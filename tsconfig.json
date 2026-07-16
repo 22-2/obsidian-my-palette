@@ -13,10 +13,11 @@
 
 		// Type checking
 		"strict": true,
+		"skipLibCheck": true,
 
 		// Type definitions
 		"types": ["@obsidian-typings/obsidian-public-latest", "node"],
-		"lib": ["DOM", "ESNext"],
+		"lib": ["DOM", "ESNext"]
 	},
 	"include": ["src/**/*.ts", "src/**/*.tsx", "e2e/**/*.ts"],
 	"exclude": ["node_modules"]

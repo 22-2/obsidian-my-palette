@@ -1,20 +1,13 @@
 import { PluginSettingTab, Setting, Notice } from "obsidian";
 import type MyPalettePlugin from "./main";
+import {
+	type MyPaletteSettings,
+	DEFAULT_KEYBINDINGS,
+	type ActionId,
+	ACTION_IDS,
+} from "./model/settings";
 
-export interface MyPaletteSettings {
-	schemaVersion: 1;
-	showLog: boolean;
-	prefixes: { command: string; everything: string };
-	everything: {
-		esPath: string;
-		instanceName: string;
-		maxResults: number;
-		debounceMs: number;
-		esTimeoutMs: number;
-		processTimeoutMs: number;
-	};
-	recentCommandIds: string[];
-}
+export type { MyPaletteSettings };
 
 export const DEFAULT_SETTINGS: MyPaletteSettings = {
 	schemaVersion: 1,
@@ -28,6 +21,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		esTimeoutMs: 3000,
 		processTimeoutMs: 5000,
 	},
+	keybindings: structuredClone(DEFAULT_KEYBINDINGS),
 	recentCommandIds: [],
 };
 
@@ -38,33 +32,48 @@ function bounded(value: unknown, fallback: number, min: number, max: number): nu
 }
 
 export function mergeSettings(data: unknown): MyPaletteSettings {
-	const source = (data && typeof data === "object" ? data : {}) as Partial<MyPaletteSettings>;
-	const prefixes = source.prefixes ?? {};
-	const everything = source.everything ?? {};
+	const source = (data && typeof data === "object" ? data : {}) as Record<string, unknown>;
+	const rawPrefixes = (source.prefixes ?? {}) as Record<string, unknown>;
+	const rawEverything = (source.everything ?? {}) as Record<string, unknown>;
+
 	return {
 		...DEFAULT_SETTINGS,
 		showLog: typeof source.showLog === "boolean" ? source.showLog : false,
 		prefixes: {
-			command: typeof prefixes.command === "string" ? prefixes.command : ">",
-			everything: typeof prefixes.everything === "string" ? prefixes.everything : "e ",
+			command: typeof rawPrefixes.command === "string" ? rawPrefixes.command : ">",
+			everything: typeof rawPrefixes.everything === "string" ? rawPrefixes.everything : "e ",
 		},
 		everything: {
-			esPath: typeof everything.esPath === "string" ? everything.esPath : "",
+			esPath: typeof rawEverything.esPath === "string" ? rawEverything.esPath : "",
 			instanceName:
-				typeof everything.instanceName === "string" && everything.instanceName.trim()
-					? everything.instanceName.trim()
+				typeof rawEverything.instanceName === "string" && rawEverything.instanceName.trim()
+					? rawEverything.instanceName.trim()
 					: "1.5a",
-			maxResults: bounded(everything.maxResults, 100, 10, 500),
-			debounceMs: bounded(everything.debounceMs, 150, 50, 1000),
-			esTimeoutMs: bounded(everything.esTimeoutMs, 3000, 500, 10000),
-			processTimeoutMs: bounded(everything.processTimeoutMs, 5000, 500, 15000),
+			maxResults: bounded(rawEverything.maxResults, 100, 10, 500),
+			debounceMs: bounded(rawEverything.debounceMs, 150, 50, 1000),
+			esTimeoutMs: bounded(rawEverything.esTimeoutMs, 3000, 500, 10000),
+			processTimeoutMs: bounded(rawEverything.processTimeoutMs, 5000, 500, 15000),
 		},
+		keybindings: mergeKeybindings(source.keybindings),
 		recentCommandIds: Array.isArray(source.recentCommandIds)
 			? source.recentCommandIds
 					.filter((id): id is string => typeof id === "string")
 					.slice(0, 20)
 			: [],
 	};
+}
+
+function mergeKeybindings(raw: unknown): Record<ActionId, string[]> {
+	const defaults = structuredClone(DEFAULT_KEYBINDINGS);
+	if (!raw || typeof raw !== "object") return defaults;
+	const obj = raw as Record<string, unknown>;
+	for (const action of ACTION_IDS) {
+		const value = obj[action];
+		if (Array.isArray(value)) {
+			defaults[action] = value.filter((v): v is string => typeof v === "string");
+		}
+	}
+	return defaults;
 }
 
 export class MyPaletteSettingTab extends PluginSettingTab {
@@ -127,6 +136,11 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 		this.addPrefix(containerEl, "Command prefix", "command");
 		this.addPrefix(containerEl, "Everything prefix", "everything");
 
+		new Setting(containerEl).setName("Keybindings").setHeading();
+		for (const action of ACTION_IDS) {
+			this.addKeybinding(containerEl, action);
+		}
+
 		new Setting(containerEl).setName("Developer").setHeading();
 		new Setting(containerEl).setName("Show debug messages").addToggle((toggle) =>
 			toggle.setValue(this.plugin.settings.showLog).onChange(async (value) => {
@@ -140,9 +154,25 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 	private addPrefix(containerEl: HTMLElement, name: string, key: "command" | "everything"): void {
 		new Setting(containerEl).setName(name).addText((text) =>
 			text.setValue(this.plugin.settings.prefixes[key]).onChange(async (value) => {
-				this.plugin.settings.prefixes[key] = value.replace(/[\r\n\0]/g, "");
+				this.plugin.settings.prefixes[key] = value.replace(/[\r\n]/g, "");
 				await this.plugin.saveSettings();
 			}),
 		);
+	}
+
+	private addKeybinding(containerEl: HTMLElement, action: ActionId): void {
+		const keybindings = this.plugin.settings.keybindings[action] ?? [];
+		new Setting(containerEl)
+			.setName(action)
+			.setDesc("Comma-separated shortcuts")
+			.addText((text) =>
+				text.setValue(keybindings.join(", ")).onChange(async (value) => {
+					this.plugin.settings.keybindings[action] = value
+						.split(",")
+						.map((v) => v.trim())
+						.filter(Boolean);
+					await this.plugin.saveSettings();
+				}),
+			);
 	}
 }

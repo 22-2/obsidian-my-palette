@@ -21,8 +21,7 @@ export default defineConfig(async ({ mode }) => {
 				force: true,
 			}),
 			obsidianCopyVite({
-				targetDir:
-					"E:\\AppData\\obsidian\\vaults\\suizen\\.obsidian\\plugins\\my-palette",
+				targetDir: "E:\\AppData\\obsidian\\vaults\\suizen\\.obsidian\\plugins\\my-palette",
 				force: true,
 			}),
 		],

@@ -1,5 +1,12 @@
-import { Notice, TFile, openWithDefaultApp, showInFolder, type App } from "obsidian";
+import { Notice, TFile, type App } from "obsidian";
 import { promises as fs } from "fs";
+
+declare const electron: {
+	shell: {
+		showItemInFolder: (path: string) => void;
+		openPath: (path: string) => Promise<string>;
+	};
+};
 import type { PaletteResult } from "../model/results";
 
 export type ActionKind = "primary" | "alternate" | "tertiary";
@@ -38,9 +45,9 @@ export async function runResultAction(
 			return { close: false, message: "Open a Markdown editor before inserting a path." };
 		editor.replaceSelection(result.absolutePath);
 	} else if (action === "alternate") {
-		if (result.kind === "folder") openWithDefaultApp(result.absolutePath);
-		else showInFolder(result.absolutePath);
-	} else openWithDefaultApp(result.absolutePath);
+		if (result.kind === "folder") await electron.shell.openPath(result.absolutePath);
+		else electron.shell.showItemInFolder(result.absolutePath);
+	} else await electron.shell.openPath(result.absolutePath);
 	return { close: true };
 }
 
