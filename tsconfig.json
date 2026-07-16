@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+        // Project structure
+        "paths": {"*": ["./*"]},
+
+        // Module system
+        "module": "ESNext",
+        "target": "ESNext",
+        "moduleResolution": "bundler",
+        "allowSyntheticDefaultImports": true,
+        "verbatimModuleSyntax": true,
+        "noEmit": true,
+
+        // Type checking
+        "strict": true,
+
+        // Type definitions
+        "types": ["@obsidian-typings/obsidian-public-latest"],
+        "lib": ["DOM", "ESNext"],
+        "jsx": "react-jsx"
+    },
+    "include": ["src/**/*.ts", "src/**/*.tsx", "e2e/**/*.ts"],
+    "exclude": ["node_modules"]
+}
