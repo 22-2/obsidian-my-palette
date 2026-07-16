@@ -4,9 +4,9 @@ status: approved-for-implementation
 version: 0.1.0
 updated: 2026-07-17
 tags:
-  - obsidian-plugin
-  - command-palette
-  - everything-search
+    - obsidian-plugin
+    - command-palette
+    - everything-search
 ---
 
 # My Palette 詳細仕様書
@@ -23,6 +23,7 @@ tags:
 4. 後からモードを追加できること
 
 > [!important] 確定事項
+>
 > - Another Quick Switcher、Quick Switcher++ などはフォークしない。
 > - Everything 連携には HTTP API や Everything SDK ではなく `es.exe` を使用する。
 > - Everything 1.5a の名前付きインスタンスへ `-instance 1.5a` で接続する。
@@ -36,26 +37,26 @@ tags:
 
 ### 2.2 対象環境
 
-| 項目 | 要件 |
-| --- | --- |
-| OS | Windows 10 / 11 |
-| Obsidian | デスクトップ版のみ |
-| Everything | Everything 1.5a が起動済みであること |
-| CLI | voidtools の `es.exe` 1.1 系 |
-| CPU | x64 を第一対象とする。ただし実行ファイルのアーキテクチャは利用者の環境に合わせる |
-| ネットワーク | 不要 |
+| 項目         | 要件                                                                             |
+| ------------ | -------------------------------------------------------------------------------- |
+| OS           | Windows 10 / 11                                                                  |
+| Obsidian     | デスクトップ版のみ                                                               |
+| Everything   | Everything 1.5a が起動済みであること                                             |
+| CLI          | voidtools の `es.exe` 1.1 系                                                     |
+| CPU          | x64 を第一対象とする。ただし実行ファイルのアーキテクチャは利用者の環境に合わせる |
+| ネットワーク | 不要                                                                             |
 
 `manifest.json` の `isDesktopOnly` は `true` とする。モバイルではインストール・実行対象外とする。
 
 ### 2.3 プラグイン識別情報
 
-| 項目 | 値 |
-| --- | --- |
-| Plugin ID | `my-palette` |
-| Name | `My Palette` |
-| Package name | `obsidian-my-palette` |
-| Initial version | `0.1.0` |
-| License | MIT |
+| 項目            | 値                    |
+| --------------- | --------------------- |
+| Plugin ID       | `my-palette`          |
+| Name            | `My Palette`          |
+| Package name    | `obsidian-my-palette` |
+| Initial version | `0.1.0`               |
+| License         | MIT                   |
 
 ### 2.4 v0.1.0 のスコープ
 
@@ -82,14 +83,14 @@ tags:
 
 ## 3. 用語
 
-| 用語 | 意味 |
-| --- | --- |
-| パレット | 本プラグインが表示する単一のモーダル画面 |
-| モード | 入力の解釈、検索元、結果アクションの組み合わせ |
-| プレフィックス | モードを切り替える入力先頭文字列 |
-| クエリ | プレフィックスを取り除き、前後空白を正規化した検索文字列 |
-| Mod | Windows では `Ctrl` |
-| 世代番号 | 非同期検索結果の新旧を判定する単調増加 ID |
+| 用語           | 意味                                                     |
+| -------------- | -------------------------------------------------------- |
+| パレット       | 本プラグインが表示する単一のモーダル画面                 |
+| モード         | 入力の解釈、検索元、結果アクションの組み合わせ           |
+| プレフィックス | モードを切り替える入力先頭文字列                         |
+| クエリ         | プレフィックスを取り除き、前後空白を正規化した検索文字列 |
+| Mod            | Windows では `Ctrl`                                      |
+| 世代番号       | 非同期検索結果の新旧を判定する単調増加 ID                |
 
 ## 4. 起動と終了
 
@@ -97,8 +98,8 @@ tags:
 
 プラグインは次のコマンドを1つ登録する。
 
-| Command ID | 表示名 | 動作 |
-| --- | --- | --- |
+| Command ID        | 表示名                     | 動作                           |
+| ----------------- | -------------------------- | ------------------------------ |
 | `my-palette:open` | `My Palette: Open palette` | パレットをファイルモードで開く |
 
 Obsidian 標準の「ホットキー」設定から、利用者がこのコマンドにグローバルホットキーを割り当てる。プラグイン側では衝突を避けるため、グローバルホットキーを既定割り当てしない。
@@ -122,11 +123,11 @@ Obsidian 標準の「ホットキー」設定から、利用者がこのコマ�
 
 ### 5.1 プレフィックス
 
-| 優先順位 | 既定プレフィックス | モード | 表示ラベル |
-| --- | --- | --- | --- |
-| 1 | `e ` | Everything | `Everything` |
-| 2 | `>` | Command | `Commands` |
-| 3 | なし | File | `Files` |
+| 優先順位 | 既定プレフィックス | モード     | 表示ラベル   |
+| -------- | ------------------ | ---------- | ------------ |
+| 1        | `e `               | Everything | `Everything` |
+| 2        | `>`                | Command    | `Commands`   |
+| 3        | なし               | File       | `Files`      |
 
 - `e ` は小文字 `e` と半角スペースの2文字である。
 - プレフィックスは設定で変更可能とする。
@@ -138,14 +139,14 @@ Obsidian 標準の「ホットキー」設定から、利用者がこのコマ�
 
 例：
 
-| 入力 | モード | クエリ |
-| --- | --- | --- |
-| 空 | File | 空 |
-| `project` | File | `project` |
-| `>reload` | Command | `reload` |
-| `> reload` | Command | `reload` |
+| 入力               | モード     | クエリ           |
+| ------------------ | ---------- | ---------------- |
+| 空                 | File       | 空               |
+| `project`          | File       | `project`        |
+| `>reload`          | Command    | `reload`         |
+| `> reload`         | Command    | `reload`         |
 | `e report ext:pdf` | Everything | `report ext:pdf` |
-| `example` | File | `example` |
+| `example`          | File       | `example`        |
 
 ### 5.2 File モード
 
@@ -241,16 +242,16 @@ es.exe -instance 1.5a -n 100 -csv -no-header -full-path-and-name -attributes -cp
 
 引数と設定値の対応は次のとおり。
 
-| 引数 | 既定値 | 目的 |
-| --- | --- | --- |
-| `-instance` | `1.5a` | Everything 1.5 alpha の名前付きインスタンスへ接続 |
-| `-n` | `100` | 返却件数の上限 |
-| `-csv -no-header` | 固定 | パス中の区切り文字を安全に扱える機械可読出力 |
-| `-full-path-and-name` | 固定 | 絶対パスを取得 |
-| `-attributes` | 固定 | ファイルとフォルダーを判別 |
-| `-cp` | `65001` | UTF-8 出力 |
-| `-timeout` | `3000` | Everything DB 待機時間 |
-| `--` | 固定 | 以後のクエリをスイッチとして解釈させない |
+| 引数                  | 既定値  | 目的                                              |
+| --------------------- | ------- | ------------------------------------------------- |
+| `-instance`           | `1.5a`  | Everything 1.5 alpha の名前付きインスタンスへ接続 |
+| `-n`                  | `100`   | 返却件数の上限                                    |
+| `-csv -no-header`     | 固定    | パス中の区切り文字を安全に扱える機械可読出力      |
+| `-full-path-and-name` | 固定    | 絶対パスを取得                                    |
+| `-attributes`         | 固定    | ファイルとフォルダーを判別                        |
+| `-cp`                 | `65001` | UTF-8 出力                                        |
+| `-timeout`            | `3000`  | Everything DB 待機時間                            |
+| `--`                  | 固定    | 以後のクエリをスイッチとして解釈させない          |
 
 #### stdout の解析
 
@@ -274,11 +275,11 @@ es.exe -instance 1.5a -n 100 -csv -no-header -full-path-and-name -attributes -cp
 
 ### 6.1 既定アクション
 
-| モード | Enter | Mod+Enter | Mod+Shift+Enter |
-| --- | --- | --- | --- |
-| File | 現在の leaf で開く | 新しいタブで開く | 新しい左右分割で開く |
-| Command | コマンド実行 | 割り当てなし | 割り当てなし |
-| Everything | 既定アプリで開く | Explorer で表示 | エディターへ絶対パスを挿入 |
+| モード     | Enter              | Mod+Enter        | Mod+Shift+Enter            |
+| ---------- | ------------------ | ---------------- | -------------------------- |
+| File       | 現在の leaf で開く | 新しいタブで開く | 新しい左右分割で開く       |
+| Command    | コマンド実行       | 割り当てなし     | 割り当てなし               |
+| Everything | 既定アプリで開く   | Explorer で表示  | エディターへ絶対パスを挿入 |
 
 ### 6.2 File アクション
 
@@ -311,14 +312,14 @@ es.exe -instance 1.5a -n 100 -csv -no-header -full-path-and-name -attributes -cp
 
 ### 7.1 既定キー
 
-| アクション | 既定キー |
-| --- | --- |
-| 次の結果 | `ArrowDown` |
-| 前の結果 | `ArrowUp` |
-| 既定アクション | `Enter` |
-| 代替アクション | `Ctrl+Enter` |
-| 第3アクション | `Ctrl+Shift+Enter` |
-| 閉じる | `Escape` |
+| アクション     | 既定キー           |
+| -------------- | ------------------ |
+| 次の結果       | `ArrowDown`        |
+| 前の結果       | `ArrowUp`          |
+| 既定アクション | `Enter`            |
+| 代替アクション | `Ctrl+Enter`       |
+| 第3アクション  | `Ctrl+Shift+Enter` |
+| 閉じる         | `Escape`           |
 
 - 一覧末尾で次へ進むと先頭へ循環する。先頭から前へ進むと末尾へ循環する。
 - 結果が0件の場合、アクションキーは何もしない。
@@ -363,14 +364,14 @@ es.exe -instance 1.5a -n 100 -csv -no-header -full-path-and-name -attributes -cp
 
 ### 8.3 UI 状態
 
-| 状態 | 結果領域 |
-| --- | --- |
-| idle | File は recent、Command は recent、Everything は入力案内 |
-| debouncing | 直前の結果を維持。フッターに待機表示は不要 |
-| loading | 直前の結果を維持し、入力欄右端に spinner |
-| success | 新しい結果を表示し先頭を選択 |
-| empty | `No results` |
-| error | アイコン、短い原因、設定を開くボタン |
+| 状態       | 結果領域                                                 |
+| ---------- | -------------------------------------------------------- |
+| idle       | File は recent、Command は recent、Everything は入力案内 |
+| debouncing | 直前の結果を維持。フッターに待機表示は不要               |
+| loading    | 直前の結果を維持し、入力欄右端に spinner                 |
+| success    | 新しい結果を表示し先頭を選択                             |
+| empty      | `No results`                                             |
+| error      | アイコン、短い原因、設定を開くボタン                     |
 
 ### 8.4 アクセシビリティ
 
@@ -385,14 +386,14 @@ es.exe -instance 1.5a -n 100 -csv -no-header -full-path-and-name -attributes -cp
 
 ### 9.1 Everything
 
-| 設定キー | 型 | 既定値 | 制約 |
-| --- | --- | --- | --- |
-| `everything.esPath` | string | `""` | 絶対パス。存在する `.exe` |
-| `everything.instanceName` | string | `"1.5a"` | 1〜64文字。改行・NUL不可 |
-| `everything.maxResults` | number | `100` | 10〜500 |
-| `everything.debounceMs` | number | `150` | 50〜1000 |
-| `everything.esTimeoutMs` | number | `3000` | 500〜10000 |
-| `everything.processTimeoutMs` | number | `5000` | `esTimeoutMs` 以上、最大15000 |
+| 設定キー                      | 型     | 既定値   | 制約                          |
+| ----------------------------- | ------ | -------- | ----------------------------- |
+| `everything.esPath`           | string | `""`     | 絶対パス。存在する `.exe`     |
+| `everything.instanceName`     | string | `"1.5a"` | 1〜64文字。改行・NUL不可      |
+| `everything.maxResults`       | number | `100`    | 10〜500                       |
+| `everything.debounceMs`       | number | `150`    | 50〜1000                      |
+| `everything.esTimeoutMs`      | number | `3000`   | 500〜10000                    |
+| `everything.processTimeoutMs` | number | `5000`   | `esTimeoutMs` 以上、最大15000 |
 
 設定画面に次を設ける。
 
@@ -419,9 +420,9 @@ es.exe -instance 1.5a -n 100 -csv -no-header -full-path-and-name -attributes -cp
 
 ### 9.2 Mode prefixes
 
-| 設定キー | 既定値 |
-| --- | --- |
-| `prefixes.command` | `">"` |
+| 設定キー              | 既定値 |
+| --------------------- | ------ |
+| `prefixes.command`    | `">"`  |
 | `prefixes.everything` | `"e "` |
 
 空文字、改行、NUL、File モードとの区別が不能な値は保存できない。
@@ -436,53 +437,53 @@ es.exe -instance 1.5a -n 100 -csv -no-header -full-path-and-name -attributes -cp
 type PaletteMode = "file" | "command" | "everything";
 
 interface ParsedInput {
-  raw: string;
-  mode: PaletteMode;
-  query: string;
+	raw: string;
+	mode: PaletteMode;
+	query: string;
 }
 
 interface BaseResult {
-  id: string;
-  mode: PaletteMode;
-  primary: string;
-  secondary: string;
-  icon: string;
+	id: string;
+	mode: PaletteMode;
+	primary: string;
+	secondary: string;
+	icon: string;
 }
 
 interface FileResult extends BaseResult {
-  mode: "file";
-  vaultPath: string;
+	mode: "file";
+	vaultPath: string;
 }
 
 interface CommandResult extends BaseResult {
-  mode: "command";
-  commandId: string;
+	mode: "command";
+	commandId: string;
 }
 
 interface EverythingResult extends BaseResult {
-  mode: "everything";
-  absolutePath: string;
-  kind: "file" | "folder";
-  attributes: string;
+	mode: "everything";
+	absolutePath: string;
+	kind: "file" | "folder";
+	attributes: string;
 }
 
 interface MyPaletteSettings {
-  schemaVersion: 1;
-  showLog: boolean;
-  prefixes: {
-    command: string;
-    everything: string;
-  };
-  everything: {
-    esPath: string;
-    instanceName: string;
-    maxResults: number;
-    debounceMs: number;
-    esTimeoutMs: number;
-    processTimeoutMs: number;
-  };
-  keybindings: Record<string, string[]>;
-  recentCommandIds: string[];
+	schemaVersion: 1;
+	showLog: boolean;
+	prefixes: {
+		command: string;
+		everything: string;
+	};
+	everything: {
+		esPath: string;
+		instanceName: string;
+		maxResults: number;
+		debounceMs: number;
+		esTimeoutMs: number;
+		processTimeoutMs: number;
+	};
+	keybindings: Record<string, string[]>;
+	recentCommandIds: string[];
 }
 ```
 
@@ -526,16 +527,16 @@ src/
 
 ### 11.2 責務
 
-| コンポーネント | 責務 |
-| --- | --- |
-| `main.ts` | 設定ロード、コマンド登録、設定タブ登録、ライフサイクル |
-| `PaletteModal` | 入力、モード遷移、選択状態、表示状態、世代番号管理 |
-| `inputParser` | プレフィックス検出とクエリ抽出。副作用なし |
-| Provider | モード別検索。UI 要素を直接操作しない |
-| `EsClient` | `es.exe` の起動・中断・タイムアウト・出力取得 |
-| `csvParser` | CSV を `EverythingResult` へ変換 |
-| `resultActions` | モード別アクション実行 |
-| `settings.ts` | 設定 UI、検証、マイグレーション |
+| コンポーネント  | 責務                                                   |
+| --------------- | ------------------------------------------------------ |
+| `main.ts`       | 設定ロード、コマンド登録、設定タブ登録、ライフサイクル |
+| `PaletteModal`  | 入力、モード遷移、選択状態、表示状態、世代番号管理     |
+| `inputParser`   | プレフィックス検出とクエリ抽出。副作用なし             |
+| Provider        | モード別検索。UI 要素を直接操作しない                  |
+| `EsClient`      | `es.exe` の起動・中断・タイムアウト・出力取得          |
+| `csvParser`     | CSV を `EverythingResult` へ変換                       |
+| `resultActions` | モード別アクション実行                                 |
+| `settings.ts`   | 設定 UI、検証、マイグレーション                        |
 
 ### 11.3 非同期検索フロー
 
@@ -566,33 +567,33 @@ Provider は `AbortSignal` を受け取れる契約にする。File / Command �
 
 ### 12.1 `es.exe` 終了コード
 
-| Code | 意味 | ユーザー表示 |
-| --- | --- | --- |
-| 0 | 成功 | 結果または `No results` |
-| 1 | window class 登録失敗 | `es.exe could not initialize.` |
-| 2 | listening window 作成失敗 | `es.exe could not initialize.` |
-| 3 | メモリ不足 | `Not enough memory to search.` |
-| 4 | 必須引数不足 | `Invalid es.exe arguments.` |
-| 5 | ファイル作成失敗 | `es.exe failed to create output.` |
-| 6 | 未知のスイッチ | `This es.exe version is not supported.` |
-| 7 | IPC query 送信失敗 | `Could not send the search to Everything.` |
-| 8 | Everything IPC が見つからない | `Everything 1.5a is not running or the instance name is wrong.` |
-| 9 | 結果なし | `No results` |
-| その他 | 不明 | `Everything search failed (code N).` |
+| Code   | 意味                          | ユーザー表示                                                    |
+| ------ | ----------------------------- | --------------------------------------------------------------- |
+| 0      | 成功                          | 結果または `No results`                                         |
+| 1      | window class 登録失敗         | `es.exe could not initialize.`                                  |
+| 2      | listening window 作成失敗     | `es.exe could not initialize.`                                  |
+| 3      | メモリ不足                    | `Not enough memory to search.`                                  |
+| 4      | 必須引数不足                  | `Invalid es.exe arguments.`                                     |
+| 5      | ファイル作成失敗              | `es.exe failed to create output.`                               |
+| 6      | 未知のスイッチ                | `This es.exe version is not supported.`                         |
+| 7      | IPC query 送信失敗            | `Could not send the search to Everything.`                      |
+| 8      | Everything IPC が見つからない | `Everything 1.5a is not running or the instance name is wrong.` |
+| 9      | 結果なし                      | `No results`                                                    |
+| その他 | 不明                          | `Everything search failed (code N).`                            |
 
 Code 9 は `-no-result-error` を通常検索で使用しないため原則発生しないが、防御的に結果なしとして扱う。
 
 ### 12.2 その他
 
-| 条件 | 挙動 |
-| --- | --- |
-| `es.exe` 未設定 | 設定を開くボタン付きエラー |
-| パス不存在 | 設定を開くボタン付きエラー |
-| `EACCES` | 実行権限を確認する案内 |
-| process timeout | 子プロセスを停止し、タイムアウト表示 |
-| malformed CSV | 不正行だけ破棄。全行不正なら出力形式エラー |
-| 対象ファイル消失 | パレットを閉じず、行を除去して通知 |
-| コマンド消失 | パレットを閉じず、一覧を再取得 |
+| 条件             | 挙動                                       |
+| ---------------- | ------------------------------------------ |
+| `es.exe` 未設定  | 設定を開くボタン付きエラー                 |
+| パス不存在       | 設定を開くボタン付きエラー                 |
+| `EACCES`         | 実行権限を確認する案内                     |
+| process timeout  | 子プロセスを停止し、タイムアウト表示       |
+| malformed CSV    | 不正行だけ破棄。全行不正なら出力形式エラー |
+| 対象ファイル消失 | パレットを閉じず、行を除去して通知         |
+| コマンド消失     | パレットを閉じず、一覧を再取得             |
 
 stderr の生値やローカル絶対パスは通常 UI に全面表示しない。`showLog` が有効な場合だけ開発者コンソールへ詳細を記録する。
 
@@ -612,13 +613,13 @@ stderr の生値やローカル絶対パスは通常 UI に全面表示しない
 
 計測環境差を考慮し、以下は通常規模の Vault（10,000ファイル以下）を基準とする。
 
-| 操作 | 目標 |
-| --- | --- |
-| パレット初回表示 | コマンド実行から100ms以内 |
-| File / Command 結果更新 | 入力から50ms以内 |
+| 操作                                | 目標                      |
+| ----------------------------------- | ------------------------- |
+| パレット初回表示                    | コマンド実行から100ms以内 |
+| File / Command 結果更新             | 入力から50ms以内          |
 | Everything プロセス起動後の UI 反映 | `es.exe` 完了から50ms以内 |
-| 入力中のメインスレッド blocking | 1タスク16ms未満 |
-| DOM に同時生成する結果行 | 最大100 |
+| 入力中のメインスレッド blocking     | 1タスク16ms未満           |
+| DOM に同時生成する結果行            | 最大100                   |
 
 - MetadataCache の alias / H1 検索文字列はパレット起動時に全ファイル分を毎回再構築せず、Vault / metadata イベントで更新するキャッシュとする。
 - File / Command の検索は必要なら小分けにするが、v0.1.0 では Web Worker を導入しない。
@@ -698,13 +699,13 @@ v0.1.0 は以下をすべて満たした時点で完成とする。
 
 ## 17. 実装順序
 
-| Phase | 内容 | 出口条件 |
-| --- | --- | --- |
-| 1 | Plugin ID、manifest、設定モデル、基本 Modal | 空のパレットを開閉できる |
-| 2 | inputParser、FileProvider、CommandProvider | File / Command が実用可能 |
-| 3 | EsClient、CSV parser、EverythingProvider | Everything 検索と3アクションが動く |
-| 4 | キー設定、接続診断、エラー UI | 設定から自己診断できる |
-| 5 | 自動テスト、実機 QA、README | 完了条件を満たす |
+| Phase | 内容                                        | 出口条件                           |
+| ----- | ------------------------------------------- | ---------------------------------- |
+| 1     | Plugin ID、manifest、設定モデル、基本 Modal | 空のパレットを開閉できる           |
+| 2     | inputParser、FileProvider、CommandProvider  | File / Command が実用可能          |
+| 3     | EsClient、CSV parser、EverythingProvider    | Everything 検索と3アクションが動く |
+| 4     | キー設定、接続診断、エラー UI               | 設定から自己診断できる             |
+| 5     | 自動テスト、実機 QA、README                 | 完了条件を満たす                   |
 
 ## 18. 将来拡張の境界
 
@@ -724,4 +725,3 @@ Everything 1.5 が alpha の名前付きインスタンスを廃止した場合�
 - [voidtools: ES Command Line Interface](https://www.voidtools.com/support/everything/command_line_interface/)
 - [voidtools forum: Everything 1.5a では `-instance 1.5a` を指定](https://www.voidtools.com/forum/viewtopic.php?t=11010)
 - [Obsidian Developer Documentation](https://docs.obsidian.md/)
-

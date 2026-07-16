@@ -1,10 +1,14 @@
 {
-	"name": "obsidian-my-new-plugin",
-	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
-	"keywords": [],
+	"name": "obsidian-my-palette",
+	"version": "0.1.0",
+	"description": "Keyboard-first command palette for Obsidian with Everything 1.5a search.",
+	"keywords": [
+		"command-palette",
+		"everything",
+		"obsidian"
+	],
 	"license": "MIT",
-	"author": "",
+	"author": "My Palette",
 	"main": "main.js",
 	"scripts": {
 		"dev": "vp dev",
@@ -25,5 +29,12 @@
 		"vite": "catalog:",
 		"vite-plus": "catalog:",
 		"vitest": "catalog:"
+	},
+	"devEngines": {
+		"packageManager": {
+			"name": "pnpm",
+			"version": "11.13.1",
+			"onFail": "download"
+		}
 	}
 }

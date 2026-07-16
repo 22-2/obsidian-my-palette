@@ -1,8 +1,63 @@
-/*
-
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
-
-If your plugin does not need CSS, delete this file.
-
-*/
+.my-palette-modal {
+	width: min(720px, calc(100vw - 32px));
+}
+.my-palette-header {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	border-bottom: 1px solid var(--background-modifier-border);
+	padding: 0.75rem;
+}
+.my-palette-mode {
+	color: var(--text-accent);
+	font-size: var(--font-ui-small);
+	white-space: nowrap;
+}
+.my-palette-input {
+	flex: 1;
+	border: 0;
+	background: transparent;
+	color: var(--text-normal);
+	font-size: var(--font-ui-large);
+	outline: none;
+}
+.my-palette-results {
+	max-height: min(60vh, 540px);
+	overflow-y: auto;
+	padding: 0.35rem;
+}
+.my-palette-result {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	min-height: 44px;
+	padding: 0.45rem 0.65rem;
+	border-radius: var(--radius-s);
+	cursor: pointer;
+}
+.my-palette-result.is-selected {
+	background: var(--background-modifier-hover);
+}
+.my-palette-result-icon {
+	width: 1.5rem;
+	text-align: center;
+}
+.my-palette-result-text {
+	min-width: 0;
+}
+.my-palette-result-primary,
+.my-palette-result-secondary {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.my-palette-result-secondary {
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
+.my-palette-status {
+	min-height: 1.5rem;
+	padding: 0.45rem 0.75rem;
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
