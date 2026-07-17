@@ -23,21 +23,20 @@ export function validatePrefixes(prefixes: Prefixes): string | null {
 
 export function parseInput(raw: string, prefixes: Prefixes): ParsedInput {
 	const lower = raw.toLocaleLowerCase();
-	if (lower === "esdir")
-		return { raw, mode: "everything", query: "", everythingScope: "directory" };
-	if (lower === "es") return { raw, mode: "everything", query: "", everythingScope: "vault" };
-	if (lower === "b") return { raw, mode: "bookmark", query: "" };
-	if (lower === "sc") return { raw, mode: "smart", query: "" };
 	const candidates: Array<{
 		prefix: string;
 		mode: Exclude<PaletteMode, "file">;
 		everythingScope?: EverythingScope;
 	}> = [
-		{ prefix: prefixes.command, mode: "command" },
+		{ prefix: `${prefixes.command.trimEnd()} `, mode: "command" },
 		{ prefix: "b ", mode: "bookmark" },
 		{ prefix: "sc ", mode: "smart" },
 		{ prefix: "esdir ", mode: "everything", everythingScope: "directory" },
-		{ prefix: prefixes.everything, mode: "everything", everythingScope: "vault" },
+		{
+			prefix: `${prefixes.everything.trimEnd()} `,
+			mode: "everything",
+			everythingScope: "vault",
+		},
 		{ prefix: "es ", mode: "everything", everythingScope: "vault" },
 	];
 	candidates.sort((a, b) => b.prefix.length - a.prefix.length);

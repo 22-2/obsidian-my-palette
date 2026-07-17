@@ -4,8 +4,9 @@ import { parseInput } from "./inputParser";
 const prefixes = { command: ">", everything: "e " };
 
 describe("parseInput Everything scopes", () => {
-	it("treats an empty es query as Vault-scoped Everything", () => {
-		expect(parseInput("es", prefixes)).toMatchObject({
+	it("requires a trailing space before switching Everything modes", () => {
+		expect(parseInput("es", prefixes)).toMatchObject({ mode: "file", query: "es" });
+		expect(parseInput("es ", prefixes)).toMatchObject({
 			mode: "everything",
 			query: "",
 			everythingScope: "vault",
@@ -19,8 +20,12 @@ describe("parseInput Everything scopes", () => {
 		});
 	});
 
-	it("treats an empty esdir query as directory-scoped Everything", () => {
+	it("requires a trailing space before switching directory-scoped Everything", () => {
 		expect(parseInput("esdir", prefixes)).toMatchObject({
+			mode: "file",
+			query: "esdir",
+		});
+		expect(parseInput("esdir ", prefixes)).toMatchObject({
 			mode: "everything",
 			query: "",
 			everythingScope: "directory",
@@ -32,7 +37,8 @@ describe("parseInput Everything scopes", () => {
 	});
 });
 
-it("treats a command prefix followed by a space as an empty command query", () => {
+it("requires a trailing space before switching command mode", () => {
+	expect(parseInput(">", prefixes)).toMatchObject({ mode: "file", query: ">" });
 	expect(parseInput("> ", prefixes)).toMatchObject({
 		mode: "command",
 		query: "",
@@ -40,8 +46,9 @@ it("treats a command prefix followed by a space as an empty command query", () =
 });
 
 describe("Bookmark prefix", () => {
-	it("switches to bookmark search for b and b queries", () => {
-		expect(parseInput("b", prefixes)).toMatchObject({ mode: "bookmark", query: "" });
+	it("switches to bookmark search only after b followed by a space", () => {
+		expect(parseInput("b", prefixes)).toMatchObject({ mode: "file", query: "b" });
+		expect(parseInput("b ", prefixes)).toMatchObject({ mode: "bookmark", query: "" });
 		expect(parseInput("b project", prefixes)).toMatchObject({
 			mode: "bookmark",
 			query: "project",
@@ -54,8 +61,9 @@ describe("Bookmark prefix", () => {
 });
 
 describe("Smart Connections prefix", () => {
-	it("switches to Smart Connections search for sc and sc queries", () => {
-		expect(parseInput("sc", prefixes)).toMatchObject({ mode: "smart", query: "" });
+	it("switches to Smart Connections search only after sc followed by a space", () => {
+		expect(parseInput("sc", prefixes)).toMatchObject({ mode: "file", query: "sc" });
+		expect(parseInput("sc ", prefixes)).toMatchObject({ mode: "smart", query: "" });
 		expect(parseInput("sc values", prefixes)).toMatchObject({
 			mode: "smart",
 			query: "values",
