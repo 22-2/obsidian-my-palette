@@ -23,7 +23,10 @@ export default class MyPalettePlugin extends Plugin {
 	async onload(): Promise<void> {
 		await this.loadSettings();
 		this.initializeLogger();
-		this.fileProvider = new FileProvider(this.app);
+		this.fileProvider = new FileProvider(
+			this.app,
+			() => this.settings.everything.vaultExtensions,
+		);
 		this.commandProvider = new CommandProvider(this.app, () => this.settings.recentCommandIds);
 		this.everythingProvider = new EverythingProvider(
 			this.app,

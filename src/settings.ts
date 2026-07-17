@@ -131,7 +131,9 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Vault search extensions")
-			.setDesc("Comma-separated extensions used by es. esdir searches every file type.")
+			.setDesc(
+				"Comma-separated extensions used by the file list and es. esdir searches every file type.",
+			)
 			.addText((text) =>
 				text
 					.setPlaceholder("md, canvas, base")

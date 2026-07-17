@@ -24,7 +24,10 @@ export class FileProvider implements PaletteProvider {
 	private readonly refs: EventRef[] = [];
 	private readonly ignoredReady: Promise<void>;
 
-	constructor(private readonly app: App) {
+	constructor(
+		private readonly app: App,
+		private readonly vaultExtensions: () => readonly string[],
+	) {
 		this.rebuild();
 		this.ignoredReady = this.rebuildIgnored();
 		this.refs.push(
@@ -102,11 +105,17 @@ export class FileProvider implements PaletteProvider {
 		await this.ignoredReady;
 		const recentPaths = this.app.workspace.getLastOpenFiles?.() ?? [];
 		const recent = new Map(recentPaths.map((filePath, index) => [filePath, index]));
+		const entries = [...this.cache.values()].filter((entry) => this.isAllowedExtension(entry));
 		if (!query.trim()) {
+			const filteredEntries = entries;
+
 			const recentFiles = recentPaths
 				.map((filePath) => this.cache.get(filePath))
-				.filter((entry): entry is SearchEntry => Boolean(entry));
-			const allFiles = [...this.cache.values()]
+				.filter(
+					(entry): entry is SearchEntry =>
+						entry !== undefined && this.isAllowedExtension(entry),
+				);
+			const allFiles = filteredEntries
 				.filter((entry) => !isUserIgnoredPath(this.app, entry.path))
 				.sort((a, b) => a.path.localeCompare(b.path));
 			const recentPathsSet = new Set(recentFiles.map((entry) => entry.path));
@@ -116,7 +125,7 @@ export class FileProvider implements PaletteProvider {
 			return files.map((entry) => this.result(entry));
 		}
 		return [
-			...fuzzysort.go(query, [...this.cache.values()], {
+			...fuzzysort.go(query, entries, {
 				keys: [(entry) => entry.basename, (entry) => entry.path, (entry) => entry.text],
 				scoreFn: (matches) => Math.max(...matches.map((match) => match?.score ?? 0)),
 			}),
@@ -140,5 +149,16 @@ export class FileProvider implements PaletteProvider {
 			vaultPath: entry.path,
 			file: entry.file,
 		};
+	}
+
+	private isAllowedExtension(entry: SearchEntry): boolean {
+		const allowed = this.vaultExtensions();
+		return (
+			allowed.length === 0 ||
+			allowed.some(
+				(extension) =>
+					extension.toLocaleLowerCase() === entry.extension.toLocaleLowerCase(),
+			)
+		);
 	}
 }
