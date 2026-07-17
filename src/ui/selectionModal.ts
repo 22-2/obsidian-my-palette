@@ -23,18 +23,24 @@ interface ModalProps<T> {
 export class SelectionModal<T> extends SuggestModal<T> {
 	protected items: T[];
 	selected: T | null;
+	private query = "";
+	private resultCountEl?: HTMLElement;
 
 	constructor({ items = [], defaultValue, placeholder = "Search…" }: ModalProps<T>, app: App) {
 		super(app);
 		this.items = [...items];
 		this.selected = defaultValue ?? null;
-		this.limit = 15;
+		this.limit = 50;
 		this.setPlaceholder(placeholder);
 	}
 
 	onOpen(): void {
 		super.onOpen();
 		this.modalEl.addClass("my-palette-suggest-modal");
+		this.resultCountEl = document.createElement("div");
+		this.resultCountEl.addClass("my-palette-result-count");
+		this.resultContainerEl.insertAdjacentElement("afterend", this.resultCountEl);
+		this.updateResultCount(0);
 		this.onSelectionModalOpen();
 	}
 
@@ -44,9 +50,13 @@ export class SelectionModal<T> extends SuggestModal<T> {
 	}
 
 	getSuggestions(query: string): T[] | Promise<T[]> {
-		if (!query.trim()) return this.items;
+		this.query = query;
+		if (!query.trim()) {
+			this.updateResultCount(this.items.length);
+			return this.items;
+		}
 		const normalized = query.toLocaleLowerCase();
-		return this.items
+		const results = this.items
 			.map((item) => ({
 				item,
 				score: microFuzzy(this.toSelectionItem(item).label.toLocaleLowerCase(), normalized)
@@ -55,6 +65,8 @@ export class SelectionModal<T> extends SuggestModal<T> {
 			.filter(({ score }) => score > 0)
 			.sort((a, b) => b.score - a.score)
 			.map(({ item }) => item);
+		this.updateResultCount(results.length);
+		return results;
 	}
 
 	renderSuggestion(item: T, el: HTMLElement): void {
@@ -64,7 +76,8 @@ export class SelectionModal<T> extends SuggestModal<T> {
 			const icon = row.createSpan("my-palette-suggestion__icon");
 			setIcon(icon, result.icon);
 		}
-		row.createSpan({ cls: "my-palette-suggestion__label", text: result.label });
+		const label = row.createSpan("my-palette-suggestion__label");
+		this.renderMatchedLabel(label, result.label);
 		if (result.description)
 			row.createSpan({
 				cls: "my-palette-suggestion__description",
@@ -96,8 +109,30 @@ export class SelectionModal<T> extends SuggestModal<T> {
 		this.items = items;
 	}
 
+	protected updateResultCount(total: number): void {
+		this.resultCountEl?.setText(`${Math.min(total, this.limit)} / ${total}`);
+	}
+
+	protected updateMatchQuery(query: string): void {
+		this.query = query;
+	}
+
 	protected updatePlaceholder(placeholder: string): void {
 		super.setPlaceholder(placeholder);
+	}
+
+	private renderMatchedLabel(container: HTMLElement, text: string): void {
+		const query = this.query.toLocaleLowerCase();
+		let queryIndex = 0;
+		for (const character of text) {
+			const matches =
+				queryIndex < query.length && character.toLocaleLowerCase() === query[queryIndex];
+			container.createSpan({
+				cls: matches ? "my-palette-suggestion__match" : "",
+				text: character,
+			});
+			if (matches) queryIndex += 1;
+		}
 	}
 }
 

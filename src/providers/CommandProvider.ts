@@ -38,7 +38,6 @@ export class CommandProvider implements PaletteProvider {
 					a.command.name.localeCompare(b.command.name)
 				);
 			})
-			.slice(0, query ? 50 : Math.max(20, commands.length))
 			.map(({ command }) => ({
 				id: command.id,
 				mode: "command",

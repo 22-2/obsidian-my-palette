@@ -12,7 +12,7 @@ interface SearchEntry {
 	text: string;
 }
 
-const INITIAL_RESULT_COUNT = 15;
+const INITIAL_RESULT_COUNT = 50;
 
 function aliases(value: unknown): string[] {
 	if (Array.isArray(value))
@@ -143,7 +143,6 @@ export class FileProvider implements PaletteProvider {
 						(recent.get(b.entry.path) ?? Infinity) ||
 					a.entry.path.localeCompare(b.entry.path),
 			)
-			.slice(0, 50)
 			.map(({ entry }) => this.result(entry));
 	}
 

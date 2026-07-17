@@ -71,6 +71,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.controller?.abort();
 		const generation = ++this.generation;
 		const parsed = parseInput(input, this.plugin.settings.prefixes);
+		this.updateMatchQuery(parsed.query);
 		this.mode = parsed.mode;
 		this.everythingScope = parsed.everythingScope ?? "vault";
 		this.updateMode();
@@ -89,7 +90,9 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 								this.controller.signal,
 								this.everythingScope,
 							);
-			return generation === this.generation ? results : [];
+			if (generation !== this.generation) return [];
+			this.updateResultCount(results.length);
+			return results;
 		} catch (error) {
 			if (
 				generation !== this.generation ||
@@ -97,6 +100,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			)
 				return [];
 			this.emptyStateText = error instanceof Error ? error.message : String(error);
+			this.updateResultCount(0);
 			return [];
 		}
 	}
