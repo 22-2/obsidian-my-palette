@@ -15,6 +15,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	constructor(
 		app: App,
 		private readonly plugin: MyPalettePlugin,
+		private readonly initialInput = "",
 	) {
 		super(
 			{
@@ -26,6 +27,10 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override onSelectionModalOpen(): void {
+		if (this.initialInput) {
+			this.inputEl.value = this.initialInput;
+			this.inputEl.dispatchEvent(new Event("input"));
+		}
 		this.inputEl.addEventListener(
 			"keydown",
 			(event) => {

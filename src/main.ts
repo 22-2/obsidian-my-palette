@@ -36,6 +36,11 @@ export default class MyPalettePlugin extends Plugin {
 			name: "Open palette",
 			callback: () => new PaletteModal(this.app, this).open(),
 		});
+		this.addCommand({
+			id: "open-command-list",
+			name: "Open command list",
+			callback: () => new PaletteModal(this.app, this, this.settings.prefixes.command).open(),
+		});
 	}
 
 	onunload(): void {

@@ -9,14 +9,14 @@ interface SearchEntry {
 	file?: TFile;
 	path: string;
 	basename: string;
+	aliases: string[];
 	extension: string;
 	text: string;
 }
 
 function aliases(value: unknown): string[] {
-	if (Array.isArray(value))
-		return value.filter((item): item is string => typeof item === "string");
-	return typeof value === "string" ? [value] : [];
+	if (Array.isArray(value)) return value.map(String).filter((alias) => alias.trim().length > 0);
+	return value == null ? [] : [String(value)].filter((alias) => alias.trim().length > 0);
 }
 
 export class FileProvider implements PaletteProvider {
@@ -54,17 +54,14 @@ export class FileProvider implements PaletteProvider {
 	private update(file: TFile): void {
 		const metadata = this.app.metadataCache.getFileCache(file);
 		const h1 = metadata?.headings?.find((heading) => heading.level === 1)?.heading ?? "";
+		const fileAliases = aliases(metadata?.frontmatter?.aliases ?? metadata?.frontmatter?.alias);
 		this.cache.set(file.path, {
 			file,
 			path: file.path,
 			basename: file.basename,
+			aliases: fileAliases,
 			extension: file.extension,
-			text: [
-				file.basename,
-				file.path,
-				...aliases(metadata?.frontmatter?.aliases ?? metadata?.frontmatter?.alias),
-				h1,
-			].join(" "),
+			text: [file.basename, file.path, ...fileAliases, h1].join(" "),
 		});
 	}
 
@@ -96,6 +93,7 @@ export class FileProvider implements PaletteProvider {
 			path: filePath,
 			basename,
 			extension,
+			aliases: [],
 			text: `${basename} ${filePath}`,
 		});
 	}
@@ -136,7 +134,7 @@ export class FileProvider implements PaletteProvider {
 		return {
 			id: entry.path,
 			mode: "file",
-			primary: entry.basename,
+			primary: [entry.basename, ...entry.aliases].join(" / "),
 			secondary: entry.path,
 			icon: entry.extension === "md" ? "file-text" : "file",
 			vaultPath: entry.path,
