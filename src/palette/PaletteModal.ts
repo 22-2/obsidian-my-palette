@@ -4,15 +4,11 @@ import type MyPalettePlugin from "../main";
 import type { EverythingScope, PaletteMode, PaletteResult } from "../model/results";
 import { SelectionModal, type SelectionItem } from "../ui/selectionModal";
 import { parseInput } from "./inputParser";
-import { findAction } from "./keybindings";
 import { runResultAction, type ActionKind } from "./resultActions";
-import { statusText, type UiStatus } from "../ui/statusMessage";
 
 export class PaletteModal extends SelectionModal<PaletteResult> {
 	private generation = 0;
-	private debounceTimer?: number;
 	private controller?: AbortController;
-	private status: UiStatus = "idle";
 	private mode: PaletteMode = "file";
 	private everythingScope: EverythingScope = "vault";
 	private composing = false;
@@ -30,49 +26,10 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		);
 	}
 
-	protected override onSelectionModalOpen(): void {
-		this.modalEl.addClass("my-palette-modal");
-		this.modalEl.setAttrs({ role: "dialog", "aria-label": "My Palette" });
-		this.inputEl.addEventListener("compositionstart", () => {
-			this.composing = true;
-		});
-		this.inputEl.addEventListener("compositionend", () => {
-			this.composing = false;
-			this.scheduleSearch();
-		});
-		this.scheduleSearch();
-	}
-
 	protected override onSelectionModalClose(): void {
 		this.generation += 1;
-		if (this.debounceTimer !== undefined) window.clearTimeout(this.debounceTimer);
 		this.controller?.abort();
 		this.plugin.everythingClient.cancel();
-	}
-
-	protected override onQueryChanged(): void {
-		if (!this.composing) this.scheduleSearch();
-	}
-
-	protected override handleKeydown(event: KeyboardEvent): void {
-		if (event.isComposing) return;
-		const action = findAction(event, this.plugin.settings.keybindings);
-		if (!action) {
-			super.handleKeydown(event);
-			return;
-		}
-		event.preventDefault();
-		if (action === "close") {
-			this.close();
-			return;
-		}
-		if (action === "next" || action === "previous") {
-			this.moveSelection(action === "next" ? 1 : -1);
-			return;
-		}
-		void this.activatePaletteResult(
-			action === "primary" ? "primary" : action === "alternate" ? "alternate" : "tertiary",
-		);
 	}
 
 	protected override toSelectionItem(result: PaletteResult): SelectionItem {
@@ -110,68 +67,41 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		await this.activatePaletteResult(action, result);
 	}
 
-	private scheduleSearch(): void {
-		if (this.debounceTimer !== undefined) window.clearTimeout(this.debounceTimer);
+	override async getSuggestions(input: string): Promise<PaletteResult[]> {
 		this.controller?.abort();
 		const generation = ++this.generation;
-		const parsed = parseInput(this.inputEl.value, this.plugin.settings.prefixes);
+		const parsed = parseInput(input, this.plugin.settings.prefixes);
 		this.mode = parsed.mode;
 		this.everythingScope = parsed.everythingScope ?? "vault";
 		this.updateMode();
 		const delay = parsed.mode === "everything" ? this.plugin.settings.everything.debounceMs : 0;
-		this.debounceTimer = window.setTimeout(
-			() => void this.search(parsed.query, generation, this.everythingScope),
-			delay,
-		);
-	}
-
-	private async search(
-		query: string,
-		generation: number,
-		everythingScope: EverythingScope,
-	): Promise<void> {
+		if (delay) await new Promise((resolve) => window.setTimeout(resolve, delay));
+		if (generation !== this.generation) return [];
 		this.controller = new AbortController();
-		this.status = "loading";
-		this.setLoading(true);
-		this.setStatus(statusText(this.status, 0));
 		try {
 			const results =
 				this.mode === "file"
-					? await this.plugin.fileProvider.search(query)
+					? await this.plugin.fileProvider.search(parsed.query)
 					: this.mode === "command"
-						? await this.plugin.commandProvider.search(query)
+						? await this.plugin.commandProvider.search(parsed.query)
 						: await this.plugin.everythingProvider.search(
-								query,
+								parsed.query,
 								this.controller.signal,
-								everythingScope,
+								this.everythingScope,
 							);
-			if (generation !== this.generation) return;
-			this.status = results.length ? "success" : "empty";
-			this.setItems(results);
-			this.setStatus(statusText(this.status, results.length));
+			return generation === this.generation ? results : [];
 		} catch (error) {
 			if (
 				generation !== this.generation ||
 				(error instanceof DOMException && error.name === "AbortError")
 			)
-				return;
-			this.status = "error";
-			this.setItems([]);
-			this.setStatus(error instanceof Error ? error.message : String(error));
-			this.setActionButton(true, () => this.plugin.openSettings());
-		} finally {
-			if (generation === this.generation) this.setLoading(false);
+				return [];
+			this.emptyStateText = error instanceof Error ? error.message : String(error);
+			return [];
 		}
 	}
 
 	private updateMode(): void {
-		const labels = {
-			file: "Files",
-			command: "Commands",
-			everything:
-				this.everythingScope === "vault" ? "Everything · Vault" : "Everything · Directory",
-		};
-		const icons = { file: "files", command: "terminal", everything: "search" };
 		const placeholders = {
 			file: "Search vault files",
 			command: "Search Obsidian commands",
@@ -180,17 +110,12 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 					? "Search indexed Vault files · es"
 					: "Search every file under the Vault directory · esdir",
 		};
-		this.setHeading(labels[this.mode], icons[this.mode]);
-		this.inputEl.placeholder = placeholders[this.mode];
+		this.updatePlaceholder(placeholders[this.mode]);
 		this.modalEl.setAttribute("data-mode", this.mode);
 		this.modalEl.setAttribute("data-everything-scope", this.everythingScope);
-		this.setActionButton(false);
 	}
 
-	private async activatePaletteResult(
-		action: ActionKind,
-		result = this.items[this.selectedIndex],
-	): Promise<void> {
+	private async activatePaletteResult(action: ActionKind, result: PaletteResult): Promise<void> {
 		if (!result) return;
 		if (result.mode === "command") {
 			if (action !== "primary") return;
@@ -198,8 +123,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				.getCommands()
 				.some(({ id }) => id === result.commandId);
 			if (!exists) {
-				this.scheduleSearch();
-				this.setStatus("That command is no longer available.");
+				this.inputEl.dispatchEvent(new Event("input"));
 				return;
 			}
 			this.plugin.recordCommand(result.commandId);
@@ -211,6 +135,6 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		}
 		const outcome = await runResultAction(this.app, result, action);
 		if (outcome.close) this.close();
-		else this.setStatus(outcome.message ?? "The action failed.");
+		else this.emptyStateText = outcome.message ?? "The action failed.";
 	}
 }

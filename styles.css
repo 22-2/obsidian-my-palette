@@ -1,181 +1,55 @@
-.selection-modal {
-	--my-palette-mode-color: var(--color-blue);
+.my-palette-suggest-modal {
 	width: min(760px, calc(100vw - 32px));
-	padding: 0;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 8px;
-	overflow: hidden;
-	box-shadow: 0 20px 60px rgb(0 0 0 / 28%);
 }
 
-.selection-modal[data-mode="command"] {
-	--my-palette-mode-color: var(--color-orange);
+/* Small screens stay compact; tall screens can show up to 15 standard suggestions. */
+.my-palette-suggest-modal .suggestion-container {
+	max-height: min(56vh, 540px);
 }
 
-.selection-modal[data-mode="everything"] {
-	--my-palette-mode-color: var(--color-green);
+.my-palette-suggest-modal .suggestion-item {
+	font-size: 0.9em;
 }
 
-.selection-modal .modal-content {
-	padding: 0;
-}
-
-.selection-modal__header {
+.my-palette-suggestion {
 	display: flex;
 	align-items: center;
 	gap: 6px;
-	padding: 7px 10px 3px;
-	color: var(--text-muted);
-	font-size: var(--font-ui-smaller);
-	font-weight: var(--font-semibold);
-	letter-spacing: 0.03em;
-	text-transform: uppercase;
+	min-width: 0;
 }
 
-.selection-modal__title-icon {
+.my-palette-suggestion__icon {
 	display: grid;
+	flex: 0 0 18px;
 	place-items: center;
 	width: 18px;
 	height: 18px;
-	color: var(--my-palette-mode-color);
+	color: var(--text-muted);
 }
 
-.selection-modal__title {
-	flex: 1;
-}
-
-.selection-modal__spinner {
-	display: none;
-	width: 16px;
-	height: 16px;
-	color: var(--my-palette-mode-color);
-	animation: selection-modal-spin 900ms linear infinite;
-}
-
-.selection-modal__spinner.is-visible {
-	display: block;
-}
-
-.selection-modal__input {
-	box-sizing: border-box;
-	width: 100%;
-	border: 0;
-	border-bottom: 1px solid var(--background-modifier-border);
-	border-radius: 0;
-	padding: 4px 10px 8px;
-	background: transparent;
-	color: var(--text-normal);
-	font-size: 1.35em;
-	line-height: 1.35;
-	box-shadow: none;
-	outline: none;
-}
-
-.selection-modal__input:focus {
-	border-bottom-color: var(--my-palette-mode-color);
-	box-shadow: inset 0 -1px 0 var(--my-palette-mode-color);
-}
-
-.selection-modal__results {
-	max-height: min(56vh, 520px);
-	overflow: auto;
-	padding: 3px;
-}
-
-.selection-modal__result {
-	display: flex;
-	align-items: center;
-	gap: 7px;
-	min-height: 38px;
-	padding: 4px 6px;
-	border: 1px solid transparent;
-	border-radius: 5px;
-	cursor: pointer;
-}
-
-.selection-modal__result:hover,
-.selection-modal__result.is-selected {
-	border-color: var(--background-modifier-border-hover);
-	background: var(--background-modifier-hover);
-}
-
-.selection-modal__result-icon {
-	display: grid;
-	flex: 0 0 22px;
-	place-items: center;
-	width: 22px;
-	height: 22px;
-	border-radius: 4px;
-	background: var(--background-secondary);
-	color: var(--my-palette-mode-color);
-}
-
-.selection-modal__result-copy {
-	min-width: 0;
-	flex: 1;
-}
-
-.selection-modal__result-label,
-.selection-modal__result-description {
+.my-palette-suggestion__label,
+.my-palette-suggestion__description {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
-.selection-modal__result-label {
-	color: var(--text-normal);
+.my-palette-suggestion__label {
+	flex: 0 1 auto;
 	font-weight: var(--font-medium);
 }
 
-.selection-modal__result-description {
-	margin-top: 0;
+.my-palette-suggestion__description {
+	min-width: 0;
 	color: var(--text-muted);
 	font-size: var(--font-ui-smaller);
 }
 
-.selection-modal__result-badge {
+.my-palette-suggestion__badge {
+	margin-left: auto;
 	padding: 1px 5px;
 	border-radius: 999px;
 	background: var(--background-secondary-alt);
 	color: var(--text-muted);
 	font-size: var(--font-ui-smaller);
-}
-
-.selection-modal__footer {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	min-height: 28px;
-	padding: 0 8px;
-	border-top: 1px solid var(--background-modifier-border);
-	color: var(--text-muted);
-	font-size: var(--font-ui-smaller);
-}
-
-.selection-modal__status {
-	flex: 1;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.selection-modal__action-button {
-	padding: 2px 6px;
-	font-size: var(--font-ui-smaller);
-}
-
-.selection-modal__hint {
-	white-space: nowrap;
-}
-
-@keyframes selection-modal-spin {
-	to {
-		transform: rotate(360deg);
-	}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.selection-modal__spinner {
-		animation: none;
-	}
 }

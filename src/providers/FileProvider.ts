@@ -12,6 +12,8 @@ interface SearchEntry {
 	text: string;
 }
 
+const INITIAL_RESULT_COUNT = 15;
+
 function aliases(value: unknown): string[] {
 	if (Array.isArray(value))
 		return value.filter((item): item is string => typeof item === "string");
@@ -107,12 +109,14 @@ export class FileProvider implements PaletteProvider {
 			const recentFiles = recentPaths
 				.map((filePath) => this.cache.get(filePath))
 				.filter((entry): entry is SearchEntry => Boolean(entry));
+			const allFiles = [...this.cache.values()]
+				.filter((entry) => !isUserIgnoredPath(this.app, entry.path))
+				.sort((a, b) => a.path.localeCompare(b.path));
+			const recentPathsSet = new Set(recentFiles.map((entry) => entry.path));
 			const files = recentFiles.length
-				? recentFiles
-				: [...this.cache.values()]
-						.filter((entry) => !isUserIgnoredPath(this.app, entry.path))
-						.sort((a, b) => a.path.localeCompare(b.path));
-			return files.slice(0, 20).map((entry) => this.result(entry));
+				? [...recentFiles, ...allFiles.filter((entry) => !recentPathsSet.has(entry.path))]
+				: allFiles;
+			return files.slice(0, INITIAL_RESULT_COUNT).map((entry) => this.result(entry));
 		}
 		const fuzzy = prepareFuzzySearch(query);
 		return [...this.cache.values()]
