@@ -2,8 +2,16 @@
 	width: min(760px, calc(100vw - 32px));
 }
 
+.my-palette-suggest-modal .search-input-clear-button {
+	display: none;
+}
+
 .my-palette-suggest-modal .prompt-input-container {
 	position: relative;
+}
+
+.my-palette-suggest-modal .suggestion-container {
+	max-height: min(36vh, 270px);
 }
 
 .my-palette-suggest-modal .suggestion-item {
@@ -15,7 +23,7 @@
 .my-palette-result-count {
 	position: absolute;
 	top: 50%;
-	right: 10px;
+	right: 18px;
 	transform: translateY(-50%);
 	color: var(--text-muted);
 	font-size: var(--font-ui-smaller);

@@ -1,4 +1,5 @@
-import { prepareFuzzySearch, type App, type EventRef, type TFile } from "obsidian";
+import { type App, type EventRef, type TFile } from "obsidian";
+import fuzzysort from "fuzzysort";
 import * as path from "path";
 import { getUserIgnoreFilters, isUserIgnoredPath } from "../core/ignoredPaths";
 import type { FileResult } from "../model/results";
@@ -11,8 +12,6 @@ interface SearchEntry {
 	extension: string;
 	text: string;
 }
-
-const INITIAL_RESULT_COUNT = 50;
 
 function aliases(value: unknown): string[] {
 	if (Array.isArray(value))
@@ -116,34 +115,21 @@ export class FileProvider implements PaletteProvider {
 			const files = recentFiles.length
 				? [...recentFiles, ...allFiles.filter((entry) => !recentPathsSet.has(entry.path))]
 				: allFiles;
-			return files.slice(0, INITIAL_RESULT_COUNT).map((entry) => this.result(entry));
+			return files.map((entry) => this.result(entry));
 		}
-		const fuzzy = prepareFuzzySearch(query);
-		return [...this.cache.values()]
-			.map((entry) => {
-				const nameMatch = fuzzy(entry.basename);
-				const pathMatch = fuzzy(entry.path);
-				const allMatch = fuzzy(entry.text);
-				const score = nameMatch
-					? nameMatch.score +
-						2000 +
-						(entry.basename.toLocaleLowerCase().startsWith(query.toLocaleLowerCase())
-							? 1000
-							: 0)
-					: pathMatch
-						? pathMatch.score + 500
-						: (allMatch?.score ?? -Infinity);
-				return { entry, score };
-			})
-			.filter(({ score }) => Number.isFinite(score))
+		return [
+			...fuzzysort.go(query, [...this.cache.values()], {
+				keys: [(entry) => entry.basename, (entry) => entry.path, (entry) => entry.text],
+				scoreFn: (matches) => Math.max(...matches.map((match) => match?.score ?? 0)),
+			}),
+		]
 			.sort(
 				(a, b) =>
 					b.score - a.score ||
-					(recent.get(a.entry.path) ?? Infinity) -
-						(recent.get(b.entry.path) ?? Infinity) ||
-					a.entry.path.localeCompare(b.entry.path),
+					(recent.get(a.obj.path) ?? Infinity) - (recent.get(b.obj.path) ?? Infinity) ||
+					a.obj.path.localeCompare(b.obj.path),
 			)
-			.map(({ entry }) => this.result(entry));
+			.map(({ obj }) => this.result(obj));
 	}
 
 	private result(entry: SearchEntry): FileResult {

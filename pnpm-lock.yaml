@@ -220,6 +220,9 @@ importers:
       consola:
         specifier: ^3.4.2
         version: 3.4.2
+      fuzzysort:
+        specifier: ^3.1.0
+        version: 3.1.0
     devDependencies:
       '@22-2/obsidian-copy-bundler-plugin':
         specifier: 1.0.2
@@ -244,7 +247,7 @@ importers:
         version: 0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1))(esbuild@0.28.1)
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@types/node@26.1.0)(@vitest/browser-preview@4.1.10)(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1))
+        version: 4.1.10(@types/node@26.1.0)(@vitest/browser-preview@4.1.10(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1))(vitest@4.1.10))(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1))
 
 packages:
 
@@ -988,6 +991,9 @@ packages:
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
 
+  fuzzysort@3.1.0:
+    resolution: {integrity: sha512-sR9BNCjBg6LNgwvxlBd0sBABvQitkLzoVY9MYYROQVX/FvfJ4Mai9LsGhDgd8qYdds0bY77VzYd5iuB+v5rwQQ==}
+
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -1585,7 +1591,7 @@ snapshots:
       '@testing-library/dom': 10.4.1
       '@testing-library/user-event': 14.6.1(@testing-library/dom@10.4.1)
       '@vitest/browser': 4.1.10(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1))(vitest@4.1.10)
-      vitest: 4.1.10(@types/node@26.1.0)(@vitest/browser-preview@4.1.10)(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1))
+      vitest: 4.1.10(@types/node@26.1.0)(@vitest/browser-preview@4.1.10(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1))(vitest@4.1.10))(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1))
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -1601,7 +1607,7 @@ snapshots:
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.1.0
-      vitest: 4.1.10(@types/node@26.1.0)(@vitest/browser-preview@4.1.10)(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1))
+      vitest: 4.1.10(@types/node@26.1.0)(@vitest/browser-preview@4.1.10(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1))(vitest@4.1.10))(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1))
       ws: 8.21.0
     transitivePeerDependencies:
       - bufferutil
@@ -1753,6 +1759,8 @@ snapshots:
 
   fsevents@2.3.3:
     optional: true
+
+  fuzzysort@3.1.0: {}
 
   js-tokens@4.0.0: {}
 
@@ -1958,7 +1966,7 @@ snapshots:
       oxfmt: 0.57.0(vite-plus@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1))(esbuild@0.28.1))
       oxlint: 1.72.0(oxlint-tsgolint@0.24.0)(vite-plus@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1))(esbuild@0.28.1))
       oxlint-tsgolint: 0.24.0
-      vitest: 4.1.10(@types/node@26.1.0)(@vitest/browser-preview@4.1.10)(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1))
+      vitest: 4.1.10(@types/node@26.1.0)(@vitest/browser-preview@4.1.10(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1))(vitest@4.1.10))(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1))
     optionalDependencies:
       '@voidzero-dev/vite-plus-darwin-arm64': 0.2.4
       '@voidzero-dev/vite-plus-darwin-x64': 0.2.4
@@ -1999,7 +2007,7 @@ snapshots:
       - vite
       - yaml
 
-  vitest@4.1.10(@types/node@26.1.0)(@vitest/browser-preview@4.1.10)(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1)):
+  vitest@4.1.10(@types/node@26.1.0)(@vitest/browser-preview@4.1.10(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1))(vitest@4.1.10))(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1)):
     dependencies:
       '@vitest/expect': 4.1.10
       '@vitest/mocker': 4.1.10(@voidzero-dev/vite-plus-core@0.2.4(@types/node@26.1.0)(@typescript/typescript6@6.0.2)(esbuild@0.28.1))

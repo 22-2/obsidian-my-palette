@@ -1,5 +1,5 @@
 import { App, SuggestModal, setIcon } from "obsidian";
-import { microFuzzy } from "src/core/strings";
+import fuzzysort from "fuzzysort";
 
 export interface SelectionItem {
 	label: string;
@@ -55,18 +55,11 @@ export class SelectionModal<T> extends SuggestModal<T> {
 			this.updateResultCount(this.items.length);
 			return this.items;
 		}
-		const normalized = query.toLocaleLowerCase();
-		const results = this.items
-			.map((item) => ({
-				item,
-				score: microFuzzy(this.toSelectionItem(item).label.toLocaleLowerCase(), normalized)
-					.score,
-			}))
-			.filter(({ score }) => score > 0)
-			.sort((a, b) => b.score - a.score)
-			.map(({ item }) => item);
-		this.updateResultCount(results.length);
-		return results;
+		const results = fuzzysort.go(query, this.items, {
+			key: (item) => this.toSelectionItem(item).label,
+		});
+		this.updateResultCount(results.total);
+		return results.map(({ obj }) => obj);
 	}
 
 	renderSuggestion(item: T, el: HTMLElement): void {
