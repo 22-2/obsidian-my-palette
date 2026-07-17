@@ -1,124 +1,118 @@
-import { Modal, setIcon, type App } from "obsidian";
+import type { App } from "obsidian";
+import { isAbsolutePathUserIgnored, isUserIgnoredPath } from "../core/ignoredPaths";
 import type MyPalettePlugin from "../main";
 import type { PaletteMode, PaletteResult } from "../model/results";
+import { SelectionModal, type SelectionItem } from "../ui/selectionModal";
 import { parseInput } from "./inputParser";
 import { findAction } from "./keybindings";
 import { runResultAction, type ActionKind } from "./resultActions";
-import { ResultList } from "../ui/ResultList";
 import { statusText, type UiStatus } from "../ui/statusMessage";
 
-export class PaletteModal extends Modal {
-	private input!: HTMLInputElement;
-	private modeIcon!: HTMLElement;
-	private modeLabel!: HTMLElement;
-	private spinner!: HTMLElement;
-	private statusEl!: HTMLElement;
-	private errorButton!: HTMLButtonElement;
-	private list!: ResultList;
-	private results: PaletteResult[] = [];
-	private selectedIndex = 0;
+export class PaletteModal extends SelectionModal<PaletteResult> {
 	private generation = 0;
 	private debounceTimer?: number;
 	private controller?: AbortController;
 	private status: UiStatus = "idle";
 	private mode: PaletteMode = "file";
 	private composing = false;
+
 	constructor(
 		app: App,
 		private readonly plugin: MyPalettePlugin,
 	) {
-		super(app);
+		super(
+			{
+				title: "Files",
+				placeholder: "Search files · > commands · e / es Everything",
+			},
+			app,
+		);
 	}
 
-	onOpen(): void {
+	protected override onSelectionModalOpen(): void {
 		this.modalEl.addClass("my-palette-modal");
 		this.modalEl.setAttrs({ role: "dialog", "aria-label": "My Palette" });
-		this.contentEl.empty();
-		const header = this.contentEl.createDiv("my-palette-header");
-		this.modeIcon = header.createSpan("my-palette-mode-icon");
-		this.modeLabel = header.createSpan("my-palette-mode");
-		this.input = header.createEl("input", {
-			type: "text",
-			cls: "my-palette-input",
-			attr: {
-				placeholder: "Search files, > commands, or e Everything",
-				"aria-controls": "my-palette-results",
-				autocomplete: "off",
-				spellcheck: "false",
-			},
-		});
-		this.spinner = header.createSpan("my-palette-spinner");
-		this.spinner.setAttribute("aria-hidden", "true");
-		const resultsEl = this.contentEl.createDiv("my-palette-results");
-		this.list = new ResultList(resultsEl, (index, activate) => {
-			this.selectedIndex = index;
-			this.render();
-			if (activate) void this.activate("primary");
-		});
-		const footer = this.contentEl.createDiv("my-palette-footer");
-		this.statusEl = footer.createDiv("my-palette-status");
-		this.errorButton = footer.createEl("button", {
-			cls: "my-palette-settings-button",
-			text: "Open settings",
-		});
-		this.errorButton.addEventListener("click", () => this.plugin.openSettings());
-		footer.createDiv({ cls: "my-palette-hint", text: "Esc close" });
-		this.input.addEventListener("compositionstart", () => {
+		this.inputEl.addEventListener("compositionstart", () => {
 			this.composing = true;
 		});
-		this.input.addEventListener("compositionend", () => {
+		this.inputEl.addEventListener("compositionend", () => {
 			this.composing = false;
 			this.scheduleSearch();
 		});
-		this.input.addEventListener("input", () => {
-			if (!this.composing) this.scheduleSearch();
-		});
-		this.input.addEventListener("keydown", (event) => this.handleKeydown(event));
-		window.setTimeout(() => this.input.focus(), 0);
 		this.scheduleSearch();
 	}
 
-	onClose(): void {
+	protected override onSelectionModalClose(): void {
 		this.generation += 1;
 		if (this.debounceTimer !== undefined) window.clearTimeout(this.debounceTimer);
 		this.controller?.abort();
-		this.plugin.esClient.cancel();
-		this.contentEl.empty();
+		this.plugin.everythingClient.cancel();
 	}
 
-	private handleKeydown(event: KeyboardEvent): void {
+	protected override onQueryChanged(): void {
+		if (!this.composing) this.scheduleSearch();
+	}
+
+	protected override handleKeydown(event: KeyboardEvent): void {
+		if (event.isComposing) return;
 		const action = findAction(event, this.plugin.settings.keybindings);
-		if (!action) return;
+		if (!action) {
+			super.handleKeydown(event);
+			return;
+		}
 		event.preventDefault();
 		if (action === "close") {
 			this.close();
 			return;
 		}
 		if (action === "next" || action === "previous") {
-			if (this.results.length)
-				this.selectedIndex =
-					(this.selectedIndex + (action === "next" ? 1 : -1) + this.results.length) %
-					this.results.length;
-			this.render();
+			this.moveSelection(action === "next" ? 1 : -1);
 			return;
 		}
-		void this.activate(
+		void this.activatePaletteResult(
 			action === "primary" ? "primary" : action === "alternate" ? "alternate" : "tertiary",
 		);
+	}
+
+	protected override toSelectionItem(result: PaletteResult): SelectionItem {
+		return {
+			label: result.primary,
+			description: result.secondary,
+			icon: result.icon,
+			badge:
+				result.mode === "file" && isUserIgnoredPath(this.app, result.vaultPath)
+					? "VS Code"
+					: result.mode === "everything" &&
+						  isAbsolutePathUserIgnored(this.app, result.absolutePath)
+						? "VS Code"
+						: result.mode === "everything" && result.kind === "folder"
+							? "Folder"
+							: undefined,
+		};
+	}
+
+	protected override async onItemActivated(result: PaletteResult, event: Event): Promise<void> {
+		const pointer = event as MouseEvent;
+		const action: ActionKind =
+			pointer.ctrlKey && pointer.shiftKey
+				? "tertiary"
+				: pointer.ctrlKey
+					? "alternate"
+					: "primary";
+		await this.activatePaletteResult(action, result);
 	}
 
 	private scheduleSearch(): void {
 		if (this.debounceTimer !== undefined) window.clearTimeout(this.debounceTimer);
 		this.controller?.abort();
 		const generation = ++this.generation;
-		const parsed = parseInput(this.input.value, this.plugin.settings.prefixes);
+		const parsed = parseInput(this.inputEl.value, this.plugin.settings.prefixes);
 		this.mode = parsed.mode;
 		this.updateMode();
 		if (parsed.mode === "everything" && !parsed.query) {
-			this.results = [];
-			this.selectedIndex = 0;
 			this.status = "idle";
-			this.render(true);
+			this.setItems([]);
+			this.setStatus(statusText(this.status, 0, true));
 			return;
 		}
 		const delay = parsed.mode === "everything" ? this.plugin.settings.everything.debounceMs : 0;
@@ -130,10 +124,9 @@ export class PaletteModal extends Modal {
 
 	private async search(query: string, generation: number): Promise<void> {
 		this.controller = new AbortController();
-		if (this.mode === "everything") {
-			this.status = "loading";
-			this.render();
-		}
+		this.status = "loading";
+		this.setLoading(true);
+		this.setStatus(statusText(this.status, 0));
 		try {
 			const provider =
 				this.mode === "file"
@@ -143,41 +136,42 @@ export class PaletteModal extends Modal {
 						: this.plugin.everythingProvider;
 			const results = await provider.search(query, this.controller.signal);
 			if (generation !== this.generation) return;
-			this.results = results;
-			this.selectedIndex = 0;
 			this.status = results.length ? "success" : "empty";
-			this.render();
+			this.setItems(results);
+			this.setStatus(statusText(this.status, results.length));
 		} catch (error) {
 			if (
 				generation !== this.generation ||
 				(error instanceof DOMException && error.name === "AbortError")
 			)
 				return;
-			this.results = [];
 			this.status = "error";
-			this.statusEl.setText(error instanceof Error ? error.message : String(error));
-			this.render();
+			this.setItems([]);
+			this.setStatus(error instanceof Error ? error.message : String(error));
+			this.setActionButton(true, () => this.plugin.openSettings());
+		} finally {
+			if (generation === this.generation) this.setLoading(false);
 		}
 	}
 
 	private updateMode(): void {
 		const labels = { file: "Files", command: "Commands", everything: "Everything" };
 		const icons = { file: "files", command: "terminal", everything: "search" };
-		this.modeLabel.setText(labels[this.mode]);
-		setIcon(this.modeIcon, icons[this.mode]);
-	}
-	private render(everythingEmpty = false): void {
-		const active = this.list.render(this.results, this.selectedIndex);
-		if (active) this.input.setAttribute("aria-activedescendant", active);
-		else this.input.removeAttribute("aria-activedescendant");
-		this.spinner.toggleClass("is-visible", this.status === "loading");
-		this.errorButton.toggleClass("is-visible", this.status === "error");
-		if (this.status !== "error")
-			this.statusEl.setText(statusText(this.status, this.results.length, everythingEmpty));
+		const placeholders = {
+			file: "Search vault files",
+			command: "Search Obsidian commands",
+			everything: "Search Everything · e / es · native syntax supported",
+		};
+		this.setHeading(labels[this.mode], icons[this.mode]);
+		this.inputEl.placeholder = placeholders[this.mode];
+		this.modalEl.setAttribute("data-mode", this.mode);
+		this.setActionButton(false);
 	}
 
-	private async activate(action: ActionKind): Promise<void> {
-		const result = this.results[this.selectedIndex];
+	private async activatePaletteResult(
+		action: ActionKind,
+		result = this.items[this.selectedIndex],
+	): Promise<void> {
 		if (!result) return;
 		if (result.mode === "command") {
 			if (action !== "primary") return;
@@ -185,15 +179,12 @@ export class PaletteModal extends Modal {
 				.getCommands()
 				.some(({ id }) => id === result.commandId);
 			if (!exists) {
-				await this.search(
-					parseInput(this.input.value, this.plugin.settings.prefixes).query,
-					++this.generation,
-				);
-				this.statusEl.setText("That command is no longer available.");
+				this.scheduleSearch();
+				this.setStatus("That command is no longer available.");
 				return;
 			}
-			this.close();
 			this.plugin.recordCommand(result.commandId);
+			this.close();
 			(
 				this.app.commands as unknown as { executeCommandById: (id: string) => boolean }
 			).executeCommandById(result.commandId);
@@ -201,18 +192,6 @@ export class PaletteModal extends Modal {
 		}
 		const outcome = await runResultAction(this.app, result, action);
 		if (outcome.close) this.close();
-		else {
-			this.status = "error";
-			this.statusEl.setText(outcome.message ?? "The action failed.");
-			this.errorButton.removeClass("is-visible");
-			if (result.mode === "file") {
-				this.results.splice(this.selectedIndex, 1);
-				this.selectedIndex = Math.min(
-					this.selectedIndex,
-					Math.max(0, this.results.length - 1),
-				);
-				this.list.render(this.results, this.selectedIndex);
-			}
-		}
+		else this.setStatus(outcome.message ?? "The action failed.");
 	}
 }

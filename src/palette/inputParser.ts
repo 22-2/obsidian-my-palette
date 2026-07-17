@@ -25,6 +25,7 @@ export function parseInput(raw: string, prefixes: Prefixes): ParsedInput {
 	const candidates: Array<{ prefix: string; mode: Exclude<PaletteMode, "file"> }> = [
 		{ prefix: prefixes.command, mode: "command" },
 		{ prefix: prefixes.everything, mode: "everything" },
+		{ prefix: "es ", mode: "everything" },
 	];
 	candidates.sort((a, b) => b.prefix.length - a.prefix.length);
 	const lower = raw.toLocaleLowerCase();

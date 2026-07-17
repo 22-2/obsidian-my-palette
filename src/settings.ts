@@ -3,27 +3,14 @@ import type MyPalettePlugin from "./main";
 import {
 	type MyPaletteSettings,
 	DEFAULT_KEYBINDINGS,
+	DEFAULT_SETTINGS as MODEL_DEFAULT_SETTINGS,
 	type ActionId,
 	ACTION_IDS,
 } from "./model/settings";
 
 export type { MyPaletteSettings };
 
-export const DEFAULT_SETTINGS: MyPaletteSettings = {
-	schemaVersion: 1,
-	showLog: false,
-	prefixes: { command: ">", everything: "e " },
-	everything: {
-		esPath: "",
-		instanceName: "1.5a",
-		maxResults: 100,
-		debounceMs: 150,
-		esTimeoutMs: 3000,
-		processTimeoutMs: 5000,
-	},
-	keybindings: structuredClone(DEFAULT_KEYBINDINGS),
-	recentCommandIds: [],
-};
+export const DEFAULT_SETTINGS = MODEL_DEFAULT_SETTINGS;
 
 function bounded(value: unknown, fallback: number, min: number, max: number): number {
 	return typeof value === "number" && Number.isFinite(value)
@@ -38,21 +25,22 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 
 	return {
 		...DEFAULT_SETTINGS,
+		schemaVersion: 2,
 		showLog: typeof source.showLog === "boolean" ? source.showLog : false,
 		prefixes: {
 			command: typeof rawPrefixes.command === "string" ? rawPrefixes.command : ">",
 			everything: typeof rawPrefixes.everything === "string" ? rawPrefixes.everything : "e ",
 		},
 		everything: {
-			esPath: typeof rawEverything.esPath === "string" ? rawEverything.esPath : "",
-			instanceName:
-				typeof rawEverything.instanceName === "string" && rawEverything.instanceName.trim()
-					? rawEverything.instanceName.trim()
-					: "1.5a",
+			httpUrl:
+				typeof rawEverything.httpUrl === "string" && rawEverything.httpUrl.trim()
+					? rawEverything.httpUrl.trim()
+					: DEFAULT_SETTINGS.everything.httpUrl,
+			username: typeof rawEverything.username === "string" ? rawEverything.username : "",
+			password: typeof rawEverything.password === "string" ? rawEverything.password : "",
 			maxResults: bounded(rawEverything.maxResults, 100, 10, 500),
 			debounceMs: bounded(rawEverything.debounceMs, 150, 50, 1000),
-			esTimeoutMs: bounded(rawEverything.esTimeoutMs, 3000, 500, 10000),
-			processTimeoutMs: bounded(rawEverything.processTimeoutMs, 5000, 500, 15000),
+			requestTimeoutMs: bounded(rawEverything.requestTimeoutMs, 30000, 1000, 60000),
 		},
 		keybindings: mergeKeybindings(source.keybindings),
 		recentCommandIds: Array.isArray(source.recentCommandIds)
@@ -87,29 +75,38 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 		new Setting(containerEl).setName("My Palette").setHeading();
 
 		new Setting(containerEl)
-			.setName("es.exe path")
-			.setDesc("Absolute path to voidtools es.exe")
+			.setName("Everything HTTP Server URL")
+			.setDesc("URL configured in the official Everything 1.5 HTTP Server plugin")
 			.addText((text) =>
 				text
-					.setPlaceholder("C:\\Program Files\\Everything 1.5a\\es.exe")
-					.setValue(this.plugin.settings.everything.esPath)
+					.setPlaceholder(DEFAULT_SETTINGS.everything.httpUrl)
+					.setValue(this.plugin.settings.everything.httpUrl)
 					.onChange(async (value) => {
-						this.plugin.settings.everything.esPath = value.trim();
+						this.plugin.settings.everything.httpUrl = value.trim();
 						await this.plugin.saveSettings();
 					}),
 			);
 
 		new Setting(containerEl)
-			.setName("Everything instance")
-			.setDesc("Named instance used by es.exe")
+			.setName("HTTP username")
+			.setDesc("Optional username configured in Everything")
 			.addText((text) =>
-				text
-					.setValue(this.plugin.settings.everything.instanceName)
-					.onChange(async (value) => {
-						this.plugin.settings.everything.instanceName = value.trim() || "1.5a";
-						await this.plugin.saveSettings();
-					}),
+				text.setValue(this.plugin.settings.everything.username).onChange(async (value) => {
+					this.plugin.settings.everything.username = value;
+					await this.plugin.saveSettings();
+				}),
 			);
+
+		new Setting(containerEl)
+			.setName("HTTP password")
+			.setDesc("Stored in this plugin's local data.json")
+			.addText((text) => {
+				text.inputEl.type = "password";
+				text.setValue(this.plugin.settings.everything.password).onChange(async (value) => {
+					this.plugin.settings.everything.password = value;
+					await this.plugin.saveSettings();
+				});
+			});
 
 		new Setting(containerEl).setName("Maximum Everything results").addSlider((slider) =>
 			slider
@@ -122,9 +119,20 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 				}),
 		);
 
+		new Setting(containerEl).setName("HTTP request timeout").addSlider((slider) =>
+			slider
+				.setLimits(1000, 60000, 1000)
+				.setValue(this.plugin.settings.everything.requestTimeoutMs)
+				.setDynamicTooltip()
+				.onChange(async (value) => {
+					this.plugin.settings.everything.requestTimeoutMs = value;
+					await this.plugin.saveSettings();
+				}),
+		);
+
 		new Setting(containerEl)
 			.setName("Test Everything connection")
-			.setDesc("Runs a harmless query against the configured instance")
+			.setDesc("Runs a harmless query against the configured HTTP Server")
 			.addButton((button) =>
 				button.setButtonText("Test").onClick(async () => {
 					const result = await this.plugin.testEverythingConnection();

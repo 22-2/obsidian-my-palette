@@ -25,9 +25,9 @@ tags:
 > [!important] 確定事項
 >
 > - Another Quick Switcher、Quick Switcher++ などはフォークしない。
-> - Everything 連携には HTTP API や Everything SDK ではなく `es.exe` を使用する。
-> - Everything 1.5a の名前付きインスタンスへ `-instance 1.5a` で接続する。
-> - プラグイン本体に `es.exe` は同梱しない。利用者が別途用意する。
+> - Everything 連携には公式 Everything 1.5 HTTP Server Plugin の JSON API を使用する。
+> - Everything の検索構文は変換せず、`search` パラメーターへそのまま渡す。
+> - 通常は `127.0.0.1` のみで待ち受け、HTTP Server 側のファイルダウンロード機能は無効にする。
 
 ## 2. プロダクト定義
 
@@ -37,14 +37,14 @@ tags:
 
 ### 2.2 対象環境
 
-| 項目         | 要件                                                                             |
-| ------------ | -------------------------------------------------------------------------------- |
-| OS           | Windows 10 / 11                                                                  |
-| Obsidian     | デスクトップ版のみ                                                               |
-| Everything   | Everything 1.5a が起動済みであること                                             |
-| CLI          | voidtools の `es.exe` 1.1 系                                                     |
-| CPU          | x64 を第一対象とする。ただし実行ファイルのアーキテクチャは利用者の環境に合わせる |
-| ネットワーク | 不要                                                                             |
+| 項目         | 要件                                                           |
+| ------------ | -------------------------------------------------------------- |
+| OS           | Windows 10 / 11                                                |
+| Obsidian     | デスクトップ版のみ                                             |
+| Everything   | Everything 1.5a と公式 HTTP Server Plugin が起動済みであること |
+| 接続方式     | Everything HTTP Server JSON API                                |
+| CPU          | x64 を第一対象とする                                           |
+| ネットワーク | localhost 通信のみ。外部サービスへの接続は不要                 |
 
 `manifest.json` の `isDesktopOnly` は `true` とする。モバイルではインストール・実行対象外とする。
 
@@ -66,15 +66,15 @@ tags:
 - Everything モード
 - 最小キーバインドとパレット内キーバインド設定
 - 検索履歴ではなく、最近開いた Vault ファイルの表示
-- `es.exe` 接続診断
+- Everything HTTP Server 接続診断
 - 日本語・英語のファイル名とパス
 
 ### 2.5 v0.1.0 の対象外
 
 - モバイル対応
 - Everything 1.4 専用動作
-- Everything HTTP サーバー、SDK、ETP との接続
-- `es.exe` や Everything 本体の自動ダウンロード・同梱・自動起動
+- `es.exe`、Everything SDK、ETP との接続
+- HTTP Server Plugin や Everything 本体の自動ダウンロード・同梱・自動起動
 - Vault 全文検索、見出しジャンプ、ブロック検索
 - Web 検索、電卓、レジストリ検索
 - プレビューペイン
@@ -117,7 +117,7 @@ Obsidian 標準の「ホットキー」設定から、利用者がこのコマ�
 - 結果アクションの正常完了
 - Obsidian のワークスペース終了
 
-終了時は保留中のデバウンスタイマーを解除し、実行中の `es.exe` 子プロセスを停止し、イベントリスナーを破棄する。
+終了時は保留中のデバウンスタイマーを解除し、実行中の HTTP リクエストを中断し、イベントリスナーを破棄する。
 
 ## 5. モード仕様
 
@@ -204,10 +204,9 @@ Obsidian が保持する「最近開いたファイル」を新しい順で最�
 
 #### 前提条件
 
-- 設定された `es.exe` が存在し、通常ファイルである。
-- 拡張子が `.exe` である。
-- Everything 1.5a の検索クライアントが起動している。
-- `es.exe` と Everything の権限レベルが IPC 通信可能な状態である。
+- Everything 1.5a と公式 HTTP Server Plugin が起動している。
+- 設定した URL、ポート、任意のユーザー名・パスワードが HTTP Server 側と一致している。
+- HTTP Server は通常 `127.0.0.1` で待ち受ける。
 
 #### 空入力
 
@@ -218,57 +217,52 @@ PC 全体の一覧取得は行わない。結果領域に「検索語を入力�
 - 1文字以上のクエリで検索可能とする。
 - 入力変更から150ms後に検索する。
 - 新しい入力があれば待機中の検索を取り消す。
-- 既に `es.exe` が実行中なら停止要求を送り、新しい世代番号で検索する。
-- 古い世代番号の stdout、stderr、終了通知は UI に反映しない。
+- 既に HTTP リクエストが実行中なら中断し、新しい世代番号で検索する。
+- 古い世代番号の応答・エラーは UI に反映しない。
 
-#### `es.exe` 呼び出し
+#### HTTP リクエスト
 
-概念上、次のコマンドと同等の引数を渡す。
+設定 URL に対して GET を送り、次のクエリパラメーターを付与する。
 
 ```text
-es.exe -instance 1.5a -n 100 -csv -no-header -full-path-and-name -attributes -cp 65001 -timeout 3000 -- <query>
+http://127.0.0.1:8080/?search=<query>&json=1&count=100&path_column=1&attributes_column=1
 ```
 
-実装は Node.js の `child_process` を使用し、次を厳守する。
+実装は Electron が提供する Node.js の `http` / `https` を使用し、次を厳守する。
 
-- 実行ファイルと引数を配列で渡す。
-- `shell: false` とし、`cmd.exe` や PowerShell を経由しない。
-- `windowsHide: true` とし、コンソールウィンドウを表示しない。
-- stdout / stderr は UTF-8 として扱う。
-- `maxBuffer` は 1 MiB とする。
-- プラグイン側のハードタイムアウトは5秒とする。
-- クエリを引用符で自前エスケープした単一コマンド文字列にしない。
-- `--` より前はプラグイン管理の固定引数だけとし、利用者入力をオプションとして解釈させない。
+- `URL` / `URLSearchParams` で値をエンコードし、Everything 検索構文自体は変更しない。
+- `Accept: application/json` を送る。
+- 認証情報が設定されている場合は HTTP Basic 認証を使用する。
+- 応答サイズは 2 MiB を上限とする。
+- プラグイン側の既定タイムアウトは30秒とする。`content:` のような低速検索を考慮する。
+- URL は `http:` または `https:` のみ許可する。
+- ブラウザーの CORS には依存しない。
 
-引数と設定値の対応は次のとおり。
+パラメーターと設定値の対応は次のとおり。
 
-| 引数                  | 既定値  | 目的                                              |
-| --------------------- | ------- | ------------------------------------------------- |
-| `-instance`           | `1.5a`  | Everything 1.5 alpha の名前付きインスタンスへ接続 |
-| `-n`                  | `100`   | 返却件数の上限                                    |
-| `-csv -no-header`     | 固定    | パス中の区切り文字を安全に扱える機械可読出力      |
-| `-full-path-and-name` | 固定    | 絶対パスを取得                                    |
-| `-attributes`         | 固定    | ファイルとフォルダーを判別                        |
-| `-cp`                 | `65001` | UTF-8 出力                                        |
-| `-timeout`            | `3000`  | Everything DB 待機時間                            |
-| `--`                  | 固定    | 以後のクエリをスイッチとして解釈させない          |
+| パラメーター        | 値           | 目的                                 |
+| ------------------- | ------------ | ------------------------------------ |
+| `search`            | 利用者クエリ | Everything 検索構文をそのまま渡す    |
+| `json`              | `1`          | JSON 応答を要求                      |
+| `count`             | 既定 `100`   | 返却件数を設定値（10〜500）で制限    |
+| `path_column`       | `1`          | 親ディレクトリを取得                 |
+| `attributes_column` | `1`          | ファイルとフォルダーの判別情報を取得 |
 
-#### stdout の解析
+#### JSON 応答の解析
 
-- RFC 4180 相当の CSV として解析し、単純な `split(",")` は使用しない。
-- 1行は `[fullPath, attributes]` として扱う。
-- 空行は無視する。
-- 絶対パスでない行、NUL を含む行、列不足の行は破棄してデバッグログへ記録する。
-- `attributes` にディレクトリ属性 `D` が含まれる場合は folder、それ以外は file とする。
-- 同一パスは Windows の大文字・小文字を区別しない比較で重複排除する。
-- stdout が空で終了コード0の場合は「結果なし」とする。
+- ルートの `results` 配列を読み取る。
+- 各項目の `path` と `name` から絶対パスを構築する。
+- `type` が `folder`、または `attributes` に `D` が含まれる場合は folder、それ以外は file とする。
+- `name` が文字列でない項目、絶対パスを構築できない項目は破棄する。
+- `results` が空の場合は「結果なし」とする。
+- 不正な JSON または未対応形式は制御されたエラーとして表示する。
 
 #### 表示
 
 - 主表示：basename
 - 副表示：親ディレクトリの絶対パス
 - アイコン：folder または file
-- 並び順：Everything / `es.exe` が返した順を保持する。
+- 並び順：Everything HTTP Server が返した順を保持する。
 - 最大表示件数：設定値。既定100、許容範囲10〜500。
 
 ## 6. 結果アクション
@@ -386,37 +380,28 @@ es.exe -instance 1.5a -n 100 -csv -no-header -full-path-and-name -attributes -cp
 
 ### 9.1 Everything
 
-| 設定キー                      | 型     | 既定値   | 制約                          |
-| ----------------------------- | ------ | -------- | ----------------------------- |
-| `everything.esPath`           | string | `""`     | 絶対パス。存在する `.exe`     |
-| `everything.instanceName`     | string | `"1.5a"` | 1〜64文字。改行・NUL不可      |
-| `everything.maxResults`       | number | `100`    | 10〜500                       |
-| `everything.debounceMs`       | number | `150`    | 50〜1000                      |
-| `everything.esTimeoutMs`      | number | `3000`   | 500〜10000                    |
-| `everything.processTimeoutMs` | number | `5000`   | `esTimeoutMs` 以上、最大15000 |
+| 設定キー                      | 型     | 既定値                   | 制約        |
+| ----------------------------- | ------ | ------------------------ | ----------- |
+| `everything.httpUrl`          | string | `http://127.0.0.1:8080/` | HTTP(S) URL |
+| `everything.username`         | string | `""`                     | 任意        |
+| `everything.password`         | string | `""`                     | 任意        |
+| `everything.maxResults`       | number | `100`                    | 10〜500     |
+| `everything.debounceMs`       | number | `150`                    | 50〜1000    |
+| `everything.requestTimeoutMs` | number | `30000`                  | 1000〜60000 |
 
 設定画面に次を設ける。
 
-- `es.exe` パス入力欄
-- パス検出ボタン
+- HTTP Server URL
+- 任意のユーザー名・パスワード
 - 接続テストボタン
-- インスタンス名
 - 最大結果件数
-- デバウンス時間
-- タイムアウト
+- HTTP リクエストタイムアウト
 
-#### パス検出順
-
-1. 保存済みパス
-2. `PATH` 上の `es.exe`
-3. `C:\Program Files\Everything 1.5a\es.exe`
-4. `C:\Program Files\Everything\es.exe`
-
-複数候補が見つかった場合は自動保存せず、利用者に選択させる。検出のために再帰的な全ドライブ検索は行わない。
+パスワードはプラグインのローカル `data.json` に保存されることを設定画面に明記する。
 
 #### 接続テスト
 
-固定クエリ `__my_palette_connection_test__` を最大1件で実行する。結果が0件でも終了コード0なら接続成功とする。テスト結果は設定画面内に成功・失敗・所要時間で表示する。
+固定クエリ `__my_palette_connection_test__` を最大1件で実行する。HTTP 2xx と正しい JSON 応答が得られれば、結果が0件でも接続成功とする。
 
 ### 9.2 Mode prefixes
 
@@ -468,19 +453,19 @@ interface EverythingResult extends BaseResult {
 }
 
 interface MyPaletteSettings {
-	schemaVersion: 1;
+	schemaVersion: 2;
 	showLog: boolean;
 	prefixes: {
 		command: string;
 		everything: string;
 	};
 	everything: {
-		esPath: string;
-		instanceName: string;
+		httpUrl: string;
+		username: string;
+		password: string;
 		maxResults: number;
 		debounceMs: number;
-		esTimeoutMs: number;
-		processTimeoutMs: number;
+		requestTimeoutMs: number;
 	};
 	keybindings: Record<string, string[]>;
 	recentCommandIds: string[];
@@ -513,10 +498,7 @@ src/
 │   ├── CommandProvider.ts
 │   └── EverythingProvider.ts
 ├── everything/
-│   ├── EsClient.ts
-│   ├── csvParser.ts
-│   ├── esErrors.ts
-│   └── executableDiscovery.ts
+│   └── EverythingHttpClient.ts
 ├── model/
 │   ├── results.ts
 │   └── settings.ts
@@ -527,16 +509,15 @@ src/
 
 ### 11.2 責務
 
-| コンポーネント  | 責務                                                   |
-| --------------- | ------------------------------------------------------ |
-| `main.ts`       | 設定ロード、コマンド登録、設定タブ登録、ライフサイクル |
-| `PaletteModal`  | 入力、モード遷移、選択状態、表示状態、世代番号管理     |
-| `inputParser`   | プレフィックス検出とクエリ抽出。副作用なし             |
-| Provider        | モード別検索。UI 要素を直接操作しない                  |
-| `EsClient`      | `es.exe` の起動・中断・タイムアウト・出力取得          |
-| `csvParser`     | CSV を `EverythingResult` へ変換                       |
-| `resultActions` | モード別アクション実行                                 |
-| `settings.ts`   | 設定 UI、検証、マイグレーション                        |
+| コンポーネント         | 責務                                                   |
+| ---------------------- | ------------------------------------------------------ |
+| `main.ts`              | 設定ロード、コマンド登録、設定タブ登録、ライフサイクル |
+| `PaletteModal`         | 入力、モード遷移、選択状態、表示状態、世代番号管理     |
+| `inputParser`          | プレフィックス検出とクエリ抽出。副作用なし             |
+| Provider               | モード別検索。UI 要素を直接操作しない                  |
+| `EverythingHttpClient` | URL構築、認証、リクエスト中断、タイムアウト、JSON解析  |
+| `resultActions`        | モード別アクション実行                                 |
+| `settings.ts`          | 設定 UI、検証、マイグレーション                        |
 
 ### 11.3 非同期検索フロー
 
@@ -545,14 +526,14 @@ sequenceDiagram
     participant U as User
     participant M as PaletteModal
     participant P as Provider
-    participant E as es.exe
+    participant E as Everything HTTP Server
 
     U->>M: input event
     M->>M: parse mode / increment generation
     M->>M: debounce 150ms
     M->>P: search(query, generation)
-    P->>E: spawn with argv
-    E-->>P: CSV stdout / exit code
+    P->>E: GET search query
+    E-->>P: JSON response / HTTP status
     P-->>M: results, generation
     alt generation is current
         M->>M: render results
@@ -565,65 +546,56 @@ Provider は `AbortSignal` を受け取れる契約にする。File / Command �
 
 ## 12. エラー処理
 
-### 12.1 `es.exe` 終了コード
+### 12.1 HTTP エラー
 
-| Code   | 意味                          | ユーザー表示                                                    |
-| ------ | ----------------------------- | --------------------------------------------------------------- |
-| 0      | 成功                          | 結果または `No results`                                         |
-| 1      | window class 登録失敗         | `es.exe could not initialize.`                                  |
-| 2      | listening window 作成失敗     | `es.exe could not initialize.`                                  |
-| 3      | メモリ不足                    | `Not enough memory to search.`                                  |
-| 4      | 必須引数不足                  | `Invalid es.exe arguments.`                                     |
-| 5      | ファイル作成失敗              | `es.exe failed to create output.`                               |
-| 6      | 未知のスイッチ                | `This es.exe version is not supported.`                         |
-| 7      | IPC query 送信失敗            | `Could not send the search to Everything.`                      |
-| 8      | Everything IPC が見つからない | `Everything 1.5a is not running or the instance name is wrong.` |
-| 9      | 結果なし                      | `No results`                                                    |
-| その他 | 不明                          | `Everything search failed (code N).`                            |
-
-Code 9 は `-no-result-error` を通常検索で使用しないため原則発生しないが、防御的に結果なしとして扱う。
+| 条件                 | ユーザー表示                                                      |
+| -------------------- | ----------------------------------------------------------------- |
+| HTTP 2xx             | 結果または `No results`                                           |
+| 401                  | `Everything HTTP authentication failed.`                          |
+| 接続拒否             | `Everything HTTP Server is not running or the port is incorrect.` |
+| タイムアウト         | `Everything HTTP search timed out.`                               |
+| 2xx / 401 以外       | HTTP ステータスを含む短いエラー                                   |
+| 不正 JSON / 形式違い | 応答形式エラー                                                    |
+| 2 MiB 超過           | 応答サイズ上限エラー                                              |
 
 ### 12.2 その他
 
-| 条件             | 挙動                                       |
-| ---------------- | ------------------------------------------ |
-| `es.exe` 未設定  | 設定を開くボタン付きエラー                 |
-| パス不存在       | 設定を開くボタン付きエラー                 |
-| `EACCES`         | 実行権限を確認する案内                     |
-| process timeout  | 子プロセスを停止し、タイムアウト表示       |
-| malformed CSV    | 不正行だけ破棄。全行不正なら出力形式エラー |
-| 対象ファイル消失 | パレットを閉じず、行を除去して通知         |
-| コマンド消失     | パレットを閉じず、一覧を再取得             |
+| 条件             | 挙動                                  |
+| ---------------- | ------------------------------------- |
+| URL 未設定・不正 | 設定を確認するエラー                  |
+| Abort            | UI にエラー表示せず、新しい検索を優先 |
+| 対象ファイル消失 | パレットを閉じず、行を除去して通知    |
+| コマンド消失     | パレットを閉じず、一覧を再取得        |
 
 stderr の生値やローカル絶対パスは通常 UI に全面表示しない。`showLog` が有効な場合だけ開発者コンソールへ詳細を記録する。
 
 ## 13. セキュリティとプライバシー
 
-- 外部ネットワーク通信を行わない。
+- 既定では `127.0.0.1` の Everything HTTP Server とのみ通信する。
 - 検索語、検索結果、ファイルパスをプラグインデータへ永続化しない。
 - telemetry を実装しない。
-- `es.exe` の実行に shell を使わない。
-- 設定された実行ファイル以外の任意コマンドを起動しない。
-- `es.exe` パスは環境変数展開後に絶対パス化し、実ファイルを検証する。
+- HTTP Server 側のファイルダウンロード機能は無効を推奨する。
+- LAN 公開する場合は認証とファイアウォール設定を利用者の責任で行う。
+- 認証パスワードは Obsidian Vault のプラグイン `data.json` に平文保存されるため、共有 Vault では使用しない。
 - 検索結果パスをアクション直前に再検証する。
-- Everything の検索構文は利用者入力として許可するが、OS シェル構文としては一切解釈しない。
+- Everything の検索構文は URL パラメーターとしてエンコードし、OS シェル構文としては一切解釈しない。
 - プラグインは管理者権限への昇格を要求・実行しない。
 
 ## 14. 性能要件
 
 計測環境差を考慮し、以下は通常規模の Vault（10,000ファイル以下）を基準とする。
 
-| 操作                                | 目標                      |
-| ----------------------------------- | ------------------------- |
-| パレット初回表示                    | コマンド実行から100ms以内 |
-| File / Command 結果更新             | 入力から50ms以内          |
-| Everything プロセス起動後の UI 反映 | `es.exe` 完了から50ms以内 |
-| 入力中のメインスレッド blocking     | 1タスク16ms未満           |
-| DOM に同時生成する結果行            | 最大100                   |
+| 操作                            | 目標                      |
+| ------------------------------- | ------------------------- |
+| パレット初回表示                | コマンド実行から100ms以内 |
+| File / Command 結果更新         | 入力から50ms以内          |
+| Everything 応答後の UI 反映     | JSON 受信完了から50ms以内 |
+| 入力中のメインスレッド blocking | 1タスク16ms未満           |
+| DOM に同時生成する結果行        | 最大100                   |
 
 - MetadataCache の alias / H1 検索文字列はパレット起動時に全ファイル分を毎回再構築せず、Vault / metadata イベントで更新するキャッシュとする。
 - File / Command の検索は必要なら小分けにするが、v0.1.0 では Web Worker を導入しない。
-- Everything 結果件数は `es.exe` 側でも必ず制限する。
+- Everything 結果件数は HTTP の `count` でも必ず制限する。
 
 ## 15. テスト仕様
 
@@ -633,24 +605,23 @@ stderr の生値やローカル絶対パスは通常 UI に全面表示しない
 
 - プレフィックスの通常判定、大文字判定、最長一致、重複検証
 - `> reload` と `e report ext:pdf` のクエリ抽出
-- CSV の quoted field、カンマ、ダブルクォート、CRLF、空行
+- HTTP URL パラメーターで検索構文と日本語が正しくエンコードされること
 - Windows パスの大文字・小文字を無視した重複排除
 - `attributes` による file / folder 判定
-- `es.exe` 終了コードから UI エラーへの変換
+- HTTP ステータス・接続拒否・不正 JSON から UI エラーへの変換
 - 世代番号が古い結果を破棄すること
 - 設定の欠損補完、範囲補正、schema migration
 - キーバインド衝突検出と IME composition の無視
 
 ### 15.2 Integration tests
 
-`EsClient` のプロセス起動関数を差し替え可能にし、fake executable / mock process で次を確認する。
+`EverythingHttpClient` の HTTP Server を mock 化して次を確認する。
 
-- 引数が配列で渡され `shell: false`、`windowsHide: true` である。
-- `-instance 1.5a`、`-cp 65001`、`--` が正しい順序である。
-- クエリに `& | > < "` が含まれても単一引数として渡る。
-- timeout と Abort で子プロセスが停止する。
-- stderr と非0終了コードを適切に変換する。
-- 1 MiB 超過時に制御されたエラーとなる。
+- `json=1`、`count`、`path_column=1`、`attributes_column=1` が付く。
+- クエリに `content:`, `& | > < "`、日本語が含まれても検索構文が保持される。
+- timeout と Abort でリクエストが停止する。
+- Basic 認証と HTTP エラーを適切に処理する。
+- 2 MiB 超過時に制御されたエラーとなる。
 
 ### 15.3 Manual acceptance tests
 
@@ -666,9 +637,9 @@ Windows 11、Everything 1.5a 実機、英数字・日本語・空白を含むパ
 8. Everything の検索構文 `ext:`, `path:`, `folder:` がそのまま機能する。
 9. Enter で既定アプリ、Ctrl+Enter で Explorer、Ctrl+Shift+Enter でパス挿入が動く。
 10. 高速連続入力しても古い検索結果へ巻き戻らない。
-11. Everything を終了すると code 8 相当の案内が出る。
-12. `es.exe` パスが不正な場合、Obsidian 自体は正常に動作し続ける。
-13. 検索語に shell 記号を含めても別コマンドが実行されない。
+11. Everything HTTP Server を終了すると接続案内が出る。
+12. URL または認証情報が不正でも Obsidian 自体は正常に動作し続ける。
+13. 検索語に URL / shell 記号を含めても構文が壊れたり別コマンドが実行されたりしない。
 14. ダーク・ライト両テーマで選択行と副表示を判別できる。
 15. IME 変換確定の Enter で誤実行しない。
 
@@ -689,7 +660,7 @@ obsidian dev:screenshot path=my-palette-verification.png
 v0.1.0 は以下をすべて満たした時点で完成とする。
 
 - 本書の3モードが実装されている。
-- `es.exe -instance 1.5a` を通じた検索以外の Everything 接続方式を使っていない。
+- 公式 Everything HTTP Server JSON API を通じて検索している。
 - 手動受け入れテストがすべて成功している。
 - `vp check`、`vp test`、`vp build` が成功している。
 - Obsidian の `dev:errors` と error console に本プラグイン由来のエラーがない。
@@ -703,7 +674,7 @@ v0.1.0 は以下をすべて満たした時点で完成とする。
 | ----- | ------------------------------------------- | ---------------------------------- |
 | 1     | Plugin ID、manifest、設定モデル、基本 Modal | 空のパレットを開閉できる           |
 | 2     | inputParser、FileProvider、CommandProvider  | File / Command が実用可能          |
-| 3     | EsClient、CSV parser、EverythingProvider    | Everything 検索と3アクションが動く |
+| 3     | EverythingHttpClient、EverythingProvider    | Everything 検索と3アクションが動く |
 | 4     | キー設定、接続診断、エラー UI               | 設定から自己診断できる             |
 | 5     | 自動テスト、実機 QA、README                 | 完了条件を満たす                   |
 
@@ -718,10 +689,11 @@ v0.1.0 は以下をすべて満たした時点で完成とする。
 - プレビュー
 - ピン留め結果
 
-Everything 1.5 が alpha の名前付きインスタンスを廃止した場合でも、`everything.instanceName` の既定値変更だけで追従できるようにする。接続方式自体は、別途仕様変更しない限り `es.exe` を維持する。
+HTTP Server のホストやポートが変わっても `everything.httpUrl` の変更だけで追従できるようにする。接続方式は、別途仕様変更しない限り公式 HTTP Server JSON API を維持する。
 
 ## 19. 参考資料
 
-- [voidtools: ES Command Line Interface](https://www.voidtools.com/support/everything/command_line_interface/)
-- [voidtools forum: Everything 1.5a では `-instance 1.5a` を指定](https://www.voidtools.com/forum/viewtopic.php?t=11010)
+- [voidtools: Everything Plugins](https://www.voidtools.com/support/everything/plugins/)
+- [voidtools: Everything HTTP Server](https://www.voidtools.com/en-us/support/everything/http/)
+- [voidtools: Everything Search Syntax](https://www.voidtools.com/en-us/support/everything/searching/)
 - [Obsidian Developer Documentation](https://docs.obsidian.md/)

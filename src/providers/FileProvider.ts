@@ -1,9 +1,14 @@
 import { prepareFuzzySearch, type App, type EventRef, type TFile } from "obsidian";
+import * as path from "path";
+import { getUserIgnoreFilters, isUserIgnoredPath } from "../core/ignoredPaths";
 import type { FileResult } from "../model/results";
 import type { PaletteProvider } from "./PaletteProvider";
 
 interface SearchEntry {
-	file: TFile;
+	file?: TFile;
+	path: string;
+	basename: string;
+	extension: string;
 	text: string;
 }
 
@@ -16,8 +21,11 @@ function aliases(value: unknown): string[] {
 export class FileProvider implements PaletteProvider {
 	private readonly cache = new Map<string, SearchEntry>();
 	private readonly refs: EventRef[] = [];
+	private readonly ignoredReady: Promise<void>;
+
 	constructor(private readonly app: App) {
 		this.rebuild();
+		this.ignoredReady = this.rebuildIgnored();
 		this.refs.push(
 			app.vault.on("create", (file) => {
 				if ("extension" in file) this.update(file as TFile);
@@ -32,18 +40,24 @@ export class FileProvider implements PaletteProvider {
 		);
 		this.refs.push(app.metadataCache.on("changed", (file) => this.update(file)));
 	}
+
 	dispose(): void {
 		this.refs.forEach((ref) => this.app.vault.offref(ref));
 	}
+
 	private rebuild(): void {
 		this.cache.clear();
 		this.app.vault.getFiles().forEach((file) => this.update(file));
 	}
+
 	private update(file: TFile): void {
 		const metadata = this.app.metadataCache.getFileCache(file);
 		const h1 = metadata?.headings?.find((heading) => heading.level === 1)?.heading ?? "";
 		this.cache.set(file.path, {
 			file,
+			path: file.path,
+			basename: file.basename,
+			extension: file.extension,
 			text: [
 				file.basename,
 				file.path,
@@ -52,32 +66,64 @@ export class FileProvider implements PaletteProvider {
 			].join(" "),
 		});
 	}
+
+	private async rebuildIgnored(): Promise<void> {
+		const visited = new Set<string>();
+		for (const root of getUserIgnoreFilters(this.app)) {
+			await this.scanIgnoredDirectory(root, visited);
+		}
+	}
+
+	private async scanIgnoredDirectory(directory: string, visited: Set<string>): Promise<void> {
+		if (visited.has(directory)) return;
+		visited.add(directory);
+		try {
+			const listing = await this.app.vault.adapter.list(directory);
+			for (const filePath of listing.files) this.addIgnoredFile(filePath);
+			for (const folderPath of listing.folders)
+				await this.scanIgnoredDirectory(folderPath, visited);
+		} catch {
+			// Missing ignore roots are valid Obsidian configuration and are skipped.
+		}
+	}
+
+	private addIgnoredFile(filePath: string): void {
+		const extension = path.posix.extname(filePath).slice(1);
+		const filename = path.posix.basename(filePath);
+		const basename = extension ? filename.slice(0, -(extension.length + 1)) : filename;
+		this.cache.set(filePath, {
+			path: filePath,
+			basename,
+			extension,
+			text: `${basename} ${filePath}`,
+		});
+	}
+
 	async search(query: string): Promise<FileResult[]> {
+		await this.ignoredReady;
 		const recentPaths = this.app.workspace.getLastOpenFiles?.() ?? [];
 		const recent = new Map(recentPaths.map((filePath, index) => [filePath, index]));
 		if (!query.trim()) {
 			const recentFiles = recentPaths
-				.map((filePath) => this.app.vault.getAbstractFileByPath(filePath))
-				.filter((file): file is TFile => Boolean(file && "extension" in file));
+				.map((filePath) => this.cache.get(filePath))
+				.filter((entry): entry is SearchEntry => Boolean(entry));
 			const files = recentFiles.length
 				? recentFiles
 				: [...this.cache.values()]
-						.map(({ file }) => file)
+						.filter((entry) => !isUserIgnoredPath(this.app, entry.path))
 						.sort((a, b) => a.path.localeCompare(b.path));
-			return files.slice(0, 20).map((file) => this.result(file));
+			return files.slice(0, 20).map((entry) => this.result(entry));
 		}
 		const fuzzy = prepareFuzzySearch(query);
 		return [...this.cache.values()]
 			.map((entry) => {
-				const nameMatch = fuzzy(entry.file.basename);
-				const pathMatch = fuzzy(entry.file.path);
+				const nameMatch = fuzzy(entry.basename);
+				const pathMatch = fuzzy(entry.path);
 				const allMatch = fuzzy(entry.text);
 				const score = nameMatch
 					? nameMatch.score +
 						2000 +
-						(entry.file.basename
-							.toLocaleLowerCase()
-							.startsWith(query.toLocaleLowerCase())
+						(entry.basename.toLocaleLowerCase().startsWith(query.toLocaleLowerCase())
 							? 1000
 							: 0)
 					: pathMatch
@@ -89,22 +135,23 @@ export class FileProvider implements PaletteProvider {
 			.sort(
 				(a, b) =>
 					b.score - a.score ||
-					(recent.get(a.entry.file.path) ?? Infinity) -
-						(recent.get(b.entry.file.path) ?? Infinity) ||
-					a.entry.file.path.localeCompare(b.entry.file.path),
+					(recent.get(a.entry.path) ?? Infinity) -
+						(recent.get(b.entry.path) ?? Infinity) ||
+					a.entry.path.localeCompare(b.entry.path),
 			)
 			.slice(0, 50)
-			.map(({ entry }) => this.result(entry.file));
+			.map(({ entry }) => this.result(entry));
 	}
-	private result(file: TFile): FileResult {
+
+	private result(entry: SearchEntry): FileResult {
 		return {
-			id: file.path,
+			id: entry.path,
 			mode: "file",
-			primary: file.basename,
-			secondary: file.path,
-			icon: file.extension === "md" ? "file-text" : "file",
-			vaultPath: file.path,
-			file,
+			primary: entry.basename,
+			secondary: entry.path,
+			icon: entry.extension === "md" ? "file-text" : "file",
+			vaultPath: entry.path,
+			file: entry.file,
 		};
 	}
 }

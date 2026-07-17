@@ -1,63 +1,181 @@
-.my-palette-modal {
-	width: min(720px, calc(100vw - 32px));
+.selection-modal {
+	--my-palette-mode-color: var(--color-blue);
+	width: min(760px, calc(100vw - 32px));
+	padding: 0;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	overflow: hidden;
+	box-shadow: 0 20px 60px rgb(0 0 0 / 28%);
 }
-.my-palette-header {
+
+.selection-modal[data-mode="command"] {
+	--my-palette-mode-color: var(--color-orange);
+}
+
+.selection-modal[data-mode="everything"] {
+	--my-palette-mode-color: var(--color-green);
+}
+
+.selection-modal .modal-content {
+	padding: 0;
+}
+
+.selection-modal__header {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
-	border-bottom: 1px solid var(--background-modifier-border);
-	padding: 0.75rem;
+	gap: 6px;
+	padding: 7px 10px 3px;
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-semibold);
+	letter-spacing: 0.03em;
+	text-transform: uppercase;
 }
-.my-palette-mode {
-	color: var(--text-accent);
-	font-size: var(--font-ui-small);
-	white-space: nowrap;
+
+.selection-modal__title-icon {
+	display: grid;
+	place-items: center;
+	width: 18px;
+	height: 18px;
+	color: var(--my-palette-mode-color);
 }
-.my-palette-input {
+
+.selection-modal__title {
 	flex: 1;
+}
+
+.selection-modal__spinner {
+	display: none;
+	width: 16px;
+	height: 16px;
+	color: var(--my-palette-mode-color);
+	animation: selection-modal-spin 900ms linear infinite;
+}
+
+.selection-modal__spinner.is-visible {
+	display: block;
+}
+
+.selection-modal__input {
+	box-sizing: border-box;
+	width: 100%;
 	border: 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+	border-radius: 0;
+	padding: 4px 10px 8px;
 	background: transparent;
 	color: var(--text-normal);
-	font-size: var(--font-ui-large);
+	font-size: 1.35em;
+	line-height: 1.35;
+	box-shadow: none;
 	outline: none;
 }
-.my-palette-results {
-	max-height: min(60vh, 540px);
-	overflow-y: auto;
-	padding: 0.35rem;
+
+.selection-modal__input:focus {
+	border-bottom-color: var(--my-palette-mode-color);
+	box-shadow: inset 0 -1px 0 var(--my-palette-mode-color);
 }
-.my-palette-result {
+
+.selection-modal__results {
+	max-height: min(56vh, 520px);
+	overflow: auto;
+	padding: 3px;
+}
+
+.selection-modal__result {
 	display: flex;
 	align-items: center;
-	gap: 0.75rem;
-	min-height: 44px;
-	padding: 0.45rem 0.65rem;
-	border-radius: var(--radius-s);
+	gap: 7px;
+	min-height: 38px;
+	padding: 4px 6px;
+	border: 1px solid transparent;
+	border-radius: 5px;
 	cursor: pointer;
 }
-.my-palette-result.is-selected {
+
+.selection-modal__result:hover,
+.selection-modal__result.is-selected {
+	border-color: var(--background-modifier-border-hover);
 	background: var(--background-modifier-hover);
 }
-.my-palette-result-icon {
-	width: 1.5rem;
-	text-align: center;
+
+.selection-modal__result-icon {
+	display: grid;
+	flex: 0 0 22px;
+	place-items: center;
+	width: 22px;
+	height: 22px;
+	border-radius: 4px;
+	background: var(--background-secondary);
+	color: var(--my-palette-mode-color);
 }
-.my-palette-result-text {
+
+.selection-modal__result-copy {
 	min-width: 0;
+	flex: 1;
 }
-.my-palette-result-primary,
-.my-palette-result-secondary {
+
+.selection-modal__result-label,
+.selection-modal__result-description {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
-.my-palette-result-secondary {
+
+.selection-modal__result-label {
+	color: var(--text-normal);
+	font-weight: var(--font-medium);
+}
+
+.selection-modal__result-description {
+	margin-top: 0;
 	color: var(--text-muted);
 	font-size: var(--font-ui-smaller);
 }
-.my-palette-status {
-	min-height: 1.5rem;
-	padding: 0.45rem 0.75rem;
+
+.selection-modal__result-badge {
+	padding: 1px 5px;
+	border-radius: 999px;
+	background: var(--background-secondary-alt);
 	color: var(--text-muted);
 	font-size: var(--font-ui-smaller);
+}
+
+.selection-modal__footer {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 28px;
+	padding: 0 8px;
+	border-top: 1px solid var(--background-modifier-border);
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
+
+.selection-modal__status {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.selection-modal__action-button {
+	padding: 2px 6px;
+	font-size: var(--font-ui-smaller);
+}
+
+.selection-modal__hint {
+	white-space: nowrap;
+}
+
+@keyframes selection-modal-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.selection-modal__spinner {
+		animation: none;
+	}
 }

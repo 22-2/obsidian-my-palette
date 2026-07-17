@@ -9,16 +9,16 @@ export const ACTION_IDS = [
 export type ActionId = (typeof ACTION_IDS)[number];
 
 export interface MyPaletteSettings {
-	schemaVersion: 1;
+	schemaVersion: 2;
 	showLog: boolean;
 	prefixes: { command: string; everything: string };
 	everything: {
-		esPath: string;
-		instanceName: string;
+		httpUrl: string;
+		username: string;
+		password: string;
 		maxResults: number;
 		debounceMs: number;
-		esTimeoutMs: number;
-		processTimeoutMs: number;
+		requestTimeoutMs: number;
 	};
 	keybindings: Record<ActionId, string[]>;
 	recentCommandIds: string[];
@@ -34,16 +34,16 @@ export const DEFAULT_KEYBINDINGS: Record<ActionId, string[]> = {
 };
 
 export const DEFAULT_SETTINGS: MyPaletteSettings = {
-	schemaVersion: 1,
+	schemaVersion: 2,
 	showLog: false,
 	prefixes: { command: ">", everything: "e " },
 	everything: {
-		esPath: "",
-		instanceName: "1.5a",
+		httpUrl: "http://127.0.0.1:8080/",
+		username: "",
+		password: "",
 		maxResults: 100,
 		debounceMs: 150,
-		esTimeoutMs: 3000,
-		processTimeoutMs: 5000,
+		requestTimeoutMs: 30000,
 	},
 	keybindings: structuredClone(DEFAULT_KEYBINDINGS),
 	recentCommandIds: [],

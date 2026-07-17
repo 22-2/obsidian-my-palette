@@ -19,7 +19,7 @@ export interface BaseResult {
 export interface FileResult extends BaseResult {
 	mode: "file";
 	vaultPath: string;
-	file: TFile;
+	file?: TFile;
 }
 
 export interface CommandResult extends BaseResult {

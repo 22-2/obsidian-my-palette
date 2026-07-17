@@ -3,16 +3,19 @@ import log, { LogLevels } from "consola";
 import { DEFAULT_SETTINGS, mergeSettings, MyPaletteSettingTab } from "./settings";
 import type { MyPaletteSettings } from "./model/settings";
 import { PaletteModal } from "./palette/PaletteModal";
-import { EsClient } from "./everything/EsClient";
+import { EverythingHttpClient } from "./everything/EverythingHttpClient";
 import { FileProvider } from "./providers/FileProvider";
 import { CommandProvider } from "./providers/CommandProvider";
 import { EverythingProvider } from "./providers/EverythingProvider";
+import "../styles.css";
 
 const logger = log.withTag("MyPalette");
 
 export default class MyPalettePlugin extends Plugin {
 	settings: MyPaletteSettings = DEFAULT_SETTINGS;
-	readonly esClient = new EsClient(undefined, (message, detail) => logger.debug(message, detail));
+	readonly everythingClient = new EverythingHttpClient((message, detail) =>
+		logger.debug(message, detail),
+	);
 	fileProvider!: FileProvider;
 	commandProvider!: CommandProvider;
 	everythingProvider!: EverythingProvider;
@@ -23,7 +26,7 @@ export default class MyPalettePlugin extends Plugin {
 		this.fileProvider = new FileProvider(this.app);
 		this.commandProvider = new CommandProvider(this.app, () => this.settings.recentCommandIds);
 		this.everythingProvider = new EverythingProvider(
-			this.esClient,
+			this.everythingClient,
 			() => this.settings.everything,
 		);
 		this.addSettingTab(new MyPaletteSettingTab(this));
@@ -35,7 +38,7 @@ export default class MyPalettePlugin extends Plugin {
 	}
 
 	onunload(): void {
-		this.esClient.cancel();
+		this.everythingClient.cancel();
 		this.fileProvider?.dispose();
 		logger.debug("Plugin unloaded");
 	}
@@ -54,7 +57,7 @@ export default class MyPalettePlugin extends Plugin {
 
 	async testEverythingConnection(): Promise<{ ok: boolean; message: string }> {
 		try {
-			await this.esClient.search(
+			await this.everythingClient.search(
 				"__my_palette_connection_test__",
 				this.settings.everything,
 				undefined,
