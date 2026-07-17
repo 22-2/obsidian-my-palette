@@ -11,7 +11,6 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private controller?: AbortController;
 	private mode: PaletteMode = "file";
 	private everythingScope: EverythingScope = "vault";
-	private composing = false;
 
 	constructor(
 		app: App,
@@ -23,6 +22,19 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				placeholder: "Search files · > commands · es Vault · esdir directory",
 			},
 			app,
+		);
+	}
+
+	protected override onSelectionModalOpen(): void {
+		this.inputEl.addEventListener(
+			"keydown",
+			(event) => {
+				if (event.key !== "ArrowRight" || event.isComposing) return;
+				event.preventDefault();
+				event.stopImmediatePropagation();
+				void this.openSelectedWithoutClosing();
+			},
+			true,
 		);
 	}
 
@@ -106,20 +118,16 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	private updateMode(): void {
-		const placeholders = {
-			file: "Search vault files",
-			command: "Search Obsidian commands",
-			everything:
-				this.everythingScope === "vault"
-					? "Search indexed Vault files · es"
-					: "Search every file under the Vault directory · esdir",
-		};
-		this.updatePlaceholder(placeholders[this.mode]);
+		this.updatePlaceholder("Search files · > commands · es everything");
 		this.modalEl.setAttribute("data-mode", this.mode);
 		this.modalEl.setAttribute("data-everything-scope", this.everythingScope);
 	}
 
-	private async activatePaletteResult(action: ActionKind, result: PaletteResult): Promise<void> {
+	private async activatePaletteResult(
+		action: ActionKind,
+		result: PaletteResult,
+		closePalette = true,
+	): Promise<void> {
 		if (!result) return;
 		if (result.mode === "command") {
 			if (action !== "primary") return;
@@ -138,7 +146,19 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			return;
 		}
 		const outcome = await runResultAction(this.app, result, action);
-		if (outcome.close) this.close();
-		else this.emptyStateText = outcome.message ?? "The action failed.";
+		if (outcome.close) {
+			if (closePalette) this.close();
+			return;
+		}
+		this.emptyStateText = outcome.message ?? "The action failed.";
+	}
+
+	private async openSelectedWithoutClosing(): Promise<void> {
+		const chooser = this as unknown as {
+			chooser?: { values?: PaletteResult[]; selectedItem?: number };
+		};
+		const result = chooser.chooser?.values?.[chooser.chooser.selectedItem ?? -1];
+		if (!result || result.mode === "command") return;
+		await this.activatePaletteResult("primary", result, false);
 	}
 }

@@ -39,7 +39,7 @@ export class SelectionModal<T> extends SuggestModal<T> {
 		this.modalEl.addClass("my-palette-suggest-modal");
 		this.resultCountEl = document.createElement("div");
 		this.resultCountEl.addClass("my-palette-result-count");
-		this.resultContainerEl.insertAdjacentElement("afterend", this.resultCountEl);
+		this.inputEl.parentElement?.appendChild(this.resultCountEl);
 		this.updateResultCount(0);
 		this.onSelectionModalOpen();
 	}

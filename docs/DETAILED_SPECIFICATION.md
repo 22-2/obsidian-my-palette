@@ -235,7 +235,7 @@ Obsidian が保持する「最近開いたファイル」を新しい順で最�
 設定 URL に対して GET を送り、次のクエリパラメーターを付与する。
 
 ```text
-http://127.0.0.1:8080/?search=<query>&json=1&count=100&path_column=1&attributes_column=1
+http://127.0.0.1:51361/?search=<query>&json=1&count=100&path_column=1&attributes_column=1
 ```
 
 実装は Electron が提供する Node.js の `http` / `https` を使用し、次を厳守する。
@@ -391,15 +391,15 @@ http://127.0.0.1:8080/?search=<query>&json=1&count=100&path_column=1&attributes_
 
 ### 9.1 Everything
 
-| 設定キー                      | 型       | 既定値                   | 制約             |
-| ----------------------------- | -------- | ------------------------ | ---------------- |
-| `everything.httpUrl`          | string   | `http://127.0.0.1:8080/` | HTTP(S) URL      |
-| `everything.username`         | string   | `""`                     | 任意             |
-| `everything.password`         | string   | `""`                     | 任意             |
-| `everything.maxResults`       | number   | `100`                    | 10〜500          |
-| `everything.debounceMs`       | number   | `150`                    | 50〜1000         |
-| `everything.requestTimeoutMs` | number   | `30000`                  | 1000〜60000      |
-| `everything.vaultExtensions`  | string[] | `["md","canvas","base"]` | `es`の対象拡張子 |
+| 設定キー                      | 型       | 既定値                    | 制約             |
+| ----------------------------- | -------- | ------------------------- | ---------------- |
+| `everything.httpUrl`          | string   | `http://127.0.0.1:51361/` | HTTP(S) URL      |
+| `everything.username`         | string   | `""`                      | 任意             |
+| `everything.password`         | string   | `""`                      | 任意             |
+| `everything.maxResults`       | number   | `100`                     | 10〜500          |
+| `everything.debounceMs`       | number   | `150`                     | 50〜1000         |
+| `everything.requestTimeoutMs` | number   | `30000`                   | 1000〜60000      |
+| `everything.vaultExtensions`  | string[] | `["md","canvas","base"]`  | `es`の対象拡張子 |
 
 設定画面に次を設ける。
 

@@ -2,9 +2,8 @@
 	width: min(760px, calc(100vw - 32px));
 }
 
-/* Small screens stay compact; tall screens can show up to 15 standard suggestions. */
-.my-palette-suggest-modal .suggestion-container {
-	max-height: min(56vh, 540px);
+.my-palette-suggest-modal .prompt-input-container {
+	position: relative;
 }
 
 .my-palette-suggest-modal .suggestion-item {
@@ -14,11 +13,18 @@
 }
 
 .my-palette-result-count {
-	padding: 3px 8px;
-	border-top: 1px solid var(--background-modifier-border);
+	position: absolute;
+	top: 50%;
+	right: 10px;
+	transform: translateY(-50%);
 	color: var(--text-muted);
 	font-size: var(--font-ui-smaller);
 	line-height: 1.2;
+	pointer-events: none;
+}
+
+.my-palette-suggest-modal .prompt-input {
+	padding-right: 64px;
 }
 
 .my-palette-suggestion {

@@ -39,7 +39,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 	showLog: false,
 	prefixes: { command: ">", everything: "e " },
 	everything: {
-		httpUrl: "http://127.0.0.1:8080/",
+		httpUrl: "http://127.0.0.1:51361/",
 		username: "",
 		password: "",
 		maxResults: 100,
