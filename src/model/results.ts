@@ -1,6 +1,13 @@
 import type { TFile } from "obsidian";
 
-export type PaletteMode = "file" | "command" | "everything" | "link" | "backlink" | "bookmark";
+export type PaletteMode =
+	| "file"
+	| "command"
+	| "everything"
+	| "link"
+	| "backlink"
+	| "bookmark"
+	| "smart";
 export type EverythingScope = "vault" | "directory";
 
 export interface ParsedInput {
@@ -52,9 +59,16 @@ export interface BookmarkResult extends BaseResult {
 	query?: string;
 }
 
+export interface SmartConnectionResult extends BaseResult {
+	mode: "smart";
+	file: TFile;
+	score: number;
+}
+
 export type PaletteResult =
 	| FileResult
 	| CommandResult
 	| EverythingResult
 	| RelatedFileResult
-	| BookmarkResult;
+	| BookmarkResult
+	| SmartConnectionResult;

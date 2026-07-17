@@ -52,3 +52,13 @@ describe("Bookmark prefix", () => {
 		expect(parseInput("book", prefixes)).toMatchObject({ mode: "file", query: "book" });
 	});
 });
+
+describe("Smart Connections prefix", () => {
+	it("switches to Smart Connections search for sc and sc queries", () => {
+		expect(parseInput("sc", prefixes)).toMatchObject({ mode: "smart", query: "" });
+		expect(parseInput("sc values", prefixes)).toMatchObject({
+			mode: "smart",
+			query: "values",
+		});
+	});
+});

@@ -9,6 +9,7 @@ import { CommandProvider } from "./providers/CommandProvider";
 import { EverythingProvider } from "./providers/EverythingProvider";
 import { RelatedFileProvider } from "./providers/RelatedFileProvider";
 import { BookmarkProvider } from "./providers/BookmarkProvider";
+import { SmartConnectionProvider } from "./providers/SmartConnectionProvider";
 import { MoveFileModal } from "./palette/MoveFileModal";
 import "../styles.css";
 
@@ -24,6 +25,7 @@ export default class MyPalettePlugin extends Plugin {
 	everythingProvider!: EverythingProvider;
 	relatedFileProvider!: RelatedFileProvider;
 	bookmarkProvider!: BookmarkProvider;
+	smartConnectionProvider!: SmartConnectionProvider;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -40,6 +42,7 @@ export default class MyPalettePlugin extends Plugin {
 		);
 		this.relatedFileProvider = new RelatedFileProvider(this.app);
 		this.bookmarkProvider = new BookmarkProvider(this.app);
+		this.smartConnectionProvider = new SmartConnectionProvider(this.app);
 		this.addSettingTab(new MyPaletteSettingTab(this));
 		this.addCommand({
 			id: "open",
@@ -76,6 +79,14 @@ export default class MyPalettePlugin extends Plugin {
 			id: "bookmark-search",
 			name: "Bookmark search",
 			callback: () => new PaletteModal(this.app, this, "", "bookmark").open(),
+		});
+		this.addCommand({
+			id: "smart-connections-search",
+			name: "Smart Connections search",
+			checkCallback: (checking) => {
+				if (checking) return Boolean(this.app.workspace.getActiveFile());
+				new PaletteModal(this.app, this, "", "smart").open();
+			},
 		});
 		this.addCommand({
 			id: "move-file-to-another-folder",

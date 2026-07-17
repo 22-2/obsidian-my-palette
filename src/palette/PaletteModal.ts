@@ -16,7 +16,10 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		app: App,
 		private readonly plugin: MyPalettePlugin,
 		initialInput = "",
-		private readonly fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark">,
+		private readonly fixedMode?: Extract<
+			PaletteMode,
+			"link" | "backlink" | "bookmark" | "smart"
+		>,
 	) {
 		super(
 			{
@@ -62,13 +65,15 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			description: result.secondary,
 			icon: result.icon,
 			badge:
-				result.mode === "file" && isUserIgnoredPath(this.app, result.vaultPath)
-					? "VS Code"
-					: everythingOpensInCode
+				result.mode === "smart"
+					? `${Math.round(result.score * 100)}%`
+					: result.mode === "file" && isUserIgnoredPath(this.app, result.vaultPath)
 						? "VS Code"
-						: result.mode === "everything" && result.kind === "folder"
-							? "Folder"
-							: undefined,
+						: everythingOpensInCode
+							? "VS Code"
+							: result.mode === "everything" && result.kind === "folder"
+								? "Folder"
+								: undefined,
 		};
 	}
 
@@ -108,11 +113,13 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 							? await this.plugin.relatedFileProvider.search(this.mode, parsed.query)
 							: this.mode === "bookmark"
 								? await this.plugin.bookmarkProvider.search(parsed.query)
-								: await this.plugin.everythingProvider.search(
-										parsed.query,
-										this.controller.signal,
-										this.everythingScope,
-									);
+								: this.mode === "smart"
+									? await this.plugin.smartConnectionProvider.search(parsed.query)
+									: await this.plugin.everythingProvider.search(
+											parsed.query,
+											this.controller.signal,
+											this.everythingScope,
+										);
 			if (generation !== this.generation) return [];
 			this.updateResultCount(results.length);
 			return results;
@@ -136,7 +143,9 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 					? "Search backlinks to the active file"
 					: this.mode === "bookmark"
 						? "Search bookmarks"
-						: "Search files · > commands · b bookmarks · es everything",
+						: this.mode === "smart"
+							? "Search Smart Connections"
+							: "Search files · > commands · b bookmarks · sc Smart Connections · es everything",
 		);
 		this.modalEl.setAttribute("data-mode", this.mode);
 		this.modalEl.setAttribute("data-everything-scope", this.everythingScope);
@@ -176,6 +185,17 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 							: this.app.workspace.getLeaf(false);
 				await leaf.openFile(result.file);
 			}
+			if (closePalette) this.close();
+			return;
+		}
+		if (result.mode === "smart") {
+			const leaf =
+				action === "alternate"
+					? this.app.workspace.getLeaf("tab")
+					: action === "tertiary"
+						? this.app.workspace.getLeaf("split", "vertical")
+						: this.app.workspace.getLeaf(false);
+			await leaf.openFile(result.file);
 			if (closePalette) this.close();
 			return;
 		}
