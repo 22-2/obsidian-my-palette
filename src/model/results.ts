@@ -1,6 +1,6 @@
 import type { TFile } from "obsidian";
 
-export type PaletteMode = "file" | "command" | "everything";
+export type PaletteMode = "file" | "command" | "everything" | "link" | "backlink";
 export type EverythingScope = "vault" | "directory";
 
 export interface ParsedInput {
@@ -38,4 +38,11 @@ export interface EverythingResult extends BaseResult {
 	attributes: string;
 }
 
-export type PaletteResult = FileResult | CommandResult | EverythingResult;
+/** A single link occurrence, used by the Link and Backlink commands. */
+export interface RelatedFileResult extends BaseResult {
+	mode: "link" | "backlink";
+	file: TFile;
+	line: number;
+}
+
+export type PaletteResult = FileResult | CommandResult | EverythingResult | RelatedFileResult;

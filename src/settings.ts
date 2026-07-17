@@ -143,6 +143,7 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 							value.split(","),
 						);
 						await this.plugin.saveSettings();
+						this.plugin.fileProvider.refreshExtensions();
 					}),
 			);
 

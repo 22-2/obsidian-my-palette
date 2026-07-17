@@ -15,22 +15,21 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	constructor(
 		app: App,
 		private readonly plugin: MyPalettePlugin,
-		private readonly initialInput = "",
+		initialInput = "",
+		private readonly fixedMode?: Extract<PaletteMode, "link" | "backlink">,
 	) {
 		super(
 			{
 				title: "Files",
 				placeholder: "Search files · > commands · es Vault · esdir directory",
+				initialInput,
 			},
 			app,
 		);
 	}
 
 	protected override onSelectionModalOpen(): void {
-		if (this.initialInput) {
-			this.inputEl.value = this.initialInput;
-			this.inputEl.dispatchEvent(new Event("input"));
-		}
+		// SelectionModal applies and refreshes the initial input.
 		this.inputEl.addEventListener(
 			"keydown",
 			(event) => {
@@ -87,10 +86,13 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	override async getSuggestions(input: string): Promise<PaletteResult[]> {
 		this.controller?.abort();
 		const generation = ++this.generation;
-		const parsed = parseInput(input, this.plugin.settings.prefixes);
+		const parsed = this.fixedMode
+			? { mode: this.fixedMode, query: input }
+			: parseInput(input, this.plugin.settings.prefixes);
 		this.updateMatchQuery(parsed.query);
 		this.mode = parsed.mode;
-		this.everythingScope = parsed.everythingScope ?? "vault";
+		this.everythingScope =
+			("everythingScope" in parsed ? parsed.everythingScope : undefined) ?? "vault";
 		this.updateMode();
 		const delay = parsed.mode === "everything" ? this.plugin.settings.everything.debounceMs : 0;
 		if (delay) await new Promise((resolve) => window.setTimeout(resolve, delay));
@@ -102,11 +104,13 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 					? await this.plugin.fileProvider.search(parsed.query)
 					: this.mode === "command"
 						? await this.plugin.commandProvider.search(parsed.query)
-						: await this.plugin.everythingProvider.search(
-								parsed.query,
-								this.controller.signal,
-								this.everythingScope,
-							);
+						: this.mode === "link" || this.mode === "backlink"
+							? await this.plugin.relatedFileProvider.search(this.mode, parsed.query)
+							: await this.plugin.everythingProvider.search(
+									parsed.query,
+									this.controller.signal,
+									this.everythingScope,
+								);
 			if (generation !== this.generation) return [];
 			this.updateResultCount(results.length);
 			return results;
@@ -123,7 +127,13 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	private updateMode(): void {
-		this.updatePlaceholder("Search files · > commands · es everything");
+		this.updatePlaceholder(
+			this.mode === "link"
+				? "Search links in the active file"
+				: this.mode === "backlink"
+					? "Search backlinks to the active file"
+					: "Search files · > commands · es everything",
+		);
 		this.modalEl.setAttribute("data-mode", this.mode);
 		this.modalEl.setAttribute("data-everything-scope", this.everythingScope);
 	}
@@ -140,7 +150,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				.getCommands()
 				.some(({ id }) => id === result.commandId);
 			if (!exists) {
-				this.inputEl.dispatchEvent(new Event("input"));
+				this.refreshSuggestions();
 				return;
 			}
 			this.plugin.recordCommand(result.commandId);
@@ -148,6 +158,19 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			(
 				this.app.commands as unknown as { executeCommandById: (id: string) => boolean }
 			).executeCommandById(result.commandId);
+			return;
+		}
+		if (result.mode === "link" || result.mode === "backlink") {
+			const leaf =
+				action === "alternate"
+					? this.app.workspace.getLeaf("tab")
+					: action === "tertiary"
+						? this.app.workspace.getLeaf("split", "vertical")
+						: this.app.workspace.getLeaf(false);
+			await leaf.openFile(result.file);
+			const editor = this.app.workspace.activeEditor?.editor;
+			if (editor) editor.setCursor({ line: result.line, ch: 0 });
+			if (closePalette) this.close();
 			return;
 		}
 		const outcome = await runResultAction(this.app, result, action);

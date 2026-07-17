@@ -16,7 +16,7 @@ declare const electron: {
 		openExternal: (url: string) => Promise<void>;
 	};
 };
-import type { PaletteResult } from "../model/results";
+import type { EverythingResult, PaletteResult } from "../model/results";
 
 export type ActionKind = "primary" | "alternate" | "tertiary";
 export interface ActionOutcome {
@@ -116,8 +116,11 @@ export async function runResultAction(
 		return { close: true };
 	}
 	if (result.mode === "command") return { close: true };
+	if (result.mode === "link" || result.mode === "backlink")
+		return { close: false, message: "This result must be opened by the related-file palette." };
+	const everythingResult = result as EverythingResult;
 	try {
-		await fs.stat(result.absolutePath);
+		await fs.stat(everythingResult.absolutePath);
 	} catch {
 		return { close: false, message: "The selected path no longer exists." };
 	}
@@ -125,12 +128,13 @@ export async function runResultAction(
 		const editor = app.workspace.activeEditor?.editor;
 		if (!editor)
 			return { close: false, message: "Open a Markdown editor before inserting a path." };
-		editor.replaceSelection(result.absolutePath);
+		editor.replaceSelection(everythingResult.absolutePath);
 	} else if (action === "alternate") {
-		if (result.kind === "folder") await electron.shell.openPath(result.absolutePath);
-		else electron.shell.showItemInFolder(result.absolutePath);
-	} else if (result.vaultPath) {
-		const current = app.vault.getAbstractFileByPath(result.vaultPath);
+		if (everythingResult.kind === "folder")
+			await electron.shell.openPath(everythingResult.absolutePath);
+		else electron.shell.showItemInFolder(everythingResult.absolutePath);
+	} else if (everythingResult.vaultPath) {
+		const current = app.vault.getAbstractFileByPath(everythingResult.vaultPath);
 		if (current instanceof TFile) await app.workspace.getLeaf(false).openFile(current);
 		else {
 			const vaultRoot = getVaultRootPath(app);
@@ -139,14 +143,14 @@ export async function runResultAction(
 					close: false,
 					message: "This vault adapter cannot resolve the Vault folder.",
 				};
-			return await openAbsolutePathInCode(vaultRoot, result.absolutePath);
+			return await openAbsolutePathInCode(vaultRoot, everythingResult.absolutePath);
 		}
-	} else if (isAbsolutePathUserIgnored(app, result.absolutePath)) {
+	} else if (isAbsolutePathUserIgnored(app, everythingResult.absolutePath)) {
 		const vaultRoot = getVaultRootPath(app);
 		if (!vaultRoot)
 			return { close: false, message: "This vault adapter cannot resolve the Vault folder." };
-		return await openAbsolutePathInCode(vaultRoot, result.absolutePath);
-	} else await electron.shell.openPath(result.absolutePath);
+		return await openAbsolutePathInCode(vaultRoot, everythingResult.absolutePath);
+	} else await electron.shell.openPath(everythingResult.absolutePath);
 	return { close: true };
 }
 

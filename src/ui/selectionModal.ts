@@ -14,6 +14,7 @@ interface ModalProps<T> {
 	items?: T[];
 	placeholder?: string;
 	defaultValue?: T;
+	initialInput?: string;
 }
 
 /**
@@ -25,11 +26,17 @@ export class SelectionModal<T> extends SuggestModal<T> {
 	selected: T | null;
 	private query = "";
 	private resultCountEl?: HTMLElement;
+	private readonly initialInput: string;
 
-	constructor({ items = [], defaultValue, placeholder = "Search…" }: ModalProps<T>, app: App) {
+	constructor(
+		{ items = [], defaultValue, placeholder = "Search…", initialInput = "" }: ModalProps<T>,
+		app: App,
+	) {
 		super(app);
 		this.items = [...items];
 		this.selected = defaultValue ?? null;
+		this.initialInput = initialInput;
+		this.inputEl.value = initialInput;
 		this.limit = 50;
 		this.setPlaceholder(placeholder);
 	}
@@ -42,6 +49,13 @@ export class SelectionModal<T> extends SuggestModal<T> {
 		this.inputEl.parentElement?.appendChild(this.resultCountEl);
 		this.updateResultCount(0);
 		this.onSelectionModalOpen();
+		if (this.initialInput) {
+			this.inputEl.value = this.initialInput;
+			window.setTimeout(() => {
+				if (!this.inputEl.isConnected) return;
+				this.refreshSuggestions();
+			}, 0);
+		}
 	}
 
 	onClose(): void {
@@ -112,6 +126,10 @@ export class SelectionModal<T> extends SuggestModal<T> {
 
 	protected updatePlaceholder(placeholder: string): void {
 		super.setPlaceholder(placeholder);
+	}
+
+	protected refreshSuggestions(): void {
+		this.inputEl.dispatchEvent(new InputEvent("input", { bubbles: true }));
 	}
 
 	private renderMatchedLabel(container: HTMLElement, text: string): void {

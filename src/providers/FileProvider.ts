@@ -21,13 +21,16 @@ function aliases(value: unknown): string[] {
 
 export class FileProvider implements PaletteProvider {
 	private readonly cache = new Map<string, SearchEntry>();
+	private readonly allEntries = new Map<string, SearchEntry>();
 	private readonly refs: EventRef[] = [];
 	private readonly ignoredReady: Promise<void>;
+	private allowedExtensions = new Set<string>();
 
 	constructor(
 		private readonly app: App,
 		private readonly vaultExtensions: () => readonly string[],
 	) {
+		this.updateAllowedExtensions();
 		this.rebuild();
 		this.ignoredReady = this.rebuildIgnored();
 		this.refs.push(
@@ -35,10 +38,10 @@ export class FileProvider implements PaletteProvider {
 				if ("extension" in file) this.update(file as TFile);
 			}),
 		);
-		this.refs.push(app.vault.on("delete", (file) => this.cache.delete(file.path)));
+		this.refs.push(app.vault.on("delete", (file) => this.deleteEntry(file.path)));
 		this.refs.push(
 			app.vault.on("rename", (file, oldPath) => {
-				this.cache.delete(oldPath);
+				this.deleteEntry(oldPath);
 				if ("extension" in file) this.update(file as TFile);
 			}),
 		);
@@ -49,16 +52,24 @@ export class FileProvider implements PaletteProvider {
 		this.refs.forEach((ref) => this.app.vault.offref(ref));
 	}
 
+	refreshExtensions(): void {
+		this.updateAllowedExtensions();
+		this.cache.clear();
+		for (const entry of this.allEntries.values()) this.syncCachedEntry(entry);
+	}
+
 	private rebuild(): void {
 		this.cache.clear();
+		this.allEntries.clear();
 		this.app.vault.getFiles().forEach((file) => this.update(file));
 	}
 
 	private update(file: TFile): void {
+		// Keep all entries so extension-setting changes only need an in-memory cache refresh.
 		const metadata = this.app.metadataCache.getFileCache(file);
 		const h1 = metadata?.headings?.find((heading) => heading.level === 1)?.heading ?? "";
 		const fileAliases = aliases(metadata?.frontmatter?.aliases ?? metadata?.frontmatter?.alias);
-		this.cache.set(file.path, {
+		this.setEntry({
 			file,
 			path: file.path,
 			basename: file.basename,
@@ -92,7 +103,7 @@ export class FileProvider implements PaletteProvider {
 		const extension = path.posix.extname(filePath).slice(1);
 		const filename = path.posix.basename(filePath);
 		const basename = extension ? filename.slice(0, -(extension.length + 1)) : filename;
-		this.cache.set(filePath, {
+		this.setEntry({
 			path: filePath,
 			basename,
 			extension,
@@ -105,17 +116,12 @@ export class FileProvider implements PaletteProvider {
 		await this.ignoredReady;
 		const recentPaths = this.app.workspace.getLastOpenFiles?.() ?? [];
 		const recent = new Map(recentPaths.map((filePath, index) => [filePath, index]));
-		const entries = [...this.cache.values()].filter((entry) => this.isAllowedExtension(entry));
+		const entries = [...this.cache.values()];
 		if (!query.trim()) {
-			const filteredEntries = entries;
-
 			const recentFiles = recentPaths
 				.map((filePath) => this.cache.get(filePath))
-				.filter(
-					(entry): entry is SearchEntry =>
-						entry !== undefined && this.isAllowedExtension(entry),
-				);
-			const allFiles = filteredEntries
+				.filter((entry): entry is SearchEntry => entry !== undefined);
+			const allFiles = entries
 				.filter((entry) => !isUserIgnoredPath(this.app, entry.path))
 				.sort((a, b) => a.path.localeCompare(b.path));
 			const recentPathsSet = new Set(recentFiles.map((entry) => entry.path));
@@ -151,14 +157,29 @@ export class FileProvider implements PaletteProvider {
 		};
 	}
 
-	private isAllowedExtension(entry: SearchEntry): boolean {
-		const allowed = this.vaultExtensions();
-		return (
-			allowed.length === 0 ||
-			allowed.some(
-				(extension) =>
-					extension.toLocaleLowerCase() === entry.extension.toLocaleLowerCase(),
-			)
+	private setEntry(entry: SearchEntry): void {
+		this.allEntries.set(entry.path, entry);
+		this.syncCachedEntry(entry);
+	}
+
+	private syncCachedEntry(entry: SearchEntry): void {
+		if (this.isAllowedExtension(entry.extension)) this.cache.set(entry.path, entry);
+		else this.cache.delete(entry.path);
+	}
+
+	private deleteEntry(filePath: string): void {
+		this.cache.delete(filePath);
+		this.allEntries.delete(filePath);
+	}
+
+	private updateAllowedExtensions(): void {
+		this.allowedExtensions = new Set(
+			this.vaultExtensions().map((extension) => extension.toLocaleLowerCase()),
 		);
+	}
+
+	private isAllowedExtension(extension: string): boolean {
+		const allowed = this.allowedExtensions;
+		return allowed.size === 0 || allowed.has(extension.toLocaleLowerCase());
 	}
 }
