@@ -1,4 +1,4 @@
-import type { ParsedInput, PaletteMode } from "../model/results";
+import type { EverythingScope, ParsedInput, PaletteMode } from "../model/results";
 
 export interface Prefixes {
 	command: string;
@@ -22,19 +22,28 @@ export function validatePrefixes(prefixes: Prefixes): string | null {
 }
 
 export function parseInput(raw: string, prefixes: Prefixes): ParsedInput {
-	const candidates: Array<{ prefix: string; mode: Exclude<PaletteMode, "file"> }> = [
+	const lower = raw.toLocaleLowerCase();
+	if (lower === "esdir")
+		return { raw, mode: "everything", query: "", everythingScope: "directory" };
+	if (lower === "es") return { raw, mode: "everything", query: "", everythingScope: "vault" };
+	const candidates: Array<{
+		prefix: string;
+		mode: Exclude<PaletteMode, "file">;
+		everythingScope?: EverythingScope;
+	}> = [
 		{ prefix: prefixes.command, mode: "command" },
-		{ prefix: prefixes.everything, mode: "everything" },
-		{ prefix: "es ", mode: "everything" },
+		{ prefix: "esdir ", mode: "everything", everythingScope: "directory" },
+		{ prefix: prefixes.everything, mode: "everything", everythingScope: "vault" },
+		{ prefix: "es ", mode: "everything", everythingScope: "vault" },
 	];
 	candidates.sort((a, b) => b.prefix.length - a.prefix.length);
-	const lower = raw.toLocaleLowerCase();
 	for (const candidate of candidates) {
 		if (candidate.prefix && lower.startsWith(candidate.prefix.toLocaleLowerCase())) {
 			return {
 				raw,
 				mode: candidate.mode,
 				query: raw.slice(candidate.prefix.length).replace(/^\s+/, ""),
+				everythingScope: candidate.everythingScope,
 			};
 		}
 	}

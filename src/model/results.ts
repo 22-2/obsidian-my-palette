@@ -1,11 +1,13 @@
 import type { TFile } from "obsidian";
 
 export type PaletteMode = "file" | "command" | "everything";
+export type EverythingScope = "vault" | "directory";
 
 export interface ParsedInput {
 	raw: string;
 	mode: PaletteMode;
 	query: string;
+	everythingScope?: EverythingScope;
 }
 
 export interface BaseResult {
@@ -30,6 +32,8 @@ export interface CommandResult extends BaseResult {
 export interface EverythingResult extends BaseResult {
 	mode: "everything";
 	absolutePath: string;
+	vaultPath?: string;
+	scope: EverythingScope;
 	kind: "file" | "folder";
 	attributes: string;
 }

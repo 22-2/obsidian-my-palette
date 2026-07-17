@@ -18,6 +18,15 @@ function bounded(value: unknown, fallback: number, min: number, max: number): nu
 		: fallback;
 }
 
+function extensions(value: unknown): string[] {
+	if (!Array.isArray(value)) return [...DEFAULT_SETTINGS.everything.vaultExtensions];
+	const normalized = value
+		.filter((item): item is string => typeof item === "string")
+		.map((item) => item.trim().replace(/^\./, "").toLocaleLowerCase())
+		.filter((item) => /^[a-z0-9_-]+$/.test(item));
+	return [...new Set(normalized)];
+}
+
 export function mergeSettings(data: unknown): MyPaletteSettings {
 	const source = (data && typeof data === "object" ? data : {}) as Record<string, unknown>;
 	const rawPrefixes = (source.prefixes ?? {}) as Record<string, unknown>;
@@ -25,7 +34,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 
 	return {
 		...DEFAULT_SETTINGS,
-		schemaVersion: 2,
+		schemaVersion: 3,
 		showLog: typeof source.showLog === "boolean" ? source.showLog : false,
 		prefixes: {
 			command: typeof rawPrefixes.command === "string" ? rawPrefixes.command : ">",
@@ -41,6 +50,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 			maxResults: bounded(rawEverything.maxResults, 100, 10, 500),
 			debounceMs: bounded(rawEverything.debounceMs, 150, 50, 1000),
 			requestTimeoutMs: bounded(rawEverything.requestTimeoutMs, 30000, 1000, 60000),
+			vaultExtensions: extensions(rawEverything.vaultExtensions),
 		},
 		keybindings: mergeKeybindings(source.keybindings),
 		recentCommandIds: Array.isArray(source.recentCommandIds)
@@ -118,6 +128,21 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}),
 		);
+
+		new Setting(containerEl)
+			.setName("Vault search extensions")
+			.setDesc("Comma-separated extensions used by es. esdir searches every file type.")
+			.addText((text) =>
+				text
+					.setPlaceholder("md, canvas, base")
+					.setValue(this.plugin.settings.everything.vaultExtensions.join(", "))
+					.onChange(async (value) => {
+						this.plugin.settings.everything.vaultExtensions = extensions(
+							value.split(","),
+						);
+						await this.plugin.saveSettings();
+					}),
+			);
 
 		new Setting(containerEl).setName("HTTP request timeout").addSlider((slider) =>
 			slider

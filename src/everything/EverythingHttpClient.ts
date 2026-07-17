@@ -165,6 +165,7 @@ export class EverythingHttpClient {
 					secondary: path.win32.dirname(absolutePath),
 					icon: kind,
 					absolutePath,
+					scope: "directory",
 					attributes,
 					kind,
 				},

@@ -123,11 +123,12 @@ Obsidian 標準の「ホットキー」設定から、利用者がこのコマ�
 
 ### 5.1 プレフィックス
 
-| 優先順位 | 既定プレフィックス | モード     | 表示ラベル   |
-| -------- | ------------------ | ---------- | ------------ |
-| 1        | `e `               | Everything | `Everything` |
-| 2        | `>`                | Command    | `Commands`   |
-| 3        | なし               | File       | `Files`      |
+| 優先順位 | 既定プレフィックス | モード               | 表示ラベル               |
+| -------- | ------------------ | -------------------- | ------------------------ |
+| 1        | `esdir`            | Everything directory | `Everything · Directory` |
+| 2        | `es` / `e `        | Everything Vault     | `Everything · Vault`     |
+| 3        | `>`                | Command              | `Commands`               |
+| 4        | なし               | File                 | `Files`                  |
 
 - `e ` は小文字 `e` と半角スペースの2文字である。
 - プレフィックスは設定で変更可能とする。
@@ -139,14 +140,15 @@ Obsidian 標準の「ホットキー」設定から、利用者がこのコマ�
 
 例：
 
-| 入力               | モード     | クエリ           |
-| ------------------ | ---------- | ---------------- |
-| 空                 | File       | 空               |
-| `project`          | File       | `project`        |
-| `>reload`          | Command    | `reload`         |
-| `> reload`         | Command    | `reload`         |
-| `e report ext:pdf` | Everything | `report ext:pdf` |
-| `example`          | File       | `example`        |
+| 入力            | モード               | クエリ    |
+| --------------- | -------------------- | --------- |
+| 空              | File                 | 空        |
+| `project`       | File                 | `project` |
+| `>reload`       | Command              | `reload`  |
+| `> reload`      | Command              | `reload`  |
+| `es report`     | Everything Vault     | `report`  |
+| `esdir ext:pdf` | Everything directory | `ext:pdf` |
+| `example`       | File                 | `example` |
 
 ### 5.2 File モード
 
@@ -202,6 +204,14 @@ Obsidian が保持する「最近開いたファイル」を新しい順で最�
 
 ### 5.4 Everything モード
 
+#### 検索スコープ
+
+- `es`（および互換プレフィックス `e `）はVaultルート配下かつObsidianが`TFile`として認識しているファイルだけを返す。
+- `es`は`userIgnoreFilters`対象と、相対パスのいずれかの区間が`.`で始まるファイルを除外する。
+- `es`は設定した拡張子だけを対象とする。既定値は`md`, `canvas`, `base`。
+- `esdir`はVaultの物理ディレクトリ配下にある全ファイルを対象とし、ignore・ドットファイル・拡張子フィルターを適用しない。
+- `metadataCache.getFirstLinkpathDest()`は同名リンクの解決用であるため、検索結果の存在確認には使用しない。絶対パスをVault相対パスへ変換し、`vault.getAbstractFileByPath()`で`TFile`をO(1)参照する。
+
 #### 前提条件
 
 - Everything 1.5a と公式 HTTP Server Plugin が起動している。
@@ -210,7 +220,7 @@ Obsidian が保持する「最近開いたファイル」を新しい順で最�
 
 #### 空入力
 
-PC 全体の一覧取得は行わない。結果領域に「検索語を入力してください」と表示する。
+空クエリでもスコープと拡張子条件だけで検索し、設定件数まで一覧を返す。Vaultルート外は取得しない。
 
 #### 検索開始
 
@@ -269,11 +279,11 @@ http://127.0.0.1:8080/?search=<query>&json=1&count=100&path_column=1&attributes_
 
 ### 6.1 既定アクション
 
-| モード     | Enter              | Mod+Enter        | Mod+Shift+Enter            |
-| ---------- | ------------------ | ---------------- | -------------------------- |
-| File       | 現在の leaf で開く | 新しいタブで開く | 新しい左右分割で開く       |
-| Command    | コマンド実行       | 割り当てなし     | 割り当てなし               |
-| Everything | 既定アプリで開く   | Explorer で表示  | エディターへ絶対パスを挿入 |
+| モード     | Enter                 | Mod+Enter        | Mod+Shift+Enter            |
+| ---------- | --------------------- | ---------------- | -------------------------- |
+| File       | 現在の leaf で開く    | 新しいタブで開く | 新しい左右分割で開く       |
+| Command    | コマンド実行          | 割り当てなし     | 割り当てなし               |
+| Everything | ObsidianまたはVS Code | Explorer で表示  | エディターへ絶対パスを挿入 |
 
 ### 6.2 File アクション
 
@@ -284,11 +294,12 @@ http://127.0.0.1:8080/?search=<query>&json=1&count=100&path_column=1&attributes_
 
 ### 6.3 Everything アクション
 
-#### 既定アプリで開く
+#### Enterで開く
 
-- Obsidian が提供するデスクトップ用 OS 連携 API を使用する。
+- `TFile`として認識できる通常ファイルはObsidianの現在のleafで開く。
+- ignore対象、ドットファイル、その他Obsidianが認識しない物理ファイルはVS Codeで開く。
+- VS Codeには`code --new-window <Vaultルート> <対象ファイル>`相当の引数を同時に渡す。
 - 実行直前にパスの存在を確認する。
-- ファイルは関連付けられた既定アプリ、フォルダーは Explorer で開く。
 
 #### Explorer で表示
 
@@ -358,14 +369,14 @@ http://127.0.0.1:8080/?search=<query>&json=1&count=100&path_column=1&attributes_
 
 ### 8.3 UI 状態
 
-| 状態       | 結果領域                                                 |
-| ---------- | -------------------------------------------------------- |
-| idle       | File は recent、Command は recent、Everything は入力案内 |
-| debouncing | 直前の結果を維持。フッターに待機表示は不要               |
-| loading    | 直前の結果を維持し、入力欄右端に spinner                 |
-| success    | 新しい結果を表示し先頭を選択                             |
-| empty      | `No results`                                             |
-| error      | アイコン、短い原因、設定を開くボタン                     |
+| 状態       | 結果領域                                             |
+| ---------- | ---------------------------------------------------- |
+| idle       | File / Commandはrecent。Everythingは空検索結果を表示 |
+| debouncing | 直前の結果を維持。フッターに待機表示は不要           |
+| loading    | 直前の結果を維持し、入力欄右端に spinner             |
+| success    | 新しい結果を表示し先頭を選択                         |
+| empty      | `No results`                                         |
+| error      | アイコン、短い原因、設定を開くボタン                 |
 
 ### 8.4 アクセシビリティ
 
@@ -380,14 +391,15 @@ http://127.0.0.1:8080/?search=<query>&json=1&count=100&path_column=1&attributes_
 
 ### 9.1 Everything
 
-| 設定キー                      | 型     | 既定値                   | 制約        |
-| ----------------------------- | ------ | ------------------------ | ----------- |
-| `everything.httpUrl`          | string | `http://127.0.0.1:8080/` | HTTP(S) URL |
-| `everything.username`         | string | `""`                     | 任意        |
-| `everything.password`         | string | `""`                     | 任意        |
-| `everything.maxResults`       | number | `100`                    | 10〜500     |
-| `everything.debounceMs`       | number | `150`                    | 50〜1000    |
-| `everything.requestTimeoutMs` | number | `30000`                  | 1000〜60000 |
+| 設定キー                      | 型       | 既定値                   | 制約             |
+| ----------------------------- | -------- | ------------------------ | ---------------- |
+| `everything.httpUrl`          | string   | `http://127.0.0.1:8080/` | HTTP(S) URL      |
+| `everything.username`         | string   | `""`                     | 任意             |
+| `everything.password`         | string   | `""`                     | 任意             |
+| `everything.maxResults`       | number   | `100`                    | 10〜500          |
+| `everything.debounceMs`       | number   | `150`                    | 50〜1000         |
+| `everything.requestTimeoutMs` | number   | `30000`                  | 1000〜60000      |
+| `everything.vaultExtensions`  | string[] | `["md","canvas","base"]` | `es`の対象拡張子 |
 
 設定画面に次を設ける。
 
@@ -395,6 +407,7 @@ http://127.0.0.1:8080/?search=<query>&json=1&count=100&path_column=1&attributes_
 - 任意のユーザー名・パスワード
 - 接続テストボタン
 - 最大結果件数
+- `es`対象拡張子（カンマ区切り）
 - HTTP リクエストタイムアウト
 
 パスワードはプラグインのローカル `data.json` に保存されることを設定画面に明記する。
@@ -453,7 +466,7 @@ interface EverythingResult extends BaseResult {
 }
 
 interface MyPaletteSettings {
-	schemaVersion: 2;
+	schemaVersion: 3;
 	showLog: boolean;
 	prefixes: {
 		command: string;
@@ -466,6 +479,7 @@ interface MyPaletteSettings {
 		maxResults: number;
 		debounceMs: number;
 		requestTimeoutMs: number;
+		vaultExtensions: string[];
 	};
 	keybindings: Record<string, string[]>;
 	recentCommandIds: string[];
@@ -604,7 +618,7 @@ stderr の生値やローカル絶対パスは通常 UI に全面表示しない
 最低限、次を Vitest で自動化する。
 
 - プレフィックスの通常判定、大文字判定、最長一致、重複検証
-- `> reload` と `e report ext:pdf` のクエリ抽出
+- `> reload`、`es report`、`esdir ext:pdf`のクエリ抽出とスコープ判定
 - HTTP URL パラメーターで検索構文と日本語が正しくエンコードされること
 - Windows パスの大文字・小文字を無視した重複排除
 - `attributes` による file / folder 判定
@@ -632,16 +646,17 @@ Windows 11、Everything 1.5a 実機、英数字・日本語・空白を含むパ
 3. ファイル名・パス・alias・H1 の各条件で目的ファイルを絞り込める。
 4. `>` で Command モードへ即時切り替わる。
 5. コマンド実行後に対象コマンドが recent 上位へ移動する。
-6. `e ` だけでは全 PC 検索が走らない。
-7. `e 日本語 ext:pdf` で日本語パスを文字化けせず表示する。
-8. Everything の検索構文 `ext:`, `path:`, `folder:` がそのまま機能する。
-9. Enter で既定アプリ、Ctrl+Enter で Explorer、Ctrl+Shift+Enter でパス挿入が動く。
-10. 高速連続入力しても古い検索結果へ巻き戻らない。
-11. Everything HTTP Server を終了すると接続案内が出る。
-12. URL または認証情報が不正でも Obsidian 自体は正常に動作し続ける。
-13. 検索語に URL / shell 記号を含めても構文が壊れたり別コマンドが実行されたりしない。
-14. ダーク・ライト両テーマで選択行と副表示を判別できる。
-15. IME 変換確定の Enter で誤実行しない。
+6. `es`だけでも既定拡張子のVaultファイル一覧が表示される。
+7. `es 日本語`でignore・ドットパスを除くObsidian有効ファイルだけが表示される。
+8. `esdir`だけでもVault物理ディレクトリ以下の全ファイルが表示される。
+9. Everything の検索構文 `content:`, `ext:`, `path:`, `folder:` がそのまま機能する。
+10. 通常ファイルはObsidian、ignore対象などはVaultルートと対象パスを渡してVS Codeで開く。
+11. 高速連続入力しても古い検索結果へ巻き戻らない。
+12. Everything HTTP Server を終了すると接続案内が出る。
+13. URL または認証情報が不正でも Obsidian 自体は正常に動作し続ける。
+14. 検索語に URL / shell 記号を含めても構文が壊れたり別コマンドが実行されたりしない。
+15. ダーク・ライト両テーマで選択行と副表示を判別できる。
+16. IME 変換確定の Enter で誤実行しない。
 
 Obsidian 上での最終確認手順は次とする。
 

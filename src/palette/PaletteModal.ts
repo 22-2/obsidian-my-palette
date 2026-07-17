@@ -1,7 +1,7 @@
-import type { App } from "obsidian";
+import { TFile, type App } from "obsidian";
 import { isAbsolutePathUserIgnored, isUserIgnoredPath } from "../core/ignoredPaths";
 import type MyPalettePlugin from "../main";
-import type { PaletteMode, PaletteResult } from "../model/results";
+import type { EverythingScope, PaletteMode, PaletteResult } from "../model/results";
 import { SelectionModal, type SelectionItem } from "../ui/selectionModal";
 import { parseInput } from "./inputParser";
 import { findAction } from "./keybindings";
@@ -14,6 +14,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private controller?: AbortController;
 	private status: UiStatus = "idle";
 	private mode: PaletteMode = "file";
+	private everythingScope: EverythingScope = "vault";
 	private composing = false;
 
 	constructor(
@@ -23,7 +24,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		super(
 			{
 				title: "Files",
-				placeholder: "Search files · > commands · e / es Everything",
+				placeholder: "Search files · > commands · es Vault · esdir directory",
 			},
 			app,
 		);
@@ -75,6 +76,14 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override toSelectionItem(result: PaletteResult): SelectionItem {
+		const everythingOpensInCode =
+			result.mode === "everything" &&
+			(isAbsolutePathUserIgnored(this.app, result.absolutePath) ||
+				(Boolean(result.vaultPath) &&
+					!(
+						this.app.vault.getAbstractFileByPath(result.vaultPath ?? "") instanceof
+						TFile
+					)));
 		return {
 			label: result.primary,
 			description: result.secondary,
@@ -82,8 +91,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			badge:
 				result.mode === "file" && isUserIgnoredPath(this.app, result.vaultPath)
 					? "VS Code"
-					: result.mode === "everything" &&
-						  isAbsolutePathUserIgnored(this.app, result.absolutePath)
+					: everythingOpensInCode
 						? "VS Code"
 						: result.mode === "everything" && result.kind === "folder"
 							? "Folder"
@@ -108,33 +116,35 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		const generation = ++this.generation;
 		const parsed = parseInput(this.inputEl.value, this.plugin.settings.prefixes);
 		this.mode = parsed.mode;
+		this.everythingScope = parsed.everythingScope ?? "vault";
 		this.updateMode();
-		if (parsed.mode === "everything" && !parsed.query) {
-			this.status = "idle";
-			this.setItems([]);
-			this.setStatus(statusText(this.status, 0, true));
-			return;
-		}
 		const delay = parsed.mode === "everything" ? this.plugin.settings.everything.debounceMs : 0;
 		this.debounceTimer = window.setTimeout(
-			() => void this.search(parsed.query, generation),
+			() => void this.search(parsed.query, generation, this.everythingScope),
 			delay,
 		);
 	}
 
-	private async search(query: string, generation: number): Promise<void> {
+	private async search(
+		query: string,
+		generation: number,
+		everythingScope: EverythingScope,
+	): Promise<void> {
 		this.controller = new AbortController();
 		this.status = "loading";
 		this.setLoading(true);
 		this.setStatus(statusText(this.status, 0));
 		try {
-			const provider =
+			const results =
 				this.mode === "file"
-					? this.plugin.fileProvider
+					? await this.plugin.fileProvider.search(query)
 					: this.mode === "command"
-						? this.plugin.commandProvider
-						: this.plugin.everythingProvider;
-			const results = await provider.search(query, this.controller.signal);
+						? await this.plugin.commandProvider.search(query)
+						: await this.plugin.everythingProvider.search(
+								query,
+								this.controller.signal,
+								everythingScope,
+							);
 			if (generation !== this.generation) return;
 			this.status = results.length ? "success" : "empty";
 			this.setItems(results);
@@ -155,16 +165,25 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	private updateMode(): void {
-		const labels = { file: "Files", command: "Commands", everything: "Everything" };
+		const labels = {
+			file: "Files",
+			command: "Commands",
+			everything:
+				this.everythingScope === "vault" ? "Everything · Vault" : "Everything · Directory",
+		};
 		const icons = { file: "files", command: "terminal", everything: "search" };
 		const placeholders = {
 			file: "Search vault files",
 			command: "Search Obsidian commands",
-			everything: "Search Everything · e / es · native syntax supported",
+			everything:
+				this.everythingScope === "vault"
+					? "Search indexed Vault files · es"
+					: "Search every file under the Vault directory · esdir",
 		};
 		this.setHeading(labels[this.mode], icons[this.mode]);
 		this.inputEl.placeholder = placeholders[this.mode];
 		this.modalEl.setAttribute("data-mode", this.mode);
+		this.modalEl.setAttribute("data-everything-scope", this.everythingScope);
 		this.setActionButton(false);
 	}
 

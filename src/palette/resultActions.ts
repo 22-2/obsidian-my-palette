@@ -121,12 +121,6 @@ export async function runResultAction(
 	} catch {
 		return { close: false, message: "The selected path no longer exists." };
 	}
-	if (action === "primary" && isAbsolutePathUserIgnored(app, result.absolutePath)) {
-		const vaultRoot = getVaultRootPath(app);
-		if (!vaultRoot)
-			return { close: false, message: "This vault adapter cannot resolve the Vault folder." };
-		return await openAbsolutePathInCode(vaultRoot, result.absolutePath);
-	}
 	if (action === "tertiary") {
 		const editor = app.workspace.activeEditor?.editor;
 		if (!editor)
@@ -135,6 +129,23 @@ export async function runResultAction(
 	} else if (action === "alternate") {
 		if (result.kind === "folder") await electron.shell.openPath(result.absolutePath);
 		else electron.shell.showItemInFolder(result.absolutePath);
+	} else if (result.vaultPath) {
+		const current = app.vault.getAbstractFileByPath(result.vaultPath);
+		if (current instanceof TFile) await app.workspace.getLeaf(false).openFile(current);
+		else {
+			const vaultRoot = getVaultRootPath(app);
+			if (!vaultRoot)
+				return {
+					close: false,
+					message: "This vault adapter cannot resolve the Vault folder.",
+				};
+			return await openAbsolutePathInCode(vaultRoot, result.absolutePath);
+		}
+	} else if (isAbsolutePathUserIgnored(app, result.absolutePath)) {
+		const vaultRoot = getVaultRootPath(app);
+		if (!vaultRoot)
+			return { close: false, message: "This vault adapter cannot resolve the Vault folder." };
+		return await openAbsolutePathInCode(vaultRoot, result.absolutePath);
 	} else await electron.shell.openPath(result.absolutePath);
 	return { close: true };
 }

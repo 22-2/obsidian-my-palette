@@ -26,6 +26,7 @@ export default class MyPalettePlugin extends Plugin {
 		this.fileProvider = new FileProvider(this.app);
 		this.commandProvider = new CommandProvider(this.app, () => this.settings.recentCommandIds);
 		this.everythingProvider = new EverythingProvider(
+			this.app,
 			this.everythingClient,
 			() => this.settings.everything,
 		);
