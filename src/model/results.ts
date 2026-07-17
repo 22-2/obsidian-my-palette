@@ -1,6 +1,6 @@
 import type { TFile } from "obsidian";
 
-export type PaletteMode = "file" | "command" | "everything" | "link" | "backlink";
+export type PaletteMode = "file" | "command" | "everything" | "link" | "backlink" | "bookmark";
 export type EverythingScope = "vault" | "directory";
 
 export interface ParsedInput {
@@ -45,4 +45,16 @@ export interface RelatedFileResult extends BaseResult {
 	line: number;
 }
 
-export type PaletteResult = FileResult | CommandResult | EverythingResult | RelatedFileResult;
+export interface BookmarkResult extends BaseResult {
+	mode: "bookmark";
+	kind: "file" | "search";
+	file?: TFile;
+	query?: string;
+}
+
+export type PaletteResult =
+	| FileResult
+	| CommandResult
+	| EverythingResult
+	| RelatedFileResult
+	| BookmarkResult;

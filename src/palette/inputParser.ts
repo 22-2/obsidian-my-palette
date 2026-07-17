@@ -26,12 +26,14 @@ export function parseInput(raw: string, prefixes: Prefixes): ParsedInput {
 	if (lower === "esdir")
 		return { raw, mode: "everything", query: "", everythingScope: "directory" };
 	if (lower === "es") return { raw, mode: "everything", query: "", everythingScope: "vault" };
+	if (lower === "b") return { raw, mode: "bookmark", query: "" };
 	const candidates: Array<{
 		prefix: string;
 		mode: Exclude<PaletteMode, "file">;
 		everythingScope?: EverythingScope;
 	}> = [
 		{ prefix: prefixes.command, mode: "command" },
+		{ prefix: "b ", mode: "bookmark" },
 		{ prefix: "esdir ", mode: "everything", everythingScope: "directory" },
 		{ prefix: prefixes.everything, mode: "everything", everythingScope: "vault" },
 		{ prefix: "es ", mode: "everything", everythingScope: "vault" },

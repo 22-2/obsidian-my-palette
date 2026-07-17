@@ -38,3 +38,17 @@ it("treats a command prefix followed by a space as an empty command query", () =
 		query: "",
 	});
 });
+
+describe("Bookmark prefix", () => {
+	it("switches to bookmark search for b and b queries", () => {
+		expect(parseInput("b", prefixes)).toMatchObject({ mode: "bookmark", query: "" });
+		expect(parseInput("b project", prefixes)).toMatchObject({
+			mode: "bookmark",
+			query: "project",
+		});
+	});
+
+	it("does not treat ordinary words beginning with b as a prefix", () => {
+		expect(parseInput("book", prefixes)).toMatchObject({ mode: "file", query: "book" });
+	});
+});

@@ -8,6 +8,7 @@ import { FileProvider } from "./providers/FileProvider";
 import { CommandProvider } from "./providers/CommandProvider";
 import { EverythingProvider } from "./providers/EverythingProvider";
 import { RelatedFileProvider } from "./providers/RelatedFileProvider";
+import { BookmarkProvider } from "./providers/BookmarkProvider";
 import { MoveFileModal } from "./palette/MoveFileModal";
 import "../styles.css";
 
@@ -22,6 +23,7 @@ export default class MyPalettePlugin extends Plugin {
 	commandProvider!: CommandProvider;
 	everythingProvider!: EverythingProvider;
 	relatedFileProvider!: RelatedFileProvider;
+	bookmarkProvider!: BookmarkProvider;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -37,10 +39,11 @@ export default class MyPalettePlugin extends Plugin {
 			() => this.settings.everything,
 		);
 		this.relatedFileProvider = new RelatedFileProvider(this.app);
+		this.bookmarkProvider = new BookmarkProvider(this.app);
 		this.addSettingTab(new MyPaletteSettingTab(this));
 		this.addCommand({
 			id: "open",
-			name: "Open palette",
+			name: "Open Recent palette",
 			callback: () => new PaletteModal(this.app, this).open(),
 		});
 		this.addCommand({
@@ -68,6 +71,11 @@ export default class MyPalettePlugin extends Plugin {
 				if (checking) return Boolean(this.app.workspace.getActiveFile());
 				new PaletteModal(this.app, this, "", "backlink").open();
 			},
+		});
+		this.addCommand({
+			id: "bookmark-search",
+			name: "Bookmark search",
+			callback: () => new PaletteModal(this.app, this, "", "bookmark").open(),
 		});
 		this.addCommand({
 			id: "move-file-to-another-folder",

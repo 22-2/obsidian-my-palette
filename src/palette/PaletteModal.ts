@@ -16,7 +16,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		app: App,
 		private readonly plugin: MyPalettePlugin,
 		initialInput = "",
-		private readonly fixedMode?: Extract<PaletteMode, "link" | "backlink">,
+		private readonly fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark">,
 	) {
 		super(
 			{
@@ -106,11 +106,13 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 						? await this.plugin.commandProvider.search(parsed.query)
 						: this.mode === "link" || this.mode === "backlink"
 							? await this.plugin.relatedFileProvider.search(this.mode, parsed.query)
-							: await this.plugin.everythingProvider.search(
-									parsed.query,
-									this.controller.signal,
-									this.everythingScope,
-								);
+							: this.mode === "bookmark"
+								? await this.plugin.bookmarkProvider.search(parsed.query)
+								: await this.plugin.everythingProvider.search(
+										parsed.query,
+										this.controller.signal,
+										this.everythingScope,
+									);
 			if (generation !== this.generation) return [];
 			this.updateResultCount(results.length);
 			return results;
@@ -132,7 +134,9 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				? "Search links in the active file"
 				: this.mode === "backlink"
 					? "Search backlinks to the active file"
-					: "Search files · > commands · es everything",
+					: this.mode === "bookmark"
+						? "Search bookmarks"
+						: "Search files · > commands · b bookmarks · es everything",
 		);
 		this.modalEl.setAttribute("data-mode", this.mode);
 		this.modalEl.setAttribute("data-everything-scope", this.everythingScope);
@@ -158,6 +162,21 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			(
 				this.app.commands as unknown as { executeCommandById: (id: string) => boolean }
 			).executeCommandById(result.commandId);
+			return;
+		}
+		if (result.mode === "bookmark") {
+			if (result.kind === "search" && result.query) {
+				await this.app.workspace.openLinkText(result.query, "", true);
+			} else if (result.file) {
+				const leaf =
+					action === "alternate"
+						? this.app.workspace.getLeaf("tab")
+						: action === "tertiary"
+							? this.app.workspace.getLeaf("split", "vertical")
+							: this.app.workspace.getLeaf(false);
+				await leaf.openFile(result.file);
+			}
+			if (closePalette) this.close();
 			return;
 		}
 		if (result.mode === "link" || result.mode === "backlink") {
