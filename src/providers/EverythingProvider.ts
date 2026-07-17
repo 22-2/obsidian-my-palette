@@ -19,6 +19,9 @@ export class EverythingProvider implements PaletteProvider {
 		const vaultRoot = getVaultRootPath(this.app);
 		if (!vaultRoot) throw new Error("This vault adapter cannot resolve the Vault folder.");
 		const settings = this.settings();
+		const vaultExtensions = new Set(
+			settings.vaultExtensions.map((extension) => extension.toLocaleLowerCase()),
+		);
 		const extensionFilter = settings.vaultExtensions.length
 			? `ext:${settings.vaultExtensions.join(";")}`
 			: "";
@@ -34,7 +37,12 @@ export class EverythingProvider implements PaletteProvider {
 				if (scope === "vault") {
 					if (isUserIgnoredPath(this.app, vaultPath) || hasHiddenSegment(vaultPath))
 						return [];
-					if (!(this.app.vault.getAbstractFileByPath(vaultPath) instanceof TFile))
+					const file = this.app.vault.getAbstractFileByPath(vaultPath);
+					if (
+						!(file instanceof TFile) ||
+						(vaultExtensions.size > 0 &&
+							!vaultExtensions.has(file.extension.toLocaleLowerCase()))
+					)
 						return [];
 				}
 				return [{ ...result, vaultPath, scope }];

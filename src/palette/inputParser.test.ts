@@ -31,3 +31,10 @@ describe("parseInput Everything scopes", () => {
 		expect(parseInput("estate", prefixes)).toMatchObject({ mode: "file", query: "estate" });
 	});
 });
+
+it("treats a command prefix followed by a space as an empty command query", () => {
+	expect(parseInput("> ", prefixes)).toMatchObject({
+		mode: "command",
+		query: "",
+	});
+});
