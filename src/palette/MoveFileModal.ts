@@ -14,6 +14,7 @@ export class MoveFileModal extends SelectionModal<FolderItem> {
 		super(
 			{
 				placeholder: "Search destination folders",
+				footerText: `Moving: ${file.path}`,
 				items: [
 					{ label: "Vault root", description: "/", icon: "folder-root", path: "" },
 					...app.vault

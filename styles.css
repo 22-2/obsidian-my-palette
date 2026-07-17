@@ -16,19 +16,26 @@
 	font-size: 0.82em;
 }
 
-.my-palette-result-count {
-	position: absolute;
-	top: 50%;
-	right: 18px;
-	transform: translateY(-50%);
+.my-palette-status-bar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex: 0 0 auto;
+	padding: 6px 10px;
+	border-top: 1px solid var(--background-modifier-border);
 	color: var(--text-muted);
 	font-size: var(--font-ui-smaller);
-	line-height: 1.2;
-	pointer-events: none;
 }
 
-.my-palette-suggest-modal .prompt-input {
-	padding-right: 64px;
+.my-palette-status-bar__text {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.my-palette-status-bar__count {
+	margin-left: auto;
+	white-space: nowrap;
 }
 
 .my-palette-suggestion {

@@ -26,6 +26,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				title: "Files",
 				placeholder: "Search files · > commands · es Vault · esdir directory",
 				initialInput,
+				footerText: `Source: ${app.workspace.getActiveFile()?.path ?? "No active note"}`,
 			},
 			app,
 		);

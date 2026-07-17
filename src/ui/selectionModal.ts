@@ -15,6 +15,7 @@ interface ModalProps<T> {
 	placeholder?: string;
 	defaultValue?: T;
 	initialInput?: string;
+	footerText?: string;
 }
 
 /**
@@ -26,16 +27,25 @@ export class SelectionModal<T> extends SuggestModal<T> {
 	selected: T | null;
 	private query = "";
 	private resultCountEl?: HTMLElement;
+	private statusTextEl?: HTMLElement;
+	private readonly footerText?: string;
 	private readonly initialInput: string;
 
 	constructor(
-		{ items = [], defaultValue, placeholder = "Search…", initialInput = "" }: ModalProps<T>,
+		{
+			items = [],
+			defaultValue,
+			placeholder = "Search…",
+			initialInput = "",
+			footerText,
+		}: ModalProps<T>,
 		app: App,
 	) {
 		super(app);
 		this.items = [...items];
 		this.selected = defaultValue ?? null;
 		this.initialInput = initialInput;
+		this.footerText = footerText;
 		this.inputEl.value = initialInput;
 		this.limit = 50;
 		this.setPlaceholder(placeholder);
@@ -44,9 +54,12 @@ export class SelectionModal<T> extends SuggestModal<T> {
 	onOpen(): void {
 		super.onOpen();
 		this.modalEl.addClass("my-palette-suggest-modal");
-		this.resultCountEl = document.createElement("div");
-		this.resultCountEl.addClass("my-palette-result-count");
-		this.inputEl.parentElement?.appendChild(this.resultCountEl);
+		const statusBar = this.modalEl.createDiv("my-palette-status-bar");
+		this.statusTextEl = statusBar.createSpan({
+			cls: "my-palette-status-bar__text",
+			text: this.footerText ?? "",
+		});
+		this.resultCountEl = statusBar.createSpan("my-palette-status-bar__count");
 		this.updateResultCount(0);
 		this.onSelectionModalOpen();
 		if (this.initialInput) {
@@ -118,6 +131,10 @@ export class SelectionModal<T> extends SuggestModal<T> {
 
 	protected updateResultCount(total: number): void {
 		this.resultCountEl?.setText(`${Math.min(total, this.limit)} / ${total}`);
+	}
+
+	protected updateFooterText(text: string): void {
+		this.statusTextEl?.setText(text);
 	}
 
 	protected updateMatchQuery(query: string): void {
