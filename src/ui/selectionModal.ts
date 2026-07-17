@@ -150,16 +150,22 @@ export class SelectionModal<T> extends SuggestModal<T> {
 	}
 
 	private renderMatchedLabel(container: HTMLElement, text: string): void {
-		const query = this.query.toLocaleLowerCase();
-		let queryIndex = 0;
-		for (const character of text) {
-			const matches =
-				queryIndex < query.length && character.toLocaleLowerCase() === query[queryIndex];
+		// 検索は fuzzysort で行っているので、ハイライト位置も fuzzysort の
+		// マッチ index に揃える。クエリを先頭から貪欲に拾う独自走査だと、
+		// 実際のマッチ箇所とズレて無関係な文字までハイライトされてしまう。
+		const matched = this.query ? fuzzysort.single(this.query, text) : null;
+		if (!matched) {
+			container.createSpan({ text });
+			return;
+		}
+		const indexes = new Set(matched.indexes);
+		// indexes は UTF-16 コード単位の位置なので、for..of(コードポイント)ではなく
+		// インデックス走査で位置を合わせる
+		for (let index = 0; index < text.length; index += 1) {
 			container.createSpan({
-				cls: matches ? "my-palette-suggestion__match" : "",
-				text: character,
+				cls: indexes.has(index) ? "my-palette-suggestion__match" : "",
+				text: text[index],
 			});
-			if (matches) queryIndex += 1;
 		}
 	}
 }

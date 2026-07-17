@@ -19,10 +19,10 @@ describe("sortCommandMatches", () => {
 		);
 
 		expect(results.map(({ id }) => id)).toEqual([
-			"reader:external",
-			"reader:current",
 			"toolkit:delete",
 			"toolkit:export",
+			"reader:external",
+			"reader:current",
 			"other:format",
 		]);
 	});
@@ -37,5 +37,29 @@ describe("sortCommandMatches", () => {
 		);
 
 		expect(results.map(({ id }) => id)).toEqual(["higher", "lower"]);
+	});
+
+	it("sorts multi-word matches by command name instead of fuzzy character distance", () => {
+		const results = sortCommandMatches(
+			[
+				match("navigate", "@My Commands Plugin: Navigate to outgoing link", 100),
+				match("copy", "@My Commands Plugin: Copy file path with outgoing link paths", 10),
+			],
+			"my commands outgoing",
+		);
+
+		expect(results.map(({ id }) => id)).toEqual(["copy", "navigate"]);
+	});
+
+	it("sorts equal single-word matches by action name across plugins", () => {
+		const results = sortCommandMatches(
+			[
+				match("open", "GridExplorer: Open outgoing links in grid view", 100),
+				match("copy", "@My Commands Plugin: Copy file path with outgoing link paths", 10),
+			],
+			"outgoing",
+		);
+
+		expect(results.map(({ id }) => id)).toEqual(["copy", "open"]);
 	});
 });

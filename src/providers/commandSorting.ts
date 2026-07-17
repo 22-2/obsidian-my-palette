@@ -26,8 +26,14 @@ function commandParts(name: string): { pluginName: string; actionName: string } 
 	return { pluginName, actionName };
 }
 
+function everyTermStartsAWord(value: string, terms: string[]): boolean {
+	const words = normalized(value).split(/[^\p{L}\p{N}]+/u);
+	return terms.every((term) => words.some((word) => word.startsWith(term)));
+}
+
 function matchRank(pluginName: string, actionName: string, query: string): number {
 	const needle = normalized(query);
+	const terms = needle.split(/\s+/).filter(Boolean);
 	const plugin = normalized(pluginName);
 	const action = normalized(actionName);
 	const full = `${plugin}: ${action}`;
@@ -35,8 +41,9 @@ function matchRank(pluginName: string, actionName: string, query: string): numbe
 	if (plugin.startsWith(needle)) return 1;
 	if (action.startsWith(needle)) return 2;
 	if (action.split(/[^\p{L}\p{N}]+/u).some((word) => word.startsWith(needle))) return 3;
-	if (full.includes(needle)) return 4;
-	return 5;
+	if (terms.length > 1 && everyTermStartsAWord(full, terms)) return 4;
+	if (full.includes(needle)) return 5;
+	return 6;
 }
 
 export function sortCommandMatches(
@@ -57,9 +64,9 @@ export function sortCommandMatches(
 		.sort(
 			(a, b) =>
 				a.rank - b.rank ||
-				(a.rank === 5 ? b.fuzzyScore - a.fuzzyScore : 0) ||
-				a.pluginName.localeCompare(b.pluginName, undefined, { sensitivity: "base" }) ||
+				(a.rank === 6 ? b.fuzzyScore - a.fuzzyScore : 0) ||
 				a.actionName.localeCompare(b.actionName, undefined, { sensitivity: "base" }) ||
+				a.pluginName.localeCompare(b.pluginName, undefined, { sensitivity: "base" }) ||
 				a.command.id.localeCompare(b.command.id),
 		)
 		.map(({ command }) => command);
