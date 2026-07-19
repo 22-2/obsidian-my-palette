@@ -1,4 +1,4 @@
-import { App, SuggestModal, setIcon } from "obsidian";
+import { App, SuggestModal, setIcon, type KeymapEventHandler } from "obsidian";
 import fuzzysort from "fuzzysort";
 
 export interface SelectionItem {
@@ -16,6 +16,12 @@ interface ModalProps<T> {
 	defaultValue?: T;
 	initialInput?: string;
 	footerText?: string;
+}
+
+interface SuggestionChooser<T> {
+	values?: T[];
+	selectedItem?: number;
+	setSelectedItem?: (index: number) => void;
 }
 
 /**
@@ -49,6 +55,16 @@ export class SelectionModal<T> extends SuggestModal<T> {
 		this.inputEl.value = initialInput;
 		this.limit = 50;
 		this.setPlaceholder(placeholder);
+		const scopeHandlers = (this.scope as unknown as { keys?: KeymapEventHandler[] }).keys ?? [];
+		for (let index = scopeHandlers.length - 1; index >= 0; index -= 1) {
+			const handler = scopeHandlers[index];
+			if ((handler.key === "Home" || handler.key === "End") && handler.modifiers === "")
+				this.scope.unregister(handler);
+		}
+		for (const key of ["Home", "End"]) {
+			this.scope.register([], key, (event) => this.handleHomeEnd(event));
+			this.scope.register(["Ctrl"], key, (event) => this.handleHomeEnd(event));
+		}
 	}
 
 	onOpen(): void {
@@ -147,6 +163,27 @@ export class SelectionModal<T> extends SuggestModal<T> {
 
 	protected refreshSuggestions(): void {
 		this.inputEl.dispatchEvent(new InputEvent("input", { bubbles: true }));
+	}
+
+	private handleHomeEnd(event: KeyboardEvent): false | undefined {
+		if (
+			event.target !== this.inputEl ||
+			event.isComposing ||
+			(event.key !== "Home" && event.key !== "End")
+		)
+			return undefined;
+
+		if (!event.ctrlKey || event.altKey || event.metaKey) {
+			const position = event.key === "Home" ? 0 : this.inputEl.value.length;
+			this.inputEl.setSelectionRange(position, position);
+			return false;
+		}
+
+		const chooser = (this as unknown as { chooser?: SuggestionChooser<T> }).chooser;
+		const count = chooser?.values?.length ?? 0;
+		if (!count) return false;
+		chooser?.setSelectedItem?.(event.key === "Home" ? 0 : count - 1);
+		return false;
 	}
 
 	private renderMatchedLabel(container: HTMLElement, text: string): void {
