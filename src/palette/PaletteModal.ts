@@ -37,7 +37,10 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.inputEl.addEventListener(
 			"keydown",
 			(event) => {
-				if (event.key !== "ArrowRight" || event.isComposing) return;
+				const cursorIsAtEnd =
+					this.inputEl.selectionStart === this.inputEl.value.length &&
+					this.inputEl.selectionEnd === this.inputEl.value.length;
+				if (event.key !== "ArrowRight" || event.isComposing || !cursorIsAtEnd) return;
 				event.preventDefault();
 				event.stopImmediatePropagation();
 				void this.openSelectedWithoutClosing();
