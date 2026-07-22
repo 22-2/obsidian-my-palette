@@ -1,6 +1,7 @@
 import { TFile, type App } from "obsidian";
 import fuzzysort from "fuzzysort";
 import type { SmartConnectionResult } from "../model/results";
+import type { PaletteProvider, PaletteSearchRequest } from "./PaletteProvider";
 
 interface SmartSource {
 	vec?: number[];
@@ -21,10 +22,10 @@ interface SmartConnectionsEnvironment {
 }
 
 /** Queries Smart Connections' existing embeddings for notes related to the active note. */
-export class SmartConnectionProvider {
+export class SmartConnectionProvider implements PaletteProvider<SmartConnectionResult> {
 	constructor(private readonly app: App) {}
 
-	async search(query: string): Promise<SmartConnectionResult[]> {
+	async search({ query }: PaletteSearchRequest): Promise<SmartConnectionResult[]> {
 		const origin = this.app.workspace.getActiveFile();
 		if (!origin) throw new Error("Open a note before searching Smart Connections.");
 		const environment = this.environment();

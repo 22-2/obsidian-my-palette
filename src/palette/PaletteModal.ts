@@ -108,22 +108,12 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		if (generation !== this.generation) return [];
 		this.controller = new AbortController();
 		try {
-			const results =
-				this.mode === "file"
-					? await this.plugin.fileProvider.search(parsed.query)
-					: this.mode === "command"
-						? await this.plugin.commandProvider.search(parsed.query)
-						: this.mode === "link" || this.mode === "backlink"
-							? await this.plugin.relatedFileProvider.search(this.mode, parsed.query)
-							: this.mode === "bookmark"
-								? await this.plugin.bookmarkProvider.search(parsed.query)
-								: this.mode === "smart"
-									? await this.plugin.smartConnectionProvider.search(parsed.query)
-									: await this.plugin.everythingProvider.search(
-											parsed.query,
-											this.controller.signal,
-											this.everythingScope,
-										);
+			const results = await this.plugin.providers[this.mode].search({
+				mode: this.mode,
+				query: parsed.query,
+				signal: this.controller.signal,
+				everythingScope: this.everythingScope,
+			});
 			if (generation !== this.generation) return [];
 			this.updateResultCount(results.length);
 			return results;

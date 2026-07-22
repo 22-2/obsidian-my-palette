@@ -4,7 +4,7 @@ import * as path from "path";
 import { getUserIgnoreFilters, isUserIgnoredPath } from "../core/ignoredPaths";
 import type { FileResult } from "../model/results";
 import { sortFileMatches, sortFilesWithoutQuery } from "./fileSorting";
-import type { PaletteProvider } from "./PaletteProvider";
+import type { PaletteProvider, PaletteSearchRequest } from "./PaletteProvider";
 
 interface SearchEntry {
 	file?: TFile;
@@ -21,7 +21,7 @@ function aliases(value: unknown): string[] {
 	return value == null ? [] : [String(value)].filter((alias) => alias.trim().length > 0);
 }
 
-export class FileProvider implements PaletteProvider {
+export class FileProvider implements PaletteProvider<FileResult> {
 	private readonly cache = new Map<string, SearchEntry>();
 	private readonly allEntries = new Map<string, SearchEntry>();
 	private readonly refs: EventRef[] = [];
@@ -116,7 +116,7 @@ export class FileProvider implements PaletteProvider {
 		});
 	}
 
-	async search(query: string): Promise<FileResult[]> {
+	async search({ query }: PaletteSearchRequest): Promise<FileResult[]> {
 		await this.ignoredReady;
 		const recentPaths = this.app.workspace.getLastOpenFiles?.() ?? [];
 		const recent = new Map(recentPaths.map((filePath, index) => [filePath, index]));

@@ -1,14 +1,15 @@
 import { TFile, type App, type LinkCache } from "obsidian";
 import fuzzysort from "fuzzysort";
 import type { RelatedFileResult } from "../model/results";
-
-type RelatedMode = "link" | "backlink";
+import type { PaletteProvider, PaletteSearchRequest } from "./PaletteProvider";
 
 /** Finds individual outgoing-link or incoming-link occurrences for the active note. */
-export class RelatedFileProvider {
+export class RelatedFileProvider implements PaletteProvider<RelatedFileResult> {
 	constructor(private readonly app: App) {}
 
-	async search(mode: RelatedMode, query: string): Promise<RelatedFileResult[]> {
+	async search({ mode, query }: PaletteSearchRequest): Promise<RelatedFileResult[]> {
+		if (mode !== "link" && mode !== "backlink")
+			throw new Error(`RelatedFileProvider cannot search mode: ${mode}`);
 		const origin = this.app.workspace.getActiveFile();
 		if (!origin) return [];
 		const occurrences = mode === "link" ? this.outgoing(origin) : this.incoming(origin);

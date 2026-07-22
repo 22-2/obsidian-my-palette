@@ -10,6 +10,8 @@ import { EverythingProvider } from "./providers/EverythingProvider";
 import { RelatedFileProvider } from "./providers/RelatedFileProvider";
 import { BookmarkProvider } from "./providers/BookmarkProvider";
 import { SmartConnectionProvider } from "./providers/SmartConnectionProvider";
+import type { PaletteMode } from "./model/results";
+import type { PaletteProvider } from "./providers/PaletteProvider";
 import { MoveFileModal } from "./palette/MoveFileModal";
 import "../styles.css";
 
@@ -26,6 +28,7 @@ export default class MyPalettePlugin extends Plugin {
 	relatedFileProvider!: RelatedFileProvider;
 	bookmarkProvider!: BookmarkProvider;
 	smartConnectionProvider!: SmartConnectionProvider;
+	providers!: Record<PaletteMode, PaletteProvider>;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -43,6 +46,15 @@ export default class MyPalettePlugin extends Plugin {
 		this.relatedFileProvider = new RelatedFileProvider(this.app);
 		this.bookmarkProvider = new BookmarkProvider(this.app);
 		this.smartConnectionProvider = new SmartConnectionProvider(this.app);
+		this.providers = {
+			file: this.fileProvider,
+			command: this.commandProvider,
+			everything: this.everythingProvider,
+			link: this.relatedFileProvider,
+			backlink: this.relatedFileProvider,
+			bookmark: this.bookmarkProvider,
+			smart: this.smartConnectionProvider,
+		};
 		this.addSettingTab(new MyPaletteSettingTab(this));
 		this.addCommand({
 			id: "open",

@@ -1,10 +1,10 @@
 import { type App } from "obsidian";
 import fuzzysort from "fuzzysort";
 import type { CommandResult } from "../model/results";
-import type { PaletteProvider } from "./PaletteProvider";
+import type { PaletteProvider, PaletteSearchRequest } from "./PaletteProvider";
 import { type Command, sortCommandMatches } from "./commandSorting";
 
-export class CommandProvider implements PaletteProvider {
+export class CommandProvider implements PaletteProvider<CommandResult> {
 	constructor(
 		private readonly app: App,
 		private readonly recents: () => string[],
@@ -14,7 +14,7 @@ export class CommandProvider implements PaletteProvider {
 			(this.app.commands as unknown as { commands: Record<string, Command> }).commands ?? {},
 		);
 	}
-	async search(query: string): Promise<CommandResult[]> {
+	async search({ query }: PaletteSearchRequest): Promise<CommandResult[]> {
 		const commands = this.getCommands();
 		const recent = new Map(this.recents().map((id, index) => [id, index]));
 		const matched = query

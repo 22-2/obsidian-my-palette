@@ -1,21 +1,21 @@
 import { TFile, type App } from "obsidian";
 import { getVaultRootPath, isUserIgnoredPath, vaultPathFromAbsolute } from "../core/ignoredPaths";
 import type { MyPaletteSettings } from "../model/settings";
-import type { EverythingResult, EverythingScope } from "../model/results";
+import type { EverythingResult } from "../model/results";
 import { EverythingHttpClient } from "../everything/EverythingHttpClient";
-import type { PaletteProvider } from "./PaletteProvider";
+import type { PaletteProvider, PaletteSearchRequest } from "./PaletteProvider";
 
-export class EverythingProvider implements PaletteProvider {
+export class EverythingProvider implements PaletteProvider<EverythingResult> {
 	constructor(
 		private readonly app: App,
 		private readonly client: EverythingHttpClient,
 		private readonly settings: () => MyPaletteSettings["everything"],
 	) {}
-	async search(
-		query: string,
-		signal?: AbortSignal,
-		scope: EverythingScope = "vault",
-	): Promise<EverythingResult[]> {
+	async search({
+		query,
+		signal,
+		everythingScope: scope = "vault",
+	}: PaletteSearchRequest): Promise<EverythingResult[]> {
 		const vaultRoot = getVaultRootPath(this.app);
 		if (!vaultRoot) throw new Error("This vault adapter cannot resolve the Vault folder.");
 		const settings = this.settings();

@@ -1,6 +1,7 @@
 import { TFile, type App } from "obsidian";
 import fuzzysort from "fuzzysort";
 import type { BookmarkResult } from "../model/results";
+import type { PaletteProvider, PaletteSearchRequest } from "./PaletteProvider";
 
 interface BookmarkItem {
 	type: "file" | "search" | "group" | string;
@@ -15,10 +16,10 @@ interface BookmarksPlugin {
 }
 
 /** Reads the core Bookmarks plugin's nested items and exposes usable entries for the palette. */
-export class BookmarkProvider {
+export class BookmarkProvider implements PaletteProvider<BookmarkResult> {
 	constructor(private readonly app: App) {}
 
-	async search(query: string): Promise<BookmarkResult[]> {
+	async search({ query }: PaletteSearchRequest): Promise<BookmarkResult[]> {
 		const plugin = (
 			this.app as unknown as {
 				internalPlugins?: {
