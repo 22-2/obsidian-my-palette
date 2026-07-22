@@ -3,6 +3,7 @@ import fuzzysort from "fuzzysort";
 import * as path from "path";
 import { getUserIgnoreFilters, isUserIgnoredPath } from "../core/ignoredPaths";
 import type { FileResult } from "../model/results";
+import { sortFileMatches, sortFilesWithoutQuery } from "./fileSorting";
 import type { PaletteProvider } from "./PaletteProvider";
 
 interface SearchEntry {
@@ -12,6 +13,7 @@ interface SearchEntry {
 	aliases: string[];
 	extension: string;
 	text: string;
+	mtime: number;
 }
 
 function aliases(value: unknown): string[] {
@@ -76,6 +78,7 @@ export class FileProvider implements PaletteProvider {
 			aliases: fileAliases,
 			extension: file.extension,
 			text: [file.basename, file.path, ...fileAliases, h1].join(" "),
+			mtime: file.stat.mtime,
 		});
 	}
 
@@ -109,6 +112,7 @@ export class FileProvider implements PaletteProvider {
 			extension,
 			aliases: [],
 			text: `${basename} ${filePath}`,
+			mtime: 0,
 		});
 	}
 
@@ -118,31 +122,19 @@ export class FileProvider implements PaletteProvider {
 		const recent = new Map(recentPaths.map((filePath, index) => [filePath, index]));
 		const entries = [...this.cache.values()];
 		if (!query.trim()) {
-			const recentFiles = recentPaths
-				.map((filePath) => this.cache.get(filePath))
-				.filter((entry): entry is SearchEntry => entry !== undefined);
-			const allFiles = entries
-				.filter((entry) => !isUserIgnoredPath(this.app, entry.path))
-				.sort((a, b) => a.path.localeCompare(b.path));
-			const recentPathsSet = new Set(recentFiles.map((entry) => entry.path));
-			const files = recentFiles.length
-				? [...recentFiles, ...allFiles.filter((entry) => !recentPathsSet.has(entry.path))]
-				: allFiles;
+			const files = sortFilesWithoutQuery(
+				entries.filter((entry) => !isUserIgnoredPath(this.app, entry.path)),
+				recent,
+			);
 			return files.map((entry) => this.result(entry));
 		}
-		return [
+		const matches = [
 			...fuzzysort.go(query, entries, {
 				keys: [(entry) => entry.basename, (entry) => entry.path, (entry) => entry.text],
 				scoreFn: (matches) => Math.max(...matches.map((match) => match?.score ?? 0)),
 			}),
-		]
-			.sort(
-				(a, b) =>
-					b.score - a.score ||
-					(recent.get(a.obj.path) ?? Infinity) - (recent.get(b.obj.path) ?? Infinity) ||
-					a.obj.path.localeCompare(b.obj.path),
-			)
-			.map(({ obj }) => this.result(obj));
+		];
+		return sortFileMatches(matches, query, recent).map((entry) => this.result(entry));
 	}
 
 	private result(entry: SearchEntry): FileResult {
