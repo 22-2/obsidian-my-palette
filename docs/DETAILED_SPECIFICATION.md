@@ -468,6 +468,7 @@ interface EverythingResult extends BaseResult {
 interface MyPaletteSettings {
 	schemaVersion: 3;
 	showLog: boolean;
+	rememberLastInput: boolean;
 	prefixes: {
 		command: string;
 		everything: string;
@@ -491,7 +492,8 @@ interface MyPaletteSettings {
 - 欠損キーは既定値で補完する。
 - 型・範囲が不正な値は項目単位で既定値へ戻し、プラグイン全体のロードを失敗させない。
 - 最近実行コマンドは最大20 ID。存在しない ID は表示時に除外する。
-- ファイル検索履歴および Everything 検索語は永続化しない。
+- `rememberLastInput` が有効な場合、モードごとの最後の入力を Obsidian の実行中だけ保持する。
+- ファイル検索履歴および Everything 検索語は `data.json` へ永続化しない。
 
 ## 11. アーキテクチャ
 

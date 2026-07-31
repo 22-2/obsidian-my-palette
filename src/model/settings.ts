@@ -11,6 +11,7 @@ export type ActionId = (typeof ACTION_IDS)[number];
 export interface MyPaletteSettings {
 	schemaVersion: 3;
 	showLog: boolean;
+	rememberLastInput: boolean;
 	prefixes: { command: string; everything: string };
 	everything: {
 		httpUrl: string;
@@ -37,6 +38,7 @@ export const DEFAULT_KEYBINDINGS: Record<ActionId, string[]> = {
 export const DEFAULT_SETTINGS: MyPaletteSettings = {
 	schemaVersion: 3,
 	showLog: false,
+	rememberLastInput: false,
 	prefixes: { command: ">", everything: "e " },
 	everything: {
 		httpUrl: "http://127.0.0.1:51361/",

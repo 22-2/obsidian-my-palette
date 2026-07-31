@@ -36,6 +36,8 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 		...DEFAULT_SETTINGS,
 		schemaVersion: 3,
 		showLog: typeof source.showLog === "boolean" ? source.showLog : false,
+		rememberLastInput:
+			typeof source.rememberLastInput === "boolean" ? source.rememberLastInput : false,
 		prefixes: {
 			command: typeof rawPrefixes.command === "string" ? rawPrefixes.command : ">",
 			everything: typeof rawPrefixes.everything === "string" ? rawPrefixes.everything : "e ",
@@ -171,6 +173,20 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 		new Setting(containerEl).setName("Prefixes").setHeading();
 		this.addPrefix(containerEl, "Command prefix", "command");
 		this.addPrefix(containerEl, "Everything prefix", "everything");
+
+		new Setting(containerEl).setName("Behavior").setHeading();
+		new Setting(containerEl)
+			.setName("Remember last input")
+			.setDesc(
+				"Restores the last query for each palette mode until Obsidian is closed. Search text is not saved to disk.",
+			)
+			.addToggle((toggle) =>
+				toggle.setValue(this.plugin.settings.rememberLastInput).onChange(async (value) => {
+					this.plugin.settings.rememberLastInput = value;
+					if (!value) this.plugin.clearRememberedPaletteQueries();
+					await this.plugin.saveSettings();
+				}),
+			);
 
 		new Setting(containerEl).setName("Keybindings").setHeading();
 		for (const action of ACTION_IDS) {

@@ -50,6 +50,10 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override onSelectionModalClose(): void {
+		const parsed = this.fixedMode
+			? { mode: this.fixedMode, query: this.inputEl.value }
+			: parseInput(this.inputEl.value, this.plugin.settings.prefixes);
+		this.plugin.rememberPaletteQuery(parsed.mode, parsed.query);
 		this.generation += 1;
 		this.controller?.abort();
 		this.plugin.everythingClient.cancel();

@@ -29,6 +29,7 @@ export default class MyPalettePlugin extends Plugin {
 	bookmarkProvider!: BookmarkProvider;
 	smartConnectionProvider!: SmartConnectionProvider;
 	providers!: Record<PaletteMode, PaletteProvider>;
+	private rememberedPaletteQueries: Partial<Record<PaletteMode, string>> = {};
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -59,17 +60,14 @@ export default class MyPalettePlugin extends Plugin {
 		this.addCommand({
 			id: "open",
 			name: "Open Recent palette",
-			callback: () => new PaletteModal(this.app, this).open(),
+			callback: () =>
+				new PaletteModal(this.app, this, this.getRememberedPaletteQuery("file")).open(),
 		});
 		this.addCommand({
 			id: "open-command-list",
 			name: "Open command list",
 			callback: () =>
-				new PaletteModal(
-					this.app,
-					this,
-					`${this.settings.prefixes.command.trimEnd()} `,
-				).open(),
+				new PaletteModal(this.app, this, this.commandPaletteInitialInput()).open(),
 		});
 		this.addCommand({
 			id: "link-search",
@@ -149,6 +147,26 @@ export default class MyPalettePlugin extends Plugin {
 			...this.settings.recentCommandIds.filter((existing) => existing !== id),
 		].slice(0, 20);
 		void this.saveSettings();
+	}
+
+	rememberPaletteQuery(mode: PaletteMode, query: string): void {
+		if (!this.settings.rememberLastInput) return;
+		this.rememberedPaletteQueries[mode] = query;
+	}
+
+	clearRememberedPaletteQueries(): void {
+		this.rememberedPaletteQueries = {};
+	}
+
+	private getRememberedPaletteQuery(mode: PaletteMode): string {
+		if (!this.settings.rememberLastInput) return "";
+		return this.rememberedPaletteQueries[mode] ?? "";
+	}
+
+	private commandPaletteInitialInput(): string {
+		const prefix = this.settings.prefixes.command.trimEnd();
+		const query = this.getRememberedPaletteQuery("command");
+		return `${prefix} ${query}`;
 	}
 
 	openSettings(): void {
