@@ -16,10 +16,7 @@ interface ExternalMarkdownViewState extends Record<string, unknown> {
 export class ExternalMarkdownView extends ItemView {
 	private filePath = "";
 	private editor?: FakeEditor;
-	private saveTimer?: number;
-	private pendingContent?: string;
 	private loadGeneration = 0;
-	private saveChain: Promise<void> = Promise.resolve();
 	private autoFocus = true;
 	private preview = false;
 
@@ -60,7 +57,6 @@ export class ExternalMarkdownView extends ItemView {
 			if (this.autoFocus) this.editor?.focus();
 			return;
 		}
-		await this.flushSave();
 		this.filePath = nextPath;
 		(this.leaf as WorkspaceLeaf & { updateHeader?: () => void }).updateHeader?.();
 		this.app.workspace.requestSaveLayout();
@@ -72,7 +68,6 @@ export class ExternalMarkdownView extends ItemView {
 	}
 
 	async onClose(): Promise<void> {
-		await this.flushSave();
 		this.destroyEditor();
 	}
 
@@ -126,7 +121,7 @@ export class ExternalMarkdownView extends ItemView {
 			hostLeaf: this.leaf,
 			initialContent: content,
 			autoFocus: this.autoFocus,
-			onChange: (nextContent) => this.scheduleSave(nextContent),
+			isReadOnly: true,
 		});
 		await this.editor.ready;
 		if (generation !== this.loadGeneration) {
@@ -134,34 +129,6 @@ export class ExternalMarkdownView extends ItemView {
 			return;
 		}
 		this.editor.loadToDom(editorArea);
-		this.editor.registerHotkey(["Mod"], "s", () => {
-			void this.flushSave();
-			return true;
-		});
-	}
-
-	private scheduleSave(content: string): void {
-		this.pendingContent = content;
-		if (this.saveTimer !== undefined) window.clearTimeout(this.saveTimer);
-		this.saveTimer = window.setTimeout(() => void this.flushSave(), 400);
-	}
-
-	private async flushSave(): Promise<void> {
-		if (this.saveTimer !== undefined) window.clearTimeout(this.saveTimer);
-		this.saveTimer = undefined;
-		const content = this.pendingContent;
-		this.pendingContent = undefined;
-		if (content === undefined || !this.filePath) return;
-		const targetPath = this.filePath;
-		const write = this.saveChain.then(() => fs.writeFile(targetPath, content, "utf8"));
-		this.saveChain = write.catch(() => {});
-		try {
-			await write;
-		} catch (error) {
-			if (this.filePath === targetPath && this.pendingContent === undefined)
-				this.pendingContent = content;
-			new Notice(`Could not save ${path.win32.basename(targetPath)}: ${messageOf(error)}`);
-		}
 	}
 
 	private destroyEditor(): void {
