@@ -106,9 +106,6 @@
 	font-size: var(--font-ui-smaller);
 	white-space: nowrap;
 }
-.workspace-leaf-content[data-type="my-palette-external-markdown"] .view-content {
-	padding: 0;
-}
 
 .my-palette-external-markdown {
 	display: flex;
