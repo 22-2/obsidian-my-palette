@@ -1,0 +1,155 @@
+import { FakeEditor } from "@22-2/obsidian-magical-editor";
+import { ItemView, Notice, type WorkspaceLeaf } from "obsidian";
+import { promises as fs } from "fs";
+import * as path from "path";
+
+export const EXTERNAL_MARKDOWN_VIEW_TYPE = "my-palette-external-markdown";
+
+interface ExternalMarkdownViewState extends Record<string, unknown> {
+	path?: unknown;
+	autoFocus?: unknown;
+	preview?: unknown;
+}
+
+export class ExternalMarkdownView extends ItemView {
+	private filePath = "";
+	private editor?: FakeEditor;
+	private saveTimer?: number;
+	private pendingContent?: string;
+	private loadGeneration = 0;
+	private saveChain: Promise<void> = Promise.resolve();
+	private autoFocus = true;
+	private preview = false;
+
+	constructor(leaf: WorkspaceLeaf) {
+		super(leaf);
+	}
+
+	getViewType(): string {
+		return EXTERNAL_MARKDOWN_VIEW_TYPE;
+	}
+
+	getDisplayText(): string {
+		return this.filePath ? path.win32.basename(this.filePath) : "External Markdown";
+	}
+
+	getIcon(): string {
+		return "file-text";
+	}
+
+	getFilePath(): string {
+		return this.filePath;
+	}
+
+	isPreview(): boolean {
+		return this.preview;
+	}
+
+	getState(): ExternalMarkdownViewState {
+		return { path: this.filePath, autoFocus: this.autoFocus, preview: this.preview };
+	}
+
+	async setState(state: ExternalMarkdownViewState): Promise<void> {
+		const nextPath = typeof state.path === "string" ? path.win32.resolve(state.path) : "";
+		this.autoFocus = state.autoFocus !== false;
+		this.preview = state.preview === true;
+		if (!nextPath) return;
+		if (nextPath === this.filePath) {
+			if (this.autoFocus) this.editor?.focus();
+			return;
+		}
+		await this.flushSave();
+		this.filePath = nextPath;
+		(this.leaf as WorkspaceLeaf & { updateHeader?: () => void }).updateHeader?.();
+		this.app.workspace.requestSaveLayout();
+		await this.loadFile();
+	}
+
+	async onOpen(): Promise<void> {
+		if (this.filePath) await this.loadFile();
+	}
+
+	async onClose(): Promise<void> {
+		await this.flushSave();
+		this.destroyEditor();
+	}
+
+	private async loadFile(): Promise<void> {
+		const generation = ++this.loadGeneration;
+		this.destroyEditor();
+		this.contentEl.empty();
+		this.contentEl.addClass("my-palette-external-markdown");
+
+		let content: string;
+		try {
+			content = await fs.readFile(this.filePath, "utf8");
+		} catch (error) {
+			if (generation !== this.loadGeneration) return;
+			this.renderError(error);
+			return;
+		}
+		if (generation !== this.loadGeneration) return;
+
+		const header = this.contentEl.createDiv({ cls: "my-palette-external-markdown__header" });
+		header.createDiv({ cls: "my-palette-external-markdown__path", text: this.filePath });
+		const editorArea = this.contentEl.createDiv({
+			cls: "my-palette-external-markdown__editor",
+		});
+		this.editor = new FakeEditor(this.app, {
+			hostLeaf: this.leaf,
+			initialContent: content,
+			autoFocus: this.autoFocus,
+			onChange: (nextContent) => this.scheduleSave(nextContent),
+		});
+		await this.editor.ready;
+		if (generation !== this.loadGeneration) {
+			this.destroyEditor();
+			return;
+		}
+		this.editor.loadToDom(editorArea);
+		this.editor.registerHotkey(["Mod"], "s", () => {
+			void this.flushSave();
+			return true;
+		});
+	}
+
+	private scheduleSave(content: string): void {
+		this.pendingContent = content;
+		if (this.saveTimer !== undefined) window.clearTimeout(this.saveTimer);
+		this.saveTimer = window.setTimeout(() => void this.flushSave(), 400);
+	}
+
+	private async flushSave(): Promise<void> {
+		if (this.saveTimer !== undefined) window.clearTimeout(this.saveTimer);
+		this.saveTimer = undefined;
+		const content = this.pendingContent;
+		this.pendingContent = undefined;
+		if (content === undefined || !this.filePath) return;
+		const targetPath = this.filePath;
+		const write = this.saveChain.then(() => fs.writeFile(targetPath, content, "utf8"));
+		this.saveChain = write.catch(() => {});
+		try {
+			await write;
+		} catch (error) {
+			if (this.filePath === targetPath && this.pendingContent === undefined)
+				this.pendingContent = content;
+			new Notice(`Could not save ${path.win32.basename(targetPath)}: ${messageOf(error)}`);
+		}
+	}
+
+	private destroyEditor(): void {
+		this.editor?.destroy();
+		this.editor = undefined;
+	}
+
+	private renderError(error: unknown): void {
+		this.contentEl.createDiv({
+			cls: "my-palette-external-markdown__error",
+			text: `Could not open ${this.filePath}: ${messageOf(error)}`,
+		});
+	}
+}
+
+function messageOf(error: unknown): string {
+	return error instanceof Error ? error.message : String(error);
+}

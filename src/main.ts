@@ -1,4 +1,4 @@
-import { Plugin } from "obsidian";
+import { Plugin, type WorkspaceLeaf } from "obsidian";
 import log, { LogLevels } from "consola";
 import { DEFAULT_SETTINGS, mergeSettings, MyPaletteSettingTab } from "./settings";
 import type { MyPaletteSettings } from "./model/settings";
@@ -13,6 +13,7 @@ import { SmartConnectionProvider } from "./providers/SmartConnectionProvider";
 import type { PaletteMode } from "./model/results";
 import type { PaletteProvider } from "./providers/PaletteProvider";
 import { MoveFileModal } from "./palette/MoveFileModal";
+import { EXTERNAL_MARKDOWN_VIEW_TYPE, ExternalMarkdownView } from "./views/ExternalMarkdownView";
 import "../styles.css";
 
 const logger = log.withTag("MyPalette");
@@ -34,6 +35,7 @@ export default class MyPalettePlugin extends Plugin {
 	async onload(): Promise<void> {
 		await this.loadSettings();
 		this.initializeLogger();
+		this.registerView(EXTERNAL_MARKDOWN_VIEW_TYPE, (leaf) => new ExternalMarkdownView(leaf));
 		this.fileProvider = new FileProvider(
 			this.app,
 			() => this.settings.everything.vaultExtensions,
@@ -107,6 +109,46 @@ export default class MyPalettePlugin extends Plugin {
 				if (file) new MoveFileModal(this.app, file).open();
 			},
 		});
+	}
+
+	async openExternalMarkdown(
+		absolutePath: string,
+		action: "primary" | "alternate" | "tertiary",
+		autoFocus = true,
+	): Promise<void> {
+		const externalLeaves = this.app.workspace.getLeavesOfType(EXTERNAL_MARKDOWN_VIEW_TYPE);
+		const existing = externalLeaves.find(
+			(leaf) =>
+				leaf.view instanceof ExternalMarkdownView &&
+				leaf.view.getFilePath().toLocaleLowerCase() === absolutePath.toLocaleLowerCase(),
+		);
+		if (existing) {
+			await existing.setViewState({
+				type: EXTERNAL_MARKDOWN_VIEW_TYPE,
+				active: true,
+				state: { path: absolutePath, autoFocus, preview: !autoFocus },
+			});
+			this.app.workspace.revealLeaf(existing);
+			return;
+		}
+		const previewLeaf = !autoFocus
+			? externalLeaves.find(
+					(leaf) => leaf.view instanceof ExternalMarkdownView && leaf.view.isPreview(),
+				)
+			: undefined;
+		const leaf: WorkspaceLeaf =
+			previewLeaf ??
+			(action === "alternate"
+				? this.app.workspace.getLeaf("tab")
+				: action === "tertiary"
+					? this.app.workspace.getLeaf("split", "vertical")
+					: this.app.workspace.getLeaf(false));
+		await leaf.setViewState({
+			type: EXTERNAL_MARKDOWN_VIEW_TYPE,
+			active: true,
+			state: { path: absolutePath, autoFocus, preview: !autoFocus },
+		});
+		this.app.workspace.revealLeaf(leaf);
 	}
 
 	onunload(): void {

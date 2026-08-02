@@ -1,5 +1,6 @@
 import { TFile, type App } from "obsidian";
 import { isAbsolutePathUserIgnored, isUserIgnoredPath } from "../core/ignoredPaths";
+import { isMarkdownPath } from "../core/externalFiles";
 import type MyPalettePlugin from "../main";
 import type { EverythingScope, PaletteMode, PaletteResult } from "../model/results";
 import { SelectionModal, type SelectionItem } from "../ui/selectionModal";
@@ -56,6 +57,12 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override toSelectionItem(result: PaletteResult): SelectionItem {
+		const isExternalMarkdown =
+			result.mode === "everything" &&
+			result.kind === "file" &&
+			isMarkdownPath(result.absolutePath) &&
+			(!result.vaultPath ||
+				!(this.app.vault.getAbstractFileByPath(result.vaultPath) instanceof TFile));
 		const everythingOpensInCode =
 			result.mode === "everything" &&
 			(isAbsolutePathUserIgnored(this.app, result.absolutePath) ||
@@ -68,8 +75,11 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			label: result.primary,
 			description: result.secondary,
 			icon: result.icon,
-			badge:
-				result.mode === "smart"
+			badge: isExternalMarkdown
+				? this.plugin.settings.openExternalMarkdownInObsidian
+					? "Obsidian"
+					: "VS Code"
+				: result.mode === "smart"
 					? `${Math.round(result.score * 100)}%`
 					: result.mode === "file" && isUserIgnoredPath(this.app, result.vaultPath)
 						? "VS Code"
@@ -207,7 +217,11 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			if (closePalette) this.close();
 			return;
 		}
-		const outcome = await runResultAction(this.app, result, action);
+		const outcome = await runResultAction(this.app, result, action, {
+			openExternalMarkdownInObsidian: this.plugin.settings.openExternalMarkdownInObsidian,
+			openExternalMarkdown: (absolutePath, openAction) =>
+				this.plugin.openExternalMarkdown(absolutePath, openAction, closePalette),
+		});
 		if (outcome.close) {
 			if (closePalette) this.close();
 			return;
@@ -221,6 +235,13 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		};
 		const result = chooser.chooser?.values?.[chooser.chooser.selectedItem ?? -1];
 		if (!result || result.mode === "command") return;
+		const selectionStart = this.inputEl.selectionStart;
+		const selectionEnd = this.inputEl.selectionEnd;
 		await this.activatePaletteResult("primary", result, false);
+		window.setTimeout(() => {
+			if (!this.inputEl.isConnected) return;
+			this.inputEl.focus({ preventScroll: true });
+			this.inputEl.setSelectionRange(selectionStart, selectionEnd);
+		});
 	}
 }

@@ -17,11 +17,17 @@ declare const electron: {
 	};
 };
 import type { EverythingResult, PaletteResult } from "../model/results";
+import { isMarkdownPath } from "../core/externalFiles";
 
 export type ActionKind = "primary" | "alternate" | "tertiary";
 export interface ActionOutcome {
 	close: boolean;
 	message?: string;
+}
+
+interface ExternalMarkdownActions {
+	openExternalMarkdownInObsidian: boolean;
+	openExternalMarkdown: (absolutePath: string, action: ActionKind) => Promise<void>;
 }
 
 async function openVaultFileInCode(app: App, vaultPath: string): Promise<ActionOutcome> {
@@ -99,6 +105,7 @@ export async function runResultAction(
 	app: App,
 	result: PaletteResult,
 	action: ActionKind,
+	externalMarkdown: ExternalMarkdownActions,
 ): Promise<ActionOutcome> {
 	if (result.mode === "file") {
 		if (isUserIgnoredPath(app, result.vaultPath))
@@ -137,6 +144,22 @@ export async function runResultAction(
 		const current = app.vault.getAbstractFileByPath(everythingResult.vaultPath);
 		if (current instanceof TFile) await app.workspace.getLeaf(false).openFile(current);
 		else {
+			if (isMarkdownPath(everythingResult.absolutePath)) {
+				if (externalMarkdown.openExternalMarkdownInObsidian) {
+					await externalMarkdown.openExternalMarkdown(
+						everythingResult.absolutePath,
+						action,
+					);
+					return { close: true };
+				}
+				const vaultRoot = getVaultRootPath(app);
+				if (!vaultRoot)
+					return {
+						close: false,
+						message: "This vault adapter cannot resolve the Vault folder.",
+					};
+				return await openAbsolutePathInCode(vaultRoot, everythingResult.absolutePath);
+			}
 			const vaultRoot = getVaultRootPath(app);
 			if (!vaultRoot)
 				return {
@@ -145,6 +168,15 @@ export async function runResultAction(
 				};
 			return await openAbsolutePathInCode(vaultRoot, everythingResult.absolutePath);
 		}
+	} else if (isMarkdownPath(everythingResult.absolutePath)) {
+		if (externalMarkdown.openExternalMarkdownInObsidian) {
+			await externalMarkdown.openExternalMarkdown(everythingResult.absolutePath, action);
+			return { close: true };
+		}
+		const vaultRoot = getVaultRootPath(app);
+		if (!vaultRoot)
+			return { close: false, message: "This vault adapter cannot resolve the Vault folder." };
+		return await openAbsolutePathInCode(vaultRoot, everythingResult.absolutePath);
 	} else if (isAbsolutePathUserIgnored(app, everythingResult.absolutePath)) {
 		const vaultRoot = getVaultRootPath(app);
 		if (!vaultRoot)

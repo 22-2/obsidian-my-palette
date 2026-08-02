@@ -34,10 +34,14 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 
 	return {
 		...DEFAULT_SETTINGS,
-		schemaVersion: 3,
+		schemaVersion: 4,
 		showLog: typeof source.showLog === "boolean" ? source.showLog : false,
 		rememberLastInput:
 			typeof source.rememberLastInput === "boolean" ? source.rememberLastInput : false,
+		openExternalMarkdownInObsidian:
+			typeof source.openExternalMarkdownInObsidian === "boolean"
+				? source.openExternalMarkdownInObsidian
+				: true,
 		prefixes: {
 			command: typeof rawPrefixes.command === "string" ? rawPrefixes.command : ">",
 			everything: typeof rawPrefixes.everything === "string" ? rawPrefixes.everything : "e ",
@@ -175,6 +179,19 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 		this.addPrefix(containerEl, "Everything prefix", "everything");
 
 		new Setting(containerEl).setName("Behavior").setHeading();
+		new Setting(containerEl)
+			.setName("Open external Markdown in Obsidian")
+			.setDesc(
+				"Open Markdown files outside the Vault in a virtual Obsidian editor. Turn this off to open them in VS Code.",
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.openExternalMarkdownInObsidian)
+					.onChange(async (value) => {
+						this.plugin.settings.openExternalMarkdownInObsidian = value;
+						await this.plugin.saveSettings();
+					}),
+			);
 		new Setting(containerEl)
 			.setName("Remember last input")
 			.setDesc(

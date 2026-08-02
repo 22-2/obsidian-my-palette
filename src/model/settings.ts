@@ -9,9 +9,10 @@ export const ACTION_IDS = [
 export type ActionId = (typeof ACTION_IDS)[number];
 
 export interface MyPaletteSettings {
-	schemaVersion: 3;
+	schemaVersion: 4;
 	showLog: boolean;
 	rememberLastInput: boolean;
+	openExternalMarkdownInObsidian: boolean;
 	prefixes: { command: string; everything: string };
 	everything: {
 		httpUrl: string;
@@ -36,9 +37,10 @@ export const DEFAULT_KEYBINDINGS: Record<ActionId, string[]> = {
 };
 
 export const DEFAULT_SETTINGS: MyPaletteSettings = {
-	schemaVersion: 3,
+	schemaVersion: 4,
 	showLog: false,
 	rememberLastInput: false,
+	openExternalMarkdownInObsidian: true,
 	prefixes: { command: ">", everything: "e " },
 	everything: {
 		httpUrl: "http://127.0.0.1:51361/",
