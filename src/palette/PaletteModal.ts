@@ -80,7 +80,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			icon: result.icon,
 			badge: isExternalMarkdown
 				? this.plugin.settings.openExternalMarkdownInObsidian
-					? "Obsidian"
+					? "ReadOnly"
 					: "VS Code"
 				: result.mode === "smart"
 					? `${Math.round(result.score * 100)}%`
