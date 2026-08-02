@@ -4,6 +4,7 @@ import type { MyPaletteSettings } from "../model/settings";
 import type { EverythingResult } from "../model/results";
 import { EverythingHttpClient } from "../everything/EverythingHttpClient";
 import type { PaletteProvider, PaletteSearchRequest } from "./PaletteProvider";
+import { buildEverythingQuery } from "../everything/everythingQuery";
 
 export class EverythingProvider implements PaletteProvider<EverythingResult> {
 	constructor(
@@ -22,12 +23,7 @@ export class EverythingProvider implements PaletteProvider<EverythingResult> {
 		const vaultExtensions = new Set(
 			settings.vaultExtensions.map((extension) => extension.toLocaleLowerCase()),
 		);
-		const extensionFilter = settings.vaultExtensions.length
-			? `ext:${settings.vaultExtensions.join(";")}`
-			: "";
-		const scopedQuery = [`path:"${vaultRoot}"`, scope === "vault" && extensionFilter, query]
-			.filter(Boolean)
-			.join(" ");
+		const scopedQuery = buildEverythingQuery(vaultRoot, scope, settings.vaultExtensions, query);
 		const results = await this.client.search(scopedQuery, settings, signal, 500);
 		return results
 			.flatMap((result): EverythingResult[] => {
