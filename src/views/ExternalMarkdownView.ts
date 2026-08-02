@@ -132,6 +132,7 @@ export class ExternalMarkdownView extends ItemView {
 			return;
 		}
 		this.editor.loadToDom(editorArea);
+		if (this.autoFocus) this.editor.focus();
 	}
 
 	private destroyEditor(): void {
