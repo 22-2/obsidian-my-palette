@@ -125,7 +125,6 @@ export class ExternalMarkdownView extends ItemView {
 			hostLeaf: this.leaf,
 			initialContent: content,
 			autoFocus: this.autoFocus,
-			isReadOnly: true,
 		});
 		await this.editor.ready;
 		if (generation !== this.loadGeneration) {
