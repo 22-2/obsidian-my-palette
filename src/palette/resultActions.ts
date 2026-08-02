@@ -4,6 +4,7 @@ import {
 	isAbsolutePathUserIgnored,
 	isUserIgnoredPath,
 } from "../core/ignoredPaths";
+import { getDesktopAdapter } from "../core/desktopAdapter";
 
 declare const electron: {
 	shell: {
@@ -65,11 +66,7 @@ export async function runResultAction(
 		return { close: false, message: "This result must be opened by the related-file palette." };
 	const everythingResult = result as EverythingResult;
 	try {
-		await (
-			app.vault.adapter as unknown as {
-				fs: { promises: { stat: (path: string) => Promise<unknown> } };
-			}
-		).fs.promises.stat(everythingResult.absolutePath);
+		await getDesktopAdapter(app).fs.promises.stat(everythingResult.absolutePath);
 	} catch {
 		return { close: false, message: "The selected path no longer exists." };
 	}

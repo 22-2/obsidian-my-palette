@@ -1,15 +1,11 @@
 import { normalizePath, type App } from "obsidian";
+import { getDesktopAdapter } from "./desktopAdapter";
 
 type ConfigurableVault = App["vault"] & {
 	getConfig: (key: string) => unknown;
 	adapter: App["vault"]["adapter"] & {
 		getBasePath?: () => string;
 		getFullPath?: (vaultPath: string) => string;
-		path: {
-			relative(from: string, to: string): string;
-			sep: string;
-			isAbsolute(path: string): boolean;
-		};
 	};
 };
 
@@ -39,7 +35,7 @@ export function getVaultRootPath(app: App): string | null {
 export function vaultPathFromAbsolute(app: App, absolutePath: string): string | null {
 	const basePath = (app.vault as ConfigurableVault).adapter.getBasePath?.();
 	if (!basePath) return null;
-	const path = (app.vault as ConfigurableVault).adapter.path;
+	const path = getDesktopAdapter(app).path;
 	const relative = path.relative(basePath, absolutePath);
 	if (!relative || relative === ".") return "";
 	if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative))

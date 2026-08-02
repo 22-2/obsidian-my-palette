@@ -1,6 +1,7 @@
 import { FakeEditor } from "@22-2/obsidian-magical-editor";
 import { ItemView, Menu, Notice, type WorkspaceLeaf } from "obsidian";
 import { getVaultRootPath } from "../core/ignoredPaths";
+import { getDesktopAdapter } from "../core/desktopAdapter";
 import { openPathInCode } from "../core/vscode";
 
 export const EXTERNAL_MARKDOWN_VIEW_TYPE = "my-palette-external-markdown";
@@ -10,19 +11,6 @@ interface ExternalMarkdownViewState extends Record<string, unknown> {
 	autoFocus?: unknown;
 	preview?: unknown;
 }
-
-type VaultAdapterWithNodeApis = {
-	path: {
-		basename(path: string): string;
-		relative(from: string, to: string): string;
-		resolve(path: string): string;
-	};
-	fs: {
-		promises: {
-			readFile(path: string, encoding: "utf8"): Promise<string>;
-		};
-	};
-};
 
 export class ExternalMarkdownView extends ItemView {
 	private filePath = "";
@@ -40,7 +28,9 @@ export class ExternalMarkdownView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return this.filePath ? this.path.basename(this.filePath) : "External Markdown";
+		return this.filePath
+			? getDesktopAdapter(this.app).path.basename(this.filePath)
+			: "External Markdown";
 	}
 
 	getIcon(): string {
@@ -60,7 +50,10 @@ export class ExternalMarkdownView extends ItemView {
 	}
 
 	async setState(state: ExternalMarkdownViewState): Promise<void> {
-		const nextPath = typeof state.path === "string" ? this.path.resolve(state.path) : "";
+		const nextPath =
+			typeof state.path === "string"
+				? getDesktopAdapter(this.app).path.resolve(state.path)
+				: "";
 		this.autoFocus = state.autoFocus !== false;
 		this.preview = state.preview === true;
 		if (!nextPath) return;
@@ -115,7 +108,7 @@ export class ExternalMarkdownView extends ItemView {
 
 		let content: string;
 		try {
-			content = await this.adapter.fs.promises.readFile(this.filePath, "utf8");
+			content = await getDesktopAdapter(this.app).fs.promises.readFile(this.filePath, "utf8");
 		} catch (error) {
 			if (generation !== this.loadGeneration) return;
 			this.renderError(error);
@@ -147,17 +140,11 @@ export class ExternalMarkdownView extends ItemView {
 		this.editor = undefined;
 	}
 
-	private get adapter(): VaultAdapterWithNodeApis {
-		return this.app.vault.adapter as unknown as VaultAdapterWithNodeApis;
-	}
-
-	private get path(): VaultAdapterWithNodeApis["path"] {
-		return this.adapter.path;
-	}
-
 	private relativePath(): string {
 		const vaultRoot = getVaultRootPath(this.app);
-		return vaultRoot ? this.path.relative(vaultRoot, this.filePath) || "." : this.filePath;
+		return vaultRoot
+			? getDesktopAdapter(this.app).path.relative(vaultRoot, this.filePath) || "."
+			: this.filePath;
 	}
 
 	private async copyPath(value: string): Promise<void> {
@@ -170,11 +157,6 @@ export class ExternalMarkdownView extends ItemView {
 	}
 
 	private async openInCode(): Promise<void> {
-		const vaultRoot = getVaultRootPath(this.app);
-		if (!vaultRoot) {
-			new Notice("This vault adapter cannot resolve the Vault folder.");
-			return;
-		}
 		const error = await openPathInCode(this.filePath);
 		if (error) new Notice(error);
 	}
