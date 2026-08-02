@@ -1,8 +1,6 @@
 import { Notice, TFile, type App } from "obsidian";
-import { promises as fs } from "fs";
 import {
 	getVaultFullPath,
-	getVaultRootPath,
 	isAbsolutePathUserIgnored,
 	isUserIgnoredPath,
 } from "../core/ignoredPaths";
@@ -31,19 +29,13 @@ interface ExternalMarkdownActions {
 
 async function openVaultFileInCode(app: App, vaultPath: string): Promise<ActionOutcome> {
 	const absolutePath = getVaultFullPath(app, vaultPath);
-	const vaultRoot = getVaultRootPath(app);
 	if (!absolutePath)
 		return { close: false, message: "This vault adapter cannot resolve an absolute path." };
-	if (!vaultRoot)
-		return { close: false, message: "This vault adapter cannot resolve the Vault folder." };
-	return await openAbsolutePathInCode(vaultRoot, absolutePath);
+	return await openAbsolutePathInCode(absolutePath);
 }
 
-async function openAbsolutePathInCode(
-	vaultRoot: string,
-	absolutePath: string,
-): Promise<ActionOutcome> {
-	const error = await openPathInCode(vaultRoot, absolutePath);
+async function openAbsolutePathInCode(absolutePath: string): Promise<ActionOutcome> {
+	const error = await openPathInCode(absolutePath);
 	return error ? { close: false, message: error } : { close: true };
 }
 
@@ -73,7 +65,11 @@ export async function runResultAction(
 		return { close: false, message: "This result must be opened by the related-file palette." };
 	const everythingResult = result as EverythingResult;
 	try {
-		await fs.stat(everythingResult.absolutePath);
+		await (
+			app.vault.adapter as unknown as {
+				fs: { promises: { stat: (path: string) => Promise<unknown> } };
+			}
+		).fs.promises.stat(everythingResult.absolutePath);
 	} catch {
 		return { close: false, message: "The selected path no longer exists." };
 	}
@@ -98,36 +94,18 @@ export async function runResultAction(
 					);
 					return { close: true };
 				}
-				const vaultRoot = getVaultRootPath(app);
-				if (!vaultRoot)
-					return {
-						close: false,
-						message: "This vault adapter cannot resolve the Vault folder.",
-					};
-				return await openAbsolutePathInCode(vaultRoot, everythingResult.absolutePath);
+				return await openAbsolutePathInCode(everythingResult.absolutePath);
 			}
-			const vaultRoot = getVaultRootPath(app);
-			if (!vaultRoot)
-				return {
-					close: false,
-					message: "This vault adapter cannot resolve the Vault folder.",
-				};
-			return await openAbsolutePathInCode(vaultRoot, everythingResult.absolutePath);
+			return await openAbsolutePathInCode(everythingResult.absolutePath);
 		}
 	} else if (isMarkdownPath(everythingResult.absolutePath)) {
 		if (externalMarkdown.openExternalMarkdownInObsidian) {
 			await externalMarkdown.openExternalMarkdown(everythingResult.absolutePath, action);
 			return { close: true };
 		}
-		const vaultRoot = getVaultRootPath(app);
-		if (!vaultRoot)
-			return { close: false, message: "This vault adapter cannot resolve the Vault folder." };
-		return await openAbsolutePathInCode(vaultRoot, everythingResult.absolutePath);
+		return await openAbsolutePathInCode(everythingResult.absolutePath);
 	} else if (isAbsolutePathUserIgnored(app, everythingResult.absolutePath)) {
-		const vaultRoot = getVaultRootPath(app);
-		if (!vaultRoot)
-			return { close: false, message: "This vault adapter cannot resolve the Vault folder." };
-		return await openAbsolutePathInCode(vaultRoot, everythingResult.absolutePath);
+		return await openAbsolutePathInCode(everythingResult.absolutePath);
 	} else await electron.shell.openPath(everythingResult.absolutePath);
 	return { close: true };
 }

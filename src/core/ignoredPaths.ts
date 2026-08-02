@@ -1,11 +1,15 @@
 import { normalizePath, type App } from "obsidian";
-import * as path from "path";
 
 type ConfigurableVault = App["vault"] & {
 	getConfig: (key: string) => unknown;
 	adapter: App["vault"]["adapter"] & {
 		getBasePath?: () => string;
 		getFullPath?: (vaultPath: string) => string;
+		path: {
+			relative(from: string, to: string): string;
+			sep: string;
+			isAbsolute(path: string): boolean;
+		};
 	};
 };
 
@@ -35,13 +39,10 @@ export function getVaultRootPath(app: App): string | null {
 export function vaultPathFromAbsolute(app: App, absolutePath: string): string | null {
 	const basePath = (app.vault as ConfigurableVault).adapter.getBasePath?.();
 	if (!basePath) return null;
-	const relative = path.win32.relative(basePath, absolutePath);
+	const path = (app.vault as ConfigurableVault).adapter.path;
+	const relative = path.relative(basePath, absolutePath);
 	if (!relative || relative === ".") return "";
-	if (
-		relative === ".." ||
-		relative.startsWith(`..${path.win32.sep}`) ||
-		path.win32.isAbsolute(relative)
-	)
+	if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative))
 		return null;
 	return normalizePath(relative);
 }

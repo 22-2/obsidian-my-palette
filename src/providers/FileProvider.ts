@@ -1,6 +1,5 @@
 import { type App, type EventRef, type TFile } from "obsidian";
 import fuzzysort from "fuzzysort";
-import * as path from "path";
 import { getUserIgnoreFilters, isUserIgnoredPath } from "../core/ignoredPaths";
 import type { FileResult } from "../model/results";
 import { sortFileMatches, sortFilesWithoutQuery } from "./fileSorting";
@@ -111,8 +110,10 @@ export class FileProvider implements PaletteProvider<FileResult> {
 	}
 
 	private addIgnoredFile(filePath: string): void {
-		const extension = path.posix.extname(filePath).slice(1);
-		const filename = path.posix.basename(filePath);
+		const filename = filePath.slice(filePath.lastIndexOf("/") + 1);
+		const extension = filename.includes(".")
+			? filename.slice(filename.lastIndexOf(".") + 1)
+			: "";
 		const basename = extension ? filename.slice(0, -(extension.length + 1)) : filename;
 		this.setEntry({
 			path: filePath,

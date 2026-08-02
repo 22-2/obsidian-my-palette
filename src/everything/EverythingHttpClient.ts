@@ -1,7 +1,3 @@
-import type { ClientRequest, IncomingMessage } from "http";
-import { request as httpRequest } from "http";
-import { request as httpsRequest } from "https";
-import * as path from "path";
 import type { MyPaletteSettings } from "../model/settings";
 import type { EverythingResult } from "../model/results";
 
@@ -16,15 +12,24 @@ interface EverythingHttpResponse {
 	results?: unknown;
 }
 
-const MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
+declare global {
+	interface Window {
+		requestUrl: (request: {
+			url: string;
+			method?: string;
+			headers?: Record<string, string>;
+			throw?: boolean;
+		}) => Promise<{ status: number; arrayBuffer: ArrayBuffer; text: string }>;
+	}
+}
 
 export class EverythingHttpClient {
-	private active: ClientRequest | null = null;
+	private active: AbortController | null = null;
 
 	constructor(private readonly debug?: (message: string, detail?: unknown) => void) {}
 
 	cancel(): void {
-		this.active?.destroy(new DOMException("Aborted", "AbortError"));
+		this.active?.abort();
 		this.active = null;
 	}
 
@@ -39,68 +44,41 @@ export class EverythingHttpClient {
 		this.cancel();
 		this.debug?.("Requesting Everything HTTP Server", endpoint.toString());
 
-		return await new Promise<EverythingResult[]>((resolve, reject) => {
-			let settled = false;
-			let timedOut = false;
-			const finish = (callback: () => void): void => {
-				if (settled) return;
-				settled = true;
-				signal?.removeEventListener("abort", onAbort);
-				callback();
-			};
-			const transport = endpoint.protocol === "https:" ? httpsRequest : httpRequest;
-			const headers: Record<string, string> = { Accept: "application/json" };
-			if (settings.username)
-				headers.Authorization = `Basic ${Buffer.from(`${settings.username}:${settings.password}`).toString("base64")}`;
-
-			const request = transport(endpoint, { method: "GET", headers }, (response) => {
-				void this.readResponse(response)
-					.then((body) => {
-						if (response.statusCode === 401)
-							throw new Error("Everything HTTP authentication failed.");
-						if (
-							!response.statusCode ||
-							response.statusCode < 200 ||
-							response.statusCode >= 300
-						)
-							throw new Error(
-								`Everything HTTP Server returned ${response.statusCode ?? "no status"}.`,
-							);
-						finish(() => resolve(this.parseResponse(body)));
-					})
-					.catch((error: unknown) => finish(() => reject(error)));
-			});
-
-			this.active = request;
-			request.setTimeout(settings.requestTimeoutMs, () => {
-				timedOut = true;
-				request.destroy(new Error("Everything HTTP search timed out."));
-			});
-			request.on("close", () => {
-				if (this.active === request) this.active = null;
-			});
-			request.on("error", (error: NodeJS.ErrnoException) => {
-				if (signal?.aborted || error.name === "AbortError") {
-					finish(() => reject(new DOMException("Aborted", "AbortError")));
-					return;
-				}
-				if (timedOut) {
-					finish(() => reject(new Error("Everything HTTP search timed out.")));
-					return;
-				}
-				const message =
-					error.code === "ECONNREFUSED"
-						? "Everything HTTP Server is not running or the port is incorrect."
-						: `Everything HTTP request failed: ${error.message}`;
-				finish(() => reject(new Error(message)));
-			});
-
-			const onAbort = (): void => {
-				request.destroy(new DOMException("Aborted", "AbortError"));
-			};
-			signal?.addEventListener("abort", onAbort, { once: true });
-			request.end();
-		});
+		const controller = new AbortController();
+		this.active = controller;
+		signal?.addEventListener("abort", () => controller.abort(), { once: true });
+		const headers: Record<string, string> = { Accept: "application/json" };
+		if (settings.username)
+			headers.Authorization = `Basic ${btoa(`${settings.username}:${settings.password}`)}`;
+		const timeout = new Promise<never>((_, reject) =>
+			window.setTimeout(
+				() => reject(new Error("Everything HTTP search timed out.")),
+				settings.requestTimeoutMs,
+			),
+		);
+		try {
+			const response = await Promise.race([
+				window.requestUrl({
+					url: endpoint.toString(),
+					method: "GET",
+					headers,
+					throw: false,
+				}),
+				timeout,
+			]);
+			if (controller.signal.aborted) throw new DOMException("Aborted", "AbortError");
+			if (response.status === 401) throw new Error("Everything HTTP authentication failed.");
+			if (response.status < 200 || response.status >= 300)
+				throw new Error(`Everything HTTP Server returned ${response.status}.`);
+			if (response.arrayBuffer.byteLength > 2 * 1024 * 1024)
+				throw new Error("Everything HTTP response exceeded 2 MiB.");
+			return this.parseResponse(response.text);
+		} catch (error) {
+			if (controller.signal.aborted) throw new DOMException("Aborted", "AbortError");
+			throw error;
+		} finally {
+			if (this.active === controller) this.active = null;
+		}
 	}
 
 	private buildUrl(query: string, settings: MyPaletteSettings["everything"], limit: number): URL {
@@ -121,19 +99,6 @@ export class EverythingHttpClient {
 		return endpoint;
 	}
 
-	private async readResponse(response: IncomingMessage): Promise<string> {
-		const chunks: Buffer[] = [];
-		let total = 0;
-		for await (const chunk of response) {
-			const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-			total += buffer.length;
-			if (total > MAX_RESPONSE_BYTES)
-				throw new Error("Everything HTTP response exceeded 2 MiB.");
-			chunks.push(buffer);
-		}
-		return Buffer.concat(chunks).toString("utf8");
-	}
-
 	private parseResponse(body: string): EverythingResult[] {
 		let parsed: EverythingHttpResponse;
 		try {
@@ -147,10 +112,10 @@ export class EverythingHttpClient {
 			const item = raw as EverythingHttpItem;
 			if (typeof item.name !== "string") return [];
 			const parent = typeof item.path === "string" ? item.path : "";
-			const absolutePath = path.win32.isAbsolute(item.name)
+			const absolutePath = isAbsolutePath(item.name)
 				? item.name
-				: path.win32.join(parent, item.name);
-			if (!path.win32.isAbsolute(absolutePath)) return [];
+				: joinPath(parent, item.name);
+			if (!isAbsolutePath(absolutePath)) return [];
 			const attributes = typeof item.attributes === "string" ? item.attributes : "";
 			const kind =
 				String(item.type).toLocaleLowerCase() === "folder" ||
@@ -161,8 +126,8 @@ export class EverythingHttpClient {
 				{
 					id: absolutePath.toLocaleLowerCase(),
 					mode: "everything",
-					primary: path.win32.basename(absolutePath),
-					secondary: path.win32.dirname(absolutePath),
+					primary: basename(absolutePath),
+					secondary: dirname(absolutePath),
 					icon: kind,
 					absolutePath,
 					scope: "directory",
@@ -172,4 +137,21 @@ export class EverythingHttpClient {
 			];
 		});
 	}
+}
+
+function isAbsolutePath(value: string): boolean {
+	return /^[a-z]:[\\/]/i.test(value) || value.startsWith("\\\\");
+}
+
+function joinPath(parent: string, name: string): string {
+	return parent ? `${parent.replace(/[\\/]+$/, "")}\\${name}` : name;
+}
+
+function basename(value: string): string {
+	return value.slice(Math.max(value.lastIndexOf("\\"), value.lastIndexOf("/")) + 1);
+}
+
+function dirname(value: string): string {
+	const index = Math.max(value.lastIndexOf("\\"), value.lastIndexOf("/"));
+	return index < 0 ? "" : value.slice(0, index);
 }
