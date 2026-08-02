@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { sortFileMatches, sortFilesWithoutQuery, type SortableFileEntry } from "./fileSorting";
+import {
+	sortFileMatches,
+	sortFilesWithoutQuery,
+	type SortableFileEntry,
+} from "src/providers/fileSorting";
 
 function file(path: string, mtime: number, aliases: string[] = []): SortableFileEntry {
 	return {

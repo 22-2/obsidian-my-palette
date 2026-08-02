@@ -1,4 +1,4 @@
-import type { EverythingScope, ParsedInput, PaletteMode } from "../model/results";
+import type { EverythingScope, ParsedInput, PaletteMode } from "src/model/results";
 
 export interface Prefixes {
 	command: string;

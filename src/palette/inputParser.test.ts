@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseInput } from "./inputParser";
+import { parseInput } from "src/palette/inputParser";
 
 const prefixes = { command: ">", everything: "e " };
 

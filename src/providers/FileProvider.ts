@@ -1,9 +1,9 @@
 import { type App, type EventRef, type TFile } from "obsidian";
 import fuzzysort from "fuzzysort";
-import { getUserIgnoreFilters, isUserIgnoredPath } from "../core/ignoredPaths";
-import type { FileResult } from "../model/results";
-import { sortFileMatches, sortFilesWithoutQuery } from "./fileSorting";
-import type { PaletteProvider, PaletteSearchRequest } from "./PaletteProvider";
+import { getUserIgnoreFilters, isUserIgnoredPath } from "src/core/ignoredPaths";
+import type { FileResult } from "src/model/results";
+import { sortFileMatches, sortFilesWithoutQuery } from "src/providers/fileSorting";
+import type { PaletteProvider, PaletteSearchRequest } from "src/providers/PaletteProvider";
 
 interface SearchEntry {
 	file?: TFile;

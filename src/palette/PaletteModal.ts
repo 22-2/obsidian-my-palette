@@ -1,12 +1,12 @@
 import { TFile, type App } from "obsidian";
-import { isAbsolutePathUserIgnored, isUserIgnoredPath } from "../core/ignoredPaths";
-import { isMarkdownPath } from "../core/externalFiles";
-import { compactPath } from "../core/pathDisplay";
-import type MyPalettePlugin from "../main";
-import type { EverythingScope, PaletteMode, PaletteResult } from "../model/results";
-import { SelectionModal, type SelectionItem } from "../ui/selectionModal";
-import { parseInput } from "./inputParser";
-import { runResultAction, type ActionKind } from "./resultActions";
+import { isAbsolutePathUserIgnored, isUserIgnoredPath } from "src/core/ignoredPaths";
+import { isMarkdownPath } from "src/core/externalFiles";
+import { compactPath } from "src/core/pathDisplay";
+import type MyPalettePlugin from "src/main";
+import type { EverythingScope, PaletteMode, PaletteResult } from "src/model/results";
+import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
+import { parseInput } from "src/palette/inputParser";
+import { runResultAction, type ActionKind } from "src/palette/resultActions";
 
 export class PaletteModal extends SelectionModal<PaletteResult> {
 	private generation = 0;

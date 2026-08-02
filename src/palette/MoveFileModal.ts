@@ -1,5 +1,5 @@
 import { Notice, TFile, TFolder, type App } from "obsidian";
-import { SelectionModal, type SelectionItem } from "../ui/selectionModal";
+import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
 
 interface FolderItem extends SelectionItem {
 	path: string;

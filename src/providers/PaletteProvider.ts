@@ -1,4 +1,4 @@
-import type { EverythingScope, PaletteMode, PaletteResult } from "../model/results";
+import type { EverythingScope, PaletteMode, PaletteResult } from "src/model/results";
 
 export interface PaletteSearchRequest {
 	mode: PaletteMode;

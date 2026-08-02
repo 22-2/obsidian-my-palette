@@ -1,5 +1,5 @@
 import { normalizePath, type App } from "obsidian";
-import { getDesktopAdapter } from "./desktopAdapter";
+import { getDesktopAdapter } from "src/core/desktopAdapter";
 
 type ConfigurableVault = App["vault"] & {
 	getConfig: (key: string) => unknown;

@@ -1,4 +1,4 @@
-import { ACTION_IDS, type ActionId } from "../model/settings";
+import { ACTION_IDS, type ActionId } from "src/model/settings";
 
 const MODIFIER_ORDER = ["Ctrl", "Shift", "Alt", "Meta"] as const;
 

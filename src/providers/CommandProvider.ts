@@ -1,8 +1,8 @@
 import { type App } from "obsidian";
 import fuzzysort from "fuzzysort";
-import type { CommandResult } from "../model/results";
-import type { PaletteProvider, PaletteSearchRequest } from "./PaletteProvider";
-import { type Command, sortCommandMatches } from "./commandSorting";
+import type { CommandResult } from "src/model/results";
+import type { PaletteProvider, PaletteSearchRequest } from "src/providers/PaletteProvider";
+import { type Command, sortCommandMatches } from "src/providers/commandSorting";
 
 export class CommandProvider implements PaletteProvider<CommandResult> {
 	constructor(

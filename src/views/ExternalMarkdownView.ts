@@ -1,8 +1,8 @@
 import { FakeEditor } from "@22-2/obsidian-magical-editor";
 import { ItemView, Menu, Notice, type WorkspaceLeaf } from "obsidian";
-import { getVaultRootPath } from "../core/ignoredPaths";
-import { getDesktopAdapter } from "../core/desktopAdapter";
-import { openPathInCode } from "../core/vscode";
+import { getVaultRootPath } from "src/core/ignoredPaths";
+import { getDesktopAdapter } from "src/core/desktopAdapter";
+import { openPathInCode } from "src/core/vscode";
 
 export const EXTERNAL_MARKDOWN_VIEW_TYPE = "my-palette-external-markdown";
 

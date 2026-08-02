@@ -3,8 +3,8 @@ import {
 	getVaultFullPath,
 	isAbsolutePathUserIgnored,
 	isUserIgnoredPath,
-} from "../core/ignoredPaths";
-import { getDesktopAdapter } from "../core/desktopAdapter";
+} from "src/core/ignoredPaths";
+import { getDesktopAdapter } from "src/core/desktopAdapter";
 
 declare const electron: {
 	shell: {
@@ -13,9 +13,9 @@ declare const electron: {
 		openExternal: (url: string) => Promise<void>;
 	};
 };
-import type { EverythingResult, PaletteResult } from "../model/results";
-import { isMarkdownPath } from "../core/externalFiles";
-import { openPathInCode } from "../core/vscode";
+import type { EverythingResult, PaletteResult } from "src/model/results";
+import { isMarkdownPath } from "src/core/externalFiles";
+import { openPathInCode } from "src/core/vscode";
 
 export type ActionKind = "primary" | "alternate" | "tertiary";
 export interface ActionOutcome {

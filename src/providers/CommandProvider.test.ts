@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sortCommandMatches } from "./commandSorting";
+import { sortCommandMatches } from "src/providers/commandSorting";
 
 function match(id: string, name: string, fuzzyScore = 0) {
 	return { command: { id, name }, fuzzyScore };

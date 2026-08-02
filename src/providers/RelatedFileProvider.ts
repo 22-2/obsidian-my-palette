@@ -1,7 +1,7 @@
 import { TFile, type App, type LinkCache } from "obsidian";
 import fuzzysort from "fuzzysort";
-import type { RelatedFileResult } from "../model/results";
-import type { PaletteProvider, PaletteSearchRequest } from "./PaletteProvider";
+import type { RelatedFileResult } from "src/model/results";
+import type { PaletteProvider, PaletteSearchRequest } from "src/providers/PaletteProvider";
 
 /** Finds individual outgoing-link or incoming-link occurrences for the active note. */
 export class RelatedFileProvider implements PaletteProvider<RelatedFileResult> {

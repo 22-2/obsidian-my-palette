@@ -1,12 +1,12 @@
 import { PluginSettingTab, Setting, Notice } from "obsidian";
-import type MyPalettePlugin from "./main";
+import type MyPalettePlugin from "src/main";
 import {
 	type MyPaletteSettings,
 	DEFAULT_KEYBINDINGS,
 	DEFAULT_SETTINGS as MODEL_DEFAULT_SETTINGS,
 	type ActionId,
 	ACTION_IDS,
-} from "./model/settings";
+} from "src/model/settings";
 
 export type { MyPaletteSettings };
 

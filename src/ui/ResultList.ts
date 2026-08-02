@@ -1,5 +1,5 @@
 import { setIcon } from "obsidian";
-import type { PaletteResult } from "../model/results";
+import type { PaletteResult } from "src/model/results";
 
 export class ResultList {
 	constructor(
