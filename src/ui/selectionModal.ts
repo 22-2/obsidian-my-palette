@@ -4,6 +4,7 @@ import fuzzysort from "fuzzysort";
 export interface SelectionItem {
 	label: string;
 	description?: string;
+	descriptionTitle?: string;
 	icon?: string;
 	badge?: string;
 	value?: unknown;
@@ -114,11 +115,13 @@ export class SelectionModal<T> extends SuggestModal<T> {
 		}
 		const label = row.createSpan("my-palette-suggestion__label");
 		this.renderMatchedLabel(label, result.label);
-		if (result.description)
-			row.createSpan({
+		if (result.description) {
+			const description = row.createSpan({
 				cls: "my-palette-suggestion__description",
 				text: result.description,
 			});
+			if (result.descriptionTitle) description.setAttr("title", result.descriptionTitle);
+		}
 		if (result.badge)
 			row.createSpan({ cls: "my-palette-suggestion__badge", text: result.badge });
 	}

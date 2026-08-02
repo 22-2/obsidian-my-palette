@@ -11,7 +11,9 @@
 }
 
 .my-palette-suggest-modal .suggestion-item {
+	display: flex;
 	min-height: 24px;
+	min-width: 0;
 	padding: 2px 8px;
 	font-size: 0.82em;
 }
@@ -41,8 +43,10 @@
 .my-palette-suggestion {
 	display: flex;
 	align-items: center;
-	gap: 4px;
+	flex: 1 1 auto;
+	gap: 6px;
 	min-width: 0;
+	width: 100%;
 }
 
 .my-palette-suggestion__icon {
@@ -62,12 +66,14 @@
 }
 
 .my-palette-suggestion__label {
-	flex: 0 1 auto;
+	flex: 0 1 38%;
+	min-width: 0;
 	color: var(--text-muted);
 	font-weight: var(--font-medium);
 }
 
 .my-palette-suggestion__description {
+	flex: 1 1 0;
 	min-width: 0;
 	color: var(--text-faint);
 	font-size: var(--font-ui-smaller);
@@ -91,12 +97,14 @@
 }
 
 .my-palette-suggestion__badge {
+	flex: 0 0 auto;
 	margin-left: auto;
 	padding: 1px 5px;
 	border-radius: 999px;
 	background: var(--background-secondary-alt);
 	color: var(--text-muted);
 	font-size: var(--font-ui-smaller);
+	white-space: nowrap;
 }
 .workspace-leaf-content[data-type="my-palette-external-markdown"] .view-content {
 	padding: 0;

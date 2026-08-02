@@ -1,6 +1,7 @@
 import { TFile, type App } from "obsidian";
 import { isAbsolutePathUserIgnored, isUserIgnoredPath } from "../core/ignoredPaths";
 import { isMarkdownPath } from "../core/externalFiles";
+import { compactPath } from "../core/pathDisplay";
 import type MyPalettePlugin from "../main";
 import type { EverythingScope, PaletteMode, PaletteResult } from "../model/results";
 import { SelectionModal, type SelectionItem } from "../ui/selectionModal";
@@ -71,9 +72,11 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 						this.app.vault.getAbstractFileByPath(result.vaultPath ?? "") instanceof
 						TFile
 					)));
+		const usesPath = result.mode === "file" || result.mode === "everything";
 		return {
 			label: result.primary,
-			description: result.secondary,
+			description: usesPath ? compactPath(result.secondary) : result.secondary,
+			descriptionTitle: usesPath ? result.secondary : undefined,
 			icon: result.icon,
 			badge: isExternalMarkdown
 				? this.plugin.settings.openExternalMarkdownInObsidian
