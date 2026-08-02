@@ -10,7 +10,7 @@ describe("buildEverythingQuery", () => {
 
 	it("keeps directory searches within the Vault while allowing every extension", () => {
 		expect(buildEverythingQuery("E:\\Vault", "directory", ["md"], "outside.md")).toBe(
-			'path:"E:\\Vault" outside.md',
+			'path:"E:\\Vault" ext:md outside.md',
 		);
 	});
 });
