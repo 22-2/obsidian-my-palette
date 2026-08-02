@@ -1,7 +1,9 @@
 import { FakeEditor } from "@22-2/obsidian-magical-editor";
-import { ItemView, Notice, type WorkspaceLeaf } from "obsidian";
+import { ItemView, Menu, Notice, type WorkspaceLeaf } from "obsidian";
 import { promises as fs } from "fs";
 import * as path from "path";
+import { getVaultRootPath } from "../core/ignoredPaths";
+import { openPathInCode } from "../core/vscode";
 
 export const EXTERNAL_MARKDOWN_VIEW_TYPE = "my-palette-external-markdown";
 
@@ -74,6 +76,31 @@ export class ExternalMarkdownView extends ItemView {
 		this.destroyEditor();
 	}
 
+	onPaneMenu(menu: Menu, source: string): void {
+		if (this.filePath) {
+			menu.addSeparator();
+			menu.addItem((item) =>
+				item
+					.setTitle("Copy path relative to Vault")
+					.setIcon("copy")
+					.onClick(() => void this.copyPath(this.relativePath())),
+			);
+			menu.addItem((item) =>
+				item
+					.setTitle("Copy absolute path")
+					.setIcon("clipboard-copy")
+					.onClick(() => void this.copyPath(this.filePath)),
+			);
+			menu.addItem((item) =>
+				item
+					.setTitle("Open in VS Code")
+					.setIcon("code-xml")
+					.onClick(() => void this.openInCode()),
+			);
+		}
+		super.onPaneMenu(menu, source);
+	}
+
 	private async loadFile(): Promise<void> {
 		const generation = ++this.loadGeneration;
 		this.destroyEditor();
@@ -140,6 +167,30 @@ export class ExternalMarkdownView extends ItemView {
 	private destroyEditor(): void {
 		this.editor?.destroy();
 		this.editor = undefined;
+	}
+
+	private relativePath(): string {
+		const vaultRoot = getVaultRootPath(this.app);
+		return vaultRoot ? path.win32.relative(vaultRoot, this.filePath) || "." : this.filePath;
+	}
+
+	private async copyPath(value: string): Promise<void> {
+		try {
+			await navigator.clipboard.writeText(value);
+			new Notice("Path copied.");
+		} catch {
+			new Notice("Could not copy the path.");
+		}
+	}
+
+	private async openInCode(): Promise<void> {
+		const vaultRoot = getVaultRootPath(this.app);
+		if (!vaultRoot) {
+			new Notice("This vault adapter cannot resolve the Vault folder.");
+			return;
+		}
+		const error = await openPathInCode(vaultRoot, this.filePath);
+		if (error) new Notice(error);
 	}
 
 	private renderError(error: unknown): void {

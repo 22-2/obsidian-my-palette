@@ -1,7 +1,5 @@
 import { Notice, TFile, type App } from "obsidian";
 import { promises as fs } from "fs";
-import { spawn } from "child_process";
-import * as path from "path";
 import {
 	getVaultFullPath,
 	getVaultRootPath,
@@ -18,6 +16,7 @@ declare const electron: {
 };
 import type { EverythingResult, PaletteResult } from "../model/results";
 import { isMarkdownPath } from "../core/externalFiles";
+import { openPathInCode } from "../core/vscode";
 
 export type ActionKind = "primary" | "alternate" | "tertiary";
 export interface ActionOutcome {
@@ -40,65 +39,12 @@ async function openVaultFileInCode(app: App, vaultPath: string): Promise<ActionO
 	return await openAbsolutePathInCode(vaultRoot, absolutePath);
 }
 
-async function findCodeExecutable(): Promise<string | null> {
-	const candidates = [
-		process.env.VSCODE_EXEC_PATH,
-		process.env.LOCALAPPDATA &&
-			path.win32.join(process.env.LOCALAPPDATA, "Programs", "Microsoft VS Code", "Code.exe"),
-		process.env.LOCALAPPDATA &&
-			path.win32.join(
-				process.env.LOCALAPPDATA,
-				"Programs",
-				"Microsoft VS Code Insiders",
-				"Code - Insiders.exe",
-			),
-		process.env.ProgramFiles &&
-			path.win32.join(process.env.ProgramFiles, "Microsoft VS Code", "Code.exe"),
-		process.env["ProgramFiles(x86)"] &&
-			path.win32.join(process.env["ProgramFiles(x86)"], "Microsoft VS Code", "Code.exe"),
-		...(process.env.PATH ?? "")
-			.split(path.win32.delimiter)
-			.flatMap((directory) => [
-				path.win32.join(directory, "Code.exe"),
-				path.win32.join(directory, "..", "Code.exe"),
-			]),
-	].filter((candidate): candidate is string => Boolean(candidate));
-
-	for (const candidate of candidates) {
-		try {
-			const resolved = path.win32.resolve(candidate);
-			const stat = await fs.stat(resolved);
-			if (stat.isFile()) return resolved;
-		} catch {
-			// Try the next known VS Code installation path.
-		}
-	}
-	return null;
-}
-
 async function openAbsolutePathInCode(
 	vaultRoot: string,
 	absolutePath: string,
 ): Promise<ActionOutcome> {
-	const executable = await findCodeExecutable();
-	if (!executable) return { close: false, message: "Could not find VS Code (Code.exe)." };
-	try {
-		await new Promise<void>((resolve, reject) => {
-			const child = spawn(executable, ["--new-window", vaultRoot, absolutePath], {
-				detached: true,
-				stdio: "ignore",
-				windowsHide: true,
-			});
-			child.once("error", reject);
-			child.once("spawn", () => {
-				child.unref();
-				resolve();
-			});
-		});
-		return { close: true };
-	} catch {
-		return { close: false, message: "Could not open the file in VS Code." };
-	}
+	const error = await openPathInCode(vaultRoot, absolutePath);
+	return error ? { close: false, message: error } : { close: true };
 }
 
 export async function runResultAction(
