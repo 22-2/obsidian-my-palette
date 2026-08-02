@@ -9,7 +9,7 @@ export const ACTION_IDS = [
 export type ActionId = (typeof ACTION_IDS)[number];
 
 export interface MyPaletteSettings {
-	schemaVersion: 4;
+	schemaVersion: 5;
 	showLog: boolean;
 	rememberLastInput: boolean;
 	openExternalMarkdownInObsidian: boolean;
@@ -22,6 +22,7 @@ export interface MyPaletteSettings {
 		debounceMs: number;
 		requestTimeoutMs: number;
 		vaultExtensions: string[];
+		directorySearchMarkdownOnly: boolean;
 	};
 	keybindings: Record<ActionId, string[]>;
 	recentCommandIds: string[];
@@ -37,7 +38,7 @@ export const DEFAULT_KEYBINDINGS: Record<ActionId, string[]> = {
 };
 
 export const DEFAULT_SETTINGS: MyPaletteSettings = {
-	schemaVersion: 4,
+	schemaVersion: 5,
 	showLog: false,
 	rememberLastInput: false,
 	openExternalMarkdownInObsidian: true,
@@ -50,6 +51,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		debounceMs: 150,
 		requestTimeoutMs: 30000,
 		vaultExtensions: ["md", "canvas", "base"],
+		directorySearchMarkdownOnly: true,
 	},
 	keybindings: structuredClone(DEFAULT_KEYBINDINGS),
 	recentCommandIds: [],

@@ -23,7 +23,11 @@ export class EverythingProvider implements PaletteProvider<EverythingResult> {
 		const vaultExtensions = new Set(
 			settings.vaultExtensions.map((extension) => extension.toLocaleLowerCase()),
 		);
-		const scopedQuery = buildEverythingQuery(vaultRoot, scope, settings.vaultExtensions, query);
+		const extensions =
+			scope === "directory" && settings.directorySearchMarkdownOnly
+				? ["md"]
+				: settings.vaultExtensions;
+		const scopedQuery = buildEverythingQuery(vaultRoot, scope, extensions, query);
 		const results = await this.client.search(scopedQuery, settings, signal, 500);
 		return results
 			.flatMap((result): EverythingResult[] => {

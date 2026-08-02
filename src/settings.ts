@@ -34,7 +34,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 
 	return {
 		...DEFAULT_SETTINGS,
-		schemaVersion: 4,
+		schemaVersion: 5,
 		showLog: typeof source.showLog === "boolean" ? source.showLog : false,
 		rememberLastInput:
 			typeof source.rememberLastInput === "boolean" ? source.rememberLastInput : false,
@@ -57,6 +57,10 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 			debounceMs: bounded(rawEverything.debounceMs, 150, 50, 1000),
 			requestTimeoutMs: bounded(rawEverything.requestTimeoutMs, 30000, 1000, 60000),
 			vaultExtensions: extensions(rawEverything.vaultExtensions),
+			directorySearchMarkdownOnly:
+				typeof rawEverything.directorySearchMarkdownOnly === "boolean"
+					? rawEverything.directorySearchMarkdownOnly
+					: true,
 		},
 		keybindings: mergeKeybindings(source.keybindings),
 		recentCommandIds: Array.isArray(source.recentCommandIds)
@@ -163,6 +167,18 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}),
 		);
+
+		new Setting(containerEl)
+			.setName("Limit esdir to Markdown files")
+			.setDesc("Adds ext:md to esdir searches. Turn off to search every file type.")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.everything.directorySearchMarkdownOnly)
+					.onChange(async (value) => {
+						this.plugin.settings.everything.directorySearchMarkdownOnly = value;
+						await this.plugin.saveSettings();
+					}),
+			);
 
 		new Setting(containerEl)
 			.setName("Test Everything connection")

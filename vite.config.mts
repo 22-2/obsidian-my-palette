@@ -10,6 +10,9 @@ export default defineConfig(async ({ mode }) => {
 	const isProd = !isDev;
 
 	return {
+		resolve: {
+			alias: { src: path.resolve(__dirname, "src") },
+		},
 		staged: {
 			"src/**/*.{ts}": "vp check --fix",
 		},
