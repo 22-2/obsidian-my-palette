@@ -57,6 +57,13 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.plugin.everythingClient.cancel();
 	}
 
+	protected override getInitialInputSelectionRange(): [number, number] {
+		const commandPrefix = `${this.plugin.settings.prefixes.command.trimEnd()} `;
+		return this.inputEl.value.toLocaleLowerCase().startsWith(commandPrefix.toLocaleLowerCase())
+			? [commandPrefix.length, this.inputEl.value.length]
+			: [0, this.inputEl.value.length];
+	}
+
 	protected override toSelectionItem(result: PaletteResult): SelectionItem {
 		const isExternalMarkdown =
 			result.mode === "everything" &&

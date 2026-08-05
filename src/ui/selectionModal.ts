@@ -84,6 +84,8 @@ export class SelectionModal<T> extends SuggestModal<T> {
 			window.setTimeout(() => {
 				if (!this.inputEl.isConnected) return;
 				this.refreshSuggestions();
+				const [selectionStart, selectionEnd] = this.getInitialInputSelectionRange();
+				this.inputEl.setSelectionRange(selectionStart, selectionEnd);
 			}, 0);
 		}
 	}
@@ -133,6 +135,10 @@ export class SelectionModal<T> extends SuggestModal<T> {
 
 	protected onSelectionModalOpen(): void {}
 	protected onSelectionModalClose(): void {}
+
+	protected getInitialInputSelectionRange(): [number, number] {
+		return [0, this.inputEl.value.length];
+	}
 
 	protected toSelectionItem(item: T): SelectionItem {
 		if (typeof item === "string") return { label: item };
