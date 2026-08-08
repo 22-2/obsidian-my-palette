@@ -18,6 +18,7 @@ export class ExternalMarkdownView extends ItemView {
 	private loadGeneration = 0;
 	private autoFocus = true;
 	private preview = false;
+	navigation = true;
 
 	constructor(leaf: WorkspaceLeaf) {
 		super(leaf);
