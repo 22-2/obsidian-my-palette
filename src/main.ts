@@ -191,9 +191,11 @@ export default class MyPalettePlugin extends Plugin {
 		void this.saveSettings();
 	}
 
-	rememberPaletteQuery(mode: PaletteMode, query: string): void {
+	rememberPaletteQuery(mode: PaletteMode, query: string, rawInput?: string): void {
 		if (!this.settings.rememberLastInput) return;
 		this.rememberedPaletteQueries[mode] = query;
+		if (mode === "everything" && rawInput !== undefined)
+			this.rememberedPaletteQueries.file = rawInput;
 	}
 
 	clearRememberedPaletteQueries(): void {
