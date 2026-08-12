@@ -118,7 +118,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		const parsed = this.fixedMode
 			? { mode: this.fixedMode, query: input }
 			: parseInput(input, this.plugin.settings.prefixes);
-		this.plugin.rememberPaletteQuery(parsed.mode, parsed.query, input);
+		if (this.initialInputReady)
+			this.plugin.rememberPaletteQuery(parsed.mode, parsed.query, input);
 		this.updateMatchQuery(parsed.query);
 		this.mode = parsed.mode;
 		this.everythingScope =

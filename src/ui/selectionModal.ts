@@ -37,6 +37,7 @@ export class SelectionModal<T> extends SuggestModal<T> {
 	private statusTextEl?: HTMLElement;
 	private readonly footerText?: string;
 	private readonly initialInput: string;
+	protected initialInputReady: boolean;
 
 	constructor(
 		{
@@ -52,6 +53,7 @@ export class SelectionModal<T> extends SuggestModal<T> {
 		this.items = [...items];
 		this.selected = defaultValue ?? null;
 		this.initialInput = initialInput;
+		this.initialInputReady = !initialInput;
 		this.footerText = footerText;
 		this.inputEl.value = initialInput;
 		this.limit = 50;
@@ -83,6 +85,7 @@ export class SelectionModal<T> extends SuggestModal<T> {
 			this.inputEl.value = this.initialInput;
 			window.setTimeout(() => {
 				if (!this.inputEl.isConnected) return;
+				this.initialInputReady = true;
 				this.refreshSuggestions();
 				const [selectionStart, selectionEnd] = this.getInitialInputSelectionRange();
 				this.inputEl.setSelectionRange(selectionStart, selectionEnd);
