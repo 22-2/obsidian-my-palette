@@ -72,6 +72,10 @@
 	font-weight: var(--font-medium);
 }
 
+.my-palette-suggest-modal[data-mode="command"] .my-palette-suggestion__label {
+	flex-basis: 70%;
+}
+
 .my-palette-suggestion__description {
 	flex: 1 1 0;
 	min-width: 0;
