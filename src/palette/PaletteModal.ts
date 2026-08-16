@@ -184,9 +184,11 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			}
 			this.plugin.recordCommand(result.commandId);
 			this.close();
-			(
-				this.app.commands as unknown as { executeCommandById: (id: string) => boolean }
-			).executeCommandById(result.commandId);
+			window.queueMicrotask(() => {
+				(
+					this.app.commands as unknown as { executeCommandById: (id: string) => boolean }
+				).executeCommandById(result.commandId);
+			});
 			return;
 		}
 		if (result.mode === "bookmark") {

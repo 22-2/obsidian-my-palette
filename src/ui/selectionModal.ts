@@ -219,17 +219,17 @@ export class SelectionModal<T> extends SuggestModal<T> {
 	}
 }
 
-export async function showSelectionModal<T extends string | SelectionItem>(
+export function openSelectionModal<T extends string | SelectionItem>(
 	props: ModalProps<T>,
 	app: App,
-): Promise<T | null> {
-	const modal = new SelectionModal(props, app);
-	modal.open();
-	return new Promise((resolve) => {
-		const originalClose = modal.onClose.bind(modal);
-		modal.onClose = () => {
-			originalClose();
-			resolve(modal.selected);
-		};
-	});
+	onChoose: (item: T) => void | Promise<void>,
+): void {
+	class CallbackSelectionModal extends SelectionModal<T> {
+		protected override async onItemActivated(item: T): Promise<void> {
+			this.close();
+			await onChoose(item);
+		}
+	}
+
+	new CallbackSelectionModal(props, app).open();
 }

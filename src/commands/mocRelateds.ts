@@ -1,12 +1,12 @@
 import { Notice, TFile, type App } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import type { FileResult } from "src/model/results";
-import { showSelectionModal, type SelectionItem } from "src/ui/selectionModal";
+import { openSelectionModal, type SelectionItem } from "src/ui/selectionModal";
 import { addLinkToMocRelateds } from "src/commands/mocRelatedsCore";
 
 interface RelatedCandidate {
 	file: TFile;
-	description?: string;
+	badge?: string;
 }
 
 function relationPaths(
@@ -29,37 +29,48 @@ function relationPaths(
 	return { outgoing, incoming };
 }
 
-async function chooseTargetFile(plugin: MyPalettePlugin, activeFile: TFile): Promise<TFile | null> {
+async function openTargetFileSelector(
+	plugin: MyPalettePlugin,
+	activeFile: TFile,
+	onChoose: (file: TFile) => void | Promise<void>,
+): Promise<void> {
 	const { outgoing, incoming } = relationPaths(plugin.app, activeFile);
 	const results = await plugin.fileProvider.search({ mode: "file", query: "" });
 	const candidates: RelatedCandidate[] = results
 		.map((result: FileResult) => result.file)
 		.filter((file): file is TFile => file instanceof TFile && file.extension === "md")
 		.filter((file) => file.path !== activeFile.path)
-		.filter((file) => !(outgoing.has(file.path) && incoming.has(file.path)))
 		.map((file) => ({
 			file,
-			description: outgoing.has(file.path)
-				? "Outgoing link exists"
-				: incoming.has(file.path)
-					? "Backlink exists"
-					: undefined,
+			badge:
+				outgoing.has(file.path) && incoming.has(file.path)
+					? "Mutual link exists"
+					: outgoing.has(file.path)
+						? "Outgoing link exists"
+						: incoming.has(file.path)
+							? "Backlink exists"
+							: undefined,
 		}));
 
-	const selected = await showSelectionModal<SelectionItem>(
+	openSelectionModal<SelectionItem>(
 		{
-			items: candidates.map(({ file, description }) => ({
+			items: candidates.map(({ file, badge }) => ({
 				label: file.basename,
-				description: description ? `${file.path} · ${description}` : file.path,
+				description: file.path,
 				icon: "file-text",
-				value: file,
+				badge,
+				value: file.path,
 			})),
 			placeholder: "Choose a note to link mutually",
 			footerText: `Source: ${activeFile.path}`,
 		},
 		plugin.app,
+		async (selected) => {
+			if (typeof selected.value !== "string") return;
+			const file = plugin.app.vault.getAbstractFileByPath(selected.value);
+			if (file instanceof TFile) await onChoose(file);
+		},
 	);
-	return selected?.value instanceof TFile ? selected.value : null;
 }
 
 async function addLink(app: App, mocFile: TFile, fileToLink: TFile): Promise<void> {
@@ -89,10 +100,9 @@ export async function insertLinkToMocRelateds(plugin: MyPalettePlugin): Promise<
 		return;
 	}
 
-	const targetFile = await chooseTargetFile(plugin, activeFile);
-	if (!targetFile) return;
-
-	await addLink(plugin.app, activeFile, targetFile);
-	await addLink(plugin.app, targetFile, activeFile);
-	await plugin.app.workspace.activeLeaf?.openFile(activeFile);
+	await openTargetFileSelector(plugin, activeFile, async (targetFile) => {
+		await addLink(plugin.app, activeFile, targetFile);
+		await addLink(plugin.app, targetFile, activeFile);
+		await plugin.app.workspace.activeLeaf?.openFile(activeFile);
+	});
 }
