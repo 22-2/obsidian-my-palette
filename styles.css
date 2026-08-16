@@ -66,14 +66,10 @@
 }
 
 .my-palette-suggestion__label {
-	flex: 0 1 38%;
+	flex: 0 1 70%;
 	min-width: 0;
 	color: var(--text-muted);
 	font-weight: var(--font-medium);
-}
-
-.my-palette-suggest-modal[data-mode="command"] .my-palette-suggestion__label {
-	flex-basis: 70%;
 }
 
 .my-palette-suggestion__description {
