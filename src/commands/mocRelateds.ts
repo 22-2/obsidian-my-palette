@@ -40,6 +40,7 @@ async function openTargetFileSelector(
 		.map((result: FileResult) => result.file)
 		.filter((file): file is TFile => file instanceof TFile && file.extension === "md")
 		.filter((file) => file.path !== activeFile.path)
+		.filter((file) => !(outgoing.has(file.path) && incoming.has(file.path)))
 		.map((file) => ({
 			file,
 			badge:
