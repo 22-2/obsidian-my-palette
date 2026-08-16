@@ -13,6 +13,7 @@ import { SmartConnectionProvider } from "src/providers/SmartConnectionProvider";
 import type { PaletteMode } from "src/model/results";
 import type { PaletteProvider } from "src/providers/PaletteProvider";
 import { MoveFileModal } from "src/palette/MoveFileModal";
+import { insertLinkToMocRelateds } from "src/commands/mocRelateds";
 import { EXTERNAL_MARKDOWN_VIEW_TYPE, ExternalMarkdownView } from "src/views/ExternalMarkdownView";
 import "../styles.css";
 
@@ -107,6 +108,15 @@ export default class MyPalettePlugin extends Plugin {
 				const file = this.app.workspace.getActiveFile();
 				if (checking) return Boolean(file);
 				if (file) new MoveFileModal(this.app, file).open();
+			},
+		});
+		this.addCommand({
+			id: "insert-link-to-moc-relateds",
+			name: "Insert link to MOC Relateds",
+			checkCallback: (checking) => {
+				const canRun = Boolean(this.app.workspace.getActiveFile());
+				if (checking) return canRun;
+				void insertLinkToMocRelateds(this);
 			},
 		});
 	}
