@@ -80,6 +80,7 @@ export class SelectionModal<T> extends SuggestModal<T> {
 		});
 		this.resultCountEl = statusBar.createSpan("my-palette-status-bar__count");
 		this.updateResultCount(0);
+		this.registerPointerActions();
 		this.onSelectionModalOpen();
 		if (this.initialInput) {
 			this.inputEl.value = this.initialInput;
@@ -138,6 +139,14 @@ export class SelectionModal<T> extends SuggestModal<T> {
 
 	protected onSelectionModalOpen(): void {}
 	protected onSelectionModalClose(): void {}
+	protected handlesSuggestionMiddleClick(): boolean {
+		return false;
+	}
+	protected handlesSuggestionContextMenu(): boolean {
+		return false;
+	}
+	protected async onSuggestionMiddleClick(_item: T, _event: MouseEvent): Promise<void> {}
+	protected onSuggestionContextMenu(_item: T, _event: MouseEvent): void {}
 
 	protected getInitialInputSelectionRange(): [number, number] {
 		return [0, this.inputEl.value.length];
@@ -167,6 +176,45 @@ export class SelectionModal<T> extends SuggestModal<T> {
 
 	protected updateMatchQuery(query: string): void {
 		this.query = query;
+	}
+
+	private registerPointerActions(): void {
+		this.modalEl.addEventListener(
+			"mousedown",
+			(event) => {
+				if (event.button !== 1 && event.button !== 2) return;
+				if (event.button === 1 && !this.handlesSuggestionMiddleClick()) return;
+				if (event.button === 2 && !this.handlesSuggestionContextMenu()) return;
+				const item = this.suggestionAtEvent(event);
+				if (item === undefined) return;
+				event.preventDefault();
+				event.stopImmediatePropagation();
+				if (event.button === 1) void this.onSuggestionMiddleClick(item, event);
+			},
+			true,
+		);
+		if (!this.handlesSuggestionContextMenu()) return;
+		this.modalEl.addEventListener(
+			"contextmenu",
+			(event) => {
+				const item = this.suggestionAtEvent(event);
+				if (item === undefined) return;
+				event.preventDefault();
+				event.stopImmediatePropagation();
+				this.onSuggestionContextMenu(item, event);
+			},
+			true,
+		);
+	}
+
+	private suggestionAtEvent(event: MouseEvent): T | undefined {
+		const target = event.target;
+		if (!(target instanceof Element)) return undefined;
+		const row = target.closest(".suggestion-item");
+		if (!row || !this.modalEl.contains(row)) return undefined;
+		const index = [...this.modalEl.querySelectorAll(".suggestion-item")].indexOf(row);
+		const chooser = (this as unknown as { chooser?: SuggestionChooser<T> }).chooser;
+		return index < 0 ? undefined : chooser?.values?.[index];
 	}
 
 	protected updatePlaceholder(placeholder: string): void {

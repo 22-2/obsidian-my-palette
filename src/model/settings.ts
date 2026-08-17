@@ -18,7 +18,6 @@ export interface SearchHistorySettings {
 	enabled: boolean;
 	addDelayMs: number;
 	daysToKeep: number;
-	alwaysSuggest: boolean;
 	entries: SearchHistoryEntry[];
 }
 
@@ -61,7 +60,6 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		enabled: true,
 		addDelayMs: 3000,
 		daysToKeep: 360,
-		alwaysSuggest: false,
 		entries: [],
 	},
 	prefixes: { command: ">", everything: "e " },

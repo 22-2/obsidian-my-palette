@@ -87,10 +87,6 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 				0,
 				3650,
 			),
-			alwaysSuggest:
-				typeof rawSearchHistory.alwaysSuggest === "boolean"
-					? rawSearchHistory.alwaysSuggest
-					: DEFAULT_SETTINGS.searchHistory.alwaysSuggest,
 			entries: searchHistoryEntries(rawSearchHistory.entries),
 		},
 		prefixes: {
@@ -282,19 +278,6 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 					.setDynamicTooltip()
 					.onChange(async (value) => {
 						this.plugin.settings.searchHistory.daysToKeep = value;
-						await this.plugin.saveSettings();
-					}),
-			);
-		new Setting(containerEl)
-			.setName("Always show search suggestions")
-			.setDesc(
-				"Show history suggestions on every input change instead of only with Ctrl+Space.",
-			)
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.searchHistory.alwaysSuggest)
-					.onChange(async (value) => {
-						this.plugin.settings.searchHistory.alwaysSuggest = value;
 						await this.plugin.saveSettings();
 					}),
 			);

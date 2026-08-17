@@ -131,7 +131,9 @@ export default class MyPalettePlugin extends Plugin {
 		absolutePath: string,
 		action: "primary" | "alternate" | "tertiary",
 		autoFocus = true,
+		active = true,
 	): Promise<void> {
+		const effectiveAutoFocus = autoFocus && active;
 		const externalLeaves = this.app.workspace.getLeavesOfType(EXTERNAL_MARKDOWN_VIEW_TYPE);
 		const existing = externalLeaves.find(
 			(leaf) =>
@@ -141,10 +143,14 @@ export default class MyPalettePlugin extends Plugin {
 		if (existing) {
 			await existing.setViewState({
 				type: EXTERNAL_MARKDOWN_VIEW_TYPE,
-				active: true,
-				state: { path: absolutePath, autoFocus, preview: !autoFocus },
+				active,
+				state: {
+					path: absolutePath,
+					autoFocus: effectiveAutoFocus,
+					preview: !autoFocus && active,
+				},
 			});
-			this.app.workspace.revealLeaf(existing);
+			if (active) this.app.workspace.revealLeaf(existing);
 			return;
 		}
 		const previewLeaf = !autoFocus
@@ -161,10 +167,14 @@ export default class MyPalettePlugin extends Plugin {
 					: this.app.workspace.getLeaf(false));
 		await leaf.setViewState({
 			type: EXTERNAL_MARKDOWN_VIEW_TYPE,
-			active: true,
-			state: { path: absolutePath, autoFocus, preview: !autoFocus },
+			active,
+			state: {
+				path: absolutePath,
+				autoFocus: effectiveAutoFocus,
+				preview: !autoFocus && active,
+			},
 		});
-		this.app.workspace.revealLeaf(leaf);
+		if (active) this.app.workspace.revealLeaf(leaf);
 	}
 
 	onunload(): void {

@@ -10,6 +10,25 @@
 	position: relative;
 }
 
+.my-palette-suggest-modal .prompt-input {
+	padding-right: 42px;
+}
+
+.my-palette-history-button {
+	position: absolute;
+	top: 50%;
+	right: 8px;
+	z-index: 1;
+	width: 28px;
+	height: 28px;
+	transform: translateY(-50%);
+}
+
+.my-palette-history-button svg {
+	width: 16px;
+	height: 16px;
+}
+
 .my-palette-suggest-modal .suggestion-item {
 	display: flex;
 	min-height: 24px;

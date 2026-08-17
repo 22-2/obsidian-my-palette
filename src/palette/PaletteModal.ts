@@ -1,5 +1,6 @@
-import { TFile, type App } from "obsidian";
+import { Menu, Notice, setIcon, TFile, type App } from "obsidian";
 import { isAbsolutePathUserIgnored, isUserIgnoredPath } from "src/core/ignoredPaths";
+import { getDesktopAdapter } from "src/core/desktopAdapter";
 import { isMarkdownPath } from "src/core/externalFiles";
 import { compactPath } from "src/core/pathDisplay";
 import type MyPalettePlugin from "src/main";
@@ -12,7 +13,6 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private generation = 0;
 	private controller?: AbortController;
 	private historyDelayTimer?: number;
-	private showHistorySuggestions = false;
 	private suppressHistoryForNextInput = false;
 	private skipInitialHistoryRecord: boolean;
 	private mode: PaletteMode = "file";
@@ -41,6 +41,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 
 	protected override onSelectionModalOpen(): void {
 		// SelectionModal applies and refreshes the initial input.
+		this.addSearchHistoryButton();
 		this.inputEl.addEventListener(
 			"keydown",
 			(event) => {
@@ -57,19 +58,6 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.inputEl.addEventListener(
 			"keydown",
 			(event) => {
-				if (
-					event.key === " " &&
-					event.ctrlKey &&
-					!event.altKey &&
-					!event.metaKey &&
-					!event.isComposing
-				) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					this.showHistorySuggestions = true;
-					this.refreshSuggestions();
-					return;
-				}
 				if (event.key === "Enter" && !event.isComposing && !this.hasSelectedResult()) {
 					this.recordCurrentSearch();
 				}
@@ -147,9 +135,74 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		await this.activatePaletteResult(action, result);
 	}
 
+	protected override async onSuggestionMiddleClick(result: PaletteResult): Promise<void> {
+		if (result.mode === "search-history") {
+			this.applySearchHistory(result);
+			return;
+		}
+		const activeLeaf = this.app.workspace.activeLeaf;
+		try {
+			await this.openResultInBackground(result);
+		} finally {
+			if (activeLeaf && this.app.workspace.activeLeaf !== activeLeaf)
+				this.app.workspace.setActiveLeaf(activeLeaf, { focus: false });
+			this.inputEl.focus({ preventScroll: true });
+		}
+	}
+
+	protected override handlesSuggestionMiddleClick(): boolean {
+		return true;
+	}
+
+	protected override handlesSuggestionContextMenu(): boolean {
+		return true;
+	}
+
+	protected override onSuggestionContextMenu(result: PaletteResult, event: MouseEvent): void {
+		this.selected = result;
+		const menu = new Menu();
+		if (result.mode === "search-history") {
+			menu.addItem((item) =>
+				item
+					.setTitle("Use search")
+					.setIcon("history")
+					.onClick(() => this.applySearchHistory(result)),
+			);
+		} else if (result.mode === "command") {
+			menu.addItem((item) =>
+				item
+					.setTitle("Run command")
+					.setIcon("play")
+					.onClick(() => void this.activatePaletteResult("primary", result)),
+			);
+		} else {
+			menu.addItem((item) =>
+				item
+					.setTitle("Open")
+					.setIcon("external-link")
+					.onClick(() => void this.activatePaletteResult("primary", result)),
+			);
+			menu.addItem((item) =>
+				item
+					.setTitle("Open in new tab (background)")
+					.setIcon("panel-top-open")
+					.onClick(() => void this.openResultInBackground(result)),
+			);
+			if (result.mode === "everything") {
+				menu.addSeparator();
+				menu.addItem((item) =>
+					item
+						.setTitle("Show in file explorer")
+						.setIcon("folder-open")
+						.onClick(() => void this.activatePaletteResult("alternate", result)),
+				);
+			}
+		}
+		menu.setParentElement(this.modalEl);
+		menu.showAtMouseEvent(event);
+	}
+
 	override async getSuggestions(input: string): Promise<PaletteResult[]> {
-		const showHistorySuggestions = this.showHistorySuggestions;
-		this.showHistorySuggestions = false;
 		const suppressHistoryRecord = this.suppressHistoryForNextInput;
 		this.suppressHistoryForNextInput = false;
 		this.cancelHistoryDelay();
@@ -167,13 +220,9 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.updateMode();
 		if (this.skipInitialHistoryRecord) {
 			this.skipInitialHistoryRecord = false;
-		} else if (!suppressHistoryRecord && !showHistorySuggestions) {
+		} else if (!suppressHistoryRecord) {
 			this.scheduleSearchHistory(input);
 		}
-		const historySuggestions =
-			showHistorySuggestions || this.plugin.settings.searchHistory.alwaysSuggest
-				? this.plugin.getSearchHistorySuggestions(showHistorySuggestions ? "" : input)
-				: [];
 		const delay = parsed.mode === "everything" ? this.plugin.settings.everything.debounceMs : 0;
 		if (delay) await new Promise((resolve) => window.setTimeout(resolve, delay));
 		if (generation !== this.generation) return [];
@@ -186,9 +235,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				everythingScope: this.everythingScope,
 			});
 			if (generation !== this.generation) return [];
-			const combinedResults = [...historySuggestions, ...results];
-			this.updateResultCount(combinedResults.length);
-			return combinedResults;
+			this.updateResultCount(results.length);
+			return results;
 		} catch (error) {
 			if (
 				generation !== this.generation ||
@@ -196,8 +244,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			)
 				return [];
 			this.emptyStateText = error instanceof Error ? error.message : String(error);
-			this.updateResultCount(historySuggestions.length);
-			return historySuggestions;
+			this.updateResultCount(0);
+			return [];
 		}
 	}
 
@@ -224,12 +272,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	): Promise<void> {
 		if (!result) return;
 		if (result.mode === "search-history") {
-			this.suppressHistoryForNextInput = true;
-			this.inputEl.value = this.plugin.formatSearchHistoryInput(result);
-			this.showHistorySuggestions = false;
-			this.refreshSuggestions();
-			this.inputEl.focus({ preventScroll: true });
-			this.inputEl.setSelectionRange(this.inputEl.value.length, this.inputEl.value.length);
+			this.applySearchHistory(result);
 			return;
 		}
 		this.recordCurrentSearch();
@@ -300,6 +343,107 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			return;
 		}
 		this.emptyStateText = outcome.message ?? "The action failed.";
+	}
+
+	private applySearchHistory(result: Extract<PaletteResult, { mode: "search-history" }>): void {
+		this.suppressHistoryForNextInput = true;
+		this.inputEl.value = this.plugin.formatSearchHistoryInput(result);
+		this.refreshSuggestions();
+		this.inputEl.focus({ preventScroll: true });
+		this.inputEl.setSelectionRange(this.inputEl.value.length, this.inputEl.value.length);
+	}
+
+	private addSearchHistoryButton(): void {
+		const container = this.inputEl.parentElement;
+		if (!container) return;
+		const button = container.createEl("button", {
+			cls: "clickable-icon my-palette-history-button",
+			attr: { type: "button", "aria-label": "Search history" },
+		});
+		setIcon(button, "chevron-down");
+		button.addEventListener("mousedown", (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+		});
+		button.addEventListener("click", (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			this.showSearchHistoryMenu(button);
+		});
+	}
+
+	private showSearchHistoryMenu(anchor: HTMLElement): void {
+		const menu = new Menu();
+		const history = this.plugin.getSearchHistorySuggestions("");
+		if (history.length === 0) {
+			menu.addItem((item) =>
+				item.setTitle("No search history").setIcon("history").setDisabled(true),
+			);
+		} else {
+			for (const result of history) {
+				menu.addItem((item) =>
+					item
+						.setTitle(result.primary)
+						.setIcon("history")
+						.onClick(() => this.applySearchHistory(result)),
+				);
+			}
+		}
+		const rect = anchor.getBoundingClientRect();
+		menu.setParentElement(this.modalEl);
+		menu.showAtPosition({ x: rect.right, y: rect.bottom, left: true }, anchor.ownerDocument);
+	}
+
+	private async openResultInBackground(result: PaletteResult): Promise<void> {
+		if (result.mode === "command") return;
+		if (result.mode === "bookmark") {
+			if (result.kind === "search" && result.query) {
+				await this.app.workspace.openLinkText(result.query, "", "tab", { active: false });
+				return;
+			}
+			if (result.file) await this.openFileInBackground(result.file);
+			return;
+		}
+		if (result.mode === "file") {
+			if (isUserIgnoredPath(this.app, result.vaultPath)) {
+				new Notice("Ignored files cannot be opened in a background Obsidian tab.");
+				return;
+			}
+			const file = this.app.vault.getAbstractFileByPath(result.vaultPath);
+			if (file instanceof TFile) await this.openFileInBackground(file);
+			else new Notice("The file no longer exists.");
+			return;
+		}
+		if (result.mode === "link" || result.mode === "backlink" || result.mode === "smart") {
+			await this.openFileInBackground(result.file);
+			return;
+		}
+		if (result.mode !== "everything") return;
+		try {
+			await getDesktopAdapter(this.app).fs.promises.stat(result.absolutePath);
+		} catch {
+			new Notice("The selected path no longer exists.");
+			return;
+		}
+		if (result.vaultPath) {
+			const file = this.app.vault.getAbstractFileByPath(result.vaultPath);
+			if (file instanceof TFile) {
+				await this.openFileInBackground(file);
+				return;
+			}
+		}
+		if (
+			isMarkdownPath(result.absolutePath) &&
+			this.plugin.settings.openExternalMarkdownInObsidian
+		) {
+			await this.plugin.openExternalMarkdown(result.absolutePath, "primary", true, false);
+			return;
+		}
+		new Notice("This item cannot be opened in a background Obsidian tab.");
+	}
+
+	private async openFileInBackground(file: TFile): Promise<void> {
+		await this.app.workspace.getLeaf("tab").openFile(file, { active: false });
 	}
 
 	private recordCurrentSearch(): void {

@@ -403,12 +403,11 @@ http://127.0.0.1:51361/?search=<query>&json=1&count=100&path_column=1&attributes
 
 検索履歴はモード共通で次の設定を持つ。
 
-| 設定キー                      | 型      | 既定値  | 説明                                                           |
-| ----------------------------- | ------- | ------- | -------------------------------------------------------------- |
-| `searchHistory.enabled`       | boolean | `true`  | 検索履歴を有効にする                                           |
-| `searchHistory.addDelayMs`    | number  | `3000`  | 入力停止後に履歴へ追加する待機時間。0はEnter／アクション時のみ |
-| `searchHistory.daysToKeep`    | number  | `360`   | 保持日数。0は無期限                                            |
-| `searchHistory.alwaysSuggest` | boolean | `false` | 常時履歴候補を表示する。無効時はCtrl+Spaceで表示               |
+| 設定キー                   | 型      | 既定値 | 説明                                                           |
+| -------------------------- | ------- | ------ | -------------------------------------------------------------- |
+| `searchHistory.enabled`    | boolean | `true` | 検索履歴を有効にする                                           |
+| `searchHistory.addDelayMs` | number  | `3000` | 入力停止後に履歴へ追加する待機時間。0はEnter／アクション時のみ |
+| `searchHistory.daysToKeep` | number  | `360`  | 保持日数。0は無期限                                            |
 
 設定画面に次を設ける。
 
@@ -482,7 +481,6 @@ interface MyPaletteSettings {
 		enabled: boolean;
 		addDelayMs: number;
 		daysToKeep: number;
-		alwaysSuggest: boolean;
 		entries: Array<{ input: string; lastSearchedAt: number; count: number }>;
 	};
 	prefixes: {
@@ -512,7 +510,7 @@ interface MyPaletteSettings {
 - 検索履歴はモード共通で、入力欄の完全な文字列を `data.json` へ永続化する。
 - Enter、結果へのアクション、または入力停止後 `searchHistory.addDelayMs` 経過時に履歴へ追加する。
 - 大文字小文字だけが異なる入力は同じ履歴項目として扱い、最新の表記と回数を保持する。
-- Ctrl+Spaceで検索履歴候補を表示し、候補を選ぶと入力欄へ復元する。
+- 入力欄右端の履歴ボタンで検索履歴メニューを表示し、項目を選ぶと入力欄へ復元する。
 
 ## 11. アーキテクチャ
 
