@@ -42,7 +42,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	protected override onSelectionModalOpen(): void {
 		// SelectionModal applies and refreshes the initial input.
 		this.addSearchHistoryButton();
-		this.inputEl.addEventListener(
+		this.plugin.registerDomEvent(
+			this.inputEl,
 			"keydown",
 			(event) => {
 				const cursorIsAtEnd =
@@ -55,7 +56,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			},
 			true,
 		);
-		this.inputEl.addEventListener(
+		this.plugin.registerDomEvent(
+			this.inputEl,
 			"keydown",
 			(event) => {
 				if (event.key === "Enter" && !event.isComposing && !this.hasSelectedResult()) {
@@ -157,6 +159,15 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 
 	protected override handlesSuggestionContextMenu(): boolean {
 		return true;
+	}
+
+	protected override registerSelectionDomEvent<K extends keyof HTMLElementEventMap>(
+		el: HTMLElement,
+		type: K,
+		callback: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any,
+		options?: boolean | AddEventListenerOptions,
+	): void {
+		this.plugin.registerDomEvent(el, type, callback, options);
 	}
 
 	protected override onSuggestionContextMenu(result: PaletteResult, event: MouseEvent): void {
@@ -362,11 +373,11 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			attr: { type: "button", "aria-label": "Search history" },
 		});
 		setIcon(button, "chevron-down");
-		button.addEventListener("mousedown", (event) => {
+		this.plugin.registerDomEvent(button, "mousedown", (event) => {
 			event.preventDefault();
 			event.stopPropagation();
 		});
-		button.addEventListener("click", (event) => {
+		this.plugin.registerDomEvent(button, "click", (event) => {
 			event.preventDefault();
 			event.stopPropagation();
 			this.showSearchHistoryMenu(button);

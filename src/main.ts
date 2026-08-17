@@ -201,6 +201,8 @@ export default class MyPalettePlugin extends Plugin {
 	}
 
 	onunload(): void {
+		this.activePaletteModal?.close();
+		this.activePaletteModal = undefined;
 		this.everythingClient.cancel();
 		this.fileProvider?.dispose();
 		logger.debug("Plugin unloaded");
