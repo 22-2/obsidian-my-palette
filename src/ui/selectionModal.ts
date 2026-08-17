@@ -174,6 +174,11 @@ export class SelectionModal<T> extends SuggestModal<T> {
 		this.statusTextEl?.setText(text);
 	}
 
+	focusSearchInput(): void {
+		if (!this.inputEl.isConnected) return;
+		this.inputEl.focus({ preventScroll: true });
+	}
+
 	protected updateMatchQuery(query: string): void {
 		this.query = query;
 	}

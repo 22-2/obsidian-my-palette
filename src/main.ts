@@ -38,6 +38,7 @@ export default class MyPalettePlugin extends Plugin {
 	smartConnectionProvider!: SmartConnectionProvider;
 	providers!: Record<PaletteMode, PaletteProvider>;
 	private rememberedPaletteQueries: Partial<Record<PaletteMode, string>> = {};
+	private activePaletteModal?: PaletteModal;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -69,21 +70,19 @@ export default class MyPalettePlugin extends Plugin {
 		this.addCommand({
 			id: "open",
 			name: "Open Recent palette",
-			callback: () =>
-				new PaletteModal(this.app, this, this.getRememberedPaletteQuery("file")).open(),
+			callback: () => this.openPalette(this.getRememberedPaletteQuery("file")),
 		});
 		this.addCommand({
 			id: "open-command-list",
 			name: "Open command list",
-			callback: () =>
-				new PaletteModal(this.app, this, this.commandPaletteInitialInput()).open(),
+			callback: () => this.openPalette(this.commandPaletteInitialInput()),
 		});
 		this.addCommand({
 			id: "link-search",
 			name: "Link search",
 			checkCallback: (checking) => {
 				if (checking) return Boolean(this.app.workspace.getActiveFile());
-				new PaletteModal(this.app, this, "", "link").open();
+				this.openPalette("", "link");
 			},
 		});
 		this.addCommand({
@@ -91,20 +90,20 @@ export default class MyPalettePlugin extends Plugin {
 			name: "Backlink search",
 			checkCallback: (checking) => {
 				if (checking) return Boolean(this.app.workspace.getActiveFile());
-				new PaletteModal(this.app, this, "", "backlink").open();
+				this.openPalette("", "backlink");
 			},
 		});
 		this.addCommand({
 			id: "bookmark-search",
 			name: "Bookmark search",
-			callback: () => new PaletteModal(this.app, this, "", "bookmark").open(),
+			callback: () => this.openPalette("", "bookmark"),
 		});
 		this.addCommand({
 			id: "smart-connections-search",
 			name: "Smart Connections search",
 			checkCallback: (checking) => {
 				if (checking) return Boolean(this.app.workspace.getActiveFile());
-				new PaletteModal(this.app, this, "", "smart").open();
+				this.openPalette("", "smart");
 			},
 		});
 		this.addCommand({
@@ -125,6 +124,30 @@ export default class MyPalettePlugin extends Plugin {
 				void insertLinkToMocRelateds(this);
 			},
 		});
+	}
+
+	openPalette(
+		initialInput = "",
+		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
+	): void {
+		if (this.activePaletteModal) {
+			this.activePaletteModal.focusSearchInput();
+			return;
+		}
+		const existingInput = document.querySelector<HTMLInputElement>(
+			".my-palette-suggest-modal .prompt-input",
+		);
+		if (existingInput) {
+			existingInput.focus({ preventScroll: true });
+			return;
+		}
+		const modal = new PaletteModal(this.app, this, initialInput, fixedMode);
+		this.activePaletteModal = modal;
+		modal.open();
+	}
+
+	releasePaletteModal(modal: PaletteModal): void {
+		if (this.activePaletteModal === modal) this.activePaletteModal = undefined;
 	}
 
 	async openExternalMarkdown(

@@ -67,6 +67,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override onSelectionModalClose(): void {
+		this.plugin.releasePaletteModal(this);
 		this.generation += 1;
 		this.controller?.abort();
 		this.cancelHistoryDelay();
