@@ -15,6 +15,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private historyDelayTimer?: number;
 	private suppressHistoryForNextInput = false;
 	private skipInitialHistoryRecord: boolean;
+	private activeMenu?: Menu;
 	private mode: PaletteMode = "file";
 	private everythingScope: EverythingScope = "vault";
 
@@ -73,6 +74,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.generation += 1;
 		this.controller?.abort();
 		this.cancelHistoryDelay();
+		this.activeMenu?.close();
+		this.activeMenu = undefined;
 		this.plugin.everythingClient.cancel();
 	}
 
@@ -172,7 +175,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 
 	protected override onSuggestionContextMenu(result: PaletteResult, event: MouseEvent): void {
 		this.selected = result;
-		const menu = new Menu();
+		const menu = this.replaceActiveMenu(new Menu());
 		if (result.mode === "search-history") {
 			menu.addItem((item) =>
 				item
@@ -385,7 +388,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	private showSearchHistoryMenu(anchor: HTMLElement): void {
-		const menu = new Menu();
+		const menu = this.replaceActiveMenu(new Menu());
 		const history = this.plugin.getSearchHistorySuggestions("");
 		if (history.length === 0) {
 			menu.addItem((item) =>
@@ -404,6 +407,15 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		const rect = anchor.getBoundingClientRect();
 		menu.setParentElement(this.modalEl);
 		menu.showAtPosition({ x: rect.right, y: rect.bottom, left: true }, anchor.ownerDocument);
+	}
+
+	private replaceActiveMenu(menu: Menu): Menu {
+		this.activeMenu?.close();
+		this.activeMenu = menu;
+		menu.onHide(() => {
+			if (this.activeMenu === menu) this.activeMenu = undefined;
+		});
+		return menu;
 	}
 
 	private async openResultInBackground(result: PaletteResult): Promise<void> {
