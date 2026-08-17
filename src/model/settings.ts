@@ -8,11 +8,26 @@ export const ACTION_IDS = [
 ] as const;
 export type ActionId = (typeof ACTION_IDS)[number];
 
+export interface SearchHistoryEntry {
+	input: string;
+	lastSearchedAt: number;
+	count: number;
+}
+
+export interface SearchHistorySettings {
+	enabled: boolean;
+	addDelayMs: number;
+	daysToKeep: number;
+	alwaysSuggest: boolean;
+	entries: SearchHistoryEntry[];
+}
+
 export interface MyPaletteSettings {
-	schemaVersion: 5;
+	schemaVersion: 6;
 	showLog: boolean;
 	rememberLastInput: boolean;
 	openExternalMarkdownInObsidian: boolean;
+	searchHistory: SearchHistorySettings;
 	prefixes: { command: string; everything: string };
 	everything: {
 		httpUrl: string;
@@ -38,10 +53,17 @@ export const DEFAULT_KEYBINDINGS: Record<ActionId, string[]> = {
 };
 
 export const DEFAULT_SETTINGS: MyPaletteSettings = {
-	schemaVersion: 5,
+	schemaVersion: 6,
 	showLog: false,
 	rememberLastInput: false,
 	openExternalMarkdownInObsidian: true,
+	searchHistory: {
+		enabled: true,
+		addDelayMs: 3000,
+		daysToKeep: 360,
+		alwaysSuggest: false,
+		entries: [],
+	},
 	prefixes: { command: ">", everything: "e " },
 	everything: {
 		httpUrl: "http://127.0.0.1:51361/",

@@ -1,6 +1,7 @@
 import { PluginSettingTab, Setting, Notice } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import {
+	type SearchHistoryEntry,
 	type MyPaletteSettings,
 	DEFAULT_KEYBINDINGS,
 	DEFAULT_SETTINGS as MODEL_DEFAULT_SETTINGS,
@@ -27,14 +28,41 @@ function extensions(value: unknown): string[] {
 	return [...new Set(normalized)];
 }
 
+function searchHistoryEntries(value: unknown): SearchHistoryEntry[] {
+	if (!Array.isArray(value)) return [];
+	return value.flatMap((item): SearchHistoryEntry[] => {
+		if (!item || typeof item !== "object") return [];
+		const entry = item as Record<string, unknown>;
+		if (
+			typeof entry.input !== "string" ||
+			typeof entry.lastSearchedAt !== "number" ||
+			!Number.isFinite(entry.lastSearchedAt) ||
+			typeof entry.count !== "number" ||
+			!Number.isFinite(entry.count)
+		)
+			return [];
+		return [
+			{
+				input: entry.input,
+				lastSearchedAt: entry.lastSearchedAt,
+				count: Math.max(1, Math.round(entry.count)),
+			},
+		];
+	});
+}
+
 export function mergeSettings(data: unknown): MyPaletteSettings {
 	const source = (data && typeof data === "object" ? data : {}) as Record<string, unknown>;
 	const rawPrefixes = (source.prefixes ?? {}) as Record<string, unknown>;
 	const rawEverything = (source.everything ?? {}) as Record<string, unknown>;
+	const rawSearchHistory =
+		source.searchHistory && typeof source.searchHistory === "object"
+			? (source.searchHistory as Record<string, unknown>)
+			: {};
 
 	return {
 		...DEFAULT_SETTINGS,
-		schemaVersion: 5,
+		schemaVersion: 6,
 		showLog: typeof source.showLog === "boolean" ? source.showLog : false,
 		rememberLastInput:
 			typeof source.rememberLastInput === "boolean" ? source.rememberLastInput : false,
@@ -42,6 +70,29 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 			typeof source.openExternalMarkdownInObsidian === "boolean"
 				? source.openExternalMarkdownInObsidian
 				: true,
+		searchHistory: {
+			enabled:
+				typeof rawSearchHistory.enabled === "boolean"
+					? rawSearchHistory.enabled
+					: DEFAULT_SETTINGS.searchHistory.enabled,
+			addDelayMs: bounded(
+				rawSearchHistory.addDelayMs,
+				DEFAULT_SETTINGS.searchHistory.addDelayMs,
+				0,
+				10000,
+			),
+			daysToKeep: bounded(
+				rawSearchHistory.daysToKeep,
+				DEFAULT_SETTINGS.searchHistory.daysToKeep,
+				0,
+				3650,
+			),
+			alwaysSuggest:
+				typeof rawSearchHistory.alwaysSuggest === "boolean"
+					? rawSearchHistory.alwaysSuggest
+					: DEFAULT_SETTINGS.searchHistory.alwaysSuggest,
+			entries: searchHistoryEntries(rawSearchHistory.entries),
+		},
 		prefixes: {
 			command: typeof rawPrefixes.command === "string" ? rawPrefixes.command : ">",
 			everything: typeof rawPrefixes.everything === "string" ? rawPrefixes.everything : "e ",
@@ -195,6 +246,67 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 		this.addPrefix(containerEl, "Everything prefix", "everything");
 
 		new Setting(containerEl).setName("Behavior").setHeading();
+		new Setting(containerEl)
+			.setName("Enable search history")
+			.setDesc("Remember search input across all palette modes.")
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.searchHistory.enabled)
+					.onChange(async (value) => {
+						this.plugin.settings.searchHistory.enabled = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+		new Setting(containerEl)
+			.setName("Search history add delay")
+			.setDesc(
+				"Milliseconds of input inactivity before adding a search. 0 means Enter or action only.",
+			)
+			.addSlider((slider) =>
+				slider
+					.setLimits(0, 10000, 1000)
+					.setValue(this.plugin.settings.searchHistory.addDelayMs)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings.searchHistory.addDelayMs = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+		new Setting(containerEl)
+			.setName("Keep search history")
+			.setDesc("Number of days to keep entries. 0 keeps them forever.")
+			.addSlider((slider) =>
+				slider
+					.setLimits(0, 3650, 30)
+					.setValue(this.plugin.settings.searchHistory.daysToKeep)
+					.setDynamicTooltip()
+					.onChange(async (value) => {
+						this.plugin.settings.searchHistory.daysToKeep = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+		new Setting(containerEl)
+			.setName("Always show search suggestions")
+			.setDesc(
+				"Show history suggestions on every input change instead of only with Ctrl+Space.",
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.searchHistory.alwaysSuggest)
+					.onChange(async (value) => {
+						this.plugin.settings.searchHistory.alwaysSuggest = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+		new Setting(containerEl)
+			.setName("Clear search history")
+			.setDesc("Permanently remove all stored search history.")
+			.addButton((button) =>
+				button.setButtonText("Clear").onClick(() => {
+					this.plugin.clearSearchHistory();
+					new Notice("Search history cleared.");
+				}),
+			);
 		new Setting(containerEl)
 			.setName("Open external Markdown in Obsidian")
 			.setDesc(

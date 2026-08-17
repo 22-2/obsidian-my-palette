@@ -11,6 +11,10 @@ import { runResultAction, type ActionKind } from "src/palette/resultActions";
 export class PaletteModal extends SelectionModal<PaletteResult> {
 	private generation = 0;
 	private controller?: AbortController;
+	private historyDelayTimer?: number;
+	private showHistorySuggestions = false;
+	private suppressHistoryForNextInput = false;
+	private skipInitialHistoryRecord: boolean;
 	private mode: PaletteMode = "file";
 	private everythingScope: EverythingScope = "vault";
 
@@ -32,6 +36,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			},
 			app,
 		);
+		this.skipInitialHistoryRecord = Boolean(initialInput);
 	}
 
 	protected override onSelectionModalOpen(): void {
@@ -49,11 +54,34 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			},
 			true,
 		);
+		this.inputEl.addEventListener(
+			"keydown",
+			(event) => {
+				if (
+					event.key === " " &&
+					event.ctrlKey &&
+					!event.altKey &&
+					!event.metaKey &&
+					!event.isComposing
+				) {
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					this.showHistorySuggestions = true;
+					this.refreshSuggestions();
+					return;
+				}
+				if (event.key === "Enter" && !event.isComposing && !this.hasSelectedResult()) {
+					this.recordCurrentSearch();
+				}
+			},
+			true,
+		);
 	}
 
 	protected override onSelectionModalClose(): void {
 		this.generation += 1;
 		this.controller?.abort();
+		this.cancelHistoryDelay();
 		this.plugin.everythingClient.cancel();
 	}
 
@@ -65,6 +93,13 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override toSelectionItem(result: PaletteResult): SelectionItem {
+		if (result.mode === "search-history") {
+			return {
+				label: result.primary,
+				description: result.secondary,
+				icon: result.icon,
+			};
+		}
 		const isExternalMarkdown =
 			result.mode === "everything" &&
 			result.kind === "file" &&
@@ -113,6 +148,11 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	override async getSuggestions(input: string): Promise<PaletteResult[]> {
+		const showHistorySuggestions = this.showHistorySuggestions;
+		this.showHistorySuggestions = false;
+		const suppressHistoryRecord = this.suppressHistoryForNextInput;
+		this.suppressHistoryForNextInput = false;
+		this.cancelHistoryDelay();
 		this.controller?.abort();
 		const generation = ++this.generation;
 		const parsed = this.fixedMode
@@ -125,6 +165,15 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.everythingScope =
 			("everythingScope" in parsed ? parsed.everythingScope : undefined) ?? "vault";
 		this.updateMode();
+		if (this.skipInitialHistoryRecord) {
+			this.skipInitialHistoryRecord = false;
+		} else if (!suppressHistoryRecord && !showHistorySuggestions) {
+			this.scheduleSearchHistory(input);
+		}
+		const historySuggestions =
+			showHistorySuggestions || this.plugin.settings.searchHistory.alwaysSuggest
+				? this.plugin.getSearchHistorySuggestions(showHistorySuggestions ? "" : input)
+				: [];
 		const delay = parsed.mode === "everything" ? this.plugin.settings.everything.debounceMs : 0;
 		if (delay) await new Promise((resolve) => window.setTimeout(resolve, delay));
 		if (generation !== this.generation) return [];
@@ -137,8 +186,9 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				everythingScope: this.everythingScope,
 			});
 			if (generation !== this.generation) return [];
-			this.updateResultCount(results.length);
-			return results;
+			const combinedResults = [...historySuggestions, ...results];
+			this.updateResultCount(combinedResults.length);
+			return combinedResults;
 		} catch (error) {
 			if (
 				generation !== this.generation ||
@@ -146,8 +196,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			)
 				return [];
 			this.emptyStateText = error instanceof Error ? error.message : String(error);
-			this.updateResultCount(0);
-			return [];
+			this.updateResultCount(historySuggestions.length);
+			return historySuggestions;
 		}
 	}
 
@@ -173,6 +223,16 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		closePalette = true,
 	): Promise<void> {
 		if (!result) return;
+		if (result.mode === "search-history") {
+			this.suppressHistoryForNextInput = true;
+			this.inputEl.value = this.plugin.formatSearchHistoryInput(result);
+			this.showHistorySuggestions = false;
+			this.refreshSuggestions();
+			this.inputEl.focus({ preventScroll: true });
+			this.inputEl.setSelectionRange(this.inputEl.value.length, this.inputEl.value.length);
+			return;
+		}
+		this.recordCurrentSearch();
 		if (result.mode === "command") {
 			if (action !== "primary") return;
 			const exists = this.plugin.commandProvider
@@ -240,6 +300,42 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			return;
 		}
 		this.emptyStateText = outcome.message ?? "The action failed.";
+	}
+
+	private recordCurrentSearch(): void {
+		this.cancelHistoryDelay();
+		const input = this.recordableInput(this.inputEl.value);
+		if (input) this.plugin.recordSearch(input);
+	}
+
+	private scheduleSearchHistory(input: string): void {
+		const history = this.plugin.settings.searchHistory;
+		if (!history.enabled || !this.recordableInput(input) || history.addDelayMs <= 0) return;
+		this.historyDelayTimer = window.setTimeout(() => {
+			this.historyDelayTimer = undefined;
+			const recordableInput = this.recordableInput(input);
+			if (recordableInput) this.plugin.recordSearch(recordableInput);
+		}, history.addDelayMs);
+	}
+
+	private recordableInput(input: string): string | undefined {
+		const parsed = this.fixedMode
+			? { mode: this.fixedMode, query: input }
+			: parseInput(input, this.plugin.settings.prefixes);
+		return parsed.query.trim() ? input : undefined;
+	}
+
+	private cancelHistoryDelay(): void {
+		if (this.historyDelayTimer === undefined) return;
+		window.clearTimeout(this.historyDelayTimer);
+		this.historyDelayTimer = undefined;
+	}
+
+	private hasSelectedResult(): boolean {
+		const chooser = this as unknown as {
+			chooser?: { values?: PaletteResult[]; selectedItem?: number };
+		};
+		return Boolean(chooser.chooser?.values?.[chooser.chooser.selectedItem ?? -1]);
 	}
 
 	private async openSelectedWithoutClosing(): Promise<void> {

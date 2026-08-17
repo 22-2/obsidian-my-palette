@@ -1,4 +1,5 @@
 import type { TFile } from "obsidian";
+import type { SearchHistoryEntry } from "src/model/settings";
 
 export type PaletteMode =
 	| "file"
@@ -45,6 +46,10 @@ export interface EverythingResult extends BaseResult {
 	attributes: string;
 }
 
+export interface SearchHistoryResult extends Omit<BaseResult, "mode">, SearchHistoryEntry {
+	mode: "search-history";
+}
+
 /** A single link occurrence, used by the Link and Backlink commands. */
 export interface RelatedFileResult extends BaseResult {
 	mode: "link" | "backlink";
@@ -69,6 +74,7 @@ export type PaletteResult =
 	| FileResult
 	| CommandResult
 	| EverythingResult
+	| SearchHistoryResult
 	| RelatedFileResult
 	| BookmarkResult
 	| SmartConnectionResult;

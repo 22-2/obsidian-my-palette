@@ -10,11 +10,17 @@ import { EverythingProvider } from "src/providers/EverythingProvider";
 import { RelatedFileProvider } from "src/providers/RelatedFileProvider";
 import { BookmarkProvider } from "src/providers/BookmarkProvider";
 import { SmartConnectionProvider } from "src/providers/SmartConnectionProvider";
-import type { PaletteMode } from "src/model/results";
+import type { PaletteMode, SearchHistoryResult } from "src/model/results";
+import type { SearchHistoryEntry } from "src/model/settings";
 import type { PaletteProvider } from "src/providers/PaletteProvider";
 import { MoveFileModal } from "src/palette/MoveFileModal";
 import { insertLinkToMocRelateds } from "src/commands/mocRelateds";
 import { EXTERNAL_MARKDOWN_VIEW_TYPE, ExternalMarkdownView } from "src/views/ExternalMarkdownView";
+import {
+	getSearchHistorySuggestions,
+	pruneStoredSearchHistory,
+	recordSearchHistory,
+} from "src/core/searchHistory";
 import "../styles.css";
 
 const logger = log.withTag("MyPalette");
@@ -173,6 +179,11 @@ export default class MyPalettePlugin extends Plugin {
 
 	async loadSettings(): Promise<void> {
 		this.settings = mergeSettings(await this.loadData());
+		this.settings.searchHistory.entries = pruneStoredSearchHistory(
+			this.settings.searchHistory.entries,
+			Date.now(),
+			this.settings.searchHistory.daysToKeep,
+		);
 	}
 
 	async saveSettings(): Promise<void> {
@@ -206,6 +217,39 @@ export default class MyPalettePlugin extends Plugin {
 		this.rememberedPaletteQueries[mode] = query;
 		if (mode === "everything" && rawInput !== undefined)
 			this.rememberedPaletteQueries.file = rawInput;
+	}
+
+	getSearchHistorySuggestions(input: string): SearchHistoryResult[] {
+		return getSearchHistorySuggestions(this.settings.searchHistory.entries, input).map(
+			(entry) => ({
+				id: `search-history:${entry.input}`,
+				mode: "search-history",
+				primary: entry.input,
+				secondary: "Search history",
+				icon: "history",
+				...entry,
+			}),
+		);
+	}
+
+	formatSearchHistoryInput(entry: SearchHistoryEntry): string {
+		return entry.input;
+	}
+
+	recordSearch(input: string): void {
+		const history = this.settings.searchHistory;
+		if (!history.enabled || !input.trim()) return;
+		history.entries = recordSearchHistory(history.entries, input, {
+			now: Date.now(),
+			daysToKeep: history.daysToKeep,
+			maxEntries: 256,
+		});
+		void this.saveSettings();
+	}
+
+	clearSearchHistory(): void {
+		this.settings.searchHistory.entries = [];
+		void this.saveSettings();
 	}
 
 	clearRememberedPaletteQueries(): void {
