@@ -270,13 +270,13 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			);
 			menu.addItem((item) =>
 				item
-					.setTitle("Open in horizontal split")
+					.setTitle("Open below")
 					.setIcon("separator-horizontal")
 					.onClick(() => void this.activatePaletteResult("horizontal", result)),
 			);
 			menu.addItem((item) =>
 				item
-					.setTitle("Open in vertical split")
+					.setTitle("Open side by side")
 					.setIcon("separator-vertical")
 					.onClick(() => void this.activatePaletteResult("vertical", result)),
 			);
