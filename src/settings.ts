@@ -11,10 +11,7 @@ import type MyPalettePlugin from "src/main";
 import {
 	type SearchHistoryEntry,
 	type MyPaletteSettings,
-	DEFAULT_KEYBINDINGS,
 	DEFAULT_SETTINGS as MODEL_DEFAULT_SETTINGS,
-	type ActionId,
-	ACTION_IDS,
 } from "src/model/settings";
 
 export type { MyPaletteSettings };
@@ -117,26 +114,12 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 					? rawEverything.directorySearchMarkdownOnly
 					: true,
 		},
-		keybindings: mergeKeybindings(source.keybindings),
 		recentCommandIds: Array.isArray(source.recentCommandIds)
 			? source.recentCommandIds
 					.filter((id): id is string => typeof id === "string")
 					.slice(0, 20)
 			: [],
 	};
-}
-
-function mergeKeybindings(raw: unknown): Record<ActionId, string[]> {
-	const defaults = structuredClone(DEFAULT_KEYBINDINGS);
-	if (!raw || typeof raw !== "object") return defaults;
-	const obj = raw as Record<string, unknown>;
-	for (const action of ACTION_IDS) {
-		const value = obj[action];
-		if (Array.isArray(value)) {
-			defaults[action] = value.filter((v): v is string => typeof v === "string");
-		}
-	}
-	return defaults;
 }
 
 export class MyPaletteSettingTab extends PluginSettingTab {
@@ -413,28 +396,6 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 					]),
 				],
 			),
-			page("Keybindings", "Customize the shortcuts used in the palette.", [
-				group(
-					"Shortcuts",
-					ACTION_IDS.map((action) =>
-						render(action, "Comma-separated shortcuts.", (setting) => {
-							setting.addText((text) =>
-								text
-									.setValue(
-										(this.plugin.settings.keybindings[action] ?? []).join(", "),
-									)
-									.onChange(async (value) => {
-										this.plugin.settings.keybindings[action] = value
-											.split(",")
-											.map((v) => v.trim())
-											.filter(Boolean);
-										await this.plugin.saveSettings();
-									}),
-							);
-						}),
-					),
-				),
-			]),
 			page("Advanced", "Diagnostics and developer options.", [
 				group("Developer", [
 					{

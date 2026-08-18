@@ -152,7 +152,7 @@ export default class MyPalettePlugin extends Plugin {
 
 	async openExternalMarkdown(
 		absolutePath: string,
-		action: "primary" | "alternate" | "tertiary",
+		action: "primary" | "alternate" | "vertical" | "horizontal",
 		autoFocus = true,
 		active = true,
 	): Promise<void> {
@@ -185,9 +185,11 @@ export default class MyPalettePlugin extends Plugin {
 			previewLeaf ??
 			(action === "alternate"
 				? this.app.workspace.getLeaf("tab")
-				: action === "tertiary"
-					? this.app.workspace.getLeaf("split", "vertical")
-					: this.app.workspace.getLeaf(false));
+				: action === "horizontal"
+					? this.app.workspace.getLeaf("split", "horizontal")
+					: action === "vertical"
+						? this.app.workspace.getLeaf("split", "vertical")
+						: this.app.workspace.getLeaf(false));
 		await leaf.setViewState({
 			type: EXTERNAL_MARKDOWN_VIEW_TYPE,
 			active,

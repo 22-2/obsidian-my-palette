@@ -17,7 +17,7 @@ import type { EverythingResult, PaletteResult } from "src/model/results";
 import { isMarkdownPath } from "src/core/externalFiles";
 import { openPathInCode } from "src/core/vscode";
 
-export type ActionKind = "primary" | "alternate" | "tertiary";
+export type ActionKind = "primary" | "alternate" | "vertical" | "horizontal";
 export interface ActionOutcome {
 	close: boolean;
 	message?: string;
@@ -55,9 +55,11 @@ export async function runResultAction(
 		const leaf =
 			action === "alternate"
 				? app.workspace.getLeaf("tab")
-				: action === "tertiary"
-					? app.workspace.getLeaf("split", "vertical")
-					: app.workspace.getLeaf(false);
+				: action === "horizontal"
+					? app.workspace.getLeaf("split", "horizontal")
+					: action === "vertical"
+						? app.workspace.getLeaf("split", "vertical")
+						: app.workspace.getLeaf(false);
 		await leaf.openFile(current);
 		return { close: true };
 	}
@@ -70,19 +72,21 @@ export async function runResultAction(
 	} catch {
 		return { close: false, message: "The selected path no longer exists." };
 	}
-	if (action === "tertiary") {
-		const editor = app.workspace.activeEditor?.editor;
-		if (!editor)
-			return { close: false, message: "Open a Markdown editor before inserting a path." };
-		editor.replaceSelection(everythingResult.absolutePath);
-	} else if (action === "alternate") {
+	if (action === "alternate") {
 		if (everythingResult.kind === "folder")
 			await electron.shell.openPath(everythingResult.absolutePath);
 		else electron.shell.showItemInFolder(everythingResult.absolutePath);
 	} else if (everythingResult.vaultPath) {
 		const current = app.vault.getAbstractFileByPath(everythingResult.vaultPath);
-		if (current instanceof TFile) await app.workspace.getLeaf(false).openFile(current);
-		else {
+		if (current instanceof TFile) {
+			const leaf =
+				action === "horizontal"
+					? app.workspace.getLeaf("split", "horizontal")
+					: action === "vertical"
+						? app.workspace.getLeaf("split", "vertical")
+						: app.workspace.getLeaf(false);
+			await leaf.openFile(current);
+		} else {
 			if (isMarkdownPath(everythingResult.absolutePath)) {
 				if (externalMarkdown.openExternalMarkdownInObsidian) {
 					await externalMarkdown.openExternalMarkdown(

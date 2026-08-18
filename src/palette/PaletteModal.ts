@@ -130,15 +130,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		};
 	}
 
-	protected override async onItemActivated(result: PaletteResult, event: Event): Promise<void> {
-		const pointer = event as MouseEvent;
-		const action: ActionKind =
-			pointer.ctrlKey && pointer.shiftKey
-				? "tertiary"
-				: pointer.ctrlKey
-					? "alternate"
-					: "primary";
-		await this.activatePaletteResult(action, result);
+	protected override async onItemActivated(result: PaletteResult, _event: Event): Promise<void> {
+		await this.activatePaletteResult("primary", result);
 	}
 
 	protected override async onSuggestionMiddleClick(result: PaletteResult): Promise<void> {
@@ -202,6 +195,18 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 					.setTitle("Open in new tab (background)")
 					.setIcon("panel-top-open")
 					.onClick(() => void this.openResultInBackground(result)),
+			);
+			menu.addItem((item) =>
+				item
+					.setTitle("Open in horizontal split")
+					.setIcon("separator-horizontal")
+					.onClick(() => void this.activatePaletteResult("horizontal", result)),
+			);
+			menu.addItem((item) =>
+				item
+					.setTitle("Open in vertical split")
+					.setIcon("separator-vertical")
+					.onClick(() => void this.activatePaletteResult("vertical", result)),
 			);
 			if (result.mode === "everything") {
 				menu.addSeparator();
@@ -316,9 +321,11 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				const leaf =
 					action === "alternate"
 						? this.app.workspace.getLeaf("tab")
-						: action === "tertiary"
-							? this.app.workspace.getLeaf("split", "vertical")
-							: this.app.workspace.getLeaf(false);
+						: action === "horizontal"
+							? this.app.workspace.getLeaf("split", "horizontal")
+							: action === "vertical"
+								? this.app.workspace.getLeaf("split", "vertical")
+								: this.app.workspace.getLeaf(false);
 				await leaf.openFile(result.file);
 			}
 			if (closePalette) this.close();
@@ -328,9 +335,11 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			const leaf =
 				action === "alternate"
 					? this.app.workspace.getLeaf("tab")
-					: action === "tertiary"
-						? this.app.workspace.getLeaf("split", "vertical")
-						: this.app.workspace.getLeaf(false);
+					: action === "horizontal"
+						? this.app.workspace.getLeaf("split", "horizontal")
+						: action === "vertical"
+							? this.app.workspace.getLeaf("split", "vertical")
+							: this.app.workspace.getLeaf(false);
 			await leaf.openFile(result.file);
 			if (closePalette) this.close();
 			return;
@@ -339,9 +348,11 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			const leaf =
 				action === "alternate"
 					? this.app.workspace.getLeaf("tab")
-					: action === "tertiary"
-						? this.app.workspace.getLeaf("split", "vertical")
-						: this.app.workspace.getLeaf(false);
+					: action === "horizontal"
+						? this.app.workspace.getLeaf("split", "horizontal")
+						: action === "vertical"
+							? this.app.workspace.getLeaf("split", "vertical")
+							: this.app.workspace.getLeaf(false);
 			await leaf.openFile(result.file);
 			const editor = this.app.workspace.activeEditor?.editor;
 			if (editor) editor.setCursor({ line: result.line, ch: 0 });

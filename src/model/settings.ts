@@ -1,13 +1,3 @@
-export const ACTION_IDS = [
-	"next",
-	"previous",
-	"primary",
-	"alternate",
-	"tertiary",
-	"close",
-] as const;
-export type ActionId = (typeof ACTION_IDS)[number];
-
 export interface SearchHistoryEntry {
 	input: string;
 	lastSearchedAt: number;
@@ -38,18 +28,8 @@ export interface MyPaletteSettings {
 		vaultExtensions: string[];
 		directorySearchMarkdownOnly: boolean;
 	};
-	keybindings: Record<ActionId, string[]>;
 	recentCommandIds: string[];
 }
-
-export const DEFAULT_KEYBINDINGS: Record<ActionId, string[]> = {
-	next: ["ArrowDown"],
-	previous: ["ArrowUp"],
-	primary: ["Enter"],
-	alternate: ["Ctrl+Enter"],
-	tertiary: ["Ctrl+Shift+Enter"],
-	close: ["Escape"],
-};
 
 export const DEFAULT_SETTINGS: MyPaletteSettings = {
 	schemaVersion: 6,
@@ -73,6 +53,5 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		vaultExtensions: ["md", "canvas", "base"],
 		directorySearchMarkdownOnly: true,
 	},
-	keybindings: structuredClone(DEFAULT_KEYBINDINGS),
 	recentCommandIds: [],
 };
