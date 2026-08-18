@@ -63,7 +63,10 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		const scopeHandlers = (this.scope as unknown as { keys?: KeymapEventHandler[] }).keys ?? [];
 		for (let index = scopeHandlers.length - 1; index >= 0; index -= 1) {
 			const handler = scopeHandlers[index];
-			if ((handler.key === "Home" || handler.key === "End") && handler.modifiers === "")
+			if (
+				(handler.key === "Home" || handler.key === "End" || handler.key === "Escape") &&
+				handler.modifiers === ""
+			)
 				this.scope.unregister(handler);
 		}
 		for (const key of ["Home", "End"]) {
@@ -231,6 +234,12 @@ export abstract class BaseSuggestModal<T> extends Modal {
 
 	private handleInputKeyDown(event: KeyboardEvent): void {
 		if (event.isComposing) return;
+		if (event.key === "Escape") {
+			event.preventDefault();
+			event.stopPropagation();
+			this.close();
+			return;
+		}
 		if (event.key === "ArrowDown" || event.key === "ArrowUp") {
 			event.preventDefault();
 			event.stopPropagation();
