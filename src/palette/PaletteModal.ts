@@ -400,7 +400,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 
 	private showSearchHistoryMenu(anchor: HTMLElement): void {
 		const menu = this.replaceActiveMenu(new Menu());
-		const history = this.plugin.getSearchHistorySuggestions("");
+		const history = this.plugin.getSearchHistorySuggestions(this.inputEl.value);
 		if (history.length === 0) {
 			menu.addItem((item) =>
 				item.setTitle("No search history").setIcon("history").setDisabled(true),

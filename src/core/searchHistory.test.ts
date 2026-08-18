@@ -50,4 +50,16 @@ describe("search history", () => {
 			"new",
 		]);
 	});
+
+	it("filters suggestions by the current input", () => {
+		const entries = [
+			{ input: "Open daily note", lastSearchedAt: 3_000, count: 1 },
+			{ input: "Search report", lastSearchedAt: 2_000, count: 4 },
+			{ input: "Weekly review", lastSearchedAt: 1_000, count: 2 },
+		];
+
+		expect(getSearchHistorySuggestions(entries, "REPORT").map(({ input }) => input)).toEqual([
+			"Search report",
+		]);
+	});
 });
