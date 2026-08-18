@@ -59,6 +59,18 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			this.inputEl,
 			"keydown",
 			(event) => {
+				if (
+					event.ctrlKey &&
+					!event.shiftKey &&
+					!event.altKey &&
+					!event.metaKey &&
+					event.key.toLocaleLowerCase() === "r"
+				) {
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					this.showSearchHistorySuggest();
+					return;
+				}
 				if (!this.historySuggest?.isOpen) return;
 				if (event.key === "ArrowDown" || event.key === "ArrowUp") {
 					if (!this.historySuggest.moveSelection(event.key === "ArrowDown" ? 1 : -1))
@@ -445,7 +457,12 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		if (!container) return;
 		const button = container.createEl("button", {
 			cls: "clickable-icon my-palette-history-button",
-			attr: { type: "button", "aria-label": "Search history" },
+			attr: {
+				type: "button",
+				"aria-label": "Search history",
+				"aria-keyshortcuts": "Control+R",
+				title: "Search history (Ctrl+R)",
+			},
 		});
 		setIcon(button, "chevron-down");
 		this.plugin.registerDomEvent(button, "mousedown", (event) => {
