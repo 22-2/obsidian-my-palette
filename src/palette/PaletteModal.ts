@@ -6,7 +6,8 @@ import { compactPath } from "src/core/pathDisplay";
 import type MyPalettePlugin from "src/main";
 import type { EverythingScope, PaletteMode, PaletteResult } from "src/model/results";
 import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
-import { parseInput } from "src/palette/inputParser";
+import { SearchHistorySuggest } from "src/ui/searchHistorySuggest";
+import { getSearchHistoryCategory, parseInput } from "src/palette/inputParser";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
 
 export class PaletteModal extends SelectionModal<PaletteResult> {
@@ -16,6 +17,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private suppressHistoryForNextInput = false;
 	private skipInitialHistoryRecord: boolean;
 	private activeMenu?: Menu;
+	private historySuggest?: SearchHistorySuggest;
 	private mode: PaletteMode = "file";
 	private everythingScope: EverythingScope = "vault";
 
@@ -43,6 +45,62 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	protected override onSelectionModalOpen(): void {
 		// SelectionModal applies and refreshes the initial input.
 		this.addSearchHistoryButton();
+		this.historySuggest = new SearchHistorySuggest(
+			this.inputEl.parentElement ?? this.modalEl,
+			(result) => this.applySearchHistory(result),
+		);
+		this.plugin.registerDomEvent(this.inputEl, "input", () => {
+			const history = this.getSearchHistoryContext(this.inputEl.value);
+			this.historySuggest?.update(
+				this.plugin.getSearchHistorySuggestions(history.query, history.category),
+			);
+		});
+		this.plugin.registerDomEvent(
+			this.inputEl,
+			"keydown",
+			(event) => {
+				if (!this.historySuggest?.isOpen) return;
+				if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+					if (!this.historySuggest.moveSelection(event.key === "ArrowDown" ? 1 : -1))
+						return;
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					return;
+				}
+				if (event.key !== "Enter" || !this.historySuggest.selectCurrent()) return;
+				event.preventDefault();
+				event.stopImmediatePropagation();
+			},
+			true,
+		);
+		this.plugin.registerDomEvent(
+			window,
+			"keydown",
+			(event) => {
+				if (
+					event.key !== "Escape" ||
+					this.historySuggest?.isOpen !== true ||
+					!(event.target instanceof Node) ||
+					!this.modalEl.contains(event.target)
+				)
+					return;
+				event.preventDefault();
+				event.stopImmediatePropagation();
+				this.historySuggest.close();
+			},
+			true,
+		);
+		this.plugin.registerDomEvent(document, "mousedown", (event) => {
+			const target = event.target;
+			if (
+				!(target instanceof Node) ||
+				this.historySuggest?.isOpen !== true ||
+				this.historySuggest?.contains(target) ||
+				target === this.inputEl
+			)
+				return;
+			this.historySuggest.close();
+		});
 		this.plugin.registerDomEvent(
 			this.inputEl,
 			"keydown",
@@ -76,6 +134,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.cancelHistoryDelay();
 		this.activeMenu?.close();
 		this.activeMenu = undefined;
+		this.historySuggest?.destroy();
+		this.historySuggest = undefined;
 		this.plugin.everythingClient.cancel();
 	}
 
@@ -372,6 +432,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	private applySearchHistory(result: Extract<PaletteResult, { mode: "search-history" }>): void {
+		this.historySuggest?.close();
 		this.suppressHistoryForNextInput = true;
 		this.inputEl.value = this.plugin.formatSearchHistoryInput(result);
 		this.refreshSuggestions();
@@ -394,30 +455,17 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.plugin.registerDomEvent(button, "click", (event) => {
 			event.preventDefault();
 			event.stopPropagation();
-			this.showSearchHistoryMenu(button);
+			this.showSearchHistorySuggest();
 		});
 	}
 
-	private showSearchHistoryMenu(anchor: HTMLElement): void {
-		const menu = this.replaceActiveMenu(new Menu());
-		const history = this.plugin.getSearchHistorySuggestions(this.inputEl.value);
-		if (history.length === 0) {
-			menu.addItem((item) =>
-				item.setTitle("No search history").setIcon("history").setDisabled(true),
-			);
-		} else {
-			for (const result of history) {
-				menu.addItem((item) =>
-					item
-						.setTitle(result.primary)
-						.setIcon("history")
-						.onClick(() => this.applySearchHistory(result)),
-				);
-			}
-		}
-		const rect = anchor.getBoundingClientRect();
-		menu.setParentElement(this.modalEl);
-		menu.showAtPosition({ x: rect.right, y: rect.bottom, left: true }, anchor.ownerDocument);
+	private showSearchHistorySuggest(): void {
+		const history = this.getSearchHistoryContext(this.inputEl.value);
+		this.historySuggest?.show(
+			this.plugin.getSearchHistorySuggestions(history.query, history.category),
+		);
+		this.inputEl.focus({ preventScroll: true });
+		this.inputEl.setSelectionRange(this.inputEl.value.length, this.inputEl.value.length);
 	}
 
 	private replaceActiveMenu(menu: Menu): Menu {
@@ -483,25 +531,38 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 
 	private recordCurrentSearch(): void {
 		this.cancelHistoryDelay();
-		const input = this.recordableInput(this.inputEl.value);
-		if (input) this.plugin.recordSearch(input);
+		const search = this.recordableSearch(this.inputEl.value);
+		if (search) this.plugin.recordSearch(search.query, search.category);
 	}
 
 	private scheduleSearchHistory(input: string): void {
 		const history = this.plugin.settings.searchHistory;
-		if (!history.enabled || !this.recordableInput(input) || history.addDelayMs <= 0) return;
+		const search = this.recordableSearch(input);
+		if (!history.enabled || !search || history.addDelayMs <= 0) return;
 		this.historyDelayTimer = window.setTimeout(() => {
 			this.historyDelayTimer = undefined;
-			const recordableInput = this.recordableInput(input);
-			if (recordableInput) this.plugin.recordSearch(recordableInput);
+			if (search) this.plugin.recordSearch(search.query, search.category);
 		}, history.addDelayMs);
 	}
 
-	private recordableInput(input: string): string | undefined {
+	private getSearchHistoryContext(input: string): {
+		query: string;
+		category: ReturnType<typeof getSearchHistoryCategory>;
+	} {
 		const parsed = this.fixedMode
 			? { mode: this.fixedMode, query: input }
 			: parseInput(input, this.plugin.settings.prefixes);
-		return parsed.query.trim() ? input : undefined;
+		return {
+			query: parsed.query,
+			category: getSearchHistoryCategory(parsed),
+		};
+	}
+
+	private recordableSearch(
+		input: string,
+	): { query: string; category: ReturnType<typeof getSearchHistoryCategory> } | undefined {
+		const search = this.getSearchHistoryContext(input);
+		return search.query.trim() ? search : undefined;
 	}
 
 	private cancelHistoryDelay(): void {

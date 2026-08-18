@@ -10,9 +10,11 @@ import {
 import type MyPalettePlugin from "src/main";
 import {
 	type SearchHistoryEntry,
+	type SearchHistoryCategory,
 	type MyPaletteSettings,
 	DEFAULT_SETTINGS as MODEL_DEFAULT_SETTINGS,
 } from "src/model/settings";
+import { getSearchHistoryCategory, parseInput, type Prefixes } from "src/palette/inputParser";
 
 export type { MyPaletteSettings };
 
@@ -33,7 +35,20 @@ function extensions(value: unknown): string[] {
 	return [...new Set(normalized)];
 }
 
-function searchHistoryEntries(value: unknown): SearchHistoryEntry[] {
+function isSearchHistoryCategory(value: unknown): value is SearchHistoryCategory {
+	return (
+		value === "file" ||
+		value === "command" ||
+		value === "bookmark" ||
+		value === "smart" ||
+		value === "everything" ||
+		value === "everything-directory" ||
+		value === "link" ||
+		value === "backlink"
+	);
+}
+
+function searchHistoryEntries(value: unknown, prefixes: Prefixes): SearchHistoryEntry[] {
 	if (!Array.isArray(value)) return [];
 	return value.flatMap((item): SearchHistoryEntry[] => {
 		if (!item || typeof item !== "object") return [];
@@ -46,9 +61,14 @@ function searchHistoryEntries(value: unknown): SearchHistoryEntry[] {
 			!Number.isFinite(entry.count)
 		)
 			return [];
+		const parsed = parseInput(entry.input, prefixes);
+		const category = isSearchHistoryCategory(entry.category)
+			? entry.category
+			: getSearchHistoryCategory(parsed);
 		return [
 			{
-				input: entry.input,
+				input: isSearchHistoryCategory(entry.category) ? entry.input : parsed.query,
+				category,
 				lastSearchedAt: entry.lastSearchedAt,
 				count: Math.max(1, Math.round(entry.count)),
 			},
@@ -60,6 +80,10 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 	const source = (data && typeof data === "object" ? data : {}) as Record<string, unknown>;
 	const rawPrefixes = (source.prefixes ?? {}) as Record<string, unknown>;
 	const rawEverything = (source.everything ?? {}) as Record<string, unknown>;
+	const prefixes = {
+		command: typeof rawPrefixes.command === "string" ? rawPrefixes.command : ">",
+		everything: typeof rawPrefixes.everything === "string" ? rawPrefixes.everything : "e ",
+	};
 	const rawSearchHistory =
 		source.searchHistory && typeof source.searchHistory === "object"
 			? (source.searchHistory as Record<string, unknown>)
@@ -67,7 +91,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 
 	return {
 		...DEFAULT_SETTINGS,
-		schemaVersion: 6,
+		schemaVersion: 7,
 		showLog: typeof source.showLog === "boolean" ? source.showLog : false,
 		rememberLastInput:
 			typeof source.rememberLastInput === "boolean" ? source.rememberLastInput : false,
@@ -92,12 +116,9 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 				0,
 				3650,
 			),
-			entries: searchHistoryEntries(rawSearchHistory.entries),
+			entries: searchHistoryEntries(rawSearchHistory.entries, prefixes),
 		},
-		prefixes: {
-			command: typeof rawPrefixes.command === "string" ? rawPrefixes.command : ">",
-			everything: typeof rawPrefixes.everything === "string" ? rawPrefixes.everything : "e ",
-		},
+		prefixes,
 		everything: {
 			httpUrl:
 				typeof rawEverything.httpUrl === "string" && rawEverything.httpUrl.trim()

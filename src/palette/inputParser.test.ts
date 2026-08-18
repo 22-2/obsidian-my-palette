@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseInput } from "src/palette/inputParser";
+import { getSearchHistoryCategory, parseInput } from "src/palette/inputParser";
 
 const prefixes = { command: ">", everything: "e " };
 
@@ -69,4 +69,13 @@ describe("Smart Connections prefix", () => {
 			query: "values",
 		});
 	});
+});
+
+it("classifies history by mode and Everything scope", () => {
+	expect(getSearchHistoryCategory(parseInput("report", prefixes))).toBe("file");
+	expect(getSearchHistoryCategory(parseInput("> report", prefixes))).toBe("command");
+	expect(getSearchHistoryCategory(parseInput("e report", prefixes))).toBe("everything");
+	expect(getSearchHistoryCategory(parseInput("esdir report", prefixes))).toBe(
+		"everything-directory",
+	);
 });

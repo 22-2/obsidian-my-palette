@@ -1,4 +1,4 @@
-import type { SearchHistoryEntry } from "src/model/settings";
+import type { SearchHistoryCategory, SearchHistoryEntry } from "src/model/settings";
 
 export interface RecordSearchHistoryOptions {
 	now: number;
@@ -8,8 +8,14 @@ export interface RecordSearchHistoryOptions {
 
 const DEFAULT_MAX_ENTRIES = 256;
 
-function sameSearch(entry: SearchHistoryEntry, input: string): boolean {
-	return entry.input.toLocaleLowerCase() === input.toLocaleLowerCase();
+function sameSearch(
+	entry: SearchHistoryEntry,
+	input: string,
+	category: SearchHistoryCategory,
+): boolean {
+	return (
+		entry.category === category && entry.input.toLocaleLowerCase() === input.toLocaleLowerCase()
+	);
 }
 
 function pruneSearchHistory(
@@ -29,22 +35,24 @@ function pruneSearchHistory(
 export function recordSearchHistory(
 	entries: readonly SearchHistoryEntry[],
 	input: string,
+	category: SearchHistoryCategory,
 	{ now, daysToKeep, maxEntries = DEFAULT_MAX_ENTRIES }: RecordSearchHistoryOptions,
 ): SearchHistoryEntry[] {
 	if (!input.trim()) return pruneSearchHistory(entries, now, daysToKeep, maxEntries);
 
 	const next = entries.map((entry) => ({ ...entry }));
-	const existingIndex = next.findIndex((entry) => sameSearch(entry, input));
+	const existingIndex = next.findIndex((entry) => sameSearch(entry, input, category));
 	if (existingIndex >= 0) {
 		const existing = next[existingIndex];
 		next[existingIndex] = {
 			...existing,
 			input,
+			category,
 			lastSearchedAt: now,
 			count: existing.count + 1,
 		};
 	} else {
-		next.push({ input, lastSearchedAt: now, count: 1 });
+		next.push({ input, category, lastSearchedAt: now, count: 1 });
 	}
 	return pruneSearchHistory(next, now, daysToKeep, maxEntries);
 }
@@ -66,11 +74,16 @@ export function pruneStoredSearchHistory(
 export function getSearchHistorySuggestions(
 	entries: readonly SearchHistoryEntry[],
 	input: string,
+	category: SearchHistoryCategory,
 	limit = 30,
 ): SearchHistoryEntry[] {
 	const needle = input.toLocaleLowerCase();
 	return entries
-		.filter((entry) => !needle || entry.input.toLocaleLowerCase().includes(needle))
+		.filter(
+			(entry) =>
+				entry.category === category &&
+				(!needle || entry.input.toLocaleLowerCase().includes(needle)),
+		)
 		.sort((a, b) => b.count - a.count || b.lastSearchedAt - a.lastSearchedAt)
 		.slice(0, Math.max(0, limit))
 		.map((entry) => ({ ...entry }));

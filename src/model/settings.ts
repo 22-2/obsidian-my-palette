@@ -1,8 +1,19 @@
 export interface SearchHistoryEntry {
 	input: string;
+	category: SearchHistoryCategory;
 	lastSearchedAt: number;
 	count: number;
 }
+
+export type SearchHistoryCategory =
+	| "file"
+	| "command"
+	| "bookmark"
+	| "smart"
+	| "everything"
+	| "everything-directory"
+	| "link"
+	| "backlink";
 
 export interface SearchHistorySettings {
 	enabled: boolean;
@@ -12,7 +23,7 @@ export interface SearchHistorySettings {
 }
 
 export interface MyPaletteSettings {
-	schemaVersion: 6;
+	schemaVersion: 7;
 	showLog: boolean;
 	rememberLastInput: boolean;
 	openExternalMarkdownInObsidian: boolean;
@@ -32,7 +43,7 @@ export interface MyPaletteSettings {
 }
 
 export const DEFAULT_SETTINGS: MyPaletteSettings = {
-	schemaVersion: 6,
+	schemaVersion: 7,
 	showLog: false,
 	rememberLastInput: false,
 	openExternalMarkdownInObsidian: true,

@@ -1,4 +1,5 @@
 import type { EverythingScope, ParsedInput, PaletteMode } from "src/model/results";
+import type { SearchHistoryCategory } from "src/model/settings";
 
 export interface Prefixes {
 	command: string;
@@ -51,4 +52,12 @@ export function parseInput(raw: string, prefixes: Prefixes): ParsedInput {
 		}
 	}
 	return { raw, mode: "file", query: raw };
+}
+
+export function getSearchHistoryCategory(
+	input: Pick<ParsedInput, "mode" | "everythingScope">,
+): SearchHistoryCategory {
+	if (input.mode === "everything" && input.everythingScope === "directory")
+		return "everything-directory";
+	return input.mode;
 }

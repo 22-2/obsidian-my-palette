@@ -474,7 +474,7 @@ interface EverythingResult extends BaseResult {
 }
 
 interface MyPaletteSettings {
-	schemaVersion: 6;
+	schemaVersion: 7;
 	showLog: boolean;
 	rememberLastInput: boolean;
 	searchHistory: {
@@ -507,10 +507,10 @@ interface MyPaletteSettings {
 - 型・範囲が不正な値は項目単位で既定値へ戻し、プラグイン全体のロードを失敗させない。
 - 最近実行コマンドは最大20 ID。存在しない ID は表示時に除外する。
 - `rememberLastInput` が有効な場合、モードごとの最後の入力を Obsidian の実行中だけ保持する。
-- 検索履歴はモード共通で、入力欄の完全な文字列を `data.json` へ永続化する。
+- 検索履歴は検索モード・Everything の検索範囲ごとに分類し、プレフィックスを除いた検索語を `data.json` へ永続化する。
 - Enter、結果へのアクション、または入力停止後 `searchHistory.addDelayMs` 経過時に履歴へ追加する。
 - 大文字小文字だけが異なる入力は同じ履歴項目として扱い、最新の表記と回数を保持する。
-- 入力欄右端の履歴ボタンで検索履歴メニューを表示し、項目を選ぶと入力欄へ復元する。
+- 入力欄右端の履歴ボタンで現在のモードの検索履歴を表示し、項目を選ぶと現在のプレフィックス付き入力へ復元する。
 
 ## 11. アーキテクチャ
 

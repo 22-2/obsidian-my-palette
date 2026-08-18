@@ -11,7 +11,7 @@ import { RelatedFileProvider } from "src/providers/RelatedFileProvider";
 import { BookmarkProvider } from "src/providers/BookmarkProvider";
 import { SmartConnectionProvider } from "src/providers/SmartConnectionProvider";
 import type { PaletteMode, SearchHistoryResult } from "src/model/results";
-import type { SearchHistoryEntry } from "src/model/settings";
+import type { SearchHistoryCategory, SearchHistoryEntry } from "src/model/settings";
 import type { PaletteProvider } from "src/providers/PaletteProvider";
 import { MoveFileModal } from "src/palette/MoveFileModal";
 import { insertLinkToMocRelateds } from "src/commands/mocRelateds";
@@ -215,12 +215,22 @@ export default class MyPalettePlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		this.settings = mergeSettings(await this.loadData());
+		const data = await this.loadData();
+		this.settings = mergeSettings(data);
 		this.settings.searchHistory.entries = pruneStoredSearchHistory(
 			this.settings.searchHistory.entries,
 			Date.now(),
 			this.settings.searchHistory.daysToKeep,
 		);
+		const storedSchemaVersion =
+			data && typeof data === "object" && "schemaVersion" in data
+				? (data as { schemaVersion?: unknown }).schemaVersion
+				: undefined;
+		if (
+			typeof storedSchemaVersion === "number" &&
+			storedSchemaVersion < this.settings.schemaVersion
+		)
+			await this.saveSettings();
 	}
 
 	async saveSettings(): Promise<void> {
@@ -256,27 +266,39 @@ export default class MyPalettePlugin extends Plugin {
 			this.rememberedPaletteQueries.file = rawInput;
 	}
 
-	getSearchHistorySuggestions(input: string): SearchHistoryResult[] {
-		return getSearchHistorySuggestions(this.settings.searchHistory.entries, input).map(
-			(entry) => ({
-				id: `search-history:${entry.input}`,
-				mode: "search-history",
-				primary: entry.input,
-				secondary: "Search history",
-				icon: "history",
-				...entry,
-			}),
-		);
+	getSearchHistorySuggestions(
+		input: string,
+		category: SearchHistoryCategory,
+	): SearchHistoryResult[] {
+		return getSearchHistorySuggestions(
+			this.settings.searchHistory.entries,
+			input,
+			category,
+		).map((entry) => ({
+			id: `search-history:${entry.category}:${entry.input}`,
+			mode: "search-history",
+			primary: entry.input,
+			secondary: "Search history",
+			icon: "history",
+			...entry,
+		}));
 	}
 
 	formatSearchHistoryInput(entry: SearchHistoryEntry): string {
+		if (entry.category === "command")
+			return `${this.settings.prefixes.command.trimEnd()} ${entry.input}`;
+		if (entry.category === "bookmark") return `b ${entry.input}`;
+		if (entry.category === "smart") return `sc ${entry.input}`;
+		if (entry.category === "everything")
+			return `${this.settings.prefixes.everything.trimEnd()} ${entry.input}`;
+		if (entry.category === "everything-directory") return `esdir ${entry.input}`;
 		return entry.input;
 	}
 
-	recordSearch(input: string): void {
+	recordSearch(input: string, category: SearchHistoryCategory): void {
 		const history = this.settings.searchHistory;
 		if (!history.enabled || !input.trim()) return;
-		history.entries = recordSearchHistory(history.entries, input, {
+		history.entries = recordSearchHistory(history.entries, input, category, {
 			now: Date.now(),
 			daysToKeep: history.daysToKeep,
 			maxEntries: 256,
