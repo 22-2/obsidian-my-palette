@@ -270,15 +270,15 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			);
 			menu.addItem((item) =>
 				item
-					.setTitle("Open below")
-					.setIcon("separator-horizontal")
-					.onClick(() => void this.activatePaletteResult("horizontal", result)),
-			);
-			menu.addItem((item) =>
-				item
 					.setTitle("Open side by side")
 					.setIcon("separator-vertical")
 					.onClick(() => void this.activatePaletteResult("vertical", result)),
+			);
+			menu.addItem((item) =>
+				item
+					.setTitle("Open below")
+					.setIcon("separator-horizontal")
+					.onClick(() => void this.activatePaletteResult("horizontal", result)),
 			);
 			if (result.mode === "everything") {
 				menu.addSeparator();
