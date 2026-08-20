@@ -6,6 +6,7 @@ import { addLinkToMocRelateds } from "src/commands/mocRelatedsCore";
 
 interface RelatedCandidate {
 	file: TFile;
+	label: string;
 	badge?: string;
 }
 
@@ -37,12 +38,16 @@ async function openTargetFileSelector(
 	const { outgoing, incoming } = relationPaths(plugin.app, activeFile);
 	const results = await plugin.fileProvider.search({ mode: "file", query: "" });
 	const candidates: RelatedCandidate[] = results
-		.map((result: FileResult) => result.file)
-		.filter((file): file is TFile => file instanceof TFile && file.extension === "md")
-		.filter((file) => file.path !== activeFile.path)
-		.filter((file) => !(outgoing.has(file.path) && incoming.has(file.path)))
-		.map((file) => ({
+		.filter(
+			(result: FileResult): result is FileResult & { file: TFile } =>
+				result.file instanceof TFile && result.file.extension === "md",
+		)
+		.map((result) => ({ file: result.file, label: result.primary }))
+		.filter(({ file }) => file.path !== activeFile.path)
+		.filter(({ file }) => !(outgoing.has(file.path) && incoming.has(file.path)))
+		.map(({ file, label }) => ({
 			file,
+			label,
 			badge:
 				outgoing.has(file.path) && incoming.has(file.path)
 					? "Mutual link exists"
@@ -55,8 +60,8 @@ async function openTargetFileSelector(
 
 	openSelectionModal<SelectionItem>(
 		{
-			items: candidates.map(({ file, badge }) => ({
-				label: file.basename,
+			items: candidates.map(({ file, label, badge }) => ({
+				label,
 				description: file.path,
 				icon: "file-text",
 				badge,
