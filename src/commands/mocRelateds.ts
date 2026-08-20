@@ -10,6 +10,29 @@ interface RelatedCandidate {
 	badge?: string;
 }
 
+function toRelatedCandidate(
+	result: FileResult,
+	activePath: string,
+	outgoing: ReadonlySet<string>,
+	incoming: ReadonlySet<string>,
+): RelatedCandidate | undefined {
+	const file = result.file;
+	if (!(file instanceof TFile) || file.extension !== "md") return;
+	if (file.path === activePath || (outgoing.has(file.path) && incoming.has(file.path))) return;
+	return {
+		file,
+		label: result.primary,
+		badge:
+			outgoing.has(file.path) && incoming.has(file.path)
+				? "Mutual link exists"
+				: outgoing.has(file.path)
+					? "Outgoing link exists"
+					: incoming.has(file.path)
+						? "Backlink exists"
+						: undefined,
+	};
+}
+
 function relationPaths(
 	app: App,
 	activeFile: TFile,
@@ -38,25 +61,8 @@ async function openTargetFileSelector(
 	const { outgoing, incoming } = relationPaths(plugin.app, activeFile);
 	const results = await plugin.fileProvider.search({ mode: "file", query: "" });
 	const candidates: RelatedCandidate[] = results
-		.filter(
-			(result: FileResult): result is FileResult & { file: TFile } =>
-				result.file instanceof TFile && result.file.extension === "md",
-		)
-		.map((result) => ({ file: result.file, label: result.primary }))
-		.filter(({ file }) => file.path !== activeFile.path)
-		.filter(({ file }) => !(outgoing.has(file.path) && incoming.has(file.path)))
-		.map(({ file, label }) => ({
-			file,
-			label,
-			badge:
-				outgoing.has(file.path) && incoming.has(file.path)
-					? "Mutual link exists"
-					: outgoing.has(file.path)
-						? "Outgoing link exists"
-						: incoming.has(file.path)
-							? "Backlink exists"
-							: undefined,
-		}));
+		.map((result) => toRelatedCandidate(result, activeFile.path, outgoing, incoming))
+		.filter((candidate): candidate is RelatedCandidate => candidate !== undefined);
 
 	openSelectionModal<SelectionItem>(
 		{
