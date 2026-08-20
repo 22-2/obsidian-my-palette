@@ -100,6 +100,15 @@ export default class MyPalettePlugin extends Plugin {
 			callback: () => this.openPalette(this.commandPaletteInitialInput()),
 		});
 		this.addCommand({
+			id: "show-current-line-number",
+			name: "Show current line number",
+			checkCallback: (checking) => {
+				const editor = this.app.workspace.activeEditor?.editor;
+				if (checking) return Boolean(editor);
+				if (editor) new Notice(`Line ${editor.getCursor().line + 1}`);
+			},
+		});
+		this.addCommand({
 			id: "link-search",
 			name: "Link search",
 			checkCallback: (checking) => {
