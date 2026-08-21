@@ -12,6 +12,14 @@ describe("include ignored prefix", () => {
 		});
 	});
 
+	it("keeps the ignored scope when the query is empty", () => {
+		expect(parseInput("i ", prefixes)).toMatchObject({
+			mode: "file",
+			query: "",
+			includeIgnored: true,
+		});
+	});
+
 	it("can wrap another palette prefix", () => {
 		expect(parseInput("i > old", prefixes)).toMatchObject({
 			mode: "command",

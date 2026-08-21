@@ -186,9 +186,8 @@ async function openTargetFileSelector(
 	const searchCandidates = async (input: string): Promise<RelatedCandidate[]> => {
 		const parsed = parseInput(input, plugin.settings.prefixes);
 		if (parsed.mode !== "file") return [];
-		// An empty ignored query would materialize an unbounded list in large Vaults;
-		// require a search term after the explicit opt-in prefix.
-		if (parsed.includeIgnored && !parsed.query.trim()) return [];
+		// Keep MOC insertion on the same explicit-prefix path as the main palette:
+		// `i ` opts into the indexed ignored-note scope even when no query follows.
 		const results = await plugin.fileProvider.search({
 			mode: "file",
 			query: parsed.query,
