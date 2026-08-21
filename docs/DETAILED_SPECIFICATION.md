@@ -391,15 +391,30 @@ http://127.0.0.1:51361/?search=<query>&json=1&count=100&path_column=1&attributes
 
 ### 9.1 Everything
 
-| 設定キー                      | 型       | 既定値                    | 制約             |
-| ----------------------------- | -------- | ------------------------- | ---------------- |
-| `everything.httpUrl`          | string   | `http://127.0.0.1:51361/` | HTTP(S) URL      |
-| `everything.username`         | string   | `""`                      | 任意             |
-| `everything.password`         | string   | `""`                      | 任意             |
-| `everything.maxResults`       | number   | `100`                     | 10〜500          |
-| `everything.debounceMs`       | number   | `150`                     | 50〜1000         |
-| `everything.requestTimeoutMs` | number   | `30000`                   | 1000〜60000      |
-| `everything.vaultExtensions`  | string[] | `["md","canvas","base"]`  | `es`の対象拡張子 |
+| 設定キー                                 | 型       | 既定値                    | 制約                         |
+| ---------------------------------------- | -------- | ------------------------- | ---------------------------- |
+| `everything.httpUrl`                     | string   | `http://127.0.0.1:51361/` | HTTP(S) URL                  |
+| `everything.username`                    | string   | `""`                      | 任意                         |
+| `everything.password`                    | string   | `""`                      | 任意                         |
+| `everything.maxResults`                  | number   | `100`                     | 10〜500                      |
+| `everything.debounceMs`                  | number   | `150`                     | 50〜1000                     |
+| `everything.requestTimeoutMs`            | number   | `30000`                   | 1000〜60000                  |
+| `everything.vaultExtensions`             | string[] | `["md","canvas","base"]`  | Vault検索の対象拡張子        |
+| `everything.directorySearchMarkdownOnly` | boolean  | `true`                    | `esdir` に `ext:md` を付ける |
+
+Everythingページには次を設ける。
+
+- 接続: HTTP Server URL、任意のユーザー名・パスワード、接続テスト
+- 検索: 最大結果件数、HTTPリクエストタイムアウト、検索デバウンス
+- Vault検索: 対象拡張子、`esdir` のMarkdown限定
+
+パスワードはプラグインのローカル `data.json` に保存されることを設定画面に明記する。
+
+#### 接続テスト
+
+固定クエリ `__my_palette_connection_test__` を最大1件で実行する。HTTP 2xx と正しい JSON 応答が得られれば、結果が0件でも接続成功とする。
+
+### 9.2 Search history
 
 検索履歴はモード共通で次の設定を持つ。
 
@@ -409,33 +424,31 @@ http://127.0.0.1:51361/?search=<query>&json=1&count=100&path_column=1&attributes
 | `searchHistory.addDelayMs` | number  | `3000` | 入力停止後に履歴へ追加する待機時間。0はEnter／アクション時のみ |
 | `searchHistory.daysToKeep` | number  | `360`  | 保持日数。0は無期限                                            |
 
-設定画面に次を設ける。
+### 9.3 Mode prefixes
 
-- HTTP Server URL
-- 任意のユーザー名・パスワード
-- 接続テストボタン
-- 最大結果件数
-- `es`対象拡張子（カンマ区切り）
-- HTTP リクエストタイムアウト
-
-パスワードはプラグインのローカル `data.json` に保存されることを設定画面に明記する。
-
-#### 接続テスト
-
-固定クエリ `__my_palette_connection_test__` を最大1件で実行する。HTTP 2xx と正しい JSON 応答が得られれば、結果が0件でも接続成功とする。
-
-### 9.2 Mode prefixes
-
-| 設定キー              | 既定値 |
-| --------------------- | ------ |
-| `prefixes.command`    | `">"`  |
-| `prefixes.everything` | `"e "` |
+| 設定キー                  | 既定値 |
+| ------------------------- | ------ |
+| `prefixes.command`        | `">"`  |
+| `prefixes.everything`     | `"e "` |
+| `prefixes.includeIgnored` | `"i "` |
 
 空文字、改行、NUL、File モードとの区別が不能な値は保存できない。
 
-### 9.3 Keybindings
+### 9.4 Keybindings
 
 キーバインドはObsidianのコマンド設定へ委譲し、プラグイン独自の設定データとして保存しない。
+
+### 9.5 Settings screen layout
+
+設定画面は保存データの階層ではなく、利用目的でページを分ける。よく使う操作を上位に置き、複数の目的を「その他」系のページへ詰め込まない。
+
+| ページ           | 内容                                           |
+| ---------------- | ---------------------------------------------- |
+| `Palette`        | 各検索モードのプレフィックス、最後の入力の復元 |
+| `Search history` | 履歴の有効化、追加遅延、保持期間、履歴削除     |
+| `Everything`     | 接続設定とEverything/Vault検索の詳細           |
+| `File opening`   | Vault外MarkdownをObsidianで開く挙動            |
+| `Advanced`       | デバッグメッセージなどの診断設定               |
 
 ## 10. データモデル
 
