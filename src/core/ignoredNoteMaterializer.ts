@@ -56,7 +56,12 @@ async function findAvailablePath(
 	let suffix = 1;
 	while (true) {
 		const existing = app.vault.getAbstractFileByPath(candidate);
-		if (!(existing instanceof TFile)) return candidate;
+		if (!existing) return candidate;
+		if (!(existing instanceof TFile)) {
+			candidate = withSuffix(destination, suffix);
+			suffix += 1;
+			continue;
+		}
 		try {
 			if (sourceFromFrontmatter(await app.vault.read(existing)) === sourcePath)
 				return candidate;
@@ -96,11 +101,21 @@ export async function materializeIgnoredNote(
 	// An empty newFileFolderPath means Vault root; use a dedicated fallback so an
 	// ignored source is never copied over itself when the setting is unset.
 	const destinationFolder = getVaultNewFileFolderPath(app) || "_Imported";
+	const relativeSource =
+		normalizedSourcePath === destinationFolder
+			? fileName(normalizedSourcePath)
+			: normalizedSourcePath.startsWith(`${destinationFolder}/`)
+				? normalizedSourcePath.slice(destinationFolder.length + 1)
+				: normalizedSourcePath;
 	const destination = normalizePath(
-		[destinationFolder, normalizedSourcePath].filter(Boolean).join("/"),
+		[destinationFolder, relativeSource].filter(Boolean).join("/"),
 	);
-	await ensureFolder(app, destination.slice(0, destination.lastIndexOf("/")));
-	const destinationPath = await findAvailablePath(app, destination, normalizedSourcePath);
+	const safeDestination =
+		destination === normalizedSourcePath
+			? normalizePath(`${destinationFolder}/_Imported/${relativeSource}`)
+			: destination;
+	await ensureFolder(app, safeDestination.slice(0, safeDestination.lastIndexOf("/")));
+	const destinationPath = await findAvailablePath(app, safeDestination, normalizedSourcePath);
 	const importedAt = new Date().toISOString();
 	const importedFile = await app.vault.create(
 		destinationPath,

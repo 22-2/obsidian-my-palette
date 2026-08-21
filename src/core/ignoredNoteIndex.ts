@@ -286,7 +286,9 @@ export class IgnoredNoteIndex {
 			};
 		} catch (error) {
 			this.log("Failed to index ignored file", { path, error });
-			return undefined;
+			// Keep a previously indexed entry through transient sync/lock errors; a
+			// later TTL refresh can replace it once the source becomes readable again.
+			return cached;
 		}
 	}
 
