@@ -5,6 +5,7 @@ import {
 	isUserIgnoredPath,
 } from "src/core/ignoredPaths";
 import { getDesktopAdapter } from "src/core/desktopAdapter";
+import { resolveExternalOpenTarget, type ExternalOpenTarget } from "src/palette/openTargets";
 
 declare const electron: {
 	shell: {
@@ -14,7 +15,6 @@ declare const electron: {
 	};
 };
 import type { EverythingResult, PaletteResult } from "src/model/results";
-import { isMarkdownPath } from "src/core/externalFiles";
 import { openPathInCode } from "src/core/vscode";
 
 export type ActionKind = "primary" | "alternate" | "vertical" | "horizontal";
@@ -39,6 +39,20 @@ async function openVaultFileInCode(app: App, vaultPath: string): Promise<ActionO
 async function openAbsolutePathInCode(absolutePath: string): Promise<ActionOutcome> {
 	const error = await openPathInCode(absolutePath);
 	return error ? { close: false, message: error } : { close: true };
+}
+
+async function openExternalTarget(
+	target: ExternalOpenTarget,
+	action: ActionKind,
+	externalMarkdown: ExternalMarkdownActions,
+): Promise<ActionOutcome> {
+	if (target.kind === "readonly-markdown") {
+		await externalMarkdown.openExternalMarkdown(target.absolutePath, action);
+		return { close: true };
+	}
+	if (target.kind === "code") return await openAbsolutePathInCode(target.absolutePath);
+	await electron.shell.openPath(target.absolutePath);
+	return { close: true };
 }
 
 export async function runResultAction(
@@ -108,29 +122,18 @@ export async function runResultAction(
 						? app.workspace.getLeaf("split", "vertical")
 						: app.workspace.getLeaf(false);
 			await leaf.openFile(current);
-		} else {
-			if (isMarkdownPath(everythingResult.absolutePath)) {
-				if (externalMarkdown.openExternalMarkdownInObsidian) {
-					await externalMarkdown.openExternalMarkdown(
-						everythingResult.absolutePath,
-						action,
-					);
-					return { close: true };
-				}
-				return await openAbsolutePathInCode(everythingResult.absolutePath);
-			}
-			return await openAbsolutePathInCode(everythingResult.absolutePath);
-		}
-	} else if (isMarkdownPath(everythingResult.absolutePath)) {
-		if (externalMarkdown.openExternalMarkdownInObsidian) {
-			await externalMarkdown.openExternalMarkdown(everythingResult.absolutePath, action);
 			return { close: true };
 		}
-		return await openAbsolutePathInCode(everythingResult.absolutePath);
-	} else if (isAbsolutePathUserIgnored(app, everythingResult.absolutePath)) {
-		return await openAbsolutePathInCode(everythingResult.absolutePath);
-	} else await electron.shell.openPath(everythingResult.absolutePath);
-	return { close: true };
+	}
+	const target = resolveExternalOpenTarget(everythingResult.absolutePath, {
+		openMarkdownInObsidian: externalMarkdown.openExternalMarkdownInObsidian,
+		// A Vault-relative result that Obsidian does not expose as TFile is still
+		// intentionally routed to a safe external viewer/editor.
+		ignored:
+			Boolean(everythingResult.vaultPath) ||
+			isAbsolutePathUserIgnored(app, everythingResult.absolutePath),
+	});
+	return await openExternalTarget(target, action, externalMarkdown);
 }
 
 export function notifyActionError(message: string): void {
