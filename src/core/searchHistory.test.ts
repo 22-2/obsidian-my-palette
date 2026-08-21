@@ -93,4 +93,21 @@ describe("search history", () => {
 			{ input: "report", category: "everything", lastSearchedAt: 2_000, count: 1 },
 		]);
 	});
+
+	it("keeps ignored-note scope separate from the normal file search", () => {
+		const entries = recordSearchHistory(
+			recordSearchHistory([], "archive", "file", {
+				now: 1_000,
+				daysToKeep: 0,
+				maxEntries: 256,
+			}),
+			"archive",
+			"file",
+			{ now: 2_000, daysToKeep: 0, maxEntries: 256, includeIgnored: true },
+		);
+
+		expect(entries).toHaveLength(2);
+		expect(getSearchHistorySuggestions(entries, "archive", "file", 30, true)).toHaveLength(1);
+		expect(getSearchHistorySuggestions(entries, "archive", "file", 30, false)).toHaveLength(1);
+	});
 });
