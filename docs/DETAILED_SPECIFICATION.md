@@ -422,7 +422,7 @@ Everythingページには次を設ける。
 | -------------------------- | ------- | ------ | -------------------------------------------------------------- |
 | `searchHistory.enabled`    | boolean | `true` | 検索履歴を有効にする                                           |
 | `searchHistory.addDelayMs` | number  | `3000` | 入力停止後に履歴へ追加する待機時間。0はEnter／アクション時のみ |
-| `searchHistory.daysToKeep` | number  | `360`  | 保持日数。0は無期限                                            |
+| `searchHistory.daysToKeep` | number  | `0`    | 保持日数。0は無期限                                            |
 
 ### 9.3 Mode prefixes
 

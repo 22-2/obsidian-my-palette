@@ -7,6 +7,11 @@ describe("mergeSettings", () => {
 		expect(mergeSettings(undefined)).toEqual(DEFAULT_SETTINGS);
 	});
 
+	it("defaults history retention to unlimited", () => {
+		expect(DEFAULT_SETTINGS.searchHistory.daysToKeep).toBe(0);
+		expect(mergeSettings({ searchHistory: {} }).searchHistory.daysToKeep).toBe(0);
+	});
+
 	it("bounds numeric settings and sanitizes extension and command lists", () => {
 		const settings = mergeSettings({
 			searchHistory: { addDelayMs: -1, daysToKeep: 99999 },

@@ -1,5 +1,6 @@
 import { PluginSettingTab, type SettingDefinitionItem } from "obsidian";
 import type MyPalettePlugin from "src/main";
+import { DEFAULT_SETTINGS } from "src/model/settings";
 import { bounded } from "src/settings/mergeSettings";
 import { createSettingPages } from "src/settings/settingPages";
 
@@ -62,7 +63,13 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 				settings.searchHistory.addDelayMs = bounded(value, 3000, 0, 10000);
 				break;
 			case "searchHistory.daysToKeep":
-				settings.searchHistory.daysToKeep = bounded(value, 360, 0, 3650);
+				// Keep interactive edits aligned with the documented default when the control value is invalid.
+				settings.searchHistory.daysToKeep = bounded(
+					value,
+					DEFAULT_SETTINGS.searchHistory.daysToKeep,
+					0,
+					3650,
+				);
 				break;
 			case "prefixes.command":
 				settings.prefixes.command = String(value).replace(/[\r\n]/g, "");

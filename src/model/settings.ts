@@ -51,7 +51,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 	searchHistory: {
 		enabled: true,
 		addDelayMs: 3000,
-		daysToKeep: 360,
+		daysToKeep: 0,
 		entries: [],
 	},
 	prefixes: { command: ">", everything: "e ", includeIgnored: "i " },
