@@ -26,6 +26,15 @@ function withSuffix(path: string, suffix: number): string {
 	return `${directory}${stem} (imported ${suffix})${extension}`;
 }
 
+function visibleImportPath(path: string): string {
+	return normalizePath(
+		path
+			.split("/")
+			.map((segment) => (segment.startsWith(".") ? `_hidden-${segment.slice(1)}` : segment))
+			.join("/"),
+	);
+}
+
 function sourceFromFrontmatter(content: string): string | undefined {
 	const info = getFrontMatterInfo(content);
 	if (!info.exists) return undefined;
@@ -68,42 +77,64 @@ async function ensureFolder(app: App, folderPath: string): Promise<void> {
 	}
 }
 
+interface DestinationCandidate {
+	path: string;
+	existing?: TFile;
+}
+
 async function findAvailablePath(
 	app: App,
 	destination: string,
 	sourcePath: string,
-): Promise<string> {
+): Promise<DestinationCandidate> {
 	let candidate = destination;
 	let suffix = 1;
 	while (true) {
 		const existing = app.vault.getAbstractFileByPath(candidate);
-		if (!existing) return candidate;
-		if (!(existing instanceof TFile)) {
+		if (existing instanceof TFile) {
+			try {
+				if (sourceFromFrontmatter(await app.vault.read(existing)) === sourcePath)
+					return { path: candidate, existing };
+			} catch {
+				// A stale file is handled as a collision and receives a deterministic suffix.
+			}
+			candidate = withSuffix(destination, suffix);
+			suffix += 1;
+			continue;
+		}
+		if (existing) {
 			candidate = withSuffix(destination, suffix);
 			suffix += 1;
 			continue;
 		}
 		try {
-			if (sourceFromFrontmatter(await app.vault.read(existing)) === sourcePath)
-				return candidate;
+			if (await app.vault.adapter.stat(candidate)) {
+				candidate = withSuffix(destination, suffix);
+				suffix += 1;
+				continue;
+			}
 		} catch {
-			// A stale file is handled as a collision and receives a deterministic suffix.
+			// A missing path is available; adapters may report it by throwing.
 		}
-		candidate = withSuffix(destination, suffix);
-		suffix += 1;
+		return { path: candidate };
 	}
 }
 
 function addImportFrontmatter(content: string, sourcePath: string, importedAt: string): string {
 	const info = getFrontMatterInfo(content);
-	if (info.exists) return content;
-	return [
-		"---",
+	const lineEnding = content.includes("\r\n") ? "\r\n" : "\n";
+	const properties = [
 		`${IMPORT_SOURCE_PROPERTY}: ${JSON.stringify(sourcePath)}`,
 		`${IMPORTED_AT_PROPERTY}: ${JSON.stringify(importedAt)}`,
-		"---",
-		content,
-	].join("\n");
+	];
+	if (!info.exists) return ["---", ...properties, "---", content].join(lineEnding);
+	const existing = content
+		.slice(info.from, info.to)
+		.replace(/[ \t]+$/gm, "")
+		.trimEnd();
+	return [content.slice(0, info.from), existing, ...properties, content.slice(info.to)].join(
+		lineEnding,
+	);
 }
 
 /** Copies an ignored Markdown note into the configured new-note folder. */
@@ -128,27 +159,30 @@ export async function materializeIgnoredNote(
 			: normalizedSourcePath.startsWith(`${destinationFolder}/`)
 				? normalizedSourcePath.slice(destinationFolder.length + 1)
 				: normalizedSourcePath;
-	const destination = normalizePath(
-		[destinationFolder, relativeSource].filter(Boolean).join("/"),
+	// Obsidian does not expose files beneath dot-folders as TFiles. Rename only
+	// those copied path segments so the imported note can participate in links.
+	const destination = visibleImportPath(
+		normalizePath([destinationFolder, relativeSource].filter(Boolean).join("/")),
 	);
 	const safeDestination =
 		destination === normalizedSourcePath
 			? normalizePath(`${destinationFolder}/_Imported/${relativeSource}`)
 			: destination;
 	await ensureFolder(app, safeDestination.slice(0, safeDestination.lastIndexOf("/")));
-	const destinationPath = await findAvailablePath(app, safeDestination, normalizedSourcePath);
+	const destinationCandidate = await findAvailablePath(
+		app,
+		safeDestination,
+		normalizedSourcePath,
+	);
+	if (destinationCandidate.existing) return destinationCandidate.existing;
 	const importedAt = new Date().toISOString();
 	const importedFile = await app.vault.create(
-		destinationPath,
+		destinationCandidate.path,
 		addImportFrontmatter(sourceContent, normalizedSourcePath, importedAt),
 	);
-	if (getFrontMatterInfo(sourceContent).exists) {
-		await app.fileManager.processFrontMatter(importedFile, (frontmatter) => {
-			const properties = frontmatter as Record<string, unknown>;
-			properties[IMPORT_SOURCE_PROPERTY] = normalizedSourcePath;
-			properties[IMPORTED_AT_PROPERTY] = importedAt;
-		});
-	}
-	log("Imported ignored note", { sourcePath: normalizedSourcePath, destinationPath });
+	log("Imported ignored note", {
+		sourcePath: normalizedSourcePath,
+		destinationPath: destinationCandidate.path,
+	});
 	return importedFile;
 }
