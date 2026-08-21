@@ -3,6 +3,7 @@ import { ItemView, Menu, Notice, type WorkspaceLeaf } from "obsidian";
 import { getVaultRootPath } from "src/core/ignoredPaths";
 import { getDesktopAdapter } from "src/core/desktopAdapter";
 import { openPathInCode } from "src/core/vscode";
+import { addCopyPathMenuItems, copyPathToClipboard } from "src/core/pathClipboard";
 
 export const EXTERNAL_MARKDOWN_VIEW_TYPE = "my-palette-external-markdown";
 
@@ -78,18 +79,10 @@ export class ExternalMarkdownView extends ItemView {
 
 	onPaneMenu(menu: Menu, source: string): void {
 		if (this.filePath) {
-			menu.addSeparator();
-			menu.addItem((item) =>
-				item
-					.setTitle("Copy path relative to Vault")
-					.setIcon("copy")
-					.onClick(() => void this.copyPath(this.relativePath())),
-			);
-			menu.addItem((item) =>
-				item
-					.setTitle("Copy absolute path")
-					.setIcon("clipboard-copy")
-					.onClick(() => void this.copyPath(this.filePath)),
+			addCopyPathMenuItems(
+				menu,
+				{ relativePath: this.relativePath(), absolutePath: this.filePath },
+				(path) => void copyPathToClipboard(path),
 			);
 			menu.addItem((item) =>
 				item
@@ -146,15 +139,6 @@ export class ExternalMarkdownView extends ItemView {
 		return vaultRoot
 			? getDesktopAdapter(this.app).path.relative(vaultRoot, this.filePath) || "."
 			: this.filePath;
-	}
-
-	private async copyPath(value: string): Promise<void> {
-		try {
-			await navigator.clipboard.writeText(value);
-			new Notice("Path copied.");
-		} catch {
-			new Notice("Could not copy the path.");
-		}
 	}
 
 	private async openInCode(): Promise<void> {

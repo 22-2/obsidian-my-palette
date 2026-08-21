@@ -17,6 +17,7 @@ import { MoveFileModal } from "src/palette/MoveFileModal";
 import { insertLinkToMocRelateds } from "src/commands/mocRelateds";
 import { EXTERNAL_MARKDOWN_VIEW_TYPE, ExternalMarkdownView } from "src/views/ExternalMarkdownView";
 import { getVaultFullPath } from "src/core/ignoredPaths";
+import { addCopyPathMenuItems, copyPathToClipboard } from "src/core/pathClipboard";
 import {
 	getSearchHistorySuggestions,
 	pruneStoredSearchHistory,
@@ -47,22 +48,11 @@ export default class MyPalettePlugin extends Plugin {
 		this.registerView(EXTERNAL_MARKDOWN_VIEW_TYPE, (leaf) => new ExternalMarkdownView(leaf));
 		this.registerEvent(
 			this.app.workspace.on("file-menu", (menu, file) => {
-				menu.addSeparator();
-				menu.addItem((item) =>
-					item
-						.setTitle("Copy path relative to Vault")
-						.setIcon("copy")
-						.onClick(() => void this.copyPath(file.path)),
-				);
-				menu.addItem((item) =>
-					item
-						.setTitle("Copy absolute path")
-						.setIcon("clipboard-copy")
-						.onClick(() => {
-							const absolutePath = getVaultFullPath(this.app, file.path);
-							if (absolutePath) void this.copyPath(absolutePath);
-							else new Notice("This vault adapter cannot resolve an absolute path.");
-						}),
+				const absolutePath = getVaultFullPath(this.app, file.path);
+				addCopyPathMenuItems(
+					menu,
+					{ relativePath: file.path, absolutePath: absolutePath ?? undefined },
+					(path) => void copyPathToClipboard(path),
 				);
 			}),
 		);
@@ -365,14 +355,5 @@ export default class MyPalettePlugin extends Plugin {
 		).setting;
 		setting.open();
 		setting.openTabById(this.manifest.id);
-	}
-
-	private async copyPath(value: string): Promise<void> {
-		try {
-			await navigator.clipboard.writeText(value);
-			new Notice("Path copied.");
-		} catch {
-			new Notice("Could not copy the path.");
-		}
 	}
 }

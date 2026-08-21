@@ -9,6 +9,12 @@ import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
 import { SearchHistorySuggest } from "src/ui/searchHistorySuggest";
 import { getSearchHistoryCategory, parseInput } from "src/palette/inputParser";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
+import {
+	addCopyPathMenuItems,
+	copyPathToClipboard,
+	type CopyablePaths,
+} from "src/core/pathClipboard";
+import { getVaultFullPath } from "src/core/ignoredPaths";
 
 export class PaletteModal extends SelectionModal<PaletteResult> {
 	private generation = 0;
@@ -256,6 +262,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 					.onClick(() => void this.activatePaletteResult("primary", result)),
 			);
 		} else {
+			const paths = this.getCopyablePaths(result);
 			menu.addItem((item) =>
 				item
 					.setTitle("Open")
@@ -280,6 +287,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 					.setIcon("separator-horizontal")
 					.onClick(() => void this.activatePaletteResult("horizontal", result)),
 			);
+			addCopyPathMenuItems(menu, paths, (path) => void copyPathToClipboard(path));
 			if (result.mode === "everything") {
 				menu.addSeparator();
 				menu.addItem((item) =>
@@ -292,6 +300,28 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		}
 		menu.setParentElement(this.modalEl);
 		menu.showAtMouseEvent(event);
+	}
+
+	private getCopyablePaths(
+		result: Exclude<PaletteResult, { mode: "command" | "search-history" }>,
+	): CopyablePaths {
+		// Everything folders are navigable results, but only file results should expose file-path actions.
+		if (result.mode === "everything") {
+			return result.kind === "file"
+				? { relativePath: result.vaultPath, absolutePath: result.absolutePath }
+				: {};
+		}
+		const file = "file" in result ? result.file : undefined;
+		if (result.mode === "file")
+			return {
+				relativePath: result.vaultPath,
+				absolutePath: getVaultFullPath(this.app, result.vaultPath) ?? undefined,
+			};
+		if (!file) return {};
+		return {
+			relativePath: file.path,
+			absolutePath: getVaultFullPath(this.app, file.path) ?? undefined,
+		};
 	}
 
 	override async getSuggestions(input: string): Promise<PaletteResult[]> {
