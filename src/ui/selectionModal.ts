@@ -13,12 +13,20 @@ export interface SelectionItem {
 
 /** 候補の表示内容と検索方法だけを定義する選択モーダル。 */
 export class SelectionModal<T> extends BaseSuggestModal<T> {
+	private readonly searchProvider?: NonNullable<SuggestModalProps<T>["search"]>;
+
 	constructor(props: SuggestModalProps<T>, app: App) {
 		super(props, app);
+		this.searchProvider = props.search;
 	}
 
-	getSuggestions(query: string): T[] | Promise<T[]> {
+	async getSuggestions(query: string): Promise<T[]> {
 		this.query = query;
+		if (this.searchProvider) {
+			const results = await this.searchProvider(query);
+			this.updateResultCount(results.length);
+			return results;
+		}
 		if (!query.trim()) {
 			this.updateResultCount(this.items.length);
 			return this.items;

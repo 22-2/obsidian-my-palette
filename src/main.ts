@@ -146,6 +146,11 @@ export default class MyPalettePlugin extends Plugin {
 				void insertLinkToMocRelateds(this);
 			},
 		});
+		this.addCommand({
+			id: "rebuild-ignored-note-index",
+			name: "Rebuild ignored note index",
+			callback: () => void this.fileProvider.rebuildIgnoredIndex(),
+		});
 	}
 
 	openPalette(

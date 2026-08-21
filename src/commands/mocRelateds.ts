@@ -3,31 +3,41 @@ import type MyPalettePlugin from "src/main";
 import type { FileResult } from "src/model/results";
 import { openSelectionModal, type SelectionItem } from "src/ui/selectionModal";
 import { addLinkToMocRelateds } from "src/commands/mocRelatedsCore";
+import { isUserIgnoredPath } from "src/core/ignoredPaths";
+import { materializeIgnoredNote } from "src/core/ignoredNoteMaterializer";
+import { parseInput } from "src/palette/inputParser";
 
 interface RelatedCandidate {
-	file: TFile;
+	path: string;
 	label: string;
 	badge?: string;
+	ignored: boolean;
 }
 
 function toRelatedCandidate(
+	app: App,
 	result: FileResult,
 	activePath: string,
 	outgoing: ReadonlySet<string>,
 	incoming: ReadonlySet<string>,
 ): RelatedCandidate | undefined {
 	const file = result.file;
-	if (!(file instanceof TFile) || file.extension !== "md") return;
-	if (file.path === activePath || (outgoing.has(file.path) && incoming.has(file.path))) return;
+	const path = result.vaultPath;
+	if (file && file.extension !== "md") return;
+	if (!file && !isUserIgnoredPath(app, path)) return;
+	if (path === activePath || (outgoing.has(path) && incoming.has(path))) return;
+	const ignored = isUserIgnoredPath(app, path);
 	return {
-		file,
+		path,
 		label: result.primary,
-		badge:
-			outgoing.has(file.path) && incoming.has(file.path)
+		ignored,
+		badge: ignored
+			? "Ignored · Import"
+			: outgoing.has(path) && incoming.has(path)
 				? "Mutual link exists"
-				: outgoing.has(file.path)
+				: outgoing.has(path)
 					? "Outgoing link exists"
-					: incoming.has(file.path)
+					: incoming.has(path)
 						? "Backlink exists"
 						: undefined,
 	};
@@ -59,28 +69,55 @@ async function openTargetFileSelector(
 	onChoose: (file: TFile) => void | Promise<void>,
 ): Promise<void> {
 	const { outgoing, incoming } = relationPaths(plugin.app, activeFile);
-	const results = await plugin.fileProvider.search({ mode: "file", query: "" });
-	const candidates: RelatedCandidate[] = results
-		.map((result) => toRelatedCandidate(result, activeFile.path, outgoing, incoming))
-		.filter((candidate): candidate is RelatedCandidate => candidate !== undefined);
+	const searchCandidates = async (input: string): Promise<RelatedCandidate[]> => {
+		const parsed = parseInput(input, plugin.settings.prefixes);
+		if (parsed.mode !== "file") return [];
+		// An empty ignored query would materialize an unbounded list in large Vaults;
+		// require a search term after the explicit opt-in prefix.
+		if (parsed.includeIgnored && !parsed.query.trim()) return [];
+		const results = await plugin.fileProvider.search({
+			mode: "file",
+			query: parsed.query,
+			includeIgnored: parsed.includeIgnored,
+		});
+		return results
+			.map((result) =>
+				toRelatedCandidate(plugin.app, result, activeFile.path, outgoing, incoming),
+			)
+			.filter((candidate): candidate is RelatedCandidate => candidate !== undefined);
+	};
 
 	openSelectionModal<SelectionItem>(
 		{
-			items: candidates.map(({ file, label, badge }) => ({
-				label,
-				description: file.path,
-				icon: "file-text",
-				badge,
-				value: file.path,
-			})),
-			placeholder: "Choose a note to link mutually",
+			search: async (input) =>
+				(await searchCandidates(input)).map(({ path, label, badge }) => ({
+					label,
+					description: path,
+					icon: "file-text",
+					badge,
+					value: path,
+				})),
+			placeholder: "Search a note · i old notes includes Excluded files",
 			footerText: `Source: ${activeFile.path}`,
 		},
 		plugin.app,
 		async (selected) => {
 			if (typeof selected.value !== "string") return;
-			const file = plugin.app.vault.getAbstractFileByPath(selected.value);
-			if (file instanceof TFile) await onChoose(file);
+			const selectedPath = selected.value;
+			const file = plugin.app.vault.getAbstractFileByPath(selectedPath);
+			if (file instanceof TFile && !isUserIgnoredPath(plugin.app, selectedPath)) {
+				await onChoose(file);
+				return;
+			}
+			try {
+				const imported = await materializeIgnoredNote(plugin.app, selectedPath);
+				await onChoose(imported);
+			} catch (error) {
+				console.error("Failed to import ignored note", error);
+				new Notice(
+					error instanceof Error ? error.message : "Failed to import ignored note.",
+				);
+			}
 		},
 	);
 }

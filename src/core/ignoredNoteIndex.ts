@@ -3,6 +3,7 @@ import { type DBSchema, type IDBPDatabase, openDB } from "idb";
 import {
 	getUserIgnoreFilters,
 	getVaultRootPath,
+	isUserIgnoredPath,
 	isUserIgnoreFilterRegex,
 } from "src/core/ignoredPaths";
 
@@ -208,10 +209,13 @@ export class IgnoredNoteIndex {
 		const filters = getUserIgnoreFilters(this.app);
 		const roots = filters.filter((filter) => !isUserIgnoreFilterRegex(filter));
 		const regexCount = filters.length - roots.length;
+		const scanRoots = regexCount > 0 ? [...roots, ""] : roots;
 		if (regexCount > 0)
-			this.log("Ignored-note index skipped regex filters", { count: regexCount });
-		this.log("Scanning ignored notes", { roots, cachedEntries: this.current.size });
-		const paths = await this.collectPaths(roots);
+			this.log("Scanning Vault root to resolve ignored regex filters", { count: regexCount });
+		this.log("Scanning ignored notes", { roots: scanRoots, cachedEntries: this.current.size });
+		const paths = (await this.collectPaths(scanRoots)).filter((path) =>
+			isUserIgnoredPath(this.app, path),
+		);
 		const next = new Map<string, IgnoredNoteIndexEntry>();
 		let processed = 0;
 		const scanned = await mapWithConcurrency(paths, SCAN_CONCURRENCY, async (path) => {
@@ -243,9 +247,14 @@ export class IgnoredNoteIndex {
 		const files: string[] = [];
 		while (folders.length > 0) {
 			const folder = folders.shift();
-			if (!folder || visited.has(folder)) continue;
+			if (folder === undefined || visited.has(folder)) continue;
 			visited.add(folder);
 			try {
+				const stat = await adapter.stat(folder);
+				if (stat?.type === "file") {
+					files.push(folder);
+					continue;
+				}
 				const listing = await adapter.list(folder);
 				files.push(...listing.files);
 				folders.push(...listing.folders);

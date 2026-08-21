@@ -26,6 +26,7 @@ export interface ActionOutcome {
 interface ExternalMarkdownActions {
 	openExternalMarkdownInObsidian: boolean;
 	openExternalMarkdown: (absolutePath: string, action: ActionKind) => Promise<void>;
+	materializeIgnoredNote?: (sourcePath: string) => Promise<TFile>;
 }
 
 async function openVaultFileInCode(app: App, vaultPath: string): Promise<ActionOutcome> {
@@ -47,6 +48,27 @@ export async function runResultAction(
 	externalMarkdown: ExternalMarkdownActions,
 ): Promise<ActionOutcome> {
 	if (result.mode === "file") {
+		if (result.ignored && externalMarkdown.materializeIgnoredNote) {
+			try {
+				const imported = await externalMarkdown.materializeIgnoredNote(result.vaultPath);
+				const leaf =
+					action === "alternate"
+						? app.workspace.getLeaf("tab")
+						: action === "horizontal"
+							? app.workspace.getLeaf("split", "horizontal")
+							: action === "vertical"
+								? app.workspace.getLeaf("split", "vertical")
+								: app.workspace.getLeaf(false);
+				await leaf.openFile(imported);
+				return { close: true };
+			} catch (error) {
+				return {
+					close: false,
+					message:
+						error instanceof Error ? error.message : "Failed to import ignored note.",
+				};
+			}
+		}
 		if (isUserIgnoredPath(app, result.vaultPath))
 			return await openVaultFileInCode(app, result.vaultPath);
 		const current = app.vault.getAbstractFileByPath(result.vaultPath);

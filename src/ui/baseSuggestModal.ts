@@ -7,6 +7,8 @@ export interface SuggestModalProps<T> {
 	defaultValue?: T;
 	initialInput?: string;
 	footerText?: string;
+	/** Optional dynamic source used by selectors whose candidates depend on input. */
+	search?: (query: string) => T[] | Promise<T[]>;
 }
 
 interface SuggestionChooser<T> {

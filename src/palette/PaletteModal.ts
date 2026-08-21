@@ -15,6 +15,7 @@ import {
 	type CopyablePaths,
 } from "src/core/pathClipboard";
 import { getVaultFullPath } from "src/core/ignoredPaths";
+import { materializeIgnoredNote } from "src/core/ignoredNoteMaterializer";
 
 export class PaletteModal extends SelectionModal<PaletteResult> {
 	private generation = 0;
@@ -58,7 +59,11 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.plugin.registerDomEvent(this.inputEl, "input", () => {
 			const history = this.getSearchHistoryContext(this.inputEl.value);
 			this.historySuggest?.update(
-				this.plugin.getSearchHistorySuggestions(history.query, history.category),
+				this.plugin.getSearchHistorySuggestions(
+					history.query,
+					history.category,
+					history.includeIgnored,
+				),
 			);
 		});
 		this.plugin.registerDomEvent(
@@ -198,8 +203,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 					: "VS Code"
 				: result.mode === "smart"
 					? `${Math.round(result.score * 100)}%`
-					: result.mode === "file" && isUserIgnoredPath(this.app, result.vaultPath)
-						? "VS Code"
+					: result.mode === "file" && result.ignored
+						? "Ignored · Import"
 						: everythingOpensInCode
 							? "VS Code"
 							: result.mode === "everything" && result.kind === "folder"
@@ -331,7 +336,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.controller?.abort();
 		const generation = ++this.generation;
 		const parsed = this.fixedMode
-			? { mode: this.fixedMode, query: input }
+			? { mode: this.fixedMode, query: input, includeIgnored: false }
 			: parseInput(input, this.plugin.settings.prefixes);
 		if (this.initialInputReady)
 			this.plugin.rememberPaletteQuery(parsed.mode, parsed.query, input);
@@ -355,6 +360,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				query: parsed.query,
 				signal: this.controller.signal,
 				everythingScope: this.everythingScope,
+				includeIgnored: parsed.includeIgnored,
 			});
 			if (generation !== this.generation) return [];
 			this.updateResultCount(results.length);
@@ -465,6 +471,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			openExternalMarkdownInObsidian: this.plugin.settings.openExternalMarkdownInObsidian,
 			openExternalMarkdown: (absolutePath, openAction) =>
 				this.plugin.openExternalMarkdown(absolutePath, openAction, closePalette),
+			materializeIgnoredNote: (sourcePath) => materializeIgnoredNote(this.app, sourcePath),
 		});
 		if (outcome.close) {
 			if (closePalette) this.close();
@@ -509,7 +516,11 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private showSearchHistorySuggest(): void {
 		const history = this.getSearchHistoryContext(this.inputEl.value);
 		this.historySuggest?.show(
-			this.plugin.getSearchHistorySuggestions(history.query, history.category),
+			this.plugin.getSearchHistorySuggestions(
+				history.query,
+				history.category,
+				history.includeIgnored,
+			),
 		);
 		this.inputEl.focus({ preventScroll: true });
 		this.inputEl.setSelectionRange(this.inputEl.value.length, this.inputEl.value.length);
@@ -579,7 +590,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private recordCurrentSearch(): void {
 		this.cancelHistoryDelay();
 		const search = this.recordableSearch(this.inputEl.value);
-		if (search) this.plugin.recordSearch(search.query, search.category);
+		if (search) this.plugin.recordSearch(search.query, search.category, search.includeIgnored);
 	}
 
 	private scheduleSearchHistory(input: string): void {
@@ -588,26 +599,33 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		if (!history.enabled || !search || history.addDelayMs <= 0) return;
 		this.historyDelayTimer = window.setTimeout(() => {
 			this.historyDelayTimer = undefined;
-			if (search) this.plugin.recordSearch(search.query, search.category);
+			if (search)
+				this.plugin.recordSearch(search.query, search.category, search.includeIgnored);
 		}, history.addDelayMs);
 	}
 
 	private getSearchHistoryContext(input: string): {
 		query: string;
 		category: ReturnType<typeof getSearchHistoryCategory>;
+		includeIgnored: boolean;
 	} {
 		const parsed = this.fixedMode
-			? { mode: this.fixedMode, query: input }
+			? { mode: this.fixedMode, query: input, includeIgnored: false }
 			: parseInput(input, this.plugin.settings.prefixes);
 		return {
 			query: parsed.query,
 			category: getSearchHistoryCategory(parsed),
+			includeIgnored: parsed.includeIgnored,
 		};
 	}
 
-	private recordableSearch(
-		input: string,
-	): { query: string; category: ReturnType<typeof getSearchHistoryCategory> } | undefined {
+	private recordableSearch(input: string):
+		| {
+				query: string;
+				category: ReturnType<typeof getSearchHistoryCategory>;
+				includeIgnored: boolean;
+		  }
+		| undefined {
 		const search = this.getSearchHistoryContext(input);
 		return search.query.trim() ? search : undefined;
 	}
