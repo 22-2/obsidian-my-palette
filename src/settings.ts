@@ -69,6 +69,10 @@ function searchHistoryEntries(value: unknown, prefixes: Prefixes): SearchHistory
 			{
 				input: isSearchHistoryCategory(entry.category) ? entry.input : parsed.query,
 				category,
+				includeIgnored:
+					typeof entry.includeIgnored === "boolean"
+						? entry.includeIgnored
+						: parsed.includeIgnored,
 				lastSearchedAt: entry.lastSearchedAt,
 				count: Math.max(1, Math.round(entry.count)),
 			},
@@ -83,6 +87,10 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 	const prefixes = {
 		command: typeof rawPrefixes.command === "string" ? rawPrefixes.command : ">",
 		everything: typeof rawPrefixes.everything === "string" ? rawPrefixes.everything : "e ",
+		includeIgnored:
+			typeof rawPrefixes.includeIgnored === "string"
+				? rawPrefixes.includeIgnored
+				: DEFAULT_SETTINGS.prefixes.includeIgnored,
 	};
 	const rawSearchHistory =
 		source.searchHistory && typeof source.searchHistory === "object"
@@ -91,7 +99,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 
 	return {
 		...DEFAULT_SETTINGS,
-		schemaVersion: 7,
+		schemaVersion: 8,
 		showLog: typeof source.showLog === "boolean" ? source.showLog : false,
 		rememberLastInput:
 			typeof source.rememberLastInput === "boolean" ? source.rememberLastInput : false,
@@ -163,6 +171,7 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 			"searchHistory.daysToKeep": this.plugin.settings.searchHistory.daysToKeep,
 			"prefixes.command": this.plugin.settings.prefixes.command,
 			"prefixes.everything": this.plugin.settings.prefixes.everything,
+			"prefixes.includeIgnored": this.plugin.settings.prefixes.includeIgnored,
 			openExternalMarkdownInObsidian: this.plugin.settings.openExternalMarkdownInObsidian,
 			rememberLastInput: this.plugin.settings.rememberLastInput,
 			showLog: this.plugin.settings.showLog,
@@ -208,6 +217,9 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 				break;
 			case "prefixes.everything":
 				settings.prefixes.everything = String(value).replace(/[\r\n]/g, "");
+				break;
+			case "prefixes.includeIgnored":
+				settings.prefixes.includeIgnored = String(value).replace(/[\r\n]/g, "");
 				break;
 			case "openExternalMarkdownInObsidian":
 				settings.openExternalMarkdownInObsidian = Boolean(value);
@@ -364,6 +376,11 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 							name: "Everything prefix",
 							desc: "Prefix used to search Everything.",
 							...control("text", "prefixes.everything"),
+						},
+						{
+							name: "Include ignored prefix",
+							desc: "Prefix that includes Excluded files in supported file searches.",
+							...control("text", "prefixes.includeIgnored"),
 						},
 					]),
 					group("Search history", [

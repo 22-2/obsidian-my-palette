@@ -1,6 +1,7 @@
 export interface SearchHistoryEntry {
 	input: string;
 	category: SearchHistoryCategory;
+	includeIgnored?: boolean;
 	lastSearchedAt: number;
 	count: number;
 }
@@ -23,12 +24,12 @@ export interface SearchHistorySettings {
 }
 
 export interface MyPaletteSettings {
-	schemaVersion: 7;
+	schemaVersion: 8;
 	showLog: boolean;
 	rememberLastInput: boolean;
 	openExternalMarkdownInObsidian: boolean;
 	searchHistory: SearchHistorySettings;
-	prefixes: { command: string; everything: string };
+	prefixes: { command: string; everything: string; includeIgnored: string };
 	everything: {
 		httpUrl: string;
 		username: string;
@@ -43,7 +44,7 @@ export interface MyPaletteSettings {
 }
 
 export const DEFAULT_SETTINGS: MyPaletteSettings = {
-	schemaVersion: 7,
+	schemaVersion: 8,
 	showLog: false,
 	rememberLastInput: false,
 	openExternalMarkdownInObsidian: true,
@@ -53,7 +54,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		daysToKeep: 360,
 		entries: [],
 	},
-	prefixes: { command: ">", everything: "e " },
+	prefixes: { command: ">", everything: "e ", includeIgnored: "i " },
 	everything: {
 		httpUrl: "http://127.0.0.1:51361/",
 		username: "",

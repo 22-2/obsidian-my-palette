@@ -1,7 +1,33 @@
 import { describe, expect, it } from "vitest";
 import { getSearchHistoryCategory, parseInput } from "src/palette/inputParser";
 
-const prefixes = { command: ">", everything: "e " };
+const prefixes = { command: ">", everything: "e ", includeIgnored: "i " };
+
+describe("include ignored prefix", () => {
+	it("opts file searches into the ignored index", () => {
+		expect(parseInput("i old meeting", prefixes)).toMatchObject({
+			mode: "file",
+			query: "old meeting",
+			includeIgnored: true,
+		});
+	});
+
+	it("can wrap another palette prefix", () => {
+		expect(parseInput("i > old", prefixes)).toMatchObject({
+			mode: "command",
+			query: "old",
+			includeIgnored: true,
+		});
+	});
+
+	it("requires the trailing space", () => {
+		expect(parseInput("index", prefixes)).toMatchObject({
+			mode: "file",
+			query: "index",
+			includeIgnored: false,
+		});
+	});
+});
 
 describe("parseInput Everything scopes", () => {
 	it("requires a trailing space before switching Everything modes", () => {

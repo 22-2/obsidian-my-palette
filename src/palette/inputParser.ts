@@ -4,26 +4,35 @@ import type { SearchHistoryCategory } from "src/model/settings";
 export interface Prefixes {
 	command: string;
 	everything: string;
+	includeIgnored: string;
 }
 
 export function validatePrefixes(prefixes: Prefixes): string | null {
-	const values = [prefixes.command, prefixes.everything];
+	const values = [prefixes.command, prefixes.everything, prefixes.includeIgnored];
 	// eslint-disable-next-line no-control-regex -- \0 check prevents NUL injection into child-process arguments
 	if (values.some((value) => !value || /[\r\n\0]/.test(value)))
 		return "Prefixes cannot be empty or contain a newline or NUL.";
-	const [command, everything] = values.map((value) => value.toLocaleLowerCase());
-	if (
-		command === everything ||
-		command.startsWith(everything) ||
-		everything.startsWith(command)
-	) {
-		return "Command and Everything prefixes must not overlap.";
+	const normalized = values.map((value) => value.trimEnd().toLocaleLowerCase());
+	for (let index = 0; index < normalized.length; index += 1) {
+		for (let other = index + 1; other < normalized.length; other += 1) {
+			if (
+				normalized[index] === normalized[other] ||
+				normalized[index].startsWith(normalized[other]) ||
+				normalized[other].startsWith(normalized[index])
+			)
+				return "Prefixes must not overlap.";
+		}
 	}
 	return null;
 }
 
 export function parseInput(raw: string, prefixes: Prefixes): ParsedInput {
-	const lower = raw.toLocaleLowerCase();
+	const ignoredPrefix = `${prefixes.includeIgnored.trimEnd()} `;
+	const includeIgnored =
+		Boolean(ignoredPrefix.trim()) &&
+		raw.toLocaleLowerCase().startsWith(ignoredPrefix.toLocaleLowerCase());
+	const modeInput = includeIgnored ? raw.slice(ignoredPrefix.length) : raw;
+	const lower = modeInput.toLocaleLowerCase();
 	const candidates: Array<{
 		prefix: string;
 		mode: Exclude<PaletteMode, "file">;
@@ -46,12 +55,13 @@ export function parseInput(raw: string, prefixes: Prefixes): ParsedInput {
 			return {
 				raw,
 				mode: candidate.mode,
-				query: raw.slice(candidate.prefix.length).replace(/^\s+/, ""),
+				query: modeInput.slice(candidate.prefix.length).replace(/^\s+/, ""),
 				everythingScope: candidate.everythingScope,
+				includeIgnored,
 			};
 		}
 	}
-	return { raw, mode: "file", query: raw };
+	return { raw, mode: "file", query: modeInput, includeIgnored };
 }
 
 export function getSearchHistoryCategory(

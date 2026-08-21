@@ -226,6 +226,9 @@ importers:
       fuzzysort:
         specifier: ^3.1.0
         version: 3.1.0
+      idb:
+        specifier: ^8.0.3
+        version: 8.0.3
     devDependencies:
       '@22-2/obsidian-copy-bundler-plugin':
         specifier: 1.0.2
@@ -1002,6 +1005,9 @@ packages:
   fuzzysort@3.1.0:
     resolution: {integrity: sha512-sR9BNCjBg6LNgwvxlBd0sBABvQitkLzoVY9MYYROQVX/FvfJ4Mai9LsGhDgd8qYdds0bY77VzYd5iuB+v5rwQQ==}
 
+  idb@8.0.3:
+    resolution: {integrity: sha512-LtwtVyVYO5BqRvcsKuB2iUMnHwPVByPCXFXOpuU96IZPPoPN6xjOGxZQ74pgSVVLQWtUOYgyeL4GE98BY5D3wg==}
+
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -1773,6 +1779,8 @@ snapshots:
     optional: true
 
   fuzzysort@3.1.0: {}
+
+  idb@8.0.3: {}
 
   js-tokens@4.0.0: {}
 

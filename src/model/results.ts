@@ -16,6 +16,8 @@ export interface ParsedInput {
 	mode: PaletteMode;
 	query: string;
 	everythingScope?: EverythingScope;
+	/** Explicitly opts file-oriented searches into the ignored-note index. */
+	includeIgnored: boolean;
 }
 
 export interface BaseResult {
