@@ -5,7 +5,12 @@ import {
 	type SortableFileEntry,
 } from "src/providers/fileSorting";
 
-function file(path: string, mtime: number, aliases: string[] = []): SortableFileEntry {
+function file(
+	path: string,
+	mtime: number,
+	aliases: string[] = [],
+	ignored = false,
+): SortableFileEntry {
 	return {
 		path,
 		basename:
@@ -15,6 +20,7 @@ function file(path: string, mtime: number, aliases: string[] = []): SortableFile
 				?.replace(/\.[^.]+$/, "") ?? path,
 		aliases,
 		mtime,
+		ignored,
 	};
 }
 
@@ -46,6 +52,18 @@ describe("file sorting", () => {
 		const sorted = sortFileMatches(matches, "m", recent);
 
 		expect(sorted.map(({ path }) => path)).toEqual(["b/gamma.md", "z/alpha.md", "a/beta.md"]);
+	});
+
+	it("puts ignored matches before normal notes in an include-ignored search", () => {
+		const matches = [
+			{ obj: file("notes/new.md", 100, [], false), score: 100 },
+			{ obj: file("archive/old.md", 1, [], true), score: 1 },
+		];
+
+		expect(sortFileMatches(matches, "old", new Map()).map(({ path }) => path)).toEqual([
+			"archive/old.md",
+			"notes/new.md",
+		]);
 	});
 
 	it("shows recent files first, then newer files, then file-name order when input is empty", () => {

@@ -3,6 +3,7 @@ export interface SortableFileEntry {
 	basename: string;
 	aliases: string[];
 	mtime: number;
+	ignored?: boolean;
 }
 
 export interface FileMatch<T extends SortableFileEntry> {
@@ -38,6 +39,12 @@ function compareFallback(a: SortableFileEntry, b: SortableFileEntry): number {
 	);
 }
 
+function compareIgnored(a: SortableFileEntry, b: SortableFileEntry): number {
+	// The include-ignored prefix is an explicit request to inspect archived notes,
+	// so those candidates should be visible before the much larger normal set.
+	return Number(Boolean(b.ignored)) - Number(Boolean(a.ignored));
+}
+
 export function sortFilesWithoutQuery<T extends SortableFileEntry>(
 	entries: T[],
 	recent: ReadonlyMap<string, number>,
@@ -53,6 +60,7 @@ export function sortFileMatches<T extends SortableFileEntry>(
 	return matches
 		.sort(
 			(a, b) =>
+				compareIgnored(a.obj, b.obj) ||
 				Number(hasPrefixMatch(b.obj, query)) - Number(hasPrefixMatch(a.obj, query)) ||
 				b.score - a.score ||
 				compareRecent(a.obj, b.obj, recent) ||
