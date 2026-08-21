@@ -59,6 +59,7 @@ export default class MyPalettePlugin extends Plugin {
 		this.fileProvider = new FileProvider(
 			this.app,
 			() => this.settings.everything.vaultExtensions,
+			(message, detail) => logger.debug(message, detail),
 		);
 		this.commandProvider = new CommandProvider(this.app, () => this.settings.recentCommandIds);
 		this.everythingProvider = new EverythingProvider(
@@ -290,11 +291,14 @@ export default class MyPalettePlugin extends Plugin {
 	getSearchHistorySuggestions(
 		input: string,
 		category: SearchHistoryCategory,
+		includeIgnored = false,
 	): SearchHistoryResult[] {
 		return getSearchHistorySuggestions(
 			this.settings.searchHistory.entries,
 			input,
 			category,
+			30,
+			includeIgnored,
 		).map((entry) => ({
 			id: `search-history:${entry.category}:${entry.input}`,
 			mode: "search-history",
@@ -306,23 +310,31 @@ export default class MyPalettePlugin extends Plugin {
 	}
 
 	formatSearchHistoryInput(entry: SearchHistoryEntry): string {
-		if (entry.category === "command")
-			return `${this.settings.prefixes.command.trimEnd()} ${entry.input}`;
-		if (entry.category === "bookmark") return `b ${entry.input}`;
-		if (entry.category === "smart") return `sc ${entry.input}`;
-		if (entry.category === "everything")
-			return `${this.settings.prefixes.everything.trimEnd()} ${entry.input}`;
-		if (entry.category === "everything-directory") return `esdir ${entry.input}`;
-		return entry.input;
+		const modeInput =
+			entry.category === "command"
+				? `${this.settings.prefixes.command.trimEnd()} ${entry.input}`
+				: entry.category === "bookmark"
+					? `b ${entry.input}`
+					: entry.category === "smart"
+						? `sc ${entry.input}`
+						: entry.category === "everything"
+							? `${this.settings.prefixes.everything.trimEnd()} ${entry.input}`
+							: entry.category === "everything-directory"
+								? `esdir ${entry.input}`
+								: entry.input;
+		return entry.includeIgnored
+			? `${this.settings.prefixes.includeIgnored.trimEnd()} ${modeInput}`
+			: modeInput;
 	}
 
-	recordSearch(input: string, category: SearchHistoryCategory): void {
+	recordSearch(input: string, category: SearchHistoryCategory, includeIgnored = false): void {
 		const history = this.settings.searchHistory;
 		if (!history.enabled || !input.trim()) return;
 		history.entries = recordSearchHistory(history.entries, input, category, {
 			now: Date.now(),
 			daysToKeep: history.daysToKeep,
 			maxEntries: 256,
+			includeIgnored,
 		});
 		void this.saveSettings();
 	}

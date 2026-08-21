@@ -5,6 +5,7 @@ export interface PaletteSearchRequest {
 	query: string;
 	signal?: AbortSignal;
 	everythingScope?: EverythingScope;
+	includeIgnored?: boolean;
 }
 
 export interface PaletteProvider<TResult extends PaletteResult = PaletteResult> {

@@ -1,6 +1,7 @@
 import { type App, type EventRef, type TFile } from "obsidian";
 import fuzzysort from "fuzzysort";
-import { getUserIgnoreFilters, isUserIgnoredPath } from "src/core/ignoredPaths";
+import { isUserIgnoredPath } from "src/core/ignoredPaths";
+import { IgnoredNoteIndex, type IgnoredNoteIndexLogger } from "src/core/ignoredNoteIndex";
 import type { FileResult } from "src/model/results";
 import { sortFileMatches, sortFilesWithoutQuery } from "src/providers/fileSorting";
 import type { PaletteProvider, PaletteSearchRequest } from "src/providers/PaletteProvider";
@@ -13,6 +14,7 @@ interface SearchEntry {
 	extension: string;
 	text: string;
 	mtime: number;
+	ignored: boolean;
 }
 
 function aliases(value: unknown): string[] {
@@ -24,16 +26,17 @@ export class FileProvider implements PaletteProvider<FileResult> {
 	private readonly cache = new Map<string, SearchEntry>();
 	private readonly allEntries = new Map<string, SearchEntry>();
 	private readonly refs: EventRef[] = [];
-	private readonly ignoredReady: Promise<void>;
+	private readonly ignoredIndex: IgnoredNoteIndex;
 	private allowedExtensions = new Set<string>();
 
 	constructor(
 		private readonly app: App,
 		private readonly vaultExtensions: () => readonly string[],
+		ignoredLogger?: IgnoredNoteIndexLogger,
 	) {
 		this.updateAllowedExtensions();
 		this.rebuild();
-		this.ignoredReady = this.rebuildIgnored();
+		this.ignoredIndex = new IgnoredNoteIndex(app, ignoredLogger);
 		this.refs.push(
 			app.vault.on("create", (file) => {
 				if ("extension" in file) this.update(file as TFile);
@@ -59,6 +62,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 
 	dispose(): void {
 		this.refs.forEach((ref) => this.app.vault.offref(ref));
+		void this.ignoredIndex.dispose();
 	}
 
 	refreshExtensions(): void {
@@ -76,65 +80,45 @@ export class FileProvider implements PaletteProvider<FileResult> {
 	private update(file: TFile): void {
 		// Keep all entries so extension-setting changes only need an in-memory cache refresh.
 		const metadata = this.app.metadataCache.getFileCache(file);
-		const h1 = metadata?.headings?.find((heading) => heading.level === 1)?.heading ?? "";
 		const fileAliases = aliases(metadata?.frontmatter?.aliases ?? metadata?.frontmatter?.alias);
+		// Search metadata stays consistent between visible and ignored notes; H1 is
+		// intentionally excluded because it is not stable note identity metadata.
 		this.setEntry({
 			file,
 			path: file.path,
 			basename: file.basename,
 			aliases: fileAliases,
 			extension: file.extension,
-			text: [file.basename, file.path, ...fileAliases, h1].join(" "),
+			text: [file.basename, file.path, ...fileAliases].join(" "),
 			mtime: file.stat.mtime,
+			ignored: false,
 		});
 	}
 
-	private async rebuildIgnored(): Promise<void> {
-		const visited = new Set<string>();
-		for (const root of getUserIgnoreFilters(this.app)) {
-			await this.scanIgnoredDirectory(root, visited);
-		}
-	}
-
-	private async scanIgnoredDirectory(directory: string, visited: Set<string>): Promise<void> {
-		if (visited.has(directory)) return;
-		visited.add(directory);
-		try {
-			const listing = await this.app.vault.adapter.list(directory);
-			for (const filePath of listing.files) this.addIgnoredFile(filePath);
-			for (const folderPath of listing.folders)
-				await this.scanIgnoredDirectory(folderPath, visited);
-		} catch {
-			// Missing ignore roots are valid Obsidian configuration and are skipped.
-		}
-	}
-
-	private addIgnoredFile(filePath: string): void {
-		const filename = filePath.slice(filePath.lastIndexOf("/") + 1);
-		const extension = filename.includes(".")
-			? filename.slice(filename.lastIndexOf(".") + 1)
-			: "";
-		const basename = extension ? filename.slice(0, -(extension.length + 1)) : filename;
-		this.setEntry({
-			path: filePath,
-			basename,
-			extension,
-			aliases: [],
-			text: `${basename} ${filePath}`,
-			mtime: 0,
-		});
-	}
-
-	async search({ query }: PaletteSearchRequest): Promise<FileResult[]> {
-		await this.ignoredReady;
+	async search({ query, includeIgnored = false }: PaletteSearchRequest): Promise<FileResult[]> {
 		const recentPaths = this.app.workspace.getLastOpenFiles?.() ?? [];
 		const recent = new Map(recentPaths.map((filePath, index) => [filePath, index]));
-		const entries = [...this.cache.values()];
+		// Excluded files stay out of the normal index; the explicit prefix opts into
+		// the separate adapter-backed index below and prevents duplicate candidates.
+		const entries = [...this.cache.values()].filter(
+			(entry) => !isUserIgnoredPath(this.app, entry.path),
+		);
+		if (includeIgnored && query.trim()) {
+			for (const ignored of await this.ignoredIndex.getEntries()) {
+				const entry: SearchEntry = {
+					path: ignored.path,
+					basename: ignored.basename,
+					aliases: ignored.aliases,
+					extension: ignored.extension,
+					text: [ignored.basename, ignored.path, ...ignored.aliases].join(" "),
+					mtime: ignored.mtime,
+					ignored: true,
+				};
+				if (this.isAllowedExtension(entry.extension)) entries.push(entry);
+			}
+		}
 		if (!query.trim()) {
-			const files = sortFilesWithoutQuery(
-				entries.filter((entry) => !isUserIgnoredPath(this.app, entry.path)),
-				recent,
-			);
+			const files = sortFilesWithoutQuery(entries, recent);
 			return files.map((entry) => this.result(entry));
 		}
 		const matches = [
@@ -155,6 +139,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			icon: entry.extension === "md" ? "file-text" : "file",
 			vaultPath: entry.path,
 			file: entry.file,
+			ignored: entry.ignored,
 		};
 	}
 

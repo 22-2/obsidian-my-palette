@@ -12,16 +12,34 @@ type ConfigurableVault = App["vault"] & {
 export function getUserIgnoreFilters(app: App): string[] {
 	const configured = (app.vault as ConfigurableVault).getConfig("userIgnoreFilters");
 	if (!Array.isArray(configured)) return [];
-	return configured
-		.filter((value): value is string => typeof value === "string" && Boolean(value.trim()))
-		.map((value) => normalizePath(value.trim().replace(/^\/+/, "")).replace(/\/$/, ""));
+	return configured.flatMap((value): string[] => {
+		if (typeof value !== "string" || !value.trim()) return [];
+		const trimmed = value.trim();
+		// Obsidian accepts slash-delimited regular expressions; keep their delimiters
+		// so callers do not mistake a pattern for a literal folder path.
+		if (trimmed.length >= 2 && trimmed.startsWith("/") && trimmed.endsWith("/"))
+			return [trimmed];
+		const normalized = normalizePath(trimmed.replace(/^\/+/, "")).replace(/\/$/, "");
+		return normalized ? [normalized] : [];
+	});
+}
+
+export function isUserIgnoreFilterRegex(filter: string): boolean {
+	return filter.length >= 2 && filter.startsWith("/") && filter.endsWith("/");
 }
 
 export function isUserIgnoredPath(app: App, vaultPath: string): boolean {
 	const normalizedPath = normalizePath(vaultPath);
-	return getUserIgnoreFilters(app).some(
-		(ignored) => normalizedPath === ignored || normalizedPath.startsWith(`${ignored}/`),
-	);
+	return getUserIgnoreFilters(app).some((ignored) => {
+		if (isUserIgnoreFilterRegex(ignored)) {
+			try {
+				return new RegExp(ignored.slice(1, -1)).test(normalizedPath);
+			} catch {
+				return false;
+			}
+		}
+		return normalizedPath === ignored || normalizedPath.startsWith(`${ignored}/`);
+	});
 }
 
 export function getVaultFullPath(app: App, vaultPath: string): string | null {
@@ -30,6 +48,12 @@ export function getVaultFullPath(app: App, vaultPath: string): string | null {
 
 export function getVaultRootPath(app: App): string | null {
 	return (app.vault as ConfigurableVault).adapter.getBasePath?.() ?? null;
+}
+
+export function getVaultNewFileFolderPath(app: App): string {
+	const configured = (app.vault as ConfigurableVault).getConfig("newFileFolderPath");
+	if (typeof configured !== "string" || !configured.trim()) return "";
+	return normalizePath(configured.trim().replace(/^\/+/, "")).replace(/\/$/, "");
 }
 
 export function vaultPathFromAbsolute(app: App, absolutePath: string): string | null {

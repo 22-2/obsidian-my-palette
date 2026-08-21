@@ -32,6 +32,8 @@ export interface FileResult extends BaseResult {
 	mode: "file";
 	vaultPath: string;
 	file?: TFile;
+	/** True when this result came from the explicit ignored-note search scope. */
+	ignored?: boolean;
 }
 
 export interface CommandResult extends BaseResult {
