@@ -1,6 +1,6 @@
 import { type App, type EventRef, type TFile } from "obsidian";
 import fuzzysort from "fuzzysort";
-import { isUserIgnoredPath } from "src/core/ignoredPaths";
+import { getUserIgnoreFilters, isUserIgnoredPathWithFilters } from "src/core/ignoredPaths";
 import { IgnoredNoteIndex, type IgnoredNoteIndexLogger } from "src/core/ignoredNoteIndex";
 import type { FileResult } from "src/model/results";
 import { sortFileMatches, sortFilesWithoutQuery } from "src/providers/fileSorting";
@@ -102,10 +102,11 @@ export class FileProvider implements PaletteProvider<FileResult> {
 	async search({ query, includeIgnored = false }: PaletteSearchRequest): Promise<FileResult[]> {
 		const recentPaths = this.app.workspace.getLastOpenFiles?.() ?? [];
 		const recent = new Map(recentPaths.map((filePath, index) => [filePath, index]));
+		const ignoreFilters = getUserIgnoreFilters(this.app);
 		// Excluded files stay out of the normal index; the explicit prefix opts into
 		// the separate adapter-backed index below and prevents duplicate candidates.
 		const entries = [...this.cache.values()].filter(
-			(entry) => !isUserIgnoredPath(this.app, entry.path),
+			(entry) => !isUserIgnoredPathWithFilters(ignoreFilters, entry.path),
 		);
 		if (includeIgnored && query.trim()) {
 			for (const ignored of await this.ignoredIndex.getEntries()) {

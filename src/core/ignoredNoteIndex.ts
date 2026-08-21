@@ -3,8 +3,8 @@ import { type DBSchema, type IDBPDatabase, openDB } from "idb";
 import {
 	getUserIgnoreFilters,
 	getVaultRootPath,
-	isUserIgnoredPath,
 	isUserIgnoreFilterRegex,
+	isUserIgnoredPathWithFilters,
 } from "src/core/ignoredPaths";
 
 const DATABASE_NAME = "my-palette-ignored-notes";
@@ -214,7 +214,7 @@ export class IgnoredNoteIndex {
 			this.log("Scanning Vault root to resolve ignored regex filters", { count: regexCount });
 		this.log("Scanning ignored notes", { roots: scanRoots, cachedEntries: this.current.size });
 		const paths = (await this.collectPaths(scanRoots)).filter((path) =>
-			isUserIgnoredPath(this.app, path),
+			isUserIgnoredPathWithFilters(filters, path),
 		);
 		const next = new Map<string, IgnoredNoteIndexEntry>();
 		let processed = 0;

@@ -28,9 +28,12 @@ export function isUserIgnoreFilterRegex(filter: string): boolean {
 	return filter.length >= 2 && filter.startsWith("/") && filter.endsWith("/");
 }
 
-export function isUserIgnoredPath(app: App, vaultPath: string): boolean {
+export function isUserIgnoredPathWithFilters(
+	filters: readonly string[],
+	vaultPath: string,
+): boolean {
 	const normalizedPath = normalizePath(vaultPath);
-	return getUserIgnoreFilters(app).some((ignored) => {
+	return filters.some((ignored) => {
 		if (isUserIgnoreFilterRegex(ignored)) {
 			try {
 				return new RegExp(ignored.slice(1, -1)).test(normalizedPath);
@@ -40,6 +43,10 @@ export function isUserIgnoredPath(app: App, vaultPath: string): boolean {
 		}
 		return normalizedPath === ignored || normalizedPath.startsWith(`${ignored}/`);
 	});
+}
+
+export function isUserIgnoredPath(app: App, vaultPath: string): boolean {
+	return isUserIgnoredPathWithFilters(getUserIgnoreFilters(app), vaultPath);
 }
 
 export function getVaultFullPath(app: App, vaultPath: string): string | null {
