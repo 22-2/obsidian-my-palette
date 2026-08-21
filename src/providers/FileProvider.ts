@@ -71,6 +71,10 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		for (const entry of this.allEntries.values()) this.syncCachedEntry(entry);
 	}
 
+	async rebuildIgnoredIndex(): Promise<void> {
+		await this.ignoredIndex.rebuild();
+	}
+
 	private rebuild(): void {
 		this.cache.clear();
 		this.allEntries.clear();
