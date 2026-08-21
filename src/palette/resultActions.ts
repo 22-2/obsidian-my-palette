@@ -26,14 +26,6 @@ export interface ActionOutcome {
 interface ExternalMarkdownActions {
 	openExternalMarkdownInObsidian: boolean;
 	openExternalMarkdown: (absolutePath: string, action: ActionKind) => Promise<void>;
-	materializeIgnoredNote?: (sourcePath: string) => Promise<TFile>;
-}
-
-async function openVaultFileInCode(app: App, vaultPath: string): Promise<ActionOutcome> {
-	const absolutePath = getVaultFullPath(app, vaultPath);
-	if (!absolutePath)
-		return { close: false, message: "This vault adapter cannot resolve an absolute path." };
-	return await openAbsolutePathInCode(absolutePath);
 }
 
 async function openAbsolutePathInCode(absolutePath: string): Promise<ActionOutcome> {
@@ -62,29 +54,27 @@ export async function runResultAction(
 	externalMarkdown: ExternalMarkdownActions,
 ): Promise<ActionOutcome> {
 	if (result.mode === "file") {
-		if (result.ignored && externalMarkdown.materializeIgnoredNote) {
-			try {
-				const imported = await externalMarkdown.materializeIgnoredNote(result.vaultPath);
-				const leaf =
-					action === "alternate"
-						? app.workspace.getLeaf("tab")
-						: action === "horizontal"
-							? app.workspace.getLeaf("split", "horizontal")
-							: action === "vertical"
-								? app.workspace.getLeaf("split", "vertical")
-								: app.workspace.getLeaf(false);
-				await leaf.openFile(imported);
-				return { close: true };
-			} catch (error) {
+		const ignored = result.ignored || isUserIgnoredPath(app, result.vaultPath);
+		if (ignored) {
+			const absolutePath = getVaultFullPath(app, result.vaultPath);
+			if (!absolutePath)
 				return {
 					close: false,
-					message:
-						error instanceof Error ? error.message : "Failed to import ignored note.",
+					message: "This vault adapter cannot resolve an absolute path.",
 				};
+			try {
+				await getDesktopAdapter(app).fs.promises.stat(absolutePath);
+			} catch {
+				return { close: false, message: "The selected path no longer exists." };
 			}
+			// Ignored results are an inspection scope. Keep the source untouched;
+			// MOC link insertion owns the separate copy/materialize workflow.
+			const target = resolveExternalOpenTarget(absolutePath, {
+				openMarkdownInObsidian: externalMarkdown.openExternalMarkdownInObsidian,
+				ignored: true,
+			});
+			return await openExternalTarget(target, action, externalMarkdown);
 		}
-		if (isUserIgnoredPath(app, result.vaultPath))
-			return await openVaultFileInCode(app, result.vaultPath);
 		const current = app.vault.getAbstractFileByPath(result.vaultPath);
 		if (!(current instanceof TFile))
 			return { close: false, message: "The file no longer exists." };

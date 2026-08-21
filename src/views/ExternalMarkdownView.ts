@@ -119,6 +119,9 @@ export class ExternalMarkdownView extends ItemView {
 			hostLeaf: this.leaf,
 			initialContent: content,
 			autoFocus: this.autoFocus,
+			// External files are snapshots; edits must never look like they can be
+			// saved back to a source outside Obsidian's managed file model.
+			isReadOnly: true,
 		});
 		await this.editor.ready;
 		if (generation !== this.loadGeneration) {

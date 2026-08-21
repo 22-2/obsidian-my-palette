@@ -1,5 +1,9 @@
 import { Menu, Notice, setIcon, TFile, type App } from "obsidian";
-import { isAbsolutePathUserIgnored, isUserIgnoredPath } from "src/core/ignoredPaths";
+import {
+	getVaultFullPath,
+	isAbsolutePathUserIgnored,
+	isUserIgnoredPath,
+} from "src/core/ignoredPaths";
 import { getDesktopAdapter } from "src/core/desktopAdapter";
 import { isMarkdownPath } from "src/core/externalFiles";
 import { compactPath } from "src/core/pathDisplay";
@@ -14,8 +18,7 @@ import {
 	copyPathToClipboard,
 	type CopyablePaths,
 } from "src/core/pathClipboard";
-import { getVaultFullPath } from "src/core/ignoredPaths";
-import { materializeIgnoredNote } from "src/core/ignoredNoteMaterializer";
+import { resolveExternalOpenTarget } from "src/palette/openTargets";
 
 export class PaletteModal extends SelectionModal<PaletteResult> {
 	private generation = 0;
@@ -183,6 +186,12 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			isMarkdownPath(result.absolutePath) &&
 			(!result.vaultPath ||
 				!(this.app.vault.getAbstractFileByPath(result.vaultPath) instanceof TFile));
+		const ignoredMarkdownPath =
+			result.mode === "file" && result.ignored
+				? getVaultFullPath(this.app, result.vaultPath)
+				: undefined;
+		const isIgnoredMarkdown =
+			typeof ignoredMarkdownPath === "string" && isMarkdownPath(ignoredMarkdownPath);
 		const everythingOpensInCode =
 			result.mode === "everything" &&
 			(isAbsolutePathUserIgnored(this.app, result.absolutePath) ||
@@ -197,19 +206,20 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			description: usesPath ? compactPath(result.secondary) : result.secondary,
 			descriptionTitle: usesPath ? result.secondary : undefined,
 			icon: result.icon,
-			badge: isExternalMarkdown
-				? this.plugin.settings.openExternalMarkdownInObsidian
-					? "ReadOnly"
-					: "VS Code"
-				: result.mode === "smart"
-					? `${Math.round(result.score * 100)}%`
-					: result.mode === "file" && result.ignored
-						? "Ignored · Import"
-						: everythingOpensInCode
+			badge:
+				isExternalMarkdown || isIgnoredMarkdown
+					? this.plugin.settings.openExternalMarkdownInObsidian
+						? "ReadOnly"
+						: "VS Code"
+					: result.mode === "smart"
+						? `${Math.round(result.score * 100)}%`
+						: result.mode === "file" && result.ignored
 							? "VS Code"
-							: result.mode === "everything" && result.kind === "folder"
-								? "Folder"
-								: undefined,
+							: everythingOpensInCode
+								? "VS Code"
+								: result.mode === "everything" && result.kind === "folder"
+									? "Folder"
+									: undefined,
 		};
 	}
 
@@ -471,7 +481,6 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			openExternalMarkdownInObsidian: this.plugin.settings.openExternalMarkdownInObsidian,
 			openExternalMarkdown: (absolutePath, openAction) =>
 				this.plugin.openExternalMarkdown(absolutePath, openAction, closePalette),
-			materializeIgnoredNote: (sourcePath) => materializeIgnoredNote(this.app, sourcePath),
 		});
 		if (outcome.close) {
 			if (closePalette) this.close();
@@ -546,8 +555,28 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			return;
 		}
 		if (result.mode === "file") {
-			if (isUserIgnoredPath(this.app, result.vaultPath)) {
-				new Notice("Ignored files cannot be opened in a background Obsidian tab.");
+			const ignored = result.ignored || isUserIgnoredPath(this.app, result.vaultPath);
+			if (ignored) {
+				const absolutePath = getVaultFullPath(this.app, result.vaultPath);
+				if (!absolutePath) {
+					new Notice("This vault adapter cannot resolve an absolute path.");
+					return;
+				}
+				try {
+					await getDesktopAdapter(this.app).fs.promises.stat(absolutePath);
+				} catch {
+					new Notice("The selected path no longer exists.");
+					return;
+				}
+				const target = resolveExternalOpenTarget(absolutePath, {
+					openMarkdownInObsidian: this.plugin.settings.openExternalMarkdownInObsidian,
+					ignored: true,
+				});
+				if (target.kind === "readonly-markdown") {
+					await this.plugin.openExternalMarkdown(absolutePath, "primary", true, false);
+					return;
+				}
+				new Notice("This item cannot be opened in a background Obsidian tab.");
 				return;
 			}
 			const file = this.app.vault.getAbstractFileByPath(result.vaultPath);
@@ -573,10 +602,13 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				return;
 			}
 		}
-		if (
-			isMarkdownPath(result.absolutePath) &&
-			this.plugin.settings.openExternalMarkdownInObsidian
-		) {
+		const target = resolveExternalOpenTarget(result.absolutePath, {
+			openMarkdownInObsidian: this.plugin.settings.openExternalMarkdownInObsidian,
+			ignored:
+				Boolean(result.vaultPath) ||
+				isAbsolutePathUserIgnored(this.app, result.absolutePath),
+		});
+		if (target.kind === "readonly-markdown") {
 			await this.plugin.openExternalMarkdown(result.absolutePath, "primary", true, false);
 			return;
 		}
