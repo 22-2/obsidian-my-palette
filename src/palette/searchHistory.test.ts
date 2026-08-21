@@ -3,7 +3,7 @@ import {
 	getSearchHistorySuggestions,
 	pruneStoredSearchHistory,
 	recordSearchHistory,
-} from "src/core/searchHistory";
+} from "src/palette/searchHistory";
 
 describe("search history", () => {
 	it("records after an idle interval and merges case-only duplicates", () => {

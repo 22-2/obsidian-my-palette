@@ -3,10 +3,10 @@ import type MyPalettePlugin from "src/main";
 import type { FileResult } from "src/model/results";
 import { openSelectionModal, type SelectionItem } from "src/ui/selectionModal";
 import { addLinkToMocRelateds } from "src/commands/mocRelatedsCore";
-import { getVaultFullPath, isUserIgnoredPath } from "src/core/ignoredPaths";
-import { materializeIgnoredNote } from "src/core/ignoredNoteMaterializer";
-import { addCopyPathMenuItems, copyPathToClipboard } from "src/core/pathClipboard";
-import { isMarkdownPath } from "src/core/externalFiles";
+import { getVaultFullPath, isUserIgnoredPath } from "src/ignored-notes/ignoredPaths";
+import { materializeIgnoredNote } from "src/ignored-notes/ignoredNoteMaterializer";
+import { addCopyPathMenuItems, copyPathToClipboard } from "src/platform/pathClipboard";
+import { isMarkdownPath } from "src/shared/externalFiles";
 import { parseInput } from "src/palette/inputParser";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
 

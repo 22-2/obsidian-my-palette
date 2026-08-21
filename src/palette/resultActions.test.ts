@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isMarkdownPath } from "src/core/externalFiles";
+import { isMarkdownPath } from "src/shared/externalFiles";
 
 describe("isMarkdownPath", () => {
 	it("recognizes Markdown paths without case sensitivity", () => {

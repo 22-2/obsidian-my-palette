@@ -1,0 +1,67 @@
+import { describe, expect, it } from "vitest";
+import { DEFAULT_SETTINGS } from "src/model/settings";
+import { mergeSettings } from "src/settings/mergeSettings";
+
+describe("mergeSettings", () => {
+	it("fills missing data with the documented defaults", () => {
+		expect(mergeSettings(undefined)).toEqual(DEFAULT_SETTINGS);
+	});
+
+	it("bounds numeric settings and sanitizes extension and command lists", () => {
+		const settings = mergeSettings({
+			searchHistory: { addDelayMs: -1, daysToKeep: 99999 },
+			everything: {
+				maxResults: 999,
+				debounceMs: 1,
+				requestTimeoutMs: 99999,
+				vaultExtensions: [".MD", "md", "bad value", 42],
+			},
+			recentCommandIds: ["first", 42, "second", "third"],
+		});
+
+		expect(settings.searchHistory.addDelayMs).toBe(0);
+		expect(settings.searchHistory.daysToKeep).toBe(3650);
+		expect(settings.everything.maxResults).toBe(500);
+		expect(settings.everything.debounceMs).toBe(50);
+		expect(settings.everything.requestTimeoutMs).toBe(60000);
+		expect(settings.everything.vaultExtensions).toEqual(["md"]);
+		expect(settings.recentCommandIds).toEqual(["first", "second", "third"]);
+	});
+
+	it("migrates legacy history entries through the current prefix parser", () => {
+		const settings = mergeSettings({
+			searchHistory: {
+				entries: [
+					{ input: "i old note", lastSearchedAt: 10, count: 2 },
+					{ input: "> build", category: "command", lastSearchedAt: 20, count: 0 },
+					{ input: "report", category: "unknown", lastSearchedAt: 30, count: 1 },
+					{ input: 42, lastSearchedAt: 40, count: 1 },
+				],
+			},
+		});
+
+		expect(settings.searchHistory.entries).toEqual([
+			{
+				input: "old note",
+				category: "file",
+				includeIgnored: true,
+				lastSearchedAt: 10,
+				count: 2,
+			},
+			{
+				input: "> build",
+				category: "command",
+				includeIgnored: false,
+				lastSearchedAt: 20,
+				count: 1,
+			},
+			{
+				input: "report",
+				category: "file",
+				includeIgnored: false,
+				lastSearchedAt: 30,
+				count: 1,
+			},
+		]);
+	});
+});

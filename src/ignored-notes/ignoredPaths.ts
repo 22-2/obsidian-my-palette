@@ -1,5 +1,11 @@
 import { normalizePath, type App } from "obsidian";
-import { getDesktopAdapter } from "src/core/desktopAdapter";
+import { getDesktopAdapter } from "src/platform/desktopAdapter";
+import { isUserIgnoredPathWithFilters } from "src/ignored-notes/ignoredPathMatching";
+
+export {
+	isUserIgnoreFilterRegex,
+	isUserIgnoredPathWithFilters,
+} from "src/ignored-notes/ignoredPathMatching";
 
 type ConfigurableVault = App["vault"] & {
 	getConfig: (key: string) => unknown;
@@ -21,27 +27,6 @@ export function getUserIgnoreFilters(app: App): string[] {
 			return [trimmed];
 		const normalized = normalizePath(trimmed.replace(/^\/+/, "")).replace(/\/$/, "");
 		return normalized ? [normalized] : [];
-	});
-}
-
-export function isUserIgnoreFilterRegex(filter: string): boolean {
-	return filter.length >= 2 && filter.startsWith("/") && filter.endsWith("/");
-}
-
-export function isUserIgnoredPathWithFilters(
-	filters: readonly string[],
-	vaultPath: string,
-): boolean {
-	const normalizedPath = normalizePath(vaultPath);
-	return filters.some((ignored) => {
-		if (isUserIgnoreFilterRegex(ignored)) {
-			try {
-				return new RegExp(ignored.slice(1, -1)).test(normalizedPath);
-			} catch {
-				return false;
-			}
-		}
-		return normalizedPath === ignored || normalizedPath.startsWith(`${ignored}/`);
 	});
 }
 

@@ -1,10 +1,14 @@
 import { TFile, type App } from "obsidian";
-import { getVaultRootPath, isUserIgnoredPath, vaultPathFromAbsolute } from "src/core/ignoredPaths";
+import {
+	getVaultRootPath,
+	isUserIgnoredPath,
+	vaultPathFromAbsolute,
+} from "src/ignored-notes/ignoredPaths";
 import type { MyPaletteSettings } from "src/model/settings";
 import type { EverythingResult } from "src/model/results";
-import { EverythingHttpClient } from "src/everything/EverythingHttpClient";
-import type { PaletteProvider, PaletteSearchRequest } from "src/providers/PaletteProvider";
-import { buildEverythingQuery } from "src/everything/everythingQuery";
+import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
+import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
+import { buildEverythingQuery } from "src/search/everything/everythingQuery";
 
 export class EverythingProvider implements PaletteProvider<EverythingResult> {
 	constructor(

@@ -6,7 +6,7 @@ import {
 	type App,
 	normalizePath,
 } from "obsidian";
-import { getVaultNewFileFolderPath, isUserIgnoredPath } from "src/core/ignoredPaths";
+import { getVaultNewFileFolderPath, isUserIgnoredPath } from "src/ignored-notes/ignoredPaths";
 
 export const IMPORT_SOURCE_PROPERTY = "my-palette-source";
 export const IMPORTED_AT_PROPERTY = "my-palette-imported-at";

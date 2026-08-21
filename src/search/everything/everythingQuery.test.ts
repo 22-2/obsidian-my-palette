@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildEverythingQuery } from "src/everything/everythingQuery";
+import { buildEverythingQuery } from "src/search/everything/everythingQuery";
 
 describe("buildEverythingQuery", () => {
 	it("limits Vault searches by root and extension", () => {

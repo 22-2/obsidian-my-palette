@@ -3,7 +3,7 @@ import {
 	sortFileMatches,
 	sortFilesWithoutQuery,
 	type SortableFileEntry,
-} from "src/providers/fileSorting";
+} from "src/search/file/fileSorting";
 
 function file(
 	path: string,

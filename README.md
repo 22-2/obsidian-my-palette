@@ -1,33 +1,21 @@
-# Obsidian Sample Plugin
+# My Palette
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+My Palette is a keyboard-first command palette for Obsidian with Everything 1.5a search support.
 
-This project uses Typescript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in Typescript Definition format, which contains TSDoc comments describing what it does.
+The plugin is written in TypeScript and built with Vite+. Source code is organized by feature under `src/`, with unit tests colocated next to pure search, settings, and ignored-note logic.
 
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
+## Development
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
+Requirements: Node.js and pnpm.
 
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+- Install dependencies with `vp install`.
+- Start the watch build with `vp dev`.
+- Run formatting and lint checks with `vp check`.
+- Run unit tests with `vp test --run`.
+- Run the TypeScript check with `pnpm check-types`.
+- Build a production bundle with `vp build`.
 
-## First time developing plugins?
-
-Quick starting guide for new plugin devs:
-
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+The Vite configuration copies the production bundle to `dist/` and the configured development Vault plugin directory.
 
 ## Releasing new releases
 
@@ -49,25 +37,18 @@ Quick starting guide for new plugin devs:
 
 ## How to use
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+- Clone this repository.
+- Run `vp install`.
+- Run `vp dev` while developing.
+- Enable or reload the plugin in Obsidian after the bundle is copied to the development Vault.
 
 ## Manually installing the plugin
 
 - Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
 
-## Improve code quality with eslint (optional)
+## Code quality
 
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code.
-- To use eslint with this project, make sure to install eslint from terminal:
-    - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-    - `eslint main.ts`
-    - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-    - `eslint .\src\`
+Formatting and linting are handled by Vite+ through `vp check`. Type checking and tests are separate commands so they can be run independently while refactoring.
 
 ## Funding URL
 

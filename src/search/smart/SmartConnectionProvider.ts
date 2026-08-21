@@ -1,7 +1,7 @@
 import { TFile, type App } from "obsidian";
 import fuzzysort from "fuzzysort";
 import type { SmartConnectionResult } from "src/model/results";
-import type { PaletteProvider, PaletteSearchRequest } from "src/providers/PaletteProvider";
+import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 
 interface SmartSource {
 	vec?: number[];

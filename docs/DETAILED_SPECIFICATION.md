@@ -435,7 +435,7 @@ http://127.0.0.1:51361/?search=<query>&json=1&count=100&path_column=1&attributes
 
 ### 9.3 Keybindings
 
-キー割り当ては action ID をキーとする JSON オブジェクトで保存する。設定画面では「既定値に戻す」を提供する。
+キーバインドはObsidianのコマンド設定へ委譲し、プラグイン独自の設定データとして保存しない。
 
 ## 10. データモデル
 
@@ -474,7 +474,7 @@ interface EverythingResult extends BaseResult {
 }
 
 interface MyPaletteSettings {
-	schemaVersion: 7;
+	schemaVersion: 8;
 	showLog: boolean;
 	rememberLastInput: boolean;
 	searchHistory: {
@@ -496,7 +496,6 @@ interface MyPaletteSettings {
 		requestTimeoutMs: number;
 		vaultExtensions: string[];
 	};
-	keybindings: Record<string, string[]>;
 	recentCommandIds: string[];
 }
 ```
@@ -520,37 +519,86 @@ interface MyPaletteSettings {
 src/
 ├── main.ts
 ├── settings.ts
+├── app/
+│   ├── createPaletteProviders.ts
+│   ├── openExternalMarkdown.ts
+│   ├── registerCommands.ts
+│   └── registerEvents.ts
+├── commands/
+│   ├── mocRelateds.ts
+│   └── mocRelatedsCore.ts
+├── ignored-notes/
+│   ├── ignoredNoteIndex.ts
+│   ├── ignoredNoteMaterializer.ts
+│   ├── ignoredPathMatching.ts
+│   └── ignoredPaths.ts
 ├── palette/
 │   ├── PaletteModal.ts
+│   ├── backgroundResultActions.ts
 │   ├── inputParser.ts
-│   ├── keybindings.ts
-│   └── resultActions.ts
-├── providers/
+│   ├── MoveFileModal.ts
+│   ├── openTargets.ts
+│   ├── resultPresentation.ts
+│   ├── resultActions.ts
+│   └── searchHistory.ts
+├── platform/
+│   ├── desktopAdapter.ts
+│   ├── pathClipboard.ts
+│   └── vscode.ts
+├── search/
 │   ├── PaletteProvider.ts
-│   ├── FileProvider.ts
-│   ├── CommandProvider.ts
-│   └── EverythingProvider.ts
-├── everything/
-│   └── EverythingHttpClient.ts
+│   ├── bookmark/
+│   │   └── BookmarkProvider.ts
+│   ├── command/
+│   │   ├── CommandProvider.ts
+│   │   └── commandSorting.ts
+│   ├── everything/
+│   │   ├── EverythingHttpClient.ts
+│   │   ├── EverythingProvider.ts
+│   │   └── everythingQuery.ts
+│   ├── file/
+│   │   ├── FileProvider.ts
+│   │   └── fileSorting.ts
+│   ├── related/
+│   │   └── RelatedFileProvider.ts
+│   └── smart/
+│       └── SmartConnectionProvider.ts
 ├── model/
 │   ├── results.ts
 │   └── settings.ts
-└── ui/
-    ├── ResultList.ts
-    └── statusMessage.ts
+├── settings/
+│   ├── mergeSettings.ts
+│   ├── settingsStore.ts
+│   └── settingTab.ts
+├── shared/
+│   ├── externalFiles.ts
+│   └── pathDisplay.ts
+├── ui/
+│   ├── baseSuggestModal.ts
+│   ├── searchHistorySuggest.ts
+│   └── selectionModal.ts
+└── views/
+    └── ExternalMarkdownView.ts
 ```
 
 ### 11.2 責務
 
-| コンポーネント         | 責務                                                   |
-| ---------------------- | ------------------------------------------------------ |
-| `main.ts`              | 設定ロード、コマンド登録、設定タブ登録、ライフサイクル |
-| `PaletteModal`         | 入力、モード遷移、選択状態、表示状態、世代番号管理     |
-| `inputParser`          | プレフィックス検出とクエリ抽出。副作用なし             |
-| Provider               | モード別検索。UI 要素を直接操作しない                  |
-| `EverythingHttpClient` | URL構築、認証、リクエスト中断、タイムアウト、JSON解析  |
-| `resultActions`        | モード別アクション実行                                 |
-| `settings.ts`          | 設定 UI、検証、マイグレーション                        |
+| コンポーネント               | 責務                                                  |
+| ---------------------------- | ----------------------------------------------------- |
+| `main.ts`                    | 設定ロード、Pluginライフサイクル、依存関係の組み立て  |
+| `app/registerCommands`       | Obsidianコマンドの登録と実行条件                      |
+| `app/registerEvents`         | ViewとVaultイベントの登録                             |
+| `app/createPaletteProviders` | Providerの生成とモードregistryの構築                  |
+| `PaletteModal`               | 入力、モード遷移、選択状態、表示状態、世代番号管理    |
+| `resultPresentation`         | 検索結果の表示形式とパスコピー対象の決定              |
+| `inputParser`                | プレフィックス検出とクエリ抽出。副作用なし            |
+| Provider                     | モード別検索。UI 要素を直接操作しない                 |
+| `EverythingHttpClient`       | URL構築、認証、リクエスト中断、タイムアウト、JSON解析 |
+| `resultActions`              | モード別アクション実行                                |
+| `settings/mergeSettings`     | 永続化データの検証、補完、履歴データの移行            |
+| `settings/settingTab`        | 設定 UI と入力値の反映                                |
+| `IgnoredNoteIndex`           | 除外ファイルを検索可能にする再構築可能なキャッシュ    |
+| `ExternalMarkdownView`       | Vault外または除外されたMarkdownの読み取り専用表示     |
 
 ### 11.3 非同期検索フロー
 

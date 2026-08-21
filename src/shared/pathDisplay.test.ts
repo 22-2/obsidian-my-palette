@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compactPath } from "src/core/pathDisplay";
+import { compactPath } from "src/shared/pathDisplay";
 
 describe("compactPath", () => {
 	it("keeps a Windows drive and the final folders", () => {

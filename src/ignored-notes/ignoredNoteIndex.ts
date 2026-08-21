@@ -5,7 +5,7 @@ import {
 	getVaultRootPath,
 	isUserIgnoreFilterRegex,
 	isUserIgnoredPathWithFilters,
-} from "src/core/ignoredPaths";
+} from "src/ignored-notes/ignoredPaths";
 
 const DATABASE_NAME = "my-palette-ignored-notes";
 const DATABASE_VERSION = 1;

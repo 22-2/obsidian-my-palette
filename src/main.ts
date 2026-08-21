@@ -1,28 +1,20 @@
-import { Notice, Plugin, type WorkspaceLeaf } from "obsidian";
+import { Plugin } from "obsidian";
 import log, { LogLevels } from "consola";
-import { DEFAULT_SETTINGS, mergeSettings, MyPaletteSettingTab } from "src/settings";
+import { DEFAULT_SETTINGS, MyPaletteSettingTab } from "src/settings";
 import type { MyPaletteSettings } from "src/model/settings";
+import {
+	createPaletteProviders,
+	type PaletteProviderInstances,
+} from "src/app/createPaletteProviders";
+import { registerPluginCommands } from "src/app/registerCommands";
+import { registerPluginEvents } from "src/app/registerEvents";
+import { openExternalMarkdown } from "src/app/openExternalMarkdown";
 import { PaletteModal } from "src/palette/PaletteModal";
-import { EverythingHttpClient } from "src/everything/EverythingHttpClient";
-import { FileProvider } from "src/providers/FileProvider";
-import { CommandProvider } from "src/providers/CommandProvider";
-import { EverythingProvider } from "src/providers/EverythingProvider";
-import { RelatedFileProvider } from "src/providers/RelatedFileProvider";
-import { BookmarkProvider } from "src/providers/BookmarkProvider";
-import { SmartConnectionProvider } from "src/providers/SmartConnectionProvider";
+import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
 import type { PaletteMode, SearchHistoryResult } from "src/model/results";
 import type { SearchHistoryCategory, SearchHistoryEntry } from "src/model/settings";
-import type { PaletteProvider } from "src/providers/PaletteProvider";
-import { MoveFileModal } from "src/palette/MoveFileModal";
-import { insertLinkToMocRelateds } from "src/commands/mocRelateds";
-import { EXTERNAL_MARKDOWN_VIEW_TYPE, ExternalMarkdownView } from "src/views/ExternalMarkdownView";
-import { getVaultFullPath } from "src/core/ignoredPaths";
-import { addCopyPathMenuItems, copyPathToClipboard } from "src/core/pathClipboard";
-import {
-	getSearchHistorySuggestions,
-	pruneStoredSearchHistory,
-	recordSearchHistory,
-} from "src/core/searchHistory";
+import { getSearchHistorySuggestions, recordSearchHistory } from "src/palette/searchHistory";
+import { loadPluginSettings, savePluginSettings } from "src/settings/settingsStore";
 import "../styles.css";
 
 const logger = log.withTag("MyPalette");
@@ -32,125 +24,35 @@ export default class MyPalettePlugin extends Plugin {
 	readonly everythingClient = new EverythingHttpClient((message, detail) =>
 		logger.debug(message, detail),
 	);
-	fileProvider!: FileProvider;
-	commandProvider!: CommandProvider;
-	everythingProvider!: EverythingProvider;
-	relatedFileProvider!: RelatedFileProvider;
-	bookmarkProvider!: BookmarkProvider;
-	smartConnectionProvider!: SmartConnectionProvider;
-	providers!: Record<PaletteMode, PaletteProvider>;
+	fileProvider!: PaletteProviderInstances["fileProvider"];
+	commandProvider!: PaletteProviderInstances["commandProvider"];
+	everythingProvider!: PaletteProviderInstances["everythingProvider"];
+	relatedFileProvider!: PaletteProviderInstances["relatedFileProvider"];
+	bookmarkProvider!: PaletteProviderInstances["bookmarkProvider"];
+	smartConnectionProvider!: PaletteProviderInstances["smartConnectionProvider"];
+	providers!: PaletteProviderInstances["providers"];
 	private rememberedPaletteQueries: Partial<Record<PaletteMode, string>> = {};
 	private activePaletteModal?: PaletteModal;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
 		this.initializeLogger();
-		this.registerView(EXTERNAL_MARKDOWN_VIEW_TYPE, (leaf) => new ExternalMarkdownView(leaf));
-		this.registerEvent(
-			this.app.workspace.on("file-menu", (menu, file) => {
-				const absolutePath = getVaultFullPath(this.app, file.path);
-				addCopyPathMenuItems(
-					menu,
-					{ relativePath: file.path, absolutePath: absolutePath ?? undefined },
-					(path) => void copyPathToClipboard(path),
-				);
-			}),
-		);
-		this.fileProvider = new FileProvider(
-			this.app,
-			() => this.settings.everything.vaultExtensions,
-			(message, detail) => logger.debug(message, detail),
-		);
-		this.commandProvider = new CommandProvider(this.app, () => this.settings.recentCommandIds);
-		this.everythingProvider = new EverythingProvider(
-			this.app,
-			this.everythingClient,
-			() => this.settings.everything,
-		);
-		this.relatedFileProvider = new RelatedFileProvider(this.app);
-		this.bookmarkProvider = new BookmarkProvider(this.app);
-		this.smartConnectionProvider = new SmartConnectionProvider(this.app);
-		this.providers = {
-			file: this.fileProvider,
-			command: this.commandProvider,
-			everything: this.everythingProvider,
-			link: this.relatedFileProvider,
-			backlink: this.relatedFileProvider,
-			bookmark: this.bookmarkProvider,
-			smart: this.smartConnectionProvider,
-		};
+		registerPluginEvents(this);
+		const providers = createPaletteProviders(this.app, this.everythingClient, {
+			vaultExtensions: () => this.settings.everything.vaultExtensions,
+			recentCommandIds: () => this.settings.recentCommandIds,
+			everythingSettings: () => this.settings.everything,
+			log: (message, detail) => logger.debug(message, detail),
+		});
+		this.fileProvider = providers.fileProvider;
+		this.commandProvider = providers.commandProvider;
+		this.everythingProvider = providers.everythingProvider;
+		this.relatedFileProvider = providers.relatedFileProvider;
+		this.bookmarkProvider = providers.bookmarkProvider;
+		this.smartConnectionProvider = providers.smartConnectionProvider;
+		this.providers = providers.providers;
 		this.addSettingTab(new MyPaletteSettingTab(this));
-		this.addCommand({
-			id: "open",
-			name: "Open Recent palette",
-			callback: () => this.openPalette(this.getRememberedPaletteQuery("file")),
-		});
-		this.addCommand({
-			id: "open-command-list",
-			name: "Open command list",
-			callback: () => this.openPalette(this.commandPaletteInitialInput()),
-		});
-		this.addCommand({
-			id: "show-current-line-number",
-			name: "Show current line number",
-			checkCallback: (checking) => {
-				const editor = this.app.workspace.activeEditor?.editor;
-				if (checking) return Boolean(editor);
-				if (editor) new Notice(`Line ${editor.getCursor().line + 1}`);
-			},
-		});
-		this.addCommand({
-			id: "link-search",
-			name: "Link search",
-			checkCallback: (checking) => {
-				if (checking) return Boolean(this.app.workspace.getActiveFile());
-				this.openPalette("", "link");
-			},
-		});
-		this.addCommand({
-			id: "backlink-search",
-			name: "Backlink search",
-			checkCallback: (checking) => {
-				if (checking) return Boolean(this.app.workspace.getActiveFile());
-				this.openPalette("", "backlink");
-			},
-		});
-		this.addCommand({
-			id: "bookmark-search",
-			name: "Bookmark search",
-			callback: () => this.openPalette("", "bookmark"),
-		});
-		this.addCommand({
-			id: "smart-connections-search",
-			name: "Smart Connections search",
-			checkCallback: (checking) => {
-				if (checking) return Boolean(this.app.workspace.getActiveFile());
-				this.openPalette("", "smart");
-			},
-		});
-		this.addCommand({
-			id: "move-file-to-another-folder",
-			name: "Move file to another folder",
-			checkCallback: (checking) => {
-				const file = this.app.workspace.getActiveFile();
-				if (checking) return Boolean(file);
-				if (file) new MoveFileModal(this.app, file).open();
-			},
-		});
-		this.addCommand({
-			id: "insert-link-to-moc-relateds",
-			name: "Insert link to MOC Relateds",
-			checkCallback: (checking) => {
-				const canRun = Boolean(this.app.workspace.getActiveFile());
-				if (checking) return canRun;
-				void insertLinkToMocRelateds(this);
-			},
-		});
-		this.addCommand({
-			id: "rebuild-ignored-note-index",
-			name: "Rebuild ignored note index",
-			callback: () => void this.fileProvider.rebuildIgnoredIndex(),
-		});
+		registerPluginCommands(this);
 	}
 
 	openPalette(
@@ -183,50 +85,7 @@ export default class MyPalettePlugin extends Plugin {
 		autoFocus = true,
 		active = true,
 	): Promise<void> {
-		const effectiveAutoFocus = autoFocus && active;
-		const externalLeaves = this.app.workspace.getLeavesOfType(EXTERNAL_MARKDOWN_VIEW_TYPE);
-		const existing = externalLeaves.find(
-			(leaf) =>
-				leaf.view instanceof ExternalMarkdownView &&
-				leaf.view.getFilePath().toLocaleLowerCase() === absolutePath.toLocaleLowerCase(),
-		);
-		if (existing) {
-			await existing.setViewState({
-				type: EXTERNAL_MARKDOWN_VIEW_TYPE,
-				active,
-				state: {
-					path: absolutePath,
-					autoFocus: effectiveAutoFocus,
-					preview: !autoFocus && active,
-				},
-			});
-			if (active) this.app.workspace.revealLeaf(existing);
-			return;
-		}
-		const previewLeaf = !autoFocus
-			? externalLeaves.find(
-					(leaf) => leaf.view instanceof ExternalMarkdownView && leaf.view.isPreview(),
-				)
-			: undefined;
-		const leaf: WorkspaceLeaf =
-			previewLeaf ??
-			(action === "alternate"
-				? this.app.workspace.getLeaf("tab")
-				: action === "horizontal"
-					? this.app.workspace.getLeaf("split", "horizontal")
-					: action === "vertical"
-						? this.app.workspace.getLeaf("split", "vertical")
-						: this.app.workspace.getLeaf(false));
-		await leaf.setViewState({
-			type: EXTERNAL_MARKDOWN_VIEW_TYPE,
-			active,
-			state: {
-				path: absolutePath,
-				autoFocus: effectiveAutoFocus,
-				preview: !autoFocus && active,
-			},
-		});
-		if (active) this.app.workspace.revealLeaf(leaf);
+		await openExternalMarkdown(this, absolutePath, action, autoFocus, active);
 	}
 
 	onunload(): void {
@@ -242,26 +101,11 @@ export default class MyPalettePlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		const data = await this.loadData();
-		this.settings = mergeSettings(data);
-		this.settings.searchHistory.entries = pruneStoredSearchHistory(
-			this.settings.searchHistory.entries,
-			Date.now(),
-			this.settings.searchHistory.daysToKeep,
-		);
-		const storedSchemaVersion =
-			data && typeof data === "object" && "schemaVersion" in data
-				? (data as { schemaVersion?: unknown }).schemaVersion
-				: undefined;
-		if (
-			typeof storedSchemaVersion === "number" &&
-			storedSchemaVersion < this.settings.schemaVersion
-		)
-			await this.saveSettings();
+		await loadPluginSettings(this);
 	}
 
 	async saveSettings(): Promise<void> {
-		await this.saveData(this.settings);
+		await savePluginSettings(this);
 	}
 
 	async testEverythingConnection(): Promise<{ ok: boolean; message: string }> {
@@ -353,12 +197,12 @@ export default class MyPalettePlugin extends Plugin {
 		this.rememberedPaletteQueries = {};
 	}
 
-	private getRememberedPaletteQuery(mode: PaletteMode): string {
+	getRememberedPaletteQuery(mode: PaletteMode): string {
 		if (!this.settings.rememberLastInput) return "";
 		return this.rememberedPaletteQueries[mode] ?? "";
 	}
 
-	private commandPaletteInitialInput(): string {
+	commandPaletteInitialInput(): string {
 		const prefix = this.settings.prefixes.command.trimEnd();
 		const query = this.getRememberedPaletteQuery("command");
 		return `${prefix} ${query}`;

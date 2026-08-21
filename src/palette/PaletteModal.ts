@@ -1,24 +1,13 @@
-import { Menu, Notice, setIcon, TFile, type App } from "obsidian";
-import {
-	getVaultFullPath,
-	isAbsolutePathUserIgnored,
-	isUserIgnoredPath,
-} from "src/core/ignoredPaths";
-import { getDesktopAdapter } from "src/core/desktopAdapter";
-import { isMarkdownPath } from "src/core/externalFiles";
-import { compactPath } from "src/core/pathDisplay";
+import { Menu, setIcon, type App } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import type { EverythingScope, PaletteMode, PaletteResult } from "src/model/results";
 import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
 import { SearchHistorySuggest } from "src/ui/searchHistorySuggest";
 import { getSearchHistoryCategory, parseInput } from "src/palette/inputParser";
+import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
-import {
-	addCopyPathMenuItems,
-	copyPathToClipboard,
-	type CopyablePaths,
-} from "src/core/pathClipboard";
-import { resolveExternalOpenTarget } from "src/palette/openTargets";
+import { getCopyablePaths, toPaletteSelectionItem } from "src/palette/resultPresentation";
+import { addCopyPathMenuItems, copyPathToClipboard } from "src/platform/pathClipboard";
 
 export class PaletteModal extends SelectionModal<PaletteResult> {
 	private generation = 0;
@@ -173,54 +162,9 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override toSelectionItem(result: PaletteResult): SelectionItem {
-		if (result.mode === "search-history") {
-			return {
-				label: result.primary,
-				description: result.secondary,
-				icon: result.icon,
-			};
-		}
-		const isExternalMarkdown =
-			result.mode === "everything" &&
-			result.kind === "file" &&
-			isMarkdownPath(result.absolutePath) &&
-			(!result.vaultPath ||
-				!(this.app.vault.getAbstractFileByPath(result.vaultPath) instanceof TFile));
-		const ignoredMarkdownPath =
-			result.mode === "file" && result.ignored
-				? getVaultFullPath(this.app, result.vaultPath)
-				: undefined;
-		const isIgnoredMarkdown =
-			typeof ignoredMarkdownPath === "string" && isMarkdownPath(ignoredMarkdownPath);
-		const everythingOpensInCode =
-			result.mode === "everything" &&
-			(isAbsolutePathUserIgnored(this.app, result.absolutePath) ||
-				(Boolean(result.vaultPath) &&
-					!(
-						this.app.vault.getAbstractFileByPath(result.vaultPath ?? "") instanceof
-						TFile
-					)));
-		const usesPath = result.mode === "file" || result.mode === "everything";
-		return {
-			label: result.primary,
-			description: usesPath ? compactPath(result.secondary) : result.secondary,
-			descriptionTitle: usesPath ? result.secondary : undefined,
-			icon: result.icon,
-			badge:
-				isExternalMarkdown || isIgnoredMarkdown
-					? this.plugin.settings.openExternalMarkdownInObsidian
-						? "ReadOnly"
-						: "VS Code"
-					: result.mode === "smart"
-						? `${Math.round(result.score * 100)}%`
-						: result.mode === "file" && result.ignored
-							? "VS Code"
-							: everythingOpensInCode
-								? "VS Code"
-								: result.mode === "everything" && result.kind === "folder"
-									? "Folder"
-									: undefined,
-		};
+		return toPaletteSelectionItem(this.app, result, {
+			openExternalMarkdownInObsidian: this.plugin.settings.openExternalMarkdownInObsidian,
+		});
 	}
 
 	protected override async onItemActivated(result: PaletteResult, _event: Event): Promise<void> {
@@ -234,7 +178,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		}
 		const activeLeaf = this.app.workspace.activeLeaf;
 		try {
-			await this.openResultInBackground(result);
+			await openPaletteResultInBackground(this.plugin, result);
 		} finally {
 			if (activeLeaf && this.app.workspace.activeLeaf !== activeLeaf)
 				this.app.workspace.setActiveLeaf(activeLeaf, { focus: false });
@@ -277,7 +221,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 					.onClick(() => void this.activatePaletteResult("primary", result)),
 			);
 		} else {
-			const paths = this.getCopyablePaths(result);
+			const paths = getCopyablePaths(this.app, result);
 			menu.addItem((item) =>
 				item
 					.setTitle("Open")
@@ -288,7 +232,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				item
 					.setTitle("Open in new tab (background)")
 					.setIcon("panel-top-open")
-					.onClick(() => void this.openResultInBackground(result)),
+					.onClick(() => void openPaletteResultInBackground(this.plugin, result)),
 			);
 			menu.addItem((item) =>
 				item
@@ -315,28 +259,6 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		}
 		menu.setParentElement(this.modalEl);
 		menu.showAtMouseEvent(event);
-	}
-
-	private getCopyablePaths(
-		result: Exclude<PaletteResult, { mode: "command" | "search-history" }>,
-	): CopyablePaths {
-		// Everything folders are navigable results, but only file results should expose file-path actions.
-		if (result.mode === "everything") {
-			return result.kind === "file"
-				? { relativePath: result.vaultPath, absolutePath: result.absolutePath }
-				: {};
-		}
-		const file = "file" in result ? result.file : undefined;
-		if (result.mode === "file")
-			return {
-				relativePath: result.vaultPath,
-				absolutePath: getVaultFullPath(this.app, result.vaultPath) ?? undefined,
-			};
-		if (!file) return {};
-		return {
-			relativePath: file.path,
-			absolutePath: getVaultFullPath(this.app, file.path) ?? undefined,
-		};
 	}
 
 	override async getSuggestions(input: string): Promise<PaletteResult[]> {
@@ -542,81 +464,6 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			if (this.activeMenu === menu) this.activeMenu = undefined;
 		});
 		return menu;
-	}
-
-	private async openResultInBackground(result: PaletteResult): Promise<void> {
-		if (result.mode === "command") return;
-		if (result.mode === "bookmark") {
-			if (result.kind === "search" && result.query) {
-				await this.app.workspace.openLinkText(result.query, "", "tab", { active: false });
-				return;
-			}
-			if (result.file) await this.openFileInBackground(result.file);
-			return;
-		}
-		if (result.mode === "file") {
-			const ignored = result.ignored || isUserIgnoredPath(this.app, result.vaultPath);
-			if (ignored) {
-				const absolutePath = getVaultFullPath(this.app, result.vaultPath);
-				if (!absolutePath) {
-					new Notice("This vault adapter cannot resolve an absolute path.");
-					return;
-				}
-				try {
-					await getDesktopAdapter(this.app).fs.promises.stat(absolutePath);
-				} catch {
-					new Notice("The selected path no longer exists.");
-					return;
-				}
-				const target = resolveExternalOpenTarget(absolutePath, {
-					openMarkdownInObsidian: this.plugin.settings.openExternalMarkdownInObsidian,
-					ignored: true,
-				});
-				if (target.kind === "readonly-markdown") {
-					await this.plugin.openExternalMarkdown(absolutePath, "primary", true, false);
-					return;
-				}
-				new Notice("This item cannot be opened in a background Obsidian tab.");
-				return;
-			}
-			const file = this.app.vault.getAbstractFileByPath(result.vaultPath);
-			if (file instanceof TFile) await this.openFileInBackground(file);
-			else new Notice("The file no longer exists.");
-			return;
-		}
-		if (result.mode === "link" || result.mode === "backlink" || result.mode === "smart") {
-			await this.openFileInBackground(result.file);
-			return;
-		}
-		if (result.mode !== "everything") return;
-		try {
-			await getDesktopAdapter(this.app).fs.promises.stat(result.absolutePath);
-		} catch {
-			new Notice("The selected path no longer exists.");
-			return;
-		}
-		if (result.vaultPath) {
-			const file = this.app.vault.getAbstractFileByPath(result.vaultPath);
-			if (file instanceof TFile) {
-				await this.openFileInBackground(file);
-				return;
-			}
-		}
-		const target = resolveExternalOpenTarget(result.absolutePath, {
-			openMarkdownInObsidian: this.plugin.settings.openExternalMarkdownInObsidian,
-			ignored:
-				Boolean(result.vaultPath) ||
-				isAbsolutePathUserIgnored(this.app, result.absolutePath),
-		});
-		if (target.kind === "readonly-markdown") {
-			await this.plugin.openExternalMarkdown(result.absolutePath, "primary", true, false);
-			return;
-		}
-		new Notice("This item cannot be opened in a background Obsidian tab.");
-	}
-
-	private async openFileInBackground(file: TFile): Promise<void> {
-		await this.app.workspace.getLeaf("tab").openFile(file, { active: false });
 	}
 
 	private recordCurrentSearch(): void {

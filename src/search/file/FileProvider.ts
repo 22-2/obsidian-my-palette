@@ -1,10 +1,10 @@
 import { type App, type EventRef, type TFile } from "obsidian";
 import fuzzysort from "fuzzysort";
-import { getUserIgnoreFilters, isUserIgnoredPathWithFilters } from "src/core/ignoredPaths";
-import { IgnoredNoteIndex, type IgnoredNoteIndexLogger } from "src/core/ignoredNoteIndex";
+import { getUserIgnoreFilters, isUserIgnoredPathWithFilters } from "src/ignored-notes/ignoredPaths";
+import { IgnoredNoteIndex, type IgnoredNoteIndexLogger } from "src/ignored-notes/ignoredNoteIndex";
 import type { FileResult } from "src/model/results";
-import { sortFileMatches, sortFilesWithoutQuery } from "src/providers/fileSorting";
-import type { PaletteProvider, PaletteSearchRequest } from "src/providers/PaletteProvider";
+import { sortFileMatches, sortFilesWithoutQuery } from "src/search/file/fileSorting";
+import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 
 interface SearchEntry {
 	file?: TFile;

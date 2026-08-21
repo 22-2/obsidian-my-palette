@@ -1,4 +1,4 @@
-import { isMarkdownPath } from "src/core/externalFiles";
+import { isMarkdownPath } from "src/shared/externalFiles";
 
 /**
  * Describes where a path should be opened after a search result has been

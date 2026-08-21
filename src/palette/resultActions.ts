@@ -3,8 +3,8 @@ import {
 	getVaultFullPath,
 	isAbsolutePathUserIgnored,
 	isUserIgnoredPath,
-} from "src/core/ignoredPaths";
-import { getDesktopAdapter } from "src/core/desktopAdapter";
+} from "src/ignored-notes/ignoredPaths";
+import { getDesktopAdapter } from "src/platform/desktopAdapter";
 import { resolveExternalOpenTarget, type ExternalOpenTarget } from "src/palette/openTargets";
 
 declare const electron: {
@@ -15,7 +15,7 @@ declare const electron: {
 	};
 };
 import type { EverythingResult, PaletteResult } from "src/model/results";
-import { openPathInCode } from "src/core/vscode";
+import { openPathInCode } from "src/platform/vscode";
 
 export type ActionKind = "primary" | "alternate" | "vertical" | "horizontal";
 export interface ActionOutcome {
