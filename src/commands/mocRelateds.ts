@@ -1,11 +1,14 @@
-import { Notice, TFile, type App } from "obsidian";
+import { Menu, Notice, TFile, type App } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import type { FileResult } from "src/model/results";
 import { openSelectionModal, type SelectionItem } from "src/ui/selectionModal";
 import { addLinkToMocRelateds } from "src/commands/mocRelatedsCore";
-import { isUserIgnoredPath } from "src/core/ignoredPaths";
+import { getVaultFullPath, isUserIgnoredPath } from "src/core/ignoredPaths";
 import { materializeIgnoredNote } from "src/core/ignoredNoteMaterializer";
+import { addCopyPathMenuItems, copyPathToClipboard } from "src/core/pathClipboard";
+import { isMarkdownPath } from "src/core/externalFiles";
 import { parseInput } from "src/palette/inputParser";
+import { runResultAction, type ActionKind } from "src/palette/resultActions";
 
 interface RelatedCandidate {
 	path: string;
@@ -61,6 +64,117 @@ function relationPaths(
 		incoming.add(path);
 	}
 	return { outgoing, incoming };
+}
+
+function toCandidateResult(plugin: MyPalettePlugin, item: SelectionItem): FileResult | undefined {
+	if (typeof item.value !== "string") return undefined;
+	const vaultPath = item.value;
+	const file = plugin.app.vault.getAbstractFileByPath(vaultPath);
+	const ignored = isUserIgnoredPath(plugin.app, vaultPath);
+	if (!(file instanceof TFile) && !ignored) return undefined;
+	return {
+		id: vaultPath,
+		mode: "file",
+		primary: item.label,
+		secondary: vaultPath,
+		icon: "file-text",
+		vaultPath,
+		file: file instanceof TFile ? file : undefined,
+		ignored,
+	};
+}
+
+async function runCandidateAction(
+	plugin: MyPalettePlugin,
+	result: FileResult,
+	action: ActionKind,
+): Promise<void> {
+	const outcome = await runResultAction(plugin.app, result, action, {
+		openExternalMarkdownInObsidian: plugin.settings.openExternalMarkdownInObsidian,
+		openExternalMarkdown: (absolutePath, openAction) =>
+			plugin.openExternalMarkdown(absolutePath, openAction),
+	});
+	if (!outcome.close && outcome.message) new Notice(outcome.message);
+}
+
+async function openCandidateInBackground(
+	plugin: MyPalettePlugin,
+	result: FileResult,
+): Promise<void> {
+	if (result.ignored) {
+		const absolutePath = getVaultFullPath(plugin.app, result.vaultPath);
+		if (!absolutePath) {
+			new Notice("This vault adapter cannot resolve an absolute path.");
+			return;
+		}
+		if (isMarkdownPath(absolutePath) && plugin.settings.openExternalMarkdownInObsidian) {
+			await plugin.openExternalMarkdown(absolutePath, "primary", true, false);
+			return;
+		}
+		new Notice("This item cannot be opened in a background Obsidian tab.");
+		return;
+	}
+	if (result.file) {
+		await plugin.app.workspace.getLeaf("tab").openFile(result.file, { active: false });
+		return;
+	}
+	new Notice("The file no longer exists.");
+}
+
+function showCandidateMenu(
+	plugin: MyPalettePlugin,
+	item: SelectionItem,
+	event: MouseEvent,
+	close: () => void,
+): void {
+	const result = toCandidateResult(plugin, item);
+	if (!result) return;
+	const menu = new Menu();
+	menu.addItem((menuItem) =>
+		menuItem
+			.setTitle("Open")
+			.setIcon("external-link")
+			.onClick(() => {
+				close();
+				void runCandidateAction(plugin, result, "primary");
+			}),
+	);
+	menu.addItem((menuItem) =>
+		menuItem
+			.setTitle("Open in new tab (background)")
+			.setIcon("panel-top-open")
+			.onClick(() => {
+				close();
+				void openCandidateInBackground(plugin, result);
+			}),
+	);
+	menu.addItem((menuItem) =>
+		menuItem
+			.setTitle("Open side by side")
+			.setIcon("separator-vertical")
+			.onClick(() => {
+				close();
+				void runCandidateAction(plugin, result, "vertical");
+			}),
+	);
+	menu.addItem((menuItem) =>
+		menuItem
+			.setTitle("Open below")
+			.setIcon("separator-horizontal")
+			.onClick(() => {
+				close();
+				void runCandidateAction(plugin, result, "horizontal");
+			}),
+	);
+	addCopyPathMenuItems(
+		menu,
+		{
+			relativePath: result.vaultPath,
+			absolutePath: getVaultFullPath(plugin.app, result.vaultPath) ?? undefined,
+		},
+		(path) => void copyPathToClipboard(path),
+	);
+	menu.showAtMouseEvent(event);
 }
 
 async function openTargetFileSelector(
@@ -119,6 +233,7 @@ async function openTargetFileSelector(
 				);
 			}
 		},
+		(item, event, close) => showCandidateMenu(plugin, item, event, close),
 	);
 }
 

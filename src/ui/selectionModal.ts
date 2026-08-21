@@ -83,8 +83,17 @@ export function openSelectionModal<T extends string | SelectionItem>(
 	props: SuggestModalProps<T>,
 	app: App,
 	onChoose: (item: T) => void | Promise<void>,
+	onContextMenu?: (item: T, event: MouseEvent, close: () => void) => void,
 ): void {
 	class CallbackSelectionModal extends SelectionModal<T> {
+		protected override handlesSuggestionContextMenu(): boolean {
+			return onContextMenu !== undefined;
+		}
+
+		protected override onSuggestionContextMenu(item: T, event: MouseEvent): void {
+			onContextMenu?.(item, event, () => this.close());
+		}
+
 		protected override async onItemActivated(item: T): Promise<void> {
 			this.close();
 			await onChoose(item);
