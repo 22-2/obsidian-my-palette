@@ -49,7 +49,9 @@ export function sortFilesWithoutQuery<T extends SortableFileEntry>(
 	entries: T[],
 	recent: ReadonlyMap<string, number>,
 ): T[] {
-	return entries.sort((a, b) => compareRecent(a, b, recent) || compareFallback(a, b));
+	return entries.sort(
+		(a, b) => compareIgnored(a, b) || compareRecent(a, b, recent) || compareFallback(a, b),
+	);
 }
 
 export function sortFileMatches<T extends SortableFileEntry>(

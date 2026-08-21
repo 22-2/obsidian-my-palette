@@ -84,4 +84,12 @@ describe("file sorting", () => {
 			"x/alpha.md",
 		]);
 	});
+
+	it("puts ignored notes first for an empty include-ignored listing", () => {
+		const entries = [file("notes/new.md", 100, [], false), file("archive/old.md", 1, [], true)];
+
+		const sorted = sortFilesWithoutQuery(entries, new Map());
+
+		expect(sorted.map(({ path }) => path)).toEqual(["archive/old.md", "notes/new.md"]);
+	});
 });
