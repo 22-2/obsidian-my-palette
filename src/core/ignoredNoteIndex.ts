@@ -98,6 +98,15 @@ function parseAliases(content: string): string[] {
 	}
 }
 
+function isMissingPathError(error: unknown): boolean {
+	return (
+		typeof error === "object" &&
+		error !== null &&
+		"code" in error &&
+		(error as { code?: unknown }).code === "ENOENT"
+	);
+}
+
 async function mapWithConcurrency<T, R>(
 	items: readonly T[],
 	concurrency: number,
@@ -251,6 +260,13 @@ export class IgnoredNoteIndex {
 			visited.add(folder);
 			try {
 				const stat = await adapter.stat(folder);
+				// Ignore filters can outlive a moved or deleted folder. Do not call
+				// list() for a missing root, because that turns a stale setting into
+				// an avoidable ENOENT scan error.
+				if (!stat) {
+					this.log("Skipped missing ignored folder", { folder });
+					continue;
+				}
 				if (stat?.type === "file") {
 					files.push(folder);
 					continue;
@@ -259,6 +275,10 @@ export class IgnoredNoteIndex {
 				files.push(...listing.files);
 				folders.push(...listing.folders);
 			} catch (error) {
+				if (isMissingPathError(error)) {
+					this.log("Skipped missing ignored folder", { folder });
+					continue;
+				}
 				this.log("Failed to list ignored folder", { folder, error });
 			}
 		}
