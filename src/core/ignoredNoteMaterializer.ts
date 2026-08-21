@@ -39,11 +39,32 @@ function sourceFromFrontmatter(content: string): string | undefined {
 
 async function ensureFolder(app: App, folderPath: string): Promise<void> {
 	if (!folderPath) return;
+	const adapter = app.vault.adapter;
 	let current = "";
 	for (const segment of folderPath.split("/").filter(Boolean)) {
 		current = current ? `${current}/${segment}` : segment;
-		if (app.vault.getFolderByPath(current)) continue;
-		await app.vault.createFolder(current);
+		let stat: Awaited<ReturnType<typeof adapter.stat>> = null;
+		try {
+			stat = await adapter.stat(current);
+		} catch {
+			// A missing path is created below; adapters may report it by throwing
+			// instead of returning null.
+		}
+		if (stat?.type === "folder" || app.vault.getFolderByPath(current)) continue;
+		if (stat?.type === "file")
+			throw new Error(`Cannot create import folder because a file exists at ${current}.`);
+		try {
+			await app.vault.createFolder(current);
+		} catch (error) {
+			// Hidden folders can be present on disk without a TFolder model entry;
+			// re-check the adapter so an idempotent import does not fail on them.
+			try {
+				if ((await adapter.stat(current))?.type === "folder") continue;
+			} catch {
+				// Preserve the original createFolder error when the path is still unknown.
+			}
+			throw error;
+		}
 	}
 }
 
