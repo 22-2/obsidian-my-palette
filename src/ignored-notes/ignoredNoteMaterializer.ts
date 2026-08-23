@@ -153,27 +153,16 @@ export async function materializeIgnoredNote(
 	// An empty newFileFolderPath means Vault root; use a dedicated fallback so an
 	// ignored source is never copied over itself when the setting is unset.
 	const destinationFolder = getVaultNewFileFolderPath(app) || "_Imported";
-	const relativeSource =
-		normalizedSourcePath === destinationFolder
-			? fileName(normalizedSourcePath)
-			: normalizedSourcePath.startsWith(`${destinationFolder}/`)
-				? normalizedSourcePath.slice(destinationFolder.length + 1)
-				: normalizedSourcePath;
-	// Obsidian does not expose files beneath dot-folders as TFiles. Rename only
-	// those copied path segments so the imported note can participate in links.
+	// MOC links should leave imported notes directly in the configured folder;
+	// mirroring the ignored source directories would create an unexpected nested
+	// tree beneath the user's default save destination.
 	const destination = visibleImportPath(
-		normalizePath([destinationFolder, relativeSource].filter(Boolean).join("/")),
+		normalizePath(
+			[destinationFolder, fileName(normalizedSourcePath)].filter(Boolean).join("/"),
+		),
 	);
-	const safeDestination =
-		destination === normalizedSourcePath
-			? normalizePath(`${destinationFolder}/_Imported/${relativeSource}`)
-			: destination;
-	await ensureFolder(app, safeDestination.slice(0, safeDestination.lastIndexOf("/")));
-	const destinationCandidate = await findAvailablePath(
-		app,
-		safeDestination,
-		normalizedSourcePath,
-	);
+	await ensureFolder(app, destination.slice(0, destination.lastIndexOf("/")));
+	const destinationCandidate = await findAvailablePath(app, destination, normalizedSourcePath);
 	if (destinationCandidate.existing) return destinationCandidate.existing;
 	const importedAt = new Date().toISOString();
 	const importedFile = await app.vault.create(

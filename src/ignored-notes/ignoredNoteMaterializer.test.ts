@@ -124,12 +124,12 @@ describe("materializeIgnoredNote", () => {
 		log.mockClear();
 	});
 
-	it("creates an imported note with source metadata", async () => {
+	it("creates an imported note directly under the configured folder", async () => {
 		const state = createFakeVault("ignored/note.md", "# Note");
 
 		const imported = await materializeIgnoredNote(state.app, "ignored/note.md", log);
 
-		expect(imported.path).toBe("Imported/ignored/note.md");
+		expect(imported.path).toBe("Imported/note.md");
 		expect(state.contents.get(imported.path)).toMatch(
 			/^---\nmy-palette-source: "ignored\/note\.md"\nmy-palette-imported-at: ".+"\n---\n# Note$/,
 		);
@@ -137,7 +137,7 @@ describe("materializeIgnoredNote", () => {
 			"Imported ignored note",
 			expect.objectContaining({
 				sourcePath: "ignored/note.md",
-				destinationPath: "Imported/ignored/note.md",
+				destinationPath: "Imported/note.md",
 			}),
 		);
 	});
@@ -152,16 +152,16 @@ describe("materializeIgnoredNote", () => {
 		expect(state.createCount).toBe(1);
 	});
 
-	it("uses a deterministic suffix for a collision and exposes dot-folders", async () => {
+	it("uses a deterministic suffix for a flattened collision", async () => {
 		const state = createFakeVault(".private/note.md", "# Private");
 		addExistingFile(
 			state,
-			"Imported/_hidden-private/note.md",
+			"Imported/note.md",
 			'---\nmy-palette-source: "other/note.md"\n---\n# Other',
 		);
 
 		const imported = await materializeIgnoredNote(state.app, ".private/note.md", log);
 
-		expect(imported.path).toBe("Imported/_hidden-private/note (imported 1).md");
+		expect(imported.path).toBe("Imported/note (imported 1).md");
 	});
 });
