@@ -1,8 +1,8 @@
 import { type App } from "obsidian";
-import fuzzysort from "fuzzysort";
 import type { CommandResult } from "src/model/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { type Command, sortCommandMatches } from "src/search/command/commandSorting";
+import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 
 export class CommandProvider implements PaletteProvider<CommandResult> {
 	constructor(
@@ -19,12 +19,10 @@ export class CommandProvider implements PaletteProvider<CommandResult> {
 		const recent = new Map(this.recents().map((id, index) => [id, index]));
 		const matched = query
 			? sortCommandMatches(
-					fuzzysort
-						.go(query, commands, { key: (command) => command.name })
-						.map((match) => ({
-							command: match.obj,
-							fuzzyScore: match.score,
-						})),
+					searchFuzzyQuery(query, commands, [(command) => command.name]).map((match) => ({
+						command: match.obj,
+						fuzzyScore: match.score,
+					})),
 					query,
 				)
 			: commands;

@@ -169,7 +169,10 @@ Obsidian が保持する「最近開いたファイル」を新しい順で最�
 
 #### 入力あり
 
-- Obsidian の fuzzy search ユーティリティを使用する。
+- fuzzysort による fuzzy search を使用する。
+- 空白で区切った語は AND 条件とし、すべての語に一致する項目だけを表示する。
+- `|` で区切った条件は OR 条件とし、いずれかの条件に一致する項目を表示する。
+- AND / OR 検索は File、Command、Link、Backlink、Bookmark、Smart Connections モードに適用する。Everything モードのクエリは Everything 自身の検索構文として無変換で渡す。
 - ファイル名一致をパス一致より優先する。
 - 完全な前方一致を部分一致より優先する。
 - 同点の場合は最近開いた順、次に相対パス昇順とする。

@@ -1,7 +1,7 @@
 import { TFile, type App } from "obsidian";
-import fuzzysort from "fuzzysort";
 import type { BookmarkResult } from "src/model/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
+import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 
 interface BookmarkItem {
 	type: "file" | "search" | "group" | string;
@@ -29,11 +29,10 @@ export class BookmarkProvider implements PaletteProvider<BookmarkResult> {
 		).internalPlugins?.getEnabledPluginById("bookmarks");
 		const results = this.flatten(plugin?.items ?? []);
 		if (!query.trim()) return results;
-		return fuzzysort
-			.go(query, results, {
-				keys: [(result) => result.primary, (result) => result.secondary],
-			})
-			.map(({ obj }) => obj);
+		return searchFuzzyQuery(query, results, [
+			(result) => result.primary,
+			(result) => result.secondary,
+		]).map(({ obj }) => obj);
 	}
 
 	private flatten(items: BookmarkItem[], groupPath = ""): BookmarkResult[] {

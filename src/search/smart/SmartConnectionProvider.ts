@@ -1,7 +1,7 @@
 import { TFile, type App } from "obsidian";
-import fuzzysort from "fuzzysort";
 import type { SmartConnectionResult } from "src/model/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
+import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 
 interface SmartSource {
 	vec?: number[];
@@ -56,11 +56,10 @@ export class SmartConnectionProvider implements PaletteProvider<SmartConnectionR
 			];
 		});
 		if (!query.trim()) return results;
-		return fuzzysort
-			.go(query, results, {
-				keys: [(result) => result.primary, (result) => result.secondary],
-			})
-			.map(({ obj }) => obj);
+		return searchFuzzyQuery(query, results, [
+			(result) => result.primary,
+			(result) => result.secondary,
+		]).map(({ obj }) => obj);
 	}
 
 	private environment(): SmartConnectionsEnvironment | undefined {

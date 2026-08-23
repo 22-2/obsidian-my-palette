@@ -1,9 +1,9 @@
 import { type App, type EventRef, type TFile } from "obsidian";
-import fuzzysort from "fuzzysort";
 import { getUserIgnoreFilters, isUserIgnoredPathWithFilters } from "src/ignored-notes/ignoredPaths";
 import { IgnoredNoteIndex, type IgnoredNoteIndexLogger } from "src/ignored-notes/ignoredNoteIndex";
 import type { FileResult } from "src/model/results";
 import { sortFileMatches, sortFilesWithoutQuery } from "src/search/file/fileSorting";
+import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 
 interface SearchEntry {
@@ -129,12 +129,13 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			const files = sortFilesWithoutQuery(entries, recent);
 			return files.map((entry) => this.result(entry));
 		}
-		const matches = [
-			...fuzzysort.go(query, entries, {
-				keys: [(entry) => entry.basename, (entry) => entry.path, (entry) => entry.text],
-				scoreFn: (matches) => Math.max(...matches.map((match) => match?.score ?? 0)),
-			}),
-		];
+		// Boolean operators are resolved locally; Everything is deliberately left
+		// untouched because it already owns and interprets the same syntax.
+		const matches = searchFuzzyQuery(query, entries, [
+			(entry) => entry.basename,
+			(entry) => entry.path,
+			(entry) => entry.text,
+		]);
 		return sortFileMatches(matches, query, recent).map((entry) => this.result(entry));
 	}
 

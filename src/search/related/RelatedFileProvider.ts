@@ -1,7 +1,7 @@
 import { TFile, type App, type LinkCache } from "obsidian";
-import fuzzysort from "fuzzysort";
 import type { RelatedFileResult } from "src/model/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
+import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 
 /** Finds individual outgoing-link or incoming-link occurrences for the active note. */
 export class RelatedFileProvider implements PaletteProvider<RelatedFileResult> {
@@ -33,11 +33,10 @@ export class RelatedFileProvider implements PaletteProvider<RelatedFileResult> {
 			return results.sort(
 				(a, b) => a.file.path.localeCompare(b.file.path) || a.line - b.line,
 			);
-		return fuzzysort
-			.go(query, results, {
-				keys: [(result) => result.primary, (result) => result.secondary],
-			})
-			.map(({ obj }) => obj);
+		return searchFuzzyQuery(query, results, [
+			(result) => result.primary,
+			(result) => result.secondary,
+		]).map(({ obj }) => obj);
 	}
 
 	private outgoing(origin: TFile): Array<{ file: TFile; cache: LinkCache }> {
