@@ -42,6 +42,15 @@ The Vite configuration copies the production bundle to `dist/` and the configure
 - Run `vp dev` while developing.
 - Enable or reload the plugin in Obsidian after the bundle is copied to the development Vault.
 
+### Search operators
+
+In non-Everything search modes, separate terms with spaces for AND matching and
+use `|` for OR branches. For example, `meeting project | agenda` matches notes
+containing both `meeting` and `project`, or notes containing `agenda`.
+
+Everything queries are passed through unchanged and continue to use Everything's
+own search syntax.
+
 ## Manually installing the plugin
 
 - Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
