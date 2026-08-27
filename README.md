@@ -51,20 +51,28 @@ containing both `meeting` and `project`, or notes containing `agenda`.
 Everything queries are passed through unchanged and continue to use Everything's
 own search syntax.
 
+### Tag search
+
+File search includes both inline tags and frontmatter `tags`. A query such as
+`#project` searches tags directly; ordinary terms can also match tags. Matching
+tags are shown below the file name, with up to three tags and a `+N` count for
+additional matches. Hover the row to see the full matching-tag list.
+
 ### File sort priorities
 
 File ordering is configured from `Settings → My Palette → File search → Sort
 priorities`, with one priority per line. The first priority that differs wins.
 Supported priorities are `Filename prefix match`, `Filename fuzzy match`,
-`Alias prefix match`, `Alias fuzzy match`, `Path fuzzy match`, `Last opened`,
-`Last modified`, `Aliases count`, `Alphabetical`, `Alphabetical reverse`, and
-`@prior` with an optional `:asc` or `:desc` suffix. Missing `prior` values are
-sorted last.
+`Alias prefix match`, `Alias fuzzy match`, `Tag match`, `Path fuzzy match`,
+`Last opened`, `Last modified`, `Aliases count`, `Alphabetical`, `Alphabetical
+reverse`, and `@prior` with an optional `:asc` or `:desc` suffix. Missing `prior`
+values are sorted last.
 
 For example, `@prior:desc` places notes with higher numeric `prior` values first;
-the default ranks filename matches before alias matches, then uses `prior` before
-recency. `Aliases count` is available as an optional secondary signal and orders
-notes with more aliases first.
+the default ranks filename matches before alias and tag matches, then path; `prior`
+comes before recency. `Tag match` orders notes with more matching tags first.
+`Aliases count` is available as an optional secondary signal and orders notes with
+more aliases first.
 
 ## Manually installing the plugin
 

@@ -1,10 +1,11 @@
-import { type App, type EventRef, type TFile } from "obsidian";
+import { parseFrontMatterTags, type App, type EventRef, type TFile } from "obsidian";
 import { getUserIgnoreFilters, isUserIgnoredPathWithFilters } from "src/ignored-notes/ignoredPaths";
 import { IgnoredNoteIndex, type IgnoredNoteIndexLogger } from "src/ignored-notes/ignoredNoteIndex";
 import type { FileResult } from "src/model/results";
 import { DEFAULT_FILE_SORT_PRIORITIES, type FileSortPriority } from "src/model/settings";
 import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
 import { sortFileMatches, sortFilesWithoutQuery } from "src/search/file/fileSorting";
+import { isTagOnlyQuery, matchingTags, normalizeTags } from "src/search/file/fileTags";
 import { searchFuzzyQueryWithFieldScores } from "src/search/fuzzyQuery";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 
@@ -13,6 +14,7 @@ interface SearchEntry {
 	path: string;
 	basename: string;
 	aliases: string[];
+	tags: string[];
 	extension: string;
 	text: string;
 	mtime: number;
@@ -90,6 +92,10 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		// Keep all entries so extension-setting changes only need an in-memory cache refresh.
 		const metadata = this.app.metadataCache.getFileCache(file);
 		const fileAliases = aliases(metadata?.frontmatter?.aliases ?? metadata?.frontmatter?.alias);
+		const fileTags = normalizeTags([
+			...(metadata?.tags ?? []).map(({ tag }) => tag),
+			...(parseFrontMatterTags(metadata?.frontmatter) ?? []),
+		]);
 		const prior = normalizeFrontmatterPrior(metadata?.frontmatter?.prior);
 		// Search metadata stays consistent between visible and ignored notes; H1 is
 		// intentionally excluded because it is not stable note identity metadata. The
@@ -99,6 +105,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			path: file.path,
 			basename: file.basename,
 			aliases: fileAliases,
+			tags: fileTags,
 			prior,
 			extension: file.extension,
 			text: [file.basename, file.path, ...fileAliases].join(" "),
@@ -125,6 +132,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 					path: ignored.path,
 					basename: ignored.basename,
 					aliases: ignored.aliases,
+					tags: ignored.tags,
 					prior: ignored.prior,
 					extension: ignored.extension,
 					text: [ignored.basename, ignored.path, ...ignored.aliases].join(" "),
@@ -140,26 +148,52 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		}
 		// Boolean operators are resolved locally; Everything is deliberately left
 		// untouched because it already owns and interprets the same syntax.
+		const tagOnlyQuery = isTagOnlyQuery(query);
+		// A hash-prefixed query is an explicit tag lookup. Restricting its candidate
+		// fields prevents a filename such as `project-plan.md` from masquerading as
+		// a tagged note when the user is browsing `#project`.
+		const candidates = tagOnlyQuery
+			? entries.filter((entry) => entry.tags.length > 0)
+			: entries;
 		// Keep the combined text key for candidate compatibility while retaining
-		// basename and alias scores so their sort priorities can be independent.
-		const matches = searchFuzzyQueryWithFieldScores(query, entries, [
-			(entry) => entry.basename,
-			(entry) => entry.path,
-			(entry) => entry.text,
-			(entry) => entry.aliases.join(" "),
-		]).map(({ obj, score, fieldScores }) => ({
-			obj,
-			score,
-			filenameScore: fieldScores[0],
-			pathScore: fieldScores[1],
-			aliasScore: fieldScores[3],
-		}));
-		return sortFileMatches(matches, query, recent, this.fileSortPriorities()).map((entry) =>
-			this.result(entry),
+		// basename and alias scores so their sort priorities can be independent. Tags
+		// stay in their own key so adding tag search does not change existing text
+		// scores or the meaning of the filename/path priorities.
+		const keys = tagOnlyQuery
+			? [(entry: SearchEntry) => entry.tags.join(" ")]
+			: [
+					(entry: SearchEntry) => entry.basename,
+					(entry: SearchEntry) => entry.path,
+					(entry: SearchEntry) => entry.text,
+					(entry: SearchEntry) => entry.aliases.join(" "),
+					(entry: SearchEntry) => entry.tags.join(" "),
+				];
+		const matches = searchFuzzyQueryWithFieldScores(query, candidates, keys).map(
+			({ obj, score, fieldScores }) => {
+				const matchedTags = matchingTags(obj.tags, query);
+				return {
+					obj,
+					score,
+					filenameScore: tagOnlyQuery ? undefined : fieldScores[0],
+					pathScore: tagOnlyQuery ? undefined : fieldScores[1],
+					aliasScore: tagOnlyQuery ? undefined : fieldScores[3],
+					tagMatchCount: matchedTags.length,
+					matchedTags,
+				};
+			},
 		);
+		const matchedTagsByPath = new Map(
+			matches.map(({ obj, matchedTags }) => [obj.path, matchedTags]),
+		);
+		return sortFileMatches(
+			matches,
+			tagOnlyQuery ? undefined : query,
+			recent,
+			this.fileSortPriorities(),
+		).map((entry) => this.result(entry, matchedTagsByPath.get(entry.path)));
 	}
 
-	private result(entry: SearchEntry): FileResult {
+	private result(entry: SearchEntry, matchedTags?: readonly string[]): FileResult {
 		return {
 			id: entry.path,
 			mode: "file",
@@ -169,6 +203,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			vaultPath: entry.path,
 			file: entry.file,
 			ignored: entry.ignored,
+			matchedTags: matchedTags?.length ? [...matchedTags] : undefined,
 		};
 	}
 

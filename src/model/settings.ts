@@ -28,6 +28,7 @@ export const FILE_SORT_PRIORITY_LIST = [
 	"Alias prefix match",
 	"Filename fuzzy match",
 	"Alias fuzzy match",
+	"Tag match",
 	"Path fuzzy match",
 	"Last opened",
 	"Last modified",
@@ -73,15 +74,37 @@ const LEGACY_DEFAULT_FILE_SORT_PRIORITIES = [
 	"Last modified",
 ] as const;
 
+const PREVIOUS_DEFAULT_FILE_SORT_PRIORITIES = [
+	"Filename prefix match",
+	"Filename fuzzy match",
+	"Alias prefix match",
+	"Alias fuzzy match",
+	"Path fuzzy match",
+	"@prior:desc",
+	"Last opened",
+	"Last modified",
+] as const;
+
+function isPriorityList(
+	value: readonly (string | undefined)[],
+	priorities: readonly string[],
+): boolean {
+	return (
+		value.length === priorities.length &&
+		value.every((item, index) => item === priorities[index])
+	);
+}
+
 export function normalizeFileSortPriorities(value: unknown): FileSortPriority[] {
 	if (!Array.isArray(value)) return [...DEFAULT_FILE_SORT_PRIORITIES];
 	const trimmed = value.map((item) => (typeof item === "string" ? item.trim() : undefined));
 	// The first version of this setting shipped combined name/alias priorities;
 	// migrate its untouched defaults so existing users receive the separated behavior.
-	if (
-		trimmed.length === LEGACY_DEFAULT_FILE_SORT_PRIORITIES.length &&
-		trimmed.every((item, index) => item === LEGACY_DEFAULT_FILE_SORT_PRIORITIES[index])
-	)
+	if (isPriorityList(trimmed, LEGACY_DEFAULT_FILE_SORT_PRIORITIES))
+		return [...DEFAULT_FILE_SORT_PRIORITIES];
+	// Adding a new default priority should reach users who never customized the
+	// previous list, while an arbitrary custom order remains exactly as entered.
+	if (isPriorityList(trimmed, PREVIOUS_DEFAULT_FILE_SORT_PRIORITIES))
 		return [...DEFAULT_FILE_SORT_PRIORITIES];
 	return trimmed.flatMap((item): FileSortPriority[] => {
 		if (item === undefined) return [];
@@ -97,6 +120,7 @@ export const DEFAULT_FILE_SORT_PRIORITIES: readonly FileSortPriority[] = [
 	"Filename fuzzy match",
 	"Alias prefix match",
 	"Alias fuzzy match",
+	"Tag match",
 	"Path fuzzy match",
 	"@prior:desc",
 	"Last opened",
@@ -104,7 +128,7 @@ export const DEFAULT_FILE_SORT_PRIORITIES: readonly FileSortPriority[] = [
 ];
 
 export interface MyPaletteSettings {
-	schemaVersion: 10;
+	schemaVersion: 11;
 	showLog: boolean;
 	rememberLastInput: boolean;
 	openExternalMarkdownInObsidian: boolean;
@@ -127,7 +151,7 @@ export interface MyPaletteSettings {
 }
 
 export const DEFAULT_SETTINGS: MyPaletteSettings = {
-	schemaVersion: 10,
+	schemaVersion: 11,
 	showLog: false,
 	rememberLastInput: false,
 	openExternalMarkdownInObsidian: true,

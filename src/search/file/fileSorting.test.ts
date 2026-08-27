@@ -204,6 +204,18 @@ describe("file sorting", () => {
 		expect(sorted.map(({ path }) => path)).toEqual(["folder/note.md", "alpha.md"]);
 	});
 
+	it("ranks candidates by the number of matching tags", () => {
+		const matches = [
+			{ obj: file("one.md", 1), score: -1, tagMatchCount: 1 },
+			{ obj: file("none.md", 1), score: -1, tagMatchCount: 0 },
+			{ obj: file("many.md", 1), score: -1, tagMatchCount: 2 },
+		];
+
+		const sorted = sortFileMatches(matches, "#topic", new Map(), ["Tag match"]);
+
+		expect(sorted.map(({ path }) => path)).toEqual(["many.md", "one.md", "none.md"]);
+	});
+
 	it("uses prior before recent history when configured", () => {
 		const entries = [file("recent.md", 1, [], false, 1), file("important.md", 1, [], false, 3)];
 		const recent = new Map([["recent.md", 0]]);

@@ -1,4 +1,10 @@
-import { getFrontMatterInfo, parseFrontMatterAliases, parseYaml, type App } from "obsidian";
+import {
+	getFrontMatterInfo,
+	parseFrontMatterAliases,
+	parseFrontMatterTags,
+	parseYaml,
+	type App,
+} from "obsidian";
 import { type DBSchema, type IDBPDatabase, openDB } from "idb";
 import {
 	getUserIgnoreFilters,
@@ -7,10 +13,11 @@ import {
 	isUserIgnoredPathWithFilters,
 } from "src/ignored-notes/ignoredPaths";
 import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
+import { normalizeTags } from "src/search/file/fileTags";
 
 const DATABASE_NAME = "my-palette-ignored-notes";
 const DATABASE_VERSION = 1;
-const INDEX_SCHEMA_VERSION = 2;
+const INDEX_SCHEMA_VERSION = 3;
 const INDEX_TTL_MS = 24 * 60 * 60 * 1000;
 const SCAN_CONCURRENCY = 8;
 const PROGRESS_INTERVAL = 250;
@@ -20,6 +27,7 @@ export interface IgnoredNoteIndexEntry {
 	basename: string;
 	extension: string;
 	aliases: string[];
+	tags: string[];
 	prior?: number;
 	mtime: number;
 	size: number;
@@ -90,28 +98,30 @@ function keyFor(vault: string, path: string): string {
 	return `${vault}\u0000${path}`;
 }
 
-function parseAliases(content: string): string[] {
-	const info = getFrontMatterInfo(content);
-	if (!info.exists) return [];
-	try {
-		return parseFrontMatterAliases(parseYaml(info.frontmatter)) ?? [];
-	} catch {
-		return [];
-	}
+interface ParsedFrontmatter {
+	aliases: string[];
+	tags: string[];
+	prior?: number;
 }
 
-function parsePrior(content: string): number | undefined {
+function parseFrontmatter(content: string): ParsedFrontmatter {
 	const info = getFrontMatterInfo(content);
-	if (!info.exists) return undefined;
+	if (!info.exists) return { aliases: [], tags: [] };
 	try {
+		// Parse once per scanned note so aliases, tags, and prior come from the
+		// same frontmatter snapshot without tripling the YAML parse cost.
 		const parsed = parseYaml(info.frontmatter);
-		const value =
+		const frontmatter =
 			parsed && typeof parsed === "object" && !Array.isArray(parsed)
-				? (parsed as Record<string, unknown>).prior
-				: undefined;
-		return normalizeFrontmatterPrior(value);
+				? (parsed as Record<string, unknown>)
+				: null;
+		return {
+			aliases: parseFrontMatterAliases(frontmatter) ?? [],
+			tags: normalizeTags(parseFrontMatterTags(frontmatter) ?? []),
+			prior: normalizeFrontmatterPrior(frontmatter?.prior),
+		};
 	} catch {
-		return undefined;
+		return { aliases: [], tags: [] };
 	}
 }
 
@@ -223,7 +233,7 @@ export class IgnoredNoteIndex {
 			for (const entry of entries) this.current.set(entry.path, this.toPublicEntry(entry));
 			this.lastScannedAt = meta.lastScannedAt;
 		} else {
-			// A changed entry shape, such as adding `prior`, must be rebuilt before
+			// A changed entry shape, such as adding `prior` or tags, must be rebuilt before
 			// returning ignored results; otherwise the first search would use stale data.
 			this.log("Ignored-note index requires rebuild", { entries: entries.length });
 		}
@@ -318,14 +328,15 @@ export class IgnoredNoteIndex {
 			const fileExtension = extension(path);
 			const content =
 				fileExtension === "md" ? await this.app.vault.adapter.read(path) : undefined;
-			const aliases = content === undefined ? [] : parseAliases(content);
-			const prior = content === undefined ? undefined : parsePrior(content);
+			const frontmatter =
+				content === undefined ? { aliases: [], tags: [] } : parseFrontmatter(content);
 			return {
 				path,
 				basename: basename(path),
 				extension: fileExtension,
-				aliases,
-				prior,
+				aliases: frontmatter.aliases,
+				tags: frontmatter.tags,
+				prior: frontmatter.prior,
 				mtime: stat.mtime,
 				size: stat.size,
 			};
@@ -370,6 +381,7 @@ export class IgnoredNoteIndex {
 			basename: entry.basename,
 			extension: entry.extension,
 			aliases: entry.aliases,
+			tags: entry.tags,
 			prior: entry.prior,
 			mtime: entry.mtime,
 			size: entry.size,

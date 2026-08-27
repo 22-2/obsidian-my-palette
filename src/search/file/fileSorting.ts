@@ -23,6 +23,10 @@ export interface FileMatch<T extends SortableFileEntry> {
 	aliasScore?: number;
 	/** Fuzzy score contributed by the file's path, when it matched. */
 	pathScore?: number;
+	/** Number of tags that matched the current query, when tag search was used. */
+	tagMatchCount?: number;
+	/** Tags that matched the current query; carried through sorting for presentation. */
+	matchedTags?: string[];
 }
 
 interface SortContext {
@@ -34,6 +38,8 @@ interface SortContext {
 	aliasScoreB?: number;
 	pathScoreA?: number;
 	pathScoreB?: number;
+	tagMatchCountA?: number;
+	tagMatchCountB?: number;
 }
 
 const QUERY_SORT_PRIORITIES = new Set<FileSortPriority>([
@@ -41,6 +47,7 @@ const QUERY_SORT_PRIORITIES = new Set<FileSortPriority>([
 	"Alias prefix match",
 	"Filename fuzzy match",
 	"Alias fuzzy match",
+	"Tag match",
 	"Path fuzzy match",
 ]);
 
@@ -147,6 +154,10 @@ function comparePriority(
 			return compareOptionalScore(context.filenameScoreA, context.filenameScoreB);
 		case "Alias fuzzy match":
 			return compareOptionalScore(context.aliasScoreA, context.aliasScoreB);
+		case "Tag match":
+			// A note can match the query through another field; keep notes with no
+			// matching tag behind notes that have an explicit tag contribution.
+			return compareOptionalScore(context.tagMatchCountA, context.tagMatchCountB);
 		case "Path fuzzy match":
 			return compareOptionalScore(context.pathScoreA, context.pathScoreB);
 		case "Last opened":
@@ -205,7 +216,7 @@ export function sortFilesWithoutQuery<T extends SortableFileEntry>(
 
 export function sortFileMatches<T extends SortableFileEntry>(
 	matches: FileMatch<T>[],
-	query: string,
+	query: string | undefined,
 	recent: ReadonlyMap<string, number>,
 	priorities: readonly FileSortPriority[] = DEFAULT_FILE_SORT_PRIORITIES,
 ): T[] {
@@ -229,6 +240,12 @@ export function sortFileMatches<T extends SortableFileEntry>(
 			const pathScoreB = Object.prototype.hasOwnProperty.call(b, "pathScore")
 				? b.pathScore
 				: undefined;
+			const tagMatchCountA = Object.prototype.hasOwnProperty.call(a, "tagMatchCount")
+				? a.tagMatchCount
+				: undefined;
+			const tagMatchCountB = Object.prototype.hasOwnProperty.call(b, "tagMatchCount")
+				? b.tagMatchCount
+				: undefined;
 			return (
 				compareIgnored(a.obj, b.obj) ||
 				comparePriorities(a.obj, b.obj, priorities, {
@@ -240,6 +257,8 @@ export function sortFileMatches<T extends SortableFileEntry>(
 					aliasScoreB,
 					pathScoreA,
 					pathScoreB,
+					tagMatchCountA,
+					tagMatchCountB,
 				}) ||
 				compareFallback(a.obj, b.obj)
 			);

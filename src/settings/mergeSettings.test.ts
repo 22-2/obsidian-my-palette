@@ -18,6 +18,7 @@ describe("mergeSettings", () => {
 			"Filename fuzzy match",
 			"Alias prefix match",
 			"Alias fuzzy match",
+			"Tag match",
 			"Path fuzzy match",
 			"@prior:desc",
 			"Last opened",
@@ -81,17 +82,39 @@ describe("mergeSettings", () => {
 			},
 		});
 
-		expect(settings.schemaVersion).toBe(10);
+		expect(settings.schemaVersion).toBe(11);
 		expect(settings.file.sortPriorities).toEqual([
 			"Filename prefix match",
 			"Filename fuzzy match",
 			"Alias prefix match",
 			"Alias fuzzy match",
+			"Tag match",
 			"Path fuzzy match",
 			"@prior:desc",
 			"Last opened",
 			"Last modified",
 		]);
+	});
+
+	it("adds the tag priority to untouched previous defaults", () => {
+		const settings = mergeSettings({
+			schemaVersion: 10,
+			file: {
+				sortPriorities: [
+					"Filename prefix match",
+					"Filename fuzzy match",
+					"Alias prefix match",
+					"Alias fuzzy match",
+					"Path fuzzy match",
+					"@prior:desc",
+					"Last opened",
+					"Last modified",
+				],
+			},
+		});
+
+		expect(settings.schemaVersion).toBe(11);
+		expect(settings.file.sortPriorities).toEqual(DEFAULT_SETTINGS.file.sortPriorities);
 	});
 
 	it("migrates legacy history entries through the current prefix parser", () => {

@@ -10,6 +10,18 @@ export interface PaletteResultPresentationOptions {
 	openExternalMarkdownInObsidian: boolean;
 }
 
+const MAX_VISIBLE_MATCHED_TAGS = 3;
+
+function matchedTagPresentation(
+	tags: readonly string[],
+): Pick<SelectionItem, "tags" | "tagsTitle"> {
+	if (tags.length === 0) return {};
+	const visibleTags = tags.slice(0, MAX_VISIBLE_MATCHED_TAGS);
+	if (tags.length > MAX_VISIBLE_MATCHED_TAGS)
+		visibleTags.push(`+${tags.length - MAX_VISIBLE_MATCHED_TAGS}`);
+	return { tags: visibleTags, tagsTitle: tags.join(" ") };
+}
+
 /**
  * Keeps result display policy outside the modal so formatting changes do not
  * have to touch search lifecycle and keyboard event handling at the same time.
@@ -44,11 +56,14 @@ export function toPaletteSelectionItem(
 			(Boolean(result.vaultPath) &&
 				!(app.vault.getAbstractFileByPath(result.vaultPath ?? "") instanceof TFile)));
 	const usesPath = result.mode === "file" || result.mode === "everything";
+	const matchedTags =
+		result.mode === "file" ? matchedTagPresentation(result.matchedTags ?? []) : {};
 	return {
 		label: result.primary,
 		description: usesPath ? compactPath(result.secondary) : result.secondary,
 		descriptionTitle: usesPath ? result.secondary : undefined,
 		icon: result.icon,
+		...matchedTags,
 		badge:
 			isExternalMarkdown || isIgnoredMarkdown
 				? options.openExternalMarkdownInObsidian

@@ -34,6 +34,8 @@ export interface FileResult extends BaseResult {
 	file?: TFile;
 	/** True when this result came from the explicit ignored-note search scope. */
 	ignored?: boolean;
+	/** Tags matched by the current query; omitted for empty-query results. */
+	matchedTags?: string[];
 }
 
 export interface CommandResult extends BaseResult {

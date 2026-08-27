@@ -91,7 +91,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 
 	return {
 		...DEFAULT_SETTINGS,
-		schemaVersion: 10,
+		schemaVersion: 11,
 		showLog: typeof source.showLog === "boolean" ? source.showLog : false,
 		rememberLastInput:
 			typeof source.rememberLastInput === "boolean" ? source.rememberLastInput : false,

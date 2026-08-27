@@ -8,6 +8,8 @@ export interface SelectionItem {
 	descriptionTitle?: string;
 	icon?: string;
 	badge?: string;
+	tags?: string[];
+	tagsTitle?: string;
 	value?: unknown;
 }
 
@@ -45,17 +47,27 @@ export class SelectionModal<T> extends BaseSuggestModal<T> {
 			const icon = row.createSpan("my-palette-suggestion__icon");
 			setIcon(icon, result.icon);
 		}
-		const label = row.createSpan("my-palette-suggestion__label");
+		const body = row.createDiv("my-palette-suggestion__body");
+		const main = body.createDiv("my-palette-suggestion__main");
+		const label = main.createSpan("my-palette-suggestion__label");
 		this.renderMatchedLabel(label, result.label);
 		if (result.description) {
-			const description = row.createSpan({
+			const description = main.createSpan({
 				cls: "my-palette-suggestion__description",
 				text: result.description,
 			});
 			if (result.descriptionTitle) description.setAttr("title", result.descriptionTitle);
 		}
 		if (result.badge)
-			row.createSpan({ cls: "my-palette-suggestion__badge", text: result.badge });
+			main.createSpan({ cls: "my-palette-suggestion__badge", text: result.badge });
+		if (result.tags?.length) {
+			// Tags are a second metadata row so the normal filename/path layout stays
+			// compact, while a tag query still makes its matching evidence visible.
+			const tags = body.createDiv("my-palette-suggestion__tags");
+			tags.setAttr("title", result.tagsTitle ?? result.tags.join(" "));
+			for (const tag of result.tags)
+				tags.createSpan({ cls: "my-palette-suggestion__tag", text: tag });
+		}
 	}
 
 	protected toSelectionItem(item: T): SelectionItem {

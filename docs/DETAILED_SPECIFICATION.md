@@ -161,6 +161,7 @@ Vault 内の `TFile` を対象とする。フォルダー自体は結果に含�
 - 拡張子を除いたファイル名
 - Vault ルートからの相対パス
 - MetadataCache から取得できる aliases
+- MetadataCache の inline tags と frontmatter の `tags`
 - MetadataCache から取得できる先頭 H1
 
 #### 空入力
@@ -176,6 +177,8 @@ Obsidian が保持する「最近開いたファイル」を新しい順で最�
 - 並び順は `File search` 設定の `sortPriorities` を上から適用する。
 - `@prior:asc` / `@prior:desc` は frontmatter の数値 `prior` を比較し、未設定値は最後に置く。
 - `Filename prefix match` / `Filename fuzzy match` はファイル名、`Alias prefix match` / `Alias fuzzy match` は frontmatter の aliases、`Path fuzzy match` は Vault 内の相対パスを対象に比較する。
+- `#tag` で始まる検索はタグだけを対象とし、通常の検索語もタグに fuzzy match する。
+- `Tag match` は検索に一致したタグ数を降順で比較する。
 - `Aliases count` は frontmatter の `aliases` / `alias` の要素数を降順で比較する。
 - 空入力では、検索語に依存する filename / alias の match priorities を除外してから同じ設定を適用する。
 - 最大50件を表示する。
@@ -184,6 +187,7 @@ Obsidian が保持する「最近開いたファイル」を新しい順で最�
 
 - 主表示：拡張子を除いたファイル名
 - 副表示：Vault ルートからの相対パス
+- タグ表示：検索に一致したタグを2段目へ最大3件表示し、超過分は `+N` としてまとめる。行の tooltip に全件を表示する。
 - アイコン：ファイル種別に応じた Obsidian 標準アイコン。判定不能時は `file`。
 
 ### 5.3 Command モード
@@ -478,6 +482,7 @@ interface BaseResult {
 interface FileResult extends BaseResult {
 	mode: "file";
 	vaultPath: string;
+	matchedTags?: string[];
 }
 
 interface CommandResult extends BaseResult {
@@ -493,7 +498,7 @@ interface EverythingResult extends BaseResult {
 }
 
 interface MyPaletteSettings {
-	schemaVersion: 10;
+	schemaVersion: 11;
 	showLog: boolean;
 	rememberLastInput: boolean;
 	searchHistory: {

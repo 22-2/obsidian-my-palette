@@ -127,7 +127,7 @@
 
 .my-palette-suggestion {
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	flex: 1 1 auto;
 	gap: 6px;
 	min-width: 0;
@@ -140,7 +140,22 @@
 	place-items: center;
 	width: 16px;
 	height: 16px;
+	margin-top: 2px;
 	color: var(--text-faint);
+}
+
+.my-palette-suggestion__body {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.my-palette-suggestion__main {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+	width: 100%;
+	min-height: 20px;
 }
 
 .my-palette-suggestion__label,
@@ -164,6 +179,24 @@
 	font-size: var(--font-ui-smaller);
 }
 
+.my-palette-suggestion__tags {
+	display: flex;
+	gap: 6px;
+	min-width: 0;
+	overflow: hidden;
+	color: var(--text-faint);
+	font-size: var(--font-ui-smaller);
+	line-height: 1.2;
+}
+
+.my-palette-suggestion__tag {
+	min-width: 0;
+	max-width: 18ch;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
 .my-palette-suggestion__match {
 	color: var(--text-accent);
 }
@@ -173,7 +206,8 @@
 }
 
 .my-palette-suggest-modal .suggestion-item.is-selected .my-palette-suggestion__description,
-.my-palette-suggest-modal .suggestion-item.is-selected .my-palette-suggestion__icon {
+.my-palette-suggest-modal .suggestion-item.is-selected .my-palette-suggestion__icon,
+.my-palette-suggest-modal .suggestion-item.is-selected .my-palette-suggestion__tags {
 	color: var(--text-muted);
 }
 
