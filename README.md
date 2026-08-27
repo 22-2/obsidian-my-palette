@@ -55,15 +55,16 @@ own search syntax.
 
 File ordering is configured from `Settings → My Palette → File search → Sort
 priorities`, with one priority per line. The first priority that differs wins.
-Supported priorities are `Prefix name match`, `Fuzzy name match`, `Last opened`,
+Supported priorities are `Filename prefix match`, `Filename fuzzy match`,
+`Alias prefix match`, `Alias fuzzy match`, `Path fuzzy match`, `Last opened`,
 `Last modified`, `Aliases count`, `Alphabetical`, `Alphabetical reverse`, and
 `@prior` with an optional `:asc` or `:desc` suffix. Missing `prior` values are
 sorted last.
 
 For example, `@prior:desc` places notes with higher numeric `prior` values first;
-the default keeps filename relevance ahead of `prior` for non-empty searches and
-uses `prior` ahead of recency for empty searches. `Aliases count` is available as
-an optional secondary signal and orders notes with more aliases first.
+the default ranks filename matches before alias matches, then uses `prior` before
+recency. `Aliases count` is available as an optional secondary signal and orders
+notes with more aliases first.
 
 ## Manually installing the plugin
 

@@ -17,30 +17,62 @@ export interface SortableFileEntry {
 export interface FileMatch<T extends SortableFileEntry> {
 	obj: T;
 	score: number;
+	/** Fuzzy score contributed by the file's basename, when it matched. */
+	filenameScore?: number;
+	/** Fuzzy score contributed by the file's aliases, when they matched. */
+	aliasScore?: number;
+	/** Fuzzy score contributed by the file's path, when it matched. */
+	pathScore?: number;
 }
 
 interface SortContext {
 	query?: string;
 	recent: ReadonlyMap<string, number>;
-	scoreA?: number;
-	scoreB?: number;
+	filenameScoreA?: number;
+	filenameScoreB?: number;
+	aliasScoreA?: number;
+	aliasScoreB?: number;
+	pathScoreA?: number;
+	pathScoreB?: number;
 }
 
-const QUERY_SORT_PRIORITIES = new Set<FileSortPriority>(["Prefix name match", "Fuzzy name match"]);
+const QUERY_SORT_PRIORITIES = new Set<FileSortPriority>([
+	"Filename prefix match",
+	"Alias prefix match",
+	"Filename fuzzy match",
+	"Alias fuzzy match",
+	"Path fuzzy match",
+]);
 
 function normalized(value: string): string {
 	return value.normalize("NFKC").trim().toLocaleLowerCase();
 }
 
-function hasPrefixMatch(entry: SortableFileEntry, query: string): boolean {
+function hasPrefixMatch(
+	entry: SortableFileEntry,
+	query: string,
+	field: "filename" | "alias",
+): boolean {
 	const needle = normalized(query);
-	return [entry.basename, ...entry.aliases].some((value) => normalized(value).startsWith(needle));
+	const values = field === "filename" ? [entry.basename] : entry.aliases;
+	return values.some((value) => normalized(value).startsWith(needle));
 }
 
 function compareNumber(a: number, b: number, order: "asc" | "desc" = "asc"): number {
 	if (a === b) return 0;
 	const result = a < b ? -1 : 1;
 	return order === "asc" ? result : -result;
+}
+
+function compareOptionalScore(a: number | undefined, b: number | undefined): number {
+	const scoreA = typeof a === "number" && Number.isFinite(a) ? a : undefined;
+	const scoreB = typeof b === "number" && Number.isFinite(b) ? b : undefined;
+	// A candidate can match through another field; keep it behind candidates that
+	// actually matched the field selected by this priority.
+	if (scoreA === undefined && scoreB === undefined) return 0;
+	if (scoreA === undefined) return 1;
+	if (scoreB === undefined) return -1;
+	return compareNumber(scoreA, scoreB, "desc");
 }
 
 function compareOptionalPrior(
@@ -101,13 +133,22 @@ function comparePriority(
 	context: SortContext,
 ): number {
 	switch (priority) {
-		case "Prefix name match":
+		case "Filename prefix match":
 			return context.query === undefined
 				? 0
-				: Number(hasPrefixMatch(b, context.query)) -
-						Number(hasPrefixMatch(a, context.query));
-		case "Fuzzy name match":
-			return (context.scoreB ?? 0) - (context.scoreA ?? 0);
+				: Number(hasPrefixMatch(b, context.query, "filename")) -
+						Number(hasPrefixMatch(a, context.query, "filename"));
+		case "Alias prefix match":
+			return context.query === undefined
+				? 0
+				: Number(hasPrefixMatch(b, context.query, "alias")) -
+						Number(hasPrefixMatch(a, context.query, "alias"));
+		case "Filename fuzzy match":
+			return compareOptionalScore(context.filenameScoreA, context.filenameScoreB);
+		case "Alias fuzzy match":
+			return compareOptionalScore(context.aliasScoreA, context.aliasScoreB);
+		case "Path fuzzy match":
+			return compareOptionalScore(context.pathScoreA, context.pathScoreB);
 		case "Last opened":
 			return compareRecent(a, b, context.recent);
 		case "Last modified":
@@ -169,16 +210,39 @@ export function sortFileMatches<T extends SortableFileEntry>(
 	priorities: readonly FileSortPriority[] = DEFAULT_FILE_SORT_PRIORITIES,
 ): T[] {
 	return matches
-		.sort(
-			(a, b) =>
+		.sort((a, b) => {
+			const filenameScoreA = Object.prototype.hasOwnProperty.call(a, "filenameScore")
+				? a.filenameScore
+				: a.score;
+			const filenameScoreB = Object.prototype.hasOwnProperty.call(b, "filenameScore")
+				? b.filenameScore
+				: b.score;
+			const aliasScoreA = Object.prototype.hasOwnProperty.call(a, "aliasScore")
+				? a.aliasScore
+				: undefined;
+			const aliasScoreB = Object.prototype.hasOwnProperty.call(b, "aliasScore")
+				? b.aliasScore
+				: undefined;
+			const pathScoreA = Object.prototype.hasOwnProperty.call(a, "pathScore")
+				? a.pathScore
+				: undefined;
+			const pathScoreB = Object.prototype.hasOwnProperty.call(b, "pathScore")
+				? b.pathScore
+				: undefined;
+			return (
 				compareIgnored(a.obj, b.obj) ||
 				comparePriorities(a.obj, b.obj, priorities, {
 					query,
 					recent,
-					scoreA: a.score,
-					scoreB: b.score,
+					filenameScoreA,
+					filenameScoreB,
+					aliasScoreA,
+					aliasScoreB,
+					pathScoreA,
+					pathScoreB,
 				}) ||
-				compareFallback(a.obj, b.obj),
-		)
+				compareFallback(a.obj, b.obj)
+			);
+		})
 		.map(({ obj }) => obj);
 }

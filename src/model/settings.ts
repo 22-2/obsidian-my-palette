@@ -24,8 +24,11 @@ export interface SearchHistorySettings {
 }
 
 export const FILE_SORT_PRIORITY_LIST = [
-	"Prefix name match",
-	"Fuzzy name match",
+	"Filename prefix match",
+	"Alias prefix match",
+	"Filename fuzzy match",
+	"Alias fuzzy match",
+	"Path fuzzy match",
 	"Last opened",
 	"Last modified",
 	"Aliases count",
@@ -57,11 +60,32 @@ export function isFileSortPriority(value: unknown): value is FileSortPriority {
 	);
 }
 
+const LEGACY_FILE_SORT_PRIORITY_ALIASES: Readonly<Record<string, FileSortPriority>> = {
+	"Prefix name match": "Filename prefix match",
+	"Fuzzy name match": "Filename fuzzy match",
+};
+
+const LEGACY_DEFAULT_FILE_SORT_PRIORITIES = [
+	"Prefix name match",
+	"Fuzzy name match",
+	"@prior:desc",
+	"Last opened",
+	"Last modified",
+] as const;
+
 export function normalizeFileSortPriorities(value: unknown): FileSortPriority[] {
 	if (!Array.isArray(value)) return [...DEFAULT_FILE_SORT_PRIORITIES];
-	return value.flatMap((item): FileSortPriority[] => {
-		if (typeof item !== "string") return [];
-		const priority = item.trim();
+	const trimmed = value.map((item) => (typeof item === "string" ? item.trim() : undefined));
+	// The first version of this setting shipped combined name/alias priorities;
+	// migrate its untouched defaults so existing users receive the separated behavior.
+	if (
+		trimmed.length === LEGACY_DEFAULT_FILE_SORT_PRIORITIES.length &&
+		trimmed.every((item, index) => item === LEGACY_DEFAULT_FILE_SORT_PRIORITIES[index])
+	)
+		return [...DEFAULT_FILE_SORT_PRIORITIES];
+	return trimmed.flatMap((item): FileSortPriority[] => {
+		if (item === undefined) return [];
+		const priority = LEGACY_FILE_SORT_PRIORITY_ALIASES[item] ?? item;
 		return isFileSortPriority(priority) ? [priority] : [];
 	});
 }
@@ -69,15 +93,18 @@ export function normalizeFileSortPriorities(value: unknown): FileSortPriority[] 
 // Keep the existing relevance and recency behavior while making `prior` useful
 // by default as a tie-breaker and as the first meaningful criterion for empty input.
 export const DEFAULT_FILE_SORT_PRIORITIES: readonly FileSortPriority[] = [
-	"Prefix name match",
-	"Fuzzy name match",
+	"Filename prefix match",
+	"Filename fuzzy match",
+	"Alias prefix match",
+	"Alias fuzzy match",
+	"Path fuzzy match",
 	"@prior:desc",
 	"Last opened",
 	"Last modified",
 ];
 
 export interface MyPaletteSettings {
-	schemaVersion: 9;
+	schemaVersion: 10;
 	showLog: boolean;
 	rememberLastInput: boolean;
 	openExternalMarkdownInObsidian: boolean;
@@ -100,7 +127,7 @@ export interface MyPaletteSettings {
 }
 
 export const DEFAULT_SETTINGS: MyPaletteSettings = {
-	schemaVersion: 9,
+	schemaVersion: 10,
 	showLog: false,
 	rememberLastInput: false,
 	openExternalMarkdownInObsidian: true,

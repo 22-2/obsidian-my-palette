@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { searchFuzzyQuery, searchFuzzyQueryWithFieldScores } from "src/search/fuzzyQuery";
 
 const items = ["alpha beta", "alpha gamma", "delta beta", "omega"];
 
@@ -35,5 +35,23 @@ describe("searchFuzzyQuery", () => {
 				(item) => item.path,
 			]).map(({ obj }) => obj.path),
 		).toEqual(["folder/beta.md"]);
+	});
+
+	it("retains fuzzy scores for the fields that matched", () => {
+		const records = [
+			{ name: "project note", alias: "old note" },
+			{ name: "ordinary note", alias: "project" },
+		];
+		const results = searchFuzzyQueryWithFieldScores("project", records, [
+			(record) => record.name,
+			(record) => record.alias,
+		]);
+
+		const byName = results.find(({ obj }) => obj.name === "project note");
+		const byAlias = results.find(({ obj }) => obj.name === "ordinary note");
+		expect(byName?.fieldScores[0]).toEqual(expect.any(Number));
+		expect(byName?.fieldScores[1]).toBeUndefined();
+		expect(byAlias?.fieldScores[0]).toBeUndefined();
+		expect(byAlias?.fieldScores[1]).toEqual(expect.any(Number));
 	});
 });

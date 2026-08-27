@@ -78,7 +78,7 @@ function createFileSearchPage(plugin: MyPalettePlugin, helpers: SettingPageHelpe
 		helpers.group("Sorting", [
 			helpers.render(
 				"Sort priorities",
-				"One priority per line. The first priority that differs wins. Use @prior:desc for higher-priority notes first or Aliases count for notes with more aliases; missing prior values are last.",
+				"One priority per line. The first priority that differs wins. Filename, Alias, and Path match priorities control the source; Aliases count is an optional tie-breaker. @prior:desc puts higher-priority notes first, and missing prior values are last.",
 				(setting) =>
 					setting.addTextArea((text) =>
 						text

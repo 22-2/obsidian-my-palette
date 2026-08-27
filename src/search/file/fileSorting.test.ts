@@ -28,19 +28,31 @@ function file(
 }
 
 describe("file sorting", () => {
-	it("puts file-name and alias prefix matches before stronger fuzzy matches", () => {
+	it("separates filename and alias prefix matches", () => {
 		const matches = [
-			{ obj: file("notes/my-project.md", 1), score: 10 },
-			{ obj: file("archive/team-project-notes.md", 1), score: 100 },
-			{ obj: file("notes/work.md", 1, ["Project dashboard"]), score: 5 },
+			{ obj: file("project-note.md", 1), score: 0 },
+			{ obj: file("archive/team-project-notes.md", 1), score: 0 },
+			{ obj: file("work.md", 1, ["Project dashboard"]), score: 0 },
 		];
 
-		const sorted = sortFileMatches(matches, "project", new Map());
+		const filenameSorted = sortFileMatches(matches.slice(), "project", new Map(), [
+			"Filename prefix match",
+			"Alphabetical",
+		]);
+		const aliasSorted = sortFileMatches(matches.slice(), "project", new Map(), [
+			"Alias prefix match",
+			"Alphabetical",
+		]);
 
-		expect(sorted.map(({ path }) => path)).toEqual([
-			"notes/work.md",
+		expect(filenameSorted.map(({ path }) => path)).toEqual([
+			"project-note.md",
 			"archive/team-project-notes.md",
-			"notes/my-project.md",
+			"work.md",
+		]);
+		expect(aliasSorted.map(({ path }) => path)).toEqual([
+			"work.md",
+			"project-note.md",
+			"archive/team-project-notes.md",
 		]);
 	});
 
@@ -122,10 +134,74 @@ describe("file sorting", () => {
 			{ obj: file("alpha.md", 1, [], false, 3), score: 100 },
 		];
 
-		const priorities: FileSortPriority[] = ["Fuzzy name match", "@prior:desc"];
+		const priorities: FileSortPriority[] = ["Filename fuzzy match", "@prior:desc"];
 		const sorted = sortFileMatches(matches, "query", new Map(), priorities);
 
 		expect(sorted.map(({ path }) => path)).toEqual(["alpha.md", "zeta.md"]);
+	});
+
+	it("separates filename and alias fuzzy scores", () => {
+		const matches = [
+			{
+				obj: file("ordinary.md", 1, ["project"]),
+				score: -1,
+				filenameScore: undefined,
+				aliasScore: -1,
+			},
+			{
+				obj: file("project-notes.md", 1),
+				score: -2,
+				filenameScore: -2,
+				aliasScore: undefined,
+			},
+			{
+				obj: file("other.md", 1),
+				score: -3,
+				filenameScore: undefined,
+				aliasScore: undefined,
+			},
+		];
+
+		const filenameSorted = sortFileMatches(matches.slice(), "project", new Map(), [
+			"Filename fuzzy match",
+		]);
+		const aliasSorted = sortFileMatches(matches.slice(), "project", new Map(), [
+			"Alias fuzzy match",
+		]);
+
+		expect(filenameSorted.map(({ path }) => path)).toEqual([
+			"project-notes.md",
+			"ordinary.md",
+			"other.md",
+		]);
+		expect(aliasSorted.map(({ path }) => path)).toEqual([
+			"ordinary.md",
+			"other.md",
+			"project-notes.md",
+		]);
+	});
+
+	it("keeps path fuzzy matching available as its own priority", () => {
+		const matches = [
+			{
+				obj: file("folder/note.md", 1),
+				score: -1,
+				filenameScore: undefined,
+				aliasScore: undefined,
+				pathScore: -1,
+			},
+			{
+				obj: file("alpha.md", 1),
+				score: -2,
+				filenameScore: undefined,
+				aliasScore: undefined,
+				pathScore: undefined,
+			},
+		];
+
+		const sorted = sortFileMatches(matches, "folder", new Map(), ["Path fuzzy match"]);
+
+		expect(sorted.map(({ path }) => path)).toEqual(["folder/note.md", "alpha.md"]);
 	});
 
 	it("uses prior before recent history when configured", () => {

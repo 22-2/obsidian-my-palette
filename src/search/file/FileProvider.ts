@@ -5,7 +5,7 @@ import type { FileResult } from "src/model/results";
 import { DEFAULT_FILE_SORT_PRIORITIES, type FileSortPriority } from "src/model/settings";
 import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
 import { sortFileMatches, sortFilesWithoutQuery } from "src/search/file/fileSorting";
-import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { searchFuzzyQueryWithFieldScores } from "src/search/fuzzyQuery";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 
 interface SearchEntry {
@@ -140,11 +140,20 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		}
 		// Boolean operators are resolved locally; Everything is deliberately left
 		// untouched because it already owns and interprets the same syntax.
-		const matches = searchFuzzyQuery(query, entries, [
+		// Keep the combined text key for candidate compatibility while retaining
+		// basename and alias scores so their sort priorities can be independent.
+		const matches = searchFuzzyQueryWithFieldScores(query, entries, [
 			(entry) => entry.basename,
 			(entry) => entry.path,
 			(entry) => entry.text,
-		]);
+			(entry) => entry.aliases.join(" "),
+		]).map(({ obj, score, fieldScores }) => ({
+			obj,
+			score,
+			filenameScore: fieldScores[0],
+			pathScore: fieldScores[1],
+			aliasScore: fieldScores[3],
+		}));
 		return sortFileMatches(matches, query, recent, this.fileSortPriorities()).map((entry) =>
 			this.result(entry),
 		);

@@ -14,8 +14,11 @@ describe("mergeSettings", () => {
 
 	it("defaults file sorting to relevance, prior, and recency", () => {
 		expect(mergeSettings(undefined).file.sortPriorities).toEqual([
-			"Prefix name match",
-			"Fuzzy name match",
+			"Filename prefix match",
+			"Filename fuzzy match",
+			"Alias prefix match",
+			"Alias fuzzy match",
+			"Path fuzzy match",
 			"@prior:desc",
 			"Last opened",
 			"Last modified",
@@ -61,6 +64,33 @@ describe("mergeSettings", () => {
 			"@prior:asc",
 			"Aliases count",
 			"Last opened",
+		]);
+	});
+
+	it("migrates the previous combined name priorities", () => {
+		const settings = mergeSettings({
+			schemaVersion: 9,
+			file: {
+				sortPriorities: [
+					"Prefix name match",
+					"Fuzzy name match",
+					"@prior:desc",
+					"Last opened",
+					"Last modified",
+				],
+			},
+		});
+
+		expect(settings.schemaVersion).toBe(10);
+		expect(settings.file.sortPriorities).toEqual([
+			"Filename prefix match",
+			"Filename fuzzy match",
+			"Alias prefix match",
+			"Alias fuzzy match",
+			"Path fuzzy match",
+			"@prior:desc",
+			"Last opened",
+			"Last modified",
 		]);
 	});
 
