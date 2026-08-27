@@ -4,12 +4,14 @@ import {
 	sortFilesWithoutQuery,
 	type SortableFileEntry,
 } from "src/search/file/fileSorting";
+import type { FileSortPriority } from "src/model/settings";
 
 function file(
 	path: string,
 	mtime: number,
 	aliases: string[] = [],
 	ignored = false,
+	prior?: number,
 ): SortableFileEntry {
 	return {
 		path,
@@ -20,6 +22,7 @@ function file(
 				?.replace(/\.[^.]+$/, "") ?? path,
 		aliases,
 		mtime,
+		prior,
 		ignored,
 	};
 }
@@ -91,5 +94,46 @@ describe("file sorting", () => {
 		const sorted = sortFilesWithoutQuery(entries, new Map());
 
 		expect(sorted.map(({ path }) => path)).toEqual(["archive/old.md", "notes/new.md"]);
+	});
+
+	it("sorts numeric prior values and keeps missing values last", () => {
+		const entries = [
+			file("missing.md", 1),
+			file("low.md", 1, [], false, -1),
+			file("pinned.md", 1, [], false, 999),
+			file("high.md", 1, [], false, 3),
+			file("medium.md", 1, [], false, 1),
+		];
+
+		const sorted = sortFilesWithoutQuery(entries, new Map(), ["@prior:desc"]);
+
+		expect(sorted.map(({ path }) => path)).toEqual([
+			"pinned.md",
+			"high.md",
+			"medium.md",
+			"low.md",
+			"missing.md",
+		]);
+	});
+
+	it("applies configured priorities from left to right", () => {
+		const matches = [
+			{ obj: file("zeta.md", 10, [], false, 1), score: 100 },
+			{ obj: file("alpha.md", 1, [], false, 3), score: 100 },
+		];
+
+		const priorities: FileSortPriority[] = ["Fuzzy name match", "@prior:desc"];
+		const sorted = sortFileMatches(matches, "query", new Map(), priorities);
+
+		expect(sorted.map(({ path }) => path)).toEqual(["alpha.md", "zeta.md"]);
+	});
+
+	it("uses prior before recent history when configured", () => {
+		const entries = [file("recent.md", 1, [], false, 1), file("important.md", 1, [], false, 3)];
+		const recent = new Map([["recent.md", 0]]);
+
+		const sorted = sortFilesWithoutQuery(entries, recent, ["@prior:desc", "Last opened"]);
+
+		expect(sorted.map(({ path }) => path)).toEqual(["important.md", "recent.md"]);
 	});
 });

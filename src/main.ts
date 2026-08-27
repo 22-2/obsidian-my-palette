@@ -40,6 +40,7 @@ export default class MyPalettePlugin extends Plugin {
 		registerPluginEvents(this);
 		const providers = createPaletteProviders(this.app, this.everythingClient, {
 			vaultExtensions: () => this.settings.everything.vaultExtensions,
+			fileSortPriorities: () => this.settings.file.sortPriorities,
 			recentCommandIds: () => this.settings.recentCommandIds,
 			everythingSettings: () => this.settings.everything,
 			log: (message, detail) => logger.debug(message, detail),

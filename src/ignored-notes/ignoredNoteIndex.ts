@@ -6,10 +6,11 @@ import {
 	isUserIgnoreFilterRegex,
 	isUserIgnoredPathWithFilters,
 } from "src/ignored-notes/ignoredPaths";
+import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
 
 const DATABASE_NAME = "my-palette-ignored-notes";
 const DATABASE_VERSION = 1;
-const INDEX_SCHEMA_VERSION = 1;
+const INDEX_SCHEMA_VERSION = 2;
 const INDEX_TTL_MS = 24 * 60 * 60 * 1000;
 const SCAN_CONCURRENCY = 8;
 const PROGRESS_INTERVAL = 250;
@@ -19,6 +20,7 @@ export interface IgnoredNoteIndexEntry {
 	basename: string;
 	extension: string;
 	aliases: string[];
+	prior?: number;
 	mtime: number;
 	size: number;
 }
@@ -95,6 +97,21 @@ function parseAliases(content: string): string[] {
 		return parseFrontMatterAliases(parseYaml(info.frontmatter)) ?? [];
 	} catch {
 		return [];
+	}
+}
+
+function parsePrior(content: string): number | undefined {
+	const info = getFrontMatterInfo(content);
+	if (!info.exists) return undefined;
+	try {
+		const parsed = parseYaml(info.frontmatter);
+		const value =
+			parsed && typeof parsed === "object" && !Array.isArray(parsed)
+				? (parsed as Record<string, unknown>).prior
+				: undefined;
+		return normalizeFrontmatterPrior(value);
+	} catch {
+		return undefined;
 	}
 }
 
@@ -199,12 +216,17 @@ export class IgnoredNoteIndex {
 			database.getAllFromIndex("notes", "byVault", this.currentVaultId),
 			database.get("meta", this.currentVaultId),
 		]);
-		for (const entry of entries) this.current.set(entry.path, this.toPublicEntry(entry));
-		if (
+		const canReuseEntries =
 			meta?.schemaVersion === INDEX_SCHEMA_VERSION &&
-			meta.filterFingerprint === this.filterFingerprint
-		)
+			meta.filterFingerprint === this.filterFingerprint;
+		if (canReuseEntries) {
+			for (const entry of entries) this.current.set(entry.path, this.toPublicEntry(entry));
 			this.lastScannedAt = meta.lastScannedAt;
+		} else {
+			// A changed entry shape, such as adding `prior`, must be rebuilt before
+			// returning ignored results; otherwise the first search would use stale data.
+			this.log("Ignored-note index requires rebuild", { entries: entries.length });
+		}
 		this.loaded = true;
 		this.log("Loaded ignored-note index", { entries: this.current.size });
 	}
@@ -294,13 +316,16 @@ export class IgnoredNoteIndex {
 			if (!stat) return undefined;
 			if (cached && cached.mtime === stat.mtime && cached.size === stat.size) return cached;
 			const fileExtension = extension(path);
-			const aliases =
-				fileExtension === "md" ? parseAliases(await this.app.vault.adapter.read(path)) : [];
+			const content =
+				fileExtension === "md" ? await this.app.vault.adapter.read(path) : undefined;
+			const aliases = content === undefined ? [] : parseAliases(content);
+			const prior = content === undefined ? undefined : parsePrior(content);
 			return {
 				path,
 				basename: basename(path),
 				extension: fileExtension,
 				aliases,
+				prior,
 				mtime: stat.mtime,
 				size: stat.size,
 			};
@@ -345,6 +370,7 @@ export class IgnoredNoteIndex {
 			basename: entry.basename,
 			extension: entry.extension,
 			aliases: entry.aliases,
+			prior: entry.prior,
 			mtime: entry.mtime,
 			size: entry.size,
 		};

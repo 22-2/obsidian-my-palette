@@ -2,6 +2,8 @@ import { type App, type EventRef, type TFile } from "obsidian";
 import { getUserIgnoreFilters, isUserIgnoredPathWithFilters } from "src/ignored-notes/ignoredPaths";
 import { IgnoredNoteIndex, type IgnoredNoteIndexLogger } from "src/ignored-notes/ignoredNoteIndex";
 import type { FileResult } from "src/model/results";
+import { DEFAULT_FILE_SORT_PRIORITIES, type FileSortPriority } from "src/model/settings";
+import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
 import { sortFileMatches, sortFilesWithoutQuery } from "src/search/file/fileSorting";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
@@ -14,6 +16,7 @@ interface SearchEntry {
 	extension: string;
 	text: string;
 	mtime: number;
+	prior?: number;
 	ignored: boolean;
 }
 
@@ -33,6 +36,8 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		private readonly app: App,
 		private readonly vaultExtensions: () => readonly string[],
 		ignoredLogger?: IgnoredNoteIndexLogger,
+		private readonly fileSortPriorities: () => readonly FileSortPriority[] = () =>
+			DEFAULT_FILE_SORT_PRIORITIES,
 	) {
 		this.updateAllowedExtensions();
 		this.rebuild();
@@ -85,13 +90,16 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		// Keep all entries so extension-setting changes only need an in-memory cache refresh.
 		const metadata = this.app.metadataCache.getFileCache(file);
 		const fileAliases = aliases(metadata?.frontmatter?.aliases ?? metadata?.frontmatter?.alias);
+		const prior = normalizeFrontmatterPrior(metadata?.frontmatter?.prior);
 		// Search metadata stays consistent between visible and ignored notes; H1 is
-		// intentionally excluded because it is not stable note identity metadata.
+		// intentionally excluded because it is not stable note identity metadata. The
+		// numeric `prior` value is kept separately because it controls ordering only.
 		this.setEntry({
 			file,
 			path: file.path,
 			basename: file.basename,
 			aliases: fileAliases,
+			prior,
 			extension: file.extension,
 			text: [file.basename, file.path, ...fileAliases].join(" "),
 			mtime: file.stat.mtime,
@@ -117,6 +125,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 					path: ignored.path,
 					basename: ignored.basename,
 					aliases: ignored.aliases,
+					prior: ignored.prior,
 					extension: ignored.extension,
 					text: [ignored.basename, ignored.path, ...ignored.aliases].join(" "),
 					mtime: ignored.mtime,
@@ -126,7 +135,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			}
 		}
 		if (!query.trim()) {
-			const files = sortFilesWithoutQuery(entries, recent);
+			const files = sortFilesWithoutQuery(entries, recent, this.fileSortPriorities());
 			return files.map((entry) => this.result(entry));
 		}
 		// Boolean operators are resolved locally; Everything is deliberately left
@@ -136,7 +145,9 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			(entry) => entry.path,
 			(entry) => entry.text,
 		]);
-		return sortFileMatches(matches, query, recent).map((entry) => this.result(entry));
+		return sortFileMatches(matches, query, recent, this.fileSortPriorities()).map((entry) =>
+			this.result(entry),
+		);
 	}
 
 	private result(entry: SearchEntry): FileResult {

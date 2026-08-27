@@ -51,6 +51,18 @@ containing both `meeting` and `project`, or notes containing `agenda`.
 Everything queries are passed through unchanged and continue to use Everything's
 own search syntax.
 
+### File sort priorities
+
+File ordering is configured from `Settings → My Palette → File search → Sort
+priorities`, with one priority per line. The first priority that differs wins.
+Supported priorities are `Prefix name match`, `Fuzzy name match`, `Last opened`,
+`Last modified`, `Alphabetical`, `Alphabetical reverse`, and `@prior` with an
+optional `:asc` or `:desc` suffix. Missing `prior` values are sorted last.
+
+For example, `@prior:desc` places notes with higher numeric `prior` values first;
+the default keeps filename relevance ahead of `prior` for non-empty searches and
+uses `prior` ahead of recency for empty searches.
+
 ## Manually installing the plugin
 
 - Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.

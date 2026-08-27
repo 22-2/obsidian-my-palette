@@ -9,7 +9,7 @@ import {
 	type SettingGroupItem,
 } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import { DEFAULT_SETTINGS } from "src/model/settings";
+import { DEFAULT_SETTINGS, normalizeFileSortPriorities } from "src/model/settings";
 import { extensions } from "src/settings/mergeSettings";
 
 type ControlType = "text" | "toggle" | "slider";
@@ -65,11 +65,35 @@ export function createSettingPages(
 
 	return [
 		createPalettePage(helpers),
+		createFileSearchPage(plugin, helpers),
 		createSearchHistoryPage(plugin, helpers),
 		createEverythingPage(plugin, setControlValue, helpers),
 		createFileOpeningPage(helpers),
 		createAdvancedPage(helpers),
 	];
+}
+
+function createFileSearchPage(plugin: MyPalettePlugin, helpers: SettingPageHelpers): PageItem {
+	return helpers.page("File search", "Control how Vault files are ordered in the palette.", [
+		helpers.group("Sorting", [
+			helpers.render(
+				"Sort priorities",
+				"One priority per line. The first priority that differs wins. Use @prior:desc for higher-priority notes first; missing values are last.",
+				(setting) =>
+					setting.addTextArea((text) =>
+						text
+							.setValue(plugin.settings.file.sortPriorities.join("\n"))
+							.setPlaceholder(DEFAULT_SETTINGS.file.sortPriorities.join("\n"))
+							.onChange(async (value) => {
+								plugin.settings.file.sortPriorities = normalizeFileSortPriorities(
+									value.split(/\r?\n/),
+								);
+								await plugin.saveSettings();
+							}),
+					),
+			),
+		]),
+	]);
 }
 
 function createPalettePage(helpers: SettingPageHelpers): PageItem {

@@ -3,7 +3,7 @@ import type {
 	SearchHistoryCategory,
 	SearchHistoryEntry,
 } from "src/model/settings";
-import { DEFAULT_SETTINGS } from "src/model/settings";
+import { DEFAULT_SETTINGS, normalizeFileSortPriorities } from "src/model/settings";
 import { getSearchHistoryCategory, parseInput, type Prefixes } from "src/palette/inputParser";
 
 /**
@@ -74,6 +74,7 @@ function searchHistoryEntries(value: unknown, prefixes: Prefixes): SearchHistory
 export function mergeSettings(data: unknown): MyPaletteSettings {
 	const source = (data && typeof data === "object" ? data : {}) as Record<string, unknown>;
 	const rawPrefixes = (source.prefixes ?? {}) as Record<string, unknown>;
+	const rawFile = (source.file ?? {}) as Record<string, unknown>;
 	const rawEverything = (source.everything ?? {}) as Record<string, unknown>;
 	const prefixes = {
 		command: typeof rawPrefixes.command === "string" ? rawPrefixes.command : ">",
@@ -90,7 +91,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 
 	return {
 		...DEFAULT_SETTINGS,
-		schemaVersion: 8,
+		schemaVersion: 9,
 		showLog: typeof source.showLog === "boolean" ? source.showLog : false,
 		rememberLastInput:
 			typeof source.rememberLastInput === "boolean" ? source.rememberLastInput : false,
@@ -118,6 +119,9 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 			entries: searchHistoryEntries(rawSearchHistory.entries, prefixes),
 		},
 		prefixes,
+		file: {
+			sortPriorities: normalizeFileSortPriorities(rawFile.sortPriorities),
+		},
 		everything: {
 			httpUrl:
 				typeof rawEverything.httpUrl === "string" && rawEverything.httpUrl.trim()

@@ -12,6 +12,16 @@ describe("mergeSettings", () => {
 		expect(mergeSettings({ searchHistory: {} }).searchHistory.daysToKeep).toBe(0);
 	});
 
+	it("defaults file sorting to relevance, prior, and recency", () => {
+		expect(mergeSettings(undefined).file.sortPriorities).toEqual([
+			"Prefix name match",
+			"Fuzzy name match",
+			"@prior:desc",
+			"Last opened",
+			"Last modified",
+		]);
+	});
+
 	it("bounds numeric settings and sanitizes extension and command lists", () => {
 		const settings = mergeSettings({
 			searchHistory: { addDelayMs: -1, daysToKeep: 99999 },
@@ -31,6 +41,16 @@ describe("mergeSettings", () => {
 		expect(settings.everything.requestTimeoutMs).toBe(60000);
 		expect(settings.everything.vaultExtensions).toEqual(["md"]);
 		expect(settings.recentCommandIds).toEqual(["first", "second", "third"]);
+	});
+
+	it("normalizes configured file sort priorities and ignores invalid values", () => {
+		const settings = mergeSettings({
+			file: {
+				sortPriorities: [" @prior:asc ", "Last opened", "@title:desc", 42, "unknown"],
+			},
+		});
+
+		expect(settings.file.sortPriorities).toEqual(["@prior:asc", "Last opened"]);
 	});
 
 	it("migrates legacy history entries through the current prefix parser", () => {

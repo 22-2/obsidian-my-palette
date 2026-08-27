@@ -173,9 +173,9 @@ Obsidian が保持する「最近開いたファイル」を新しい順で最�
 - 空白で区切った語は AND 条件とし、すべての語に一致する項目だけを表示する。
 - `|` で区切った条件は OR 条件とし、いずれかの条件に一致する項目を表示する。
 - AND / OR 検索は File、Command、Link、Backlink、Bookmark、Smart Connections モードに適用する。Everything モードのクエリは Everything 自身の検索構文として無変換で渡す。
-- ファイル名一致をパス一致より優先する。
-- 完全な前方一致を部分一致より優先する。
-- 同点の場合は最近開いた順、次に相対パス昇順とする。
+- 並び順は `File search` 設定の `sortPriorities` を上から適用する。
+- `@prior:asc` / `@prior:desc` は frontmatter の数値 `prior` を比較し、未設定値は最後に置く。
+- 空入力では、検索語に依存する `Prefix name match` / `Fuzzy name match` を除外してから同じ設定を適用する。
 - 最大50件を表示する。
 
 #### 表示
@@ -448,6 +448,7 @@ Everythingページには次を設ける。
 | ページ           | 内容                                           |
 | ---------------- | ---------------------------------------------- |
 | `Palette`        | 各検索モードのプレフィックス、最後の入力の復元 |
+| `File search`    | Vaultファイルの並び順                          |
 | `Search history` | 履歴の有効化、追加遅延、保持期間、履歴削除     |
 | `Everything`     | 接続設定とEverything/Vault検索の詳細           |
 | `File opening`   | Vault外MarkdownをObsidianで開く挙動            |
@@ -490,7 +491,7 @@ interface EverythingResult extends BaseResult {
 }
 
 interface MyPaletteSettings {
-	schemaVersion: 8;
+	schemaVersion: 9;
 	showLog: boolean;
 	rememberLastInput: boolean;
 	searchHistory: {
@@ -502,6 +503,9 @@ interface MyPaletteSettings {
 	prefixes: {
 		command: string;
 		everything: string;
+	};
+	file: {
+		sortPriorities: string[];
 	};
 	everything: {
 		httpUrl: string;
