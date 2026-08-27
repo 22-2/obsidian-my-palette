@@ -23,25 +23,85 @@ export interface SearchHistorySettings {
 	entries: SearchHistoryEntry[];
 }
 
+export const SETTINGS_SCHEMA_VERSION = 11;
+export const MAX_RECENT_COMMAND_IDS = 20;
+export const MILLISECONDS_PER_SECOND = 1_000;
+export const DISABLED_DELAY_MS = 0;
+export const UNLIMITED_DAYS = 0;
+
+/**
+ * Keep persisted defaults in one named block so validation and the settings UI
+ * cannot silently drift when a default changes.
+ */
+export const SETTING_DEFAULTS = {
+	searchHistory: {
+		addDelayMs: 3_000,
+		daysToKeep: UNLIMITED_DAYS,
+	},
+	everything: {
+		maxResults: 100,
+		debounceMs: 150,
+		requestTimeoutMs: 30_000,
+	},
+} as const;
+
+/**
+ * The same ranges drive both data sanitization and slider controls, keeping
+ * interactive edits consistent with values loaded from data.json.
+ */
+export const SETTING_LIMITS = {
+	searchHistory: {
+		addDelayMs: { min: DISABLED_DELAY_MS, max: 10_000, step: 1_000 },
+		daysToKeep: { min: UNLIMITED_DAYS, max: 3_650, step: 30 },
+	},
+	everything: {
+		maxResults: { min: 10, max: 500, step: 10 },
+		debounceMs: { min: 50, max: 1_000, step: 50 },
+		requestTimeoutMs: { min: 1_000, max: 60_000, step: 1_000 },
+	},
+} as const;
+
+/**
+ * These strings are persisted in data.json, so the names are stable setting
+ * tokens as well as labels shown in documentation. Keep them centralized so a
+ * sorter branch and a migration cannot accidentally drift apart.
+ */
+export const FILE_SORT_PRIORITIES = {
+	filenamePrefixMatch: "Filename prefix match",
+	aliasPrefixMatch: "Alias prefix match",
+	filenameFuzzyMatch: "Filename fuzzy match",
+	aliasFuzzyMatch: "Alias fuzzy match",
+	tagMatch: "Tag match",
+	pathFuzzyMatch: "Path fuzzy match",
+	lastOpened: "Last opened",
+	lastModified: "Last modified",
+	aliasesCount: "Aliases count",
+	alphabetical: "Alphabetical",
+	alphabeticalReverse: "Alphabetical reverse",
+	prior: "@prior",
+	priorAsc: "@prior:asc",
+	priorDesc: "@prior:desc",
+} as const;
+
 export const FILE_SORT_PRIORITY_LIST = [
-	"Filename prefix match",
-	"Alias prefix match",
-	"Filename fuzzy match",
-	"Alias fuzzy match",
-	"Tag match",
-	"Path fuzzy match",
-	"Last opened",
-	"Last modified",
-	"Aliases count",
-	"Alphabetical",
-	"Alphabetical reverse",
+	FILE_SORT_PRIORITIES.filenamePrefixMatch,
+	FILE_SORT_PRIORITIES.aliasPrefixMatch,
+	FILE_SORT_PRIORITIES.filenameFuzzyMatch,
+	FILE_SORT_PRIORITIES.aliasFuzzyMatch,
+	FILE_SORT_PRIORITIES.tagMatch,
+	FILE_SORT_PRIORITIES.pathFuzzyMatch,
+	FILE_SORT_PRIORITIES.lastOpened,
+	FILE_SORT_PRIORITIES.lastModified,
+	FILE_SORT_PRIORITIES.aliasesCount,
+	FILE_SORT_PRIORITIES.alphabetical,
+	FILE_SORT_PRIORITIES.alphabeticalReverse,
 ] as const;
 
 export type FileSortPriority =
 	| (typeof FILE_SORT_PRIORITY_LIST)[number]
-	| "@prior"
-	| "@prior:asc"
-	| "@prior:desc";
+	| typeof FILE_SORT_PRIORITIES.prior
+	| typeof FILE_SORT_PRIORITIES.priorAsc
+	| typeof FILE_SORT_PRIORITIES.priorDesc;
 
 const PRIOR_SORT_PRIORITY_PATTERN = /^@(prior)(?::(asc|desc))?$/;
 
@@ -62,27 +122,27 @@ export function isFileSortPriority(value: unknown): value is FileSortPriority {
 }
 
 const LEGACY_FILE_SORT_PRIORITY_ALIASES: Readonly<Record<string, FileSortPriority>> = {
-	"Prefix name match": "Filename prefix match",
-	"Fuzzy name match": "Filename fuzzy match",
+	"Prefix name match": FILE_SORT_PRIORITIES.filenamePrefixMatch,
+	"Fuzzy name match": FILE_SORT_PRIORITIES.filenameFuzzyMatch,
 };
 
 const LEGACY_DEFAULT_FILE_SORT_PRIORITIES = [
 	"Prefix name match",
 	"Fuzzy name match",
-	"@prior:desc",
-	"Last opened",
-	"Last modified",
+	FILE_SORT_PRIORITIES.priorDesc,
+	FILE_SORT_PRIORITIES.lastOpened,
+	FILE_SORT_PRIORITIES.lastModified,
 ] as const;
 
 const PREVIOUS_DEFAULT_FILE_SORT_PRIORITIES = [
-	"Filename prefix match",
-	"Filename fuzzy match",
-	"Alias prefix match",
-	"Alias fuzzy match",
-	"Path fuzzy match",
-	"@prior:desc",
-	"Last opened",
-	"Last modified",
+	FILE_SORT_PRIORITIES.filenamePrefixMatch,
+	FILE_SORT_PRIORITIES.filenameFuzzyMatch,
+	FILE_SORT_PRIORITIES.aliasPrefixMatch,
+	FILE_SORT_PRIORITIES.aliasFuzzyMatch,
+	FILE_SORT_PRIORITIES.pathFuzzyMatch,
+	FILE_SORT_PRIORITIES.priorDesc,
+	FILE_SORT_PRIORITIES.lastOpened,
+	FILE_SORT_PRIORITIES.lastModified,
 ] as const;
 
 function isPriorityList(
@@ -116,19 +176,19 @@ export function normalizeFileSortPriorities(value: unknown): FileSortPriority[] 
 // Keep the existing relevance and recency behavior while making `prior` useful
 // by default as a tie-breaker and as the first meaningful criterion for empty input.
 export const DEFAULT_FILE_SORT_PRIORITIES: readonly FileSortPriority[] = [
-	"Filename prefix match",
-	"Filename fuzzy match",
-	"Alias prefix match",
-	"Alias fuzzy match",
-	"Tag match",
-	"Path fuzzy match",
-	"@prior:desc",
-	"Last opened",
-	"Last modified",
+	FILE_SORT_PRIORITIES.filenamePrefixMatch,
+	FILE_SORT_PRIORITIES.filenameFuzzyMatch,
+	FILE_SORT_PRIORITIES.aliasPrefixMatch,
+	FILE_SORT_PRIORITIES.aliasFuzzyMatch,
+	FILE_SORT_PRIORITIES.tagMatch,
+	FILE_SORT_PRIORITIES.pathFuzzyMatch,
+	FILE_SORT_PRIORITIES.priorDesc,
+	FILE_SORT_PRIORITIES.lastOpened,
+	FILE_SORT_PRIORITIES.lastModified,
 ];
 
 export interface MyPaletteSettings {
-	schemaVersion: 11;
+	schemaVersion: typeof SETTINGS_SCHEMA_VERSION;
 	showLog: boolean;
 	rememberLastInput: boolean;
 	openExternalMarkdownInObsidian: boolean;
@@ -151,14 +211,14 @@ export interface MyPaletteSettings {
 }
 
 export const DEFAULT_SETTINGS: MyPaletteSettings = {
-	schemaVersion: 11,
+	schemaVersion: SETTINGS_SCHEMA_VERSION,
 	showLog: false,
 	rememberLastInput: false,
 	openExternalMarkdownInObsidian: true,
 	searchHistory: {
 		enabled: true,
-		addDelayMs: 3000,
-		daysToKeep: 0,
+		addDelayMs: SETTING_DEFAULTS.searchHistory.addDelayMs,
+		daysToKeep: SETTING_DEFAULTS.searchHistory.daysToKeep,
 		entries: [],
 	},
 	prefixes: { command: ">", everything: "e ", includeIgnored: "i " },
@@ -169,9 +229,9 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		httpUrl: "http://127.0.0.1:51361/",
 		username: "",
 		password: "",
-		maxResults: 100,
-		debounceMs: 150,
-		requestTimeoutMs: 30000,
+		maxResults: SETTING_DEFAULTS.everything.maxResults,
+		debounceMs: SETTING_DEFAULTS.everything.debounceMs,
+		requestTimeoutMs: SETTING_DEFAULTS.everything.requestTimeoutMs,
 		vaultExtensions: ["md", "canvas", "base"],
 		directorySearchMarkdownOnly: true,
 	},

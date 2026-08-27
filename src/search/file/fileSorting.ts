@@ -1,5 +1,6 @@
 import {
 	DEFAULT_FILE_SORT_PRIORITIES,
+	FILE_SORT_PRIORITIES,
 	parseFileSortPriority,
 	type FileSortPriority,
 } from "src/model/settings";
@@ -43,12 +44,12 @@ interface SortContext {
 }
 
 const QUERY_SORT_PRIORITIES = new Set<FileSortPriority>([
-	"Filename prefix match",
-	"Alias prefix match",
-	"Filename fuzzy match",
-	"Alias fuzzy match",
-	"Tag match",
-	"Path fuzzy match",
+	FILE_SORT_PRIORITIES.filenamePrefixMatch,
+	FILE_SORT_PRIORITIES.aliasPrefixMatch,
+	FILE_SORT_PRIORITIES.filenameFuzzyMatch,
+	FILE_SORT_PRIORITIES.aliasFuzzyMatch,
+	FILE_SORT_PRIORITIES.tagMatch,
+	FILE_SORT_PRIORITIES.pathFuzzyMatch,
 ]);
 
 function normalized(value: string): string {
@@ -140,37 +141,37 @@ function comparePriority(
 	context: SortContext,
 ): number {
 	switch (priority) {
-		case "Filename prefix match":
+		case FILE_SORT_PRIORITIES.filenamePrefixMatch:
 			return context.query === undefined
 				? 0
 				: Number(hasPrefixMatch(b, context.query, "filename")) -
 						Number(hasPrefixMatch(a, context.query, "filename"));
-		case "Alias prefix match":
+		case FILE_SORT_PRIORITIES.aliasPrefixMatch:
 			return context.query === undefined
 				? 0
 				: Number(hasPrefixMatch(b, context.query, "alias")) -
 						Number(hasPrefixMatch(a, context.query, "alias"));
-		case "Filename fuzzy match":
+		case FILE_SORT_PRIORITIES.filenameFuzzyMatch:
 			return compareOptionalScore(context.filenameScoreA, context.filenameScoreB);
-		case "Alias fuzzy match":
+		case FILE_SORT_PRIORITIES.aliasFuzzyMatch:
 			return compareOptionalScore(context.aliasScoreA, context.aliasScoreB);
-		case "Tag match":
+		case FILE_SORT_PRIORITIES.tagMatch:
 			// A note can match the query through another field; keep notes with no
 			// matching tag behind notes that have an explicit tag contribution.
 			return compareOptionalScore(context.tagMatchCountA, context.tagMatchCountB);
-		case "Path fuzzy match":
+		case FILE_SORT_PRIORITIES.pathFuzzyMatch:
 			return compareOptionalScore(context.pathScoreA, context.pathScoreB);
-		case "Last opened":
+		case FILE_SORT_PRIORITIES.lastOpened:
 			return compareRecent(a, b, context.recent);
-		case "Last modified":
+		case FILE_SORT_PRIORITIES.lastModified:
 			return compareNumber(a.mtime, b.mtime, "desc");
-		case "Aliases count":
+		case FILE_SORT_PRIORITIES.aliasesCount:
 			// Alias count is a derived centrality signal, not the first alias value;
 			// keep it opt-in so a few heavily aliased notes do not dominate by default.
 			return compareNumber(a.aliases.length, b.aliases.length, "desc");
-		case "Alphabetical":
+		case FILE_SORT_PRIORITIES.alphabetical:
 			return compareAlphabetical(a, b);
-		case "Alphabetical reverse":
+		case FILE_SORT_PRIORITIES.alphabeticalReverse:
 			return compareAlphabetical(a, b, true);
 		default: {
 			const property = parseFileSortPriority(priority);

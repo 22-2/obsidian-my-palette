@@ -3,7 +3,13 @@ import type {
 	SearchHistoryCategory,
 	SearchHistoryEntry,
 } from "src/model/settings";
-import { DEFAULT_SETTINGS, normalizeFileSortPriorities } from "src/model/settings";
+import {
+	DEFAULT_SETTINGS,
+	MAX_RECENT_COMMAND_IDS,
+	SETTING_LIMITS,
+	SETTINGS_SCHEMA_VERSION,
+	normalizeFileSortPriorities,
+} from "src/model/settings";
 import { getSearchHistoryCategory, parseInput, type Prefixes } from "src/palette/inputParser";
 
 /**
@@ -91,7 +97,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 
 	return {
 		...DEFAULT_SETTINGS,
-		schemaVersion: 11,
+		schemaVersion: SETTINGS_SCHEMA_VERSION,
 		showLog: typeof source.showLog === "boolean" ? source.showLog : false,
 		rememberLastInput:
 			typeof source.rememberLastInput === "boolean" ? source.rememberLastInput : false,
@@ -107,14 +113,14 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 			addDelayMs: bounded(
 				rawSearchHistory.addDelayMs,
 				DEFAULT_SETTINGS.searchHistory.addDelayMs,
-				0,
-				10000,
+				SETTING_LIMITS.searchHistory.addDelayMs.min,
+				SETTING_LIMITS.searchHistory.addDelayMs.max,
 			),
 			daysToKeep: bounded(
 				rawSearchHistory.daysToKeep,
 				DEFAULT_SETTINGS.searchHistory.daysToKeep,
-				0,
-				3650,
+				SETTING_LIMITS.searchHistory.daysToKeep.min,
+				SETTING_LIMITS.searchHistory.daysToKeep.max,
 			),
 			entries: searchHistoryEntries(rawSearchHistory.entries, prefixes),
 		},
@@ -129,9 +135,24 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 					: DEFAULT_SETTINGS.everything.httpUrl,
 			username: typeof rawEverything.username === "string" ? rawEverything.username : "",
 			password: typeof rawEverything.password === "string" ? rawEverything.password : "",
-			maxResults: bounded(rawEverything.maxResults, 100, 10, 500),
-			debounceMs: bounded(rawEverything.debounceMs, 150, 50, 1000),
-			requestTimeoutMs: bounded(rawEverything.requestTimeoutMs, 30000, 1000, 60000),
+			maxResults: bounded(
+				rawEverything.maxResults,
+				DEFAULT_SETTINGS.everything.maxResults,
+				SETTING_LIMITS.everything.maxResults.min,
+				SETTING_LIMITS.everything.maxResults.max,
+			),
+			debounceMs: bounded(
+				rawEverything.debounceMs,
+				DEFAULT_SETTINGS.everything.debounceMs,
+				SETTING_LIMITS.everything.debounceMs.min,
+				SETTING_LIMITS.everything.debounceMs.max,
+			),
+			requestTimeoutMs: bounded(
+				rawEverything.requestTimeoutMs,
+				DEFAULT_SETTINGS.everything.requestTimeoutMs,
+				SETTING_LIMITS.everything.requestTimeoutMs.min,
+				SETTING_LIMITS.everything.requestTimeoutMs.max,
+			),
 			vaultExtensions: extensions(rawEverything.vaultExtensions),
 			directorySearchMarkdownOnly:
 				typeof rawEverything.directorySearchMarkdownOnly === "boolean"
@@ -141,7 +162,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 		recentCommandIds: Array.isArray(source.recentCommandIds)
 			? source.recentCommandIds
 					.filter((id): id is string => typeof id === "string")
-					.slice(0, 20)
+					.slice(0, MAX_RECENT_COMMAND_IDS)
 			: [],
 	};
 }

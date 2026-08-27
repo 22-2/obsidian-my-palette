@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_SETTINGS } from "src/model/settings";
+import {
+	DEFAULT_SETTINGS,
+	SETTING_LIMITS,
+	SETTINGS_SCHEMA_VERSION,
+	UNLIMITED_DAYS,
+} from "src/model/settings";
 import { mergeSettings } from "src/settings/mergeSettings";
 
 describe("mergeSettings", () => {
@@ -8,8 +13,8 @@ describe("mergeSettings", () => {
 	});
 
 	it("defaults history retention to unlimited", () => {
-		expect(DEFAULT_SETTINGS.searchHistory.daysToKeep).toBe(0);
-		expect(mergeSettings({ searchHistory: {} }).searchHistory.daysToKeep).toBe(0);
+		expect(DEFAULT_SETTINGS.searchHistory.daysToKeep).toBe(UNLIMITED_DAYS);
+		expect(mergeSettings({ searchHistory: {} }).searchHistory.daysToKeep).toBe(UNLIMITED_DAYS);
 	});
 
 	it("defaults file sorting to relevance, prior, and recency", () => {
@@ -39,10 +44,12 @@ describe("mergeSettings", () => {
 		});
 
 		expect(settings.searchHistory.addDelayMs).toBe(0);
-		expect(settings.searchHistory.daysToKeep).toBe(3650);
-		expect(settings.everything.maxResults).toBe(500);
-		expect(settings.everything.debounceMs).toBe(50);
-		expect(settings.everything.requestTimeoutMs).toBe(60000);
+		expect(settings.searchHistory.daysToKeep).toBe(SETTING_LIMITS.searchHistory.daysToKeep.max);
+		expect(settings.everything.maxResults).toBe(SETTING_LIMITS.everything.maxResults.max);
+		expect(settings.everything.debounceMs).toBe(SETTING_LIMITS.everything.debounceMs.min);
+		expect(settings.everything.requestTimeoutMs).toBe(
+			SETTING_LIMITS.everything.requestTimeoutMs.max,
+		);
 		expect(settings.everything.vaultExtensions).toEqual(["md"]);
 		expect(settings.recentCommandIds).toEqual(["first", "second", "third"]);
 	});
@@ -82,7 +89,7 @@ describe("mergeSettings", () => {
 			},
 		});
 
-		expect(settings.schemaVersion).toBe(11);
+		expect(settings.schemaVersion).toBe(SETTINGS_SCHEMA_VERSION);
 		expect(settings.file.sortPriorities).toEqual([
 			"Filename prefix match",
 			"Filename fuzzy match",
@@ -113,7 +120,7 @@ describe("mergeSettings", () => {
 			},
 		});
 
-		expect(settings.schemaVersion).toBe(11);
+		expect(settings.schemaVersion).toBe(SETTINGS_SCHEMA_VERSION);
 		expect(settings.file.sortPriorities).toEqual(DEFAULT_SETTINGS.file.sortPriorities);
 	});
 

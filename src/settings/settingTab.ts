@@ -1,6 +1,6 @@
 import { PluginSettingTab, type SettingDefinitionItem } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import { DEFAULT_SETTINGS } from "src/model/settings";
+import { DEFAULT_SETTINGS, SETTING_LIMITS } from "src/model/settings";
 import { bounded } from "src/settings/mergeSettings";
 import { createSettingPages } from "src/settings/settingPages";
 
@@ -45,13 +45,28 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 				settings.everything.password = String(value);
 				break;
 			case "everything.maxResults":
-				settings.everything.maxResults = bounded(value, 100, 10, 500);
+				settings.everything.maxResults = bounded(
+					value,
+					DEFAULT_SETTINGS.everything.maxResults,
+					SETTING_LIMITS.everything.maxResults.min,
+					SETTING_LIMITS.everything.maxResults.max,
+				);
 				break;
 			case "everything.debounceMs":
-				settings.everything.debounceMs = bounded(value, 150, 50, 1000);
+				settings.everything.debounceMs = bounded(
+					value,
+					DEFAULT_SETTINGS.everything.debounceMs,
+					SETTING_LIMITS.everything.debounceMs.min,
+					SETTING_LIMITS.everything.debounceMs.max,
+				);
 				break;
 			case "everything.requestTimeoutMs":
-				settings.everything.requestTimeoutMs = bounded(value, 30000, 1000, 60000);
+				settings.everything.requestTimeoutMs = bounded(
+					value,
+					DEFAULT_SETTINGS.everything.requestTimeoutMs,
+					SETTING_LIMITS.everything.requestTimeoutMs.min,
+					SETTING_LIMITS.everything.requestTimeoutMs.max,
+				);
 				break;
 			case "everything.directorySearchMarkdownOnly":
 				settings.everything.directorySearchMarkdownOnly = Boolean(value);
@@ -60,15 +75,20 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 				settings.searchHistory.enabled = Boolean(value);
 				break;
 			case "searchHistory.addDelayMs":
-				settings.searchHistory.addDelayMs = bounded(value, 3000, 0, 10000);
+				settings.searchHistory.addDelayMs = bounded(
+					value,
+					DEFAULT_SETTINGS.searchHistory.addDelayMs,
+					SETTING_LIMITS.searchHistory.addDelayMs.min,
+					SETTING_LIMITS.searchHistory.addDelayMs.max,
+				);
 				break;
 			case "searchHistory.daysToKeep":
 				// Keep interactive edits aligned with the documented default when the control value is invalid.
 				settings.searchHistory.daysToKeep = bounded(
 					value,
 					DEFAULT_SETTINGS.searchHistory.daysToKeep,
-					0,
-					3650,
+					SETTING_LIMITS.searchHistory.daysToKeep.min,
+					SETTING_LIMITS.searchHistory.daysToKeep.max,
 				);
 				break;
 			case "prefixes.command":

@@ -1,7 +1,7 @@
 import { Plugin } from "obsidian";
 import log, { LogLevels } from "consola";
 import { DEFAULT_SETTINGS, MyPaletteSettingTab } from "src/settings";
-import type { MyPaletteSettings } from "src/model/settings";
+import { MAX_RECENT_COMMAND_IDS, type MyPaletteSettings } from "src/model/settings";
 import {
 	createPaletteProviders,
 	type PaletteProviderInstances,
@@ -127,7 +127,7 @@ export default class MyPalettePlugin extends Plugin {
 		this.settings.recentCommandIds = [
 			id,
 			...this.settings.recentCommandIds.filter((existing) => existing !== id),
-		].slice(0, 20);
+		].slice(0, MAX_RECENT_COMMAND_IDS);
 		void this.saveSettings();
 	}
 

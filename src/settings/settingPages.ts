@@ -9,7 +9,12 @@ import {
 	type SettingGroupItem,
 } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import { DEFAULT_SETTINGS, normalizeFileSortPriorities } from "src/model/settings";
+import {
+	DEFAULT_SETTINGS,
+	MILLISECONDS_PER_SECOND,
+	SETTING_LIMITS,
+	normalizeFileSortPriorities,
+} from "src/model/settings";
 import { extensions } from "src/settings/mergeSettings";
 
 type ControlType = "text" | "toggle" | "slider";
@@ -137,20 +142,26 @@ function createSearchHistoryPage(plugin: MyPalettePlugin, helpers: SettingPageHe
 				name: "Add delay",
 				desc: "Milliseconds of input inactivity before adding a search. 0 means Enter or action only.",
 				...helpers.control("slider", "searchHistory.addDelayMs", {
-					min: 0,
-					max: 10000,
-					step: 1000,
-					displayFormat: (value: number) => (value === 0 ? "Off" : `${value / 1000}s`),
+					min: SETTING_LIMITS.searchHistory.addDelayMs.min,
+					max: SETTING_LIMITS.searchHistory.addDelayMs.max,
+					step: SETTING_LIMITS.searchHistory.addDelayMs.step,
+					displayFormat: (value: number) =>
+						value === SETTING_LIMITS.searchHistory.addDelayMs.min
+							? "Off"
+							: `${value / MILLISECONDS_PER_SECOND}s`,
 				}),
 			},
 			{
 				name: "Keep history",
 				desc: "Number of days to keep entries. 0 keeps them forever.",
 				...helpers.control("slider", "searchHistory.daysToKeep", {
-					min: 0,
-					max: 3650,
-					step: 30,
-					displayFormat: (value: number) => (value === 0 ? "Forever" : `${value} days`),
+					min: SETTING_LIMITS.searchHistory.daysToKeep.min,
+					max: SETTING_LIMITS.searchHistory.daysToKeep.max,
+					step: SETTING_LIMITS.searchHistory.daysToKeep.step,
+					displayFormat: (value: number) =>
+						value === SETTING_LIMITS.searchHistory.daysToKeep.min
+							? "Forever"
+							: `${value} days`,
 				}),
 			},
 			{
@@ -213,28 +224,28 @@ function createEverythingPage(
 				name: "Maximum results",
 				desc: "Maximum number of results returned by Everything.",
 				...helpers.control("slider", "everything.maxResults", {
-					min: 10,
-					max: 500,
-					step: 10,
+					min: SETTING_LIMITS.everything.maxResults.min,
+					max: SETTING_LIMITS.everything.maxResults.max,
+					step: SETTING_LIMITS.everything.maxResults.step,
 				}),
 			},
 			{
 				name: "Request timeout",
 				desc: "Maximum time to wait for an Everything response.",
 				...helpers.control("slider", "everything.requestTimeoutMs", {
-					min: 1000,
-					max: 60000,
-					step: 1000,
-					displayFormat: (value: number) => `${value / 1000}s`,
+					min: SETTING_LIMITS.everything.requestTimeoutMs.min,
+					max: SETTING_LIMITS.everything.requestTimeoutMs.max,
+					step: SETTING_LIMITS.everything.requestTimeoutMs.step,
+					displayFormat: (value: number) => `${value / MILLISECONDS_PER_SECOND}s`,
 				}),
 			},
 			{
 				name: "Search debounce",
 				desc: "Delay before sending a new Everything search.",
 				...helpers.control("slider", "everything.debounceMs", {
-					min: 50,
-					max: 1000,
-					step: 50,
+					min: SETTING_LIMITS.everything.debounceMs.min,
+					max: SETTING_LIMITS.everything.debounceMs.max,
+					step: SETTING_LIMITS.everything.debounceMs.step,
 					displayFormat: (value: number) => `${value}ms`,
 				}),
 			},
