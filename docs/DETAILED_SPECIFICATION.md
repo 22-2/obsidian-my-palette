@@ -175,6 +175,7 @@ Obsidian が保持する「最近開いたファイル」を新しい順で最�
 - AND / OR 検索は File、Command、Link、Backlink、Bookmark、Smart Connections モードに適用する。Everything モードのクエリは Everything 自身の検索構文として無変換で渡す。
 - 並び順は `File search` 設定の `sortPriorities` を上から適用する。
 - `@prior:asc` / `@prior:desc` は frontmatter の数値 `prior` を比較し、未設定値は最後に置く。
+- `Aliases count` は frontmatter の `aliases` / `alias` の要素数を降順で比較する。
 - 空入力では、検索語に依存する `Prefix name match` / `Fuzzy name match` を除外してから同じ設定を適用する。
 - 最大50件を表示する。
 

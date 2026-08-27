@@ -28,6 +28,7 @@ export const FILE_SORT_PRIORITY_LIST = [
 	"Fuzzy name match",
 	"Last opened",
 	"Last modified",
+	"Aliases count",
 	"Alphabetical",
 	"Alphabetical reverse",
 ] as const;

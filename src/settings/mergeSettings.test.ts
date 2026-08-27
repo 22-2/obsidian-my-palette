@@ -46,11 +46,22 @@ describe("mergeSettings", () => {
 	it("normalizes configured file sort priorities and ignores invalid values", () => {
 		const settings = mergeSettings({
 			file: {
-				sortPriorities: [" @prior:asc ", "Last opened", "@title:desc", 42, "unknown"],
+				sortPriorities: [
+					" @prior:asc ",
+					"Aliases count",
+					"Last opened",
+					"@title:desc",
+					42,
+					"unknown",
+				],
 			},
 		});
 
-		expect(settings.file.sortPriorities).toEqual(["@prior:asc", "Last opened"]);
+		expect(settings.file.sortPriorities).toEqual([
+			"@prior:asc",
+			"Aliases count",
+			"Last opened",
+		]);
 	});
 
 	it("migrates legacy history entries through the current prefix parser", () => {

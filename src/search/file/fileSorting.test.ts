@@ -136,4 +136,17 @@ describe("file sorting", () => {
 
 		expect(sorted.map(({ path }) => path)).toEqual(["important.md", "recent.md"]);
 	});
+
+	it("sorts by the number of aliases when configured", () => {
+		const entries = [
+			file("one.md", 1, ["one"]),
+			file("five.md", 1, ["one", "two", "three", "four", "five"]),
+			file("none.md", 1),
+			file("two.md", 1, ["one", "two"]),
+		];
+
+		const sorted = sortFilesWithoutQuery(entries, new Map(), ["Aliases count"]);
+
+		expect(sorted.map(({ path }) => path)).toEqual(["five.md", "two.md", "one.md", "none.md"]);
+	});
 });

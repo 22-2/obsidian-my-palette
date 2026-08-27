@@ -112,6 +112,10 @@ function comparePriority(
 			return compareRecent(a, b, context.recent);
 		case "Last modified":
 			return compareNumber(a.mtime, b.mtime, "desc");
+		case "Aliases count":
+			// Alias count is a derived centrality signal, not the first alias value;
+			// keep it opt-in so a few heavily aliased notes do not dominate by default.
+			return compareNumber(a.aliases.length, b.aliases.length, "desc");
 		case "Alphabetical":
 			return compareAlphabetical(a, b);
 		case "Alphabetical reverse":
