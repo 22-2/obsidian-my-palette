@@ -176,8 +176,13 @@ export class IgnoredNoteIndex {
 
 	async getEntries(): Promise<IgnoredNoteIndexEntry[]> {
 		await this.ensureLoaded();
-		if (this.needsScan() && !this.scanPromise) {
-			if (this.current.size === 0) await this.rebuild();
+		const filters = getUserIgnoreFilters(this.app);
+		const filtersChanged = fingerprint(filters) !== this.filterFingerprint;
+		if ((filtersChanged || this.needsScan()) && !this.scanPromise) {
+			// Excluded files can change while the plugin stays loaded. Waiting for an
+			// explicit `i ` search to rescan prevents the prefix from appearing broken
+			// for up to the index TTL after the user edits Obsidian's ignore filters.
+			if (filtersChanged || this.current.size === 0) await this.rebuild();
 			else void this.rebuild();
 		}
 		return [...this.current.values()];
