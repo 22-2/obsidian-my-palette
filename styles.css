@@ -14,6 +14,27 @@
 	padding-right: 42px;
 }
 
+/* Sorting priorities are one-per-line, so the default compact control hides useful context. */
+.my-palette-sort-priorities-setting {
+	display: block;
+}
+
+.my-palette-sort-priorities-setting .setting-item-info,
+.my-palette-sort-priorities-setting .setting-item-control {
+	width: 100%;
+}
+
+.my-palette-sort-priorities-setting .setting-item-control {
+	margin-top: 12px;
+}
+
+.my-palette-sort-priorities {
+	box-sizing: border-box;
+	width: 100%;
+	min-height: 12em;
+	resize: vertical;
+}
+
 .my-palette-history-button {
 	position: absolute;
 	top: 50%;
