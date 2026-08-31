@@ -139,12 +139,12 @@ function createSearchHistoryPage(plugin: MyPalettePlugin, helpers: SettingPageHe
 		helpers.group("History", [
 			{
 				name: "Enable search history",
-				desc: "Remember search input across all palette modes.",
+				desc: "Remember searches after a result is used across all palette modes.",
 				...helpers.control("toggle", "searchHistory.enabled"),
 			},
 			{
 				name: "Add delay",
-				desc: "Milliseconds of input inactivity before adding a search. 0 means Enter or action only.",
+				desc: "Optional milliseconds of input inactivity before adding a search. 0 means action only.",
 				...helpers.control("slider", "searchHistory.addDelayMs", {
 					min: SETTING_LIMITS.searchHistory.addDelayMs.min,
 					max: SETTING_LIMITS.searchHistory.addDelayMs.max,

@@ -6,7 +6,7 @@ import {
 } from "src/palette/searchHistory";
 
 describe("search history", () => {
-	it("records after an idle interval and merges case-only duplicates", () => {
+	it("increments a committed search and merges case-only duplicates", () => {
 		const first = recordSearchHistory([], "report", "everything", {
 			now: 1_000,
 			daysToKeep: 360,

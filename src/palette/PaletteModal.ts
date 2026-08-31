@@ -9,6 +9,12 @@ import { runResultAction, type ActionKind } from "src/palette/resultActions";
 import { getCopyablePaths, toPaletteSelectionItem } from "src/palette/resultPresentation";
 import { addCopyPathMenuItems, copyPathToClipboard } from "src/platform/pathClipboard";
 
+type RecordableSearch = {
+	query: string;
+	category: ReturnType<typeof getSearchHistoryCategory>;
+	includeIgnored: boolean;
+};
+
 export class PaletteModal extends SelectionModal<PaletteResult> {
 	private generation = 0;
 	private controller?: AbortController;
@@ -130,16 +136,6 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			},
 			true,
 		);
-		this.plugin.registerDomEvent(
-			this.inputEl,
-			"keydown",
-			(event) => {
-				if (event.key === "Enter" && !event.isComposing && !this.hasSelectedResult()) {
-					this.recordCurrentSearch();
-				}
-			},
-			true,
-		);
 	}
 
 	protected override onSelectionModalClose(): void {
@@ -178,7 +174,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		}
 		const activeLeaf = this.app.workspace.activeLeaf;
 		try {
-			await openPaletteResultInBackground(this.plugin, result);
+			await this.openResultInBackground(result);
 		} finally {
 			if (activeLeaf && this.app.workspace.activeLeaf !== activeLeaf)
 				this.app.workspace.setActiveLeaf(activeLeaf, { focus: false });
@@ -232,7 +228,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				item
 					.setTitle("Open in new tab (background)")
 					.setIcon("panel-top-open")
-					.onClick(() => void openPaletteResultInBackground(this.plugin, result)),
+					.onClick(() => void this.openResultInBackground(result)),
 			);
 			menu.addItem((item) =>
 				item
@@ -335,7 +331,11 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			this.applySearchHistory(result);
 			return;
 		}
-		this.recordCurrentSearch();
+		const committedSearch = this.recordableSearch(this.inputEl.value);
+		// Cancel the idle fallback whenever the user makes an explicit choice. The
+		// action below decides whether that choice actually succeeded before it is
+		// committed to history.
+		this.cancelHistoryDelay();
 		if (result.mode === "command") {
 			if (action !== "primary") return;
 			const exists = this.plugin.commandProvider
@@ -348,15 +348,18 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			this.plugin.recordCommand(result.commandId);
 			this.close();
 			window.queueMicrotask(() => {
-				(
+				const executed = (
 					this.app.commands as unknown as { executeCommandById: (id: string) => boolean }
 				).executeCommandById(result.commandId);
+				if (executed) this.commitSearch(committedSearch);
 			});
 			return;
 		}
 		if (result.mode === "bookmark") {
+			let opened = false;
 			if (result.kind === "search" && result.query) {
 				await this.app.workspace.openLinkText(result.query, "", true);
+				opened = true;
 			} else if (result.file) {
 				const leaf =
 					action === "alternate"
@@ -367,7 +370,9 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 								? this.app.workspace.getLeaf("split", "vertical")
 								: this.app.workspace.getLeaf(false);
 				await leaf.openFile(result.file);
+				opened = true;
 			}
+			if (opened) this.commitSearch(committedSearch);
 			if (closePalette) this.close();
 			return;
 		}
@@ -381,6 +386,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 							? this.app.workspace.getLeaf("split", "vertical")
 							: this.app.workspace.getLeaf(false);
 			await leaf.openFile(result.file);
+			this.commitSearch(committedSearch);
 			if (closePalette) this.close();
 			return;
 		}
@@ -394,6 +400,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 							? this.app.workspace.getLeaf("split", "vertical")
 							: this.app.workspace.getLeaf(false);
 			await leaf.openFile(result.file);
+			this.commitSearch(committedSearch);
 			const editor = this.app.workspace.activeEditor?.editor;
 			if (editor) editor.setCursor({ line: result.line, ch: 0 });
 			if (closePalette) this.close();
@@ -405,6 +412,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				this.plugin.openExternalMarkdown(absolutePath, openAction, closePalette),
 		});
 		if (outcome.close) {
+			this.commitSearch(committedSearch);
 			if (closePalette) this.close();
 			return;
 		}
@@ -466,10 +474,17 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		return menu;
 	}
 
-	private recordCurrentSearch(): void {
-		this.cancelHistoryDelay();
-		const search = this.recordableSearch(this.inputEl.value);
+	private commitSearch(search: RecordableSearch | undefined): void {
 		if (search) this.plugin.recordSearch(search.query, search.category, search.includeIgnored);
+	}
+
+	private async openResultInBackground(result: PaletteResult): Promise<void> {
+		const committedSearch = this.recordableSearch(this.inputEl.value);
+		this.cancelHistoryDelay();
+		// Background opening does not close the palette, so it needs its own
+		// successful-action commit instead of relying on activatePaletteResult.
+		if (await openPaletteResultInBackground(this.plugin, result))
+			this.commitSearch(committedSearch);
 	}
 
 	private scheduleSearchHistory(input: string): void {
@@ -498,13 +513,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		};
 	}
 
-	private recordableSearch(input: string):
-		| {
-				query: string;
-				category: ReturnType<typeof getSearchHistoryCategory>;
-				includeIgnored: boolean;
-		  }
-		| undefined {
+	private recordableSearch(input: string): RecordableSearch | undefined {
 		const search = this.getSearchHistoryContext(input);
 		return search.query.trim() ? search : undefined;
 	}
@@ -513,13 +522,6 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		if (this.historyDelayTimer === undefined) return;
 		window.clearTimeout(this.historyDelayTimer);
 		this.historyDelayTimer = undefined;
-	}
-
-	private hasSelectedResult(): boolean {
-		const chooser = this as unknown as {
-			chooser?: { values?: PaletteResult[]; selectedItem?: number };
-		};
-		return Boolean(chooser.chooser?.values?.[chooser.chooser.selectedItem ?? -1]);
 	}
 
 	private async openSelectedWithoutClosing(): Promise<void> {

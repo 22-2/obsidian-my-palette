@@ -427,11 +427,11 @@ Everythingページには次を設ける。
 
 検索履歴はモード共通で次の設定を持つ。
 
-| 設定キー                   | 型      | 既定値 | 説明                                                           |
-| -------------------------- | ------- | ------ | -------------------------------------------------------------- |
-| `searchHistory.enabled`    | boolean | `true` | 検索履歴を有効にする                                           |
-| `searchHistory.addDelayMs` | number  | `3000` | 入力停止後に履歴へ追加する待機時間。0はEnter／アクション時のみ |
-| `searchHistory.daysToKeep` | number  | `0`    | 保持日数。0は無期限                                            |
+| 設定キー                   | 型      | 既定値 | 説明                                                    |
+| -------------------------- | ------- | ------ | ------------------------------------------------------- |
+| `searchHistory.enabled`    | boolean | `true` | 検索履歴を有効にする                                    |
+| `searchHistory.addDelayMs` | number  | `0`    | 入力停止後に履歴へ追加する待機時間。0はアクション時のみ |
+| `searchHistory.daysToKeep` | number  | `0`    | 保持日数。0は無期限                                     |
 
 ### 9.3 Mode prefixes
 
@@ -498,7 +498,7 @@ interface EverythingResult extends BaseResult {
 }
 
 interface MyPaletteSettings {
-	schemaVersion: 11;
+	schemaVersion: 12;
 	showLog: boolean;
 	rememberLastInput: boolean;
 	searchHistory: {
@@ -534,7 +534,7 @@ interface MyPaletteSettings {
 - 最近実行コマンドは最大20 ID。存在しない ID は表示時に除外する。
 - `rememberLastInput` が有効な場合、モードごとの最後の入力を Obsidian の実行中だけ保持する。
 - 検索履歴は検索モード・Everything の検索範囲ごとに分類し、プレフィックスを除いた検索語を `data.json` へ永続化する。
-- Enter、結果へのアクション、または入力停止後 `searchHistory.addDelayMs` 経過時に履歴へ追加する。
+- 結果へのアクションが成功したときに履歴へ追加する。入力停止後の追加は `searchHistory.addDelayMs` を0より大きくした場合だけ行う。
 - 大文字小文字だけが異なる入力は同じ履歴項目として扱い、最新の表記と回数を保持する。
 - 入力欄右端の履歴ボタンまたは `Ctrl+R` で現在のモードの検索履歴を表示し、項目を選ぶと現在のプレフィックス付き入力へ復元する。
 

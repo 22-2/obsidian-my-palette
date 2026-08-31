@@ -23,7 +23,7 @@ export interface SearchHistorySettings {
 	entries: SearchHistoryEntry[];
 }
 
-export const SETTINGS_SCHEMA_VERSION = 11;
+export const SETTINGS_SCHEMA_VERSION = 12;
 export const MAX_RECENT_COMMAND_IDS = 20;
 export const MILLISECONDS_PER_SECOND = 1_000;
 export const DISABLED_DELAY_MS = 0;
@@ -35,7 +35,9 @@ export const UNLIMITED_DAYS = 0;
  */
 export const SETTING_DEFAULTS = {
 	searchHistory: {
-		addDelayMs: 3_000,
+		// Search history is most useful when it reflects an action the user
+		// completed, so idle input must be opt-in rather than the default.
+		addDelayMs: 0,
 		daysToKeep: UNLIMITED_DAYS,
 	},
 	everything: {

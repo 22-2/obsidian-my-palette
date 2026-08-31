@@ -12,6 +12,8 @@ import {
 } from "src/model/settings";
 import { getSearchHistoryCategory, parseInput, type Prefixes } from "src/palette/inputParser";
 
+const PREVIOUS_DEFAULT_SEARCH_HISTORY_DELAY_MS = 3_000;
+
 /**
  * `data.json` is untrusted persisted input. Keeping normalization separate from
  * the Obsidian settings UI lets the migration contract stay pure and testable.
@@ -94,6 +96,15 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 		source.searchHistory && typeof source.searchHistory === "object"
 			? (source.searchHistory as Record<string, unknown>)
 			: {};
+	const storedSchemaVersion =
+		typeof source.schemaVersion === "number" ? source.schemaVersion : undefined;
+	const migratedSearchHistoryDelay =
+		// Treat the previous default as a migration value, while preserving an
+		// explicit delay in settings written by the new schema.
+		(storedSchemaVersion === undefined || storedSchemaVersion < SETTINGS_SCHEMA_VERSION) &&
+		rawSearchHistory.addDelayMs === PREVIOUS_DEFAULT_SEARCH_HISTORY_DELAY_MS
+			? DEFAULT_SETTINGS.searchHistory.addDelayMs
+			: rawSearchHistory.addDelayMs;
 
 	return {
 		...DEFAULT_SETTINGS,
@@ -111,7 +122,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 					? rawSearchHistory.enabled
 					: DEFAULT_SETTINGS.searchHistory.enabled,
 			addDelayMs: bounded(
-				rawSearchHistory.addDelayMs,
+				migratedSearchHistoryDelay,
 				DEFAULT_SETTINGS.searchHistory.addDelayMs,
 				SETTING_LIMITS.searchHistory.addDelayMs.min,
 				SETTING_LIMITS.searchHistory.addDelayMs.max,

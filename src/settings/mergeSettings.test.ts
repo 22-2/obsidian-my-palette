@@ -13,8 +13,24 @@ describe("mergeSettings", () => {
 	});
 
 	it("defaults history retention to unlimited", () => {
+		expect(DEFAULT_SETTINGS.searchHistory.addDelayMs).toBe(0);
 		expect(DEFAULT_SETTINGS.searchHistory.daysToKeep).toBe(UNLIMITED_DAYS);
 		expect(mergeSettings({ searchHistory: {} }).searchHistory.daysToKeep).toBe(UNLIMITED_DAYS);
+	});
+
+	it("migrates the old idle-history default to action-only history", () => {
+		expect(
+			mergeSettings({
+				schemaVersion: 11,
+				searchHistory: { addDelayMs: 3_000 },
+			}).searchHistory.addDelayMs,
+		).toBe(0);
+		expect(
+			mergeSettings({
+				schemaVersion: SETTINGS_SCHEMA_VERSION,
+				searchHistory: { addDelayMs: 3_000 },
+			}).searchHistory.addDelayMs,
+		).toBe(3_000);
 	});
 
 	it("defaults file sorting to relevance, prior, and recency", () => {
