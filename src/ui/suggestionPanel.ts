@@ -1,18 +1,11 @@
 import { Component, setIcon } from "obsidian";
 
-export interface SuggestionPanelHeader {
-	title: string;
-	icon?: string;
-	hint?: string;
-}
-
 export interface SuggestionPanelProps<T> {
 	initialInput?: string;
 	placeholder?: string;
 	footerText?: string;
 	limit?: number;
 	surface?: "modal" | "view";
-	header?: SuggestionPanelHeader;
 	onInput: (input: string) => void;
 	renderSuggestion: (item: T, el: HTMLElement, query: string) => void;
 	onChoose: (item: T, event: MouseEvent | KeyboardEvent) => void | Promise<void>;
@@ -44,10 +37,6 @@ export class SuggestionPanel<T> extends Component {
 	readonly statusBarEl: HTMLElement;
 	readonly statusTextEl: HTMLElement;
 	readonly resultCountEl: HTMLElement;
-	readonly headerEl?: HTMLElement;
-	readonly headerIconEl?: HTMLElement;
-	readonly headerTitleEl?: HTMLElement;
-	readonly headerHintEl?: HTMLElement;
 	readonly chooser: SuggestionChooser<T> = { values: [], selectedItem: -1 };
 	readonly limit: number;
 	selected: T | null = null;
@@ -73,13 +62,6 @@ export class SuggestionPanel<T> extends Component {
 		// Obsidian's `prompt` class imposes modal sizing. The persistent view gets
 		// its own shell so a narrow sidebar cannot inherit those width constraints.
 		if (surface === "modal") this.rootEl.addClass("prompt");
-		if (surface === "view") {
-			this.headerEl = this.rootEl.createDiv("my-palette-panel__header");
-			this.headerIconEl = this.headerEl.createSpan("my-palette-panel__header-icon");
-			this.headerTitleEl = this.headerEl.createSpan("my-palette-panel__header-title");
-			this.headerHintEl = this.headerEl.createSpan("my-palette-panel__header-hint");
-			this.updateHeader(props.header ?? { title: "Search", icon: "search" });
-		}
 		const inputContainer = this.rootEl.createDiv("prompt-input-container");
 		if (surface === "view") {
 			const searchIcon = inputContainer.createSpan("my-palette-panel__search-icon");
@@ -156,17 +138,6 @@ export class SuggestionPanel<T> extends Component {
 
 	updateFooterText(text: string): void {
 		this.statusTextEl.setText(text);
-	}
-
-	updateHeader(header: SuggestionPanelHeader): void {
-		if (!this.headerEl || !this.headerIconEl || !this.headerTitleEl || !this.headerHintEl)
-			return;
-		this.headerIconEl.empty();
-		if (header.icon) setIcon(this.headerIconEl, header.icon);
-		this.headerIconEl.toggleClass("is-hidden", !header.icon);
-		this.headerTitleEl.setText(header.title);
-		this.headerHintEl.setText(header.hint ?? "");
-		this.headerHintEl.toggleClass("is-hidden", !header.hint);
 	}
 
 	updateResultCount(total: number): void {

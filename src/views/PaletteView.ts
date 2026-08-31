@@ -134,7 +134,6 @@ export class PaletteView extends ItemView {
 		this.panel = new SuggestionPanel<PaletteResult>(this.contentEl, {
 			initialInput,
 			surface: "view",
-			header: paletteViewHeader(state.fixedMode ?? "file"),
 			placeholder: palettePlaceholder(state.fixedMode ?? "file"),
 			onInput: (input) => this.session?.setInput(input),
 			renderSuggestion: (result, el, query) =>
@@ -164,7 +163,6 @@ export class PaletteView extends ItemView {
 	private renderState(state: PaletteSearchState): void {
 		if (!this.panel) return;
 		this.panel.updatePlaceholder(palettePlaceholder(state.mode));
-		this.panel.updateHeader(paletteViewHeader(state.mode));
 		this.panel.setAttribute("data-mode", state.mode);
 		this.panel.setAttribute("data-everything-scope", state.everythingScope);
 		const source = this.sourcePath ?? this.app.workspace.getActiveFile()?.path;
@@ -466,30 +464,6 @@ export class PaletteView extends ItemView {
 			? (file as import("obsidian").TFile)
 			: undefined;
 	}
-}
-
-function paletteViewHeader(mode: PaletteSearchState["mode"]): {
-	title: string;
-	icon: string;
-	hint: string;
-} {
-	const headers: Record<PaletteSearchState["mode"], [string, string]> = {
-		file: ["Notes", "files"],
-		command: ["Commands", "terminal"],
-		bookmark: ["Bookmarks", "bookmark"],
-		link: ["Related notes", "link"],
-		backlink: ["Backlinks", "links-coming-in"],
-		smart: ["Smart search", "sparkles"],
-		everything: ["Everything", "search"],
-	};
-	const [title, icon] = headers[mode];
-	return {
-		title,
-		icon,
-		// Keep the affordance visible in a persistent view where modal keyboard
-		// conventions are less discoverable and the note remains interactive.
-		hint: mode === "command" ? "Enter to run" : "Click to zap · Middle-click for tab",
-	};
 }
 
 function normalizeState(state: PaletteViewState): NormalizedPaletteViewState {

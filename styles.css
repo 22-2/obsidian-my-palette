@@ -17,42 +17,6 @@
 	background: var(--background-secondary);
 }
 
-.my-palette-panel--view .my-palette-panel__header {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	min-width: 0;
-	padding: 9px 10px 5px;
-	color: var(--text-muted);
-	font-size: var(--font-ui-smaller);
-}
-
-.my-palette-panel--view .my-palette-panel__header-icon {
-	display: grid;
-	flex: 0 0 14px;
-	place-items: center;
-}
-
-.my-palette-panel--view .my-palette-panel__header-icon svg {
-	width: 14px;
-	height: 14px;
-}
-
-.my-palette-panel--view .my-palette-panel__header-title {
-	flex: 0 0 auto;
-	color: var(--text-normal);
-	font-weight: var(--font-semibold);
-}
-
-.my-palette-panel--view .my-palette-panel__header-hint {
-	min-width: 0;
-	margin-left: auto;
-	overflow: hidden;
-	color: var(--text-faint);
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
 .my-palette-panel--view .prompt-input-container {
 	position: relative;
 	flex: 0 0 auto;
@@ -378,6 +342,17 @@
 	max-width: 42%;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+.my-palette-panel--view .my-palette-suggestion__icon {
+	flex-basis: 13px;
+	width: 13px;
+	height: 13px;
+}
+
+.my-palette-panel--view .my-palette-suggestion__icon svg {
+	width: 13px;
+	height: 13px;
 }
 
 .my-palette-status-bar {
