@@ -210,7 +210,9 @@ async function openTargetFileSelector(
 					badge,
 					value: path,
 				})),
-			placeholder: "Search a note · i old notes includes Excluded files",
+			// Explain the destination because this selector chooses the note to link into the active MOC.
+			placeholder:
+				"Search a note to insert into the MOC · i old notes includes Excluded files",
 			footerText: `Source: ${activeFile.path}`,
 		},
 		plugin.app,
