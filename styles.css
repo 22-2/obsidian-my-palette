@@ -345,14 +345,14 @@
 }
 
 .my-palette-panel--view .my-palette-suggestion__icon {
-	flex-basis: 13px;
-	width: 13px;
-	height: 13px;
+	flex-basis: 14px;
+	width: 14px;
+	height: 14px;
 }
 
 .my-palette-panel--view .my-palette-suggestion__icon svg {
-	width: 13px;
-	height: 13px;
+	width: 14px;
+	height: 14px;
 }
 
 .my-palette-status-bar {
