@@ -372,8 +372,6 @@ export class PaletteView extends ItemView {
 			);
 		} else {
 			const paths = getCopyablePaths(this.app, result);
-			addMocInsertionMenuItem(menu, this.plugin, result);
-			menu.addSeparator();
 			menu.addItem((item) =>
 				item
 					.setTitle("Open")
@@ -398,7 +396,6 @@ export class PaletteView extends ItemView {
 					.setIcon("separator-horizontal")
 					.onClick(() => void this.execute(result, "horizontal")),
 			);
-			addCopyPathMenuItems(menu, paths, (path) => void copyPathToClipboard(path));
 			if (result.mode === "everything") {
 				menu.addSeparator();
 				menu.addItem((item) =>
@@ -408,6 +405,10 @@ export class PaletteView extends ItemView {
 						.onClick(() => void this.execute(result, "alternate")),
 				);
 			}
+			addCopyPathMenuItems(menu, paths, (path) => void copyPathToClipboard(path));
+			// Keep the potentially mutating MOC operation below navigation and copy
+			// actions so the menu follows familiar file-manager conventions.
+			addMocInsertionMenuItem(menu, this.plugin, result);
 		}
 		menu.setParentElement(this.contentEl);
 		menu.showAtMouseEvent(event);

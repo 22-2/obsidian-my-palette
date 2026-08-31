@@ -224,8 +224,6 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			);
 		} else {
 			const paths = getCopyablePaths(this.app, result);
-			addMocInsertionMenuItem(menu, this.plugin, result, () => this.close());
-			menu.addSeparator();
 			menu.addItem((item) =>
 				item
 					.setTitle("Open")
@@ -250,7 +248,6 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 					.setIcon("separator-horizontal")
 					.onClick(() => void this.activatePaletteResult("horizontal", result)),
 			);
-			addCopyPathMenuItems(menu, paths, (path) => void copyPathToClipboard(path));
 			if (result.mode === "everything") {
 				menu.addSeparator();
 				menu.addItem((item) =>
@@ -260,6 +257,10 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 						.onClick(() => void this.activatePaletteResult("alternate", result)),
 				);
 			}
+			addCopyPathMenuItems(menu, paths, (path) => void copyPathToClipboard(path));
+			// MOC insertion is intentionally last: it is a multi-note mutation,
+			// unlike the immediately discoverable open and copy actions above.
+			addMocInsertionMenuItem(menu, this.plugin, result, () => this.close());
 		}
 		menu.setParentElement(this.modalEl);
 		menu.showAtMouseEvent(event);

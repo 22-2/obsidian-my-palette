@@ -42,6 +42,7 @@ export function addMocInsertionMenuItem(
 	if (result.mode === "command" || result.mode === "search-history") return;
 	if (result.mode === "everything" && (result.kind === "folder" || !result.vaultPath)) return;
 	if (result.mode === "bookmark" && result.kind === "search") return;
+	menu.addSeparator();
 	menu.addItem((item) =>
 		item
 			.setTitle("Insert into MOC Relateds")
