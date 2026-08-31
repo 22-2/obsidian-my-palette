@@ -9,13 +9,9 @@ import {
 	type SettingGroupItem,
 } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import {
-	DEFAULT_SETTINGS,
-	MILLISECONDS_PER_SECOND,
-	SETTING_LIMITS,
-	normalizeFileSortPriorities,
-} from "src/model/settings";
+import { DEFAULT_SETTINGS, MILLISECONDS_PER_SECOND, SETTING_LIMITS } from "src/model/settings";
 import { extensions } from "src/settings/mergeSettings";
+import { renderFileSortPriorityControl } from "src/settings/fileSortPriorityControl";
 
 type ControlType = "text" | "toggle" | "slider";
 type ControlItem = Pick<SettingDefinitionControl, "control">;
@@ -83,22 +79,13 @@ function createFileSearchPage(plugin: MyPalettePlugin, helpers: SettingPageHelpe
 		helpers.group("Sorting", [
 			helpers.render(
 				"Sort priorities",
-				"One priority per line. The first priority that differs wins. Filename, Alias, Tag, and Path match priorities control the source; Aliases count is an optional tie-breaker. #tag searches tags directly. @prior:desc puts higher-priority notes first, and missing prior values are last.",
+				"Choose priorities separately for blank and typed input. Enabled priorities run from top to bottom; drag them to reorder. @prior:desc puts higher-priority notes first, and missing prior values are last.",
 				(setting) => {
-					// The multiline priority list needs the whole setting row, not the
-					// narrow control column used by ordinary one-line settings.
-					setting.settingEl.addClass("my-palette-sort-priorities-setting");
-					setting.addTextArea((text) => {
-						text.inputEl.addClass("my-palette-sort-priorities");
-						text.setValue(plugin.settings.file.sortPriorities.join("\n"))
-							.setPlaceholder(DEFAULT_SETTINGS.file.sortPriorities.join("\n"))
-							.onChange(async (value) => {
-								plugin.settings.file.sortPriorities = normalizeFileSortPriorities(
-									value.split(/\r?\n/),
-								);
-								await plugin.saveSettings();
-							});
-					});
+					renderFileSortPriorityControl(
+						setting,
+						plugin.settings.file.sortPriorities,
+						() => plugin.saveSettings(),
+					);
 				},
 			),
 		]),

@@ -2,7 +2,7 @@ import { parseFrontMatterTags, type App, type EventRef, type TFile } from "obsid
 import { getUserIgnoreFilters, isUserIgnoredPathWithFilters } from "src/ignored-notes/ignoredPaths";
 import { IgnoredNoteIndex, type IgnoredNoteIndexLogger } from "src/ignored-notes/ignoredNoteIndex";
 import type { FileResult } from "src/model/results";
-import { DEFAULT_FILE_SORT_PRIORITIES, type FileSortPriority } from "src/model/settings";
+import { DEFAULT_FILE_SORT_PRIORITIES, type FileSortPriorities } from "src/model/settings";
 import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
 import { sortFileMatches, sortFilesWithoutQuery } from "src/search/file/fileSorting";
 import { isTagOnlyQuery, matchingTags, normalizeTags } from "src/search/file/fileTags";
@@ -38,8 +38,10 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		private readonly app: App,
 		private readonly vaultExtensions: () => readonly string[],
 		ignoredLogger?: IgnoredNoteIndexLogger,
-		private readonly fileSortPriorities: () => readonly FileSortPriority[] = () =>
-			DEFAULT_FILE_SORT_PRIORITIES,
+		private readonly fileSortPriorities: () => FileSortPriorities = () => ({
+			blank: [...DEFAULT_FILE_SORT_PRIORITIES],
+			input: [...DEFAULT_FILE_SORT_PRIORITIES],
+		}),
 	) {
 		this.updateAllowedExtensions();
 		this.rebuild();
@@ -143,7 +145,9 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			}
 		}
 		if (!query.trim()) {
-			const files = sortFilesWithoutQuery(entries, recent, this.fileSortPriorities());
+			// Empty and typed searches serve different browsing intents, so each
+			// reads its own priority sequence at search time for live settings edits.
+			const files = sortFilesWithoutQuery(entries, recent, this.fileSortPriorities().blank);
 			return files.map((entry) => this.result(entry));
 		}
 		// Boolean operators are resolved locally; Everything is deliberately left
@@ -189,7 +193,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			matches,
 			tagOnlyQuery ? undefined : query,
 			recent,
-			this.fileSortPriorities(),
+			this.fileSortPriorities().input,
 		).map((entry) => this.result(entry, matchedTagsByPath.get(entry.path)));
 	}
 

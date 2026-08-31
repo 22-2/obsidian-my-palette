@@ -23,7 +23,7 @@ export interface SearchHistorySettings {
 	entries: SearchHistoryEntry[];
 }
 
-export const SETTINGS_SCHEMA_VERSION = 12;
+export const SETTINGS_SCHEMA_VERSION = 13;
 export const MAX_RECENT_COMMAND_IDS = 20;
 export const MILLISECONDS_PER_SECOND = 1_000;
 export const DISABLED_DELAY_MS = 0;
@@ -99,11 +99,25 @@ export const FILE_SORT_PRIORITY_LIST = [
 	FILE_SORT_PRIORITIES.alphabeticalReverse,
 ] as const;
 
+export const FILE_SORT_PRIORITY_OPTIONS = [
+	...FILE_SORT_PRIORITY_LIST,
+	FILE_SORT_PRIORITIES.prior,
+	FILE_SORT_PRIORITIES.priorAsc,
+	FILE_SORT_PRIORITIES.priorDesc,
+] as const;
+
 export type FileSortPriority =
 	| (typeof FILE_SORT_PRIORITY_LIST)[number]
 	| typeof FILE_SORT_PRIORITIES.prior
 	| typeof FILE_SORT_PRIORITIES.priorAsc
 	| typeof FILE_SORT_PRIORITIES.priorDesc;
+
+export type FileSortState = "blank" | "input";
+
+export interface FileSortPriorities {
+	blank: FileSortPriority[];
+	input: FileSortPriority[];
+}
 
 const PRIOR_SORT_PRIORITY_PATTERN = /^@(prior)(?::(asc|desc))?$/;
 
@@ -168,11 +182,14 @@ export function normalizeFileSortPriorities(value: unknown): FileSortPriority[] 
 	// previous list, while an arbitrary custom order remains exactly as entered.
 	if (isPriorityList(trimmed, PREVIOUS_DEFAULT_FILE_SORT_PRIORITIES))
 		return [...DEFAULT_FILE_SORT_PRIORITIES];
-	return trimmed.flatMap((item): FileSortPriority[] => {
+	const normalized = trimmed.flatMap((item): FileSortPriority[] => {
 		if (item === undefined) return [];
 		const priority = LEGACY_FILE_SORT_PRIORITY_ALIASES[item] ?? item;
 		return isFileSortPriority(priority) ? [priority] : [];
 	});
+	// A dual list represents enablement, so repeated tokens cannot be expressed
+	// meaningfully and would otherwise appear as ambiguous duplicate rows.
+	return [...new Set(normalized)];
 }
 
 // Keep the existing relevance and recency behavior while making `prior` useful
@@ -197,7 +214,7 @@ export interface MyPaletteSettings {
 	searchHistory: SearchHistorySettings;
 	prefixes: { command: string; everything: string; includeIgnored: string };
 	file: {
-		sortPriorities: FileSortPriority[];
+		sortPriorities: FileSortPriorities;
 	};
 	everything: {
 		httpUrl: string;
@@ -225,7 +242,12 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 	},
 	prefixes: { command: ">", everything: "e ", includeIgnored: "i " },
 	file: {
-		sortPriorities: [...DEFAULT_FILE_SORT_PRIORITIES],
+		// Start both states identically so the split adds control without changing
+		// the ordering users already expect from a fresh installation.
+		sortPriorities: {
+			blank: [...DEFAULT_FILE_SORT_PRIORITIES],
+			input: [...DEFAULT_FILE_SORT_PRIORITIES],
+		},
 	},
 	everything: {
 		httpUrl: "http://127.0.0.1:51361/",

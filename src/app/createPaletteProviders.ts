@@ -1,5 +1,5 @@
 import type { App } from "obsidian";
-import type { FileSortPriority, MyPaletteSettings } from "src/model/settings";
+import type { FileSortPriorities, MyPaletteSettings } from "src/model/settings";
 import type { PaletteMode } from "src/model/results";
 import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
 import { EverythingProvider } from "src/search/everything/EverythingProvider";
@@ -22,7 +22,7 @@ export interface PaletteProviderInstances {
 
 interface ProviderFactoryOptions {
 	vaultExtensions: () => string[];
-	fileSortPriorities: () => readonly FileSortPriority[];
+	fileSortPriorities: () => FileSortPriorities;
 	recentCommandIds: () => string[];
 	everythingSettings: () => MyPaletteSettings["everything"];
 	log: (message: string, detail?: unknown) => void;

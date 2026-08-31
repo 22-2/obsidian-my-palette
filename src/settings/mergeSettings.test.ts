@@ -34,17 +34,30 @@ describe("mergeSettings", () => {
 	});
 
 	it("defaults file sorting to relevance, prior, and recency", () => {
-		expect(mergeSettings(undefined).file.sortPriorities).toEqual([
-			"Filename prefix match",
-			"Filename fuzzy match",
-			"Alias prefix match",
-			"Alias fuzzy match",
-			"Tag match",
-			"Path fuzzy match",
-			"@prior:desc",
-			"Last opened",
-			"Last modified",
-		]);
+		expect(mergeSettings(undefined).file.sortPriorities).toEqual({
+			blank: [
+				"Filename prefix match",
+				"Filename fuzzy match",
+				"Alias prefix match",
+				"Alias fuzzy match",
+				"Tag match",
+				"Path fuzzy match",
+				"@prior:desc",
+				"Last opened",
+				"Last modified",
+			],
+			input: [
+				"Filename prefix match",
+				"Filename fuzzy match",
+				"Alias prefix match",
+				"Alias fuzzy match",
+				"Tag match",
+				"Path fuzzy match",
+				"@prior:desc",
+				"Last opened",
+				"Last modified",
+			],
+		});
 	});
 
 	it("bounds numeric settings and sanitizes extension and command lists", () => {
@@ -84,11 +97,10 @@ describe("mergeSettings", () => {
 			},
 		});
 
-		expect(settings.file.sortPriorities).toEqual([
-			"@prior:asc",
-			"Aliases count",
-			"Last opened",
-		]);
+		expect(settings.file.sortPriorities).toEqual({
+			blank: ["@prior:asc", "Aliases count", "Last opened"],
+			input: ["@prior:asc", "Aliases count", "Last opened"],
+		});
 	});
 
 	it("migrates the previous combined name priorities", () => {
@@ -106,7 +118,7 @@ describe("mergeSettings", () => {
 		});
 
 		expect(settings.schemaVersion).toBe(SETTINGS_SCHEMA_VERSION);
-		expect(settings.file.sortPriorities).toEqual([
+		expect(settings.file.sortPriorities.blank).toEqual([
 			"Filename prefix match",
 			"Filename fuzzy match",
 			"Alias prefix match",
@@ -117,6 +129,7 @@ describe("mergeSettings", () => {
 			"Last opened",
 			"Last modified",
 		]);
+		expect(settings.file.sortPriorities.input).toEqual(settings.file.sortPriorities.blank);
 	});
 
 	it("adds the tag priority to untouched previous defaults", () => {
@@ -138,6 +151,22 @@ describe("mergeSettings", () => {
 
 		expect(settings.schemaVersion).toBe(SETTINGS_SCHEMA_VERSION);
 		expect(settings.file.sortPriorities).toEqual(DEFAULT_SETTINGS.file.sortPriorities);
+	});
+
+	it("preserves independent sort priorities for blank and typed input", () => {
+		const settings = mergeSettings({
+			file: {
+				sortPriorities: {
+					blank: ["Last opened", "Last modified"],
+					input: ["Filename fuzzy match", "@prior:desc"],
+				},
+			},
+		});
+
+		expect(settings.file.sortPriorities).toEqual({
+			blank: ["Last opened", "Last modified"],
+			input: ["Filename fuzzy match", "@prior:desc"],
+		});
 	});
 
 	it("migrates legacy history entries through the current prefix parser", () => {

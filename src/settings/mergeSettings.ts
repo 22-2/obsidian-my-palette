@@ -105,6 +105,23 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 		rawSearchHistory.addDelayMs === PREVIOUS_DEFAULT_SEARCH_HISTORY_DELAY_MS
 			? DEFAULT_SETTINGS.searchHistory.addDelayMs
 			: rawSearchHistory.addDelayMs;
+	const rawSortPriorities = rawFile.sortPriorities;
+	const legacySortPriorities = normalizeFileSortPriorities(rawSortPriorities);
+	// The old setting controlled both query states. Copy it into each branch so
+	// upgrading does not silently change either empty or typed search ordering.
+	const sortPriorities =
+		rawSortPriorities &&
+		typeof rawSortPriorities === "object" &&
+		!Array.isArray(rawSortPriorities)
+			? {
+					blank: normalizeFileSortPriorities(
+						(rawSortPriorities as Record<string, unknown>).blank,
+					),
+					input: normalizeFileSortPriorities(
+						(rawSortPriorities as Record<string, unknown>).input,
+					),
+				}
+			: { blank: [...legacySortPriorities], input: [...legacySortPriorities] };
 
 	return {
 		...DEFAULT_SETTINGS,
@@ -137,7 +154,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 		},
 		prefixes,
 		file: {
-			sortPriorities: normalizeFileSortPriorities(rawFile.sortPriorities),
+			sortPriorities,
 		},
 		everything: {
 			httpUrl:
