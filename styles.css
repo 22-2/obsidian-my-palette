@@ -86,7 +86,7 @@
 
 .my-palette-suggest-modal .prompt-input,
 .my-palette-panel .prompt-input {
-	padding-right: 42px;
+	padding-right: 74px;
 }
 
 /* The dual list is a single editor, so it needs the full row instead of the
@@ -224,6 +224,21 @@
 	transform: translateY(-50%);
 }
 
+.my-palette-help-button {
+	position: absolute;
+	top: 50%;
+	right: 40px;
+	z-index: 1;
+	width: 28px;
+	height: 28px;
+	transform: translateY(-50%);
+}
+
+.my-palette-help-button svg {
+	width: 16px;
+	height: 16px;
+}
+
 .my-palette-history-button svg {
 	width: 16px;
 	height: 16px;
@@ -293,6 +308,75 @@
 	padding: 8px;
 	color: var(--text-muted);
 	font-size: var(--font-ui-smaller);
+}
+
+.my-palette-help-modal {
+	width: min(560px, calc(100vw - 32px));
+}
+
+.my-palette-help-modal__intro,
+.my-palette-help-modal__note {
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+}
+
+.my-palette-help-modal__section {
+	margin-top: 18px;
+}
+
+.my-palette-help-modal__section h3 {
+	margin: 0 0 7px;
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-semibold);
+}
+
+.my-palette-help-modal__row {
+	display: grid;
+	grid-template-columns: minmax(64px, auto) minmax(110px, auto) minmax(0, 1fr);
+	align-items: baseline;
+	gap: 9px;
+	min-height: 28px;
+	padding: 4px 7px;
+	border-radius: var(--radius-s);
+}
+
+.my-palette-help-modal__row:hover {
+	background: var(--background-modifier-hover);
+}
+
+.my-palette-help-modal__row code {
+	padding: 2px 5px;
+	border-radius: var(--radius-s);
+	background: var(--background-secondary);
+	color: var(--text-accent);
+	font-size: var(--font-ui-smaller);
+}
+
+.my-palette-help-modal__name {
+	color: var(--text-normal);
+	font-weight: var(--font-medium);
+}
+
+.my-palette-help-modal__description {
+	min-width: 0;
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
+
+.my-palette-help-modal__note {
+	display: flex;
+	align-items: flex-start;
+	gap: 7px;
+	margin-top: 18px;
+	padding: 9px 10px;
+	border-radius: var(--radius-s);
+	background: var(--background-secondary);
+}
+
+.my-palette-help-modal__note-icon {
+	display: grid;
+	flex: 0 0 16px;
+	place-items: center;
 }
 
 .my-palette-suggest-modal .suggestion-item,

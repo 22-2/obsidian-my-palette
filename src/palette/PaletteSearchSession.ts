@@ -232,5 +232,5 @@ export function palettePlaceholder(mode: PaletteMode): string {
 				? "Search bookmarks"
 				: mode === "smart"
 					? "Search Smart Connections"
-					: "Search files · > commands · o outlinks · bl backlinks · b bookmarks · sc Smart Connections · es everything";
+					: "Search files";
 }

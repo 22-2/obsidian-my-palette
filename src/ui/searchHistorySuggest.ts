@@ -26,6 +26,11 @@ export class SearchHistorySuggest {
 		this.el.removeClass("is-hidden");
 	}
 
+	toggle(results: readonly SearchHistoryResult[]): void {
+		if (this.isOpen) this.close();
+		else this.show(results);
+	}
+
 	update(results: readonly SearchHistoryResult[]): void {
 		if (!this.isOpen) return;
 		this.render(results);

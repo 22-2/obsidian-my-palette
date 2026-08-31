@@ -14,6 +14,7 @@ import {
 import { getCopyablePaths, toPaletteSelectionItem } from "src/palette/resultPresentation";
 import { addCopyPathMenuItems, copyPathToClipboard } from "src/platform/pathClipboard";
 import { addMocInsertionMenuItem } from "src/palette/mocInsertion";
+import { PaletteHelpModal } from "src/ui/paletteHelpModal";
 
 export class PaletteModal extends SelectionModal<PaletteResult> {
 	private readonly session: PaletteSearchSession;
@@ -35,8 +36,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		super(
 			{
 				title: "Files",
-				placeholder:
-					"Search files · > commands · o outlinks · bl backlinks · es Vault · esdir directory",
+				placeholder: "Search files",
 				initialInput,
 				footerText: `Source: ${app.workspace.getActiveFile()?.path ?? "No active note"}`,
 			},
@@ -59,6 +59,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	protected override onSelectionModalOpen(): void {
 		// SelectionModal applies and refreshes the initial input.
 		this.addSearchHistoryButton();
+		this.addHelpButton();
 		this.historySuggest = new SearchHistorySuggest(
 			this.inputEl.parentElement ?? this.modalEl,
 			(result) => this.applySearchHistory(result),
@@ -126,7 +127,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				!(target instanceof Node) ||
 				this.historySuggest?.isOpen !== true ||
 				this.historySuggest?.contains(target) ||
-				target === this.inputEl
+				target === this.inputEl ||
+				(target instanceof Element && target.closest(".my-palette-history-button"))
 			)
 				return;
 			this.historySuggest.close();
@@ -335,7 +337,26 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.plugin.registerDomEvent(button, "click", (event) => {
 			event.preventDefault();
 			event.stopPropagation();
-			this.showSearchHistorySuggest();
+			this.toggleSearchHistorySuggest();
+		});
+	}
+
+	private addHelpButton(): void {
+		const container = this.inputEl.parentElement;
+		if (!container) return;
+		const button = container.createEl("button", {
+			cls: "clickable-icon my-palette-help-button",
+			attr: { type: "button", "aria-label": "Palette help", title: "Palette help" },
+		});
+		setIcon(button, "help-circle");
+		this.plugin.registerDomEvent(button, "mousedown", (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+		});
+		this.plugin.registerDomEvent(button, "click", (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			new PaletteHelpModal(this.app, this.plugin.settings.prefixes).open();
 		});
 	}
 
@@ -350,6 +371,14 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		);
 		this.inputEl.focus({ preventScroll: true });
 		this.inputEl.setSelectionRange(this.inputEl.value.length, this.inputEl.value.length);
+	}
+
+	private toggleSearchHistorySuggest(): void {
+		if (this.historySuggest?.isOpen) {
+			this.historySuggest.close();
+			return;
+		}
+		this.showSearchHistorySuggest();
 	}
 
 	private replaceActiveMenu(menu: Menu): Menu {

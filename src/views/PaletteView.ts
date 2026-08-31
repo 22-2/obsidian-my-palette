@@ -19,6 +19,7 @@ import { renderSelectionItem } from "src/ui/selectionModal";
 import { SuggestionPanel } from "src/ui/suggestionPanel";
 import type { ActionKind } from "src/palette/resultActions";
 import { addMocInsertionMenuItem } from "src/palette/mocInsertion";
+import { PaletteHelpModal } from "src/ui/paletteHelpModal";
 
 export const PALETTE_VIEW_TYPE = "my-palette-search";
 
@@ -207,7 +208,21 @@ export class PaletteView extends ItemView {
 		this.registerDomEvent(button, "click", (event) => {
 			event.preventDefault();
 			event.stopPropagation();
-			this.showSearchHistorySuggest();
+			this.toggleSearchHistorySuggest();
+		});
+		const helpButton = container.createEl("button", {
+			cls: "clickable-icon my-palette-help-button",
+			attr: { type: "button", "aria-label": "Palette help", title: "Palette help" },
+		});
+		setIcon(helpButton, "help-circle");
+		this.registerDomEvent(helpButton, "mousedown", (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+		});
+		this.registerDomEvent(helpButton, "click", (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			new PaletteHelpModal(this.app, this.plugin.settings.prefixes).open();
 		});
 		this.historySuggest = new SearchHistorySuggest(container, (result) =>
 			this.applySearchHistory(result),
@@ -267,7 +282,8 @@ export class PaletteView extends ItemView {
 				!(target instanceof Node) ||
 				!this.historySuggest?.isOpen ||
 				this.historySuggest.contains(target) ||
-				target === this.panel?.inputEl
+				target === this.panel?.inputEl ||
+				(target instanceof Element && target.closest(".my-palette-history-button"))
 			)
 				return;
 			this.historySuggest.close();
@@ -286,6 +302,14 @@ export class PaletteView extends ItemView {
 		);
 		this.panel.focusSearchInput();
 		this.panel.setInput(this.panel.inputEl.value, "end");
+	}
+
+	private toggleSearchHistorySuggest(): void {
+		if (this.historySuggest?.isOpen) {
+			this.historySuggest.close();
+			return;
+		}
+		this.showSearchHistorySuggest();
 	}
 
 	private applySearchHistory(result: Extract<PaletteResult, { mode: "search-history" }>): void {
