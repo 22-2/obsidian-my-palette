@@ -13,6 +13,39 @@ export interface SelectionItem {
 	value?: unknown;
 }
 
+/** Render a selection row without requiring a SuggestModal host. */
+export function renderSelectionItem(
+	result: SelectionItem,
+	container: HTMLElement,
+	query = "",
+): void {
+	const row = container.createDiv("my-palette-suggestion");
+	if (result.icon) {
+		const icon = row.createSpan("my-palette-suggestion__icon");
+		setIcon(icon, result.icon);
+	}
+	const body = row.createDiv("my-palette-suggestion__body");
+	const main = body.createDiv("my-palette-suggestion__main");
+	const label = main.createSpan("my-palette-suggestion__label");
+	renderMatchedLabel(label, result.label, query);
+	if (result.description) {
+		const description = main.createSpan({
+			cls: "my-palette-suggestion__description",
+			text: result.description,
+		});
+		if (result.descriptionTitle) description.setAttr("title", result.descriptionTitle);
+	}
+	if (result.badge) main.createSpan({ cls: "my-palette-suggestion__badge", text: result.badge });
+	if (result.tags?.length) {
+		// Tags are a second metadata row so the normal filename/path layout stays
+		// compact, while a tag query still makes its matching evidence visible.
+		const tags = body.createDiv("my-palette-suggestion__tags");
+		tags.setAttr("title", result.tagsTitle ?? result.tags.join(" "));
+		for (const tag of result.tags)
+			tags.createSpan({ cls: "my-palette-suggestion__tag", text: tag });
+	}
+}
+
 /** 候補の表示内容と検索方法だけを定義する選択モーダル。 */
 export class SelectionModal<T> extends BaseSuggestModal<T> {
 	private readonly searchProvider?: NonNullable<SuggestModalProps<T>["search"]>;
@@ -42,52 +75,27 @@ export class SelectionModal<T> extends BaseSuggestModal<T> {
 
 	renderSuggestion(item: T, el: HTMLElement): void {
 		const result = this.toSelectionItem(item);
-		const row = el.createDiv("my-palette-suggestion");
-		if (result.icon) {
-			const icon = row.createSpan("my-palette-suggestion__icon");
-			setIcon(icon, result.icon);
-		}
-		const body = row.createDiv("my-palette-suggestion__body");
-		const main = body.createDiv("my-palette-suggestion__main");
-		const label = main.createSpan("my-palette-suggestion__label");
-		this.renderMatchedLabel(label, result.label);
-		if (result.description) {
-			const description = main.createSpan({
-				cls: "my-palette-suggestion__description",
-				text: result.description,
-			});
-			if (result.descriptionTitle) description.setAttr("title", result.descriptionTitle);
-		}
-		if (result.badge)
-			main.createSpan({ cls: "my-palette-suggestion__badge", text: result.badge });
-		if (result.tags?.length) {
-			// Tags are a second metadata row so the normal filename/path layout stays
-			// compact, while a tag query still makes its matching evidence visible.
-			const tags = body.createDiv("my-palette-suggestion__tags");
-			tags.setAttr("title", result.tagsTitle ?? result.tags.join(" "));
-			for (const tag of result.tags)
-				tags.createSpan({ cls: "my-palette-suggestion__tag", text: tag });
-		}
+		renderSelectionItem(result, el, this.query);
 	}
 
 	protected toSelectionItem(item: T): SelectionItem {
 		if (typeof item === "string") return { label: item };
 		return item as unknown as SelectionItem;
 	}
+}
 
-	private renderMatchedLabel(container: HTMLElement, text: string): void {
-		const matched = this.query ? fuzzysort.single(this.query, text) : null;
-		if (!matched) {
-			container.createSpan({ text });
-			return;
-		}
-		const indexes = new Set(matched.indexes);
-		for (let index = 0; index < text.length; index += 1) {
-			container.createSpan({
-				cls: indexes.has(index) ? "my-palette-suggestion__match" : "",
-				text: text[index],
-			});
-		}
+function renderMatchedLabel(container: HTMLElement, text: string, query: string): void {
+	const matched = query ? fuzzysort.single(query, text) : null;
+	if (!matched) {
+		container.createSpan({ text });
+		return;
+	}
+	const indexes = new Set(matched.indexes);
+	for (let index = 0; index < text.length; index += 1) {
+		container.createSpan({
+			cls: indexes.has(index) ? "my-palette-suggestion__match" : "",
+			text: text[index],
+		});
 	}
 }
 

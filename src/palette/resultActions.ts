@@ -1,4 +1,4 @@
-import { Notice, TFile, type App } from "obsidian";
+import { Notice, TFile, type App, type WorkspaceLeaf } from "obsidian";
 import {
 	getVaultFullPath,
 	isAbsolutePathUserIgnored,
@@ -25,7 +25,18 @@ export interface ActionOutcome {
 
 interface ExternalMarkdownActions {
 	openExternalMarkdownInObsidian: boolean;
-	openExternalMarkdown: (absolutePath: string, action: ActionKind) => Promise<void>;
+	openExternalMarkdown: (
+		absolutePath: string,
+		action: ActionKind,
+		active?: boolean,
+	) => Promise<void>;
+}
+
+export interface ResultActionOptions {
+	/** Existing本文leaf used by a persistent palette for primary opens. */
+	targetLeaf?: WorkspaceLeaf;
+	/** Whether a primary external/open-file action should focus its target. */
+	active?: boolean;
 }
 
 async function openAbsolutePathInCode(absolutePath: string): Promise<ActionOutcome> {
@@ -37,9 +48,10 @@ async function openExternalTarget(
 	target: ExternalOpenTarget,
 	action: ActionKind,
 	externalMarkdown: ExternalMarkdownActions,
+	active: boolean,
 ): Promise<ActionOutcome> {
 	if (target.kind === "readonly-markdown") {
-		await externalMarkdown.openExternalMarkdown(target.absolutePath, action);
+		await externalMarkdown.openExternalMarkdown(target.absolutePath, action, active);
 		return { close: true };
 	}
 	if (target.kind === "code") return await openAbsolutePathInCode(target.absolutePath);
@@ -52,6 +64,7 @@ export async function runResultAction(
 	result: PaletteResult,
 	action: ActionKind,
 	externalMarkdown: ExternalMarkdownActions,
+	options: ResultActionOptions = {},
 ): Promise<ActionOutcome> {
 	if (result.mode === "file") {
 		const ignored = result.ignored || isUserIgnoredPath(app, result.vaultPath);
@@ -73,20 +86,30 @@ export async function runResultAction(
 				openMarkdownInObsidian: externalMarkdown.openExternalMarkdownInObsidian,
 				ignored: true,
 			});
-			return await openExternalTarget(target, action, externalMarkdown);
+			return await openExternalTarget(
+				target,
+				action,
+				externalMarkdown,
+				options.active ?? true,
+			);
 		}
 		const current = app.vault.getAbstractFileByPath(result.vaultPath);
 		if (!(current instanceof TFile))
 			return { close: false, message: "The file no longer exists." };
 		const leaf =
-			action === "alternate"
-				? app.workspace.getLeaf("tab")
-				: action === "horizontal"
-					? app.workspace.getLeaf("split", "horizontal")
-					: action === "vertical"
-						? app.workspace.getLeaf("split", "vertical")
-						: app.workspace.getLeaf(false);
-		await leaf.openFile(current);
+			action === "primary" && options.targetLeaf
+				? options.targetLeaf
+				: action === "alternate"
+					? app.workspace.getLeaf("tab")
+					: action === "horizontal"
+						? app.workspace.getLeaf("split", "horizontal")
+						: action === "vertical"
+							? app.workspace.getLeaf("split", "vertical")
+							: app.workspace.getLeaf(false);
+		await leaf.openFile(
+			current,
+			action === "primary" ? { active: options.active ?? true } : undefined,
+		);
 		return { close: true };
 	}
 	if (result.mode === "command") return { close: true };
@@ -106,12 +129,17 @@ export async function runResultAction(
 		const current = app.vault.getAbstractFileByPath(everythingResult.vaultPath);
 		if (current instanceof TFile) {
 			const leaf =
-				action === "horizontal"
-					? app.workspace.getLeaf("split", "horizontal")
-					: action === "vertical"
-						? app.workspace.getLeaf("split", "vertical")
-						: app.workspace.getLeaf(false);
-			await leaf.openFile(current);
+				action === "primary" && options.targetLeaf
+					? options.targetLeaf
+					: action === "horizontal"
+						? app.workspace.getLeaf("split", "horizontal")
+						: action === "vertical"
+							? app.workspace.getLeaf("split", "vertical")
+							: app.workspace.getLeaf(false);
+			await leaf.openFile(
+				current,
+				action === "primary" ? { active: options.active ?? true } : undefined,
+			);
 			return { close: true };
 		}
 	}
@@ -123,7 +151,7 @@ export async function runResultAction(
 			Boolean(everythingResult.vaultPath) ||
 			isAbsolutePathUserIgnored(app, everythingResult.absolutePath),
 	});
-	return await openExternalTarget(target, action, externalMarkdown);
+	return await openExternalTarget(target, action, externalMarkdown, options.active ?? true);
 }
 
 export function notifyActionError(message: string): void {

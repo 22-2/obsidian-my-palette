@@ -7,10 +7,10 @@ import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 export class RelatedFileProvider implements PaletteProvider<RelatedFileResult> {
 	constructor(private readonly app: App) {}
 
-	async search({ mode, query }: PaletteSearchRequest): Promise<RelatedFileResult[]> {
+	async search({ mode, query, sourceFile }: PaletteSearchRequest): Promise<RelatedFileResult[]> {
 		if (mode !== "link" && mode !== "backlink")
 			throw new Error(`RelatedFileProvider cannot search mode: ${mode}`);
-		const origin = this.app.workspace.getActiveFile();
+		const origin = sourceFile ?? this.app.workspace.getActiveFile();
 		if (!origin) return [];
 		const occurrences = mode === "link" ? this.outgoing(origin) : this.incoming(origin);
 		const results = await Promise.all(

@@ -3,24 +3,20 @@ import type MyPalettePlugin from "src/main";
 import type { EverythingScope, PaletteMode, PaletteResult } from "src/model/results";
 import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
 import { SearchHistorySuggest } from "src/ui/searchHistorySuggest";
-import { getSearchHistoryCategory, parseInput } from "src/palette/inputParser";
 import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
-import { runResultAction, type ActionKind } from "src/palette/resultActions";
+import { executePaletteResult } from "src/palette/executePaletteResult";
+import type { ActionKind } from "src/palette/resultActions";
+import {
+	PaletteSearchSession,
+	palettePlaceholder,
+	type RecordableSearch,
+} from "src/palette/PaletteSearchSession";
 import { getCopyablePaths, toPaletteSelectionItem } from "src/palette/resultPresentation";
 import { addCopyPathMenuItems, copyPathToClipboard } from "src/platform/pathClipboard";
 
-type RecordableSearch = {
-	query: string;
-	category: ReturnType<typeof getSearchHistoryCategory>;
-	includeIgnored: boolean;
-};
-
 export class PaletteModal extends SelectionModal<PaletteResult> {
-	private generation = 0;
-	private controller?: AbortController;
-	private historyDelayTimer?: number;
+	private readonly session: PaletteSearchSession;
 	private suppressHistoryForNextInput = false;
-	private skipInitialHistoryRecord: boolean;
 	private activeMenu?: Menu;
 	private historySuggest?: SearchHistorySuggest;
 	private mode: PaletteMode = "file";
@@ -44,7 +40,18 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			},
 			app,
 		);
-		this.skipInitialHistoryRecord = Boolean(initialInput);
+		this.session = new PaletteSearchSession(this.plugin, {
+			initialInput,
+			fixedMode,
+			onStateChange: (state) => {
+				this.mode = state.mode;
+				this.everythingScope = state.everythingScope;
+				this.updateMatchQuery(state.query);
+				this.updateMode();
+				this.updateResultCount(state.resultCount);
+				if (state.error) this.emptyStateText = state.error;
+			},
+		});
 	}
 
 	protected override onSelectionModalOpen(): void {
@@ -140,9 +147,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 
 	protected override onSelectionModalClose(): void {
 		this.plugin.releasePaletteModal(this);
-		this.generation += 1;
-		this.controller?.abort();
-		this.cancelHistoryDelay();
+		this.session.dispose();
 		this.activeMenu?.close();
 		this.activeMenu = undefined;
 		this.historySuggest?.destroy();
@@ -260,63 +265,11 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	override async getSuggestions(input: string): Promise<PaletteResult[]> {
 		const suppressHistoryRecord = this.suppressHistoryForNextInput;
 		this.suppressHistoryForNextInput = false;
-		this.cancelHistoryDelay();
-		this.controller?.abort();
-		const generation = ++this.generation;
-		const parsed = this.fixedMode
-			? { mode: this.fixedMode, query: input, includeIgnored: false }
-			: parseInput(input, this.plugin.settings.prefixes);
-		if (this.initialInputReady)
-			this.plugin.rememberPaletteQuery(parsed.mode, parsed.query, input);
-		this.updateMatchQuery(parsed.query);
-		this.mode = parsed.mode;
-		this.everythingScope =
-			("everythingScope" in parsed ? parsed.everythingScope : undefined) ?? "vault";
-		this.updateMode();
-		if (this.skipInitialHistoryRecord) {
-			this.skipInitialHistoryRecord = false;
-		} else if (!suppressHistoryRecord) {
-			this.scheduleSearchHistory(input);
-		}
-		const delay = parsed.mode === "everything" ? this.plugin.settings.everything.debounceMs : 0;
-		if (delay) await new Promise((resolve) => window.setTimeout(resolve, delay));
-		if (generation !== this.generation) return [];
-		this.controller = new AbortController();
-		try {
-			const results = await this.plugin.providers[this.mode].search({
-				mode: this.mode,
-				query: parsed.query,
-				signal: this.controller.signal,
-				everythingScope: this.everythingScope,
-				includeIgnored: parsed.includeIgnored,
-			});
-			if (generation !== this.generation) return [];
-			this.updateResultCount(results.length);
-			return results;
-		} catch (error) {
-			if (
-				generation !== this.generation ||
-				(error instanceof DOMException && error.name === "AbortError")
-			)
-				return [];
-			this.emptyStateText = error instanceof Error ? error.message : String(error);
-			this.updateResultCount(0);
-			return [];
-		}
+		return await this.session.search(input, { suppressHistory: suppressHistoryRecord });
 	}
 
 	private updateMode(): void {
-		this.updatePlaceholder(
-			this.mode === "link"
-				? "Search links in the active file"
-				: this.mode === "backlink"
-					? "Search backlinks to the active file"
-					: this.mode === "bookmark"
-						? "Search bookmarks"
-						: this.mode === "smart"
-							? "Search Smart Connections"
-							: "Search files · > commands · b bookmarks · sc Smart Connections · es everything",
-		);
+		this.updatePlaceholder(palettePlaceholder(this.mode));
 		this.modalEl.setAttribute("data-mode", this.mode);
 		this.modalEl.setAttribute("data-everything-scope", this.everythingScope);
 	}
@@ -336,87 +289,16 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		// action below decides whether that choice actually succeeded before it is
 		// committed to history.
 		this.cancelHistoryDelay();
-		if (result.mode === "command") {
-			if (action !== "primary") return;
-			const exists = this.plugin.commandProvider
-				.getCommands()
-				.some(({ id }) => id === result.commandId);
-			if (!exists) {
-				this.refreshSuggestions();
-				return;
-			}
-			this.plugin.recordCommand(result.commandId);
-			this.close();
-			window.queueMicrotask(() => {
-				const executed = (
-					this.app.commands as unknown as { executeCommandById: (id: string) => boolean }
-				).executeCommandById(result.commandId);
-				if (executed) this.commitSearch(committedSearch);
-			});
-			return;
-		}
-		if (result.mode === "bookmark") {
-			let opened = false;
-			if (result.kind === "search" && result.query) {
-				await this.app.workspace.openLinkText(result.query, "", true);
-				opened = true;
-			} else if (result.file) {
-				const leaf =
-					action === "alternate"
-						? this.app.workspace.getLeaf("tab")
-						: action === "horizontal"
-							? this.app.workspace.getLeaf("split", "horizontal")
-							: action === "vertical"
-								? this.app.workspace.getLeaf("split", "vertical")
-								: this.app.workspace.getLeaf(false);
-				await leaf.openFile(result.file);
-				opened = true;
-			}
-			if (opened) this.commitSearch(committedSearch);
-			if (closePalette) this.close();
-			return;
-		}
-		if (result.mode === "smart") {
-			const leaf =
-				action === "alternate"
-					? this.app.workspace.getLeaf("tab")
-					: action === "horizontal"
-						? this.app.workspace.getLeaf("split", "horizontal")
-						: action === "vertical"
-							? this.app.workspace.getLeaf("split", "vertical")
-							: this.app.workspace.getLeaf(false);
-			await leaf.openFile(result.file);
-			this.commitSearch(committedSearch);
-			if (closePalette) this.close();
-			return;
-		}
-		if (result.mode === "link" || result.mode === "backlink") {
-			const leaf =
-				action === "alternate"
-					? this.app.workspace.getLeaf("tab")
-					: action === "horizontal"
-						? this.app.workspace.getLeaf("split", "horizontal")
-						: action === "vertical"
-							? this.app.workspace.getLeaf("split", "vertical")
-							: this.app.workspace.getLeaf(false);
-			await leaf.openFile(result.file);
-			this.commitSearch(committedSearch);
-			const editor = this.app.workspace.activeEditor?.editor;
-			if (editor) editor.setCursor({ line: result.line, ch: 0 });
-			if (closePalette) this.close();
-			return;
-		}
-		const outcome = await runResultAction(this.app, result, action, {
-			openExternalMarkdownInObsidian: this.plugin.settings.openExternalMarkdownInObsidian,
-			openExternalMarkdown: (absolutePath, openAction) =>
-				this.plugin.openExternalMarkdown(absolutePath, openAction, closePalette),
+		await executePaletteResult(this.plugin, result, action, {
+			closeWhenDone: closePalette,
+			active: true,
+			externalAutoFocus: closePalette,
+			commitSearch: () => this.commitSearch(committedSearch),
+			close: () => this.close(),
+			showError: (message) => {
+				this.emptyStateText = message;
+			},
 		});
-		if (outcome.close) {
-			this.commitSearch(committedSearch);
-			if (closePalette) this.close();
-			return;
-		}
-		this.emptyStateText = outcome.message ?? "The action failed.";
 	}
 
 	private applySearchHistory(result: Extract<PaletteResult, { mode: "search-history" }>): void {
@@ -487,41 +369,20 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			this.commitSearch(committedSearch);
 	}
 
-	private scheduleSearchHistory(input: string): void {
-		const history = this.plugin.settings.searchHistory;
-		const search = this.recordableSearch(input);
-		if (!history.enabled || !search || history.addDelayMs <= 0) return;
-		this.historyDelayTimer = window.setTimeout(() => {
-			this.historyDelayTimer = undefined;
-			if (search)
-				this.plugin.recordSearch(search.query, search.category, search.includeIgnored);
-		}, history.addDelayMs);
-	}
-
 	private getSearchHistoryContext(input: string): {
 		query: string;
-		category: ReturnType<typeof getSearchHistoryCategory>;
+		category: RecordableSearch["category"];
 		includeIgnored: boolean;
 	} {
-		const parsed = this.fixedMode
-			? { mode: this.fixedMode, query: input, includeIgnored: false }
-			: parseInput(input, this.plugin.settings.prefixes);
-		return {
-			query: parsed.query,
-			category: getSearchHistoryCategory(parsed),
-			includeIgnored: parsed.includeIgnored,
-		};
+		return this.session.getSearchHistoryContext(input);
 	}
 
 	private recordableSearch(input: string): RecordableSearch | undefined {
-		const search = this.getSearchHistoryContext(input);
-		return search.query.trim() ? search : undefined;
+		return this.session.getRecordableSearch(input);
 	}
 
 	private cancelHistoryDelay(): void {
-		if (this.historyDelayTimer === undefined) return;
-		window.clearTimeout(this.historyDelayTimer);
-		this.historyDelayTimer = undefined;
+		this.session.cancelHistoryDelay();
 	}
 
 	private async openSelectedWithoutClosing(): Promise<void> {

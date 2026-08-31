@@ -25,8 +25,8 @@ interface SmartConnectionsEnvironment {
 export class SmartConnectionProvider implements PaletteProvider<SmartConnectionResult> {
 	constructor(private readonly app: App) {}
 
-	async search({ query }: PaletteSearchRequest): Promise<SmartConnectionResult[]> {
-		const origin = this.app.workspace.getActiveFile();
+	async search({ query, sourceFile }: PaletteSearchRequest): Promise<SmartConnectionResult[]> {
+		const origin = sourceFile ?? this.app.workspace.getActiveFile();
 		if (!origin) throw new Error("Open a note before searching Smart Connections.");
 		const environment = this.environment();
 		if (!environment) throw new Error("Smart Connections is not enabled.");
