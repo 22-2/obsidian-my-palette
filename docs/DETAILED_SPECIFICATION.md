@@ -2,7 +2,7 @@
 title: My Palette 詳細仕様書
 status: approved-for-implementation
 version: 0.1.0
-updated: 2026-07-17
+updated: 2026-09-01
 tags:
     - obsidian-plugin
     - command-palette
@@ -60,7 +60,7 @@ tags:
 
 ### 2.4 v0.1.0 のスコープ
 
-- 単一のモーダル型パレット
+- モーダル型パレットと右サイドバーの永続パレットビュー
 - Vault ファイルモード
 - Obsidian コマンドモード
 - Everything モード
@@ -96,13 +96,20 @@ tags:
 
 ### 4.1 Obsidian コマンド
 
-プラグインは次のコマンドを1つ登録する。
+プラグインは次のパレット起動コマンドを登録する。
 
-| Command ID        | 表示名                     | 動作                           |
-| ----------------- | -------------------------- | ------------------------------ |
-| `my-palette:open` | `My Palette: Open palette` | パレットをファイルモードで開く |
+| Command ID             | 表示名                                      | 動作                           |
+| ---------------------- | ------------------------------------------- | ------------------------------ |
+| `my-palette:open`      | `My Palette: Open palette`                  | パレットをファイルモードで開く |
+| `my-palette:open-view` | `My Palette: Open palette in right sidebar` | 右サイドバーでパレットを開く   |
 
 Obsidian 標準の「ホットキー」設定から、利用者がこのコマンドにグローバルホットキーを割り当てる。プラグイン側では衝突を避けるため、グローバルホットキーを既定割り当てしない。
+
+### 4.3 永続パレットビュー
+
+`my-palette:open-view` は `ItemView` を右サイドバーへ開く。入力欄を編集したまま候補を連続して切り替えられ、通常の本文ペインは検索ビューとは別に維持する。ビューのworkspace stateには入力、固定モード、検索元ノートを保存する。
+
+主クリックは検索ビューを閉じず、起動時に記録した本文leafへ候補を開く。検索元ノート（link / backlink / Smart Connectionsの基準）はビューを開いた時点で固定する。
 
 ### 4.2 初期フォーカス
 
@@ -294,6 +301,8 @@ http://127.0.0.1:51361/?search=<query>&json=1&count=100&path_column=1&attributes
 | File       | 現在の leaf で開く    | 新しいタブで開く | 新しい左右分割で開く       |
 | Command    | コマンド実行          | 割り当てなし     | 割り当てなし               |
 | Everything | ObsidianまたはVS Code | Explorer で表示  | エディターへ絶対パスを挿入 |
+
+永続パレットビューではEnter相当の主クリック後もビューを閉じず、追跡中の本文leafの内容だけを差し替える。中クリック、右クリックメニュー、検索履歴、行の表示形式はモーダルと共通である。
 
 ### 6.2 File アクション
 
@@ -562,7 +571,9 @@ src/
 │   └── ignoredPaths.ts
 ├── palette/
 │   ├── PaletteModal.ts
+│   ├── PaletteSearchSession.ts
 │   ├── backgroundResultActions.ts
+│   ├── executePaletteResult.ts
 │   ├── inputParser.ts
 │   ├── MoveFileModal.ts
 │   ├── openTargets.ts
@@ -604,50 +615,58 @@ src/
 ├── ui/
 │   ├── baseSuggestModal.ts
 │   ├── searchHistorySuggest.ts
-│   └── selectionModal.ts
+│   ├── selectionModal.ts
+│   └── suggestionPanel.ts
 └── views/
-    └── ExternalMarkdownView.ts
+    ├── ExternalMarkdownView.ts
+    └── PaletteView.ts
 ```
 
 ### 11.2 責務
 
-| コンポーネント               | 責務                                                  |
-| ---------------------------- | ----------------------------------------------------- |
-| `main.ts`                    | 設定ロード、Pluginライフサイクル、依存関係の組み立て  |
-| `app/registerCommands`       | Obsidianコマンドの登録と実行条件                      |
-| `app/registerEvents`         | ViewとVaultイベントの登録                             |
-| `app/createPaletteProviders` | Providerの生成とモードregistryの構築                  |
-| `PaletteModal`               | 入力、モード遷移、選択状態、表示状態、世代番号管理    |
-| `resultPresentation`         | 検索結果の表示形式とパスコピー対象の決定              |
-| `inputParser`                | プレフィックス検出とクエリ抽出。副作用なし            |
-| Provider                     | モード別検索。UI 要素を直接操作しない                 |
-| `EverythingHttpClient`       | URL構築、認証、リクエスト中断、タイムアウト、JSON解析 |
-| `resultActions`              | モード別アクション実行                                |
-| `settings/mergeSettings`     | 永続化データの検証、補完、履歴データの移行            |
-| `settings/settingTab`        | 設定 UI と入力値の反映                                |
-| `IgnoredNoteIndex`           | 除外ファイルを検索可能にする再構築可能なキャッシュ    |
-| `ExternalMarkdownView`       | Vault外または除外されたMarkdownの読み取り専用表示     |
+| コンポーネント               | 責務                                                      |
+| ---------------------------- | --------------------------------------------------------- |
+| `main.ts`                    | 設定ロード、Pluginライフサイクル、依存関係の組み立て      |
+| `app/registerCommands`       | Obsidianコマンドの登録と実行条件                          |
+| `app/registerEvents`         | ViewとVaultイベントの登録                                 |
+| `app/createPaletteProviders` | Providerの生成とモードregistryの構築                      |
+| `PaletteSearchSession`       | 入力解析、Provider検索、世代番号、キャンセル、履歴遅延    |
+| `SuggestionPanel`            | Modal / ItemView共通の入力、候補行、選択、ポインター操作  |
+| `executePaletteResult`       | 結果モードごとのアクション振り分けとホスト差分の吸収      |
+| `PaletteModal`               | モーダルのライフサイクル、フォーカス、閉じる挙動          |
+| `PaletteView`                | 右サイドバーの永続パレット、本文leaf追跡、workspace state |
+| `resultPresentation`         | 検索結果の表示形式とパスコピー対象の決定                  |
+| `inputParser`                | プレフィックス検出とクエリ抽出。副作用なし                |
+| Provider                     | モード別検索。UI 要素を直接操作しない                     |
+| `EverythingHttpClient`       | URL構築、認証、リクエスト中断、タイムアウト、JSON解析     |
+| `resultActions`              | モード別アクション実行                                    |
+| `settings/mergeSettings`     | 永続化データの検証、補完、履歴データの移行                |
+| `settings/settingTab`        | 設定 UI と入力値の反映                                    |
+| `IgnoredNoteIndex`           | 除外ファイルを検索可能にする再構築可能なキャッシュ        |
+| `ExternalMarkdownView`       | Vault外または除外されたMarkdownの読み取り専用表示         |
 
 ### 11.3 非同期検索フロー
 
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant M as PaletteModal
+    participant M as Palette host
+    participant S as PaletteSearchSession
     participant P as Provider
     participant E as Everything HTTP Server
 
     U->>M: input event
-    M->>M: parse mode / increment generation
-    M->>M: debounce 150ms
-    M->>P: search(query, generation)
+    M->>S: set input
+    S->>S: parse mode / increment generation
+    S->>S: debounce 150ms
+    S->>P: search(query, generation)
     P->>E: GET search query
     E-->>P: JSON response / HTTP status
-    P-->>M: results, generation
+    P-->>S: results, generation
     alt generation is current
-        M->>M: render results
+        S-->>M: state update / render results
     else stale generation
-        M->>M: discard result
+        S->>S: discard result
     end
 ```
 
@@ -752,6 +771,10 @@ Windows 11、Everything 1.5a 実機、英数字・日本語・空白を含むパ
 14. 検索語に URL / shell 記号を含めても構文が壊れたり別コマンドが実行されたりしない。
 15. ダーク・ライト両テーマで選択行と副表示を判別できる。
 16. IME 変換確定の Enter で誤実行しない。
+17. `Open palette in right sidebar` で右サイドバーに検索状態を保持できる。
+18. 右サイドバーの主クリックで検索ビューを閉じず、本文leafだけを差し替えられる。
+19. 右サイドバーをアクティブにした状態でも、本文leafへの主クリック、中クリック、右クリック操作が壊れない。
+20. 右サイドバーを閉じて再表示しても入力、固定モード、検索元が復元される。
 
 Obsidian 上での最終確認手順は次とする。
 

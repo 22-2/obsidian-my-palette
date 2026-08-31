@@ -177,12 +177,22 @@ refactor: separate core modules by responsibility
 
 - [x] 結果を`SelectionItem`へ変換する処理を分離する
 - [x] 結果ごとの表示バッジ判定を分離する
-- [ ] 結果アクションの振り分けを分離する
+- [x] 結果アクションの振り分けを分離する
 - [ ] 検索履歴のイベント登録と遅延保存を分離する
 - [x] バックグラウンドオープン処理を分離する
-- [ ] `PaletteModal` は入力・選択状態・検索世代管理に集中させる
+- [x] `PaletteModal` は入力・選択状態・検索世代管理に集中させる
 
 対象: `src/palette/PaletteModal.ts`
+
+### 永続パレットビュー
+
+- [x] 検索状態をModalとItemViewから共有する
+- [x] 結果行の表示と左右中クリック処理を共通化する
+- [x] 右サイドバーから本文leafを差し替える
+- [x] workspace stateへ入力、固定モード、検索元を保存する
+- [ ] 検索履歴コントロールのイベント登録を共通Componentへ移す
+
+対象: `src/palette/PaletteSearchSession.ts`、`src/ui/suggestionPanel.ts`、`src/views/PaletteView.ts`
 
 ### `main.ts`
 
