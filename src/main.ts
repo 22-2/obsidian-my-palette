@@ -10,6 +10,7 @@ import { registerPluginCommands } from "src/app/registerCommands";
 import { registerPluginEvents } from "src/app/registerEvents";
 import { openExternalMarkdown } from "src/app/openExternalMarkdown";
 import { PaletteModal } from "src/palette/PaletteModal";
+import { PALETTE_VIEW_TYPE } from "src/views/PaletteView";
 import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
 import type { PaletteMode, SearchHistoryResult } from "src/model/results";
 import type { SearchHistoryCategory, SearchHistoryEntry } from "src/model/settings";
@@ -74,6 +75,19 @@ export default class MyPalettePlugin extends Plugin {
 		const modal = new PaletteModal(this.app, this, initialInput, fixedMode);
 		this.activePaletteModal = modal;
 		modal.open();
+	}
+
+	async openPaletteView(
+		initialInput = this.getRememberedPaletteQuery("file"),
+		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
+	): Promise<void> {
+		const sourcePath = this.app.workspace.getActiveFile()?.path;
+		const state = { input: initialInput, fixedMode, sourcePath };
+		await this.app.workspace.ensureSideLeaf(PALETTE_VIEW_TYPE, "right", {
+			active: true,
+			reveal: true,
+			state,
+		});
 	}
 
 	releasePaletteModal(modal: PaletteModal): void {
