@@ -174,7 +174,8 @@ Obsidian が保持する「最近開いたファイル」を新しい順で最�
 - 空白で区切った語は AND 条件とし、すべての語に一致する項目だけを表示する。
 - `|` で区切った条件は OR 条件とし、いずれかの条件に一致する項目を表示する。
 - AND / OR 検索は File、Command、Link、Backlink、Bookmark、Smart Connections モードに適用する。Everything モードのクエリは Everything 自身の検索構文として無変換で渡す。
-- 並び順は `File search` 設定の `sortPriorities` を上から適用する。
+- 並び順は `File search` 設定の `sortPriorities.blank`（空白時）または
+  `sortPriorities.input`（入力時）を上から適用する。
 - `@prior:asc` / `@prior:desc` は frontmatter の数値 `prior` を比較し、未設定値は最後に置く。
 - `Filename prefix match` / `Filename fuzzy match` はファイル名、`Alias prefix match` / `Alias fuzzy match` は frontmatter の aliases、`Path fuzzy match` は Vault 内の相対パスを対象に比較する。
 - `#tag` で始まる検索はタグだけを対象とし、通常の検索語もタグに fuzzy match する。
@@ -512,7 +513,7 @@ interface MyPaletteSettings {
 		everything: string;
 	};
 	file: {
-		sortPriorities: string[];
+		sortPriorities: { blank: string[]; input: string[] };
 	};
 	everything: {
 		httpUrl: string;
