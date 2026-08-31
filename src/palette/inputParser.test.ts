@@ -80,17 +80,17 @@ it("requires a trailing space before switching command mode", () => {
 });
 
 describe("Bookmark prefix", () => {
-	it("switches to bookmark search only after b followed by a space", () => {
-		expect(parseInput("b", prefixes)).toMatchObject({ mode: "file", query: "b" });
-		expect(parseInput("b ", prefixes)).toMatchObject({ mode: "bookmark", query: "" });
-		expect(parseInput("b project", prefixes)).toMatchObject({
+	it("switches to bookmark search only after bk followed by a space", () => {
+		expect(parseInput("bk", prefixes)).toMatchObject({ mode: "file", query: "bk" });
+		expect(parseInput("bk ", prefixes)).toMatchObject({ mode: "bookmark", query: "" });
+		expect(parseInput("bk project", prefixes)).toMatchObject({
 			mode: "bookmark",
 			query: "project",
 		});
 	});
 
-	it("does not treat ordinary words beginning with b as a prefix", () => {
-		expect(parseInput("book", prefixes)).toMatchObject({ mode: "file", query: "book" });
+	it("does not treat ordinary words beginning with bk as a prefix", () => {
+		expect(parseInput("books", prefixes)).toMatchObject({ mode: "file", query: "books" });
 	});
 });
 
@@ -114,12 +114,12 @@ describe("Related note prefixes", () => {
 		});
 	});
 
-	it("switches to backlink search with the bl prefix without colliding with bookmarks", () => {
-		expect(parseInput("bl project", prefixes)).toMatchObject({
+	it("switches to backlink search with b without colliding with bookmarks", () => {
+		expect(parseInput("b project", prefixes)).toMatchObject({
 			mode: "backlink",
 			query: "project",
 		});
-		expect(parseInput("b project", prefixes)).toMatchObject({ mode: "bookmark" });
+		expect(parseInput("bk project", prefixes)).toMatchObject({ mode: "bookmark" });
 	});
 
 	it("does not combine the ignored-note prefix with related searches", () => {
@@ -128,9 +128,9 @@ describe("Related note prefixes", () => {
 			query: "o project",
 			includeIgnored: true,
 		});
-		expect(parseInput("i bl project", prefixes)).toMatchObject({
+		expect(parseInput("i b project", prefixes)).toMatchObject({
 			mode: "file",
-			query: "bl project",
+			query: "b project",
 			includeIgnored: true,
 		});
 	});

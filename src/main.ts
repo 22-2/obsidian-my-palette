@@ -179,7 +179,7 @@ export default class MyPalettePlugin extends Plugin {
 			entry.category === "command"
 				? `${this.settings.prefixes.command.trimEnd()} ${entry.input}`
 				: entry.category === "bookmark"
-					? `b ${entry.input}`
+					? `bk ${entry.input}`
 					: entry.category === "smart"
 						? `sc ${entry.input}`
 						: entry.category === "everything"

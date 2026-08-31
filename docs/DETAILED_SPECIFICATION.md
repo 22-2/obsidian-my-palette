@@ -451,8 +451,8 @@ Everythingページには次を設ける。
 | `prefixes.everything`     | `"e "` |
 | `prefixes.includeIgnored` | `"i "` |
 
-組み込みprefixとして `o `（現在ノートから出るリンク）、`bl `（現在ノートへ入るリンク）、
-`b `（ブックマーク）、`sc `（Smart Connections）、`esdir `（Everythingのdirectory検索）を予約する。
+組み込みprefixとして `o `（現在ノートから出るリンク）、`b `（現在ノートへ入るリンク）、
+`bk `（ブックマーク）、`sc `（Smart Connections）、`esdir `（Everythingのdirectory検索）を予約する。
 `i `（Excluded files）はFile検索専用で、関連検索prefixとは組み合わせない。
 
 空文字、改行、NUL、File モードとの区別が不能な値は保存できない。

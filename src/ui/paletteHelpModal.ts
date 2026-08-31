@@ -25,7 +25,7 @@ export class PaletteHelpModal extends Modal {
 			[`${this.prefixes.command.trimEnd()} `, "Commands", "Run an Obsidian command"],
 			[RELATED_PREFIXES.link, "Outlinks", "Notes linked from the current note"],
 			[RELATED_PREFIXES.backlink, "Backlinks", "Notes linking to the current note"],
-			["b ", "Bookmarks", "Search saved bookmarks"],
+			["bk ", "Bookmarks", "Search saved bookmarks"],
 			["sc ", "Smart Connections", "Search notes related to the current note"],
 			[
 				`${this.prefixes.everything.trimEnd()} `,

@@ -7,10 +7,10 @@ export interface Prefixes {
 	includeIgnored: string;
 }
 
-/** Built-in mode prefixes stay short while avoiding the existing bookmark `b `. */
+/** Built-in related prefixes stay short; `b ` is reserved for backlinks. */
 export const RELATED_PREFIXES = {
 	link: "o ",
-	backlink: "bl ",
+	backlink: "b ",
 } as const;
 
 export function validatePrefixes(prefixes: Prefixes): string | null {
@@ -48,7 +48,7 @@ export function parseInput(raw: string, prefixes: Prefixes): ParsedInput {
 		{ prefix: `${prefixes.command.trimEnd()} `, mode: "command" },
 		{ prefix: RELATED_PREFIXES.link, mode: "link", allowIgnored: false },
 		{ prefix: RELATED_PREFIXES.backlink, mode: "backlink", allowIgnored: false },
-		{ prefix: "b ", mode: "bookmark" },
+		{ prefix: "bk ", mode: "bookmark" },
 		{ prefix: "sc ", mode: "smart" },
 		{ prefix: "esdir ", mode: "everything", everythingScope: "directory" },
 		{
