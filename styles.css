@@ -14,7 +14,8 @@
 	padding-right: 42px;
 }
 
-/* Sorting priorities are one-per-line, so the default compact control hides useful context. */
+/* The dual list is a single editor, so it needs the full row instead of the
+   narrow control column used by ordinary one-line settings. */
 .my-palette-sort-priorities-setting {
 	display: block;
 }
@@ -25,14 +26,117 @@
 }
 
 .my-palette-sort-priorities-setting .setting-item-control {
+	display: block;
 	margin-top: 12px;
 }
 
-.my-palette-sort-priorities {
+.my-palette-sort-priorities__state {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 10px;
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+}
+
+.my-palette-sort-priorities__dual-list {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+}
+
+.my-palette-sort-priorities__column {
+	min-width: 0;
+}
+
+.my-palette-sort-priorities__label {
+	margin-bottom: 5px;
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-semibold);
+}
+
+.my-palette-sort-priorities__list {
 	box-sizing: border-box;
 	width: 100%;
-	min-height: 12em;
-	resize: vertical;
+	height: 18em;
+	overflow-y: auto;
+	padding: 4px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary-alt);
+}
+
+.my-palette-sort-priorities__option {
+	display: block;
+	width: 100%;
+	min-height: 28px;
+	padding: 4px 8px;
+	border: 0;
+	border-radius: var(--radius-s);
+	background: transparent;
+	box-shadow: none;
+	color: var(--text-normal);
+	font: inherit;
+	font-size: var(--font-ui-small);
+	text-align: left;
+	cursor: default;
+}
+
+.my-palette-sort-priorities__option[draggable="true"] {
+	cursor: grab;
+}
+
+.my-palette-sort-priorities__option:hover,
+.my-palette-sort-priorities__option:focus-visible {
+	background: var(--background-modifier-hover);
+}
+
+.my-palette-sort-priorities__option.is-selected {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.my-palette-sort-priorities__option.is-dragging {
+	opacity: 0.4;
+}
+
+.my-palette-sort-priorities__drop-indicator {
+	display: none;
+	height: 3px;
+	margin: 2px 4px;
+	border-radius: 999px;
+	background: var(--interactive-accent);
+	pointer-events: none;
+}
+
+.my-palette-sort-priorities__drop-indicator.is-visible {
+	display: block;
+}
+
+.my-palette-sort-priorities__buttons {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding-top: 20px;
+}
+
+.my-palette-sort-priorities__buttons button {
+	min-width: 38px;
+}
+
+@media (max-width: 520px) {
+	.my-palette-sort-priorities__dual-list {
+		grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+		gap: 5px;
+	}
+
+	.my-palette-sort-priorities__buttons button {
+		min-width: 32px;
+		padding-inline: 6px;
+	}
 }
 
 .my-palette-history-button {
