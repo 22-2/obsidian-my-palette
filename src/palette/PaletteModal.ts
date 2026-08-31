@@ -13,6 +13,7 @@ import {
 } from "src/palette/PaletteSearchSession";
 import { getCopyablePaths, toPaletteSelectionItem } from "src/palette/resultPresentation";
 import { addCopyPathMenuItems, copyPathToClipboard } from "src/platform/pathClipboard";
+import { addMocInsertionMenuItem } from "src/palette/mocInsertion";
 
 export class PaletteModal extends SelectionModal<PaletteResult> {
 	private readonly session: PaletteSearchSession;
@@ -223,6 +224,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			);
 		} else {
 			const paths = getCopyablePaths(this.app, result);
+			addMocInsertionMenuItem(menu, this.plugin, result, () => this.close());
+			menu.addSeparator();
 			menu.addItem((item) =>
 				item
 					.setTitle("Open")

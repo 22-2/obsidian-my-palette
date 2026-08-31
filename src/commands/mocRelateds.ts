@@ -257,6 +257,25 @@ async function addLink(app: App, mocFile: TFile, fileToLink: TFile): Promise<voi
 	}
 }
 
+/** Inserts a known note into the active MOC and keeps the existing mutual-link behavior. */
+export async function insertFileToActiveMocRelateds(
+	plugin: MyPalettePlugin,
+	fileToLink: TFile,
+): Promise<void> {
+	const mocFile = plugin.app.workspace.getActiveFile();
+	if (!(mocFile instanceof TFile)) {
+		new Notice("No active MOC file.");
+		return;
+	}
+	if (mocFile.path === fileToLink.path) {
+		new Notice("The active note cannot be inserted into itself.");
+		return;
+	}
+	await addLink(plugin.app, mocFile, fileToLink);
+	await addLink(plugin.app, fileToLink, mocFile);
+	await plugin.app.workspace.activeLeaf?.openFile(mocFile);
+}
+
 /** Selects a note from the current file list and adds mutual MOC Relateds links. */
 export async function insertLinkToMocRelateds(plugin: MyPalettePlugin): Promise<void> {
 	const activeFile = plugin.app.workspace.getActiveFile();
@@ -266,8 +285,6 @@ export async function insertLinkToMocRelateds(plugin: MyPalettePlugin): Promise<
 	}
 
 	await openTargetFileSelector(plugin, activeFile, async (targetFile) => {
-		await addLink(plugin.app, activeFile, targetFile);
-		await addLink(plugin.app, targetFile, activeFile);
-		await plugin.app.workspace.activeLeaf?.openFile(activeFile);
+		await insertFileToActiveMocRelateds(plugin, targetFile);
 	});
 }
