@@ -7,6 +7,12 @@ export interface Prefixes {
 	includeIgnored: string;
 }
 
+/** Built-in mode prefixes stay short while avoiding the existing bookmark `b `. */
+export const RELATED_PREFIXES = {
+	link: "o ",
+	backlink: "bl ",
+} as const;
+
 export function validatePrefixes(prefixes: Prefixes): string | null {
 	const values = [prefixes.command, prefixes.everything, prefixes.includeIgnored];
 	// eslint-disable-next-line no-control-regex -- \0 check prevents NUL injection into child-process arguments
@@ -37,8 +43,11 @@ export function parseInput(raw: string, prefixes: Prefixes): ParsedInput {
 		prefix: string;
 		mode: Exclude<PaletteMode, "file">;
 		everythingScope?: EverythingScope;
+		allowIgnored?: boolean;
 	}> = [
 		{ prefix: `${prefixes.command.trimEnd()} `, mode: "command" },
+		{ prefix: RELATED_PREFIXES.link, mode: "link", allowIgnored: false },
+		{ prefix: RELATED_PREFIXES.backlink, mode: "backlink", allowIgnored: false },
 		{ prefix: "b ", mode: "bookmark" },
 		{ prefix: "sc ", mode: "smart" },
 		{ prefix: "esdir ", mode: "everything", everythingScope: "directory" },
@@ -51,7 +60,11 @@ export function parseInput(raw: string, prefixes: Prefixes): ParsedInput {
 	];
 	candidates.sort((a, b) => b.prefix.length - a.prefix.length);
 	for (const candidate of candidates) {
-		if (candidate.prefix && lower.startsWith(candidate.prefix.toLocaleLowerCase())) {
+		if (
+			candidate.prefix &&
+			(!includeIgnored || candidate.allowIgnored !== false) &&
+			lower.startsWith(candidate.prefix.toLocaleLowerCase())
+		) {
 			return {
 				raw,
 				mode: candidate.mode,

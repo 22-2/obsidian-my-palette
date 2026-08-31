@@ -105,6 +105,37 @@ describe("Smart Connections prefix", () => {
 	});
 });
 
+describe("Related note prefixes", () => {
+	it("switches to outgoing-link search with the o prefix", () => {
+		expect(parseInput("o ", prefixes)).toMatchObject({ mode: "link", query: "" });
+		expect(parseInput("o project", prefixes)).toMatchObject({
+			mode: "link",
+			query: "project",
+		});
+	});
+
+	it("switches to backlink search with the bl prefix without colliding with bookmarks", () => {
+		expect(parseInput("bl project", prefixes)).toMatchObject({
+			mode: "backlink",
+			query: "project",
+		});
+		expect(parseInput("b project", prefixes)).toMatchObject({ mode: "bookmark" });
+	});
+
+	it("does not combine the ignored-note prefix with related searches", () => {
+		expect(parseInput("i o project", prefixes)).toMatchObject({
+			mode: "file",
+			query: "o project",
+			includeIgnored: true,
+		});
+		expect(parseInput("i bl project", prefixes)).toMatchObject({
+			mode: "file",
+			query: "bl project",
+			includeIgnored: true,
+		});
+	});
+});
+
 it("classifies history by mode and Everything scope", () => {
 	expect(getSearchHistoryCategory(parseInput("report", prefixes))).toBe("file");
 	expect(getSearchHistoryCategory(parseInput("> report", prefixes))).toBe("command");

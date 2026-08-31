@@ -15,6 +15,7 @@ import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient
 import type { PaletteMode, SearchHistoryResult } from "src/model/results";
 import type { SearchHistoryCategory, SearchHistoryEntry } from "src/model/settings";
 import { getSearchHistorySuggestions, recordSearchHistory } from "src/palette/searchHistory";
+import { RELATED_PREFIXES } from "src/palette/inputParser";
 import { loadPluginSettings, savePluginSettings } from "src/settings/settingsStore";
 import "../styles.css";
 
@@ -185,8 +186,14 @@ export default class MyPalettePlugin extends Plugin {
 							? `${this.settings.prefixes.everything.trimEnd()} ${entry.input}`
 							: entry.category === "everything-directory"
 								? `esdir ${entry.input}`
-								: entry.input;
-		return entry.includeIgnored
+								: entry.category === "link"
+									? `${RELATED_PREFIXES.link}${entry.input}`
+									: entry.category === "backlink"
+										? `${RELATED_PREFIXES.backlink}${entry.input}`
+										: entry.input;
+		// Related searches intentionally do not support the ignored-note scope;
+		// avoid reconstructing an input that the parser would interpret as File mode.
+		return entry.includeIgnored && entry.category !== "link" && entry.category !== "backlink"
 			? `${this.settings.prefixes.includeIgnored.trimEnd()} ${modeInput}`
 			: modeInput;
 	}
