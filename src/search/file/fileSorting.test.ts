@@ -228,6 +228,17 @@ describe("file sorting", () => {
 		expect(sorted.map(({ path }) => path)).toEqual(["many.md", "some.md", "one.md"]);
 	});
 
+	it("keeps contiguous metadata matches ahead of fuzzy-only matches", () => {
+		const matches = [
+			{ obj: file("fuzzy-chat.md", 1), score: 1, contiguousMatch: false },
+			{ obj: file("exact-alias.md", 1), score: 0, contiguousMatch: true },
+		];
+
+		const sorted = sortFileMatches(matches, "cheat", new Map(), ["Filename fuzzy match"]);
+
+		expect(sorted.map(({ path }) => path)).toEqual(["exact-alias.md", "fuzzy-chat.md"]);
+	});
+
 	it("uses prior before recent history when configured", () => {
 		const entries = [file("recent.md", 1, [], false, 1), file("important.md", 1, [], false, 3)];
 		const recent = new Map([["recent.md", 0]]);

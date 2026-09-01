@@ -10,7 +10,11 @@ import {
 import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
 import { sortFileMatches, sortFilesWithoutQuery } from "src/search/file/fileSorting";
 import { isTagOnlyQuery, matchingTags, normalizeTags } from "src/search/file/fileTags";
-import { fuzzyMatchCoverage, searchFuzzyQueryWithFieldScores } from "src/search/fuzzyQuery";
+import {
+	fuzzyMatchCoverage,
+	hasContiguousQueryMatch,
+	searchFuzzyQueryWithFieldScores,
+} from "src/search/fuzzyQuery";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 
 interface SearchEntry {
@@ -183,13 +187,12 @@ export class FileProvider implements PaletteProvider<FileResult> {
 				const matchedTags = matchingTags(obj.tags, query);
 				// Count source values rather than the compatibility `text` key, which
 				// repeats filename, path, and aliases and would artificially boost rank.
+				const searchableValues = tagOnlyQuery
+					? obj.tags
+					: [obj.basename, obj.path, ...obj.aliases, ...obj.tags];
+				const contiguousMatch = hasContiguousQueryMatch(query, searchableValues);
 				const matchCoverage = usesMatchCoverage
-					? fuzzyMatchCoverage(
-							query,
-							tagOnlyQuery
-								? obj.tags
-								: [obj.basename, obj.path, ...obj.aliases, ...obj.tags],
-						)
+					? fuzzyMatchCoverage(query, searchableValues)
 					: undefined;
 				return {
 					obj,
@@ -199,6 +202,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 					aliasScore: tagOnlyQuery ? undefined : fieldScores[3],
 					tagMatchCount: matchedTags.length,
 					matchCoverage,
+					contiguousMatch,
 					matchedTags,
 				};
 			},

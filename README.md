@@ -76,6 +76,9 @@ filenames, paths, aliases, and tags, using only the strongest OR branch.
 `Aliases count` is available as an optional secondary signal and orders notes with
 more aliases first.
 
+Complete contiguous matches across a filename, path, alias, or tag are always
+preferred over fuzzy-only matches before the configured priority list is applied.
+
 ## Manually installing the plugin
 
 - Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.

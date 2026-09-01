@@ -28,6 +28,8 @@ export interface FileMatch<T extends SortableFileEntry> {
 	tagMatchCount?: number;
 	/** Total query characters matched across distinct searchable values. */
 	matchCoverage?: number;
+	/** Whether a complete AND branch matched contiguously in searchable metadata. */
+	contiguousMatch?: boolean;
 	/** Tags that matched the current query; carried through sorting for presentation. */
 	matchedTags?: string[];
 }
@@ -45,6 +47,8 @@ interface SortContext {
 	tagMatchCountB?: number;
 	matchCoverageA?: number;
 	matchCoverageB?: number;
+	contiguousMatchA?: boolean;
+	contiguousMatchB?: boolean;
 }
 
 const QUERY_SORT_PRIORITIES = new Set<FileSortPriority>([
@@ -86,6 +90,14 @@ function compareOptionalScore(a: number | undefined, b: number | undefined): num
 	if (scoreA === undefined) return 1;
 	if (scoreB === undefined) return -1;
 	return compareNumber(scoreA, scoreB, "desc");
+}
+
+function compareContiguousMatch(a: boolean | undefined, b: boolean | undefined): number {
+	// Keep exact phrase relevance ahead of user-selected fuzzy fields while
+	// leaving legacy callers without this metadata in the normal priority flow.
+	if (a === true && b !== true) return -1;
+	if (b === true && a !== true) return 1;
+	return 0;
 }
 
 function compareOptionalPrior(
@@ -262,8 +274,15 @@ export function sortFileMatches<T extends SortableFileEntry>(
 			const matchCoverageB = Object.prototype.hasOwnProperty.call(b, "matchCoverage")
 				? b.matchCoverage
 				: undefined;
+			const contiguousMatchA = Object.prototype.hasOwnProperty.call(a, "contiguousMatch")
+				? a.contiguousMatch
+				: undefined;
+			const contiguousMatchB = Object.prototype.hasOwnProperty.call(b, "contiguousMatch")
+				? b.contiguousMatch
+				: undefined;
 			return (
 				compareIgnored(a.obj, b.obj) ||
+				compareContiguousMatch(contiguousMatchA, contiguousMatchB) ||
 				comparePriorities(a.obj, b.obj, priorities, {
 					query,
 					recent,
@@ -277,6 +296,8 @@ export function sortFileMatches<T extends SortableFileEntry>(
 					tagMatchCountB,
 					matchCoverageA,
 					matchCoverageB,
+					contiguousMatchA,
+					contiguousMatchB,
 				}) ||
 				compareFallback(a.obj, b.obj)
 			);

@@ -18,6 +18,21 @@ function queryBranches(query: string): string[][] {
 }
 
 /**
+ * Detect a complete contiguous match for at least one valid AND branch. This
+ * is a common relevance tier: an exact metadata phrase should not lose to a
+ * fuzzy-only candidate just because a user placed a field-specific priority first.
+ */
+export function hasContiguousQueryMatch(query: string, values: readonly string[]): boolean {
+	const normalizedValues = values.map((value) => value.normalize("NFKC").toLocaleLowerCase());
+	return queryBranches(query).some((terms) =>
+		terms.every((term) => {
+			const normalizedTerm = term.normalize("NFKC").toLocaleLowerCase();
+			return normalizedValues.some((value) => value.includes(normalizedTerm));
+		}),
+	);
+}
+
+/**
  * Count how much query evidence appears across distinct searchable values.
  * Each term contributes its character length once per matching value, and OR
  * branches compete by coverage so unrelated alternatives are never added together.

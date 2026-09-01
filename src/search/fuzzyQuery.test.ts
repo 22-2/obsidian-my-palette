@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	fuzzyMatchCoverage,
+	hasContiguousQueryMatch,
 	searchFuzzyQuery,
 	searchFuzzyQueryWithFieldScores,
 } from "src/search/fuzzyQuery";
@@ -8,6 +9,12 @@ import {
 const items = ["alpha beta", "alpha gamma", "delta beta", "omega"];
 
 describe("searchFuzzyQuery", () => {
+	it("detects complete contiguous matches across AND and OR branches", () => {
+		expect(hasContiguousQueryMatch("alpha beta", ["alpha", "beta"])).toBe(true);
+		expect(hasContiguousQueryMatch("alpha beta | gamma", ["gamma"])).toBe(true);
+		expect(hasContiguousQueryMatch("alpha beta | gamma", ["alpha", "delta"])).toBe(false);
+	});
+
 	it("counts matched characters across distinct searchable values", () => {
 		expect(
 			fuzzyMatchCoverage("project", [
