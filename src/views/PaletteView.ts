@@ -18,7 +18,7 @@ import { SearchHistorySuggest } from "src/ui/searchHistorySuggest";
 import { renderSelectionItem } from "src/ui/selectionModal";
 import { SuggestionPanel } from "src/ui/suggestionPanel";
 import type { ActionKind } from "src/palette/resultActions";
-import { addMocInsertionMenuItem } from "src/palette/mocInsertion";
+import { addMocInsertionMenuItem, type MocInsertionContext } from "src/palette/mocInsertion";
 import { PaletteHelpModal } from "src/ui/paletteHelpModal";
 
 export const PALETTE_VIEW_TYPE = "my-palette-search";
@@ -432,10 +432,23 @@ export class PaletteView extends ItemView {
 			addCopyPathMenuItems(menu, paths, (path) => void copyPathToClipboard(path));
 			// Keep the potentially mutating MOC operation below navigation and copy
 			// actions so the menu follows familiar file-manager conventions.
-			addMocInsertionMenuItem(menu, this.plugin, result);
+			addMocInsertionMenuItem(menu, this.plugin, result, undefined, () =>
+				this.resolveMocInsertionContext(),
+			);
 		}
 		menu.setParentElement(this.contentEl);
 		menu.showAtMouseEvent(event);
+	}
+
+	private resolveMocInsertionContext(): MocInsertionContext {
+		const mocLeaf = this.findTargetLeaf(this.sourcePath);
+		return {
+			// Resolve the pinned source first; the active leaf can be the palette
+			// itself after a context-menu interaction in the sidebar.
+			mocFile:
+				this.sourceFile(this.sourcePath) ?? (mocLeaf ? this.fileOf(mocLeaf) : null) ?? null,
+			mocLeaf,
+		};
 	}
 
 	private clearOrFocus(): void {

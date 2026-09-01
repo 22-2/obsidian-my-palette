@@ -1,4 +1,4 @@
-import { Menu, Notice, TFile, type App } from "obsidian";
+import { Menu, Notice, TFile, type App, type WorkspaceLeaf } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import type { FileResult } from "src/model/results";
 import { openSelectionModal, type SelectionItem } from "src/ui/selectionModal";
@@ -263,6 +263,21 @@ export async function insertFileToActiveMocRelateds(
 	fileToLink: TFile,
 ): Promise<void> {
 	const mocFile = plugin.app.workspace.getActiveFile();
+	const activeLeaf = plugin.app.workspace.activeLeaf;
+	// Only reopen a real file leaf; a persistent palette can be the active leaf
+	// while its source note is still available through workspace.getActiveFile().
+	const mocLeaf =
+		activeLeaf && (activeLeaf.view as { file?: unknown }).file ? activeLeaf : undefined;
+	await insertFileToMocRelateds(plugin, mocFile, fileToLink, mocLeaf ?? undefined);
+}
+
+/** Inserts into an explicit MOC leaf so a persistent palette can never replace itself. */
+export async function insertFileToMocRelateds(
+	plugin: MyPalettePlugin,
+	mocFile: TFile | null,
+	fileToLink: TFile,
+	mocLeaf?: WorkspaceLeaf,
+): Promise<void> {
 	if (!(mocFile instanceof TFile)) {
 		new Notice("No active MOC file.");
 		return;
@@ -273,7 +288,7 @@ export async function insertFileToActiveMocRelateds(
 	}
 	await addLink(plugin.app, mocFile, fileToLink);
 	await addLink(plugin.app, fileToLink, mocFile);
-	await plugin.app.workspace.activeLeaf?.openFile(mocFile);
+	await mocLeaf?.openFile(mocFile);
 }
 
 /** Selects a note from the current file list and adds mutual MOC Relateds links. */

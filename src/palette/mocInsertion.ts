@@ -1,7 +1,7 @@
-import { Notice, TFile, type Menu } from "obsidian";
+import { Notice, TFile, type Menu, type WorkspaceLeaf } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/model/results";
-import { insertFileToActiveMocRelateds } from "src/commands/mocRelateds";
+import { insertFileToActiveMocRelateds, insertFileToMocRelateds } from "src/commands/mocRelateds";
 import { materializeIgnoredNote } from "src/ignored-notes/ignoredNoteMaterializer";
 
 /** Resolves a palette result to a vault note for the shared MOC menu action. */
@@ -32,12 +32,18 @@ async function resolveMocTarget(
 	return result.file;
 }
 
+export interface MocInsertionContext {
+	mocFile: TFile | null;
+	mocLeaf?: WorkspaceLeaf;
+}
+
 /** Adds the same MOC insertion action to both the modal and persistent palette menus. */
 export function addMocInsertionMenuItem(
 	menu: Menu,
 	plugin: MyPalettePlugin,
 	result: PaletteResult,
 	onSelected?: () => void,
+	getContext?: () => MocInsertionContext,
 ): void {
 	if (result.mode === "command" || result.mode === "search-history") return;
 	if (result.mode === "everything" && (result.kind === "folder" || !result.vaultPath)) return;
@@ -55,7 +61,15 @@ export function addMocInsertionMenuItem(
 						new Notice("This result is not an available vault note.");
 						return;
 					}
-					await insertFileToActiveMocRelateds(plugin, target);
+					const context = getContext?.();
+					if (context)
+						await insertFileToMocRelateds(
+							plugin,
+							context.mocFile,
+							target,
+							context.mocLeaf,
+						);
+					else await insertFileToActiveMocRelateds(plugin, target);
 				})();
 			}),
 	);
