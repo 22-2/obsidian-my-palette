@@ -18,6 +18,37 @@ function queryBranches(query: string): string[][] {
 }
 
 /**
+ * Count how much query evidence appears across distinct searchable values.
+ * Each term contributes its character length once per matching value, and OR
+ * branches compete by coverage so unrelated alternatives are never added together.
+ */
+export function fuzzyMatchCoverage(query: string, values: readonly string[]): number {
+	const distinctValues = new Map<string, string>();
+	for (const value of values) {
+		const trimmed = value.trim();
+		if (!trimmed) continue;
+		// Metadata can repeat the same alias or tag with different casing. Treating
+		// those spellings as one value prevents duplicated metadata inflating rank.
+		const key = trimmed.normalize("NFKC").toLocaleLowerCase();
+		if (!distinctValues.has(key)) distinctValues.set(key, trimmed);
+	}
+
+	return queryBranches(query).reduce((bestCoverage, terms) => {
+		let branchCoverage = 0;
+		for (const term of terms) {
+			const matchingValueCount = [...distinctValues.values()].filter(
+				(value) => fuzzysort.single(term, value) !== null,
+			).length;
+			// A valid AND branch must match every term somewhere. Keeping the same
+			// qualification here makes coverage describe the branch used by search.
+			if (matchingValueCount === 0) return bestCoverage;
+			branchCoverage += Array.from(term.normalize("NFKC")).length * matchingValueCount;
+		}
+		return Math.max(bestCoverage, branchCoverage);
+	}, 0);
+}
+
+/**
  * Search while retaining each key's contribution for callers that need to
  * distinguish otherwise identical matches, such as filenames and aliases.
  */

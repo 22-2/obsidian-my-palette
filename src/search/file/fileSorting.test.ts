@@ -216,6 +216,18 @@ describe("file sorting", () => {
 		expect(sorted.map(({ path }) => path)).toEqual(["many.md", "one.md", "none.md"]);
 	});
 
+	it("ranks candidates by matched character coverage when configured", () => {
+		const matches = [
+			{ obj: file("one.md", 1), score: -1, matchCoverage: 7 },
+			{ obj: file("many.md", 1), score: -1, matchCoverage: 21 },
+			{ obj: file("some.md", 1), score: -1, matchCoverage: 14 },
+		];
+
+		const sorted = sortFileMatches(matches, "project", new Map(), ["Match coverage"]);
+
+		expect(sorted.map(({ path }) => path)).toEqual(["many.md", "some.md", "one.md"]);
+	});
+
 	it("uses prior before recent history when configured", () => {
 		const entries = [file("recent.md", 1, [], false, 1), file("important.md", 1, [], false, 3)];
 		const recent = new Map([["recent.md", 0]]);

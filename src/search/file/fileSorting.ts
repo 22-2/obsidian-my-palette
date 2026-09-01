@@ -26,6 +26,8 @@ export interface FileMatch<T extends SortableFileEntry> {
 	pathScore?: number;
 	/** Number of tags that matched the current query, when tag search was used. */
 	tagMatchCount?: number;
+	/** Total query characters matched across distinct searchable values. */
+	matchCoverage?: number;
 	/** Tags that matched the current query; carried through sorting for presentation. */
 	matchedTags?: string[];
 }
@@ -41,6 +43,8 @@ interface SortContext {
 	pathScoreB?: number;
 	tagMatchCountA?: number;
 	tagMatchCountB?: number;
+	matchCoverageA?: number;
+	matchCoverageB?: number;
 }
 
 const QUERY_SORT_PRIORITIES = new Set<FileSortPriority>([
@@ -49,6 +53,7 @@ const QUERY_SORT_PRIORITIES = new Set<FileSortPriority>([
 	FILE_SORT_PRIORITIES.filenameFuzzyMatch,
 	FILE_SORT_PRIORITIES.aliasFuzzyMatch,
 	FILE_SORT_PRIORITIES.tagMatch,
+	FILE_SORT_PRIORITIES.matchCoverage,
 	FILE_SORT_PRIORITIES.pathFuzzyMatch,
 ]);
 
@@ -159,6 +164,10 @@ function comparePriority(
 			// A note can match the query through another field; keep notes with no
 			// matching tag behind notes that have an explicit tag contribution.
 			return compareOptionalScore(context.tagMatchCountA, context.tagMatchCountB);
+		case FILE_SORT_PRIORITIES.matchCoverage:
+			// Coverage is opt-in/configurable so its cross-field signal cannot bypass
+			// the user's chosen filename, alias, tag, or property priorities.
+			return compareOptionalScore(context.matchCoverageA, context.matchCoverageB);
 		case FILE_SORT_PRIORITIES.pathFuzzyMatch:
 			return compareOptionalScore(context.pathScoreA, context.pathScoreB);
 		case FILE_SORT_PRIORITIES.lastOpened:
@@ -247,6 +256,12 @@ export function sortFileMatches<T extends SortableFileEntry>(
 			const tagMatchCountB = Object.prototype.hasOwnProperty.call(b, "tagMatchCount")
 				? b.tagMatchCount
 				: undefined;
+			const matchCoverageA = Object.prototype.hasOwnProperty.call(a, "matchCoverage")
+				? a.matchCoverage
+				: undefined;
+			const matchCoverageB = Object.prototype.hasOwnProperty.call(b, "matchCoverage")
+				? b.matchCoverage
+				: undefined;
 			return (
 				compareIgnored(a.obj, b.obj) ||
 				comparePriorities(a.obj, b.obj, priorities, {
@@ -260,6 +275,8 @@ export function sortFileMatches<T extends SortableFileEntry>(
 					pathScoreB,
 					tagMatchCountA,
 					tagMatchCountB,
+					matchCoverageA,
+					matchCoverageB,
 				}) ||
 				compareFallback(a.obj, b.obj)
 			);

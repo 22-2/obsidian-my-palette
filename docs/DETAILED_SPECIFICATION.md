@@ -187,6 +187,7 @@ Obsidian が保持する「最近開いたファイル」を新しい順で最�
 - `Filename prefix match` / `Filename fuzzy match` はファイル名、`Alias prefix match` / `Alias fuzzy match` は frontmatter の aliases、`Path fuzzy match` は Vault 内の相対パスを対象に比較する。
 - `#tag` で始まる検索はタグだけを対象とし、通常の検索語もタグに fuzzy match する。
 - `Tag match` は検索に一致したタグ数を降順で比較する。
+- `Match coverage` は、ファイル名・パス・個々の alias・個々の tag で一致した検索語の文字数を合計して降順で比較する。重複する値は1回だけ数え、OR 条件では合計が最大のブランチだけを使う。
 - `Aliases count` は frontmatter の `aliases` / `alias` の要素数を降順で比較する。
 - 空入力では、検索語に依存する filename / alias の match priorities を除外してから同じ設定を適用する。
 - 最大50件を表示する。
@@ -512,7 +513,7 @@ interface EverythingResult extends BaseResult {
 }
 
 interface MyPaletteSettings {
-	schemaVersion: 12;
+	schemaVersion: 14;
 	showLog: boolean;
 	rememberLastInput: boolean;
 	searchHistory: {

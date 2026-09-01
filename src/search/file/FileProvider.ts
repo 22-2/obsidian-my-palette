@@ -2,11 +2,15 @@ import { parseFrontMatterTags, type App, type EventRef, type TFile } from "obsid
 import { getUserIgnoreFilters, isUserIgnoredPathWithFilters } from "src/ignored-notes/ignoredPaths";
 import { IgnoredNoteIndex, type IgnoredNoteIndexLogger } from "src/ignored-notes/ignoredNoteIndex";
 import type { FileResult } from "src/model/results";
-import { DEFAULT_FILE_SORT_PRIORITIES, type FileSortPriorities } from "src/model/settings";
+import {
+	DEFAULT_FILE_SORT_PRIORITIES,
+	FILE_SORT_PRIORITIES,
+	type FileSortPriorities,
+} from "src/model/settings";
 import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
 import { sortFileMatches, sortFilesWithoutQuery } from "src/search/file/fileSorting";
 import { isTagOnlyQuery, matchingTags, normalizeTags } from "src/search/file/fileTags";
-import { searchFuzzyQueryWithFieldScores } from "src/search/fuzzyQuery";
+import { fuzzyMatchCoverage, searchFuzzyQueryWithFieldScores } from "src/search/fuzzyQuery";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 
 interface SearchEntry {
@@ -153,6 +157,8 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		// Boolean operators are resolved locally; Everything is deliberately left
 		// untouched because it already owns and interprets the same syntax.
 		const tagOnlyQuery = isTagOnlyQuery(query);
+		const inputSortPriorities = this.fileSortPriorities().input;
+		const usesMatchCoverage = inputSortPriorities.includes(FILE_SORT_PRIORITIES.matchCoverage);
 		// A hash-prefixed query is an explicit tag lookup. Restricting its candidate
 		// fields prevents a filename such as `project-plan.md` from masquerading as
 		// a tagged note when the user is browsing `#project`.
@@ -175,6 +181,16 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		const matches = searchFuzzyQueryWithFieldScores(query, candidates, keys).map(
 			({ obj, score, fieldScores }) => {
 				const matchedTags = matchingTags(obj.tags, query);
+				// Count source values rather than the compatibility `text` key, which
+				// repeats filename, path, and aliases and would artificially boost rank.
+				const matchCoverage = usesMatchCoverage
+					? fuzzyMatchCoverage(
+							query,
+							tagOnlyQuery
+								? obj.tags
+								: [obj.basename, obj.path, ...obj.aliases, ...obj.tags],
+						)
+					: undefined;
 				return {
 					obj,
 					score,
@@ -182,6 +198,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 					pathScore: tagOnlyQuery ? undefined : fieldScores[1],
 					aliasScore: tagOnlyQuery ? undefined : fieldScores[3],
 					tagMatchCount: matchedTags.length,
+					matchCoverage,
 					matchedTags,
 				};
 			},
@@ -193,7 +210,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			matches,
 			tagOnlyQuery ? undefined : query,
 			recent,
-			this.fileSortPriorities().input,
+			inputSortPriorities,
 		).map((entry) => this.result(entry, matchedTagsByPath.get(entry.path)));
 	}
 

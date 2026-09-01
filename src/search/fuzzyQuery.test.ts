@@ -1,9 +1,38 @@
 import { describe, expect, it } from "vitest";
-import { searchFuzzyQuery, searchFuzzyQueryWithFieldScores } from "src/search/fuzzyQuery";
+import {
+	fuzzyMatchCoverage,
+	searchFuzzyQuery,
+	searchFuzzyQueryWithFieldScores,
+} from "src/search/fuzzyQuery";
 
 const items = ["alpha beta", "alpha gamma", "delta beta", "omega"];
 
 describe("searchFuzzyQuery", () => {
+	it("counts matched characters across distinct searchable values", () => {
+		expect(
+			fuzzyMatchCoverage("project", [
+				"project note",
+				"archive/project.md",
+				"Project",
+				"PROJECT",
+				"#project",
+			]),
+		).toBe(28);
+	});
+
+	it("uses the highest-coverage valid OR branch", () => {
+		expect(
+			fuzzyMatchCoverage("project notes | plan", [
+				"project",
+				"notes",
+				"plan",
+				"plan overview",
+				"plan archive",
+				"plan alias",
+			]),
+		).toBe(16);
+	});
+
 	it("treats whitespace-separated terms as AND", () => {
 		expect(
 			searchFuzzyQuery("alpha beta", items, [(item) => item]).map(({ obj }) => obj),

@@ -41,6 +41,7 @@ describe("mergeSettings", () => {
 				"Alias prefix match",
 				"Alias fuzzy match",
 				"Tag match",
+				"Match coverage",
 				"Path fuzzy match",
 				"@prior:desc",
 				"Last opened",
@@ -52,6 +53,7 @@ describe("mergeSettings", () => {
 				"Alias prefix match",
 				"Alias fuzzy match",
 				"Tag match",
+				"Match coverage",
 				"Path fuzzy match",
 				"@prior:desc",
 				"Last opened",
@@ -124,6 +126,7 @@ describe("mergeSettings", () => {
 			"Alias prefix match",
 			"Alias fuzzy match",
 			"Tag match",
+			"Match coverage",
 			"Path fuzzy match",
 			"@prior:desc",
 			"Last opened",
@@ -150,6 +153,27 @@ describe("mergeSettings", () => {
 		});
 
 		expect(settings.schemaVersion).toBe(SETTINGS_SCHEMA_VERSION);
+		expect(settings.file.sortPriorities).toEqual(DEFAULT_SETTINGS.file.sortPriorities);
+	});
+
+	it("adds match coverage to untouched previous defaults", () => {
+		const settings = mergeSettings({
+			schemaVersion: 13,
+			file: {
+				sortPriorities: [
+					"Filename prefix match",
+					"Filename fuzzy match",
+					"Alias prefix match",
+					"Alias fuzzy match",
+					"Tag match",
+					"Path fuzzy match",
+					"@prior:desc",
+					"Last opened",
+					"Last modified",
+				],
+			},
+		});
+
 		expect(settings.file.sortPriorities).toEqual(DEFAULT_SETTINGS.file.sortPriorities);
 	});
 

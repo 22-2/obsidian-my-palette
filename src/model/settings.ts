@@ -23,7 +23,7 @@ export interface SearchHistorySettings {
 	entries: SearchHistoryEntry[];
 }
 
-export const SETTINGS_SCHEMA_VERSION = 13;
+export const SETTINGS_SCHEMA_VERSION = 14;
 export const MAX_RECENT_COMMAND_IDS = 20;
 export const MILLISECONDS_PER_SECOND = 1_000;
 export const DISABLED_DELAY_MS = 0;
@@ -74,6 +74,7 @@ export const FILE_SORT_PRIORITIES = {
 	filenameFuzzyMatch: "Filename fuzzy match",
 	aliasFuzzyMatch: "Alias fuzzy match",
 	tagMatch: "Tag match",
+	matchCoverage: "Match coverage",
 	pathFuzzyMatch: "Path fuzzy match",
 	lastOpened: "Last opened",
 	lastModified: "Last modified",
@@ -91,6 +92,7 @@ export const FILE_SORT_PRIORITY_LIST = [
 	FILE_SORT_PRIORITIES.filenameFuzzyMatch,
 	FILE_SORT_PRIORITIES.aliasFuzzyMatch,
 	FILE_SORT_PRIORITIES.tagMatch,
+	FILE_SORT_PRIORITIES.matchCoverage,
 	FILE_SORT_PRIORITIES.pathFuzzyMatch,
 	FILE_SORT_PRIORITIES.lastOpened,
 	FILE_SORT_PRIORITIES.lastModified,
@@ -150,11 +152,23 @@ const LEGACY_DEFAULT_FILE_SORT_PRIORITIES = [
 	FILE_SORT_PRIORITIES.lastModified,
 ] as const;
 
+const PRE_TAG_DEFAULT_FILE_SORT_PRIORITIES = [
+	FILE_SORT_PRIORITIES.filenamePrefixMatch,
+	FILE_SORT_PRIORITIES.filenameFuzzyMatch,
+	FILE_SORT_PRIORITIES.aliasPrefixMatch,
+	FILE_SORT_PRIORITIES.aliasFuzzyMatch,
+	FILE_SORT_PRIORITIES.pathFuzzyMatch,
+	FILE_SORT_PRIORITIES.priorDesc,
+	FILE_SORT_PRIORITIES.lastOpened,
+	FILE_SORT_PRIORITIES.lastModified,
+] as const;
+
 const PREVIOUS_DEFAULT_FILE_SORT_PRIORITIES = [
 	FILE_SORT_PRIORITIES.filenamePrefixMatch,
 	FILE_SORT_PRIORITIES.filenameFuzzyMatch,
 	FILE_SORT_PRIORITIES.aliasPrefixMatch,
 	FILE_SORT_PRIORITIES.aliasFuzzyMatch,
+	FILE_SORT_PRIORITIES.tagMatch,
 	FILE_SORT_PRIORITIES.pathFuzzyMatch,
 	FILE_SORT_PRIORITIES.priorDesc,
 	FILE_SORT_PRIORITIES.lastOpened,
@@ -180,7 +194,10 @@ export function normalizeFileSortPriorities(value: unknown): FileSortPriority[] 
 		return [...DEFAULT_FILE_SORT_PRIORITIES];
 	// Adding a new default priority should reach users who never customized the
 	// previous list, while an arbitrary custom order remains exactly as entered.
-	if (isPriorityList(trimmed, PREVIOUS_DEFAULT_FILE_SORT_PRIORITIES))
+	if (
+		isPriorityList(trimmed, PRE_TAG_DEFAULT_FILE_SORT_PRIORITIES) ||
+		isPriorityList(trimmed, PREVIOUS_DEFAULT_FILE_SORT_PRIORITIES)
+	)
 		return [...DEFAULT_FILE_SORT_PRIORITIES];
 	const normalized = trimmed.flatMap((item): FileSortPriority[] => {
 		if (item === undefined) return [];
@@ -200,6 +217,7 @@ export const DEFAULT_FILE_SORT_PRIORITIES: readonly FileSortPriority[] = [
 	FILE_SORT_PRIORITIES.aliasPrefixMatch,
 	FILE_SORT_PRIORITIES.aliasFuzzyMatch,
 	FILE_SORT_PRIORITIES.tagMatch,
+	FILE_SORT_PRIORITIES.matchCoverage,
 	FILE_SORT_PRIORITIES.pathFuzzyMatch,
 	FILE_SORT_PRIORITIES.priorDesc,
 	FILE_SORT_PRIORITIES.lastOpened,
