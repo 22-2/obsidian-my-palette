@@ -1,6 +1,7 @@
 import { App, setIcon } from "obsidian";
 import fuzzysort from "fuzzysort";
 import { BaseSuggestModal, type SuggestModalProps } from "src/ui/baseSuggestModal";
+import { matchedQueryIndexes } from "src/ui/queryHighlight";
 
 export interface SelectionItem {
 	label: string;
@@ -85,12 +86,11 @@ export class SelectionModal<T> extends BaseSuggestModal<T> {
 }
 
 function renderMatchedLabel(container: HTMLElement, text: string, query: string): void {
-	const matched = query ? fuzzysort.single(query, text) : null;
-	if (!matched) {
+	const indexes = new Set(matchedQueryIndexes(text, query));
+	if (indexes.size === 0) {
 		container.createSpan({ text });
 		return;
 	}
-	const indexes = new Set(matched.indexes);
 	for (let index = 0; index < text.length; index += 1) {
 		container.createSpan({
 			cls: indexes.has(index) ? "my-palette-suggestion__match" : "",
