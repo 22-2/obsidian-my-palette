@@ -5,6 +5,7 @@ import {
 	type FileSortPriority,
 	type FileSortState,
 } from "src/model/settings";
+import { moveByInsertionIndex } from "src/settings/fileSortPriorityOrdering";
 
 const STATE_LABELS: Record<FileSortState, string> = {
 	blank: "On blank",
@@ -65,7 +66,6 @@ export function renderFileSortPriorityControl(
 	const clearDropIndicator = (): void => {
 		dropIndex = undefined;
 		dropIndicator.removeClass("is-visible");
-		dropIndicator.remove();
 	};
 
 	const showDropIndicator = (index: number): void => {
@@ -76,9 +76,29 @@ export function renderFileSortPriorityControl(
 			),
 		];
 		const target = options[dropIndex];
-		if (target) enabledList.insertBefore(dropIndicator, target);
-		else enabledList.append(dropIndicator);
+		const last = options.at(-1);
+		// Overlay the indicator instead of inserting it into the list flow. Moving
+		// layout under the pointer can emit dragleave and discard an otherwise valid drop.
+		const indicatorTop = target
+			? target.offsetTop
+			: last
+				? last.offsetTop + last.offsetHeight
+				: enabledList.clientTop + 4;
+		if (!dropIndicator.isConnected) enabledList.append(dropIndicator);
+		dropIndicator.style.top = `${indicatorTop - 1}px`;
 		dropIndicator.addClass("is-visible");
+	};
+
+	const dropDraggedOption = (): void => {
+		if (draggedIndex === undefined || dropIndex === undefined) return;
+		const current = priorities[state];
+		const next = moveByInsertionIndex(current, draggedIndex, dropIndex);
+		draggedIndex = undefined;
+		clearDropIndicator();
+		if (next === current) return;
+		priorities[state] = [...next];
+		render();
+		commit();
 	};
 
 	const renderOption = (
@@ -113,47 +133,16 @@ export function renderFileSortPriorityControl(
 			draggedIndex = index;
 			dropIndex = index;
 			option.addClass("is-dragging");
-			if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+			if (event.dataTransfer) {
+				event.dataTransfer.effectAllowed = "move";
+				event.dataTransfer.setData("text/plain", priority);
+			}
 			showDropIndicator(index);
 		});
 		option.addEventListener("dragend", () => {
 			draggedIndex = undefined;
 			option.removeClass("is-dragging");
 			clearDropIndicator();
-		});
-		option.addEventListener("dragover", (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-			if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-			const rect = option.getBoundingClientRect();
-			showDropIndicator(index + (event.clientY > rect.top + rect.height / 2 ? 1 : 0));
-		});
-		option.addEventListener("drop", (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-			if (draggedIndex === undefined || dropIndex === undefined) return;
-			const sourceIndex = draggedIndex;
-			const insertionIndex = dropIndex;
-			if (insertionIndex === sourceIndex || insertionIndex === sourceIndex + 1) {
-				draggedIndex = undefined;
-				clearDropIndicator();
-				return;
-			}
-			const next = [...priorities[state]];
-			const [moved] = next.splice(sourceIndex, 1);
-			if (moved === undefined) return;
-			// The target index is measured before removing the source item, so a
-			// downward move needs one slot subtracted before insertion.
-			next.splice(
-				insertionIndex > sourceIndex ? insertionIndex - 1 : insertionIndex,
-				0,
-				moved,
-			);
-			priorities[state] = next;
-			draggedIndex = undefined;
-			clearDropIndicator();
-			render();
-			commit();
 		});
 	};
 
@@ -184,19 +173,27 @@ export function renderFileSortPriorityControl(
 		render();
 		commit();
 	});
-	enabledList.addEventListener("dragover", (event) => event.preventDefault());
+	enabledList.addEventListener("dragover", (event) => {
+		event.preventDefault();
+		if (draggedIndex === undefined) return;
+		if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+		const options = [
+			...enabledList.querySelectorAll<HTMLButtonElement>(
+				".my-palette-sort-priorities__option",
+			),
+		];
+		// Resolve the destination from one stable list coordinate space. Child-level
+		// handlers could miss a drop when the pointer crossed the gap indicator.
+		const targetIndex = options.findIndex((option) => {
+			const rect = option.getBoundingClientRect();
+			return event.clientY < rect.top + rect.height / 2;
+		});
+		showDropIndicator(targetIndex === -1 ? options.length : targetIndex);
+	});
 	enabledList.addEventListener("drop", (event) => {
 		event.preventDefault();
-		if (draggedIndex === undefined || event.target !== enabledList) return;
-		const next = [...priorities[state]];
-		const [moved] = next.splice(draggedIndex, 1);
-		if (moved === undefined) return;
-		next.push(moved);
-		priorities[state] = next;
-		draggedIndex = undefined;
-		clearDropIndicator();
-		render();
-		commit();
+		event.stopPropagation();
+		dropDraggedOption();
 	});
 	enabledList.addEventListener("dragleave", (event) => {
 		const target = event.relatedTarget;
