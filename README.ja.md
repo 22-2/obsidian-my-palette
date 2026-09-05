@@ -60,6 +60,23 @@ File 検索では、インラインタグと frontmatter の `tags` の両方を
 
 利用できる priority は `Filename prefix match`、`Filename fuzzy match`、`Alias prefix match`、`Alias fuzzy match`、`Tag match`、`Match coverage`、`Folder path match`、`Activity`、`Last modified`、`Aliases count`、`Alphabetical`、`Alphabetical reverse`、および任意の `:asc` / `:desc` を付けられる `@prior` です。`prior` が未設定のファイルは後ろに置かれます。
 
+| ソートキー              | 説明                                                                                               |
+| ----------------------- | -------------------------------------------------------------------------------------------------- |
+| `Filename prefix match` | ファイル名が検索語で始まる候補を先に置く                                                           |
+| `Filename fuzzy match`  | ファイル名の fuzzy score が高い候補を先に置く                                                      |
+| `Alias prefix match`    | alias が検索語で始まる候補を先に置く                                                               |
+| `Alias fuzzy match`     | alias の fuzzy score が高い候補を先に置く                                                          |
+| `Tag match`             | 検索に一致したタグが多い候補を先に置く                                                             |
+| `Match coverage`        | ファイル名・パス・alias・tag で一致した検索文字数が多い候補を先に置く                              |
+| `Folder path match`     | ファイル名を除いた相対フォルダーパスの fuzzy score が高い候補を先に置く                            |
+| `Activity`              | 最近開いた順を優先し、最近開いた履歴で差がつかない候補では永続利用履歴のスコアが高い候補を先に置く |
+| `Last modified`         | ファイルの更新日時が新しい候補を先に置く                                                           |
+| `Aliases count`         | alias の数が多い候補を先に置く                                                                     |
+| `Alphabetical`          | ファイル名、次に相対パスの昇順で並べる                                                             |
+| `Alphabetical reverse`  | ファイル名、次に相対パスの降順で並べる                                                             |
+| `@prior` / `@prior:asc` | frontmatter の数値 `prior` が小さい候補を先に置く                                                  |
+| `@prior:desc`           | frontmatter の数値 `prior` が大きい候補を先に置く                                                  |
+
 `@prior:desc` は frontmatter の数値 `prior` が大きいノートを先に置きます。既定では、ファイル名、alias、タグ、検索範囲、フォルダーパス、`prior`、`Activity`、更新日時の順に評価します。
 
 `Folder path match` はファイル名を除いた Vault 内の相対フォルダーパスを比較します。`Activity` は Obsidian の最近開いた順を先に使い、同じ状態の候補ではパレットの永続利用履歴をタイブレークに使います。`Last modified` は明示的に指定した場合だけ更新日時で比較し、設定した priority がすべて同点なら Vault 内の相対パスを決定的なフォールバックに使います。
