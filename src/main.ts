@@ -12,11 +12,12 @@ import { openExternalMarkdown } from "src/app/openExternalMarkdown";
 import { PaletteModal } from "src/palette/PaletteModal";
 import { PALETTE_VIEW_TYPE } from "src/views/PaletteView";
 import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
-import type { PaletteMode, SearchHistoryResult } from "src/model/results";
+import type { PaletteMode, PaletteResult, SearchHistoryResult } from "src/model/results";
 import type { SearchHistoryCategory, SearchHistoryEntry } from "src/model/settings";
 import { getSearchHistorySuggestions, recordSearchHistory } from "src/palette/searchHistory";
 import { RELATED_PREFIXES } from "src/palette/inputParser";
 import { loadPluginSettings, savePluginSettings } from "src/settings/settingsStore";
+import { FileUsageHistory } from "src/search/file/fileUsageHistory";
 import "../styles.css";
 
 const logger = log.withTag("MyPalette");
@@ -33,18 +34,24 @@ export default class MyPalettePlugin extends Plugin {
 	bookmarkProvider!: PaletteProviderInstances["bookmarkProvider"];
 	smartConnectionProvider!: PaletteProviderInstances["smartConnectionProvider"];
 	providers!: PaletteProviderInstances["providers"];
+	private fileUsageHistory?: FileUsageHistory;
 	private rememberedPaletteQueries: Partial<Record<PaletteMode, string>> = {};
 	private activePaletteModal?: PaletteModal;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
 		this.initializeLogger();
+		this.fileUsageHistory = new FileUsageHistory(this.app, (message, detail) =>
+			logger.debug(message, detail),
+		);
+		await this.fileUsageHistory.load();
 		registerPluginEvents(this);
 		const providers = createPaletteProviders(this.app, this.everythingClient, {
 			vaultExtensions: () => this.settings.everything.vaultExtensions,
 			fileSortPriorities: () => this.settings.file.sortPriorities,
 			recentCommandIds: () => this.settings.recentCommandIds,
 			everythingSettings: () => this.settings.everything,
+			fileUsageHistory: this.fileUsageHistory,
 			log: (message, detail) => logger.debug(message, detail),
 		});
 		this.fileProvider = providers.fileProvider;
@@ -109,6 +116,7 @@ export default class MyPalettePlugin extends Plugin {
 		this.activePaletteModal = undefined;
 		this.everythingClient.cancel();
 		this.fileProvider?.dispose();
+		void this.fileUsageHistory?.dispose();
 		logger.debug("Plugin unloaded");
 	}
 
@@ -144,6 +152,26 @@ export default class MyPalettePlugin extends Plugin {
 			...this.settings.recentCommandIds.filter((existing) => existing !== id),
 		].slice(0, MAX_RECENT_COMMAND_IDS);
 		void this.saveSettings();
+	}
+
+	recordFileUsage(path: string): void {
+		this.fileUsageHistory?.record(path);
+	}
+
+	recordResultUsage(result: PaletteResult): void {
+		const path =
+			result.mode === "file"
+				? result.vaultPath
+				: result.mode === "everything" && result.kind === "file"
+					? result.vaultPath
+					: result.mode === "bookmark"
+						? result.file?.path
+						: result.mode === "link" ||
+							  result.mode === "backlink" ||
+							  result.mode === "smart"
+							? result.file.path
+							: undefined;
+		if (path) this.recordFileUsage(path);
 	}
 
 	rememberPaletteQuery(mode: PaletteMode, query: string, rawInput?: string): void {

@@ -51,16 +51,21 @@ export async function executePaletteResult(
 
 	if (result.mode === "bookmark") {
 		const opened = await executeBookmark(plugin.app, result, action, options);
-		if (opened) finish(options);
+		if (opened) {
+			plugin.recordResultUsage(result);
+			finish(options);
+		}
 		return;
 	}
 	if (result.mode === "smart") {
 		await openFileResult(plugin.app, result, action, options);
+		plugin.recordResultUsage(result);
 		finish(options);
 		return;
 	}
 	if (result.mode === "link" || result.mode === "backlink") {
 		await openFileResult(plugin.app, result, action, options);
+		plugin.recordResultUsage(result);
 		const editor = editorOf(options.targetLeaf ?? plugin.app.workspace.activeLeaf);
 		if (editor) editor.setCursor({ line: result.line, ch: 0 });
 		finish(options);
@@ -86,8 +91,10 @@ export async function executePaletteResult(
 			active: options.active,
 		},
 	);
-	if (outcome.close) finish(options);
-	else options.showError(outcome.message ?? "The action failed.");
+	if (outcome.close) {
+		plugin.recordResultUsage(result);
+		finish(options);
+	} else options.showError(outcome.message ?? "The action failed.");
 }
 
 async function executeBookmark(

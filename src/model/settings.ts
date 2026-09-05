@@ -77,6 +77,7 @@ export const FILE_SORT_PRIORITIES = {
 	matchCoverage: "Match coverage",
 	pathFuzzyMatch: "Path fuzzy match",
 	lastOpened: "Last opened",
+	usageHistory: "Usage history",
 	lastModified: "Last modified",
 	aliasesCount: "Aliases count",
 	alphabetical: "Alphabetical",
@@ -95,6 +96,7 @@ export const FILE_SORT_PRIORITY_LIST = [
 	FILE_SORT_PRIORITIES.matchCoverage,
 	FILE_SORT_PRIORITIES.pathFuzzyMatch,
 	FILE_SORT_PRIORITIES.lastOpened,
+	FILE_SORT_PRIORITIES.usageHistory,
 	FILE_SORT_PRIORITIES.lastModified,
 	FILE_SORT_PRIORITIES.aliasesCount,
 	FILE_SORT_PRIORITIES.alphabetical,
@@ -221,6 +223,7 @@ export const DEFAULT_FILE_SORT_PRIORITIES: readonly FileSortPriority[] = [
 	FILE_SORT_PRIORITIES.pathFuzzyMatch,
 	FILE_SORT_PRIORITIES.priorDesc,
 	FILE_SORT_PRIORITIES.lastOpened,
+	FILE_SORT_PRIORITIES.usageHistory,
 	FILE_SORT_PRIORITIES.lastModified,
 ];
 

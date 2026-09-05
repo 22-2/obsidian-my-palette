@@ -101,6 +101,42 @@ describe("file sorting", () => {
 		expect(sorted.map(({ path }) => path)).toEqual(["b/gamma.md", "z/alpha.md", "a/beta.md"]);
 	});
 
+	it("uses usage history when it is an explicit sorting priority", () => {
+		const matches = [
+			{ obj: file("rare.md", 1), score: 0 },
+			{ obj: file("often.md", 1), score: 0 },
+		];
+		const usageScores = new Map([
+			["rare.md", 0.2],
+			["often.md", 0.9],
+		]);
+
+		const sorted = sortFileMatches(matches, "query", new Map(), ["Usage history"], usageScores);
+
+		expect(sorted.map(({ path }) => path)).toEqual(["often.md", "rare.md"]);
+	});
+
+	it("keeps an earlier configured match priority ahead of usage history", () => {
+		const matches = [
+			{ obj: file("ordinary.md", 1), score: 1, filenameScore: 1 },
+			{ obj: file("strong.md", 1), score: 2, filenameScore: 2 },
+		];
+		const usageScores = new Map([
+			["ordinary.md", 1],
+			["strong.md", 0],
+		]);
+
+		const sorted = sortFileMatches(
+			matches,
+			"query",
+			new Map(),
+			["Filename fuzzy match", "Usage history"],
+			usageScores,
+		);
+
+		expect(sorted.map(({ path }) => path)).toEqual(["strong.md", "ordinary.md"]);
+	});
+
 	it("puts ignored matches before normal notes in an include-ignored search", () => {
 		const matches = [
 			{ obj: file("notes/new.md", 100, [], false), score: 100 },

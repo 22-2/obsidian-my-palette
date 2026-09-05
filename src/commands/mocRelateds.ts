@@ -94,6 +94,7 @@ async function runCandidateAction(
 		openExternalMarkdown: (absolutePath, openAction) =>
 			plugin.openExternalMarkdown(absolutePath, openAction),
 	});
+	if (outcome.close) plugin.recordFileUsage(result.vaultPath);
 	if (!outcome.close && outcome.message) new Notice(outcome.message);
 }
 
@@ -109,6 +110,7 @@ async function openCandidateInBackground(
 		}
 		if (isMarkdownPath(absolutePath) && plugin.settings.openExternalMarkdownInObsidian) {
 			await plugin.openExternalMarkdown(absolutePath, "primary", true, false);
+			plugin.recordFileUsage(result.vaultPath);
 			return;
 		}
 		new Notice("This item cannot be opened in a background Obsidian tab.");
@@ -116,6 +118,7 @@ async function openCandidateInBackground(
 	}
 	if (result.file) {
 		await plugin.app.workspace.getLeaf("tab").openFile(result.file, { active: false });
+		plugin.recordFileUsage(result.vaultPath);
 		return;
 	}
 	new Notice("The file no longer exists.");

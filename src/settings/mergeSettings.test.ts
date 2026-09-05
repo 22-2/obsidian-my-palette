@@ -45,6 +45,7 @@ describe("mergeSettings", () => {
 				"Path fuzzy match",
 				"@prior:desc",
 				"Last opened",
+				"Usage history",
 				"Last modified",
 			],
 			input: [
@@ -57,6 +58,7 @@ describe("mergeSettings", () => {
 				"Path fuzzy match",
 				"@prior:desc",
 				"Last opened",
+				"Usage history",
 				"Last modified",
 			],
 		});
@@ -130,6 +132,7 @@ describe("mergeSettings", () => {
 			"Path fuzzy match",
 			"@prior:desc",
 			"Last opened",
+			"Usage history",
 			"Last modified",
 		]);
 		expect(settings.file.sortPriorities.input).toEqual(settings.file.sortPriorities.blank);
@@ -156,7 +159,7 @@ describe("mergeSettings", () => {
 		expect(settings.file.sortPriorities).toEqual(DEFAULT_SETTINGS.file.sortPriorities);
 	});
 
-	it("adds match coverage to untouched previous defaults", () => {
+	it("adds usage history to untouched previous defaults", () => {
 		const settings = mergeSettings({
 			schemaVersion: 13,
 			file: {

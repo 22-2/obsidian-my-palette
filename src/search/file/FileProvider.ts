@@ -11,6 +11,7 @@ import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
 import { createFileMatch, fileSearchKeys, type FileSearchEntry } from "src/search/file/fileMatch";
 import { sortFileMatches, sortFilesWithoutQuery } from "src/search/file/fileSorting";
 import { isTagOnlyQuery, normalizeTags } from "src/search/file/fileTags";
+import type { FileUsageScoreSource } from "src/search/file/fileUsageHistory";
 import { searchFuzzyQueryWithFieldScores } from "src/search/fuzzyQuery";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 
@@ -34,6 +35,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			blank: [...DEFAULT_FILE_SORT_PRIORITIES],
 			input: [...DEFAULT_FILE_SORT_PRIORITIES],
 		}),
+		private readonly usageHistory?: FileUsageScoreSource,
 	) {
 		this.updateAllowedExtensions();
 		this.rebuild();
@@ -111,6 +113,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 	async search({ query, includeIgnored = false }: PaletteSearchRequest): Promise<FileResult[]> {
 		const recentPaths = this.app.workspace.getLastOpenFiles?.() ?? [];
 		const recent = new Map(recentPaths.map((filePath, index) => [filePath, index]));
+		const usageScores = this.usageHistory?.getScores();
 		const ignoreFilters = getUserIgnoreFilters(this.app);
 		// Excluded files stay out of the normal index; the explicit prefix opts into
 		// the separate adapter-backed index below and prevents duplicate candidates.
@@ -139,7 +142,12 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		if (!query.trim()) {
 			// Empty and typed searches serve different browsing intents, so each
 			// reads its own priority sequence at search time for live settings edits.
-			const files = sortFilesWithoutQuery(entries, recent, this.fileSortPriorities().blank);
+			const files = sortFilesWithoutQuery(
+				entries,
+				recent,
+				this.fileSortPriorities().blank,
+				usageScores,
+			);
 			return files.map((entry) => this.result(entry));
 		}
 		// Boolean operators are resolved locally; Everything is deliberately left
@@ -166,6 +174,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			tagOnlyQuery ? undefined : query,
 			recent,
 			inputSortPriorities,
+			usageScores,
 		).map((entry) => this.result(entry, matchedTagsByPath.get(entry.path)));
 	}
 

@@ -9,6 +9,7 @@ import { RelatedFileProvider } from "src/search/related/RelatedFileProvider";
 import { BookmarkProvider } from "src/search/bookmark/BookmarkProvider";
 import { SmartConnectionProvider } from "src/search/smart/SmartConnectionProvider";
 import type { PaletteProvider } from "src/search/PaletteProvider";
+import type { FileUsageScoreSource } from "src/search/file/fileUsageHistory";
 
 export interface PaletteProviderInstances {
 	fileProvider: FileProvider;
@@ -25,6 +26,7 @@ interface ProviderFactoryOptions {
 	fileSortPriorities: () => FileSortPriorities;
 	recentCommandIds: () => string[];
 	everythingSettings: () => MyPaletteSettings["everything"];
+	fileUsageHistory?: FileUsageScoreSource;
 	log: (message: string, detail?: unknown) => void;
 }
 
@@ -42,6 +44,7 @@ export function createPaletteProviders(
 		options.vaultExtensions,
 		options.log,
 		options.fileSortPriorities,
+		options.fileUsageHistory,
 	);
 	const commandProvider = new CommandProvider(app, options.recentCommandIds);
 	const everythingProvider = new EverythingProvider(

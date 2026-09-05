@@ -20,11 +20,13 @@ export type { FileMatch, FileMatchSignals, SortableFileEntry };
 interface SortContext {
 	query?: string;
 	recent: ReadonlyMap<string, number>;
+	usageScores: ReadonlyMap<string, number>;
 	signalsA: FileMatchSignals;
 	signalsB: FileMatchSignals;
 }
 
 const EMPTY_MATCH_SIGNALS: FileMatchSignals = {};
+const EMPTY_USAGE_SCORES: ReadonlyMap<string, number> = new Map();
 
 const QUERY_SORT_PRIORITIES = new Set<FileSortPriority>([
 	FILE_SORT_PRIORITIES.filenamePrefixMatch,
@@ -105,6 +107,16 @@ function compareRecent(
 	return indexA - indexB;
 }
 
+function compareUsage(
+	a: SortableFileEntry,
+	b: SortableFileEntry,
+	usageScores: ReadonlyMap<string, number>,
+): number {
+	// Usage is an optional, bounded hint. Missing records stay behind recorded
+	// notes only when this priority is explicitly selected by the user.
+	return compareOptionalScore(usageScores.get(a.path), usageScores.get(b.path));
+}
+
 function compareFallback(a: SortableFileEntry, b: SortableFileEntry): number {
 	return (
 		b.mtime - a.mtime ||
@@ -168,6 +180,8 @@ function comparePriority(
 			return compareOptionalScore(context.signalsA.pathScore, context.signalsB.pathScore);
 		case FILE_SORT_PRIORITIES.lastOpened:
 			return compareRecent(a, b, context.recent);
+		case FILE_SORT_PRIORITIES.usageHistory:
+			return compareUsage(a, b, context.usageScores);
 		case FILE_SORT_PRIORITIES.lastModified:
 			return compareNumber(a.mtime, b.mtime, "desc");
 		case FILE_SORT_PRIORITIES.aliasesCount:
@@ -210,6 +224,7 @@ export function sortFilesWithoutQuery<T extends SortableFileEntry>(
 	entries: T[],
 	recent: ReadonlyMap<string, number>,
 	priorities: readonly FileSortPriority[] = DEFAULT_FILE_SORT_PRIORITIES,
+	usageScores?: ReadonlyMap<string, number>,
 ): T[] {
 	const noQueryPriorities = filterNoQueryPriorities(priorities);
 	return entries.sort(
@@ -219,6 +234,7 @@ export function sortFilesWithoutQuery<T extends SortableFileEntry>(
 			// still receives an explicit empty signal set to keep its contract uniform.
 			comparePriorities(a, b, noQueryPriorities, {
 				recent,
+				usageScores: usageScores ?? EMPTY_USAGE_SCORES,
 				signalsA: EMPTY_MATCH_SIGNALS,
 				signalsB: EMPTY_MATCH_SIGNALS,
 			}) ||
@@ -231,6 +247,7 @@ export function sortFileMatches<T extends SortableFileEntry>(
 	query: string | undefined,
 	recent: ReadonlyMap<string, number>,
 	priorities: readonly FileSortPriority[] = DEFAULT_FILE_SORT_PRIORITIES,
+	usageScores?: ReadonlyMap<string, number>,
 ): T[] {
 	// Extract once before sorting so the comparator only compares stable signals;
 	// this keeps the compatibility boundary cheap when a vault has many matches.
@@ -248,6 +265,7 @@ export function sortFileMatches<T extends SortableFileEntry>(
 				comparePriorities(a.obj, b.obj, priorities, {
 					query,
 					recent,
+					usageScores: usageScores ?? EMPTY_USAGE_SCORES,
 					signalsA,
 					signalsB,
 				}) ||

@@ -8,11 +8,11 @@ import {
 import { type DBSchema, type IDBPDatabase, openDB } from "idb";
 import {
 	getUserIgnoreFilters,
-	getVaultRootPath,
 	isUserIgnoreFilterRegex,
 	isUserIgnoredPathWithFilters,
 } from "src/ignored-notes/ignoredPaths";
 import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
+import { getVaultId, getVaultPathKey } from "src/shared/vaultIdentity";
 import { normalizeTags } from "src/search/file/fileTags";
 
 const DATABASE_NAME = "my-palette-ignored-notes";
@@ -80,22 +80,6 @@ function fingerprint(filters: readonly string[]): string {
 		.map((filter) => filter.toLocaleLowerCase())
 		.sort()
 		.join("\n");
-}
-
-function vaultId(app: App): string {
-	const source = getVaultRootPath(app) ?? app.vault.getName();
-	// A stable hash keeps the absolute Vault path out of the browser database while
-	// still separating two Vaults that happen to contain identically named notes.
-	let hash = 2166136261;
-	for (const character of source) {
-		hash ^= character.charCodeAt(0);
-		hash = Math.imul(hash, 16777619);
-	}
-	return `v${(hash >>> 0).toString(16)}`;
-}
-
-function keyFor(vault: string, path: string): string {
-	return `${vault}\u0000${path}`;
 }
 
 interface ParsedFrontmatter {
@@ -171,7 +155,7 @@ export class IgnoredNoteIndex {
 		private readonly app: App,
 		private readonly log: IgnoredNoteIndexLogger = () => undefined,
 	) {
-		this.currentVaultId = vaultId(app);
+		this.currentVaultId = getVaultId(app);
 	}
 
 	async getEntries(): Promise<IgnoredNoteIndexEntry[]> {
@@ -365,7 +349,7 @@ export class IgnoredNoteIndex {
 			await transaction.store.put({
 				...entry,
 				vaultId: this.currentVaultId,
-				key: keyFor(this.currentVaultId, entry.path),
+				key: getVaultPathKey(this.currentVaultId, entry.path),
 			});
 		await transaction.done;
 		await database.put(

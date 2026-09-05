@@ -19,6 +19,19 @@ export async function openPaletteResultInBackground(
 	plugin: MyPalettePlugin,
 	result: PaletteResult,
 ): Promise<boolean> {
+	const opened = await openPaletteResultInBackgroundInternal(plugin, result);
+	if (opened) {
+		// Record only after the host accepted the open, so failed or unsupported
+		// results cannot teach the ranking about a note the user never saw.
+		plugin.recordResultUsage(result);
+	}
+	return opened;
+}
+
+async function openPaletteResultInBackgroundInternal(
+	plugin: MyPalettePlugin,
+	result: PaletteResult,
+): Promise<boolean> {
 	if (result.mode === "command") return false;
 	if (result.mode === "bookmark") {
 		if (result.kind === "search" && result.query) {
