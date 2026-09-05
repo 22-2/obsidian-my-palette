@@ -173,7 +173,7 @@ Vault 内の `TFile` を対象とする。フォルダー自体は結果に含�
 
 #### 空入力
 
-Obsidian が保持する「最近開いたファイル」を新しい順で最大20件表示する。存在しなくなったファイルは除外する。履歴を取得できない場合はファイル名昇順の先頭20件へフォールバックする。
+Obsidian が保持する「最近開いたファイル」を検索候補へ渡し、`Activity` が有効な場合は最近開いた順を優先する。永続化したパレットの利用履歴は、最近開いた状態が同じ候補のタイブレークとして使う。存在しなくなったファイルは除外する。
 
 #### 入力あり
 
@@ -184,13 +184,14 @@ Obsidian が保持する「最近開いたファイル」を新しい順で最�
 - 並び順は `File search` 設定の `sortPriorities.blank`（空白時）または
   `sortPriorities.input`（入力時）を上から適用する。
 - `@prior:asc` / `@prior:desc` は frontmatter の数値 `prior` を比較し、未設定値は最後に置く。
-- `Filename prefix match` / `Filename fuzzy match` はファイル名、`Alias prefix match` / `Alias fuzzy match` は frontmatter の aliases、`Path fuzzy match` は Vault 内の相対パスを対象に比較する。
+- `Filename prefix match` / `Filename fuzzy match` はファイル名、`Alias prefix match` / `Alias fuzzy match` は frontmatter の aliases、`Folder path match` はファイル名を除いた Vault 内の相対フォルダーパスを対象に比較する。
+- `Activity` は最近開いたファイルの順序を先に比較し、同じ状態の候補では IndexedDB に保存した利用回数と最終利用時刻から計算したスコアを比較する。
 - `#tag` で始まる検索はタグだけを対象とし、通常の検索語もタグに fuzzy match する。
 - `Tag match` は検索に一致したタグ数を降順で比較する。
 - `Match coverage` は、ファイル名・パス・個々の alias・個々の tag で一致した検索語の文字数を合計して降順で比較する。重複する値は1回だけ数え、OR 条件では合計が最大のブランチだけを使う。
 - AND ブランチの全語がファイル名・パス・alias・tag のいずれかで連続一致する結果は、設定した fuzzy 系 priority より先に置く。
 - `Aliases count` は frontmatter の `aliases` / `alias` の要素数を降順で比較する。
-- 空入力では、検索語に依存する filename / alias の match priorities を除外してから同じ設定を適用する。
+- 空入力では、検索語に依存する filename / alias / tag / folder path / coverage の match priorities を除外してから同じ設定を適用する。設定した priority がすべて同点の場合は Vault 内の相対パス昇順を使う。
 - 最大50件を表示する。
 
 #### 表示

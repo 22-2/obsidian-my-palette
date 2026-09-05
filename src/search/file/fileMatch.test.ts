@@ -32,7 +32,7 @@ describe("file match signal construction", () => {
 		});
 
 		expect(match.filenameScore).toBeUndefined();
-		expect(match.pathScore).toBeUndefined();
+		expect(match.folderPathScore).toBeUndefined();
 		expect(match.aliasScore).toEqual(expect.any(Number));
 		expect(match.matchCoverage).toBeUndefined();
 	});
@@ -51,13 +51,25 @@ describe("file match signal construction", () => {
 		expect(match).toMatchObject({
 			score: -1,
 			filenameScore: -2,
-			pathScore: -3,
+			folderPathScore: -3,
 			aliasScore: -5,
 			tagMatchCount: 1,
 			contiguousMatch: true,
 			matchedTags: ["#project"],
 		});
 		expect(match.matchCoverage).toBeGreaterThan(0);
+	});
+
+	it("keeps filename-only matches out of the folder path signal", () => {
+		const [candidate] = searchFuzzyQueryWithFieldScores(
+			"project-plan",
+			[entry()],
+			fileSearchKeys(false),
+		);
+		expect(candidate).toBeDefined();
+		if (!candidate) return;
+
+		expect(candidate.fieldScores[1]).toBeUndefined();
 	});
 
 	it("keeps tag-only queries out of filename, path, and alias signals", () => {
@@ -73,7 +85,7 @@ describe("file match signal construction", () => {
 
 		expect(match).toMatchObject({
 			filenameScore: undefined,
-			pathScore: undefined,
+			folderPathScore: undefined,
 			aliasScore: undefined,
 			tagMatchCount: 1,
 			contiguousMatch: true,

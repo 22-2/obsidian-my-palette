@@ -35,7 +35,7 @@ const QUERY_SORT_PRIORITIES = new Set<FileSortPriority>([
 	FILE_SORT_PRIORITIES.aliasFuzzyMatch,
 	FILE_SORT_PRIORITIES.tagMatch,
 	FILE_SORT_PRIORITIES.matchCoverage,
-	FILE_SORT_PRIORITIES.pathFuzzyMatch,
+	FILE_SORT_PRIORITIES.folderPathMatch,
 ]);
 
 function normalized(value: string): string {
@@ -117,12 +117,16 @@ function compareUsage(
 	return compareOptionalScore(usageScores.get(a.path), usageScores.get(b.path));
 }
 
+function compareActivity(a: SortableFileEntry, b: SortableFileEntry, context: SortContext): number {
+	// Keep the existing short-term ordering first, then use the persistent
+	// aggregate only when both candidates have the same recent-open status.
+	return compareRecent(a, b, context.recent) || compareUsage(a, b, context.usageScores);
+}
+
 function compareFallback(a: SortableFileEntry, b: SortableFileEntry): number {
-	return (
-		b.mtime - a.mtime ||
-		a.basename.localeCompare(b.basename, undefined, { sensitivity: "base" }) ||
-		a.path.localeCompare(b.path, undefined, { sensitivity: "base" })
-	);
+	// Last modified is a configurable priority. The fallback must stay
+	// deterministic without silently reintroducing that signal after a user omits it.
+	return a.path.localeCompare(b.path, undefined, { sensitivity: "base" });
 }
 
 function compareAlphabetical(a: SortableFileEntry, b: SortableFileEntry, reverse = false): number {
@@ -176,12 +180,13 @@ function comparePriority(
 				context.signalsA.matchCoverage,
 				context.signalsB.matchCoverage,
 			);
-		case FILE_SORT_PRIORITIES.pathFuzzyMatch:
-			return compareOptionalScore(context.signalsA.pathScore, context.signalsB.pathScore);
-		case FILE_SORT_PRIORITIES.lastOpened:
-			return compareRecent(a, b, context.recent);
-		case FILE_SORT_PRIORITIES.usageHistory:
-			return compareUsage(a, b, context.usageScores);
+		case FILE_SORT_PRIORITIES.folderPathMatch:
+			return compareOptionalScore(
+				context.signalsA.folderPathScore,
+				context.signalsB.folderPathScore,
+			);
+		case FILE_SORT_PRIORITIES.activity:
+			return compareActivity(a, b, context);
 		case FILE_SORT_PRIORITIES.lastModified:
 			return compareNumber(a.mtime, b.mtime, "desc");
 		case FILE_SORT_PRIORITIES.aliasesCount:

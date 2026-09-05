@@ -79,7 +79,7 @@ function createFileSearchPage(plugin: MyPalettePlugin, helpers: SettingPageHelpe
 		helpers.group("Sorting", [
 			helpers.render(
 				"Sort priorities",
-				"Choose priorities separately for blank and typed input. Enabled priorities run from top to bottom; drag them to reorder. @prior:desc puts higher-priority notes first, Usage history favors notes opened through the palette, and missing prior values are last.",
+				"Choose priorities separately for blank and typed input. Enabled priorities run from top to bottom; drag them to reorder. @prior:desc puts higher-priority notes first, Activity combines recent opens with persistent palette usage, and missing prior values are last.",
 				(setting) => {
 					renderFileSortPriorityControl(
 						setting,

@@ -63,16 +63,21 @@ additional matches. Hover the row to see the full matching-tag list.
 File ordering is configured from `Settings → My Palette → File search → Sort
 priorities`, with one priority per line. The first priority that differs wins.
 Supported priorities are `Filename prefix match`, `Filename fuzzy match`,
-`Alias prefix match`, `Alias fuzzy match`, `Tag match`, `Match coverage`, `Path fuzzy match`,
-`Last opened`, `Last modified`, `Aliases count`, `Alphabetical`, `Alphabetical
-reverse`, and `@prior` with an optional `:asc` or `:desc` suffix. Missing `prior`
-values are sorted last.
+`Alias prefix match`, `Alias fuzzy match`, `Tag match`, `Match coverage`, `Folder path match`,
+`Activity`, `Last modified`, `Aliases count`, `Alphabetical`, `Alphabetical reverse`,
+and `@prior` with an optional `:asc` or `:desc` suffix. Missing `prior` values are
+sorted last.
 
 For example, `@prior:desc` places notes with higher numeric `prior` values first;
 the default ranks filename matches before alias and tag matches, then match coverage
-and path; `prior` comes before recency. `Tag match` orders notes with more matching
-tags first. `Match coverage` totals matched query characters across distinct
-filenames, paths, aliases, and tags, using only the strongest OR branch.
+and folder path; `prior` comes before `Activity`. `Folder path match` compares the
+directory portion of the Vault-relative path, excluding the filename. `Activity`
+combines the current workspace's recent-open order with persistent palette usage,
+using usage as a tie-breaker after recent-open status. `Last modified` is an explicit
+mtime priority; when all configured priorities tie, the Vault-relative path provides
+a deterministic fallback. `Tag match` orders notes with more matching tags first.
+`Match coverage` totals matched query characters across distinct filenames, paths,
+aliases, and tags, using only the strongest OR branch.
 `Aliases count` is available as an optional secondary signal and orders notes with
 more aliases first.
 

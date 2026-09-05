@@ -36,7 +36,7 @@ describe("file sorting", () => {
 			score: -1,
 			filenameScore: undefined,
 			aliasScore: -2,
-			pathScore: -3,
+			folderPathScore: -3,
 			tagMatchCount: 2,
 			matchCoverage: 5,
 			contiguousMatch: true,
@@ -45,7 +45,7 @@ describe("file sorting", () => {
 		expect(extractFileMatchSignals(legacy)).toEqual({
 			filenameScore: -4,
 			aliasScore: undefined,
-			pathScore: undefined,
+			folderPathScore: undefined,
 			tagMatchCount: undefined,
 			matchCoverage: undefined,
 			contiguousMatch: undefined,
@@ -53,7 +53,7 @@ describe("file sorting", () => {
 		expect(extractFileMatchSignals(fieldSpecific)).toEqual({
 			filenameScore: undefined,
 			aliasScore: -2,
-			pathScore: -3,
+			folderPathScore: -3,
 			tagMatchCount: 2,
 			matchCoverage: 5,
 			contiguousMatch: true,
@@ -88,7 +88,7 @@ describe("file sorting", () => {
 		]);
 	});
 
-	it("uses fuzzy score, recent history, modified time, and file name in that order", () => {
+	it("uses fuzzy score, activity, modified time, and path fallback in that order", () => {
 		const matches = [
 			{ obj: file("z/alpha.md", 10), score: 20 },
 			{ obj: file("a/beta.md", 30), score: 20 },
@@ -101,7 +101,7 @@ describe("file sorting", () => {
 		expect(sorted.map(({ path }) => path)).toEqual(["b/gamma.md", "z/alpha.md", "a/beta.md"]);
 	});
 
-	it("uses usage history when it is an explicit sorting priority", () => {
+	it("uses persistent usage when Activity is an explicit sorting priority", () => {
 		const matches = [
 			{ obj: file("rare.md", 1), score: 0 },
 			{ obj: file("often.md", 1), score: 0 },
@@ -111,12 +111,28 @@ describe("file sorting", () => {
 			["often.md", 0.9],
 		]);
 
-		const sorted = sortFileMatches(matches, "query", new Map(), ["Usage history"], usageScores);
+		const sorted = sortFileMatches(matches, "query", new Map(), ["Activity"], usageScores);
 
 		expect(sorted.map(({ path }) => path)).toEqual(["often.md", "rare.md"]);
 	});
 
-	it("keeps an earlier configured match priority ahead of usage history", () => {
+	it("prefers recent opens before persistent usage within Activity", () => {
+		const matches = [
+			{ obj: file("old.md", 1), score: 0 },
+			{ obj: file("recent.md", 1), score: 0 },
+		];
+		const recent = new Map([["recent.md", 0]]);
+		const usageScores = new Map([
+			["old.md", 1],
+			["recent.md", 0.1],
+		]);
+
+		const sorted = sortFileMatches(matches, "query", recent, ["Activity"], usageScores);
+
+		expect(sorted.map(({ path }) => path)).toEqual(["recent.md", "old.md"]);
+	});
+
+	it("keeps an earlier configured match priority ahead of Activity", () => {
 		const matches = [
 			{ obj: file("ordinary.md", 1), score: 1, filenameScore: 1 },
 			{ obj: file("strong.md", 1), score: 2, filenameScore: 2 },
@@ -130,7 +146,7 @@ describe("file sorting", () => {
 			matches,
 			"query",
 			new Map(),
-			["Filename fuzzy match", "Usage history"],
+			["Filename fuzzy match", "Activity"],
 			usageScores,
 		);
 
@@ -149,7 +165,7 @@ describe("file sorting", () => {
 		]);
 	});
 
-	it("shows recent files first, then newer files, then file-name order when input is empty", () => {
+	it("shows recent files first, then newer files, then path order when input is empty", () => {
 		const entries = [
 			file("z/charlie.md", 30),
 			file("a/bravo.md", 30),
@@ -166,6 +182,14 @@ describe("file sorting", () => {
 			"z/charlie.md",
 			"x/alpha.md",
 		]);
+	});
+
+	it("uses path as the deterministic fallback when Last modified is omitted", () => {
+		const entries = [file("z-note.md", 100), file("a-note.md", 1)];
+
+		const sorted = sortFilesWithoutQuery(entries, new Map(), []);
+
+		expect(sorted.map(({ path }) => path)).toEqual(["a-note.md", "z-note.md"]);
 	});
 
 	it("puts ignored notes first for an empty include-ignored listing", () => {
@@ -249,25 +273,25 @@ describe("file sorting", () => {
 		]);
 	});
 
-	it("keeps path fuzzy matching available as its own priority", () => {
+	it("keeps folder path matching available as its own priority", () => {
 		const matches = [
 			{
 				obj: file("folder/note.md", 1),
 				score: -1,
 				filenameScore: undefined,
 				aliasScore: undefined,
-				pathScore: -1,
+				folderPathScore: -1,
 			},
 			{
 				obj: file("alpha.md", 1),
 				score: -2,
 				filenameScore: undefined,
 				aliasScore: undefined,
-				pathScore: undefined,
+				folderPathScore: undefined,
 			},
 		];
 
-		const sorted = sortFileMatches(matches, "folder", new Map(), ["Path fuzzy match"]);
+		const sorted = sortFileMatches(matches, "folder", new Map(), ["Folder path match"]);
 
 		expect(sorted.map(({ path }) => path)).toEqual(["folder/note.md", "alpha.md"]);
 	});
@@ -311,7 +335,7 @@ describe("file sorting", () => {
 		const entries = [file("recent.md", 1, [], false, 1), file("important.md", 1, [], false, 3)];
 		const recent = new Map([["recent.md", 0]]);
 
-		const sorted = sortFilesWithoutQuery(entries, recent, ["@prior:desc", "Last opened"]);
+		const sorted = sortFilesWithoutQuery(entries, recent, ["@prior:desc", "Activity"]);
 
 		expect(sorted.map(({ path }) => path)).toEqual(["important.md", "recent.md"]);
 	});

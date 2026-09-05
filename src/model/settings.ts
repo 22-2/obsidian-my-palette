@@ -75,9 +75,8 @@ export const FILE_SORT_PRIORITIES = {
 	aliasFuzzyMatch: "Alias fuzzy match",
 	tagMatch: "Tag match",
 	matchCoverage: "Match coverage",
-	pathFuzzyMatch: "Path fuzzy match",
-	lastOpened: "Last opened",
-	usageHistory: "Usage history",
+	folderPathMatch: "Folder path match",
+	activity: "Activity",
 	lastModified: "Last modified",
 	aliasesCount: "Aliases count",
 	alphabetical: "Alphabetical",
@@ -94,9 +93,8 @@ export const FILE_SORT_PRIORITY_LIST = [
 	FILE_SORT_PRIORITIES.aliasFuzzyMatch,
 	FILE_SORT_PRIORITIES.tagMatch,
 	FILE_SORT_PRIORITIES.matchCoverage,
-	FILE_SORT_PRIORITIES.pathFuzzyMatch,
-	FILE_SORT_PRIORITIES.lastOpened,
-	FILE_SORT_PRIORITIES.usageHistory,
+	FILE_SORT_PRIORITIES.folderPathMatch,
+	FILE_SORT_PRIORITIES.activity,
 	FILE_SORT_PRIORITIES.lastModified,
 	FILE_SORT_PRIORITIES.aliasesCount,
 	FILE_SORT_PRIORITIES.alphabetical,
@@ -144,13 +142,20 @@ export function isFileSortPriority(value: unknown): value is FileSortPriority {
 const LEGACY_FILE_SORT_PRIORITY_ALIASES: Readonly<Record<string, FileSortPriority>> = {
 	"Prefix name match": FILE_SORT_PRIORITIES.filenamePrefixMatch,
 	"Fuzzy name match": FILE_SORT_PRIORITIES.filenameFuzzyMatch,
+	"Path fuzzy match": FILE_SORT_PRIORITIES.folderPathMatch,
+	"Last opened": FILE_SORT_PRIORITIES.activity,
+	"Usage history": FILE_SORT_PRIORITIES.activity,
 };
+
+const LEGACY_PATH_FUZZY_MATCH = "Path fuzzy match";
+const LEGACY_LAST_OPENED = "Last opened";
+const LEGACY_USAGE_HISTORY = "Usage history";
 
 const LEGACY_DEFAULT_FILE_SORT_PRIORITIES = [
 	"Prefix name match",
 	"Fuzzy name match",
 	FILE_SORT_PRIORITIES.priorDesc,
-	FILE_SORT_PRIORITIES.lastOpened,
+	LEGACY_LAST_OPENED,
 	FILE_SORT_PRIORITIES.lastModified,
 ] as const;
 
@@ -159,9 +164,9 @@ const PRE_TAG_DEFAULT_FILE_SORT_PRIORITIES = [
 	FILE_SORT_PRIORITIES.filenameFuzzyMatch,
 	FILE_SORT_PRIORITIES.aliasPrefixMatch,
 	FILE_SORT_PRIORITIES.aliasFuzzyMatch,
-	FILE_SORT_PRIORITIES.pathFuzzyMatch,
+	LEGACY_PATH_FUZZY_MATCH,
 	FILE_SORT_PRIORITIES.priorDesc,
-	FILE_SORT_PRIORITIES.lastOpened,
+	LEGACY_LAST_OPENED,
 	FILE_SORT_PRIORITIES.lastModified,
 ] as const;
 
@@ -171,9 +176,23 @@ const PREVIOUS_DEFAULT_FILE_SORT_PRIORITIES = [
 	FILE_SORT_PRIORITIES.aliasPrefixMatch,
 	FILE_SORT_PRIORITIES.aliasFuzzyMatch,
 	FILE_SORT_PRIORITIES.tagMatch,
-	FILE_SORT_PRIORITIES.pathFuzzyMatch,
+	LEGACY_PATH_FUZZY_MATCH,
 	FILE_SORT_PRIORITIES.priorDesc,
-	FILE_SORT_PRIORITIES.lastOpened,
+	LEGACY_LAST_OPENED,
+	FILE_SORT_PRIORITIES.lastModified,
+] as const;
+
+const PREVIOUS_ACTIVITY_DEFAULT_FILE_SORT_PRIORITIES = [
+	FILE_SORT_PRIORITIES.filenamePrefixMatch,
+	FILE_SORT_PRIORITIES.filenameFuzzyMatch,
+	FILE_SORT_PRIORITIES.aliasPrefixMatch,
+	FILE_SORT_PRIORITIES.aliasFuzzyMatch,
+	FILE_SORT_PRIORITIES.tagMatch,
+	FILE_SORT_PRIORITIES.matchCoverage,
+	LEGACY_PATH_FUZZY_MATCH,
+	FILE_SORT_PRIORITIES.priorDesc,
+	LEGACY_LAST_OPENED,
+	LEGACY_USAGE_HISTORY,
 	FILE_SORT_PRIORITIES.lastModified,
 ] as const;
 
@@ -198,7 +217,8 @@ export function normalizeFileSortPriorities(value: unknown): FileSortPriority[] 
 	// previous list, while an arbitrary custom order remains exactly as entered.
 	if (
 		isPriorityList(trimmed, PRE_TAG_DEFAULT_FILE_SORT_PRIORITIES) ||
-		isPriorityList(trimmed, PREVIOUS_DEFAULT_FILE_SORT_PRIORITIES)
+		isPriorityList(trimmed, PREVIOUS_DEFAULT_FILE_SORT_PRIORITIES) ||
+		isPriorityList(trimmed, PREVIOUS_ACTIVITY_DEFAULT_FILE_SORT_PRIORITIES)
 	)
 		return [...DEFAULT_FILE_SORT_PRIORITIES];
 	const normalized = trimmed.flatMap((item): FileSortPriority[] => {
@@ -220,10 +240,9 @@ export const DEFAULT_FILE_SORT_PRIORITIES: readonly FileSortPriority[] = [
 	FILE_SORT_PRIORITIES.aliasFuzzyMatch,
 	FILE_SORT_PRIORITIES.tagMatch,
 	FILE_SORT_PRIORITIES.matchCoverage,
-	FILE_SORT_PRIORITIES.pathFuzzyMatch,
+	FILE_SORT_PRIORITIES.folderPathMatch,
 	FILE_SORT_PRIORITIES.priorDesc,
-	FILE_SORT_PRIORITIES.lastOpened,
-	FILE_SORT_PRIORITIES.usageHistory,
+	FILE_SORT_PRIORITIES.activity,
 	FILE_SORT_PRIORITIES.lastModified,
 ];
 

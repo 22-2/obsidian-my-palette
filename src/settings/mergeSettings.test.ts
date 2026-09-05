@@ -42,10 +42,9 @@ describe("mergeSettings", () => {
 				"Alias fuzzy match",
 				"Tag match",
 				"Match coverage",
-				"Path fuzzy match",
+				"Folder path match",
 				"@prior:desc",
-				"Last opened",
-				"Usage history",
+				"Activity",
 				"Last modified",
 			],
 			input: [
@@ -55,10 +54,9 @@ describe("mergeSettings", () => {
 				"Alias fuzzy match",
 				"Tag match",
 				"Match coverage",
-				"Path fuzzy match",
+				"Folder path match",
 				"@prior:desc",
-				"Last opened",
-				"Usage history",
+				"Activity",
 				"Last modified",
 			],
 		});
@@ -94,6 +92,7 @@ describe("mergeSettings", () => {
 					" @prior:asc ",
 					"Aliases count",
 					"Last opened",
+					"Usage history",
 					"@title:desc",
 					42,
 					"unknown",
@@ -102,8 +101,8 @@ describe("mergeSettings", () => {
 		});
 
 		expect(settings.file.sortPriorities).toEqual({
-			blank: ["@prior:asc", "Aliases count", "Last opened"],
-			input: ["@prior:asc", "Aliases count", "Last opened"],
+			blank: ["@prior:asc", "Aliases count", "Activity"],
+			input: ["@prior:asc", "Aliases count", "Activity"],
 		});
 	});
 
@@ -129,10 +128,9 @@ describe("mergeSettings", () => {
 			"Alias fuzzy match",
 			"Tag match",
 			"Match coverage",
-			"Path fuzzy match",
+			"Folder path match",
 			"@prior:desc",
-			"Last opened",
-			"Usage history",
+			"Activity",
 			"Last modified",
 		]);
 		expect(settings.file.sortPriorities.input).toEqual(settings.file.sortPriorities.blank);
@@ -159,7 +157,7 @@ describe("mergeSettings", () => {
 		expect(settings.file.sortPriorities).toEqual(DEFAULT_SETTINGS.file.sortPriorities);
 	});
 
-	it("adds usage history to untouched previous defaults", () => {
+	it("adds Activity to untouched previous defaults", () => {
 		const settings = mergeSettings({
 			schemaVersion: 13,
 			file: {
@@ -180,6 +178,29 @@ describe("mergeSettings", () => {
 		expect(settings.file.sortPriorities).toEqual(DEFAULT_SETTINGS.file.sortPriorities);
 	});
 
+	it("migrates the previous Activity default", () => {
+		const settings = mergeSettings({
+			schemaVersion: SETTINGS_SCHEMA_VERSION,
+			file: {
+				sortPriorities: [
+					"Filename prefix match",
+					"Filename fuzzy match",
+					"Alias prefix match",
+					"Alias fuzzy match",
+					"Tag match",
+					"Match coverage",
+					"Path fuzzy match",
+					"@prior:desc",
+					"Last opened",
+					"Usage history",
+					"Last modified",
+				],
+			},
+		});
+
+		expect(settings.file.sortPriorities).toEqual(DEFAULT_SETTINGS.file.sortPriorities);
+	});
+
 	it("preserves independent sort priorities for blank and typed input", () => {
 		const settings = mergeSettings({
 			file: {
@@ -191,7 +212,7 @@ describe("mergeSettings", () => {
 		});
 
 		expect(settings.file.sortPriorities).toEqual({
-			blank: ["Last opened", "Last modified"],
+			blank: ["Activity", "Last modified"],
 			input: ["Filename fuzzy match", "@prior:desc"],
 		});
 	});

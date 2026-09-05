@@ -21,8 +21,8 @@ export interface FileMatchSignals {
 	filenameScore?: number;
 	/** Fuzzy score contributed by the file's aliases, when they matched. */
 	aliasScore?: number;
-	/** Fuzzy score contributed by the file's path, when it matched. */
-	pathScore?: number;
+	/** Fuzzy score contributed by the file's folder path, when it matched. */
+	folderPathScore?: number;
 	/** Number of tags that matched the current query, when tag search was used. */
 	tagMatchCount?: number;
 	/** Total query characters matched across distinct searchable values. */
@@ -53,9 +53,16 @@ export interface FileMatchOptions {
 
 // Candidate generation and signal extraction share these descriptors so adding
 // or reordering a field cannot silently attach its fuzzy score to another signal.
+export function folderPath(path: string): string {
+	const separator = path.lastIndexOf("/");
+	return separator === -1 ? "" : path.slice(0, separator);
+}
+
 const FILE_SEARCH_FIELDS = [
 	{ name: "filename", value: (entry: FileSearchEntry) => entry.basename },
-	{ name: "path", value: (entry: FileSearchEntry) => entry.path },
+	// Keep the file name in its own signal so a folder priority cannot reward the
+	// same basename a second time through the full Vault-relative path.
+	{ name: "folderPath", value: (entry: FileSearchEntry) => folderPath(entry.path) },
 	{ name: "text", value: (entry: FileSearchEntry) => entry.text },
 	{ name: "alias", value: (entry: FileSearchEntry) => entry.aliases.join(" ") },
 	{ name: "tags", value: (entry: FileSearchEntry) => entry.tags.join(" ") },
@@ -98,8 +105,8 @@ export function extractFileMatchSignals<T extends SortableFileEntry>(
 		aliasScore: Object.prototype.hasOwnProperty.call(match, "aliasScore")
 			? match.aliasScore
 			: undefined,
-		pathScore: Object.prototype.hasOwnProperty.call(match, "pathScore")
-			? match.pathScore
+		folderPathScore: Object.prototype.hasOwnProperty.call(match, "folderPathScore")
+			? match.folderPathScore
 			: undefined,
 		tagMatchCount: Object.prototype.hasOwnProperty.call(match, "tagMatchCount")
 			? match.tagMatchCount
@@ -139,7 +146,7 @@ export function createFileMatch(
 		obj,
 		score,
 		filenameScore: options.tagOnlyQuery ? undefined : fieldScore(fieldScores, "filename"),
-		pathScore: options.tagOnlyQuery ? undefined : fieldScore(fieldScores, "path"),
+		folderPathScore: options.tagOnlyQuery ? undefined : fieldScore(fieldScores, "folderPath"),
 		aliasScore: options.tagOnlyQuery ? undefined : fieldScore(fieldScores, "alias"),
 		tagMatchCount: matchedTags.length,
 		matchCoverage,
