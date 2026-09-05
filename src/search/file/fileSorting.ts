@@ -4,69 +4,18 @@ import {
 	parseFileSortPriority,
 	type FileSortPriority,
 } from "src/model/settings";
+import {
+	extractFileMatchSignals,
+	type FileMatch,
+	type FileMatchSignals,
+	type SortableFileEntry,
+} from "src/search/file/fileMatch";
 
-export interface SortableFileEntry {
-	path: string;
-	basename: string;
-	aliases: string[];
-	mtime: number;
-	/** Parsed numeric value of the Vault's `prior` frontmatter property. */
-	prior?: number;
-	ignored?: boolean;
-}
-
-export interface FileMatchSignals {
-	/** Fuzzy score contributed by the file's basename, when it matched. */
-	filenameScore?: number;
-	/** Fuzzy score contributed by the file's aliases, when they matched. */
-	aliasScore?: number;
-	/** Fuzzy score contributed by the file's path, when it matched. */
-	pathScore?: number;
-	/** Number of tags that matched the current query, when tag search was used. */
-	tagMatchCount?: number;
-	/** Total query characters matched across distinct searchable values. */
-	matchCoverage?: number;
-	/** Whether a complete AND branch matched contiguously in searchable metadata. */
-	contiguousMatch?: boolean;
-}
-
-export interface FileMatch<T extends SortableFileEntry> extends FileMatchSignals {
-	obj: T;
-	score: number;
-	/** Tags that matched the current query; carried through sorting for presentation. */
-	matchedTags?: string[];
-}
-
-/**
- * Normalize the flat match shape at the sorter boundary. Providers historically
- * only supplied `score`, so the filename fallback must stay here while new
- * ranking signals can be added without spreading compatibility checks through
- * every comparator.
- */
-export function extractFileMatchSignals<T extends SortableFileEntry>(
-	match: FileMatch<T>,
-): FileMatchSignals {
-	return {
-		filenameScore: Object.prototype.hasOwnProperty.call(match, "filenameScore")
-			? match.filenameScore
-			: match.score,
-		aliasScore: Object.prototype.hasOwnProperty.call(match, "aliasScore")
-			? match.aliasScore
-			: undefined,
-		pathScore: Object.prototype.hasOwnProperty.call(match, "pathScore")
-			? match.pathScore
-			: undefined,
-		tagMatchCount: Object.prototype.hasOwnProperty.call(match, "tagMatchCount")
-			? match.tagMatchCount
-			: undefined,
-		matchCoverage: Object.prototype.hasOwnProperty.call(match, "matchCoverage")
-			? match.matchCoverage
-			: undefined,
-		contiguousMatch: Object.prototype.hasOwnProperty.call(match, "contiguousMatch")
-			? match.contiguousMatch
-			: undefined,
-	};
-}
+// Keep the existing module exports stable while the match data model lives
+// outside the comparator, so future providers can create signals without
+// importing the sorting implementation.
+export { extractFileMatchSignals };
+export type { FileMatch, FileMatchSignals, SortableFileEntry };
 
 interface SortContext {
 	query?: string;

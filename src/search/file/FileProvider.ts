@@ -8,27 +8,11 @@ import {
 	type FileSortPriorities,
 } from "src/model/settings";
 import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
+import { createFileMatch, type FileSearchEntry } from "src/search/file/fileMatch";
 import { sortFileMatches, sortFilesWithoutQuery } from "src/search/file/fileSorting";
-import { isTagOnlyQuery, matchingTags, normalizeTags } from "src/search/file/fileTags";
-import {
-	fuzzyMatchCoverage,
-	hasContiguousQueryMatch,
-	searchFuzzyQueryWithFieldScores,
-} from "src/search/fuzzyQuery";
+import { isTagOnlyQuery, normalizeTags } from "src/search/file/fileTags";
+import { searchFuzzyQueryWithFieldScores } from "src/search/fuzzyQuery";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
-
-interface SearchEntry {
-	file?: TFile;
-	path: string;
-	basename: string;
-	aliases: string[];
-	tags: string[];
-	extension: string;
-	text: string;
-	mtime: number;
-	prior?: number;
-	ignored: boolean;
-}
 
 function aliases(value: unknown): string[] {
 	if (Array.isArray(value)) return value.map(String).filter((alias) => alias.trim().length > 0);
@@ -36,8 +20,8 @@ function aliases(value: unknown): string[] {
 }
 
 export class FileProvider implements PaletteProvider<FileResult> {
-	private readonly cache = new Map<string, SearchEntry>();
-	private readonly allEntries = new Map<string, SearchEntry>();
+	private readonly cache = new Map<string, FileSearchEntry>();
+	private readonly allEntries = new Map<string, FileSearchEntry>();
 	private readonly refs: EventRef[] = [];
 	private readonly ignoredIndex: IgnoredNoteIndex;
 	private allowedExtensions = new Set<string>();
@@ -138,7 +122,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			// result limit in the palette keeps the UI bounded while the sorter
 			// places ignored notes before the normal Vault entries.
 			for (const ignored of await this.ignoredIndex.getEntries()) {
-				const entry: SearchEntry = {
+				const entry: FileSearchEntry = {
 					path: ignored.path,
 					basename: ignored.basename,
 					aliases: ignored.aliases,
@@ -174,38 +158,16 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		// stay in their own key so adding tag search does not change existing text
 		// scores or the meaning of the filename/path priorities.
 		const keys = tagOnlyQuery
-			? [(entry: SearchEntry) => entry.tags.join(" ")]
+			? [(entry: FileSearchEntry) => entry.tags.join(" ")]
 			: [
-					(entry: SearchEntry) => entry.basename,
-					(entry: SearchEntry) => entry.path,
-					(entry: SearchEntry) => entry.text,
-					(entry: SearchEntry) => entry.aliases.join(" "),
-					(entry: SearchEntry) => entry.tags.join(" "),
+					(entry: FileSearchEntry) => entry.basename,
+					(entry: FileSearchEntry) => entry.path,
+					(entry: FileSearchEntry) => entry.text,
+					(entry: FileSearchEntry) => entry.aliases.join(" "),
+					(entry: FileSearchEntry) => entry.tags.join(" "),
 				];
-		const matches = searchFuzzyQueryWithFieldScores(query, candidates, keys).map(
-			({ obj, score, fieldScores }) => {
-				const matchedTags = matchingTags(obj.tags, query);
-				// Count source values rather than the compatibility `text` key, which
-				// repeats filename, path, and aliases and would artificially boost rank.
-				const searchableValues = tagOnlyQuery
-					? obj.tags
-					: [obj.basename, obj.path, ...obj.aliases, ...obj.tags];
-				const contiguousMatch = hasContiguousQueryMatch(query, searchableValues);
-				const matchCoverage = usesMatchCoverage
-					? fuzzyMatchCoverage(query, searchableValues)
-					: undefined;
-				return {
-					obj,
-					score,
-					filenameScore: tagOnlyQuery ? undefined : fieldScores[0],
-					pathScore: tagOnlyQuery ? undefined : fieldScores[1],
-					aliasScore: tagOnlyQuery ? undefined : fieldScores[3],
-					tagMatchCount: matchedTags.length,
-					matchCoverage,
-					contiguousMatch,
-					matchedTags,
-				};
-			},
+		const matches = searchFuzzyQueryWithFieldScores(query, candidates, keys).map((match) =>
+			createFileMatch(match, query, { tagOnlyQuery, usesMatchCoverage }),
 		);
 		const matchedTagsByPath = new Map(
 			matches.map(({ obj, matchedTags }) => [obj.path, matchedTags]),
@@ -218,7 +180,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		).map((entry) => this.result(entry, matchedTagsByPath.get(entry.path)));
 	}
 
-	private result(entry: SearchEntry, matchedTags?: readonly string[]): FileResult {
+	private result(entry: FileSearchEntry, matchedTags?: readonly string[]): FileResult {
 		return {
 			id: entry.path,
 			mode: "file",
@@ -232,12 +194,12 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		};
 	}
 
-	private setEntry(entry: SearchEntry): void {
+	private setEntry(entry: FileSearchEntry): void {
 		this.allEntries.set(entry.path, entry);
 		this.syncCachedEntry(entry);
 	}
 
-	private syncCachedEntry(entry: SearchEntry): void {
+	private syncCachedEntry(entry: FileSearchEntry): void {
 		if (this.isAllowedExtension(entry.extension)) this.cache.set(entry.path, entry);
 		else this.cache.delete(entry.path);
 	}
