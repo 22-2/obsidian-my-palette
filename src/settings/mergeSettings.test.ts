@@ -31,6 +31,12 @@ describe("mergeSettings", () => {
 				searchHistory: { addDelayMs: 3_000 },
 			}).searchHistory.addDelayMs,
 		).toBe(3_000);
+		expect(
+			mergeSettings({
+				schemaVersion: SETTINGS_SCHEMA_VERSION - 1,
+				searchHistory: { addDelayMs: 3_000 },
+			}).searchHistory.addDelayMs,
+		).toBe(3_000);
 	});
 
 	it("defaults file sorting to relevance, prior, and recency", () => {
@@ -215,42 +221,5 @@ describe("mergeSettings", () => {
 			blank: ["Activity", "Last modified"],
 			input: ["Filename fuzzy match", "@prior:desc"],
 		});
-	});
-
-	it("migrates legacy history entries through the current prefix parser", () => {
-		const settings = mergeSettings({
-			searchHistory: {
-				entries: [
-					{ input: "i old note", lastSearchedAt: 10, count: 2 },
-					{ input: "> build", category: "command", lastSearchedAt: 20, count: 0 },
-					{ input: "report", category: "unknown", lastSearchedAt: 30, count: 1 },
-					{ input: 42, lastSearchedAt: 40, count: 1 },
-				],
-			},
-		});
-
-		expect(settings.searchHistory.entries).toEqual([
-			{
-				input: "old note",
-				category: "file",
-				includeIgnored: true,
-				lastSearchedAt: 10,
-				count: 2,
-			},
-			{
-				input: "> build",
-				category: "command",
-				includeIgnored: false,
-				lastSearchedAt: 20,
-				count: 1,
-			},
-			{
-				input: "report",
-				category: "file",
-				includeIgnored: false,
-				lastSearchedAt: 30,
-				count: 1,
-			},
-		]);
 	});
 });

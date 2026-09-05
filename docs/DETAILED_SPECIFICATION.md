@@ -515,14 +515,13 @@ interface EverythingResult extends BaseResult {
 }
 
 interface MyPaletteSettings {
-	schemaVersion: 14;
+	schemaVersion: 15;
 	showLog: boolean;
 	rememberLastInput: boolean;
 	searchHistory: {
 		enabled: boolean;
 		addDelayMs: number;
 		daysToKeep: number;
-		entries: Array<{ input: string; lastSearchedAt: number; count: number }>;
 	};
 	prefixes: {
 		command: string;
@@ -550,7 +549,8 @@ interface MyPaletteSettings {
 - 型・範囲が不正な値は項目単位で既定値へ戻し、プラグイン全体のロードを失敗させない。
 - 最近実行コマンドは最大20 ID。存在しない ID は表示時に除外する。
 - `rememberLastInput` が有効な場合、モードごとの最後の入力を Obsidian の実行中だけ保持する。
-- 検索履歴は検索モード・Everything の検索範囲ごとに分類し、プレフィックスを除いた検索語を `data.json` へ永続化する。
+- 検索履歴は検索モード・Everything の検索範囲ごとに分類し、プレフィックスを除いた検索語、回数、最終検索日時を Vault 単位の IndexedDB へ永続化する。設定の `data.json` には履歴エントリを保存しない。
+- 既存の `data.json` にある履歴エントリは、初回起動時に IndexedDB へ移行する。IndexedDB が利用できない場合は履歴を `data.json` の一時的なフォールバックとして保持し、次回起動時に再試行する。
 - 結果へのアクションが成功したときに履歴へ追加する。入力停止後の追加は `searchHistory.addDelayMs` を0より大きくした場合だけ行う。
 - 大文字小文字だけが異なる入力は同じ履歴項目として扱い、最新の表記と回数を保持する。
 - 入力欄右端の履歴ボタンまたは `Ctrl+R` で現在のモードの検索履歴を表示し、項目を選ぶと現在のプレフィックス付き入力へ復元する。
@@ -586,7 +586,8 @@ src/
 │   ├── openTargets.ts
 │   ├── resultPresentation.ts
 │   ├── resultActions.ts
-│   └── searchHistory.ts
+│   ├── searchHistory.ts
+│   └── searchHistoryStore.ts
 ├── platform/
 │   ├── desktopAdapter.ts
 │   ├── pathClipboard.ts
@@ -631,26 +632,28 @@ src/
 
 ### 11.2 責務
 
-| コンポーネント               | 責務                                                      |
-| ---------------------------- | --------------------------------------------------------- |
-| `main.ts`                    | 設定ロード、Pluginライフサイクル、依存関係の組み立て      |
-| `app/registerCommands`       | Obsidianコマンドの登録と実行条件                          |
-| `app/registerEvents`         | ViewとVaultイベントの登録                                 |
-| `app/createPaletteProviders` | Providerの生成とモードregistryの構築                      |
-| `PaletteSearchSession`       | 入力解析、Provider検索、世代番号、キャンセル、履歴遅延    |
-| `SuggestionPanel`            | Modal / ItemView共通の入力、候補行、選択、ポインター操作  |
-| `executePaletteResult`       | 結果モードごとのアクション振り分けとホスト差分の吸収      |
-| `PaletteModal`               | モーダルのライフサイクル、フォーカス、閉じる挙動          |
-| `PaletteView`                | 右サイドバーの永続パレット、本文leaf追跡、workspace state |
-| `resultPresentation`         | 検索結果の表示形式とパスコピー対象の決定                  |
-| `inputParser`                | プレフィックス検出とクエリ抽出。副作用なし                |
-| Provider                     | モード別検索。UI 要素を直接操作しない                     |
-| `EverythingHttpClient`       | URL構築、認証、リクエスト中断、タイムアウト、JSON解析     |
-| `resultActions`              | モード別アクション実行                                    |
-| `settings/mergeSettings`     | 永続化データの検証、補完、履歴データの移行                |
-| `settings/settingTab`        | 設定 UI と入力値の反映                                    |
-| `IgnoredNoteIndex`           | 除外ファイルを検索可能にする再構築可能なキャッシュ        |
-| `ExternalMarkdownView`       | Vault外または除外されたMarkdownの読み取り専用表示         |
+| コンポーネント               | 責務                                                           |
+| ---------------------------- | -------------------------------------------------------------- |
+| `main.ts`                    | 設定ロード、Pluginライフサイクル、依存関係の組み立て           |
+| `app/registerCommands`       | Obsidianコマンドの登録と実行条件                               |
+| `app/registerEvents`         | ViewとVaultイベントの登録                                      |
+| `app/createPaletteProviders` | Providerの生成とモードregistryの構築                           |
+| `PaletteSearchSession`       | 入力解析、Provider検索、世代番号、キャンセル、履歴遅延         |
+| `SuggestionPanel`            | Modal / ItemView共通の入力、候補行、選択、ポインター操作       |
+| `executePaletteResult`       | 結果モードごとのアクション振り分けとホスト差分の吸収           |
+| `PaletteModal`               | モーダルのライフサイクル、フォーカス、閉じる挙動               |
+| `PaletteView`                | 右サイドバーの永続パレット、本文leaf追跡、workspace state      |
+| `resultPresentation`         | 検索結果の表示形式とパスコピー対象の決定                       |
+| `inputParser`                | プレフィックス検出とクエリ抽出。副作用なし                     |
+| Provider                     | モード別検索。UI 要素を直接操作しない                          |
+| `EverythingHttpClient`       | URL構築、認証、リクエスト中断、タイムアウト、JSON解析          |
+| `resultActions`              | モード別アクション実行                                         |
+| `settings/mergeSettings`     | 永続化データの検証と既定値の補完                               |
+| `settings/settingsStore`     | `data.json` のロード・保存と旧検索履歴の移行準備               |
+| `SearchHistoryStore`         | Vault単位のIndexedDB保存、履歴の読み書き、削除、フォールバック |
+| `settings/settingTab`        | 設定 UI と入力値の反映                                         |
+| `IgnoredNoteIndex`           | 除外ファイルを検索可能にする再構築可能なキャッシュ             |
+| `ExternalMarkdownView`       | Vault外または除外されたMarkdownの読み取り専用表示              |
 
 ### 11.3 非同期検索フロー
 
@@ -707,11 +710,12 @@ stderr の生値やローカル絶対パスは通常 UI に全面表示しない
 ## 13. セキュリティとプライバシー
 
 - 既定では `127.0.0.1` の Everything HTTP Server とのみ通信する。
-- 検索語、検索結果、ファイルパスをプラグインデータへ永続化しない。
+- 検索結果そのものは永続化せず、検索語とファイル利用履歴だけを Vault 単位のローカル IndexedDB に保存する。
 - telemetry を実装しない。
 - HTTP Server 側のファイルダウンロード機能は無効を推奨する。
 - LAN 公開する場合は認証とファイアウォール設定を利用者の責任で行う。
 - 認証パスワードは Obsidian Vault のプラグイン `data.json` に平文保存されるため、共有 Vault では使用しない。
+- 検索履歴とファイル利用履歴は Vault 識別子で分離したローカル IndexedDB に保存し、外部サービスへ送信しない。
 - 検索結果パスをアクション直前に再検証する。
 - Everything の検索構文は URL パラメーターとしてエンコードし、OS シェル構文としては一切解釈しない。
 - プラグインは管理者権限への昇格を要求・実行しない。

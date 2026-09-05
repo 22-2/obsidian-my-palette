@@ -20,10 +20,9 @@ export interface SearchHistorySettings {
 	enabled: boolean;
 	addDelayMs: number;
 	daysToKeep: number;
-	entries: SearchHistoryEntry[];
 }
 
-export const SETTINGS_SCHEMA_VERSION = 14;
+export const SETTINGS_SCHEMA_VERSION = 15;
 export const MAX_RECENT_COMMAND_IDS = 20;
 export const MILLISECONDS_PER_SECOND = 1_000;
 export const DISABLED_DELAY_MS = 0;
@@ -278,7 +277,6 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		enabled: true,
 		addDelayMs: SETTING_DEFAULTS.searchHistory.addDelayMs,
 		daysToKeep: SETTING_DEFAULTS.searchHistory.daysToKeep,
-		entries: [],
 	},
 	prefixes: { command: ">", everything: "e ", includeIgnored: "i " },
 	file: {

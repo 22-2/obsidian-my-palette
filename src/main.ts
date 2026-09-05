@@ -14,10 +14,19 @@ import { PALETTE_VIEW_TYPE } from "src/views/PaletteView";
 import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
 import type { PaletteMode, PaletteResult, SearchHistoryResult } from "src/model/results";
 import type { SearchHistoryCategory, SearchHistoryEntry } from "src/model/settings";
-import { getSearchHistorySuggestions, recordSearchHistory } from "src/palette/searchHistory";
+import {
+	getSearchHistorySuggestions,
+	recordSearchHistory,
+	SEARCH_HISTORY_MAX_ENTRIES,
+} from "src/palette/searchHistory";
 import { RELATED_PREFIXES } from "src/palette/inputParser";
-import { loadPluginSettings, savePluginSettings } from "src/settings/settingsStore";
+import {
+	loadPluginSettings,
+	savePluginSettings,
+	type LoadedPluginSettings,
+} from "src/settings/settingsStore";
 import { FileUsageHistory } from "src/search/file/fileUsageHistory";
+import { SearchHistoryStore } from "src/palette/searchHistoryStore";
 import "../styles.css";
 
 const logger = log.withTag("MyPalette");
@@ -35,12 +44,27 @@ export default class MyPalettePlugin extends Plugin {
 	smartConnectionProvider!: PaletteProviderInstances["smartConnectionProvider"];
 	providers!: PaletteProviderInstances["providers"];
 	private fileUsageHistory?: FileUsageHistory;
+	private searchHistoryStore?: SearchHistoryStore;
+	private legacySearchHistoryEntries?: SearchHistoryEntry[];
 	private rememberedPaletteQueries: Partial<Record<PaletteMode, string>> = {};
 	private activePaletteModal?: PaletteModal;
 
 	async onload(): Promise<void> {
-		await this.loadSettings();
+		const loadedSettings = await this.loadSettings();
 		this.initializeLogger();
+		this.searchHistoryStore = new SearchHistoryStore(this.app, (message, detail) =>
+			logger.debug(message, detail),
+		);
+		const persistentHistory = await this.searchHistoryStore.load(
+			loadedSettings.legacySearchHistoryEntries,
+			this.settings.searchHistory.daysToKeep,
+		);
+		// Keep the legacy payload in data.json only when IndexedDB cannot accept
+		// the migration, so a later settings save cannot erase search history.
+		this.legacySearchHistoryEntries = persistentHistory
+			? undefined
+			: [...this.searchHistoryStore.getEntries()];
+		if (loadedSettings.shouldSave) await this.saveSettings();
 		this.fileUsageHistory = new FileUsageHistory(this.app, (message, detail) =>
 			logger.debug(message, detail),
 		);
@@ -116,6 +140,7 @@ export default class MyPalettePlugin extends Plugin {
 		this.activePaletteModal = undefined;
 		this.everythingClient.cancel();
 		this.fileProvider?.dispose();
+		void this.searchHistoryStore?.dispose();
 		void this.fileUsageHistory?.dispose();
 		logger.debug("Plugin unloaded");
 	}
@@ -124,12 +149,12 @@ export default class MyPalettePlugin extends Plugin {
 		logger.level = this.settings.showLog ? LogLevels.debug : LogLevels.error;
 	}
 
-	async loadSettings(): Promise<void> {
-		await loadPluginSettings(this);
+	async loadSettings(): Promise<LoadedPluginSettings> {
+		return loadPluginSettings(this);
 	}
 
 	async saveSettings(): Promise<void> {
-		await savePluginSettings(this);
+		await savePluginSettings(this, this.legacySearchHistoryEntries);
 	}
 
 	async testEverythingConnection(): Promise<{ ok: boolean; message: string }> {
@@ -186,13 +211,16 @@ export default class MyPalettePlugin extends Plugin {
 		category: SearchHistoryCategory,
 		includeIgnored = false,
 	): SearchHistoryResult[] {
-		return getSearchHistorySuggestions(
-			this.settings.searchHistory.entries,
-			input,
-			category,
-			30,
-			includeIgnored,
-		).map((entry) => ({
+		const entries =
+			this.searchHistoryStore?.getSuggestions(input, category, 30, includeIgnored) ??
+			getSearchHistorySuggestions(
+				this.legacySearchHistoryEntries ?? [],
+				input,
+				category,
+				30,
+				includeIgnored,
+			);
+		return entries.map((entry) => ({
 			id: `search-history:${entry.category}:${entry.input}`,
 			mode: "search-history",
 			primary: entry.input,
@@ -229,18 +257,39 @@ export default class MyPalettePlugin extends Plugin {
 	recordSearch(input: string, category: SearchHistoryCategory, includeIgnored = false): void {
 		const history = this.settings.searchHistory;
 		if (!history.enabled || !input.trim()) return;
-		history.entries = recordSearchHistory(history.entries, input, category, {
+		const options = {
 			now: Date.now(),
 			daysToKeep: history.daysToKeep,
-			maxEntries: 256,
+			maxEntries: SEARCH_HISTORY_MAX_ENTRIES,
 			includeIgnored,
-		});
-		void this.saveSettings();
+		};
+		if (this.searchHistoryStore) {
+			this.searchHistoryStore.record(input, category, options);
+			this.syncLegacySearchHistoryFallback();
+		} else {
+			this.legacySearchHistoryEntries = recordSearchHistory(
+				this.legacySearchHistoryEntries ?? [],
+				input,
+				category,
+				options,
+			);
+		}
+		if (this.legacySearchHistoryEntries !== undefined) void this.saveSettings();
 	}
 
 	clearSearchHistory(): void {
-		this.settings.searchHistory.entries = [];
-		void this.saveSettings();
+		if (this.searchHistoryStore) {
+			this.searchHistoryStore.clear();
+			this.syncLegacySearchHistoryFallback();
+		} else {
+			this.legacySearchHistoryEntries = [];
+		}
+		if (this.legacySearchHistoryEntries !== undefined) void this.saveSettings();
+	}
+
+	private syncLegacySearchHistoryFallback(): void {
+		if (this.searchHistoryStore && !this.searchHistoryStore.isPersistent)
+			this.legacySearchHistoryEntries = [...this.searchHistoryStore.getEntries()];
 	}
 
 	clearRememberedPaletteQueries(): void {

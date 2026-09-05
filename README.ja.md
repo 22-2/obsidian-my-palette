@@ -28,6 +28,8 @@ Obsidian のコマンドパレットから `My Palette: Open Recent palette` を
 
 Everything モードを使うには、Everything 1.5a と公式 HTTP Server Plugin を起動しておく必要があります。
 
+検索履歴は Vault ごとのローカル IndexedDB に保存されます。既存の検索履歴は初回起動時に移行され、IndexedDB が利用できない場合は `data.json` を一時的なフォールバックとして使います。
+
 ### 検索モードのプレフィックス
 
 既定のプレフィックスは次のとおりです。設定から変更できるプレフィックスもあります。

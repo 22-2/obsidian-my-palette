@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	getSearchHistorySuggestions,
+	parseStoredSearchHistoryEntries,
 	pruneStoredSearchHistory,
 	recordSearchHistory,
 } from "src/palette/searchHistory";
@@ -109,5 +110,39 @@ describe("search history", () => {
 		expect(entries).toHaveLength(2);
 		expect(getSearchHistorySuggestions(entries, "archive", "file", 30, true)).toHaveLength(1);
 		expect(getSearchHistorySuggestions(entries, "archive", "file", 30, false)).toHaveLength(1);
+	});
+
+	it("parses legacy entries before IndexedDB migration", () => {
+		expect(
+			parseStoredSearchHistoryEntries(
+				[
+					{ input: "i old note", lastSearchedAt: 10, count: 2 },
+					{ input: "> build", category: "command", lastSearchedAt: 20, count: 0 },
+					{ input: "report", category: "unknown", lastSearchedAt: 30, count: 1 },
+					{ input: 42, lastSearchedAt: 40, count: 1 },
+				],
+				{ command: ">", everything: "e ", includeIgnored: "i " },
+			),
+		).toEqual([
+			{
+				input: "old note",
+				category: "file",
+				includeIgnored: true,
+				lastSearchedAt: 10,
+				count: 2,
+			},
+			{
+				input: "> build",
+				category: "command",
+				lastSearchedAt: 20,
+				count: 1,
+			},
+			{
+				input: "report",
+				category: "file",
+				lastSearchedAt: 30,
+				count: 1,
+			},
+		]);
 	});
 });

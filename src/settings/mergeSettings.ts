@@ -1,8 +1,4 @@
-import type {
-	MyPaletteSettings,
-	SearchHistoryCategory,
-	SearchHistoryEntry,
-} from "src/model/settings";
+import type { MyPaletteSettings } from "src/model/settings";
 import {
 	DEFAULT_SETTINGS,
 	MAX_RECENT_COMMAND_IDS,
@@ -10,9 +6,11 @@ import {
 	SETTINGS_SCHEMA_VERSION,
 	normalizeFileSortPriorities,
 } from "src/model/settings";
-import { getSearchHistoryCategory, parseInput, type Prefixes } from "src/palette/inputParser";
 
 const PREVIOUS_DEFAULT_SEARCH_HISTORY_DELAY_MS = 3_000;
+// Schema 12 changed the default from delayed input to action-only history;
+// later schema bumps must not reinterpret a user's explicit 3-second delay.
+const SEARCH_HISTORY_ACTION_ONLY_SCHEMA_VERSION = 12;
 
 /**
  * `data.json` is untrusted persisted input. Keeping normalization separate from
@@ -32,51 +30,6 @@ export function extensions(value: unknown): string[] {
 		.map((item) => item.trim().replace(/^\./, "").toLocaleLowerCase())
 		.filter((item) => /^[a-z0-9_-]+$/.test(item));
 	return [...new Set(normalized)];
-}
-
-function isSearchHistoryCategory(value: unknown): value is SearchHistoryCategory {
-	return (
-		value === "file" ||
-		value === "command" ||
-		value === "bookmark" ||
-		value === "smart" ||
-		value === "everything" ||
-		value === "everything-directory" ||
-		value === "link" ||
-		value === "backlink"
-	);
-}
-
-function searchHistoryEntries(value: unknown, prefixes: Prefixes): SearchHistoryEntry[] {
-	if (!Array.isArray(value)) return [];
-	return value.flatMap((item): SearchHistoryEntry[] => {
-		if (!item || typeof item !== "object") return [];
-		const entry = item as Record<string, unknown>;
-		if (
-			typeof entry.input !== "string" ||
-			typeof entry.lastSearchedAt !== "number" ||
-			!Number.isFinite(entry.lastSearchedAt) ||
-			typeof entry.count !== "number" ||
-			!Number.isFinite(entry.count)
-		)
-			return [];
-		const parsed = parseInput(entry.input, prefixes);
-		const category = isSearchHistoryCategory(entry.category)
-			? entry.category
-			: getSearchHistoryCategory(parsed);
-		return [
-			{
-				input: isSearchHistoryCategory(entry.category) ? entry.input : parsed.query,
-				category,
-				includeIgnored:
-					typeof entry.includeIgnored === "boolean"
-						? entry.includeIgnored
-						: parsed.includeIgnored,
-				lastSearchedAt: entry.lastSearchedAt,
-				count: Math.max(1, Math.round(entry.count)),
-			},
-		];
-	});
 }
 
 export function mergeSettings(data: unknown): MyPaletteSettings {
@@ -101,7 +54,8 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 	const migratedSearchHistoryDelay =
 		// Treat the previous default as a migration value, while preserving an
 		// explicit delay in settings written by the new schema.
-		(storedSchemaVersion === undefined || storedSchemaVersion < SETTINGS_SCHEMA_VERSION) &&
+		(storedSchemaVersion === undefined ||
+			storedSchemaVersion < SEARCH_HISTORY_ACTION_ONLY_SCHEMA_VERSION) &&
 		rawSearchHistory.addDelayMs === PREVIOUS_DEFAULT_SEARCH_HISTORY_DELAY_MS
 			? DEFAULT_SETTINGS.searchHistory.addDelayMs
 			: rawSearchHistory.addDelayMs;
@@ -150,7 +104,6 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 				SETTING_LIMITS.searchHistory.daysToKeep.min,
 				SETTING_LIMITS.searchHistory.daysToKeep.max,
 			),
-			entries: searchHistoryEntries(rawSearchHistory.entries, prefixes),
 		},
 		prefixes,
 		file: {
