@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { createFileMatch, type FileSearchEntry } from "src/search/file/fileMatch";
+import { createFileMatch, fileSearchKeys, type FileSearchEntry } from "src/search/file/fileMatch";
+import { searchFuzzyQueryWithFieldScores } from "src/search/fuzzyQuery";
 
 function entry(overrides: Partial<FileSearchEntry> = {}): FileSearchEntry {
 	return {
@@ -16,6 +17,26 @@ function entry(overrides: Partial<FileSearchEntry> = {}): FileSearchEntry {
 }
 
 describe("file match signal construction", () => {
+	it("maps shared search keys back to their named field signals", () => {
+		const [candidate] = searchFuzzyQueryWithFieldScores(
+			"roadmap",
+			[entry()],
+			fileSearchKeys(false),
+		);
+		expect(candidate).toBeDefined();
+		if (!candidate) return;
+
+		const match = createFileMatch(candidate, "roadmap", {
+			tagOnlyQuery: false,
+			usesMatchCoverage: false,
+		});
+
+		expect(match.filenameScore).toBeUndefined();
+		expect(match.pathScore).toBeUndefined();
+		expect(match.aliasScore).toEqual(expect.any(Number));
+		expect(match.matchCoverage).toBeUndefined();
+	});
+
 	it("keeps field scores and derived query signals together", () => {
 		const match = createFileMatch(
 			{

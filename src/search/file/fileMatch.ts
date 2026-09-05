@@ -51,13 +51,36 @@ export interface FileMatchOptions {
 	usesMatchCoverage: boolean;
 }
 
-// These positions mirror the key order in FileProvider. Naming the positions
-// keeps the signal builder independent from the sorter's comparison rules.
-const SEARCH_FIELD_INDEX = {
-	filename: 0,
-	path: 1,
-	alias: 3,
-} as const;
+// Candidate generation and signal extraction share these descriptors so adding
+// or reordering a field cannot silently attach its fuzzy score to another signal.
+const FILE_SEARCH_FIELDS = [
+	{ name: "filename", value: (entry: FileSearchEntry) => entry.basename },
+	{ name: "path", value: (entry: FileSearchEntry) => entry.path },
+	{ name: "text", value: (entry: FileSearchEntry) => entry.text },
+	{ name: "alias", value: (entry: FileSearchEntry) => entry.aliases.join(" ") },
+	{ name: "tags", value: (entry: FileSearchEntry) => entry.tags.join(" ") },
+] as const;
+
+type FileSearchFieldName = (typeof FILE_SEARCH_FIELDS)[number]["name"];
+
+const FILE_SEARCH_KEYS = FILE_SEARCH_FIELDS.map(({ value }) => value);
+const TAG_ONLY_SEARCH_KEYS = FILE_SEARCH_FIELDS.filter(({ name }) => name === "tags").map(
+	({ value }) => value,
+);
+
+export function fileSearchKeys(
+	tagOnlyQuery: boolean,
+): readonly ((entry: FileSearchEntry) => string)[] {
+	return tagOnlyQuery ? TAG_ONLY_SEARCH_KEYS : FILE_SEARCH_KEYS;
+}
+
+function fieldScore(
+	fieldScores: readonly (number | undefined)[],
+	fieldName: FileSearchFieldName,
+): number | undefined {
+	const index = FILE_SEARCH_FIELDS.findIndex(({ name }) => name === fieldName);
+	return index === -1 ? undefined : fieldScores[index];
+}
 
 /**
  * Normalize the flat match shape at the sorter boundary. Providers historically
@@ -115,9 +138,9 @@ export function createFileMatch(
 	return {
 		obj,
 		score,
-		filenameScore: options.tagOnlyQuery ? undefined : fieldScores[SEARCH_FIELD_INDEX.filename],
-		pathScore: options.tagOnlyQuery ? undefined : fieldScores[SEARCH_FIELD_INDEX.path],
-		aliasScore: options.tagOnlyQuery ? undefined : fieldScores[SEARCH_FIELD_INDEX.alias],
+		filenameScore: options.tagOnlyQuery ? undefined : fieldScore(fieldScores, "filename"),
+		pathScore: options.tagOnlyQuery ? undefined : fieldScore(fieldScores, "path"),
+		aliasScore: options.tagOnlyQuery ? undefined : fieldScore(fieldScores, "alias"),
 		tagMatchCount: matchedTags.length,
 		matchCoverage,
 		contiguousMatch,

@@ -8,7 +8,7 @@ import {
 	type FileSortPriorities,
 } from "src/model/settings";
 import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
-import { createFileMatch, type FileSearchEntry } from "src/search/file/fileMatch";
+import { createFileMatch, fileSearchKeys, type FileSearchEntry } from "src/search/file/fileMatch";
 import { sortFileMatches, sortFilesWithoutQuery } from "src/search/file/fileSorting";
 import { isTagOnlyQuery, normalizeTags } from "src/search/file/fileTags";
 import { searchFuzzyQueryWithFieldScores } from "src/search/fuzzyQuery";
@@ -153,22 +153,11 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		const candidates = tagOnlyQuery
 			? entries.filter((entry) => entry.tags.length > 0)
 			: entries;
-		// Keep the combined text key for candidate compatibility while retaining
-		// basename and alias scores so their sort priorities can be independent. Tags
-		// stay in their own key so adding tag search does not change existing text
-		// scores or the meaning of the filename/path priorities.
-		const keys = tagOnlyQuery
-			? [(entry: FileSearchEntry) => entry.tags.join(" ")]
-			: [
-					(entry: FileSearchEntry) => entry.basename,
-					(entry: FileSearchEntry) => entry.path,
-					(entry: FileSearchEntry) => entry.text,
-					(entry: FileSearchEntry) => entry.aliases.join(" "),
-					(entry: FileSearchEntry) => entry.tags.join(" "),
-				];
-		const matches = searchFuzzyQueryWithFieldScores(query, candidates, keys).map((match) =>
-			createFileMatch(match, query, { tagOnlyQuery, usesMatchCoverage }),
-		);
+		const matches = searchFuzzyQueryWithFieldScores(
+			query,
+			candidates,
+			fileSearchKeys(tagOnlyQuery),
+		).map((match) => createFileMatch(match, query, { tagOnlyQuery, usesMatchCoverage }));
 		const matchedTagsByPath = new Map(
 			matches.map(({ obj, matchedTags }) => [obj.path, matchedTags]),
 		);
