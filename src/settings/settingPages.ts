@@ -130,19 +130,6 @@ function createSearchHistoryPage(plugin: MyPalettePlugin, helpers: SettingPageHe
 				...helpers.control("toggle", "searchHistory.enabled"),
 			},
 			{
-				name: "Add delay",
-				desc: "Optional milliseconds of input inactivity before adding a search. 0 means action only.",
-				...helpers.control("slider", "searchHistory.addDelayMs", {
-					min: SETTING_LIMITS.searchHistory.addDelayMs.min,
-					max: SETTING_LIMITS.searchHistory.addDelayMs.max,
-					step: SETTING_LIMITS.searchHistory.addDelayMs.step,
-					displayFormat: (value: number) =>
-						value === SETTING_LIMITS.searchHistory.addDelayMs.min
-							? "Off"
-							: `${value / MILLISECONDS_PER_SECOND}s`,
-				}),
-			},
-			{
 				name: "Keep history",
 				desc: "Number of days to keep entries. 0 keeps them forever.",
 				...helpers.control("slider", "searchHistory.daysToKeep", {

@@ -440,11 +440,10 @@ Everythingページには次を設ける。
 
 検索履歴はモード共通で次の設定を持つ。
 
-| 設定キー                   | 型      | 既定値 | 説明                                                    |
-| -------------------------- | ------- | ------ | ------------------------------------------------------- |
-| `searchHistory.enabled`    | boolean | `true` | 検索履歴を有効にする                                    |
-| `searchHistory.addDelayMs` | number  | `0`    | 入力停止後に履歴へ追加する待機時間。0はアクション時のみ |
-| `searchHistory.daysToKeep` | number  | `0`    | 保持日数。0は無期限                                     |
+| 設定キー                   | 型      | 既定値 | 説明                 |
+| -------------------------- | ------- | ------ | -------------------- |
+| `searchHistory.enabled`    | boolean | `true` | 検索履歴を有効にする |
+| `searchHistory.daysToKeep` | number  | `0`    | 保持日数。0は無期限  |
 
 ### 9.3 Mode prefixes
 
@@ -472,7 +471,7 @@ Everythingページには次を設ける。
 | ---------------- | ---------------------------------------------- |
 | `Palette`        | 各検索モードのプレフィックス、最後の入力の復元 |
 | `File search`    | Vaultファイルの並び順                          |
-| `Search history` | 履歴の有効化、追加遅延、保持期間、履歴削除     |
+| `Search history` | 履歴の有効化、保持期間、履歴削除               |
 | `Everything`     | 接続設定とEverything/Vault検索の詳細           |
 | `File opening`   | Vault外MarkdownをObsidianで開く挙動            |
 | `Advanced`       | デバッグメッセージなどの診断設定               |
@@ -552,7 +551,7 @@ interface MyPaletteSettings {
 - `rememberLastInput` が有効な場合、モードごとの最後の入力を Obsidian の実行中だけ保持する。
 - 検索履歴は検索モード・Everything の検索範囲ごとに分類し、プレフィックスを除いた検索語、回数、最終検索日時を Vault 単位の IndexedDB へ永続化する。設定の `data.json` には履歴エントリを保存しない。
 - 既存の `data.json` にある履歴エントリは、初回起動時に IndexedDB へ移行する。IndexedDB が利用できない場合は履歴を `data.json` の一時的なフォールバックとして保持し、次回起動時に再試行する。
-- 結果へのアクションが成功したときに履歴へ追加する。入力停止後の追加は `searchHistory.addDelayMs` を0より大きくした場合だけ行う。
+- 検索結果リストへフォーカスが移ったときに履歴へ追加する。検索欄のblurや入力停止後の経過時間だけでは追加しない。
 - 大文字小文字だけが異なる入力は同じ履歴項目として扱い、最新の表記と回数を保持する。
 - 入力欄右端の履歴ボタンまたは `Ctrl+R` で現在のモードの検索履歴を表示し、項目を選ぶと現在のプレフィックス付き入力へ復元する。
 
@@ -640,7 +639,7 @@ src/
 | `app/registerCommands`       | Obsidianコマンドの登録と実行条件                                           |
 | `app/registerEvents`         | ViewとVaultイベントの登録                                                  |
 | `app/createPaletteProviders` | Providerの生成とモードregistryの構築                                       |
-| `PaletteSearchSession`       | 入力解析、Provider検索、世代番号、キャンセル、履歴遅延                     |
+| `PaletteSearchSession`       | 入力解析、Provider検索、世代番号、キャンセル、履歴コミット                 |
 | `SuggestionPanel`            | Modal / ItemView共通の入力、候補行、選択、ポインター操作                   |
 | `executePaletteResult`       | 結果モードごとのアクション振り分けとホスト差分の吸収                       |
 | `PaletteModal`               | モーダルのライフサイクル、フォーカス、閉じる挙動                           |

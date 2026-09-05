@@ -176,6 +176,10 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		await this.activatePaletteResult("primary", result);
 	}
 
+	protected override onResultFocus(): void {
+		this.session.commitCurrentSearch();
+	}
+
 	protected override async onSuggestionMiddleClick(result: PaletteResult): Promise<void> {
 		if (result.mode === "search-history") {
 			this.applySearchHistory(result);
@@ -291,16 +295,10 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			this.applySearchHistory(result);
 			return;
 		}
-		const committedSearch = this.recordableSearch(this.inputEl.value);
-		// Cancel the idle fallback whenever the user makes an explicit choice. The
-		// action below decides whether that choice actually succeeded before it is
-		// committed to history.
-		this.cancelHistoryDelay();
 		await executePaletteResult(this.plugin, result, action, {
 			closeWhenDone: closePalette,
 			active: true,
 			externalAutoFocus: closePalette,
-			commitSearch: () => this.commitSearch(committedSearch),
 			close: () => this.close(),
 			showError: (message) => {
 				this.emptyStateText = message;
@@ -390,17 +388,10 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		return menu;
 	}
 
-	private commitSearch(search: RecordableSearch | undefined): void {
-		if (search) this.plugin.recordSearch(search.query, search.category, search.includeIgnored);
-	}
-
 	private async openResultInBackground(result: PaletteResult): Promise<void> {
-		const committedSearch = this.recordableSearch(this.inputEl.value);
-		this.cancelHistoryDelay();
-		// Background opening does not close the palette, so it needs its own
-		// successful-action commit instead of relying on activatePaletteResult.
-		if (await openPaletteResultInBackground(this.plugin, result))
-			this.commitSearch(committedSearch);
+		// Background opening does not close the palette, so retain its successful
+		// action behavior for callers that did not click the result list.
+		await openPaletteResultInBackground(this.plugin, result);
 	}
 
 	private getSearchHistoryContext(input: string): {
@@ -409,14 +400,6 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		includeIgnored: boolean;
 	} {
 		return this.session.getSearchHistoryContext(input);
-	}
-
-	private recordableSearch(input: string): RecordableSearch | undefined {
-		return this.session.getRecordableSearch(input);
-	}
-
-	private cancelHistoryDelay(): void {
-		this.session.cancelHistoryDelay();
 	}
 
 	private async openSelectedWithoutClosing(): Promise<void> {

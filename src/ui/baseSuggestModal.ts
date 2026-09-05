@@ -122,6 +122,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	}
 	protected async onSuggestionMiddleClick(_item: T, _event: MouseEvent): Promise<void> {}
 	protected onSuggestionContextMenu(_item: T, _event: MouseEvent): void {}
+	protected onResultFocus(): void {}
 
 	protected getInitialInputSelectionRange(): [number, number] {
 		return [0, this.inputEl.value.length];
@@ -295,6 +296,9 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			this.resultContainerEl,
 			"mousedown",
 			(event) => {
+				// A result-list interaction is the explicit boundary after which the
+				// current query is considered used; input blur alone is not enough.
+				this.onResultFocus();
 				const row = this.suggestionRowAtEvent(event);
 				if (!row) return;
 				const item = this.itemAtRow(row);

@@ -12,7 +12,6 @@ export interface PaletteResultExecutionOptions {
 	active: boolean;
 	/** Modal's ArrowRight preview keeps the target active but avoids editor focus. */
 	externalAutoFocus?: boolean;
-	commitSearch: () => void;
 	close: () => void;
 	showError: (message: string) => void;
 }
@@ -41,10 +40,9 @@ export async function executePaletteResult(
 		plugin.recordCommand(result.commandId);
 		if (options.closeWhenDone) options.close();
 		window.queueMicrotask(() => {
-			const executed = (
+			(
 				plugin.app.commands as unknown as { executeCommandById: (id: string) => boolean }
 			).executeCommandById(result.commandId);
-			if (executed) options.commitSearch();
 		});
 		return;
 	}
@@ -144,6 +142,5 @@ function editorOf(
 }
 
 function finish(options: PaletteResultExecutionOptions): void {
-	options.commitSearch();
 	if (options.closeWhenDone) options.close();
 }

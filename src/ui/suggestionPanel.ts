@@ -9,6 +9,7 @@ export interface SuggestionPanelProps<T> {
 	onInput: (input: string) => void;
 	renderSuggestion: (item: T, el: HTMLElement, query: string) => void;
 	onChoose: (item: T, event: MouseEvent | KeyboardEvent) => void | Promise<void>;
+	onResultFocus?: () => void;
 	onMiddleClick?: (item: T, event: MouseEvent) => void | Promise<void>;
 	onContextMenu?: (item: T, event: MouseEvent) => void;
 	onEscape?: () => void;
@@ -194,6 +195,9 @@ export class SuggestionPanel<T> extends Component {
 			this.resultContainerEl,
 			"mousedown",
 			(event) => {
+				// Result clicks are the concrete browser event that moves the user's
+				// attention from typing to the result list.
+				this.props.onResultFocus?.();
 				const row = this.suggestionRowAtEvent(event);
 				if (!row) return;
 				const item = this.itemAtRow(row);

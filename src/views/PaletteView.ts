@@ -138,6 +138,7 @@ export class PaletteView extends ItemView {
 			surface: "view",
 			placeholder: palettePlaceholder(state.fixedMode ?? "file"),
 			onInput: (input) => this.session?.setInput(input),
+			onResultFocus: () => this.session?.commitCurrentSearch(),
 			renderSuggestion: (result, el, query) =>
 				renderSelectionItem(
 					toPaletteSelectionItem(this.app, result, {
@@ -325,13 +326,11 @@ export class PaletteView extends ItemView {
 			if (result.mode === "search-history") this.applySearchHistory(result);
 			return;
 		}
-		this.session.markHistoryActionStarted();
 		const targetLeaf = this.resolveTargetLeaf();
 		const execution: PaletteResultExecutionOptions = {
 			closeWhenDone: false,
 			targetLeaf,
 			active: action !== "primary",
-			commitSearch: () => this.session?.commitCurrentSearch(),
 			close: () => undefined,
 			showError: (message) => {
 				this.actionMessage = message;
@@ -367,9 +366,7 @@ export class PaletteView extends ItemView {
 			if (result.mode === "search-history") this.applySearchHistory(result);
 			return;
 		}
-		this.session.markHistoryActionStarted();
-		if (await openPaletteResultInBackground(this.plugin, result))
-			this.session.commitCurrentSearch();
+		await openPaletteResultInBackground(this.plugin, result);
 		this.panel?.focusSearchInput();
 	}
 

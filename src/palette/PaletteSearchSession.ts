@@ -38,9 +38,7 @@ export interface PaletteSearchSessionOptions {
 export class PaletteSearchSession {
 	private generation = 0;
 	private controller?: AbortController;
-	private historyDelayTimer?: number;
-	private suppressHistoryForNextInput = false;
-	private skipInitialHistoryRecord: boolean;
+	private historyCommittedGeneration = -1;
 	private disposed = false;
 	private readonly fixedMode?: FixedPaletteMode;
 	private readonly sourceFile?: TFile;
@@ -59,7 +57,6 @@ export class PaletteSearchSession {
 		this.fixedMode = fixedMode;
 		this.sourceFile = sourceFile;
 		this.onStateChange = onStateChange;
-		this.skipInitialHistoryRecord = Boolean(initialInput);
 		const parsed = this.parse(initialInput);
 		this.state = {
 			input: initialInput,
@@ -90,9 +87,10 @@ export class PaletteSearchSession {
 		options: { suppressHistory?: boolean } = {},
 	): Promise<PaletteResult[]> {
 		if (this.disposed) return [];
-		this.cancelHistoryDelay();
+		void options;
 		this.controller?.abort();
 		const generation = ++this.generation;
+		this.historyCommittedGeneration = -1;
 		const parsed = this.parse(input);
 		this.state = {
 			...this.state,
@@ -108,12 +106,8 @@ export class PaletteSearchSession {
 		this.emit();
 
 		this.plugin.rememberPaletteQuery(parsed.mode, parsed.query, input);
-		if (this.skipInitialHistoryRecord) {
-			this.skipInitialHistoryRecord = false;
-		} else if (!options.suppressHistory && !this.suppressHistoryForNextInput) {
-			this.scheduleSearchHistory(input);
-		}
-		this.suppressHistoryForNextInput = false;
+		// History is committed when the result list receives focus. Keeping it out
+		// of the search pipeline prevents typing alone from creating history.
 
 		const delay = parsed.mode === "everything" ? this.plugin.settings.everything.debounceMs : 0;
 		if (delay) await new Promise((resolve) => window.setTimeout(resolve, delay));
@@ -152,7 +146,6 @@ export class PaletteSearchSession {
 	}
 
 	setInput(input: string, options: { suppressHistory?: boolean } = {}): void {
-		this.suppressHistoryForNextInput = options.suppressHistory === true;
 		void this.search(input, options);
 	}
 
@@ -175,18 +168,11 @@ export class PaletteSearchSession {
 	}
 
 	commitCurrentSearch(): void {
+		if (this.historyCommittedGeneration === this.generation) return;
 		const search = this.getRecordableSearch();
-		if (search) this.plugin.recordSearch(search.query, search.category, search.includeIgnored);
-	}
-
-	cancelHistoryDelay(): void {
-		if (this.historyDelayTimer === undefined) return;
-		window.clearTimeout(this.historyDelayTimer);
-		this.historyDelayTimer = undefined;
-	}
-
-	markHistoryActionStarted(): void {
-		this.cancelHistoryDelay();
+		if (!search) return;
+		this.historyCommittedGeneration = this.generation;
+		this.plugin.recordSearch(search.query, search.category, search.includeIgnored);
 	}
 
 	dispose(): void {
@@ -194,7 +180,6 @@ export class PaletteSearchSession {
 		this.disposed = true;
 		this.generation += 1;
 		this.controller?.abort();
-		this.cancelHistoryDelay();
 	}
 
 	private parse(input: string): ParsedInput {
@@ -205,17 +190,6 @@ export class PaletteSearchSession {
 
 	private scopeOf(parsed: ParsedInput): EverythingScope {
 		return ("everythingScope" in parsed ? parsed.everythingScope : undefined) ?? "vault";
-	}
-
-	private scheduleSearchHistory(input: string): void {
-		const history = this.plugin.settings.searchHistory;
-		const search = this.getRecordableSearch(input);
-		if (!history.enabled || !search || history.addDelayMs <= 0) return;
-		this.historyDelayTimer = window.setTimeout(() => {
-			this.historyDelayTimer = undefined;
-			if (!this.disposed)
-				this.plugin.recordSearch(search.query, search.category, search.includeIgnored);
-		}, history.addDelayMs);
 	}
 
 	private emit(): void {
