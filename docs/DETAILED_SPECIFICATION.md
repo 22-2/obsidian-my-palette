@@ -515,7 +515,7 @@ interface EverythingResult extends BaseResult {
 }
 
 interface MyPaletteSettings {
-	schemaVersion: 15;
+	schemaVersion: 16;
 	showLog: boolean;
 	rememberLastInput: boolean;
 	searchHistory: {
@@ -539,7 +539,6 @@ interface MyPaletteSettings {
 		requestTimeoutMs: number;
 		vaultExtensions: string[];
 	};
-	recentCommandIds: string[];
 }
 ```
 
@@ -548,6 +547,8 @@ interface MyPaletteSettings {
 - 欠損キーは既定値で補完する。
 - 型・範囲が不正な値は項目単位で既定値へ戻し、プラグイン全体のロードを失敗させない。
 - 最近実行コマンドは最大20 ID。存在しない ID は表示時に除外する。
+- 最近実行コマンドのIDは Vault 単位の IndexedDB に保存し、設定の `data.json` にはIDを保存しない。
+- 既存の `data.json` にある最近実行コマンドIDは、初回起動時に IndexedDB へ移行する。IndexedDB が利用できない場合はIDを `data.json` の一時的なフォールバックとして保持する。
 - `rememberLastInput` が有効な場合、モードごとの最後の入力を Obsidian の実行中だけ保持する。
 - 検索履歴は検索モード・Everything の検索範囲ごとに分類し、プレフィックスを除いた検索語、回数、最終検索日時を Vault 単位の IndexedDB へ永続化する。設定の `data.json` には履歴エントリを保存しない。
 - 既存の `data.json` にある履歴エントリは、初回起動時に IndexedDB へ移行する。IndexedDB が利用できない場合は履歴を `data.json` の一時的なフォールバックとして保持し、次回起動時に再試行する。
@@ -598,7 +599,8 @@ src/
 │   │   └── BookmarkProvider.ts
 │   ├── command/
 │   │   ├── CommandProvider.ts
-│   │   └── commandSorting.ts
+│   │   ├── commandSorting.ts
+│   │   └── recentCommandStore.ts
 │   ├── everything/
 │   │   ├── EverythingHttpClient.ts
 │   │   ├── EverythingProvider.ts
@@ -632,28 +634,29 @@ src/
 
 ### 11.2 責務
 
-| コンポーネント               | 責務                                                           |
-| ---------------------------- | -------------------------------------------------------------- |
-| `main.ts`                    | 設定ロード、Pluginライフサイクル、依存関係の組み立て           |
-| `app/registerCommands`       | Obsidianコマンドの登録と実行条件                               |
-| `app/registerEvents`         | ViewとVaultイベントの登録                                      |
-| `app/createPaletteProviders` | Providerの生成とモードregistryの構築                           |
-| `PaletteSearchSession`       | 入力解析、Provider検索、世代番号、キャンセル、履歴遅延         |
-| `SuggestionPanel`            | Modal / ItemView共通の入力、候補行、選択、ポインター操作       |
-| `executePaletteResult`       | 結果モードごとのアクション振り分けとホスト差分の吸収           |
-| `PaletteModal`               | モーダルのライフサイクル、フォーカス、閉じる挙動               |
-| `PaletteView`                | 右サイドバーの永続パレット、本文leaf追跡、workspace state      |
-| `resultPresentation`         | 検索結果の表示形式とパスコピー対象の決定                       |
-| `inputParser`                | プレフィックス検出とクエリ抽出。副作用なし                     |
-| Provider                     | モード別検索。UI 要素を直接操作しない                          |
-| `EverythingHttpClient`       | URL構築、認証、リクエスト中断、タイムアウト、JSON解析          |
-| `resultActions`              | モード別アクション実行                                         |
-| `settings/mergeSettings`     | 永続化データの検証と既定値の補完                               |
-| `settings/settingsStore`     | `data.json` のロード・保存と旧検索履歴の移行準備               |
-| `SearchHistoryStore`         | Vault単位のIndexedDB保存、履歴の読み書き、削除、フォールバック |
-| `settings/settingTab`        | 設定 UI と入力値の反映                                         |
-| `IgnoredNoteIndex`           | 除外ファイルを検索可能にする再構築可能なキャッシュ             |
-| `ExternalMarkdownView`       | Vault外または除外されたMarkdownの読み取り専用表示              |
+| コンポーネント               | 責務                                                                       |
+| ---------------------------- | -------------------------------------------------------------------------- |
+| `main.ts`                    | 設定ロード、Pluginライフサイクル、依存関係の組み立て                       |
+| `app/registerCommands`       | Obsidianコマンドの登録と実行条件                                           |
+| `app/registerEvents`         | ViewとVaultイベントの登録                                                  |
+| `app/createPaletteProviders` | Providerの生成とモードregistryの構築                                       |
+| `PaletteSearchSession`       | 入力解析、Provider検索、世代番号、キャンセル、履歴遅延                     |
+| `SuggestionPanel`            | Modal / ItemView共通の入力、候補行、選択、ポインター操作                   |
+| `executePaletteResult`       | 結果モードごとのアクション振り分けとホスト差分の吸収                       |
+| `PaletteModal`               | モーダルのライフサイクル、フォーカス、閉じる挙動                           |
+| `PaletteView`                | 右サイドバーの永続パレット、本文leaf追跡、workspace state                  |
+| `resultPresentation`         | 検索結果の表示形式とパスコピー対象の決定                                   |
+| `inputParser`                | プレフィックス検出とクエリ抽出。副作用なし                                 |
+| Provider                     | モード別検索。UI 要素を直接操作しない                                      |
+| `EverythingHttpClient`       | URL構築、認証、リクエスト中断、タイムアウト、JSON解析                      |
+| `resultActions`              | モード別アクション実行                                                     |
+| `settings/mergeSettings`     | 永続化データの検証と既定値の補完                                           |
+| `settings/settingsStore`     | `data.json` のロード・保存と旧履歴データの移行準備                         |
+| `SearchHistoryStore`         | Vault単位のIndexedDB保存、履歴の読み書き、削除、フォールバック             |
+| `RecentCommandStore`         | Vault単位のIndexedDB保存、最近実行コマンドの並び替え、削除、フォールバック |
+| `settings/settingTab`        | 設定 UI と入力値の反映                                                     |
+| `IgnoredNoteIndex`           | 除外ファイルを検索可能にする再構築可能なキャッシュ                         |
+| `ExternalMarkdownView`       | Vault外または除外されたMarkdownの読み取り専用表示                          |
 
 ### 11.3 非同期検索フロー
 

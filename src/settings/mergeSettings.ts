@@ -1,7 +1,6 @@
 import type { MyPaletteSettings } from "src/model/settings";
 import {
 	DEFAULT_SETTINGS,
-	MAX_RECENT_COMMAND_IDS,
 	SETTING_LIMITS,
 	SETTINGS_SCHEMA_VERSION,
 	normalizeFileSortPriorities,
@@ -140,10 +139,5 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 					? rawEverything.directorySearchMarkdownOnly
 					: true,
 		},
-		recentCommandIds: Array.isArray(source.recentCommandIds)
-			? source.recentCommandIds
-					.filter((id): id is string => typeof id === "string")
-					.slice(0, MAX_RECENT_COMMAND_IDS)
-			: [],
 	};
 }

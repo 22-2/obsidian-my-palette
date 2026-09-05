@@ -1,5 +1,6 @@
 import type MyPalettePlugin from "src/main";
 import type { SearchHistoryEntry } from "src/model/settings";
+import { normalizeRecentCommandIds } from "src/search/command/recentCommandStore";
 import { mergeSettings } from "src/settings/mergeSettings";
 import {
 	parseStoredSearchHistoryEntries,
@@ -8,6 +9,7 @@ import {
 
 export interface LoadedPluginSettings {
 	legacySearchHistoryEntries: SearchHistoryEntry[];
+	legacyRecentCommandIds: string[];
 	shouldSave: boolean;
 }
 
@@ -28,16 +30,19 @@ export async function loadPluginSettings(plugin: MyPalettePlugin): Promise<Loade
 		Date.now(),
 		plugin.settings.searchHistory.daysToKeep,
 	);
+	const legacyRecentCommandIds = normalizeRecentCommandIds(source.recentCommandIds);
 	const storedSchemaVersion =
 		data && typeof data === "object" && "schemaVersion" in data
 			? (data as { schemaVersion?: unknown }).schemaVersion
 			: undefined;
 	return {
 		legacySearchHistoryEntries,
-		// An old schema or legacy entries need to be written after the history
-		// store has accepted the migration, so data.json never loses its fallback.
+		legacyRecentCommandIds,
+		// An old schema or legacy history data needs to be written after both
+		// stores accept migration, so data.json never loses its fallback.
 		shouldSave:
 			Object.prototype.hasOwnProperty.call(rawSearchHistory, "entries") ||
+			Object.prototype.hasOwnProperty.call(source, "recentCommandIds") ||
 			(typeof storedSchemaVersion === "number" &&
 				storedSchemaVersion < plugin.settings.schemaVersion),
 	};
@@ -46,16 +51,14 @@ export async function loadPluginSettings(plugin: MyPalettePlugin): Promise<Loade
 export async function savePluginSettings(
 	plugin: MyPalettePlugin,
 	legacySearchHistoryEntries?: readonly SearchHistoryEntry[],
+	legacyRecentCommandIds?: readonly string[],
 ): Promise<void> {
-	const data =
-		legacySearchHistoryEntries === undefined
-			? plugin.settings
-			: {
-					...plugin.settings,
-					searchHistory: {
-						...plugin.settings.searchHistory,
-						entries: legacySearchHistoryEntries,
-					},
-				};
+	const data: Record<string, unknown> = { ...plugin.settings };
+	if (legacySearchHistoryEntries !== undefined)
+		data.searchHistory = {
+			...plugin.settings.searchHistory,
+			entries: legacySearchHistoryEntries,
+		};
+	if (legacyRecentCommandIds !== undefined) data.recentCommandIds = [...legacyRecentCommandIds];
 	await plugin.saveData(data);
 }

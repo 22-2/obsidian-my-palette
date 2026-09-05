@@ -68,7 +68,7 @@ describe("mergeSettings", () => {
 		});
 	});
 
-	it("bounds numeric settings and sanitizes extension and command lists", () => {
+	it("bounds numeric settings and sanitizes extensions", () => {
 		const settings = mergeSettings({
 			searchHistory: { addDelayMs: -1, daysToKeep: 99999 },
 			everything: {
@@ -77,7 +77,6 @@ describe("mergeSettings", () => {
 				requestTimeoutMs: 99999,
 				vaultExtensions: [".MD", "md", "bad value", 42],
 			},
-			recentCommandIds: ["first", 42, "second", "third"],
 		});
 
 		expect(settings.searchHistory.addDelayMs).toBe(0);
@@ -88,7 +87,6 @@ describe("mergeSettings", () => {
 			SETTING_LIMITS.everything.requestTimeoutMs.max,
 		);
 		expect(settings.everything.vaultExtensions).toEqual(["md"]);
-		expect(settings.recentCommandIds).toEqual(["first", "second", "third"]);
 	});
 
 	it("normalizes configured file sort priorities and ignores invalid values", () => {

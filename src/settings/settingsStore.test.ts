@@ -12,6 +12,7 @@ describe("settings store", () => {
 				searchHistory: {
 					entries: [{ input: "i old note", lastSearchedAt: 10, count: 2 }],
 				},
+				recentCommandIds: ["first", 42, "second", "first"],
 			}),
 			saveData: async (data: unknown) => {
 				savedData = data;
@@ -30,14 +31,21 @@ describe("settings store", () => {
 				count: 2,
 			},
 		]);
+		expect(loaded.legacyRecentCommandIds).toEqual(["first", "second"]);
 
 		await savePluginSettings(plugin);
 		expect(savedData).not.toHaveProperty("searchHistory.entries");
+		expect(savedData).not.toHaveProperty("recentCommandIds");
 
-		await savePluginSettings(plugin, loaded.legacySearchHistoryEntries);
+		await savePluginSettings(
+			plugin,
+			loaded.legacySearchHistoryEntries,
+			loaded.legacyRecentCommandIds,
+		);
 		expect(savedData).toHaveProperty(
 			"searchHistory.entries",
 			loaded.legacySearchHistoryEntries,
 		);
+		expect(savedData).toHaveProperty("recentCommandIds", ["first", "second"]);
 	});
 });

@@ -1,7 +1,7 @@
 import { Plugin } from "obsidian";
 import log, { LogLevels } from "consola";
 import { DEFAULT_SETTINGS, MyPaletteSettingTab } from "src/settings";
-import { MAX_RECENT_COMMAND_IDS, type MyPaletteSettings } from "src/model/settings";
+import type { MyPaletteSettings } from "src/model/settings";
 import {
 	createPaletteProviders,
 	type PaletteProviderInstances,
@@ -26,6 +26,10 @@ import {
 	type LoadedPluginSettings,
 } from "src/settings/settingsStore";
 import { FileUsageHistory } from "src/search/file/fileUsageHistory";
+import {
+	normalizeRecentCommandIds,
+	RecentCommandStore,
+} from "src/search/command/recentCommandStore";
 import { SearchHistoryStore } from "src/palette/searchHistoryStore";
 import "../styles.css";
 
@@ -45,7 +49,9 @@ export default class MyPalettePlugin extends Plugin {
 	providers!: PaletteProviderInstances["providers"];
 	private fileUsageHistory?: FileUsageHistory;
 	private searchHistoryStore?: SearchHistoryStore;
+	private recentCommandStore?: RecentCommandStore;
 	private legacySearchHistoryEntries?: SearchHistoryEntry[];
+	private legacyRecentCommandIds?: string[];
 	private rememberedPaletteQueries: Partial<Record<PaletteMode, string>> = {};
 	private activePaletteModal?: PaletteModal;
 
@@ -64,6 +70,15 @@ export default class MyPalettePlugin extends Plugin {
 		this.legacySearchHistoryEntries = persistentHistory
 			? undefined
 			: [...this.searchHistoryStore.getEntries()];
+		this.recentCommandStore = new RecentCommandStore(this.app, (message, detail) =>
+			logger.debug(message, detail),
+		);
+		const persistentRecentCommands = await this.recentCommandStore.load(
+			loadedSettings.legacyRecentCommandIds,
+		);
+		this.legacyRecentCommandIds = persistentRecentCommands
+			? undefined
+			: [...this.recentCommandStore.getIds()];
 		if (loadedSettings.shouldSave) await this.saveSettings();
 		this.fileUsageHistory = new FileUsageHistory(this.app, (message, detail) =>
 			logger.debug(message, detail),
@@ -73,7 +88,10 @@ export default class MyPalettePlugin extends Plugin {
 		const providers = createPaletteProviders(this.app, this.everythingClient, {
 			vaultExtensions: () => this.settings.everything.vaultExtensions,
 			fileSortPriorities: () => this.settings.file.sortPriorities,
-			recentCommandIds: () => this.settings.recentCommandIds,
+			recentCommandIds: () =>
+				this.recentCommandStore
+					? [...this.recentCommandStore.getIds()]
+					: (this.legacyRecentCommandIds ?? []),
 			everythingSettings: () => this.settings.everything,
 			fileUsageHistory: this.fileUsageHistory,
 			log: (message, detail) => logger.debug(message, detail),
@@ -141,6 +159,7 @@ export default class MyPalettePlugin extends Plugin {
 		this.everythingClient.cancel();
 		this.fileProvider?.dispose();
 		void this.searchHistoryStore?.dispose();
+		void this.recentCommandStore?.dispose();
 		void this.fileUsageHistory?.dispose();
 		logger.debug("Plugin unloaded");
 	}
@@ -154,7 +173,11 @@ export default class MyPalettePlugin extends Plugin {
 	}
 
 	async saveSettings(): Promise<void> {
-		await savePluginSettings(this, this.legacySearchHistoryEntries);
+		await savePluginSettings(
+			this,
+			this.legacySearchHistoryEntries,
+			this.legacyRecentCommandIds,
+		);
 	}
 
 	async testEverythingConnection(): Promise<{ ok: boolean; message: string }> {
@@ -172,11 +195,16 @@ export default class MyPalettePlugin extends Plugin {
 	}
 
 	recordCommand(id: string): void {
-		this.settings.recentCommandIds = [
-			id,
-			...this.settings.recentCommandIds.filter((existing) => existing !== id),
-		].slice(0, MAX_RECENT_COMMAND_IDS);
-		void this.saveSettings();
+		if (this.recentCommandStore) {
+			this.recentCommandStore.record(id);
+			this.syncLegacyRecentCommandFallback();
+		} else {
+			this.legacyRecentCommandIds = normalizeRecentCommandIds([
+				id,
+				...(this.legacyRecentCommandIds ?? []),
+			]);
+		}
+		if (this.legacyRecentCommandIds !== undefined) void this.saveSettings();
 	}
 
 	recordFileUsage(path: string): void {
@@ -290,6 +318,11 @@ export default class MyPalettePlugin extends Plugin {
 	private syncLegacySearchHistoryFallback(): void {
 		if (this.searchHistoryStore && !this.searchHistoryStore.isPersistent)
 			this.legacySearchHistoryEntries = [...this.searchHistoryStore.getEntries()];
+	}
+
+	private syncLegacyRecentCommandFallback(): void {
+		if (this.recentCommandStore && !this.recentCommandStore.isPersistent)
+			this.legacyRecentCommandIds = [...this.recentCommandStore.getIds()];
 	}
 
 	clearRememberedPaletteQueries(): void {
