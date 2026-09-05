@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	extractFileMatchSignals,
 	sortFileMatches,
 	sortFilesWithoutQuery,
 	type SortableFileEntry,
@@ -28,6 +29,37 @@ function file(
 }
 
 describe("file sorting", () => {
+	it("normalizes legacy and field-specific match signals at the sorter boundary", () => {
+		const legacy = { obj: file("legacy.md", 1), score: -4 };
+		const fieldSpecific = {
+			obj: file("field-specific.md", 1),
+			score: -1,
+			filenameScore: undefined,
+			aliasScore: -2,
+			pathScore: -3,
+			tagMatchCount: 2,
+			matchCoverage: 5,
+			contiguousMatch: true,
+		};
+
+		expect(extractFileMatchSignals(legacy)).toEqual({
+			filenameScore: -4,
+			aliasScore: undefined,
+			pathScore: undefined,
+			tagMatchCount: undefined,
+			matchCoverage: undefined,
+			contiguousMatch: undefined,
+		});
+		expect(extractFileMatchSignals(fieldSpecific)).toEqual({
+			filenameScore: undefined,
+			aliasScore: -2,
+			pathScore: -3,
+			tagMatchCount: 2,
+			matchCoverage: 5,
+			contiguousMatch: true,
+		});
+	});
+
 	it("separates filename and alias prefix matches", () => {
 		const matches = [
 			{ obj: file("project-note.md", 1), score: 0 },

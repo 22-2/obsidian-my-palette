@@ -15,9 +15,7 @@ export interface SortableFileEntry {
 	ignored?: boolean;
 }
 
-export interface FileMatch<T extends SortableFileEntry> {
-	obj: T;
-	score: number;
+export interface FileMatchSignals {
 	/** Fuzzy score contributed by the file's basename, when it matched. */
 	filenameScore?: number;
 	/** Fuzzy score contributed by the file's aliases, when they matched. */
@@ -30,26 +28,54 @@ export interface FileMatch<T extends SortableFileEntry> {
 	matchCoverage?: number;
 	/** Whether a complete AND branch matched contiguously in searchable metadata. */
 	contiguousMatch?: boolean;
+}
+
+export interface FileMatch<T extends SortableFileEntry> extends FileMatchSignals {
+	obj: T;
+	score: number;
 	/** Tags that matched the current query; carried through sorting for presentation. */
 	matchedTags?: string[];
+}
+
+/**
+ * Normalize the flat match shape at the sorter boundary. Providers historically
+ * only supplied `score`, so the filename fallback must stay here while new
+ * ranking signals can be added without spreading compatibility checks through
+ * every comparator.
+ */
+export function extractFileMatchSignals<T extends SortableFileEntry>(
+	match: FileMatch<T>,
+): FileMatchSignals {
+	return {
+		filenameScore: Object.prototype.hasOwnProperty.call(match, "filenameScore")
+			? match.filenameScore
+			: match.score,
+		aliasScore: Object.prototype.hasOwnProperty.call(match, "aliasScore")
+			? match.aliasScore
+			: undefined,
+		pathScore: Object.prototype.hasOwnProperty.call(match, "pathScore")
+			? match.pathScore
+			: undefined,
+		tagMatchCount: Object.prototype.hasOwnProperty.call(match, "tagMatchCount")
+			? match.tagMatchCount
+			: undefined,
+		matchCoverage: Object.prototype.hasOwnProperty.call(match, "matchCoverage")
+			? match.matchCoverage
+			: undefined,
+		contiguousMatch: Object.prototype.hasOwnProperty.call(match, "contiguousMatch")
+			? match.contiguousMatch
+			: undefined,
+	};
 }
 
 interface SortContext {
 	query?: string;
 	recent: ReadonlyMap<string, number>;
-	filenameScoreA?: number;
-	filenameScoreB?: number;
-	aliasScoreA?: number;
-	aliasScoreB?: number;
-	pathScoreA?: number;
-	pathScoreB?: number;
-	tagMatchCountA?: number;
-	tagMatchCountB?: number;
-	matchCoverageA?: number;
-	matchCoverageB?: number;
-	contiguousMatchA?: boolean;
-	contiguousMatchB?: boolean;
+	signalsA: FileMatchSignals;
+	signalsB: FileMatchSignals;
 }
+
+const EMPTY_MATCH_SIGNALS: FileMatchSignals = {};
 
 const QUERY_SORT_PRIORITIES = new Set<FileSortPriority>([
 	FILE_SORT_PRIORITIES.filenamePrefixMatch,
@@ -169,19 +195,28 @@ function comparePriority(
 				: Number(hasPrefixMatch(b, context.query, "alias")) -
 						Number(hasPrefixMatch(a, context.query, "alias"));
 		case FILE_SORT_PRIORITIES.filenameFuzzyMatch:
-			return compareOptionalScore(context.filenameScoreA, context.filenameScoreB);
+			return compareOptionalScore(
+				context.signalsA.filenameScore,
+				context.signalsB.filenameScore,
+			);
 		case FILE_SORT_PRIORITIES.aliasFuzzyMatch:
-			return compareOptionalScore(context.aliasScoreA, context.aliasScoreB);
+			return compareOptionalScore(context.signalsA.aliasScore, context.signalsB.aliasScore);
 		case FILE_SORT_PRIORITIES.tagMatch:
 			// A note can match the query through another field; keep notes with no
 			// matching tag behind notes that have an explicit tag contribution.
-			return compareOptionalScore(context.tagMatchCountA, context.tagMatchCountB);
+			return compareOptionalScore(
+				context.signalsA.tagMatchCount,
+				context.signalsB.tagMatchCount,
+			);
 		case FILE_SORT_PRIORITIES.matchCoverage:
 			// Coverage is opt-in/configurable so its cross-field signal cannot bypass
 			// the user's chosen filename, alias, tag, or property priorities.
-			return compareOptionalScore(context.matchCoverageA, context.matchCoverageB);
+			return compareOptionalScore(
+				context.signalsA.matchCoverage,
+				context.signalsB.matchCoverage,
+			);
 		case FILE_SORT_PRIORITIES.pathFuzzyMatch:
-			return compareOptionalScore(context.pathScoreA, context.pathScoreB);
+			return compareOptionalScore(context.signalsA.pathScore, context.signalsB.pathScore);
 		case FILE_SORT_PRIORITIES.lastOpened:
 			return compareRecent(a, b, context.recent);
 		case FILE_SORT_PRIORITIES.lastModified:
@@ -231,7 +266,13 @@ export function sortFilesWithoutQuery<T extends SortableFileEntry>(
 	return entries.sort(
 		(a, b) =>
 			compareIgnored(a, b) ||
-			comparePriorities(a, b, noQueryPriorities, { recent }) ||
+			// Match-based priorities are removed above, but the shared comparator
+			// still receives an explicit empty signal set to keep its contract uniform.
+			comparePriorities(a, b, noQueryPriorities, {
+				recent,
+				signalsA: EMPTY_MATCH_SIGNALS,
+				signalsB: EMPTY_MATCH_SIGNALS,
+			}) ||
 			compareFallback(a, b),
 	);
 }
@@ -242,62 +283,24 @@ export function sortFileMatches<T extends SortableFileEntry>(
 	recent: ReadonlyMap<string, number>,
 	priorities: readonly FileSortPriority[] = DEFAULT_FILE_SORT_PRIORITIES,
 ): T[] {
+	// Extract once before sorting so the comparator only compares stable signals;
+	// this keeps the compatibility boundary cheap when a vault has many matches.
+	const signalsByMatch = new Map(
+		matches.map((match) => [match, extractFileMatchSignals(match)] as const),
+	);
 	return matches
 		.sort((a, b) => {
-			const filenameScoreA = Object.prototype.hasOwnProperty.call(a, "filenameScore")
-				? a.filenameScore
-				: a.score;
-			const filenameScoreB = Object.prototype.hasOwnProperty.call(b, "filenameScore")
-				? b.filenameScore
-				: b.score;
-			const aliasScoreA = Object.prototype.hasOwnProperty.call(a, "aliasScore")
-				? a.aliasScore
-				: undefined;
-			const aliasScoreB = Object.prototype.hasOwnProperty.call(b, "aliasScore")
-				? b.aliasScore
-				: undefined;
-			const pathScoreA = Object.prototype.hasOwnProperty.call(a, "pathScore")
-				? a.pathScore
-				: undefined;
-			const pathScoreB = Object.prototype.hasOwnProperty.call(b, "pathScore")
-				? b.pathScore
-				: undefined;
-			const tagMatchCountA = Object.prototype.hasOwnProperty.call(a, "tagMatchCount")
-				? a.tagMatchCount
-				: undefined;
-			const tagMatchCountB = Object.prototype.hasOwnProperty.call(b, "tagMatchCount")
-				? b.tagMatchCount
-				: undefined;
-			const matchCoverageA = Object.prototype.hasOwnProperty.call(a, "matchCoverage")
-				? a.matchCoverage
-				: undefined;
-			const matchCoverageB = Object.prototype.hasOwnProperty.call(b, "matchCoverage")
-				? b.matchCoverage
-				: undefined;
-			const contiguousMatchA = Object.prototype.hasOwnProperty.call(a, "contiguousMatch")
-				? a.contiguousMatch
-				: undefined;
-			const contiguousMatchB = Object.prototype.hasOwnProperty.call(b, "contiguousMatch")
-				? b.contiguousMatch
-				: undefined;
+			const signalsA = signalsByMatch.get(a);
+			const signalsB = signalsByMatch.get(b);
+			if (!signalsA || !signalsB) return 0;
 			return (
 				compareIgnored(a.obj, b.obj) ||
-				compareContiguousMatch(contiguousMatchA, contiguousMatchB) ||
+				compareContiguousMatch(signalsA.contiguousMatch, signalsB.contiguousMatch) ||
 				comparePriorities(a.obj, b.obj, priorities, {
 					query,
 					recent,
-					filenameScoreA,
-					filenameScoreB,
-					aliasScoreA,
-					aliasScoreB,
-					pathScoreA,
-					pathScoreB,
-					tagMatchCountA,
-					tagMatchCountB,
-					matchCoverageA,
-					matchCoverageB,
-					contiguousMatchA,
-					contiguousMatchB,
+					signalsA,
+					signalsB,
 				}) ||
 				compareFallback(a.obj, b.obj)
 			);
