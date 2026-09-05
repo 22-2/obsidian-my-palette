@@ -47,6 +47,7 @@ export class SuggestionPanel<T> extends Component {
 	private readonly props: SuggestionPanelProps<T>;
 	private readonly initialInput: string;
 	private pointerActionsRegistered = false;
+	private readonly leftClickRows = new WeakSet<Element>();
 	private readonly middleClickRows = new WeakSet<Element>();
 	private readonly rightClickRows = new WeakSet<Element>();
 
@@ -198,7 +199,15 @@ export class SuggestionPanel<T> extends Component {
 				const item = this.itemAtRow(row);
 				if (item === undefined) return;
 				const index = Number(row.getAttribute("data-index"));
-				if (event.button === 1 && this.props.onMiddleClick) {
+				if (event.button === 0) {
+					// Sidebar clicks can be consumed by Obsidian after mousedown, so run
+					// the primary action here and let the later click only clear the guard.
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					this.leftClickRows.add(row);
+					this.setSelectedIndex(index, false);
+					void this.props.onChoose(item, event);
+				} else if (event.button === 1 && this.props.onMiddleClick) {
 					event.preventDefault();
 					event.stopImmediatePropagation();
 					this.middleClickRows.add(row);
@@ -235,6 +244,11 @@ export class SuggestionPanel<T> extends Component {
 			(event) => {
 				const row = this.suggestionRowAtEvent(event);
 				if (!row) return;
+				if (this.leftClickRows.delete(row)) {
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					return;
+				}
 				if (this.rightClickRows.delete(row)) {
 					event.preventDefault();
 					event.stopImmediatePropagation();
