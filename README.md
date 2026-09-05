@@ -2,6 +2,8 @@
 
 My Palette is a keyboard-first command palette for Obsidian with Everything 1.5a search support.
 
+[日本語版](README.ja.md)
+
 The plugin is written in TypeScript and built with Vite+. Source code is organized by feature under `src/`, with unit tests colocated next to pure search, settings, and ignored-note logic.
 
 ## Development
