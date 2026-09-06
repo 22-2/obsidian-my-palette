@@ -41,18 +41,7 @@ describe("mergeSettings", () => {
 
 	it("defaults file sorting to relevance, prior, and recency", () => {
 		expect(mergeSettings(undefined).file.sortPriorities).toEqual({
-			blank: [
-				"Filename prefix match",
-				"Filename fuzzy match",
-				"Alias prefix match",
-				"Alias fuzzy match",
-				"Tag match",
-				"Match coverage",
-				"Folder path match",
-				"@prior:desc",
-				"Activity",
-				"Last modified",
-			],
+			blank: ["Activity", "Last modified", "@prior:desc"],
 			input: [
 				"Filename prefix match",
 				"Filename fuzzy match",
@@ -126,6 +115,11 @@ describe("mergeSettings", () => {
 
 		expect(settings.schemaVersion).toBe(SETTINGS_SCHEMA_VERSION);
 		expect(settings.file.sortPriorities.blank).toEqual([
+			"Activity",
+			"Last modified",
+			"@prior:desc",
+		]);
+		expect(settings.file.sortPriorities.input).toEqual([
 			"Filename prefix match",
 			"Filename fuzzy match",
 			"Alias prefix match",
@@ -137,7 +131,6 @@ describe("mergeSettings", () => {
 			"Activity",
 			"Last modified",
 		]);
-		expect(settings.file.sortPriorities.input).toEqual(settings.file.sortPriorities.blank);
 	});
 
 	it("adds the tag priority to untouched previous defaults", () => {

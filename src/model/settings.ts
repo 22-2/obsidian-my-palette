@@ -205,21 +205,24 @@ function isPriorityList(
 	);
 }
 
-export function normalizeFileSortPriorities(value: unknown): FileSortPriority[] {
-	if (!Array.isArray(value)) return [...DEFAULT_FILE_SORT_PRIORITIES];
+export function normalizeFileSortPriorities(
+	value: unknown,
+	fallback: readonly FileSortPriority[] = DEFAULT_FILE_SORT_PRIORITIES,
+): FileSortPriority[] {
+	if (!Array.isArray(value)) return [...fallback];
 	const trimmed = value.map((item) => (typeof item === "string" ? item.trim() : undefined));
 	// The first version of this setting shipped combined name/alias priorities;
 	// migrate its untouched defaults so existing users receive the separated behavior.
-	if (isPriorityList(trimmed, LEGACY_DEFAULT_FILE_SORT_PRIORITIES))
-		return [...DEFAULT_FILE_SORT_PRIORITIES];
+	if (isPriorityList(trimmed, LEGACY_DEFAULT_FILE_SORT_PRIORITIES)) return [...fallback];
 	// Adding a new default priority should reach users who never customized the
 	// previous list, while an arbitrary custom order remains exactly as entered.
 	if (
 		isPriorityList(trimmed, PRE_TAG_DEFAULT_FILE_SORT_PRIORITIES) ||
 		isPriorityList(trimmed, PREVIOUS_DEFAULT_FILE_SORT_PRIORITIES) ||
-		isPriorityList(trimmed, PREVIOUS_ACTIVITY_DEFAULT_FILE_SORT_PRIORITIES)
+		isPriorityList(trimmed, PREVIOUS_ACTIVITY_DEFAULT_FILE_SORT_PRIORITIES) ||
+		isPriorityList(trimmed, [...DEFAULT_FILE_SORT_PRIORITIES])
 	)
-		return [...DEFAULT_FILE_SORT_PRIORITIES];
+		return [...fallback];
 	const normalized = trimmed.flatMap((item): FileSortPriority[] => {
 		if (item === undefined) return [];
 		const priority = LEGACY_FILE_SORT_PRIORITY_ALIASES[item] ?? item;
@@ -243,6 +246,14 @@ export const DEFAULT_FILE_SORT_PRIORITIES: readonly FileSortPriority[] = [
 	FILE_SORT_PRIORITIES.priorDesc,
 	FILE_SORT_PRIORITIES.activity,
 	FILE_SORT_PRIORITIES.lastModified,
+];
+
+// 空クエリ時はマッチ系が除去されるため、有効なデフォルトは Activity → Last modified →
+// @prior:desc の順になる。ユーザーの実設定に合わせて blank だけ別デフォルトにするっす。
+export const DEFAULT_BLANK_FILE_SORT_PRIORITIES: readonly FileSortPriority[] = [
+	FILE_SORT_PRIORITIES.activity,
+	FILE_SORT_PRIORITIES.lastModified,
+	FILE_SORT_PRIORITIES.priorDesc,
 ];
 
 export interface MyPaletteSettings {
@@ -282,7 +293,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		// Start both states identically so the split adds control without changing
 		// the ordering users already expect from a fresh installation.
 		sortPriorities: {
-			blank: [...DEFAULT_FILE_SORT_PRIORITIES],
+			blank: [...DEFAULT_BLANK_FILE_SORT_PRIORITIES],
 			input: [...DEFAULT_FILE_SORT_PRIORITIES],
 		},
 	},

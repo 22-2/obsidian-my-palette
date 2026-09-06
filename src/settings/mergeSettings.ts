@@ -1,5 +1,6 @@
 import type { MyPaletteSettings } from "src/model/settings";
 import {
+	DEFAULT_BLANK_FILE_SORT_PRIORITIES,
 	DEFAULT_SETTINGS,
 	SETTING_LIMITS,
 	SETTINGS_SCHEMA_VERSION,
@@ -60,6 +61,10 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 			: rawSearchHistory.addDelayMs;
 	const rawSortPriorities = rawFile.sortPriorities;
 	const legacySortPriorities = normalizeFileSortPriorities(rawSortPriorities);
+	const legacyBlankSortPriorities = normalizeFileSortPriorities(
+		rawSortPriorities,
+		DEFAULT_BLANK_FILE_SORT_PRIORITIES,
+	);
 	// The old setting controlled both query states. Copy it into each branch so
 	// upgrading does not silently change either empty or typed search ordering.
 	const sortPriorities =
@@ -69,12 +74,13 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 			? {
 					blank: normalizeFileSortPriorities(
 						(rawSortPriorities as Record<string, unknown>).blank,
+						DEFAULT_BLANK_FILE_SORT_PRIORITIES,
 					),
 					input: normalizeFileSortPriorities(
 						(rawSortPriorities as Record<string, unknown>).input,
 					),
 				}
-			: { blank: [...legacySortPriorities], input: [...legacySortPriorities] };
+			: { blank: [...legacyBlankSortPriorities], input: [...legacySortPriorities] };
 
 	return {
 		...DEFAULT_SETTINGS,
