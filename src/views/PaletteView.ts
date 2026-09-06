@@ -107,7 +107,7 @@ export class PaletteView extends ItemView {
 	}
 
 	setTargetLeaf(leaf: WorkspaceLeaf | undefined): void {
-		if (!leaf || leaf === this.leaf || leaf.view.getViewType() === PALETTE_VIEW_TYPE) return;
+		if (!leaf || !this.isCenterLeaf(leaf)) return;
 		this.targetLeaf = leaf;
 	}
 
@@ -344,17 +344,15 @@ export class PaletteView extends ItemView {
 	}
 
 	private resolveTargetLeaf(): WorkspaceLeaf {
-		if (
-			this.targetLeaf &&
-			this.targetLeaf !== this.leaf &&
-			this.targetLeaf.view.getViewType() !== PALETTE_VIEW_TYPE
-		)
-			return this.targetLeaf;
+		// Clicks in the sidebar must always open in the center: never reuse a
+		// sidebar leaf, and never trust a cached leaf that has moved out of
+		// the main area. Prefer the current center leaf over any history.
 		const active = this.app.workspace.activeLeaf;
-		if (active && active !== this.leaf && active.view.getViewType() !== PALETTE_VIEW_TYPE) {
+		if (active && this.isCenterLeaf(active)) {
 			this.targetLeaf = active;
 			return active;
 		}
+		if (this.targetLeaf && this.isCenterLeaf(this.targetLeaf)) return this.targetLeaf;
 		// A sidebar can be opened with no note pane at all. Allocate a normal tab
 		// once so a first zap can never replace the palette view itself.
 		this.targetLeaf = this.app.workspace.getLeaf("tab");
@@ -440,8 +438,6 @@ export class PaletteView extends ItemView {
 	private resolveMocInsertionContext(): MocInsertionContext {
 		const mocLeaf = this.findTargetLeaf(this.sourcePath);
 		return {
-			// Resolve the pinned source first; the active leaf can be the palette
-			// itself after a context-menu interaction in the sidebar.
 			mocFile:
 				this.sourceFile(this.sourcePath) ?? (mocLeaf ? this.fileOf(mocLeaf) : null) ?? null,
 			mocLeaf,
@@ -463,31 +459,41 @@ export class PaletteView extends ItemView {
 		this.targetTrackingRegistered = true;
 		this.registerEvent(
 			this.app.workspace.on("active-leaf-change", (leaf) => {
-				if (!leaf || leaf === this.leaf || leaf.view.getViewType() === PALETTE_VIEW_TYPE)
-					return;
+				// Only center leaves are valid open/MOC targets; sidebar focus
+				// (including this palette) must never overwrite the target.
+				if (!leaf || !this.isCenterLeaf(leaf)) return;
 				if (this.fileOf(leaf)) this.targetLeaf = leaf;
 			}),
 		);
 	}
 
+	private isCenterLeaf(leaf: WorkspaceLeaf): boolean {
+		if (leaf === this.leaf || leaf.view.getViewType() === PALETTE_VIEW_TYPE) return false;
+		try {
+			// Sidebar leaves live under leftSplit/rightSplit; only rootSplit is center.
+			return leaf.getRoot() === this.app.workspace.rootSplit;
+		} catch {
+			return true;
+		}
+	}
+
 	private findTargetLeaf(sourcePath?: string): WorkspaceLeaf | undefined {
 		if (
 			this.targetLeaf &&
-			this.targetLeaf !== this.leaf &&
+			this.isCenterLeaf(this.targetLeaf) &&
 			(!sourcePath || this.fileOf(this.targetLeaf)?.path === sourcePath)
 		)
 			return this.targetLeaf;
 		if (sourcePath) {
 			let match: WorkspaceLeaf | undefined;
 			this.app.workspace.iterateAllLeaves((leaf) => {
-				if (!match && this.fileOf(leaf)?.path === sourcePath) match = leaf;
+				if (!match && this.isCenterLeaf(leaf) && this.fileOf(leaf)?.path === sourcePath)
+					match = leaf;
 			});
 			if (match) return match;
 		}
 		const active = this.app.workspace.activeLeaf;
-		return active && active !== this.leaf && active.view.getViewType() !== PALETTE_VIEW_TYPE
-			? active
-			: undefined;
+		return active && this.isCenterLeaf(active) ? active : undefined;
 	}
 
 	private sourceFile(sourcePath?: string) {
