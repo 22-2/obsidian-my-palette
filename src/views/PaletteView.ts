@@ -436,6 +436,15 @@ export class PaletteView extends ItemView {
 	}
 
 	private resolveMocInsertionContext(): MocInsertionContext {
+		// The sidebar palette keeps focus in its search input, so a cached
+		// sourcePath/targetLeaf can point at the previously active note. Prefer
+		// the currently active center note at click time.
+		const activeLeaf =
+			this.app.workspace.activeLeaf && this.isCenterLeaf(this.app.workspace.activeLeaf)
+				? this.app.workspace.activeLeaf
+				: undefined;
+		const activeFile = activeLeaf ? this.fileOf(activeLeaf) : undefined;
+		if (activeFile) return { mocFile: activeFile, mocLeaf: activeLeaf };
 		const mocLeaf = this.findTargetLeaf(this.sourcePath);
 		return {
 			mocFile:
