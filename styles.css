@@ -480,9 +480,17 @@
 }
 
 .my-palette-status-bar__text {
+	flex: 1 1 auto;
+	min-width: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+.my-palette-source-pin {
+	flex: 0 0 auto;
+	width: 24px;
+	height: 24px;
 }
 
 .my-palette-status-bar__count {

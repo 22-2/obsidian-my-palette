@@ -37,12 +37,14 @@ interface PaletteViewState extends Record<string, unknown> {
 	input?: unknown;
 	fixedMode?: unknown;
 	sourcePath?: unknown;
+	sourcePinned?: unknown;
 }
 
 interface NormalizedPaletteViewState {
 	input: string;
 	fixedMode?: FixedPaletteMode;
 	sourcePath?: string;
+	sourcePinned: boolean;
 }
 
 /** Persistent ItemView shell for searching while the note pane remains usable. */
@@ -55,9 +57,11 @@ export class PaletteView extends ItemView {
 	private activeMenu?: Menu;
 	private targetLeaf?: WorkspaceLeaf;
 	private sourcePath?: string;
+	private sourcePinned = false;
+	private sourcePinButton?: HTMLButtonElement;
 	private actionMessage?: string;
 	private targetTrackingRegistered = false;
-	private pendingState: NormalizedPaletteViewState = { input: "" };
+	private pendingState: NormalizedPaletteViewState = { input: "", sourcePinned: false };
 
 	constructor(
 		leaf: WorkspaceLeaf,
@@ -90,6 +94,7 @@ export class PaletteView extends ItemView {
 						state.input,
 						state.fixedMode,
 						state.sourcePath,
+						state.sourcePinned,
 					);
 				}),
 		);
@@ -99,7 +104,8 @@ export class PaletteView extends ItemView {
 		return {
 			input: this.session?.input ?? this.pendingState.input,
 			fixedMode: this.session?.fixed ?? this.pendingState.fixedMode,
-			sourcePath: this.sourcePath ?? this.pendingState.sourcePath,
+			sourcePath: this.sourcePinned ? this.sourcePath : undefined,
+			sourcePinned: this.sourcePinned,
 		};
 	}
 
@@ -107,10 +113,12 @@ export class PaletteView extends ItemView {
 		const next = normalizeState(state);
 		const fixedModeChanged = next.fixedMode !== this.pendingState.fixedMode;
 		const sourceChanged = next.sourcePath !== this.pendingState.sourcePath;
+		const sourcePinChanged = next.sourcePinned !== this.pendingState.sourcePinned;
 		this.pendingState = next;
-		this.sourcePath = this.pendingState.sourcePath;
+		this.sourcePinned = this.pendingState.sourcePinned;
+		this.sourcePath = this.sourcePinned ? this.pendingState.sourcePath : undefined;
 		if (!this.panel || !this.session) return;
-		if (fixedModeChanged || sourceChanged) {
+		if (fixedModeChanged || sourceChanged || sourcePinChanged) {
 			this.createSurface(this.pendingState);
 			return;
 		}
@@ -131,6 +139,7 @@ export class PaletteView extends ItemView {
 		this.session = undefined;
 		if (this.panel) this.removeChild(this.panel);
 		this.panel = undefined;
+		this.sourcePinButton = undefined;
 	}
 
 	setTargetLeaf(leaf: WorkspaceLeaf | undefined): void {
@@ -148,7 +157,8 @@ export class PaletteView extends ItemView {
 		this.panel = undefined;
 		this.actionMessage = undefined;
 		this.pendingState = state;
-		this.sourcePath = state.sourcePath;
+		this.sourcePinned = state.sourcePinned;
+		this.sourcePath = this.sourcePinned ? state.sourcePath : this.currentSourcePath();
 		this.targetLeaf = this.findTargetLeaf(state.sourcePath) ?? this.targetLeaf;
 		this.contentEl.empty();
 		this.contentEl.addClass("my-palette-view");
@@ -157,7 +167,9 @@ export class PaletteView extends ItemView {
 		this.session = new PaletteSearchSession(this.plugin, {
 			initialInput,
 			fixedMode: state.fixedMode,
-			sourceFile: this.sourceFile(state.sourcePath),
+			// Why: unpinned views derive the source from the current center note;
+			// passing the persisted state here would make their first search stale.
+			sourceFile: this.sourceFile(this.sourcePath),
 			onStateChange: (next) => this.renderState(next),
 		});
 		this.panel = new SuggestionPanel<PaletteResult>(this.contentEl, {
@@ -184,6 +196,7 @@ export class PaletteView extends ItemView {
 		});
 		this.addChild(this.panel);
 		this.panel.load();
+		this.addSourcePinControl();
 		this.addSearchHistoryControls();
 		this.registerTargetLeafTracking();
 		this.renderState(this.session.current);
@@ -196,12 +209,13 @@ export class PaletteView extends ItemView {
 	}
 
 	private newPaletteViewState(): NormalizedPaletteViewState {
-		// Duplicate this view's state instead of reading the active leaf: the active
-		// leaf is the sidebar itself and may not expose the note this view targets.
+		// Duplicate the pin state as well as the query: an unpinned view should keep
+		// following the active note, while a pinned view should remain reproducible.
 		return {
 			input: this.session?.input ?? this.pendingState.input,
 			fixedMode: this.session?.fixed ?? this.pendingState.fixedMode,
-			sourcePath: this.sourcePath ?? this.pendingState.sourcePath,
+			sourcePath: this.sourcePinned ? this.sourcePath : undefined,
+			sourcePinned: this.sourcePinned,
 		};
 	}
 
@@ -210,9 +224,10 @@ export class PaletteView extends ItemView {
 		this.panel.updatePlaceholder(palettePlaceholder(state.mode));
 		this.panel.setAttribute("data-mode", state.mode);
 		this.panel.setAttribute("data-everything-scope", state.everythingScope);
-		const source = this.sourcePath ?? this.app.workspace.getActiveFile()?.path;
+		const source = this.sourcePath ?? "No active note";
 		const suffix = this.actionMessage ? ` · ${this.actionMessage}` : "";
-		this.panel.updateFooterText(`Source: ${source ?? "No active note"}${suffix}`);
+		this.panel.updateFooterText(`Source: ${source}${suffix}`);
+		this.updateSourcePinControl();
 		this.panel.setResults({
 			items: state.results,
 			total: state.resultCount,
@@ -228,6 +243,75 @@ export class PaletteView extends ItemView {
 					history.includeIgnored,
 				),
 			);
+	}
+
+	private addSourcePinControl(): void {
+		if (!this.panel) return;
+		this.sourcePinButton = this.panel.statusBarEl.createEl("button", {
+			cls: "clickable-icon my-palette-source-pin",
+			attr: { type: "button" },
+		});
+		// Why: createEl appends after the result count; prepend keeps the pin action
+		// immediately beside the Source label as the footer's context control.
+		this.panel.statusBarEl.prepend(this.sourcePinButton);
+		this.registerDomEvent(this.sourcePinButton, "mousedown", (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+		});
+		this.registerDomEvent(this.sourcePinButton, "click", (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			this.toggleSourcePin();
+		});
+		this.updateSourcePinControl();
+	}
+
+	private updateSourcePinControl(): void {
+		if (!this.sourcePinButton) return;
+		this.sourcePinButton.empty();
+		setIcon(this.sourcePinButton, this.sourcePinned ? "pin" : "pin-off");
+		const action = this.sourcePinned ? "Unpin source note" : "Pin source note";
+		this.sourcePinButton.setAttribute("aria-label", action);
+		this.sourcePinButton.setAttribute("title", action);
+		this.sourcePinButton.setAttribute("aria-pressed", String(this.sourcePinned));
+	}
+
+	private toggleSourcePin(): void {
+		if (!this.session) return;
+		if (this.sourcePinned) {
+			this.sourcePinned = false;
+			this.pendingState = {
+				...this.pendingState,
+				sourcePinned: false,
+				sourcePath: undefined,
+			};
+			this.updateSource(this.currentSourceFile());
+			return;
+		}
+		const sourceFile = this.currentSourceFile();
+		if (!sourceFile) return;
+		this.sourcePinned = true;
+		this.sourcePath = sourceFile.path;
+		this.pendingState = {
+			...this.pendingState,
+			sourcePinned: true,
+			sourcePath: this.sourcePath,
+		};
+		this.session.setSourceFile(sourceFile);
+		this.renderState(this.session.current);
+	}
+
+	private updateSource(sourceFile: TFile | undefined): void {
+		const nextPath = sourceFile?.path;
+		const changed = nextPath !== this.sourcePath;
+		this.sourcePath = nextPath;
+		this.pendingState = {
+			...this.pendingState,
+			sourcePath: this.sourcePinned ? nextPath : undefined,
+			sourcePinned: this.sourcePinned,
+		};
+		if (changed) this.session?.setSourceFile(sourceFile);
+		if (this.session) this.renderState(this.session.current);
 	}
 
 	private addSearchHistoryControls(): void {
@@ -551,12 +635,29 @@ export class PaletteView extends ItemView {
 		this.targetTrackingRegistered = true;
 		this.registerEvent(
 			this.app.workspace.on("active-leaf-change", (leaf) => {
-				// Only center leaves are valid open/MOC targets; sidebar focus
-				// (including this palette) must never overwrite the target.
+				// Only center leaves can change the unpinned source; sidebar focus
+				// (including this palette) must never overwrite the active note.
 				if (!leaf || !this.isCenterLeaf(leaf)) return;
-				if (this.fileOf(leaf)) this.targetLeaf = leaf;
+				const file = this.fileOf(leaf);
+				if (file) this.targetLeaf = leaf;
+				if (!this.sourcePinned) this.updateSource(file);
 			}),
 		);
+	}
+
+	private currentSourceFile(): TFile | undefined {
+		const activeLeaf = this.app.workspace.activeLeaf;
+		if (activeLeaf && this.isCenterLeaf(activeLeaf)) return this.fileOf(activeLeaf);
+		if (this.targetLeaf && this.isCenterLeaf(this.targetLeaf))
+			return this.fileOf(this.targetLeaf);
+		const recentLeaf = this.app.workspace.getMostRecentLeaf(this.app.workspace.rootSplit);
+		return recentLeaf
+			? this.fileOf(recentLeaf)
+			: (this.app.workspace.getActiveFile() ?? undefined);
+	}
+
+	private currentSourcePath(): string | undefined {
+		return this.currentSourceFile()?.path;
 	}
 
 	private isCenterLeaf(leaf: WorkspaceLeaf): boolean {
@@ -614,5 +715,6 @@ function normalizeState(state: PaletteViewState): NormalizedPaletteViewState {
 		input: typeof state.input === "string" ? state.input : "",
 		fixedMode,
 		sourcePath: typeof state.sourcePath === "string" ? state.sourcePath : undefined,
+		sourcePinned: state.sourcePinned === true,
 	};
 }

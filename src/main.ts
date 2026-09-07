@@ -144,6 +144,7 @@ export default class MyPalettePlugin extends Plugin {
 		initialInput = this.getRememberedPaletteQuery("file"),
 		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
 		sourcePath?: string,
+		sourcePinned = false,
 	): Promise<void> {
 		// ensureSideLeaf intentionally reuses a view of the same type. A separate
 		// right-sidebar leaf is required here so users can keep independent searches
@@ -153,7 +154,7 @@ export default class MyPalettePlugin extends Plugin {
 		await leaf.setViewState({
 			type: PALETTE_VIEW_TYPE,
 			active: true,
-			state: this.paletteViewState(initialInput, fixedMode, sourcePath),
+			state: this.paletteViewState(initialInput, fixedMode, sourcePath, sourcePinned),
 		});
 		this.app.workspace.revealLeaf(leaf);
 		this.focusPaletteView(leaf);
@@ -162,26 +163,20 @@ export default class MyPalettePlugin extends Plugin {
 	private paletteViewState(
 		initialInput: string,
 		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
-		sourcePath = this.currentPaletteSourcePath(),
-	): { input: string; fixedMode?: typeof fixedMode; sourcePath?: string } {
+		sourcePath?: string,
+		sourcePinned = false,
+	): {
+		input: string;
+		fixedMode?: typeof fixedMode;
+		sourcePath?: string;
+		sourcePinned: boolean;
+	} {
 		return {
 			input: initialInput,
 			fixedMode,
-			sourcePath,
+			sourcePath: sourcePinned ? sourcePath : undefined,
+			sourcePinned,
 		};
-	}
-
-	private currentPaletteSourcePath(): string | undefined {
-		const sourcePath =
-			this.app.workspace.getActiveFile()?.path ??
-			(
-				this.app.workspace.getMostRecentLeaf(this.app.workspace.rootSplit)?.view as
-					| {
-							file?: { path?: unknown };
-					  }
-					| undefined
-			)?.file?.path;
-		return typeof sourcePath === "string" ? sourcePath : undefined;
 	}
 
 	private focusPaletteView(leaf: WorkspaceLeaf): void {

@@ -41,7 +41,7 @@ export class PaletteSearchSession {
 	private historyCommittedGeneration = -1;
 	private disposed = false;
 	private readonly fixedMode?: FixedPaletteMode;
-	private readonly sourceFile?: TFile;
+	private sourceFile?: TFile;
 	private readonly onStateChange?: (state: PaletteSearchState) => void;
 	private state: PaletteSearchState;
 
@@ -79,6 +79,18 @@ export class PaletteSearchSession {
 
 	get fixed(): FixedPaletteMode | undefined {
 		return this.fixedMode;
+	}
+
+	/** Update the note used by source-dependent modes without replacing the UI shell. */
+	setSourceFile(sourceFile?: TFile): void {
+		if (this.sourceFile?.path === sourceFile?.path) return;
+		this.sourceFile = sourceFile;
+		if (
+			this.state.mode === "link" ||
+			this.state.mode === "backlink" ||
+			this.state.mode === "smart"
+		)
+			void this.search(this.state.input, { suppressHistory: true });
 	}
 
 	/** Start a new provider search and discard any result from an older input. */
