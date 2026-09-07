@@ -396,8 +396,12 @@
 .my-palette-suggest-modal .suggestion-item.is-selected,
 .my-palette-panel .suggestion-item:hover,
 .my-palette-panel .suggestion-item.is-selected {
-	/* Why: hover should preview exactly the same state the user gets after selecting. */
-	background-color: var(--background-modifier-hover);
+	/* Why: the theme hover token is too subtle for a multi-selection preview. */
+	background-color: color-mix(
+		in srgb,
+		var(--interactive-accent) 22%,
+		var(--background-primary)
+	) !important;
 	color: var(--text-normal);
 }
 
