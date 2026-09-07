@@ -21,16 +21,19 @@ export async function openExternalMarkdown(
 			leaf.view.getFilePath().toLocaleLowerCase() === absolutePath.toLocaleLowerCase(),
 	);
 	if (existing) {
+		// A ReadOnly path has a single workspace leaf; reopening it is a navigation
+		// request, so focus that existing tab even when the original action was
+		// requested as a background open.
 		await existing.setViewState({
 			type: EXTERNAL_MARKDOWN_VIEW_TYPE,
-			active,
+			active: true,
 			state: {
 				path: absolutePath,
 				autoFocus: effectiveAutoFocus,
 				preview: !autoFocus && active,
 			},
 		});
-		if (active) plugin.app.workspace.revealLeaf(existing);
+		plugin.app.workspace.revealLeaf(existing);
 		return;
 	}
 	const previewLeaf = !autoFocus

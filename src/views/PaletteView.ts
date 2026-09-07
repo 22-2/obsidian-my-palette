@@ -20,6 +20,7 @@ import { SuggestionPanel } from "src/ui/suggestionPanel";
 import type { ActionKind } from "src/palette/resultActions";
 import { addMocInsertionMenuItem, type MocInsertionContext } from "src/palette/mocInsertion";
 import { PaletteHelpModal } from "src/ui/paletteHelpModal";
+import { EXTERNAL_MARKDOWN_VIEW_TYPE } from "src/views/ExternalMarkdownView";
 
 export const PALETTE_VIEW_TYPE = "my-palette-search";
 
@@ -326,6 +327,9 @@ export class PaletteView extends ItemView {
 			if (result.mode === "search-history") this.applySearchHistory(result);
 			return;
 		}
+		const existingExternalLeaves = this.app.workspace.getLeavesOfType(
+			EXTERNAL_MARKDOWN_VIEW_TYPE,
+		);
 		const targetLeaf = this.resolveTargetLeaf();
 		const execution: PaletteResultExecutionOptions = {
 			closeWhenDone: false,
@@ -340,7 +344,7 @@ export class PaletteView extends ItemView {
 			},
 		};
 		await executePaletteResult(this.plugin, result, action, execution);
-		this.panel.focusSearchInput();
+		this.focusPanelAfterAction(existingExternalLeaves);
 	}
 
 	private resolveTargetLeaf(): WorkspaceLeaf {
@@ -364,7 +368,23 @@ export class PaletteView extends ItemView {
 			if (result.mode === "search-history") this.applySearchHistory(result);
 			return;
 		}
+		const existingExternalLeaves = this.app.workspace.getLeavesOfType(
+			EXTERNAL_MARKDOWN_VIEW_TYPE,
+		);
 		await openPaletteResultInBackground(this.plugin, result);
+		this.focusPanelAfterAction(existingExternalLeaves);
+	}
+
+	private focusPanelAfterAction(existingExternalLeaves: readonly WorkspaceLeaf[]): void {
+		const activeLeaf = this.app.workspace.activeLeaf;
+		// Reusing a ReadOnly leaf reveals the requested tab. Focusing the sidebar
+		// input afterward would immediately activate the palette again and undo it.
+		if (
+			activeLeaf &&
+			existingExternalLeaves.includes(activeLeaf) &&
+			activeLeaf.view.getViewType() === EXTERNAL_MARKDOWN_VIEW_TYPE
+		)
+			return;
 		this.panel?.focusSearchInput();
 	}
 
