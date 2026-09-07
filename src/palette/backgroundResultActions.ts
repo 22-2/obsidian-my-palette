@@ -61,7 +61,7 @@ async function openPaletteResultInBackgroundInternal(
 				ignored: true,
 			});
 			if (target.kind === "readonly-markdown") {
-				await plugin.openExternalMarkdown(absolutePath, "primary", true, false);
+				await openExternalMarkdownInBackground(plugin, absolutePath);
 				return true;
 			}
 			new Notice("This item cannot be opened in a background Obsidian tab.");
@@ -99,11 +99,21 @@ async function openPaletteResultInBackgroundInternal(
 			Boolean(result.vaultPath) || isAbsolutePathUserIgnored(plugin.app, result.absolutePath),
 	});
 	if (target.kind === "readonly-markdown") {
-		await plugin.openExternalMarkdown(result.absolutePath, "primary", true, false);
+		await openExternalMarkdownInBackground(plugin, result.absolutePath);
 		return true;
 	}
 	new Notice("This item cannot be opened in a background Obsidian tab.");
 	return false;
+}
+
+async function openExternalMarkdownInBackground(
+	plugin: MyPalettePlugin,
+	absolutePath: string,
+): Promise<void> {
+	// The external viewer maps `primary` to the current leaf. Background opens
+	// must use its `alternate` target so ReadOnly results cannot overwrite the
+	// note that currently owns focus in the sidebar workflow.
+	await plugin.openExternalMarkdown(absolutePath, "alternate", true, false);
 }
 
 async function openFileInBackground(plugin: MyPalettePlugin, file: TFile): Promise<void> {
