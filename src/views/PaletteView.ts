@@ -269,7 +269,7 @@ export class PaletteView extends ItemView {
 	private updateSourcePinControl(): void {
 		if (!this.sourcePinButton) return;
 		this.sourcePinButton.empty();
-		setIcon(this.sourcePinButton, this.sourcePinned ? "pin" : "pin-off");
+		setIcon(this.sourcePinButton, this.sourcePinned ? "pin-off" : "pin");
 		const action = this.sourcePinned ? "Unpin source note" : "Pin source note";
 		this.sourcePinButton.setAttribute("aria-label", action);
 		this.sourcePinButton.setAttribute("title", action);
