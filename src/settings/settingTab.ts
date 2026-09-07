@@ -1,7 +1,7 @@
 import { PluginSettingTab, type SettingDefinitionItem } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import { DEFAULT_SETTINGS, SETTING_LIMITS } from "src/model/settings";
-import { bounded } from "src/settings/mergeSettings";
+import { bounded, excludedFolders } from "src/settings/mergeSettings";
 import { createSettingPages } from "src/settings/settingPages";
 
 export class MyPaletteSettingTab extends PluginSettingTab {
@@ -25,6 +25,7 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 			"prefixes.command": this.plugin.settings.prefixes.command,
 			"prefixes.everything": this.plugin.settings.prefixes.everything,
 			"prefixes.includeIgnored": this.plugin.settings.prefixes.includeIgnored,
+			"file.excludedFolders": this.plugin.settings.file.excludedFolders.join("\n"),
 			openExternalMarkdownInObsidian: this.plugin.settings.openExternalMarkdownInObsidian,
 			rememberLastInput: this.plugin.settings.rememberLastInput,
 			showLog: this.plugin.settings.showLog,
@@ -99,6 +100,9 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 				break;
 			case "prefixes.includeIgnored":
 				settings.prefixes.includeIgnored = String(value).replace(/[\r\n]/g, "");
+				break;
+			case "file.excludedFolders":
+				settings.file.excludedFolders = excludedFolders(String(value));
 				break;
 			case "openExternalMarkdownInObsidian":
 				settings.openExternalMarkdownInObsidian = Boolean(value);

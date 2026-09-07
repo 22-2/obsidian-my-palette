@@ -10,7 +10,7 @@ import {
 } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import { DEFAULT_SETTINGS, MILLISECONDS_PER_SECOND, SETTING_LIMITS } from "src/model/settings";
-import { extensions } from "src/settings/mergeSettings";
+import { excludedFolders, extensions } from "src/settings/mergeSettings";
 import { renderFileSortPriorityControl } from "src/settings/fileSortPriorityControl";
 
 type ControlType = "text" | "toggle" | "slider";
@@ -76,6 +76,23 @@ export function createSettingPages(
 
 function createFileSearchPage(plugin: MyPalettePlugin, helpers: SettingPageHelpers): PageItem {
 	return helpers.page("File search", "Control how Vault files are ordered in the palette.", [
+		helpers.group("Excluded folders", [
+			helpers.render(
+				"Excluded folders",
+				"Folder paths hidden from every file list, one per line. Subfolders are also hidden.",
+				(setting) =>
+					setting.addTextArea((text) =>
+						text
+							.setPlaceholder("archive\nprivate/diary")
+							.setValue(plugin.settings.file.excludedFolders.join("\n"))
+							.onChange(async (value) => {
+								// 保存時に正規化して重複を除くことで表示と検索判定のズレを防ぐ。
+								plugin.settings.file.excludedFolders = excludedFolders(value);
+								await plugin.saveSettings();
+							}),
+					),
+			),
+		]),
 		helpers.group("Sorting", [
 			helpers.render(
 				"Sort priorities",

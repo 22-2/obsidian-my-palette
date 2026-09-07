@@ -9,6 +9,10 @@ import { RelatedFileProvider } from "src/search/related/RelatedFileProvider";
 import { BookmarkProvider } from "src/search/bookmark/BookmarkProvider";
 import { SmartConnectionProvider } from "src/search/smart/SmartConnectionProvider";
 import type { PaletteProvider } from "src/search/PaletteProvider";
+import {
+	EMPTY_EXCLUDED_FOLDER_SOURCE,
+	type ExcludedFolderSource,
+} from "src/search/excludedFolders";
 import type { FileUsageScoreSource } from "src/search/file/fileUsageHistory";
 
 export interface PaletteProviderInstances {
@@ -24,6 +28,7 @@ export interface PaletteProviderInstances {
 interface ProviderFactoryOptions {
 	vaultExtensions: () => string[];
 	fileSortPriorities: () => FileSortPriorities;
+	excludedFolders?: ExcludedFolderSource;
 	recentCommandIds: () => string[];
 	everythingSettings: () => MyPaletteSettings["everything"];
 	fileUsageHistory?: FileUsageScoreSource;
@@ -39,22 +44,25 @@ export function createPaletteProviders(
 	everythingClient: EverythingHttpClient,
 	options: ProviderFactoryOptions,
 ): PaletteProviderInstances {
+	const excludedFolders = options.excludedFolders ?? EMPTY_EXCLUDED_FOLDER_SOURCE;
 	const fileProvider = new FileProvider(
 		app,
 		options.vaultExtensions,
 		options.log,
 		options.fileSortPriorities,
 		options.fileUsageHistory,
+		excludedFolders,
 	);
 	const commandProvider = new CommandProvider(app, options.recentCommandIds);
 	const everythingProvider = new EverythingProvider(
 		app,
 		everythingClient,
 		options.everythingSettings,
+		excludedFolders,
 	);
-	const relatedFileProvider = new RelatedFileProvider(app);
-	const bookmarkProvider = new BookmarkProvider(app);
-	const smartConnectionProvider = new SmartConnectionProvider(app);
+	const relatedFileProvider = new RelatedFileProvider(app, excludedFolders);
+	const bookmarkProvider = new BookmarkProvider(app, excludedFolders);
+	const smartConnectionProvider = new SmartConnectionProvider(app, excludedFolders);
 	return {
 		fileProvider,
 		commandProvider,

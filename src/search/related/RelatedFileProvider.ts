@@ -1,11 +1,19 @@
 import { TFile, type App, type LinkCache } from "obsidian";
+import {
+	EMPTY_EXCLUDED_FOLDER_SOURCE,
+	filterExcludedFolders,
+	type ExcludedFolderSource,
+} from "src/search/excludedFolders";
 import type { RelatedFileResult } from "src/model/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 
 /** Finds individual outgoing-link or incoming-link occurrences for the active note. */
 export class RelatedFileProvider implements PaletteProvider<RelatedFileResult> {
-	constructor(private readonly app: App) {}
+	constructor(
+		private readonly app: App,
+		private readonly excludedFolders: ExcludedFolderSource = EMPTY_EXCLUDED_FOLDER_SOURCE,
+	) {}
 
 	async search({ mode, query, sourceFile }: PaletteSearchRequest): Promise<RelatedFileResult[]> {
 		if (mode !== "link" && mode !== "backlink")
@@ -13,8 +21,13 @@ export class RelatedFileProvider implements PaletteProvider<RelatedFileResult> {
 		const origin = sourceFile ?? this.app.workspace.getActiveFile();
 		if (!origin) return [];
 		const occurrences = mode === "link" ? this.outgoing(origin) : this.incoming(origin);
+		const allowed = filterExcludedFolders(
+			this.excludedFolders,
+			occurrences,
+			({ file }) => file.path,
+		);
 		const results = await Promise.all(
-			occurrences.map(async ({ file, cache }) => {
+			allowed.map(async ({ file, cache }) => {
 				const content = await this.app.vault.cachedRead(file);
 				const line = cache.position.start.line;
 				const text = content.split(/\r?\n/)[line]?.trim() ?? "";

@@ -88,6 +88,7 @@ export default class MyPalettePlugin extends Plugin {
 		const providers = createPaletteProviders(this.app, this.everythingClient, {
 			vaultExtensions: () => this.settings.everything.vaultExtensions,
 			fileSortPriorities: () => this.settings.file.sortPriorities,
+			excludedFolders: () => this.settings.file.excludedFolders,
 			recentCommandIds: () =>
 				this.recentCommandStore
 					? [...this.recentCommandStore.getIds()]

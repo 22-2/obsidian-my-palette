@@ -32,6 +32,16 @@ export function extensions(value: unknown): string[] {
 	return [...new Set(normalized)];
 }
 
+export function excludedFolders(value: unknown): string[] {
+	if (typeof value === "string") value = value.split(/[\r\n,]+/);
+	if (!Array.isArray(value)) return [...DEFAULT_SETTINGS.file.excludedFolders];
+	const normalized = value
+		.filter((item): item is string => typeof item === "string")
+		.map((item) => item.trim().replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, ""))
+		.filter((item) => item.length > 0 && item !== "/" && !item.startsWith(".."));
+	return [...new Set(normalized)];
+}
+
 export function mergeSettings(data: unknown): MyPaletteSettings {
 	const source = (data && typeof data === "object" ? data : {}) as Record<string, unknown>;
 	const rawPrefixes = (source.prefixes ?? {}) as Record<string, unknown>;
@@ -113,6 +123,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 		prefixes,
 		file: {
 			sortPriorities,
+			excludedFolders: excludedFolders(rawFile.excludedFolders),
 		},
 		everything: {
 			httpUrl:

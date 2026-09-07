@@ -8,6 +8,11 @@ import {
 	type FileSortPriorities,
 } from "src/model/settings";
 import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
+import {
+	EMPTY_EXCLUDED_FOLDER_SOURCE,
+	isExcludedFolder,
+	type ExcludedFolderSource,
+} from "src/search/excludedFolders";
 import { createFileMatch, fileSearchKeys, type FileSearchEntry } from "src/search/file/fileMatch";
 import { sortFileMatches, sortFilesWithoutQuery } from "src/search/file/fileSorting";
 import { isTagOnlyQuery, normalizeTags } from "src/search/file/fileTags";
@@ -36,6 +41,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			input: [...DEFAULT_FILE_SORT_PRIORITIES],
 		}),
 		private readonly usageHistory?: FileUsageScoreSource,
+		private readonly excludedFolders: ExcludedFolderSource = EMPTY_EXCLUDED_FOLDER_SOURCE,
 	) {
 		this.updateAllowedExtensions();
 		this.rebuild();
@@ -115,16 +121,19 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		const recent = new Map(recentPaths.map((filePath, index) => [filePath, index]));
 		const usageScores = this.usageHistory?.getScores();
 		const ignoreFilters = getUserIgnoreFilters(this.app);
-		// Excluded files stay out of the normal index; the explicit prefix opts into
-		// the separate adapter-backed index below and prevents duplicate candidates.
+		// プラグイン共通の除外フォルダはObsidianの除外設定と合わせて判定する。
+		// includeIgnored指定時のみ両方をまとめて解除し、通常検索では常に除外する。
 		const entries = [...this.cache.values()].filter(
-			(entry) => !isUserIgnoredPathWithFilters(ignoreFilters, entry.path),
+			(entry) =>
+				!isUserIgnoredPathWithFilters(ignoreFilters, entry.path) &&
+				!isExcludedFolder(this.excludedFolders, entry.path),
 		);
 		if (includeIgnored) {
 			// The explicit prefix also authorizes an empty-query listing. The
 			// result limit in the palette keeps the UI bounded while the sorter
 			// places ignored notes before the normal Vault entries.
 			for (const ignored of await this.ignoredIndex.getEntries()) {
+				if (isExcludedFolder(this.excludedFolders, ignored.path)) continue;
 				const entry: FileSearchEntry = {
 					path: ignored.path,
 					basename: ignored.basename,

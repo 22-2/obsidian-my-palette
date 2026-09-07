@@ -4,6 +4,11 @@ import {
 	isUserIgnoredPath,
 	vaultPathFromAbsolute,
 } from "src/ignored-notes/ignoredPaths";
+import {
+	EMPTY_EXCLUDED_FOLDER_SOURCE,
+	isExcludedFolder,
+	type ExcludedFolderSource,
+} from "src/search/excludedFolders";
 import type { MyPaletteSettings } from "src/model/settings";
 import type { EverythingResult } from "src/model/results";
 import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
@@ -15,6 +20,7 @@ export class EverythingProvider implements PaletteProvider<EverythingResult> {
 		private readonly app: App,
 		private readonly client: EverythingHttpClient,
 		private readonly settings: () => MyPaletteSettings["everything"],
+		private readonly excludedFolders: ExcludedFolderSource = EMPTY_EXCLUDED_FOLDER_SOURCE,
 	) {}
 	async search({
 		query,
@@ -38,6 +44,7 @@ export class EverythingProvider implements PaletteProvider<EverythingResult> {
 				if (result.kind !== "file") return [];
 				const vaultPath = vaultPathFromAbsolute(this.app, result.absolutePath);
 				if (vaultPath === null) return [];
+				if (isExcludedFolder(this.excludedFolders, vaultPath)) return [];
 				if (scope === "vault") {
 					if (isUserIgnoredPath(this.app, vaultPath) || hasHiddenSegment(vaultPath))
 						return [];

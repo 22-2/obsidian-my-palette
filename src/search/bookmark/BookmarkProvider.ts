@@ -1,4 +1,9 @@
 import { TFile, type App } from "obsidian";
+import {
+	EMPTY_EXCLUDED_FOLDER_SOURCE,
+	filterExcludedFolders,
+	type ExcludedFolderSource,
+} from "src/search/excludedFolders";
 import type { BookmarkResult } from "src/model/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
@@ -17,7 +22,10 @@ interface BookmarksPlugin {
 
 /** Reads the core Bookmarks plugin's nested items and exposes usable entries for the palette. */
 export class BookmarkProvider implements PaletteProvider<BookmarkResult> {
-	constructor(private readonly app: App) {}
+	constructor(
+		private readonly app: App,
+		private readonly excludedFolders: ExcludedFolderSource = EMPTY_EXCLUDED_FOLDER_SOURCE,
+	) {}
 
 	async search({ query }: PaletteSearchRequest): Promise<BookmarkResult[]> {
 		const plugin = (
@@ -28,8 +36,12 @@ export class BookmarkProvider implements PaletteProvider<BookmarkResult> {
 			}
 		).internalPlugins?.getEnabledPluginById("bookmarks");
 		const results = this.flatten(plugin?.items ?? []);
-		if (!query.trim()) return results;
-		return searchFuzzyQuery(query, results, [
+		// search種別には紐づくファイルがないため、file種別のみ共通除外を適用する。
+		const visible = filterExcludedFolders(this.excludedFolders, results, (result) =>
+			result.kind === "file" ? result.file?.path : undefined,
+		);
+		if (!query.trim()) return visible;
+		return searchFuzzyQuery(query, visible, [
 			(result) => result.primary,
 			(result) => result.secondary,
 		]).map(({ obj }) => obj);

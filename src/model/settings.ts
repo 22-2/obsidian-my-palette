@@ -265,6 +265,7 @@ export interface MyPaletteSettings {
 	prefixes: { command: string; everything: string; includeIgnored: string };
 	file: {
 		sortPriorities: FileSortPriorities;
+		excludedFolders: string[];
 	};
 	everything: {
 		httpUrl: string;
@@ -296,6 +297,8 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 			blank: [...DEFAULT_BLANK_FILE_SORT_PRIORITIES],
 			input: [...DEFAULT_FILE_SORT_PRIORITIES],
 		},
+		// プラグイン共通の除外フォルダ。Obsidianの除外設定とは独立に全リストへ適用する。
+		excludedFolders: [],
 	},
 	everything: {
 		httpUrl: "http://127.0.0.1:51361/",

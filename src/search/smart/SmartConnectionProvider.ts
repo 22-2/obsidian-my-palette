@@ -1,4 +1,9 @@
 import { TFile, type App } from "obsidian";
+import {
+	EMPTY_EXCLUDED_FOLDER_SOURCE,
+	isExcludedFolder,
+	type ExcludedFolderSource,
+} from "src/search/excludedFolders";
 import type { SmartConnectionResult } from "src/model/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
@@ -23,7 +28,10 @@ interface SmartConnectionsEnvironment {
 
 /** Queries Smart Connections' existing embeddings for notes related to the active note. */
 export class SmartConnectionProvider implements PaletteProvider<SmartConnectionResult> {
-	constructor(private readonly app: App) {}
+	constructor(
+		private readonly app: App,
+		private readonly excludedFolders: ExcludedFolderSource = EMPTY_EXCLUDED_FOLDER_SOURCE,
+	) {}
 
 	async search({ query, sourceFile }: PaletteSearchRequest): Promise<SmartConnectionResult[]> {
 		const origin = sourceFile ?? this.app.workspace.getActiveFile();
@@ -43,6 +51,7 @@ export class SmartConnectionProvider implements PaletteProvider<SmartConnectionR
 		const results = nearest.flatMap(({ item, score }) => {
 			const file = this.app.vault.getAbstractFileByPath(item.key);
 			if (!(file instanceof TFile) || file.path === origin.path) return [];
+			if (isExcludedFolder(this.excludedFolders, file.path)) return [];
 			return [
 				{
 					id: `smart:${file.path}`,
