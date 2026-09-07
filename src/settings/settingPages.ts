@@ -128,23 +128,23 @@ function createPalettePage(plugin: MyPalettePlugin, helpers: SettingPageHelpers)
 		"Palette",
 		"Prefixes, remembered input, search history, external Markdown, and diagnostics.",
 		[
-			helpers.group("Prefixes", [
-				{
-					name: "Command prefix",
-					desc: "Prefix used to search Obsidian commands.",
-					...helpers.control("text", "prefixes.command"),
-				},
-				{
-					name: "Everything prefix",
-					desc: "Prefix used to search Everything.",
-					...helpers.control("text", "prefixes.everything"),
-				},
-				{
-					name: "Include ignored prefix",
-					desc: "Prefix that includes excluded folders in supported file searches.",
-					...helpers.control("text", "prefixes.includeIgnored"),
-				},
-			]),
+			// helpers.group("Prefixes", [
+			// 	{
+			// 		name: "Command prefix",
+			// 		desc: "Prefix used to search Obsidian commands.",
+			// 		...helpers.control("text", "prefixes.command"),
+			// 	},
+			// 	{
+			// 		name: "Everything prefix",
+			// 		desc: "Prefix used to search Everything.",
+			// 		...helpers.control("text", "prefixes.everything"),
+			// 	},
+			// 	{
+			// 		name: "Include ignored prefix",
+			// 		desc: "Prefix that includes excluded folders in supported file searches.",
+			// 		...helpers.control("text", "prefixes.includeIgnored"),
+			// 	},
+			// ]),
 			helpers.group("Palette behavior", [
 				{
 					name: "Remember last input",
@@ -153,24 +153,24 @@ function createPalettePage(plugin: MyPalettePlugin, helpers: SettingPageHelpers)
 				},
 			]),
 			helpers.group("Search history", [
-				{
-					name: "Enable search history",
-					desc: "Remember searches after a result is used, across all palette modes.",
-					...helpers.control("toggle", "searchHistory.enabled"),
-				},
-				{
-					name: "Keep history",
-					desc: "Number of days to keep entries. 0 keeps them forever.",
-					...helpers.control("slider", "searchHistory.daysToKeep", {
-						min: SETTING_LIMITS.searchHistory.daysToKeep.min,
-						max: SETTING_LIMITS.searchHistory.daysToKeep.max,
-						step: SETTING_LIMITS.searchHistory.daysToKeep.step,
-						displayFormat: (value: number) =>
-							value === SETTING_LIMITS.searchHistory.daysToKeep.min
-								? "Forever"
-								: `${value} days`,
-					}),
-				},
+				// {
+				// 	name: "Enable search history",
+				// 	desc: "Remember searches after a result is used, across all palette modes.",
+				// 	...helpers.control("toggle", "searchHistory.enabled"),
+				// },
+				// {
+				// 	name: "Keep history",
+				// 	desc: "Number of days to keep entries. 0 keeps them forever.",
+				// 	...helpers.control("slider", "searchHistory.daysToKeep", {
+				// 		min: SETTING_LIMITS.searchHistory.daysToKeep.min,
+				// 		max: SETTING_LIMITS.searchHistory.daysToKeep.max,
+				// 		step: SETTING_LIMITS.searchHistory.daysToKeep.step,
+				// 		displayFormat: (value: number) =>
+				// 			value === SETTING_LIMITS.searchHistory.daysToKeep.min
+				// 				? "Forever"
+				// 				: `${value} days`,
+				// 	}),
+				// },
 				{
 					name: "Clear search history",
 					desc: "Permanently remove all stored search history.",
@@ -180,13 +180,13 @@ function createPalettePage(plugin: MyPalettePlugin, helpers: SettingPageHelpers)
 					},
 				},
 			]),
-			helpers.group("File opening", [
-				{
-					name: "Open external Markdown in Obsidian",
-					desc: "Open Markdown files outside the vault in a virtual Obsidian editor.",
-					...helpers.control("toggle", "openExternalMarkdownInObsidian"),
-				},
-			]),
+			// helpers.group("File opening", [
+			// 	{
+			// 		name: "Open external Markdown in Obsidian",
+			// 		desc: "Open Markdown files outside the vault in a virtual Obsidian editor.",
+			// 		...helpers.control("toggle", "openExternalMarkdownInObsidian"),
+			// 	},
+			// ]),
 			helpers.group("Diagnostics", [
 				{
 					name: "Show debug messages",
@@ -244,37 +244,37 @@ function createEverythingPage(
 					},
 				},
 			]),
-			helpers.group("Search", [
-				{
-					name: "Maximum results",
-					desc: "Maximum number of results returned by Everything.",
-					...helpers.control("slider", "everything.maxResults", {
-						min: SETTING_LIMITS.everything.maxResults.min,
-						max: SETTING_LIMITS.everything.maxResults.max,
-						step: SETTING_LIMITS.everything.maxResults.step,
-					}),
-				},
-				{
-					name: "Request timeout",
-					desc: "Maximum time to wait for an Everything response.",
-					...helpers.control("slider", "everything.requestTimeoutMs", {
-						min: SETTING_LIMITS.everything.requestTimeoutMs.min,
-						max: SETTING_LIMITS.everything.requestTimeoutMs.max,
-						step: SETTING_LIMITS.everything.requestTimeoutMs.step,
-						displayFormat: (value: number) => `${value / MILLISECONDS_PER_SECOND}s`,
-					}),
-				},
-				{
-					name: "Search debounce",
-					desc: "Delay before sending a new Everything search.",
-					...helpers.control("slider", "everything.debounceMs", {
-						min: SETTING_LIMITS.everything.debounceMs.min,
-						max: SETTING_LIMITS.everything.debounceMs.max,
-						step: SETTING_LIMITS.everything.debounceMs.step,
-						displayFormat: (value: number) => `${value}ms`,
-					}),
-				},
-			]),
+			// helpers.group("Search", [
+			// 	{
+			// 		name: "Maximum results",
+			// 		desc: "Maximum number of results returned by Everything.",
+			// 		...helpers.control("slider", "everything.maxResults", {
+			// 			min: SETTING_LIMITS.everything.maxResults.min,
+			// 			max: SETTING_LIMITS.everything.maxResults.max,
+			// 			step: SETTING_LIMITS.everything.maxResults.step,
+			// 		}),
+			// 	},
+			// 	{
+			// 		name: "Request timeout",
+			// 		desc: "Maximum time to wait for an Everything response.",
+			// 		...helpers.control("slider", "everything.requestTimeoutMs", {
+			// 			min: SETTING_LIMITS.everything.requestTimeoutMs.min,
+			// 			max: SETTING_LIMITS.everything.requestTimeoutMs.max,
+			// 			step: SETTING_LIMITS.everything.requestTimeoutMs.step,
+			// 			displayFormat: (value: number) => `${value / MILLISECONDS_PER_SECOND}s`,
+			// 		}),
+			// 	},
+			// 	{
+			// 		name: "Search debounce",
+			// 		desc: "Delay before sending a new Everything search.",
+			// 		...helpers.control("slider", "everything.debounceMs", {
+			// 			min: SETTING_LIMITS.everything.debounceMs.min,
+			// 			max: SETTING_LIMITS.everything.debounceMs.max,
+			// 			step: SETTING_LIMITS.everything.debounceMs.step,
+			// 			displayFormat: (value: number) => `${value}ms`,
+			// 		}),
+			// 	},
+			// ]),
 			helpers.group("Vault search", [
 				helpers.render(
 					"Vault search extensions",
