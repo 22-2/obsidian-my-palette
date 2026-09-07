@@ -62,7 +62,7 @@ additional matches. Hover the row to see the full matching-tag list.
 
 ### File sort priorities
 
-File ordering is configured from `Settings → My Palette → File search → Sort
+File ordering is configured from `Settings → My Palette → Vault file search → Sort
 priorities`, with one priority per line. The first priority that differs wins.
 Supported priorities are `Filename prefix match`, `Filename fuzzy match`,
 `Alias prefix match`, `Alias fuzzy match`, `Tag match`, `Match coverage`, `Folder path match`,

@@ -58,7 +58,7 @@ File 検索では、インラインタグと frontmatter の `tags` の両方を
 
 ### ファイルのソート
 
-ファイルの並び順は `Settings → My Palette → File search → Sort priorities` で、1行につき1つの priority を指定して設定します。上から順に比較し、差がついた最初の priority が採用されます。
+ファイルの並び順は `Settings → My Palette → Vault file search → Sort priorities` で、1行につき1つの priority を指定して設定します。上から順に比較し、差がついた最初の priority が採用されます。
 
 利用できる priority は `Filename prefix match`、`Filename fuzzy match`、`Alias prefix match`、`Alias fuzzy match`、`Tag match`、`Match coverage`、`Folder path match`、`Activity`、`Last modified`、`Aliases count`、`Alphabetical`、`Alphabetical reverse`、および任意の `:asc` / `:desc` を付けられる `@prior` です。`prior` が未設定のファイルは後ろに置かれます。
 

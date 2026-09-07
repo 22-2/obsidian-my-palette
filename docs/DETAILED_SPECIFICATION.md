@@ -181,7 +181,7 @@ Obsidian が保持する「最近開いたファイル」を検索候補へ渡�
 - 空白で区切った語は AND 条件とし、すべての語に一致する項目だけを表示する。
 - `|` で区切った条件は OR 条件とし、いずれかの条件に一致する項目を表示する。
 - AND / OR 検索は File、Command、Link、Backlink、Bookmark、Smart Connections モードに適用する。Everything モードのクエリは Everything 自身の検索構文として無変換で渡す。
-- 並び順は `File search` 設定の `sortPriorities.blank`（空白時）または
+- 並び順は `Vault file search` 設定の `sortPriorities.blank`（空白時）または
   `sortPriorities.input`（入力時）を上から適用する。
 - `@prior:asc` / `@prior:desc` は frontmatter の数値 `prior` を比較し、未設定値は最後に置く。
 - `Filename prefix match` / `Filename fuzzy match` はファイル名、`Alias prefix match` / `Alias fuzzy match` は frontmatter の aliases、`Folder path match` はファイル名を除いた Vault 内の相対フォルダーパスを対象に比較する。
@@ -465,16 +465,13 @@ Everythingページには次を設ける。
 
 ### 9.5 Settings screen layout
 
-設定画面は保存データの階層ではなく、利用目的でページを分ける。よく使う操作を上位に置き、複数の目的を「その他」系のページへ詰め込まない。
+設定画面は保存データの階層ではなく、利用目的で3ページに分ける。Obsidianの設定は別ウィンドウで開くため、少数の設定だけを別ページにせず、関連する補助設定を主目的のページへまとめる。各ページの説明には、ページ内で変更できる設定の種類を列挙する。
 
-| ページ           | 内容                                           |
-| ---------------- | ---------------------------------------------- |
-| `Palette`        | 各検索モードのプレフィックス、最後の入力の復元 |
-| `File search`    | Vaultファイルの並び順                          |
-| `Search history` | 履歴の有効化、保持期間、履歴削除               |
-| `Everything`     | 接続設定とEverything/Vault検索の詳細           |
-| `File opening`   | Vault外MarkdownをObsidianで開く挙動            |
-| `Advanced`       | デバッグメッセージなどの診断設定               |
+| ページ              | 内容                                                                              |
+| ------------------- | --------------------------------------------------------------------------------- |
+| `Palette`           | プレフィックス、最後の入力の復元、検索履歴、Vault外Markdownの開き方、診断設定     |
+| `Vault file search` | 除外フォルダとVaultファイルの検索結果の並び順                                     |
+| `Everything`        | Everything 1.5の接続・認証、結果件数、対象拡張子、検索タイミング、Vault検索の詳細 |
 
 ## 10. データモデル
 
