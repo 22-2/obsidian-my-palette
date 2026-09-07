@@ -275,7 +275,6 @@ export interface MyPaletteSettings {
 		debounceMs: number;
 		requestTimeoutMs: number;
 		vaultExtensions: string[];
-		directorySearchMarkdownOnly: boolean;
 	};
 }
 
@@ -308,6 +307,5 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		debounceMs: SETTING_DEFAULTS.everything.debounceMs,
 		requestTimeoutMs: SETTING_DEFAULTS.everything.requestTimeoutMs,
 		vaultExtensions: ["md", "canvas", "base"],
-		directorySearchMarkdownOnly: true,
 	},
 };

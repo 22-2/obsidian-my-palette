@@ -151,10 +151,6 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 				SETTING_LIMITS.everything.requestTimeoutMs.max,
 			),
 			vaultExtensions: extensions(rawEverything.vaultExtensions),
-			directorySearchMarkdownOnly:
-				typeof rawEverything.directorySearchMarkdownOnly === "boolean"
-					? rawEverything.directorySearchMarkdownOnly
-					: true,
 		},
 	};
 }

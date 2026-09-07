@@ -293,11 +293,6 @@ function createEverythingPage(
 								}),
 						),
 				),
-				{
-					name: "Limit esdir to Markdown files",
-					desc: "Adds ext:md to esdir searches. Turn off to search every file type.",
-					...helpers.control("toggle", "everything.directorySearchMarkdownOnly"),
-				},
 			]),
 		],
 	);

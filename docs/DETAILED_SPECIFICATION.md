@@ -426,13 +426,12 @@ http://127.0.0.1:51361/?search=<query>&json=1&count=100&path_column=1&attributes
 | `everything.debounceMs`                  | number   | `150`                     | 50〜1000                     |
 | `everything.requestTimeoutMs`            | number   | `30000`                   | 1000〜60000                  |
 | `everything.vaultExtensions`             | string[] | `["md","canvas","base"]`  | Vault検索の対象拡張子        |
-| `everything.directorySearchMarkdownOnly` | boolean  | `true`                    | `esdir` に `ext:md` を付ける |
 
 Everythingページには次を設ける。
 
 - 接続: HTTP Server URL、任意のユーザー名・パスワード、接続テスト
 - 検索: 最大結果件数、HTTPリクエストタイムアウト、検索デバウンス
-- Vault検索: 対象拡張子、`esdir` のMarkdown限定
+- Vault検索: 対象拡張子。`esdir` はVault配下の全ファイルを対象とする
 
 パスワードはプラグインのローカル `data.json` に保存されることを設定画面に明記する。
 

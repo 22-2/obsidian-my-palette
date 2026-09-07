@@ -9,7 +9,6 @@ const settings = {
 	debounceMs: 150,
 	requestTimeoutMs: 10_000,
 	vaultExtensions: ["md"],
-	directorySearchMarkdownOnly: true,
 };
 
 type EverythingResponse = { status: number; arrayBuffer: ArrayBuffer; text: string };

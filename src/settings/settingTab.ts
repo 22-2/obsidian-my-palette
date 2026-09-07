@@ -17,8 +17,6 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 			"everything.maxResults": this.plugin.settings.everything.maxResults,
 			"everything.debounceMs": this.plugin.settings.everything.debounceMs,
 			"everything.requestTimeoutMs": this.plugin.settings.everything.requestTimeoutMs,
-			"everything.directorySearchMarkdownOnly":
-				this.plugin.settings.everything.directorySearchMarkdownOnly,
 			"searchHistory.enabled": this.plugin.settings.searchHistory.enabled,
 			"searchHistory.addDelayMs": this.plugin.settings.searchHistory.addDelayMs,
 			"searchHistory.daysToKeep": this.plugin.settings.searchHistory.daysToKeep,
@@ -68,9 +66,6 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 					SETTING_LIMITS.everything.requestTimeoutMs.min,
 					SETTING_LIMITS.everything.requestTimeoutMs.max,
 				);
-				break;
-			case "everything.directorySearchMarkdownOnly":
-				settings.everything.directorySearchMarkdownOnly = Boolean(value);
 				break;
 			case "searchHistory.enabled":
 				settings.searchHistory.enabled = Boolean(value);
