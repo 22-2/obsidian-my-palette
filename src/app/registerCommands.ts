@@ -24,6 +24,11 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		callback: () => void plugin.openPaletteView(plugin.getRememberedPaletteQuery("file")),
 	});
 	plugin.addCommand({
+		id: "open-new-view",
+		name: "Open new palette in right sidebar",
+		callback: () => void plugin.openNewPaletteView(plugin.getRememberedPaletteQuery("file")),
+	});
+	plugin.addCommand({
 		id: "show-current-line-number",
 		name: "Show current line number",
 		checkCallback: (checking) => {

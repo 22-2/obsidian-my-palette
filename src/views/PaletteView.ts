@@ -160,8 +160,11 @@ export class PaletteView extends ItemView {
 		this.registerTargetLeafTracking();
 		this.renderState(this.session.current);
 		void this.session.search(initialInput);
-		this.panel.focusSearchInput();
 		this.panel.setInput(initialInput, "end");
+	}
+
+	focusSearchInput(): void {
+		this.panel?.focusSearchInput();
 	}
 
 	private renderState(state: PaletteSearchState): void {

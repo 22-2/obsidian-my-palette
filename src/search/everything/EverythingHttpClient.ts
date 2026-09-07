@@ -24,13 +24,13 @@ declare global {
 }
 
 export class EverythingHttpClient {
-	private active: AbortController | null = null;
+	private readonly active = new Set<AbortController>();
 
 	constructor(private readonly debug?: (message: string, detail?: unknown) => void) {}
 
 	cancel(): void {
-		this.active?.abort();
-		this.active = null;
+		for (const controller of this.active) controller.abort();
+		this.active.clear();
 	}
 
 	async search(
@@ -41,20 +41,22 @@ export class EverythingHttpClient {
 	): Promise<EverythingResult[]> {
 		const endpoint = this.buildUrl(query, settings, limit);
 		if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-		this.cancel();
 		this.debug?.("Requesting Everything HTTP Server", endpoint.toString());
 
 		const controller = new AbortController();
-		this.active = controller;
-		signal?.addEventListener("abort", () => controller.abort(), { once: true });
+		this.active.add(controller);
+		const abortFromCaller = () => controller.abort();
+		signal?.addEventListener("abort", abortFromCaller, { once: true });
 		const headers: Record<string, string> = { Accept: "application/json" };
 		if (settings.username)
 			headers.Authorization = `Basic ${btoa(`${settings.username}:${settings.password}`)}`;
-		const timeout = new Promise<never>((_, reject) =>
-			window.setTimeout(
-				() => reject(new Error("Everything HTTP search timed out.")),
-				settings.requestTimeoutMs,
-			),
+		let timeoutId: number | undefined;
+		const timeout = new Promise<never>(
+			(_, reject) =>
+				(timeoutId = window.setTimeout(
+					() => reject(new Error("Everything HTTP search timed out.")),
+					settings.requestTimeoutMs,
+				)),
 		);
 		try {
 			const response = await Promise.race([
@@ -77,7 +79,9 @@ export class EverythingHttpClient {
 			if (controller.signal.aborted) throw new DOMException("Aborted", "AbortError");
 			throw error;
 		} finally {
-			if (this.active === controller) this.active = null;
+			if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+			signal?.removeEventListener("abort", abortFromCaller);
+			this.active.delete(controller);
 		}
 	}
 

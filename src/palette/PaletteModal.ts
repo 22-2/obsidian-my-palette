@@ -151,12 +151,13 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 
 	protected override onSelectionModalClose(): void {
 		this.plugin.releasePaletteModal(this);
+		// This session owns the request signal; canceling the shared client here
+		// would also interrupt searches in still-open sidebar views.
 		this.session.dispose();
 		this.activeMenu?.close();
 		this.activeMenu = undefined;
 		this.historySuggest?.destroy();
 		this.historySuggest = undefined;
-		this.plugin.everythingClient.cancel();
 	}
 
 	protected override getInitialInputSelectionRange(): [number, number] {

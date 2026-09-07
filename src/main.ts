@@ -1,4 +1,4 @@
-import { Plugin } from "obsidian";
+import { Plugin, type WorkspaceLeaf } from "obsidian";
 import log, { LogLevels } from "consola";
 import { DEFAULT_SETTINGS, MyPaletteSettingTab } from "src/settings";
 import type { MyPaletteSettings } from "src/model/settings";
@@ -10,7 +10,7 @@ import { registerPluginCommands } from "src/app/registerCommands";
 import { registerPluginEvents } from "src/app/registerEvents";
 import { openExternalMarkdown } from "src/app/openExternalMarkdown";
 import { PaletteModal } from "src/palette/PaletteModal";
-import { PALETTE_VIEW_TYPE } from "src/views/PaletteView";
+import { PALETTE_VIEW_TYPE, PaletteView } from "src/views/PaletteView";
 import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
 import type { PaletteMode, PaletteResult, SearchHistoryResult } from "src/model/results";
 import type { SearchHistoryCategory, SearchHistoryEntry } from "src/model/settings";
@@ -132,13 +132,56 @@ export default class MyPalettePlugin extends Plugin {
 		initialInput = this.getRememberedPaletteQuery("file"),
 		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
 	): Promise<void> {
-		const sourcePath = this.app.workspace.getActiveFile()?.path;
-		const state = { input: initialInput, fixedMode, sourcePath };
-		await this.app.workspace.ensureSideLeaf(PALETTE_VIEW_TYPE, "right", {
+		const leaf = await this.app.workspace.ensureSideLeaf(PALETTE_VIEW_TYPE, "right", {
 			active: true,
 			reveal: true,
-			state,
+			state: this.paletteViewState(initialInput, fixedMode),
 		});
+		this.focusPaletteView(leaf);
+	}
+
+	async openNewPaletteView(
+		initialInput = this.getRememberedPaletteQuery("file"),
+		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
+	): Promise<void> {
+		// ensureSideLeaf intentionally reuses a view of the same type. A separate
+		// right-sidebar leaf is required here so users can keep independent searches
+		// open at the same time.
+		const leaf = this.app.workspace.getRightLeaf(false);
+		if (!leaf) return;
+		await leaf.setViewState({
+			type: PALETTE_VIEW_TYPE,
+			active: true,
+			state: this.paletteViewState(initialInput, fixedMode),
+		});
+		this.app.workspace.revealLeaf(leaf);
+		this.focusPaletteView(leaf);
+	}
+
+	private paletteViewState(
+		initialInput: string,
+		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
+	): { input: string; fixedMode?: typeof fixedMode; sourcePath?: string } {
+		const sourcePath =
+			this.app.workspace.getActiveFile()?.path ??
+			(
+				this.app.workspace.getMostRecentLeaf(this.app.workspace.rootSplit)?.view as
+					| {
+							file?: { path?: unknown };
+					  }
+					| undefined
+			)?.file?.path;
+		return {
+			input: initialInput,
+			fixedMode,
+			sourcePath: typeof sourcePath === "string" ? sourcePath : undefined,
+		};
+	}
+
+	private focusPaletteView(leaf: WorkspaceLeaf): void {
+		// Focus is explicit for command-created views; restored views must not steal
+		// focus from the editor merely because Obsidian reopened their ItemView.
+		if (leaf.view instanceof PaletteView) leaf.view.focusSearchInput();
 	}
 
 	releasePaletteModal(modal: PaletteModal): void {
