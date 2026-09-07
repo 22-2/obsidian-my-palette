@@ -69,6 +69,23 @@ export class PaletteView extends ItemView {
 		return "search";
 	}
 
+	override onPaneMenu(menu: Menu, source: string): void {
+		super.onPaneMenu(menu, source);
+		menu.addItem((item) =>
+			item
+				.setTitle("Open new palette in right sidebar")
+				.setIcon("plus")
+				.onClick(() => {
+					const state = this.newPaletteViewState();
+					void this.plugin.openNewPaletteView(
+						state.input,
+						state.fixedMode,
+						state.sourcePath,
+					);
+				}),
+		);
+	}
+
 	getState(): PaletteViewState {
 		return {
 			input: this.session?.input ?? this.pendingState.input,
@@ -165,6 +182,16 @@ export class PaletteView extends ItemView {
 
 	focusSearchInput(): void {
 		this.panel?.focusSearchInput();
+	}
+
+	private newPaletteViewState(): NormalizedPaletteViewState {
+		// Duplicate this view's state instead of reading the active leaf: the active
+		// leaf is the sidebar itself and may not expose the note this view targets.
+		return {
+			input: this.session?.input ?? this.pendingState.input,
+			fixedMode: this.session?.fixed ?? this.pendingState.fixedMode,
+			sourcePath: this.sourcePath ?? this.pendingState.sourcePath,
+		};
 	}
 
 	private renderState(state: PaletteSearchState): void {
