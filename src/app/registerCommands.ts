@@ -79,9 +79,4 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 			void insertLinkToMocRelateds(plugin);
 		},
 	});
-	plugin.addCommand({
-		id: "rebuild-ignored-note-index",
-		name: "Rebuild ignored note index",
-		callback: () => void plugin.fileProvider.rebuildIgnoredIndex(),
-	});
 }

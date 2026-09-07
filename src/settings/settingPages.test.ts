@@ -46,6 +46,7 @@ describe("settings page layout", () => {
 		]);
 		expect(groupsOf(fileSearch).map((group) => group.heading)).toEqual([
 			"Excluded folders",
+			"Ignored note index",
 			"Result sorting",
 		]);
 		expect(groupsOf(everything).map((group) => group.heading)).toEqual([

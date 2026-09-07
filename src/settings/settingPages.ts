@@ -75,7 +75,7 @@ export function createSettingPages(
 function createFileSearchPage(plugin: MyPalettePlugin, helpers: SettingPageHelpers): PageItem {
 	return helpers.page(
 		"Vault file search",
-		"Excluded folders and result sorting for Vault files.",
+		"Excluded folders, ignored-note indexing, and result sorting for Vault files.",
 		[
 			helpers.group("Excluded folders", [
 				helpers.render(
@@ -93,6 +93,18 @@ function createFileSearchPage(plugin: MyPalettePlugin, helpers: SettingPageHelpe
 								}),
 						),
 				),
+			]),
+			helpers.group("Ignored note index", [
+				{
+					name: "Rebuild ignored note index",
+					desc: "Rescan files hidden by Obsidian's excluded-folder filters so they are available with the include-ignored prefix.",
+					action: async () => {
+						// Keep index maintenance with the file-search settings because it
+						// repairs the cache used by the include-ignored search scope.
+						await plugin.fileProvider.rebuildIgnoredIndex();
+						new Notice("Ignored note index rebuilt.");
+					},
+				},
 			]),
 			helpers.group("Result sorting", [
 				helpers.render(
