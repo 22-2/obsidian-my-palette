@@ -392,6 +392,15 @@
 	font-size: 0.82em;
 }
 
+.my-palette-suggest-modal .suggestion-item:hover,
+.my-palette-suggest-modal .suggestion-item.is-selected,
+.my-palette-panel .suggestion-item:hover,
+.my-palette-panel .suggestion-item.is-selected {
+	/* Why: hover should preview exactly the same state the user gets after selecting. */
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
 .my-palette-panel--view .suggestion-item {
 	box-sizing: border-box;
 	width: 100%;
@@ -553,21 +562,31 @@
 	color: var(--text-accent);
 }
 
+.my-palette-suggest-modal .suggestion-item:hover .my-palette-suggestion__label,
 .my-palette-suggest-modal .suggestion-item.is-selected .my-palette-suggestion__label,
+.my-palette-panel .suggestion-item:hover .my-palette-suggestion__label,
 .my-palette-panel .suggestion-item.is-selected .my-palette-suggestion__label {
 	color: var(--text-normal);
 }
 
+.my-palette-suggest-modal .suggestion-item:hover .my-palette-suggestion__description,
+.my-palette-suggest-modal .suggestion-item:hover .my-palette-suggestion__icon,
+.my-palette-suggest-modal .suggestion-item:hover .my-palette-suggestion__tags,
 .my-palette-suggest-modal .suggestion-item.is-selected .my-palette-suggestion__description,
 .my-palette-suggest-modal .suggestion-item.is-selected .my-palette-suggestion__icon,
 .my-palette-suggest-modal .suggestion-item.is-selected .my-palette-suggestion__tags,
+.my-palette-panel .suggestion-item:hover .my-palette-suggestion__description,
+.my-palette-panel .suggestion-item:hover .my-palette-suggestion__icon,
+.my-palette-panel .suggestion-item:hover .my-palette-suggestion__tags,
 .my-palette-panel .suggestion-item.is-selected .my-palette-suggestion__description,
 .my-palette-panel .suggestion-item.is-selected .my-palette-suggestion__icon,
 .my-palette-panel .suggestion-item.is-selected .my-palette-suggestion__tags {
 	color: var(--text-muted);
 }
 
+.my-palette-suggest-modal .suggestion-item:hover .my-palette-suggestion__match,
 .my-palette-suggest-modal .suggestion-item.is-selected .my-palette-suggestion__match,
+.my-palette-panel .suggestion-item:hover .my-palette-suggestion__match,
 .my-palette-panel .suggestion-item.is-selected .my-palette-suggestion__match {
 	color: var(--text-accent);
 }
