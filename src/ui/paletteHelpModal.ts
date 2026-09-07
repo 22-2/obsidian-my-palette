@@ -49,9 +49,11 @@ export class PaletteHelpModal extends Modal {
 		const actions = this.contentEl.createDiv("my-palette-help-modal__section");
 		actions.createEl("h3", { text: "Actions" });
 		const actionRows: Array<[string, string]> = [
-			["Enter / click", "Open or run the selected result"],
+			["Enter / double-click", "Open or run the active result"],
+			["Click / Ctrl+click", "Select one result or toggle several results"],
+			["Shift+click", "Select a range of results"],
 			["Middle-click", "Open the result in a background tab"],
-			["Right-click", "Show more actions"],
+			["Right-click", "Show actions, including copy actions for a selection"],
 			["Ctrl+R", "Open search history"],
 			["Esc", "Clear the query, then focus the search field"],
 		];

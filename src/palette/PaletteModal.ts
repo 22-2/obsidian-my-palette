@@ -11,8 +11,17 @@ import {
 	palettePlaceholder,
 	type RecordableSearch,
 } from "src/palette/PaletteSearchSession";
-import { getCopyablePaths, toPaletteSelectionItem } from "src/palette/resultPresentation";
-import { addCopyPathMenuItems, copyPathToClipboard } from "src/platform/pathClipboard";
+import {
+	getCopyablePaths,
+	isCopyablePaletteResult,
+	toPaletteSelectionItem,
+} from "src/palette/resultPresentation";
+import {
+	addCopyPathListMenuItems,
+	addCopyPathMenuItems,
+	copyPathListToClipboard,
+	copyPathToClipboard,
+} from "src/platform/pathClipboard";
 import { addMocInsertionMenuItem } from "src/palette/mocInsertion";
 import { PaletteHelpModal } from "src/ui/paletteHelpModal";
 
@@ -38,6 +47,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				title: "Files",
 				placeholder: "Search files",
 				initialInput,
+				selectionMode: "extended",
 				footerText: `Source: ${app.workspace.getActiveFile()?.path ?? "No active note"}`,
 			},
 			app,
@@ -216,6 +226,24 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	protected override onSuggestionContextMenu(result: PaletteResult, event: MouseEvent): void {
 		this.selected = result;
 		const menu = this.replaceActiveMenu(new Menu());
+		const selectedPaths = this.getSelectedItems()
+			.filter(isCopyablePaletteResult)
+			.map((item) => getCopyablePaths(this.app, item))
+			.filter(({ fileName, relativePath, absolutePath }) =>
+				Boolean(fileName || relativePath || absolutePath),
+			);
+		if (selectedPaths.length > 1) {
+			// Why: opening or mutating several heterogeneous results is ambiguous;
+			// a multi-selection menu is intentionally limited to safe copy actions.
+			addCopyPathListMenuItems(
+				menu,
+				selectedPaths,
+				(values) => void copyPathListToClipboard(values),
+			);
+			menu.setParentElement(this.modalEl);
+			menu.showAtMouseEvent(event);
+			return;
+		}
 		if (result.mode === "search-history") {
 			menu.addItem((item) =>
 				item

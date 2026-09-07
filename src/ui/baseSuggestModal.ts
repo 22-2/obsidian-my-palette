@@ -1,4 +1,5 @@
 import { App, Modal, type KeymapEventHandler } from "obsidian";
+import { ExtendedSelection } from "src/ui/extendedSelection";
 
 export interface SuggestModalProps<T> {
 	title?: string;
@@ -7,6 +8,7 @@ export interface SuggestModalProps<T> {
 	defaultValue?: T;
 	initialInput?: string;
 	footerText?: string;
+	selectionMode?: "single" | "extended";
 	/** Optional dynamic source used by selectors whose candidates depend on input. */
 	search?: (query: string) => T[] | Promise<T[]>;
 }
@@ -35,8 +37,11 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	private statusTextEl?: HTMLElement;
 	private readonly footerText?: string;
 	private readonly initialInput: string;
+	private readonly selectionMode: "single" | "extended";
 	private refreshGeneration = 0;
 	private pointerActionsRegistered = false;
+	private readonly extendedSelection = new ExtendedSelection();
+	private readonly leftClickRows = new WeakSet<Element>();
 	private readonly middleClickRows = new WeakSet<Element>();
 	private readonly rightClickRows = new WeakSet<Element>();
 
@@ -47,6 +52,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			placeholder = "Search…",
 			initialInput = "",
 			footerText,
+			selectionMode = "single",
 		}: SuggestModalProps<T>,
 		app: App,
 	) {
@@ -56,6 +62,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		this.initialInput = initialInput;
 		this.initialInputReady = !initialInput;
 		this.footerText = footerText;
+		this.selectionMode = selectionMode;
 		this.chooser = {
 			values: [],
 			selectedItem: -1,
@@ -123,6 +130,16 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	protected async onSuggestionMiddleClick(_item: T, _event: MouseEvent): Promise<void> {}
 	protected onSuggestionContextMenu(_item: T, _event: MouseEvent): void {}
 	protected onResultFocus(): void {}
+	protected getSelectedItems(): T[] {
+		if (this.selectionMode !== "extended") {
+			const item = this.getSelectedItem();
+			return item === undefined ? [] : [item];
+		}
+		return this.extendedSelection
+			.indexes()
+			.map((index) => this.chooser.values[index])
+			.filter((item): item is T => item !== undefined);
+	}
 
 	protected getInitialInputSelectionRange(): [number, number] {
 		return [0, this.inputEl.value.length];
@@ -200,6 +217,9 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		const clearButton = inputContainer.createDiv("search-input-clear-button");
 		clearButton.setAttribute("aria-hidden", "true");
 		this.resultContainerEl = this.modalEl.createDiv("prompt-results");
+		this.resultContainerEl.setAttribute("role", "listbox");
+		if (this.selectionMode === "extended")
+			this.resultContainerEl.setAttribute("aria-multiselectable", "true");
 		this.inputEl.addEventListener("input", () => this.refreshSuggestions());
 		this.inputEl.addEventListener("keydown", (event) => this.handleInputKeyDown(event));
 	}
@@ -218,6 +238,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		const visibleItems = items.slice(0, this.limit);
 		this.chooser.values = visibleItems;
 		this.chooser.selectedItem = visibleItems.length ? 0 : -1;
+		this.extendedSelection.reset(visibleItems.length);
 		this.selected = visibleItems[0] ?? null;
 		this.resultContainerEl.empty();
 		if (!visibleItems.length) {
@@ -230,7 +251,9 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		for (const [index, item] of visibleItems.entries()) {
 			const el = this.resultContainerEl.createDiv("suggestion-item");
 			el.setAttribute("data-index", String(index));
-			if (index === 0) el.addClass("is-selected");
+			el.setAttribute("role", "option");
+			el.setAttribute("aria-selected", String(index === 0));
+			if (index === 0) el.addClass("is-selected", "is-active");
 			this.renderSuggestion(item, el);
 		}
 	}
@@ -247,7 +270,16 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			event.preventDefault();
 			event.stopPropagation();
 			const delta = event.key === "ArrowDown" ? 1 : -1;
-			this.setSelectedIndex(this.chooser.selectedItem + delta, true);
+			const next = Math.max(
+				0,
+				Math.min(this.chooser.values.length - 1, this.chooser.selectedItem + delta),
+			);
+			if (this.selectionMode === "extended" && !(event.ctrlKey || event.metaKey))
+				this.extendedSelection.select(next, this.chooser.values.length, {
+					toggle: false,
+					range: event.shiftKey,
+				});
+			this.setSelectedIndex(next, true);
 			return;
 		}
 		if (event.key === "Enter") {
@@ -285,6 +317,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			this.resultContainerEl,
 			"pointermove",
 			(event) => {
+				if (this.selectionMode === "extended") return;
 				const row = this.suggestionRowAtEvent(event);
 				if (!row) return;
 				const index = Number(row.getAttribute("data-index"));
@@ -303,17 +336,34 @@ export abstract class BaseSuggestModal<T> extends Modal {
 				if (!row) return;
 				const item = this.itemAtRow(row);
 				if (item === undefined) return;
-				if (event.button === 1 && this.handlesSuggestionMiddleClick()) {
+				const index = Number(row.getAttribute("data-index"));
+				if (event.button === 0 && this.selectionMode === "extended") {
+					// Why: select on press so Obsidian cannot consume the later click;
+					// activation is deliberately reserved for the double-click event.
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					this.leftClickRows.add(row);
+					this.extendedSelection.select(index, this.chooser.values.length, {
+						toggle: event.ctrlKey || event.metaKey,
+						range: event.shiftKey,
+					});
+					this.setSelectedIndex(index, false);
+				} else if (event.button === 1 && this.handlesSuggestionMiddleClick()) {
 					event.preventDefault();
 					event.stopImmediatePropagation();
 					this.middleClickRows.add(row);
-					this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
+					this.setSelectedIndex(index, false);
 					void this.onSuggestionMiddleClick(item, event);
 				} else if (event.button === 2 && this.handlesSuggestionContextMenu()) {
 					event.preventDefault();
 					event.stopImmediatePropagation();
 					this.rightClickRows.add(row);
-					this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
+					if (this.selectionMode === "extended")
+						this.extendedSelection.selectForContextMenu(
+							index,
+							this.chooser.values.length,
+						);
+					this.setSelectedIndex(index, false);
 				}
 			},
 			true,
@@ -353,13 +403,34 @@ export abstract class BaseSuggestModal<T> extends Modal {
 					event.stopImmediatePropagation();
 					return;
 				}
+				if (this.leftClickRows.delete(row)) {
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					return;
+				}
 				if (this.rightClickRows.delete(row)) {
 					event.preventDefault();
 					event.stopImmediatePropagation();
 					return;
 				}
+				if (this.selectionMode === "extended") return;
 				const item = this.itemAtRow(row);
 				if (item === undefined) return;
+				this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
+				this.onChooseSuggestion(item, event);
+			},
+			true,
+		);
+		this.registerSelectionDomEvent(
+			this.resultContainerEl,
+			"dblclick",
+			(event) => {
+				if (this.selectionMode !== "extended" || event.button !== 0) return;
+				const row = this.suggestionRowAtEvent(event);
+				const item = row ? this.itemAtRow(row) : undefined;
+				if (!row || item === undefined) return;
+				event.preventDefault();
+				event.stopImmediatePropagation();
 				this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
 				this.onChooseSuggestion(item, event);
 			},
@@ -376,7 +447,10 @@ export abstract class BaseSuggestModal<T> extends Modal {
 				event.preventDefault();
 				event.stopImmediatePropagation();
 				this.rightClickRows.add(row);
-				this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
+				const index = Number(row.getAttribute("data-index"));
+				if (this.selectionMode === "extended")
+					this.extendedSelection.selectForContextMenu(index, this.chooser.values.length);
+				this.setSelectedIndex(index, false);
 				this.onSuggestionContextMenu(item, event);
 			},
 			true,
@@ -411,7 +485,21 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		for (const [rowIndex, row] of [
 			...this.resultContainerEl.querySelectorAll<HTMLElement>(".suggestion-item"),
 		].entries()) {
-			row.toggleClass("is-selected", rowIndex === next);
+			row.toggleClass(
+				"is-selected",
+				this.selectionMode === "extended"
+					? this.extendedSelection.has(rowIndex)
+					: rowIndex === next,
+			);
+			row.toggleClass("is-active", rowIndex === next);
+			row.setAttribute(
+				"aria-selected",
+				String(
+					this.selectionMode === "extended"
+						? this.extendedSelection.has(rowIndex)
+						: rowIndex === next,
+				),
+			);
 		}
 		if (scroll)
 			this.resultContainerEl

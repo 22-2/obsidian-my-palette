@@ -12,8 +12,17 @@ import {
 	type PaletteSearchState,
 } from "src/palette/PaletteSearchSession";
 import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
-import { getCopyablePaths, toPaletteSelectionItem } from "src/palette/resultPresentation";
-import { addCopyPathMenuItems, copyPathToClipboard } from "src/platform/pathClipboard";
+import {
+	getCopyablePaths,
+	isCopyablePaletteResult,
+	toPaletteSelectionItem,
+} from "src/palette/resultPresentation";
+import {
+	addCopyPathListMenuItems,
+	addCopyPathMenuItems,
+	copyPathListToClipboard,
+	copyPathToClipboard,
+} from "src/platform/pathClipboard";
 import { SearchHistorySuggest } from "src/ui/searchHistorySuggest";
 import { renderSelectionItem } from "src/ui/selectionModal";
 import { SuggestionPanel } from "src/ui/suggestionPanel";
@@ -154,6 +163,7 @@ export class PaletteView extends ItemView {
 		this.panel = new SuggestionPanel<PaletteResult>(this.contentEl, {
 			initialInput,
 			surface: "view",
+			selectionMode: "extended",
 			placeholder: palettePlaceholder(state.fixedMode ?? "file"),
 			onInput: (input) => this.session?.setInput(input),
 			onResultFocus: () => this.session?.commitCurrentSearch(),
@@ -168,7 +178,8 @@ export class PaletteView extends ItemView {
 				),
 			onChoose: (result) => this.execute(result, "primary"),
 			onMiddleClick: (result) => this.openInBackground(result),
-			onContextMenu: (result, event) => this.showContextMenu(result, event),
+			onContextMenu: (result, event, selectedItems) =>
+				this.showContextMenu(result, event, selectedItems),
 			onEscape: () => this.clearOrFocus(),
 		});
 		this.addChild(this.panel);
@@ -418,13 +429,35 @@ export class PaletteView extends ItemView {
 		this.panel?.focusSearchInput();
 	}
 
-	private showContextMenu(result: PaletteResult, event: MouseEvent): void {
+	private showContextMenu(
+		result: PaletteResult,
+		event: MouseEvent,
+		selectedItems: PaletteResult[],
+	): void {
 		this.activeMenu?.close();
 		const menu = new Menu();
 		this.activeMenu = menu;
 		menu.onHide(() => {
 			if (this.activeMenu === menu) this.activeMenu = undefined;
 		});
+		const selectedPaths = selectedItems
+			.filter(isCopyablePaletteResult)
+			.map((item) => getCopyablePaths(this.app, item))
+			.filter(({ fileName, relativePath, absolutePath }) =>
+				Boolean(fileName || relativePath || absolutePath),
+			);
+		if (selectedPaths.length > 1) {
+			// Why: bulk open/MOC actions have unclear failure and focus semantics;
+			// keep the multi-selection menu limited to non-mutating clipboard work.
+			addCopyPathListMenuItems(
+				menu,
+				selectedPaths,
+				(values) => void copyPathListToClipboard(values),
+			);
+			menu.setParentElement(this.contentEl);
+			menu.showAtMouseEvent(event);
+			return;
+		}
 		if (result.mode === "search-history") {
 			menu.addItem((item) =>
 				item

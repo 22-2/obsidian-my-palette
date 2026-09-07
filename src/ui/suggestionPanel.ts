@@ -1,4 +1,5 @@
 import { Component, setIcon } from "obsidian";
+import { ExtendedSelection } from "src/ui/extendedSelection";
 
 export interface SuggestionPanelProps<T> {
 	initialInput?: string;
@@ -6,12 +7,13 @@ export interface SuggestionPanelProps<T> {
 	footerText?: string;
 	limit?: number;
 	surface?: "modal" | "view";
+	selectionMode?: "single" | "extended";
 	onInput: (input: string) => void;
 	renderSuggestion: (item: T, el: HTMLElement, query: string) => void;
 	onChoose: (item: T, event: MouseEvent | KeyboardEvent) => void | Promise<void>;
 	onResultFocus?: () => void;
 	onMiddleClick?: (item: T, event: MouseEvent) => void | Promise<void>;
-	onContextMenu?: (item: T, event: MouseEvent) => void;
+	onContextMenu?: (item: T, event: MouseEvent, selectedItems: T[]) => void;
 	onEscape?: () => void;
 	onReady?: () => void;
 }
@@ -47,7 +49,9 @@ export class SuggestionPanel<T> extends Component {
 	private readonly rootEl: HTMLElement;
 	private readonly props: SuggestionPanelProps<T>;
 	private readonly initialInput: string;
+	private readonly selectionMode: "single" | "extended";
 	private pointerActionsRegistered = false;
+	private readonly extendedSelection = new ExtendedSelection();
 	private readonly leftClickRows = new WeakSet<Element>();
 	private readonly middleClickRows = new WeakSet<Element>();
 	private readonly rightClickRows = new WeakSet<Element>();
@@ -57,6 +61,7 @@ export class SuggestionPanel<T> extends Component {
 		this.rootEl = rootEl;
 		this.props = props;
 		this.initialInput = props.initialInput ?? "";
+		this.selectionMode = props.selectionMode ?? "single";
 		this.limit = props.limit ?? 50;
 		this.rootEl.empty();
 		const surface = props.surface ?? "modal";
@@ -85,6 +90,9 @@ export class SuggestionPanel<T> extends Component {
 		const clearButton = inputContainer.createDiv("search-input-clear-button");
 		clearButton.setAttribute("aria-hidden", "true");
 		this.resultContainerEl = this.rootEl.createDiv("prompt-results");
+		this.resultContainerEl.setAttribute("role", "listbox");
+		if (this.selectionMode === "extended")
+			this.resultContainerEl.setAttribute("aria-multiselectable", "true");
 		this.statusBarEl = this.rootEl.createDiv("my-palette-status-bar");
 		this.statusTextEl = this.statusBarEl.createSpan({
 			cls: "my-palette-status-bar__text",
@@ -106,6 +114,7 @@ export class SuggestionPanel<T> extends Component {
 		this.query = this.inputEl.value;
 		this.chooser.values = items.slice(0, this.limit);
 		this.chooser.selectedItem = this.chooser.values.length ? 0 : -1;
+		this.extendedSelection.reset(this.chooser.values.length);
 		this.selected = this.chooser.values[0] ?? null;
 		this.updateResultCount(total);
 		this.resultContainerEl.empty();
@@ -119,7 +128,9 @@ export class SuggestionPanel<T> extends Component {
 		for (const [index, item] of this.chooser.values.entries()) {
 			const el = this.resultContainerEl.createDiv("suggestion-item");
 			el.setAttribute("data-index", String(index));
-			if (index === 0) el.addClass("is-selected");
+			el.setAttribute("role", "option");
+			el.setAttribute("aria-selected", String(index === 0));
+			if (index === 0) el.addClass("is-selected", "is-active");
 			this.props.renderSuggestion(item, el, this.query);
 		}
 	}
@@ -150,6 +161,17 @@ export class SuggestionPanel<T> extends Component {
 		this.rootEl.setAttribute(name, value);
 	}
 
+	getSelectedItems(): T[] {
+		if (this.selectionMode !== "extended") {
+			const item = this.getSelectedItem();
+			return item === undefined ? [] : [item];
+		}
+		return this.extendedSelection
+			.indexes()
+			.map((index) => this.chooser.values[index])
+			.filter((item): item is T => item !== undefined);
+	}
+
 	private handleInputKeyDown(event: KeyboardEvent): void {
 		if (event.isComposing) return;
 		if (event.key === "Escape") {
@@ -161,10 +183,19 @@ export class SuggestionPanel<T> extends Component {
 		if (event.key === "ArrowDown" || event.key === "ArrowUp") {
 			event.preventDefault();
 			event.stopPropagation();
-			this.setSelectedIndex(
-				this.chooser.selectedItem + (event.key === "ArrowDown" ? 1 : -1),
-				true,
+			const next = Math.max(
+				0,
+				Math.min(
+					this.chooser.values.length - 1,
+					this.chooser.selectedItem + (event.key === "ArrowDown" ? 1 : -1),
+				),
 			);
+			if (this.selectionMode === "extended" && !(event.ctrlKey || event.metaKey))
+				this.extendedSelection.select(next, this.chooser.values.length, {
+					toggle: false,
+					range: event.shiftKey,
+				});
+			this.setSelectedIndex(next, true);
 			return;
 		}
 		if (event.key === "Enter") {
@@ -184,6 +215,7 @@ export class SuggestionPanel<T> extends Component {
 			this.resultContainerEl,
 			"pointermove",
 			(event) => {
+				if (this.selectionMode === "extended") return;
 				const row = this.suggestionRowAtEvent(event);
 				if (!row) return;
 				const index = Number(row.getAttribute("data-index"));
@@ -203,7 +235,18 @@ export class SuggestionPanel<T> extends Component {
 				const item = this.itemAtRow(row);
 				if (item === undefined) return;
 				const index = Number(row.getAttribute("data-index"));
-				if (event.button === 0) {
+				if (event.button === 0 && this.selectionMode === "extended") {
+					// Why: the sidebar can lose its click to Obsidian after mousedown;
+					// select now and leave opening exclusively to double-click/Enter.
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					this.leftClickRows.add(row);
+					this.extendedSelection.select(index, this.chooser.values.length, {
+						toggle: event.ctrlKey || event.metaKey,
+						range: event.shiftKey,
+					});
+					this.setSelectedIndex(index, false);
+				} else if (event.button === 0) {
 					// Sidebar clicks can be consumed by Obsidian after mousedown, so run
 					// the primary action here and let the later click only clear the guard.
 					event.preventDefault();
@@ -221,8 +264,28 @@ export class SuggestionPanel<T> extends Component {
 					event.preventDefault();
 					event.stopImmediatePropagation();
 					this.rightClickRows.add(row);
+					if (this.selectionMode === "extended")
+						this.extendedSelection.selectForContextMenu(
+							index,
+							this.chooser.values.length,
+						);
 					this.setSelectedIndex(index, false);
 				}
+			},
+			true,
+		);
+		this.registerDomEvent(
+			this.resultContainerEl,
+			"dblclick",
+			(event) => {
+				if (this.selectionMode !== "extended" || event.button !== 0) return;
+				const row = this.suggestionRowAtEvent(event);
+				const item = row ? this.itemAtRow(row) : undefined;
+				if (!row || item === undefined) return;
+				event.preventDefault();
+				event.stopImmediatePropagation();
+				this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
+				void this.props.onChoose(item, event);
 			},
 			true,
 		);
@@ -274,6 +337,7 @@ export class SuggestionPanel<T> extends Component {
 					event.stopImmediatePropagation();
 					return;
 				}
+				if (this.selectionMode === "extended") return;
 				const item = this.itemAtRow(row);
 				if (item === undefined) return;
 				this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
@@ -292,8 +356,11 @@ export class SuggestionPanel<T> extends Component {
 				event.preventDefault();
 				event.stopImmediatePropagation();
 				this.rightClickRows.add(row);
-				this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
-				this.props.onContextMenu(item, event);
+				const index = Number(row.getAttribute("data-index"));
+				if (this.selectionMode === "extended")
+					this.extendedSelection.selectForContextMenu(index, this.chooser.values.length);
+				this.setSelectedIndex(index, false);
+				this.props.onContextMenu(item, event, this.getSelectedItems());
 			},
 			true,
 		);
@@ -326,8 +393,23 @@ export class SuggestionPanel<T> extends Component {
 		this.selected = this.chooser.values[next] ?? null;
 		for (const [rowIndex, row] of [
 			...this.resultContainerEl.querySelectorAll<HTMLElement>(".suggestion-item"),
-		].entries())
-			row.toggleClass("is-selected", rowIndex === next);
+		].entries()) {
+			row.toggleClass(
+				"is-selected",
+				this.selectionMode === "extended"
+					? this.extendedSelection.has(rowIndex)
+					: rowIndex === next,
+			);
+			row.toggleClass("is-active", rowIndex === next);
+			row.setAttribute(
+				"aria-selected",
+				String(
+					this.selectionMode === "extended"
+						? this.extendedSelection.has(rowIndex)
+						: rowIndex === next,
+				),
+			);
+		}
 		if (scroll)
 			this.resultContainerEl
 				.querySelector<HTMLElement>(`.suggestion-item[data-index="${next}"]`)

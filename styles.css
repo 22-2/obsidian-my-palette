@@ -403,6 +403,11 @@
 	font-size: var(--font-ui-small);
 }
 
+.my-palette-suggest-modal .suggestion-item.is-active,
+.my-palette-panel .suggestion-item.is-active {
+	box-shadow: inset 2px 0 var(--interactive-accent);
+}
+
 .my-palette-panel--view .my-palette-suggestion__main {
 	flex-wrap: wrap;
 	align-content: center;

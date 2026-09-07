@@ -92,18 +92,34 @@ export function getCopyablePaths(
 	// Everything folders are navigable results, but only file results should expose file-path actions.
 	if (result.mode === "everything") {
 		return result.kind === "file"
-			? { relativePath: result.vaultPath, absolutePath: result.absolutePath }
+			? {
+					fileName: fileNameOf(result.vaultPath ?? result.absolutePath),
+					relativePath: result.vaultPath,
+					absolutePath: result.absolutePath,
+				}
 			: {};
 	}
 	const file = "file" in result ? result.file : undefined;
 	if (result.mode === "file")
 		return {
+			fileName: fileNameOf(result.vaultPath),
 			relativePath: result.vaultPath,
 			absolutePath: getVaultFullPath(app, result.vaultPath) ?? undefined,
 		};
 	if (!file) return {};
 	return {
+		fileName: fileNameOf(file.path),
 		relativePath: file.path,
 		absolutePath: getVaultFullPath(app, file.path) ?? undefined,
 	};
+}
+
+export function isCopyablePaletteResult(
+	result: PaletteResult,
+): result is Exclude<PaletteResult, { mode: "command" | "search-history" }> {
+	return result.mode !== "command" && result.mode !== "search-history";
+}
+
+function fileNameOf(path: string): string {
+	return path.split(/[\\/]/).at(-1) ?? path;
 }
