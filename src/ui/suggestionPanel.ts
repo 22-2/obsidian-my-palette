@@ -230,11 +230,12 @@ export class SuggestionPanel<T> extends Component {
 			this.resultContainerEl,
 			"auxclick",
 			(event) => {
-				if (event.button !== 1) return;
+				if (event.button !== 1 && event.button !== 2) return;
 				const row = this.suggestionRowAtEvent(event);
 				if (!row) return;
 				event.preventDefault();
 				event.stopImmediatePropagation();
+				if (this.rightClickRows.delete(row)) return;
 				if (this.middleClickRows.delete(row)) return;
 				const item = this.itemAtRow(row);
 				if (item !== undefined && this.props.onMiddleClick)
@@ -246,8 +247,23 @@ export class SuggestionPanel<T> extends Component {
 			this.resultContainerEl,
 			"click",
 			(event) => {
+				// 中・右クリック後に発火する click/auxclick の取りこぼしが
+				// primary 扱いで onChoose へ落ちてアクティブタブを上書きするため、
+				// 左クリック以外はここで確実に消費する。
+				// なぜこう書かれたか: Electron/Win では中クリックで click が、
+				// 右クリックで click が飛ぶ環境があり、ガード漏れが上書きの原因だった。
+				if (event.button !== 0) {
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					return;
+				}
 				const row = this.suggestionRowAtEvent(event);
 				if (!row) return;
+				if (this.middleClickRows.delete(row)) {
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					return;
+				}
 				if (this.leftClickRows.delete(row)) {
 					event.preventDefault();
 					event.stopImmediatePropagation();

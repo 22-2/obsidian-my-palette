@@ -322,11 +322,12 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			this.resultContainerEl,
 			"auxclick",
 			(event) => {
-				if (event.button !== 1) return;
+				if (event.button !== 1 && event.button !== 2) return;
 				const row = this.suggestionRowAtEvent(event);
 				if (!row) return;
 				event.preventDefault();
 				event.stopImmediatePropagation();
+				if (this.rightClickRows.delete(row)) return;
 				if (this.middleClickRows.delete(row)) return;
 				const item = this.itemAtRow(row);
 				if (item !== undefined && this.handlesSuggestionMiddleClick())
@@ -338,8 +339,20 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			this.resultContainerEl,
 			"click",
 			(event) => {
+				// 中・右クリック後の click が primary 扱いで onChooseSuggestion へ
+				// 落ちてアクティブタブを上書きするため、左以外は確実に消費する。
+				if (event.button !== 0) {
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					return;
+				}
 				const row = this.suggestionRowAtEvent(event);
 				if (!row) return;
+				if (this.middleClickRows.delete(row)) {
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					return;
+				}
 				if (this.rightClickRows.delete(row)) {
 					event.preventDefault();
 					event.stopImmediatePropagation();
