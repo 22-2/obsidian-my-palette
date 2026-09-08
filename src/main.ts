@@ -1,20 +1,20 @@
 import { Plugin, type WorkspaceLeaf } from "obsidian";
 import log, { LogLevels } from "consola";
 import { DEFAULT_SETTINGS, MyPaletteSettingTab } from "src/settings";
-import type { LeafOpenAction } from "src/app/openLeaf";
-import type { MyPaletteSettings } from "src/model/settings";
+import type { LeafOpenAction } from "src/workspace/openLeaf";
+import type { MyPaletteSettings } from "src/settings/model";
 import {
 	createPaletteProviders,
 	type PaletteProviderInstances,
 } from "src/app/createPaletteProviders";
 import { registerPluginCommands } from "src/app/registerCommands";
 import { registerPluginEvents } from "src/app/registerEvents";
-import { openExternalMarkdown } from "src/app/openExternalMarkdown";
+import { openExternalMarkdown } from "src/workspace/external-markdown/openExternalMarkdown";
 import { PaletteModal } from "src/palette/PaletteModal";
-import { PALETTE_VIEW_TYPE, PaletteView } from "src/views/PaletteView";
+import { PALETTE_VIEW_TYPE, PaletteView } from "src/palette/surfaces/PaletteView";
 import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
-import type { PaletteMode, PaletteResult, SearchHistoryResult } from "src/model/results";
-import type { SearchHistoryCategory, SearchHistoryEntry } from "src/model/settings";
+import type { PaletteMode, PaletteResult, SearchHistoryResult } from "src/palette/results";
+import type { SearchHistoryCategory, SearchHistoryEntry } from "src/settings/model";
 import {
 	getSearchHistorySuggestions,
 	recordSearchHistory,

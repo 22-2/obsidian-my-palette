@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addLinkToMocRelateds } from "src/commands/mocRelatedsCore";
+import { addLinkToMocRelateds } from "src/moc-relateds/mocRelatedsCore";
 
 describe("addLinkToMocRelateds", () => {
 	it("adds a link using the existing Relateds child indentation", () => {

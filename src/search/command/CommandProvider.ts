@@ -1,5 +1,5 @@
 import { type App } from "obsidian";
-import type { CommandResult } from "src/model/results";
+import type { CommandResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { type Command, sortCommandMatches } from "src/search/command/commandSorting";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";

@@ -1,6 +1,9 @@
 import type MyPalettePlugin from "src/main";
-import { EXTERNAL_MARKDOWN_VIEW_TYPE, ExternalMarkdownView } from "src/views/ExternalMarkdownView";
-import { PALETTE_VIEW_TYPE, PaletteView } from "src/views/PaletteView";
+import {
+	EXTERNAL_MARKDOWN_VIEW_TYPE,
+	ExternalMarkdownView,
+} from "src/workspace/external-markdown/ExternalMarkdownView";
+import { PALETTE_VIEW_TYPE, PaletteView } from "src/palette/surfaces/PaletteView";
 import { getVaultFullPath } from "src/ignored-notes/ignoredPaths";
 import { addCopyPathMenuItems, copyPathToClipboard } from "src/platform/pathClipboard";
 

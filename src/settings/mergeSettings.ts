@@ -1,11 +1,11 @@
-import type { MyPaletteSettings } from "src/model/settings";
+import type { MyPaletteSettings } from "src/settings/model";
 import {
 	DEFAULT_BLANK_FILE_SORT_PRIORITIES,
 	DEFAULT_SETTINGS,
 	SETTING_LIMITS,
 	SETTINGS_SCHEMA_VERSION,
 	normalizeFileSortPriorities,
-} from "src/model/settings";
+} from "src/settings/model";
 
 const PREVIOUS_DEFAULT_SEARCH_HISTORY_DELAY_MS = 3_000;
 // Schema 12 changed the default from delayed input to action-only history;

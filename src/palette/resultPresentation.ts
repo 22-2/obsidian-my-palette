@@ -2,7 +2,7 @@ import { TFile, type App } from "obsidian";
 import { getVaultFullPath, isAbsolutePathUserIgnored } from "src/ignored-notes/ignoredPaths";
 import { isMarkdownPath } from "src/shared/externalFiles";
 import { compactPath } from "src/shared/pathDisplay";
-import type { PaletteResult } from "src/model/results";
+import type { PaletteResult } from "src/palette/results";
 import type { SelectionItem } from "src/ui/selectionModal";
 import type { CopyablePaths } from "src/platform/pathClipboard";
 

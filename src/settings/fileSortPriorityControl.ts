@@ -4,7 +4,7 @@ import {
 	type FileSortPriorities,
 	type FileSortPriority,
 	type FileSortState,
-} from "src/model/settings";
+} from "src/settings/model";
 import { moveByInsertionIndex } from "src/settings/fileSortPriorityOrdering";
 
 const STATE_LABELS: Record<FileSortState, string> = {

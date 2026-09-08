@@ -1,7 +1,7 @@
 import { type App, type WorkspaceLeaf } from "obsidian";
-import { getLeafForAction } from "src/app/openLeaf";
+import { getLeafForAction } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
-import type { PaletteResult } from "src/model/results";
+import type { PaletteResult } from "src/palette/results";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
 
 export interface PaletteResultExecutionOptions {

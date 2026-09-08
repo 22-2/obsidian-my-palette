@@ -1,6 +1,6 @@
 import { PluginSettingTab, type SettingDefinitionItem } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import { DEFAULT_SETTINGS, SETTING_LIMITS } from "src/model/settings";
+import { DEFAULT_SETTINGS, SETTING_LIMITS } from "src/settings/model";
 import { bounded, excludedFolders } from "src/settings/mergeSettings";
 import { createSettingPages } from "src/settings/settingPages";
 

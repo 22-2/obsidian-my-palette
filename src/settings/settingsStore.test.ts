@@ -1,5 +1,5 @@
 import type MyPalettePlugin from "src/main";
-import { SETTINGS_SCHEMA_VERSION } from "src/model/settings";
+import { SETTINGS_SCHEMA_VERSION } from "src/settings/model";
 import { describe, expect, it } from "vitest";
 import { loadPluginSettings, savePluginSettings } from "src/settings/settingsStore";
 

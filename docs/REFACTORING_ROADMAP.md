@@ -88,7 +88,7 @@ chore: remove unused modules
 - [x] 古い履歴データの読み込みとカテゴリ補完をテストする
 - [ ] `schemaVersion` と保存判断をテストする
 
-対象: `src/settings/mergeSettings.ts`、`src/model/settings.ts`
+対象: `src/settings/mergeSettings.ts`、`src/settings/model.ts`
 
 ### ignored note
 
@@ -178,7 +178,7 @@ refactor: separate core modules by responsibility
 - [x] 結果を`SelectionItem`へ変換する処理を分離する
 - [x] 結果ごとの表示バッジ判定を分離する
 - [x] 結果アクションの振り分けを分離する
-- [ ] 検索履歴のイベント登録と遅延保存を分離する
+- [x] 検索履歴のイベント登録を共通コントローラへ分離する
 - [x] バックグラウンドオープン処理を分離する
 - [x] `PaletteModal` は入力・選択状態・検索世代管理に集中させる
 
@@ -190,9 +190,9 @@ refactor: separate core modules by responsibility
 - [x] 結果行の表示と左右中クリック処理を共通化する
 - [x] 右サイドバーから本文leafを差し替える
 - [x] workspace stateへ入力、固定モード、検索元を保存する
-- [ ] 検索履歴コントロールのイベント登録を共通Componentへ移す
+- [x] 検索履歴コントロールのイベント登録を共通コントローラへ移す
 
-対象: `src/palette/PaletteSearchSession.ts`、`src/ui/suggestionPanel.ts`、`src/views/PaletteView.ts`
+対象: `src/palette/PaletteSearchSession.ts`、`src/ui/suggestionPanel.ts`、`src/palette/surfaces/PaletteView.ts`
 
 ### `main.ts`
 
@@ -203,7 +203,7 @@ refactor: separate core modules by responsibility
 - [x] 設定ロード・保存を設定ストアへ移す
 - [ ] `main.ts` はPluginのライフサイクルと依存関係の組み立てに集中させる
 
-対象: `src/main.ts`、`src/app/openExternalMarkdown.ts`、`src/settings/settingsStore.ts`
+対象: `src/main.ts`、`src/workspace/external-markdown/openExternalMarkdown.ts`、`src/settings/settingsStore.ts`
 
 ### `settings.ts`
 
@@ -212,7 +212,7 @@ refactor: separate core modules by responsibility
 - [x] 設定画面の定義を分離する
 - [ ] 設定画面からPlugin本体への依存を薄くする
 
-対象: `src/settings/settingTab.ts`、`src/settings/mergeSettings.ts`、`src/model/settings.ts`
+対象: `src/settings/settingTab.ts`、`src/settings/mergeSettings.ts`、`src/settings/model.ts`
 
 ### 完了条件
 
@@ -265,8 +265,8 @@ src/
 ├── settings/
 ├── platform/
 ├── ui/
-├── views/
-└── model/
+├── workspace/
+└── shared/
 ```
 
 ### 共通化の判断基準

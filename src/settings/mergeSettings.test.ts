@@ -4,7 +4,7 @@ import {
 	SETTING_LIMITS,
 	SETTINGS_SCHEMA_VERSION,
 	UNLIMITED_DAYS,
-} from "src/model/settings";
+} from "src/settings/model";
 import { mergeSettings } from "src/settings/mergeSettings";
 
 describe("mergeSettings", () => {

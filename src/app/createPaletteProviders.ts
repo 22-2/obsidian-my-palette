@@ -1,6 +1,6 @@
 import type { App } from "obsidian";
-import type { FileSortPriorities, MyPaletteSettings } from "src/model/settings";
-import type { PaletteMode } from "src/model/results";
+import type { FileSortPriorities, MyPaletteSettings } from "src/settings/model";
+import type { PaletteMode } from "src/palette/results";
 import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
 import { EverythingProvider } from "src/search/everything/EverythingProvider";
 import { FileProvider } from "src/search/file/FileProvider";

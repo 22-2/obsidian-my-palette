@@ -36,12 +36,9 @@ describe("settings page layout", () => {
 
 		const [palette, fileSearch, everything] = pages.filter(isPage);
 		expect(palette.desc).toContain("search history");
-		expect(palette.desc).toContain("external Markdown");
 		expect(groupsOf(palette).map((group) => group.heading)).toEqual([
-			"Prefixes",
 			"Palette behavior",
 			"Search history",
-			"File opening",
 			"Diagnostics",
 		]);
 		expect(groupsOf(fileSearch).map((group) => group.heading)).toEqual([
@@ -51,7 +48,6 @@ describe("settings page layout", () => {
 		]);
 		expect(groupsOf(everything).map((group) => group.heading)).toEqual([
 			"Connection",
-			"Search",
 			"Vault search",
 		]);
 	});

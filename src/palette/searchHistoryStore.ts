@@ -9,7 +9,7 @@ import {
 	SEARCH_HISTORY_MAX_ENTRIES,
 	type RecordSearchHistoryOptions,
 } from "src/palette/searchHistory";
-import type { SearchHistoryCategory, SearchHistoryEntry } from "src/model/settings";
+import type { SearchHistoryCategory, SearchHistoryEntry } from "src/settings/model";
 import { getVaultId, getVaultPathKey } from "src/shared/vaultIdentity";
 
 export const SEARCH_HISTORY_DATABASE_NAME = "my-palette-search-history";

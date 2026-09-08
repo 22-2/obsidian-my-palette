@@ -1,19 +1,19 @@
-import {
-	getFrontMatterInfo,
-	parseFrontMatterAliases,
-	parseFrontMatterTags,
-	parseYaml,
-	type App,
-} from "obsidian";
+import type { App } from "obsidian";
 import { type DBSchema, type IDBPDatabase, openDB } from "idb";
 import {
 	getUserIgnoreFilters,
 	isUserIgnoreFilterRegex,
 	isUserIgnoredPathWithFilters,
 } from "src/ignored-notes/ignoredPaths";
-import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
 import { getVaultId, getVaultPathKey } from "src/shared/vaultIdentity";
-import { normalizeTags } from "src/search/file/fileTags";
+import {
+	parseIgnoredNoteFrontmatter,
+	type IgnoredNoteIndexEntry,
+} from "src/ignored-notes/ignoredNoteEntry";
+import { ignoredNotePathParts } from "src/ignored-notes/ignoredNotePath";
+import { collectVaultPaths, mapWithConcurrency } from "src/ignored-notes/ignoredNoteScanner";
+
+export type { IgnoredNoteIndexEntry } from "src/ignored-notes/ignoredNoteEntry";
 
 const DATABASE_NAME = "my-palette-ignored-notes";
 const DATABASE_VERSION = 1;
@@ -21,17 +21,6 @@ const INDEX_SCHEMA_VERSION = 3;
 const INDEX_TTL_MS = 24 * 60 * 60 * 1000;
 const SCAN_CONCURRENCY = 8;
 const PROGRESS_INTERVAL = 250;
-
-export interface IgnoredNoteIndexEntry {
-	path: string;
-	basename: string;
-	extension: string;
-	aliases: string[];
-	tags: string[];
-	prior?: number;
-	mtime: number;
-	size: number;
-}
 
 interface StoredIgnoredNoteIndexEntry extends IgnoredNoteIndexEntry {
 	vaultId: string;
@@ -59,82 +48,11 @@ interface IgnoredNoteIndexDatabase extends DBSchema {
 
 export type IgnoredNoteIndexLogger = (message: string, detail?: unknown) => void;
 
-function fileName(path: string): string {
-	return path.slice(path.lastIndexOf("/") + 1);
-}
-
-function basename(path: string): string {
-	const name = fileName(path);
-	const extensionIndex = name.lastIndexOf(".");
-	return extensionIndex > 0 ? name.slice(0, extensionIndex) : name;
-}
-
-function extension(path: string): string {
-	const name = fileName(path);
-	const extensionIndex = name.lastIndexOf(".");
-	return extensionIndex > 0 ? name.slice(extensionIndex + 1).toLocaleLowerCase() : "";
-}
-
 function fingerprint(filters: readonly string[]): string {
 	return filters
 		.map((filter) => filter.toLocaleLowerCase())
 		.sort()
 		.join("\n");
-}
-
-interface ParsedFrontmatter {
-	aliases: string[];
-	tags: string[];
-	prior?: number;
-}
-
-function parseFrontmatter(content: string): ParsedFrontmatter {
-	const info = getFrontMatterInfo(content);
-	if (!info.exists) return { aliases: [], tags: [] };
-	try {
-		// Parse once per scanned note so aliases, tags, and prior come from the
-		// same frontmatter snapshot without tripling the YAML parse cost.
-		const parsed = parseYaml(info.frontmatter);
-		const frontmatter =
-			parsed && typeof parsed === "object" && !Array.isArray(parsed)
-				? (parsed as Record<string, unknown>)
-				: null;
-		return {
-			aliases: parseFrontMatterAliases(frontmatter) ?? [],
-			tags: normalizeTags(parseFrontMatterTags(frontmatter) ?? []),
-			prior: normalizeFrontmatterPrior(frontmatter?.prior),
-		};
-	} catch {
-		return { aliases: [], tags: [] };
-	}
-}
-
-function isMissingPathError(error: unknown): boolean {
-	return (
-		typeof error === "object" &&
-		error !== null &&
-		"code" in error &&
-		(error as { code?: unknown }).code === "ENOENT"
-	);
-}
-
-async function mapWithConcurrency<T, R>(
-	items: readonly T[],
-	concurrency: number,
-	callback: (item: T, index: number) => Promise<R>,
-): Promise<R[]> {
-	const results: R[] = [];
-	results.length = items.length;
-	let nextIndex = 0;
-	const worker = async (): Promise<void> => {
-		while (true) {
-			const index = nextIndex++;
-			if (index >= items.length) return;
-			results[index] = await callback(items[index], index);
-		}
-	};
-	await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, worker));
-	return results;
 }
 
 /**
@@ -243,7 +161,7 @@ export class IgnoredNoteIndex {
 		if (regexCount > 0)
 			this.log("Scanning Vault root to resolve ignored regex filters", { count: regexCount });
 		this.log("Scanning ignored notes", { roots: scanRoots, cachedEntries: this.current.size });
-		const paths = (await this.collectPaths(scanRoots)).filter((path) =>
+		const paths = (await collectVaultPaths(this.app, scanRoots, this.log)).filter((path) =>
 			isUserIgnoredPathWithFilters(filters, path),
 		);
 		const next = new Map<string, IgnoredNoteIndexEntry>();
@@ -270,42 +188,6 @@ export class IgnoredNoteIndex {
 		this.log("Finished scanning ignored notes", { entries: next.size });
 	}
 
-	private async collectPaths(roots: readonly string[]): Promise<string[]> {
-		const adapter = this.app.vault.adapter;
-		const folders = [...new Set(roots)];
-		const visited = new Set<string>();
-		const files: string[] = [];
-		while (folders.length > 0) {
-			const folder = folders.shift();
-			if (folder === undefined || visited.has(folder)) continue;
-			visited.add(folder);
-			try {
-				const stat = await adapter.stat(folder);
-				// Ignore filters can outlive a moved or deleted folder. Do not call
-				// list() for a missing root, because that turns a stale setting into
-				// an avoidable ENOENT scan error.
-				if (!stat) {
-					this.log("Skipped missing ignored folder", { folder });
-					continue;
-				}
-				if (stat?.type === "file") {
-					files.push(folder);
-					continue;
-				}
-				const listing = await adapter.list(folder);
-				files.push(...listing.files);
-				folders.push(...listing.folders);
-			} catch (error) {
-				if (isMissingPathError(error)) {
-					this.log("Skipped missing ignored folder", { folder });
-					continue;
-				}
-				this.log("Failed to list ignored folder", { folder, error });
-			}
-		}
-		return files;
-	}
-
 	private async readEntry(
 		path: string,
 		cached: IgnoredNoteIndexEntry | undefined,
@@ -314,15 +196,16 @@ export class IgnoredNoteIndex {
 			const stat = await this.app.vault.adapter.stat(path);
 			if (!stat) return undefined;
 			if (cached && cached.mtime === stat.mtime && cached.size === stat.size) return cached;
-			const fileExtension = extension(path);
+			const parts = ignoredNotePathParts(path);
 			const content =
-				fileExtension === "md" ? await this.app.vault.adapter.read(path) : undefined;
+				parts.extension === "md" ? await this.app.vault.adapter.read(path) : undefined;
 			const frontmatter =
-				content === undefined ? { aliases: [], tags: [] } : parseFrontmatter(content);
+				content === undefined
+					? { aliases: [], tags: [] }
+					: parseIgnoredNoteFrontmatter(content);
 			return {
 				path,
-				basename: basename(path),
-				extension: fileExtension,
+				...parts,
 				aliases: frontmatter.aliases,
 				tags: frontmatter.tags,
 				prior: frontmatter.prior,

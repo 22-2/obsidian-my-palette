@@ -1,5 +1,5 @@
 import type { TFile } from "obsidian";
-import type { EverythingScope, PaletteMode, PaletteResult } from "src/model/results";
+import type { EverythingScope, PaletteMode, PaletteResult } from "src/palette/results";
 
 export interface PaletteSearchRequest {
 	mode: PaletteMode;

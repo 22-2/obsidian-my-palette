@@ -1,5 +1,5 @@
 import { setIcon } from "obsidian";
-import type { SearchHistoryResult } from "src/model/results";
+import type { SearchHistoryResult } from "src/palette/results";
 
 export class SearchHistorySuggest {
 	private readonly el: HTMLElement;

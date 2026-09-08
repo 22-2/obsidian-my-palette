@@ -1,7 +1,10 @@
 import type { WorkspaceLeaf } from "obsidian";
-import { getLeafForAction, isPinnedLeaf, type LeafOpenAction } from "src/app/openLeaf";
+import { getLeafForAction, isPinnedLeaf, type LeafOpenAction } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
-import { EXTERNAL_MARKDOWN_VIEW_TYPE, ExternalMarkdownView } from "src/views/ExternalMarkdownView";
+import {
+	EXTERNAL_MARKDOWN_VIEW_TYPE,
+	ExternalMarkdownView,
+} from "src/workspace/external-markdown/ExternalMarkdownView";
 
 /**
  * External Markdown leaf reuse is a workspace concern, so keep it outside the

@@ -1,6 +1,6 @@
 import type { App } from "obsidian";
 import { type DBSchema, type IDBPDatabase, openDB } from "idb";
-import { MAX_RECENT_COMMAND_IDS } from "src/model/settings";
+import { MAX_RECENT_COMMAND_IDS } from "src/settings/model";
 import { getVaultId, getVaultPathKey } from "src/shared/vaultIdentity";
 
 export const RECENT_COMMAND_DATABASE_NAME = "my-palette-recent-commands";

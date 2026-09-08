@@ -1,5 +1,5 @@
 import { Notice, TFile } from "obsidian";
-import { getLeafForAction } from "src/app/openLeaf";
+import { getLeafForAction } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
 import {
 	getVaultFullPath,
@@ -7,7 +7,7 @@ import {
 	isUserIgnoredPath,
 } from "src/ignored-notes/ignoredPaths";
 import { getDesktopAdapter } from "src/platform/desktopAdapter";
-import type { PaletteResult } from "src/model/results";
+import type { PaletteResult } from "src/palette/results";
 import { resolveExternalOpenTarget } from "src/palette/openTargets";
 
 /**

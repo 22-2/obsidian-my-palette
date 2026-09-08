@@ -1,6 +1,6 @@
 import type { Prefixes } from "src/palette/inputParser";
 import { getSearchHistoryCategory, parseInput } from "src/palette/inputParser";
-import type { SearchHistoryCategory, SearchHistoryEntry } from "src/model/settings";
+import type { SearchHistoryCategory, SearchHistoryEntry } from "src/settings/model";
 
 export interface RecordSearchHistoryOptions {
 	now: number;

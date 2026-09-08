@@ -4,7 +4,7 @@ import {
 	isExcludedFolder,
 	type ExcludedFolderSource,
 } from "src/search/excludedFolders";
-import type { SmartConnectionResult } from "src/model/results";
+import type { SmartConnectionResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 

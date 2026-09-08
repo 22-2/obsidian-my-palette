@@ -1,6 +1,6 @@
 import type { App, WorkspaceLeaf } from "obsidian";
 import { describe, expect, it, vi } from "vitest";
-import { getLeafForAction } from "src/app/openLeaf";
+import { getLeafForAction } from "src/workspace/openLeaf";
 
 function fakeLeaf(pinned: boolean): WorkspaceLeaf {
 	return { getViewState: () => ({ pinned }) } as unknown as WorkspaceLeaf;

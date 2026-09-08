@@ -1,9 +1,9 @@
 import { Menu, Notice, TFile, type App, type WorkspaceLeaf } from "obsidian";
-import { getLeafForAction } from "src/app/openLeaf";
+import { getLeafForAction } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
-import type { FileResult } from "src/model/results";
+import type { FileResult } from "src/palette/results";
 import { openSelectionModal, type SelectionItem } from "src/ui/selectionModal";
-import { addLinkToMocRelateds } from "src/commands/mocRelatedsCore";
+import { addLinkToMocRelateds } from "src/moc-relateds/mocRelatedsCore";
 import { getVaultFullPath, isUserIgnoredPath } from "src/ignored-notes/ignoredPaths";
 import { materializeIgnoredNote } from "src/ignored-notes/ignoredNoteMaterializer";
 import { addCopyPathMenuItems, copyPathToClipboard } from "src/platform/pathClipboard";

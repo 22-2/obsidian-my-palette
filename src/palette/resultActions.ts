@@ -1,5 +1,5 @@
 import { Notice, TFile, type App, type WorkspaceLeaf } from "obsidian";
-import { getLeafForAction, type LeafOpenAction } from "src/app/openLeaf";
+import { getLeafForAction, type LeafOpenAction } from "src/workspace/openLeaf";
 import {
 	getVaultFullPath,
 	isAbsolutePathUserIgnored,
@@ -15,7 +15,7 @@ declare const electron: {
 		openExternal: (url: string) => Promise<void>;
 	};
 };
-import type { EverythingResult, PaletteResult } from "src/model/results";
+import type { EverythingResult, PaletteResult } from "src/palette/results";
 import { openPathInCode } from "src/platform/vscode";
 
 export type ActionKind = LeafOpenAction;

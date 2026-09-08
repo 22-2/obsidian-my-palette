@@ -1,6 +1,6 @@
 import { ItemView, Menu, TFile, setIcon, type WorkspaceLeaf } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import type { PaletteResult } from "src/model/results";
+import type { PaletteResult } from "src/palette/results";
 import {
 	executePaletteResult,
 	type PaletteResultExecutionOptions,
@@ -12,24 +12,14 @@ import {
 	type PaletteSearchState,
 } from "src/palette/PaletteSearchSession";
 import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
-import {
-	getCopyablePaths,
-	isCopyablePaletteResult,
-	toPaletteSelectionItem,
-} from "src/palette/resultPresentation";
-import {
-	addCopyPathListMenuItems,
-	addCopyPathMenuItems,
-	copyPathListToClipboard,
-	copyPathToClipboard,
-} from "src/platform/pathClipboard";
-import { SearchHistorySuggest } from "src/ui/searchHistorySuggest";
+import { toPaletteSelectionItem } from "src/palette/resultPresentation";
 import { renderSelectionItem } from "src/ui/selectionModal";
 import { SuggestionPanel } from "src/ui/suggestionPanel";
 import type { ActionKind } from "src/palette/resultActions";
-import { addMocInsertionMenuItem, type MocInsertionContext } from "src/palette/mocInsertion";
-import { PaletteHelpModal } from "src/ui/paletteHelpModal";
-import { EXTERNAL_MARKDOWN_VIEW_TYPE } from "src/views/ExternalMarkdownView";
+import type { MocInsertionContext } from "src/moc-relateds/mocInsertion";
+import { populatePaletteResultMenu } from "src/palette/actions/resultContextMenu";
+import { EXTERNAL_MARKDOWN_VIEW_TYPE } from "src/workspace/external-markdown/ExternalMarkdownView";
+import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 
 export const PALETTE_VIEW_TYPE = "my-palette-search";
 
@@ -53,7 +43,7 @@ export class PaletteView extends ItemView {
 
 	private panel?: SuggestionPanel<PaletteResult>;
 	private session?: PaletteSearchSession;
-	private historySuggest?: SearchHistorySuggest;
+	private historyControls?: PaletteHistoryControls;
 	private activeMenu?: Menu;
 	private targetLeaf?: WorkspaceLeaf;
 	private sourcePath?: string;
@@ -133,8 +123,8 @@ export class PaletteView extends ItemView {
 	async onClose(): Promise<void> {
 		this.activeMenu?.close();
 		this.activeMenu = undefined;
-		this.historySuggest?.destroy();
-		this.historySuggest = undefined;
+		this.historyControls?.destroy();
+		this.historyControls = undefined;
 		this.session?.dispose();
 		this.session = undefined;
 		if (this.panel) this.removeChild(this.panel);
@@ -149,8 +139,8 @@ export class PaletteView extends ItemView {
 
 	private createSurface(state: NormalizedPaletteViewState): void {
 		this.activeMenu?.close();
-		this.historySuggest?.destroy();
-		this.historySuggest = undefined;
+		this.historyControls?.destroy();
+		this.historyControls = undefined;
 		this.session?.dispose();
 		if (this.panel) this.removeChild(this.panel);
 		this.session = undefined;
@@ -197,7 +187,7 @@ export class PaletteView extends ItemView {
 		this.addChild(this.panel);
 		this.panel.load();
 		this.addSourcePinControl();
-		this.addSearchHistoryControls();
+		this.addHistoryControls();
 		this.registerTargetLeafTracking();
 		this.renderState(this.session.current);
 		void this.session.search(initialInput);
@@ -234,15 +224,7 @@ export class PaletteView extends ItemView {
 			error: state.error,
 		});
 		this.actionMessage = undefined;
-		const history = this.session?.getSearchHistoryContext(state.input);
-		if (history)
-			this.historySuggest?.update(
-				this.plugin.getSearchHistorySuggestions(
-					history.query,
-					history.category,
-					history.includeIgnored,
-				),
-			);
+		this.historyControls?.update(state.input);
 	}
 
 	private addSourcePinControl(): void {
@@ -314,134 +296,28 @@ export class PaletteView extends ItemView {
 		if (this.session) this.renderState(this.session.current);
 	}
 
-	private addSearchHistoryControls(): void {
+	private addHistoryControls(): void {
 		if (!this.panel) return;
 		const container = this.panel.inputEl.parentElement;
 		if (!container) return;
-		const button = container.createEl("button", {
-			cls: "clickable-icon my-palette-history-button",
-			attr: {
-				type: "button",
-				"aria-label": "Search history",
-				"aria-keyshortcuts": "Control+R",
-				title: "Search history (Ctrl+R)",
-			},
+		this.historyControls = new PaletteHistoryControls({
+			plugin: this.plugin,
+			inputEl: this.panel.inputEl,
+			containerEl: container,
+			hostEl: this.contentEl,
+			getContext: (input) =>
+				this.session?.getSearchHistoryContext(input) ?? {
+					query: "",
+					category: "file",
+					includeIgnored: false,
+				},
+			apply: (result) => this.applySearchHistory(result),
 		});
-		setIcon(button, "chevron-down");
-		this.registerDomEvent(button, "mousedown", (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-		});
-		this.registerDomEvent(button, "click", (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-			this.toggleSearchHistorySuggest();
-		});
-		const helpButton = container.createEl("button", {
-			cls: "clickable-icon my-palette-help-button",
-			attr: { type: "button", "aria-label": "Palette help", title: "Palette help" },
-		});
-		setIcon(helpButton, "help-circle");
-		this.registerDomEvent(helpButton, "mousedown", (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-		});
-		this.registerDomEvent(helpButton, "click", (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-			new PaletteHelpModal(this.app, this.plugin.settings.prefixes).open();
-		});
-		this.historySuggest = new SearchHistorySuggest(container, (result) =>
-			this.applySearchHistory(result),
-		);
-		this.registerDomEvent(this.panel.inputEl, "input", () => {
-			if (!this.historySuggest?.isOpen) return;
-			const history = this.session?.getSearchHistoryContext(this.panel?.inputEl.value ?? "");
-			if (history)
-				this.historySuggest.update(
-					this.plugin.getSearchHistorySuggestions(
-						history.query,
-						history.category,
-						history.includeIgnored,
-					),
-				);
-		});
-		this.registerDomEvent(
-			this.panel.inputEl,
-			"keydown",
-			(event) => {
-				if (event.key === "Escape" && this.historySuggest?.isOpen) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					this.historySuggest.close();
-					return;
-				}
-				if (
-					event.ctrlKey &&
-					!event.shiftKey &&
-					!event.altKey &&
-					!event.metaKey &&
-					event.key.toLocaleLowerCase() === "r"
-				) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					this.showSearchHistorySuggest();
-					return;
-				}
-				if (!this.historySuggest?.isOpen) return;
-				if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-					if (!this.historySuggest.moveSelection(event.key === "ArrowDown" ? 1 : -1))
-						return;
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					return;
-				}
-				if (event.key === "Enter" && this.historySuggest.selectCurrent()) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-				}
-			},
-			true,
-		);
-		this.registerDomEvent(document, "mousedown", (event) => {
-			const target = event.target;
-			if (
-				!(target instanceof Node) ||
-				!this.historySuggest?.isOpen ||
-				this.historySuggest.contains(target) ||
-				target === this.panel?.inputEl ||
-				(target instanceof Element && target.closest(".my-palette-history-button"))
-			)
-				return;
-			this.historySuggest.close();
-		});
-	}
-
-	private showSearchHistorySuggest(): void {
-		if (!this.panel || !this.session) return;
-		const history = this.session.getSearchHistoryContext(this.panel.inputEl.value);
-		this.historySuggest?.show(
-			this.plugin.getSearchHistorySuggestions(
-				history.query,
-				history.category,
-				history.includeIgnored,
-			),
-		);
-		this.panel.focusSearchInput();
-		this.panel.setInput(this.panel.inputEl.value, "end");
-	}
-
-	private toggleSearchHistorySuggest(): void {
-		if (this.historySuggest?.isOpen) {
-			this.historySuggest.close();
-			return;
-		}
-		this.showSearchHistorySuggest();
 	}
 
 	private applySearchHistory(result: Extract<PaletteResult, { mode: "search-history" }>): void {
 		const input = this.plugin.formatSearchHistoryInput(result);
-		this.historySuggest?.close();
+		this.historyControls?.close();
 		this.panel?.setInput(input, "end");
 		this.session?.setInputFromHistory(input);
 		this.panel?.focusSearchInput();
@@ -524,80 +400,17 @@ export class PaletteView extends ItemView {
 		menu.onHide(() => {
 			if (this.activeMenu === menu) this.activeMenu = undefined;
 		});
-		const selectedPaths = selectedItems
-			.filter(isCopyablePaletteResult)
-			.map((item) => getCopyablePaths(this.app, item))
-			.filter(({ fileName, relativePath, absolutePath }) =>
-				Boolean(fileName || relativePath || absolutePath),
-			);
-		if (selectedPaths.length > 1) {
-			// Why: bulk open/MOC actions have unclear failure and focus semantics;
-			// keep the multi-selection menu limited to non-mutating clipboard work.
-			addCopyPathListMenuItems(
-				menu,
-				selectedPaths,
-				(values) => void copyPathListToClipboard(values),
-			);
-			menu.setParentElement(this.contentEl);
-			menu.showAtMouseEvent(event);
-			return;
-		}
-		if (result.mode === "search-history") {
-			menu.addItem((item) =>
-				item
-					.setTitle("Use search")
-					.setIcon("history")
-					.onClick(() => this.applySearchHistory(result)),
-			);
-		} else if (result.mode === "command") {
-			menu.addItem((item) =>
-				item
-					.setTitle("Run command")
-					.setIcon("play")
-					.onClick(() => void this.execute(result, "primary")),
-			);
-		} else {
-			const paths = getCopyablePaths(this.app, result);
-			menu.addItem((item) =>
-				item
-					.setTitle("Open")
-					.setIcon("external-link")
-					.onClick(() => void this.execute(result, "primary")),
-			);
-			menu.addItem((item) =>
-				item
-					.setTitle("Open in new tab (background)")
-					.setIcon("panel-top-open")
-					.onClick(() => void this.openInBackground(result)),
-			);
-			menu.addItem((item) =>
-				item
-					.setTitle("Open side by side")
-					.setIcon("separator-vertical")
-					.onClick(() => void this.execute(result, "vertical")),
-			);
-			menu.addItem((item) =>
-				item
-					.setTitle("Open below")
-					.setIcon("separator-horizontal")
-					.onClick(() => void this.execute(result, "horizontal")),
-			);
-			if (result.mode === "everything") {
-				menu.addSeparator();
-				menu.addItem((item) =>
-					item
-						.setTitle("Show in file explorer")
-						.setIcon("folder-open")
-						.onClick(() => void this.execute(result, "alternate")),
-				);
-			}
-			addCopyPathMenuItems(menu, paths, (path) => void copyPathToClipboard(path));
-			// Keep the potentially mutating MOC operation below navigation and copy
-			// actions so the menu follows familiar file-manager conventions.
-			addMocInsertionMenuItem(menu, this.plugin, result, undefined, () =>
-				this.resolveMocInsertionContext(),
-			);
-		}
+		populatePaletteResultMenu({
+			app: this.app,
+			plugin: this.plugin,
+			menu,
+			result,
+			selectedItems,
+			activate: (action, selected) => this.execute(selected, action),
+			openInBackground: (selected) => this.openInBackground(selected),
+			applySearchHistory: (history) => this.applySearchHistory(history),
+			getMocContext: () => this.resolveMocInsertionContext(),
+		});
 		menu.setParentElement(this.contentEl);
 		menu.showAtMouseEvent(event);
 	}

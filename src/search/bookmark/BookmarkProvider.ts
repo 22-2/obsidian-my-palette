@@ -4,7 +4,7 @@ import {
 	filterExcludedFolders,
 	type ExcludedFolderSource,
 } from "src/search/excludedFolders";
-import type { BookmarkResult } from "src/model/results";
+import type { BookmarkResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 

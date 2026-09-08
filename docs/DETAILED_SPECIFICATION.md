@@ -98,10 +98,10 @@ tags:
 
 プラグインは次のパレット起動コマンドを登録する。
 
-| Command ID             | 表示名                                      | 動作                           |
-| ---------------------- | ------------------------------------------- | ------------------------------ |
-| `my-palette:open`      | `My Palette: Open palette`                  | パレットをファイルモードで開く |
-| `my-palette:open-view` | `My Palette: Open palette in right sidebar` | 右サイドバーでパレットを開く   |
+| Command ID                 | 表示名                                          | 動作                               |
+| -------------------------- | ----------------------------------------------- | ---------------------------------- |
+| `my-palette:open`          | `My Palette: Open palette`                      | パレットをファイルモードで開く     |
+| `my-palette:open-view`     | `My Palette: Open palette in right sidebar`     | 右サイドバーでパレットを開く       |
 | `my-palette:open-new-view` | `My Palette: Open new palette in right sidebar` | 右サイドバーに新しいパレットを開く |
 
 Obsidian 標準の「ホットキー」設定から、利用者がこのコマンドにグローバルホットキーを割り当てる。プラグイン側では衝突を避けるため、グローバルホットキーを既定割り当てしない。
@@ -421,15 +421,15 @@ http://127.0.0.1:51361/?search=<query>&json=1&count=100&path_column=1&attributes
 
 ### 9.1 Everything
 
-| 設定キー                                 | 型       | 既定値                    | 制約                         |
-| ---------------------------------------- | -------- | ------------------------- | ---------------------------- |
-| `everything.httpUrl`                     | string   | `http://127.0.0.1:51361/` | HTTP(S) URL                  |
-| `everything.username`                    | string   | `""`                      | 任意                         |
-| `everything.password`                    | string   | `""`                      | 任意                         |
-| `everything.maxResults`                  | number   | `100`                     | 10〜500                      |
-| `everything.debounceMs`                  | number   | `150`                     | 50〜1000                     |
-| `everything.requestTimeoutMs`            | number   | `30000`                   | 1000〜60000                  |
-| `everything.vaultExtensions`             | string[] | `["md","canvas","base"]`  | Vault検索の対象拡張子        |
+| 設定キー                      | 型       | 既定値                    | 制約                  |
+| ----------------------------- | -------- | ------------------------- | --------------------- |
+| `everything.httpUrl`          | string   | `http://127.0.0.1:51361/` | HTTP(S) URL           |
+| `everything.username`         | string   | `""`                      | 任意                  |
+| `everything.password`         | string   | `""`                      | 任意                  |
+| `everything.maxResults`       | number   | `100`                     | 10〜500               |
+| `everything.debounceMs`       | number   | `150`                     | 50〜1000              |
+| `everything.requestTimeoutMs` | number   | `30000`                   | 1000〜60000           |
+| `everything.vaultExtensions`  | string[] | `["md","canvas","base"]`  | Vault検索の対象拡張子 |
 
 Everythingページには次を設ける。
 
@@ -477,7 +477,7 @@ Everythingページには次を設ける。
 | ページ              | 内容                                                                              |
 | ------------------- | --------------------------------------------------------------------------------- |
 | `Palette`           | プレフィックス、最後の入力の復元、検索履歴、Vault外Markdownの開き方、診断設定     |
-| `Vault file search` | 除外フォルダ、除外ノートのインデックス再構築、Vaultファイルの検索結果の並び順       |
+| `Vault file search` | 除外フォルダ、除外ノートのインデックス再構築、Vaultファイルの検索結果の並び順     |
 | `Everything`        | Everything 1.5の接続・認証、結果件数、対象拡張子、検索タイミング、Vault検索の詳細 |
 
 ## 10. データモデル
@@ -569,18 +569,25 @@ src/
 ├── settings.ts
 ├── app/
 │   ├── createPaletteProviders.ts
-│   ├── openExternalMarkdown.ts
 │   ├── registerCommands.ts
 │   └── registerEvents.ts
-├── commands/
-│   ├── mocRelateds.ts
-│   └── mocRelatedsCore.ts
 ├── ignored-notes/
+│   ├── ignoredNoteEntry.ts
 │   ├── ignoredNoteIndex.ts
 │   ├── ignoredNoteMaterializer.ts
+│   ├── ignoredNotePath.ts
+│   ├── ignoredNoteScanner.ts
 │   ├── ignoredPathMatching.ts
 │   └── ignoredPaths.ts
+├── moc-relateds/
+│   ├── mocInsertion.ts
+│   ├── mocRelateds.ts
+│   └── mocRelatedsCore.ts
 ├── palette/
+│   ├── actions/
+│   │   └── resultContextMenu.ts
+│   ├── components/
+│   │   └── PaletteHistoryControls.ts
 │   ├── PaletteModal.ts
 │   ├── PaletteSearchSession.ts
 │   ├── backgroundResultActions.ts
@@ -590,8 +597,11 @@ src/
 │   ├── openTargets.ts
 │   ├── resultPresentation.ts
 │   ├── resultActions.ts
+│   ├── results.ts
 │   ├── searchHistory.ts
-│   └── searchHistoryStore.ts
+│   ├── searchHistoryStore.ts
+│   └── surfaces/
+│       └── PaletteView.ts
 ├── platform/
 │   ├── desktopAdapter.ts
 │   ├── pathClipboard.ts
@@ -615,10 +625,8 @@ src/
 │   │   └── RelatedFileProvider.ts
 │   └── smart/
 │       └── SmartConnectionProvider.ts
-├── model/
-│   ├── results.ts
-│   └── settings.ts
 ├── settings/
+│   ├── model.ts
 │   ├── mergeSettings.ts
 │   ├── settingsStore.ts
 │   └── settingTab.ts
@@ -630,9 +638,11 @@ src/
 │   ├── searchHistorySuggest.ts
 │   ├── selectionModal.ts
 │   └── suggestionPanel.ts
-└── views/
-    ├── ExternalMarkdownView.ts
-    └── PaletteView.ts
+└── workspace/
+    ├── openLeaf.ts
+    └── external-markdown/
+        ├── ExternalMarkdownView.ts
+        └── openExternalMarkdown.ts
 ```
 
 ### 11.2 責務
@@ -643,11 +653,17 @@ src/
 | `app/registerCommands`       | Obsidianコマンドの登録と実行条件                                           |
 | `app/registerEvents`         | ViewとVaultイベントの登録                                                  |
 | `app/createPaletteProviders` | Providerの生成とモードregistryの構築                                       |
+| `workspace/openLeaf`         | pinned状態を含む結果アクションのleaf選択規則                               |
+| `PaletteHistoryControls`     | Modal / ItemView共通の検索履歴・ヘルプ操作とイベントのライフサイクル       |
+| `resultContextMenu`          | Modal / ItemView共通の結果メニュー構築                                     |
 | `PaletteSearchSession`       | 入力解析、Provider検索、世代番号、キャンセル、履歴コミット                 |
 | `SuggestionPanel`            | Modal / ItemView共通の入力、候補行、選択、ポインター操作                   |
 | `executePaletteResult`       | 結果モードごとのアクション振り分けとホスト差分の吸収                       |
 | `PaletteModal`               | モーダルのライフサイクル、フォーカス、閉じる挙動                           |
 | `PaletteView`                | 右サイドバーの永続パレット、本文leaf追跡、workspace state                  |
+| `ignoredNoteEntry`           | ignored noteのパス・frontmatterを検索用エントリへ変換                      |
+| `ignoredNoteScanner`         | 除外対象のVault走査と並列処理                                              |
+| `ignoredNoteIndex`           | ignored noteエントリのキャッシュ制御とIndexedDB永続化                      |
 | `resultPresentation`         | 検索結果の表示形式とパスコピー対象の決定                                   |
 | `inputParser`                | プレフィックス検出とクエリ抽出。副作用なし                                 |
 | Provider                     | モード別検索。UI 要素を直接操作しない                                      |

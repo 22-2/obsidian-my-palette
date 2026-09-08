@@ -1,7 +1,10 @@
 import { Notice, TFile, type Menu, type WorkspaceLeaf } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import type { PaletteResult } from "src/model/results";
-import { insertFileToActiveMocRelateds, insertFileToMocRelateds } from "src/commands/mocRelateds";
+import type { PaletteResult } from "src/palette/results";
+import {
+	insertFileToActiveMocRelateds,
+	insertFileToMocRelateds,
+} from "src/moc-relateds/mocRelateds";
 import { materializeIgnoredNote } from "src/ignored-notes/ignoredNoteMaterializer";
 
 /** Resolves a palette result to a vault note for the shared MOC menu action. */

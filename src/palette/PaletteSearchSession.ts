@@ -1,5 +1,5 @@
 import type { TFile } from "obsidian";
-import type { EverythingScope, PaletteMode, PaletteResult, ParsedInput } from "src/model/results";
+import type { EverythingScope, PaletteMode, PaletteResult, ParsedInput } from "src/palette/results";
 import type MyPalettePlugin from "src/main";
 import { getSearchHistoryCategory, parseInput } from "src/palette/inputParser";
 

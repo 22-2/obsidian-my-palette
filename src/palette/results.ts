@@ -1,5 +1,5 @@
 import type { TFile } from "obsidian";
-import type { SearchHistoryEntry } from "src/model/settings";
+import type { SearchHistoryEntry } from "src/settings/model";
 
 export type PaletteMode =
 	| "file"

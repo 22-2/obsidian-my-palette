@@ -1,6 +1,6 @@
 import { Notice } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import { insertLinkToMocRelateds } from "src/commands/mocRelateds";
+import { insertLinkToMocRelateds } from "src/moc-relateds/mocRelateds";
 import { MoveFileModal } from "src/palette/MoveFileModal";
 
 /**

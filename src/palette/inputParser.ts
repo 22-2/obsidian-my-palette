@@ -1,5 +1,5 @@
-import type { EverythingScope, ParsedInput, PaletteMode } from "src/model/results";
-import type { SearchHistoryCategory } from "src/model/settings";
+import type { EverythingScope, ParsedInput, PaletteMode } from "src/palette/results";
+import type { SearchHistoryCategory } from "src/settings/model";
 
 export interface Prefixes {
 	command: string;

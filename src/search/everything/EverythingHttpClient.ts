@@ -1,5 +1,5 @@
-import type { MyPaletteSettings } from "src/model/settings";
-import type { EverythingResult } from "src/model/results";
+import type { MyPaletteSettings } from "src/settings/model";
+import type { EverythingResult } from "src/palette/results";
 
 interface EverythingHttpItem {
 	type?: unknown;

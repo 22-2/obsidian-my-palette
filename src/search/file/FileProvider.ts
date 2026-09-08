@@ -1,12 +1,12 @@
 import { parseFrontMatterTags, type App, type EventRef, type TFile } from "obsidian";
 import { getUserIgnoreFilters, isUserIgnoredPathWithFilters } from "src/ignored-notes/ignoredPaths";
 import { IgnoredNoteIndex, type IgnoredNoteIndexLogger } from "src/ignored-notes/ignoredNoteIndex";
-import type { FileResult } from "src/model/results";
+import type { FileResult } from "src/palette/results";
 import {
 	DEFAULT_FILE_SORT_PRIORITIES,
 	FILE_SORT_PRIORITIES,
 	type FileSortPriorities,
-} from "src/model/settings";
+} from "src/settings/model";
 import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
 import {
 	EMPTY_EXCLUDED_FOLDER_SOURCE,
