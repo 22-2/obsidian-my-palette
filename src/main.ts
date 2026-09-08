@@ -1,6 +1,7 @@
 import { Plugin, type WorkspaceLeaf } from "obsidian";
 import log, { LogLevels } from "consola";
 import { DEFAULT_SETTINGS, MyPaletteSettingTab } from "src/settings";
+import type { LeafOpenAction } from "src/app/openLeaf";
 import type { MyPaletteSettings } from "src/model/settings";
 import {
 	createPaletteProviders,
@@ -191,11 +192,12 @@ export default class MyPalettePlugin extends Plugin {
 
 	async openExternalMarkdown(
 		absolutePath: string,
-		action: "primary" | "alternate" | "vertical" | "horizontal",
+		action: LeafOpenAction,
 		autoFocus = true,
 		active = true,
+		targetLeaf?: WorkspaceLeaf,
 	): Promise<void> {
-		await openExternalMarkdown(this, absolutePath, action, autoFocus, active);
+		await openExternalMarkdown(this, absolutePath, action, autoFocus, active, targetLeaf);
 	}
 
 	onunload(): void {

@@ -1,4 +1,5 @@
 import { Notice, TFile } from "obsidian";
+import { getLeafForAction } from "src/app/openLeaf";
 import type MyPalettePlugin from "src/main";
 import {
 	getVaultFullPath,
@@ -117,5 +118,5 @@ async function openExternalMarkdownInBackground(
 }
 
 async function openFileInBackground(plugin: MyPalettePlugin, file: TFile): Promise<void> {
-	await plugin.app.workspace.getLeaf("tab").openFile(file, { active: false });
+	await getLeafForAction(plugin.app, "alternate").openFile(file, { active: false });
 }

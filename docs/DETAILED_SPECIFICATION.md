@@ -316,6 +316,7 @@ http://127.0.0.1:51361/?search=<query>&json=1&count=100&path_column=1&attributes
 ### 6.2 File アクション
 
 - 現在の leaf で開く場合、既存 leaf がなければ新規 leaf を取得する。
+- pinned な leaf は保護し、現在の leaf で開く操作でも pinned でない既存 leaf または新規 leaf を使用する。
 - 新しいタブでは `getLeaf("tab")` 相当を使用する。
 - 分割では `getLeaf("split", "vertical")` 相当を使用する。
 - 開く直前に対象 `TFile` がまだ存在するか再確認する。
@@ -325,6 +326,7 @@ http://127.0.0.1:51361/?search=<query>&json=1&count=100&path_column=1&attributes
 #### Enterで開く
 
 - `TFile`として認識できる通常ファイルはObsidianの現在のleafで開く。
+- 現在の leaf が pinned の場合は上書きせず、移動可能な leaf または新規 leaf を使用する。
 - ignore対象、ドットファイル、その他Obsidianが認識しない物理ファイルはVS Codeで開く。
 - VS Codeには`code --new-window <Vaultルート> <対象ファイル>`相当の引数を同時に渡す。
 - 実行直前にパスの存在を確認する。

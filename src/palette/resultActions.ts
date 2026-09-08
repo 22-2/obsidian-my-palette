@@ -1,4 +1,5 @@
 import { Notice, TFile, type App, type WorkspaceLeaf } from "obsidian";
+import { getLeafForAction, type LeafOpenAction } from "src/app/openLeaf";
 import {
 	getVaultFullPath,
 	isAbsolutePathUserIgnored,
@@ -17,7 +18,7 @@ declare const electron: {
 import type { EverythingResult, PaletteResult } from "src/model/results";
 import { openPathInCode } from "src/platform/vscode";
 
-export type ActionKind = "primary" | "alternate" | "vertical" | "horizontal";
+export type ActionKind = LeafOpenAction;
 export interface ActionOutcome {
 	close: boolean;
 	message?: string;
@@ -29,6 +30,7 @@ interface ExternalMarkdownActions {
 		absolutePath: string,
 		action: ActionKind,
 		active?: boolean,
+		targetLeaf?: WorkspaceLeaf,
 	) => Promise<void>;
 }
 
@@ -49,9 +51,15 @@ async function openExternalTarget(
 	action: ActionKind,
 	externalMarkdown: ExternalMarkdownActions,
 	active: boolean,
+	targetLeaf?: WorkspaceLeaf,
 ): Promise<ActionOutcome> {
 	if (target.kind === "readonly-markdown") {
-		await externalMarkdown.openExternalMarkdown(target.absolutePath, action, active);
+		await externalMarkdown.openExternalMarkdown(
+			target.absolutePath,
+			action,
+			active,
+			targetLeaf,
+		);
 		return { close: true };
 	}
 	if (target.kind === "code") return await openAbsolutePathInCode(target.absolutePath);
@@ -91,21 +99,13 @@ export async function runResultAction(
 				action,
 				externalMarkdown,
 				options.active ?? true,
+				options.targetLeaf,
 			);
 		}
 		const current = app.vault.getAbstractFileByPath(result.vaultPath);
 		if (!(current instanceof TFile))
 			return { close: false, message: "The file no longer exists." };
-		const leaf =
-			action === "primary" && options.targetLeaf
-				? options.targetLeaf
-				: action === "alternate"
-					? app.workspace.getLeaf("tab")
-					: action === "horizontal"
-						? app.workspace.getLeaf("split", "horizontal")
-						: action === "vertical"
-							? app.workspace.getLeaf("split", "vertical")
-							: app.workspace.getLeaf(false);
+		const leaf = getLeafForAction(app, action, options.targetLeaf);
 		await leaf.openFile(
 			current,
 			action === "primary" ? { active: options.active ?? true } : undefined,
@@ -128,14 +128,7 @@ export async function runResultAction(
 	} else if (everythingResult.vaultPath) {
 		const current = app.vault.getAbstractFileByPath(everythingResult.vaultPath);
 		if (current instanceof TFile) {
-			const leaf =
-				action === "primary" && options.targetLeaf
-					? options.targetLeaf
-					: action === "horizontal"
-						? app.workspace.getLeaf("split", "horizontal")
-						: action === "vertical"
-							? app.workspace.getLeaf("split", "vertical")
-							: app.workspace.getLeaf(false);
+			const leaf = getLeafForAction(app, action, options.targetLeaf);
 			await leaf.openFile(
 				current,
 				action === "primary" ? { active: options.active ?? true } : undefined,
@@ -151,7 +144,13 @@ export async function runResultAction(
 			Boolean(everythingResult.vaultPath) ||
 			isAbsolutePathUserIgnored(app, everythingResult.absolutePath),
 	});
-	return await openExternalTarget(target, action, externalMarkdown, options.active ?? true);
+	return await openExternalTarget(
+		target,
+		action,
+		externalMarkdown,
+		options.active ?? true,
+		options.targetLeaf,
+	);
 }
 
 export function notifyActionError(message: string): void {

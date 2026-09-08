@@ -1,4 +1,5 @@
 import { type App, type WorkspaceLeaf } from "obsidian";
+import { getLeafForAction } from "src/app/openLeaf";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/model/results";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
@@ -62,9 +63,11 @@ export async function executePaletteResult(
 		return;
 	}
 	if (result.mode === "link" || result.mode === "backlink") {
-		await openFileResult(plugin.app, result, action, options);
+		const openedLeaf = await openFileResult(plugin.app, result, action, options);
 		plugin.recordResultUsage(result);
-		const editor = editorOf(options.targetLeaf ?? plugin.app.workspace.activeLeaf);
+		// A pinned target may resolve to a fallback leaf; place the cursor on the
+		// leaf that actually received the related note, including split actions.
+		const editor = editorOf(openedLeaf);
 		if (editor) editor.setCursor({ line: result.line, ch: 0 });
 		finish(options);
 		return;
@@ -76,12 +79,18 @@ export async function executePaletteResult(
 		action,
 		{
 			openExternalMarkdownInObsidian: plugin.settings.openExternalMarkdownInObsidian,
-			openExternalMarkdown: (absolutePath, openAction, active = options.active) =>
+			openExternalMarkdown: (
+				absolutePath,
+				openAction,
+				active = options.active,
+				targetLeaf = options.targetLeaf,
+			) =>
 				plugin.openExternalMarkdown(
 					absolutePath,
 					openAction,
 					options.externalAutoFocus ?? active,
 					active,
+					targetLeaf,
 				),
 		},
 		{
@@ -106,7 +115,7 @@ async function executeBookmark(
 		return true;
 	}
 	if (!result.file) return false;
-	const leaf = leafForAction(app, action, options.targetLeaf);
+	const leaf = getLeafForAction(app, action, options.targetLeaf);
 	await leaf.openFile(result.file, action === "primary" ? { active: options.active } : undefined);
 	return true;
 }
@@ -116,20 +125,10 @@ async function openFileResult(
 	result: Extract<PaletteResult, { mode: "smart" | "link" | "backlink" }>,
 	action: ActionKind,
 	options: PaletteResultExecutionOptions,
-): Promise<void> {
-	const leaf = leafForAction(app, action, options.targetLeaf);
+): Promise<WorkspaceLeaf> {
+	const leaf = getLeafForAction(app, action, options.targetLeaf);
 	await leaf.openFile(result.file, action === "primary" ? { active: options.active } : undefined);
-}
-
-function leafForAction(app: App, action: ActionKind, targetLeaf?: WorkspaceLeaf): WorkspaceLeaf {
-	if (action === "primary" && targetLeaf) return targetLeaf;
-	return action === "alternate"
-		? app.workspace.getLeaf("tab")
-		: action === "horizontal"
-			? app.workspace.getLeaf("split", "horizontal")
-			: action === "vertical"
-				? app.workspace.getLeaf("split", "vertical")
-				: app.workspace.getLeaf(false);
+	return leaf;
 }
 
 function editorOf(

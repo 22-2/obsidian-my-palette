@@ -1,4 +1,5 @@
 import { Menu, Notice, TFile, type App, type WorkspaceLeaf } from "obsidian";
+import { getLeafForAction } from "src/app/openLeaf";
 import type MyPalettePlugin from "src/main";
 import type { FileResult } from "src/model/results";
 import { openSelectionModal, type SelectionItem } from "src/ui/selectionModal";
@@ -117,7 +118,7 @@ async function openCandidateInBackground(
 		return;
 	}
 	if (result.file) {
-		await plugin.app.workspace.getLeaf("tab").openFile(result.file, { active: false });
+		await getLeafForAction(plugin.app, "alternate").openFile(result.file, { active: false });
 		plugin.recordFileUsage(result.vaultPath);
 		return;
 	}

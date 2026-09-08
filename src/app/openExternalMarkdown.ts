@@ -1,4 +1,5 @@
 import type { WorkspaceLeaf } from "obsidian";
+import { getLeafForAction, isPinnedLeaf, type LeafOpenAction } from "src/app/openLeaf";
 import type MyPalettePlugin from "src/main";
 import { EXTERNAL_MARKDOWN_VIEW_TYPE, ExternalMarkdownView } from "src/views/ExternalMarkdownView";
 
@@ -9,9 +10,10 @@ import { EXTERNAL_MARKDOWN_VIEW_TYPE, ExternalMarkdownView } from "src/views/Ext
 export async function openExternalMarkdown(
 	plugin: MyPalettePlugin,
 	absolutePath: string,
-	action: "primary" | "alternate" | "vertical" | "horizontal",
+	action: LeafOpenAction,
 	autoFocus = true,
 	active = true,
+	targetLeaf?: WorkspaceLeaf,
 ): Promise<void> {
 	const effectiveAutoFocus = autoFocus && active;
 	const externalLeaves = plugin.app.workspace.getLeavesOfType(EXTERNAL_MARKDOWN_VIEW_TYPE);
@@ -38,18 +40,15 @@ export async function openExternalMarkdown(
 	}
 	const previewLeaf = !autoFocus
 		? externalLeaves.find(
-				(leaf) => leaf.view instanceof ExternalMarkdownView && leaf.view.isPreview(),
+				(leaf) =>
+					leaf.view instanceof ExternalMarkdownView &&
+					leaf.view.isPreview() &&
+					!isPinnedLeaf(leaf),
 			)
 		: undefined;
-	const leaf: WorkspaceLeaf =
-		previewLeaf ??
-		(action === "alternate"
-			? plugin.app.workspace.getLeaf("tab")
-			: action === "horizontal"
-				? plugin.app.workspace.getLeaf("split", "horizontal")
-				: action === "vertical"
-					? plugin.app.workspace.getLeaf("split", "vertical")
-					: plugin.app.workspace.getLeaf(false));
+	// Preview reuse is a virtual-note-specific optimization; every other target
+	// follows the same pinned-safe leaf policy as ordinary note opens.
+	const leaf: WorkspaceLeaf = previewLeaf ?? getLeafForAction(plugin.app, action, targetLeaf);
 	await leaf.setViewState({
 		type: EXTERNAL_MARKDOWN_VIEW_TYPE,
 		active,
