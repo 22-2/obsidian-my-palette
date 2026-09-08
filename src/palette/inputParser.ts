@@ -39,6 +39,18 @@ export function parseInput(raw: string, prefixes: Prefixes): ParsedInput {
 		raw.toLocaleLowerCase().startsWith(ignoredPrefix.toLocaleLowerCase());
 	const modeInput = includeIgnored ? raw.slice(ignoredPrefix.length) : raw;
 	const lower = modeInput.toLocaleLowerCase();
+	if (lower === "esdir" || lower === "es") {
+		// Why: these two built-in commands are useful as zero-query searches;
+		// requiring a trailing space makes the documented `es`/`esdir` shortcuts
+		// look like ordinary file queries until the user types another character.
+		return {
+			raw,
+			mode: "everything",
+			query: "",
+			everythingScope: lower === "esdir" ? "directory" : "vault",
+			includeIgnored,
+		};
+	}
 	const candidates: Array<{
 		prefix: string;
 		mode: Exclude<PaletteMode, "file">;

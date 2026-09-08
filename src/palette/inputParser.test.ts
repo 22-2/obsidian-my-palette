@@ -38,8 +38,12 @@ describe("include ignored prefix", () => {
 });
 
 describe("parseInput Everything scopes", () => {
-	it("requires a trailing space before switching Everything modes", () => {
-		expect(parseInput("es", prefixes)).toMatchObject({ mode: "file", query: "es" });
+	it("supports the bare Everything shortcut and its spaced form", () => {
+		expect(parseInput("es", prefixes)).toMatchObject({
+			mode: "everything",
+			query: "",
+			everythingScope: "vault",
+		});
 		expect(parseInput("es ", prefixes)).toMatchObject({
 			mode: "everything",
 			query: "",
@@ -54,10 +58,11 @@ describe("parseInput Everything scopes", () => {
 		});
 	});
 
-	it("requires a trailing space before switching directory-scoped Everything", () => {
+	it("supports the bare directory shortcut and its spaced form", () => {
 		expect(parseInput("esdir", prefixes)).toMatchObject({
-			mode: "file",
-			query: "esdir",
+			mode: "everything",
+			query: "",
+			everythingScope: "directory",
 		});
 		expect(parseInput("esdir ", prefixes)).toMatchObject({
 			mode: "everything",
