@@ -126,14 +126,13 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		const entries = [...this.cache.values()].filter(
 			(entry) =>
 				!isUserIgnoredPathWithFilters(ignoreFilters, entry.path) &&
-				!isExcludedFolder(this.excludedFolders, entry.path),
+				(includeIgnored || !isExcludedFolder(this.excludedFolders, entry.path)),
 		);
 		if (includeIgnored) {
 			// The explicit prefix also authorizes an empty-query listing. The
 			// result limit in the palette keeps the UI bounded while the sorter
 			// places ignored notes before the normal Vault entries.
 			for (const ignored of await this.ignoredIndex.getEntries()) {
-				if (isExcludedFolder(this.excludedFolders, ignored.path)) continue;
 				const entry: FileSearchEntry = {
 					path: ignored.path,
 					basename: ignored.basename,
