@@ -23,11 +23,8 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		name: "Open palette in right sidebar",
 		callback: () => void plugin.openPaletteView(plugin.getRememberedPaletteQuery("file")),
 	});
-	plugin.addCommand({
-		id: "open-new-view",
-		name: "Open new palette in right sidebar",
-		callback: () => void plugin.openNewPaletteView(plugin.getRememberedPaletteQuery("file")),
-	});
+	// Why: one command keeps the command palette discoverable; independent
+	// additional sidebar views remain available from the view pane menu.
 	plugin.addCommand({
 		id: "show-current-line-number",
 		name: "Show current line number",

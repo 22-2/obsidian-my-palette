@@ -24,7 +24,7 @@ Vite+ の設定により、本番用バンドルは `dist/` と設定済みの�
 - 開発中は `vp dev` を実行する
 - バンドルがコピーされた開発用 Vault でプラグインを有効化または再読み込みする
 
-Obsidian のコマンドパレットから `My Palette: Open Recent palette` を実行すると、最近使ったファイルを検索できます。`My Palette: Open command list` ではコマンド検索、`My Palette: Open palette in right sidebar` では既存の右サイドバー固定ビューを開けます。`My Palette: Open new palette in right sidebar` では、独立した検索状態を持つ新しい固定ビューを右サイドバーに追加できます。必要に応じて Obsidian のホットキー設定から各コマンドにショートカットを割り当ててください。
+Obsidian のコマンドパレットから `My Palette: Open Recent palette` を実行すると、最近使ったファイルを検索できます。`My Palette: Open command list` ではコマンド検索、`My Palette: Open palette in right sidebar` では右サイドバーのパレットを開けます。複数の独立した固定ビューを追加したい場合は、パレットビューのペインメニューから実行できます。必要に応じて Obsidian のホットキー設定から各コマンドにショートカットを割り当ててください。
 
 Everything モードを使うには、Everything 1.5a と公式 HTTP Server Plugin を起動しておく必要があります。
 
