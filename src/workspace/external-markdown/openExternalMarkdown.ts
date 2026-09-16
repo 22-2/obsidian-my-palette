@@ -1,10 +1,23 @@
-import type { WorkspaceLeaf } from "obsidian";
-import { getLeafForAction, isPinnedLeaf, type LeafOpenAction } from "src/workspace/openLeaf";
+import type { App, WorkspaceLeaf } from "obsidian";
+import { getDesktopAdapter } from "src/platform/desktopAdapter";
+import { getLeafForAction, type LeafOpenAction } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
-import {
-	EXTERNAL_MARKDOWN_VIEW_TYPE,
-	ExternalMarkdownView,
-} from "src/workspace/external-markdown/ExternalMarkdownView";
+
+const MARKDOWN_VIEW_TYPE = "markdown";
+const EXTERNAL_FILE_PREFIX = "file:";
+
+/** Native Markdown views can represent files outside the Vault via a file URI. */
+export function isExternalMarkdownLeaf(leaf: WorkspaceLeaf): boolean {
+	if (leaf.view.getViewType() !== MARKDOWN_VIEW_TYPE) return false;
+	const file = leaf.view.getState().file;
+	return typeof file === "string" && file.toLocaleLowerCase().startsWith(EXTERNAL_FILE_PREFIX);
+}
+
+export function getExternalMarkdownLeaves(app: App): WorkspaceLeaf[] {
+	return app.workspace
+		.getLeavesOfType(MARKDOWN_VIEW_TYPE)
+		.filter((leaf) => isExternalMarkdownLeaf(leaf));
+}
 
 /**
  * External Markdown leaf reuse is a workspace concern, so keep it outside the
@@ -18,48 +31,43 @@ export async function openExternalMarkdown(
 	active = true,
 	targetLeaf?: WorkspaceLeaf,
 ): Promise<void> {
-	const effectiveAutoFocus = autoFocus && active;
-	const externalLeaves = plugin.app.workspace.getLeavesOfType(EXTERNAL_MARKDOWN_VIEW_TYPE);
+	void autoFocus;
+	const resolvedPath = getDesktopAdapter(plugin.app).path.resolve(absolutePath);
+	const externalLeaves = getExternalMarkdownLeaves(plugin.app);
 	const existing = externalLeaves.find(
-		(leaf) =>
-			leaf.view instanceof ExternalMarkdownView &&
-			leaf.view.getFilePath().toLocaleLowerCase() === absolutePath.toLocaleLowerCase(),
+		(leaf) => externalPathOf(leaf)?.toLocaleLowerCase() === resolvedPath.toLocaleLowerCase(),
 	);
 	if (existing) {
-		// A ReadOnly path has a single workspace leaf; reopening it is a navigation
-		// request, so focus that existing tab even when the original action was
-		// requested as a background open.
+		// Why: a native Markdown leaf already owns this external path, so reopening
+		// it should navigate to that tab instead of creating a duplicate leaf.
 		await existing.setViewState({
-			type: EXTERNAL_MARKDOWN_VIEW_TYPE,
+			type: MARKDOWN_VIEW_TYPE,
 			active: true,
-			state: {
-				path: absolutePath,
-				autoFocus: effectiveAutoFocus,
-				preview: !autoFocus && active,
-			},
+			state: markdownViewState(resolvedPath),
 		});
 		plugin.app.workspace.revealLeaf(existing);
 		return;
 	}
-	const previewLeaf = !autoFocus
-		? externalLeaves.find(
-				(leaf) =>
-					leaf.view instanceof ExternalMarkdownView &&
-					leaf.view.isPreview() &&
-					!isPinnedLeaf(leaf),
-			)
-		: undefined;
-	// Preview reuse is a virtual-note-specific optimization; every other target
-	// follows the same pinned-safe leaf policy as ordinary note opens.
-	const leaf: WorkspaceLeaf = previewLeaf ?? getLeafForAction(plugin.app, action, targetLeaf);
+	const leaf: WorkspaceLeaf = getLeafForAction(plugin.app, action, targetLeaf);
 	await leaf.setViewState({
-		type: EXTERNAL_MARKDOWN_VIEW_TYPE,
+		type: MARKDOWN_VIEW_TYPE,
 		active,
-		state: {
-			path: absolutePath,
-			autoFocus: effectiveAutoFocus,
-			preview: !autoFocus && active,
-		},
+		state: markdownViewState(resolvedPath),
 	});
 	if (active) plugin.app.workspace.revealLeaf(leaf);
+}
+
+function markdownViewState(absolutePath: string): Record<string, unknown> {
+	return {
+		file: `${EXTERNAL_FILE_PREFIX}${absolutePath}`,
+		mode: "source",
+		source: false,
+	};
+}
+
+function externalPathOf(leaf: WorkspaceLeaf): string | undefined {
+	const file = leaf.view.getState().file;
+	if (typeof file !== "string" || !file.toLocaleLowerCase().startsWith(EXTERNAL_FILE_PREFIX))
+		return undefined;
+	return file.slice(EXTERNAL_FILE_PREFIX.length);
 }

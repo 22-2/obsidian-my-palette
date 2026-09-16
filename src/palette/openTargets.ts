@@ -6,7 +6,7 @@ import { isMarkdownPath } from "src/shared/externalFiles";
  * share the same external-file behavior.
  */
 export type ExternalOpenTarget =
-	| { kind: "readonly-markdown"; absolutePath: string }
+	| { kind: "markdown"; absolutePath: string }
 	| { kind: "code"; absolutePath: string }
 	| { kind: "system"; absolutePath: string };
 
@@ -20,7 +20,7 @@ export function resolveExternalOpenTarget(
 	{ openMarkdownInObsidian, ignored }: ExternalOpenTargetOptions,
 ): ExternalOpenTarget {
 	if (isMarkdownPath(absolutePath) && openMarkdownInObsidian)
-		return { kind: "readonly-markdown", absolutePath };
+		return { kind: "markdown", absolutePath };
 	if (ignored) return { kind: "code", absolutePath };
 	return { kind: "system", absolutePath };
 }

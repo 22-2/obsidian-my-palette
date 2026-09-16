@@ -18,7 +18,10 @@ import { SuggestionPanel } from "src/ui/suggestionPanel";
 import type { ActionKind } from "src/palette/resultActions";
 import type { MocInsertionContext } from "src/moc-relateds/mocInsertion";
 import { populatePaletteResultMenu } from "src/palette/actions/resultContextMenu";
-import { EXTERNAL_MARKDOWN_VIEW_TYPE } from "src/workspace/external-markdown/ExternalMarkdownView";
+import {
+	getExternalMarkdownLeaves,
+	isExternalMarkdownLeaf,
+} from "src/workspace/external-markdown/openExternalMarkdown";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 
 export const PALETTE_VIEW_TYPE = "my-palette-search";
@@ -328,9 +331,7 @@ export class PaletteView extends ItemView {
 			if (result.mode === "search-history") this.applySearchHistory(result);
 			return;
 		}
-		const existingExternalLeaves = this.app.workspace.getLeavesOfType(
-			EXTERNAL_MARKDOWN_VIEW_TYPE,
-		);
+		const existingExternalLeaves = getExternalMarkdownLeaves(this.app);
 		const targetLeaf = this.resolveTargetLeaf();
 		const execution: PaletteResultExecutionOptions = {
 			closeWhenDone: false,
@@ -369,21 +370,19 @@ export class PaletteView extends ItemView {
 			if (result.mode === "search-history") this.applySearchHistory(result);
 			return;
 		}
-		const existingExternalLeaves = this.app.workspace.getLeavesOfType(
-			EXTERNAL_MARKDOWN_VIEW_TYPE,
-		);
+		const existingExternalLeaves = getExternalMarkdownLeaves(this.app);
 		await openPaletteResultInBackground(this.plugin, result);
 		this.focusPanelAfterAction(existingExternalLeaves);
 	}
 
 	private focusPanelAfterAction(existingExternalLeaves: readonly WorkspaceLeaf[]): void {
 		const activeLeaf = this.app.workspace.activeLeaf;
-		// Reusing a ReadOnly leaf reveals the requested tab. Focusing the sidebar
+		// Reusing an external Markdown leaf reveals the requested tab. Focusing the sidebar
 		// input afterward would immediately activate the palette again and undo it.
 		if (
 			activeLeaf &&
 			existingExternalLeaves.includes(activeLeaf) &&
-			activeLeaf.view.getViewType() === EXTERNAL_MARKDOWN_VIEW_TYPE
+			isExternalMarkdownLeaf(activeLeaf)
 		)
 			return;
 		this.panel?.focusSearchInput();

@@ -67,7 +67,7 @@ export function toPaletteSelectionItem(
 		badge:
 			isExternalMarkdown || isIgnoredMarkdown
 				? options.openExternalMarkdownInObsidian
-					? "ReadOnly"
+					? "Obsidian"
 					: "VS Code"
 				: result.mode === "smart"
 					? `${Math.round(result.score * 100)}%`

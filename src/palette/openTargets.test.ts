@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import { resolveExternalOpenTarget } from "src/palette/openTargets";
 
 describe("resolveExternalOpenTarget", () => {
-	it("uses the readonly Markdown target when the in-app viewer is enabled", () => {
+	it("uses the native Markdown target when the in-app viewer is enabled", () => {
 		expect(
 			resolveExternalOpenTarget("C:\\vault\\ignored\\note.md", {
 				openMarkdownInObsidian: true,
 				ignored: true,
 			}),
-		).toEqual({ kind: "readonly-markdown", absolutePath: "C:\\vault\\ignored\\note.md" });
+		).toEqual({ kind: "markdown", absolutePath: "C:\\vault\\ignored\\note.md" });
 	});
 
 	it("uses VS Code for ignored Markdown when the in-app viewer is disabled", () => {

@@ -640,41 +640,40 @@ src/
 └── workspace/
     ├── openLeaf.ts
     └── external-markdown/
-        ├── ExternalMarkdownView.ts
         └── openExternalMarkdown.ts
 ```
 
 ### 11.2 責務
 
-| コンポーネント               | 責務                                                                       |
-| ---------------------------- | -------------------------------------------------------------------------- |
-| `main.ts`                    | 設定ロード、Pluginライフサイクル、依存関係の組み立て                       |
-| `app/registerCommands`       | Obsidianコマンドの登録と実行条件                                           |
-| `app/registerEvents`         | ViewとVaultイベントの登録                                                  |
-| `app/createPaletteProviders` | Providerの生成とモードregistryの構築                                       |
-| `workspace/openLeaf`         | pinned状態を含む結果アクションのleaf選択規則                               |
-| `PaletteHistoryControls`     | Modal / ItemView共通の検索履歴・ヘルプ操作とイベントのライフサイクル       |
-| `resultContextMenu`          | Modal / ItemView共通の結果メニュー構築                                     |
-| `PaletteSearchSession`       | 入力解析、Provider検索、世代番号、キャンセル、履歴コミット                 |
-| `SuggestionPanel`            | Modal / ItemView共通の入力、候補行、選択、ポインター操作                   |
-| `executePaletteResult`       | 結果モードごとのアクション振り分けとホスト差分の吸収                       |
-| `PaletteModal`               | モーダルのライフサイクル、フォーカス、閉じる挙動                           |
-| `PaletteView`                | 右サイドバーの永続パレット、本文leaf追跡、workspace state                  |
-| `ignoredNoteEntry`           | ignored noteのパス・frontmatterを検索用エントリへ変換                      |
-| `ignoredNoteScanner`         | 除外対象のVault走査と並列処理                                              |
-| `ignoredNoteIndex`           | ignored noteエントリのキャッシュ制御とIndexedDB永続化                      |
-| `resultPresentation`         | 検索結果の表示形式とパスコピー対象の決定                                   |
-| `inputParser`                | プレフィックス検出とクエリ抽出。副作用なし                                 |
-| Provider                     | モード別検索。UI 要素を直接操作しない                                      |
-| `EverythingHttpClient`       | URL構築、認証、リクエスト中断、タイムアウト、JSON解析                      |
-| `resultActions`              | モード別アクション実行                                                     |
-| `settings/mergeSettings`     | 永続化データの検証と既定値の補完                                           |
-| `settings/settingsStore`     | `data.json` のロード・保存と旧履歴データの移行準備                         |
-| `SearchHistoryStore`         | Vault単位のIndexedDB保存、履歴の読み書き、削除、フォールバック             |
-| `RecentCommandStore`         | Vault単位のIndexedDB保存、最近実行コマンドの並び替え、削除、フォールバック |
-| `settings/settingTab`        | 設定 UI と入力値の反映                                                     |
-| `IgnoredNoteIndex`           | 除外ファイルを検索可能にする再構築可能なキャッシュ                         |
-| `ExternalMarkdownView`       | Vault外または除外されたMarkdownの読み取り専用表示                          |
+| コンポーネント                | 責務                                                                       |
+| ----------------------------- | -------------------------------------------------------------------------- |
+| `main.ts`                     | 設定ロード、Pluginライフサイクル、依存関係の組み立て                       |
+| `app/registerCommands`        | Obsidianコマンドの登録と実行条件                                           |
+| `app/registerEvents`          | ViewとVaultイベントの登録                                                  |
+| `app/createPaletteProviders`  | Providerの生成とモードregistryの構築                                       |
+| `workspace/openLeaf`          | pinned状態を含む結果アクションのleaf選択規則                               |
+| `PaletteHistoryControls`      | Modal / ItemView共通の検索履歴・ヘルプ操作とイベントのライフサイクル       |
+| `resultContextMenu`           | Modal / ItemView共通の結果メニュー構築                                     |
+| `PaletteSearchSession`        | 入力解析、Provider検索、世代番号、キャンセル、履歴コミット                 |
+| `SuggestionPanel`             | Modal / ItemView共通の入力、候補行、選択、ポインター操作                   |
+| `executePaletteResult`        | 結果モードごとのアクション振り分けとホスト差分の吸収                       |
+| `PaletteModal`                | モーダルのライフサイクル、フォーカス、閉じる挙動                           |
+| `PaletteView`                 | 右サイドバーの永続パレット、本文leaf追跡、workspace state                  |
+| `ignoredNoteEntry`            | ignored noteのパス・frontmatterを検索用エントリへ変換                      |
+| `ignoredNoteScanner`          | 除外対象のVault走査と並列処理                                              |
+| `ignoredNoteIndex`            | ignored noteエントリのキャッシュ制御とIndexedDB永続化                      |
+| `resultPresentation`          | 検索結果の表示形式とパスコピー対象の決定                                   |
+| `inputParser`                 | プレフィックス検出とクエリ抽出。副作用なし                                 |
+| Provider                      | モード別検索。UI 要素を直接操作しない                                      |
+| `EverythingHttpClient`        | URL構築、認証、リクエスト中断、タイムアウト、JSON解析                      |
+| `resultActions`               | モード別アクション実行                                                     |
+| `settings/mergeSettings`      | 永続化データの検証と既定値の補完                                           |
+| `settings/settingsStore`      | `data.json` のロード・保存と旧履歴データの移行準備                         |
+| `SearchHistoryStore`          | Vault単位のIndexedDB保存、履歴の読み書き、削除、フォールバック             |
+| `RecentCommandStore`          | Vault単位のIndexedDB保存、最近実行コマンドの並び替え、削除、フォールバック |
+| `settings/settingTab`         | 設定 UI と入力値の反映                                                     |
+| `IgnoredNoteIndex`            | 除外ファイルを検索可能にする再構築可能なキャッシュ                         |
+| `workspace/external-markdown` | 外部Markdownをnative `markdown` viewへ開くworkspace state変換とleaf再利用  |
 
 ### 11.3 非同期検索フロー
 

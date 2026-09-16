@@ -61,7 +61,7 @@ async function openPaletteResultInBackgroundInternal(
 				openMarkdownInObsidian: plugin.settings.openExternalMarkdownInObsidian,
 				ignored: true,
 			});
-			if (target.kind === "readonly-markdown") {
+			if (target.kind === "markdown") {
 				await openExternalMarkdownInBackground(plugin, absolutePath);
 				return true;
 			}
@@ -99,7 +99,7 @@ async function openPaletteResultInBackgroundInternal(
 		ignored:
 			Boolean(result.vaultPath) || isAbsolutePathUserIgnored(plugin.app, result.absolutePath),
 	});
-	if (target.kind === "readonly-markdown") {
+	if (target.kind === "markdown") {
 		await openExternalMarkdownInBackground(plugin, result.absolutePath);
 		return true;
 	}
@@ -111,9 +111,8 @@ async function openExternalMarkdownInBackground(
 	plugin: MyPalettePlugin,
 	absolutePath: string,
 ): Promise<void> {
-	// The external viewer maps `primary` to the current leaf. Background opens
-	// must use its `alternate` target so ReadOnly results cannot overwrite the
-	// note that currently owns focus in the sidebar workflow.
+	// Native Markdown views still need an alternate target for background opens,
+	// so the note that currently owns focus is never overwritten.
 	await plugin.openExternalMarkdown(absolutePath, "alternate", true, false);
 }
 

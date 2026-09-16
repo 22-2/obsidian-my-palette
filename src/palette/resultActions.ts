@@ -53,7 +53,7 @@ async function openExternalTarget(
 	active: boolean,
 	targetLeaf?: WorkspaceLeaf,
 ): Promise<ActionOutcome> {
-	if (target.kind === "readonly-markdown") {
+	if (target.kind === "markdown") {
 		await externalMarkdown.openExternalMarkdown(
 			target.absolutePath,
 			action,
