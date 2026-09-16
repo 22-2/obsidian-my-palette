@@ -67,7 +67,9 @@ export function toPaletteSelectionItem(
 		badge:
 			isExternalMarkdown || isIgnoredMarkdown
 				? options.openExternalMarkdownInObsidian
-					? "Obsidian"
+					? // Why: the important distinction here is that the file is outside
+						// the Vault, not which native view happens to render it.
+						"Outside Vault"
 					: "VS Code"
 				: result.mode === "smart"
 					? `${Math.round(result.score * 100)}%`
