@@ -133,11 +133,20 @@ export default class MyPalettePlugin extends Plugin {
 		initialInput = this.getRememberedPaletteQuery("file"),
 		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
 	): Promise<void> {
-		const leaf = await this.app.workspace.ensureSideLeaf(PALETTE_VIEW_TYPE, "right", {
+		const hasRightSidebarPalette = this.app.workspace
+			.getLeavesOfType(PALETTE_VIEW_TYPE)
+			.some((leaf) => leaf.getRoot() === this.app.workspace.rightSplit);
+		// Why: PaletteView.getState() is stored independently by Obsidian for each
+		// leaf. Passing the plugin-wide remembered input every time would overwrite
+		// that leaf's own query when the sidebar command is invoked again.
+		const options = {
 			active: true,
 			reveal: true,
-			state: this.paletteViewState(initialInput, fixedMode),
-		});
+			...(hasRightSidebarPalette
+				? {}
+				: { state: this.paletteViewState(initialInput, fixedMode) }),
+		};
+		const leaf = await this.app.workspace.ensureSideLeaf(PALETTE_VIEW_TYPE, "right", options);
 		this.focusPaletteView(leaf);
 	}
 

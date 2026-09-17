@@ -21,7 +21,7 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	plugin.addCommand({
 		id: "open-view",
 		name: "Open palette in right sidebar",
-		callback: () => void plugin.openPaletteView(plugin.getRememberedPaletteQuery("file")),
+		callback: () => void plugin.openPaletteView(),
 	});
 	// Why: one command keeps the command palette discoverable; independent
 	// additional sidebar views remain available from the view pane menu.

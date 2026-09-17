@@ -124,6 +124,11 @@ export class PaletteView extends ItemView {
 	}
 
 	async onClose(): Promise<void> {
+		if (this.session) {
+			// Why: Obsidian may collect the workspace state after onClose has
+			// disposed the session, so keep the last input in the fallback state too.
+			this.pendingState = { ...this.pendingState, input: this.session.input };
+		}
 		this.activeMenu?.close();
 		this.activeMenu = undefined;
 		this.historyControls?.destroy();
@@ -170,7 +175,7 @@ export class PaletteView extends ItemView {
 			surface: "view",
 			selectionMode: "extended",
 			placeholder: palettePlaceholder(state.fixedMode ?? "file"),
-			onInput: (input) => this.session?.setInput(input),
+			onInput: (input) => this.updateInput(input),
 			onResultFocus: () => this.session?.commitCurrentSearch(),
 			renderSuggestion: (result, el, query) =>
 				renderSelectionItem(
@@ -321,8 +326,7 @@ export class PaletteView extends ItemView {
 	private applySearchHistory(result: Extract<PaletteResult, { mode: "search-history" }>): void {
 		const input = this.plugin.formatSearchHistoryInput(result);
 		this.historyControls?.close();
-		this.panel?.setInput(input, "end");
-		this.session?.setInputFromHistory(input);
+		this.updateInput(input, "end", { suppressHistory: true, syncPanel: true });
 		this.panel?.focusSearchInput();
 	}
 
@@ -435,11 +439,26 @@ export class PaletteView extends ItemView {
 	private clearOrFocus(): void {
 		if (!this.panel) return;
 		if (this.panel.inputEl.value) {
-			this.panel.setInput("", "end");
-			this.session?.setInput("");
+			this.updateInput("", "end", { syncPanel: true });
 		} else {
 			this.panel.focusSearchInput();
 		}
+	}
+
+	private updateInput(
+		input: string,
+		selection: "all" | "end" | "none" = "none",
+		options: { suppressHistory?: boolean; syncPanel?: boolean } = {},
+	): void {
+		// Why: getState() is the per-leaf persistence boundary, but Obsidian does
+		// not necessarily request a layout save for each DOM input event. Updating
+		// the fallback and requesting a debounced save keeps the leaf's latest query
+		// available even if the view is deferred or closed immediately afterward.
+		this.pendingState = { ...this.pendingState, input };
+		if (options.syncPanel) this.panel?.setInput(input, selection);
+		if (options.suppressHistory) this.session?.setInputFromHistory(input);
+		else this.session?.setInput(input);
+		void this.app.workspace.requestSaveLayout();
 	}
 
 	private registerTargetLeafTracking(): void {
