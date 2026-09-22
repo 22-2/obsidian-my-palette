@@ -157,7 +157,10 @@ export class PaletteView extends ItemView {
 		this.pendingState = state;
 		this.sourcePinned = state.sourcePinned;
 		this.sourcePath = this.sourcePinned ? state.sourcePath : this.currentSourcePath();
-		this.targetLeaf = this.findTargetLeaf(state.sourcePath) ?? this.targetLeaf;
+		// Why: sourcePath identifies the note used for searching, while targetLeaf
+		// identifies the center pane that receives an open action. Keeping them
+		// independent prevents a pinned search source from becoming the write target.
+		this.targetLeaf = this.findTargetLeaf() ?? this.targetLeaf;
 		this.contentEl.empty();
 		this.contentEl.addClass("my-palette-view");
 
@@ -466,11 +469,12 @@ export class PaletteView extends ItemView {
 		this.targetTrackingRegistered = true;
 		this.registerEvent(
 			this.app.workspace.on("active-leaf-change", (leaf) => {
-				// Only center leaves can change the unpinned source; sidebar focus
-				// (including this palette) must never overwrite the active note.
+				// Why: a non-Markdown center view can still be the user's current tab
+				// and must be replaced by a primary open. Track the leaf independently
+				// from fileOf(), which is only needed for source-note searches.
 				if (!leaf || !this.isCenterLeaf(leaf)) return;
+				this.targetLeaf = leaf;
 				const file = this.fileOf(leaf);
-				if (file) this.targetLeaf = leaf;
 				if (!this.sourcePinned) this.updateSource(file);
 			}),
 		);
@@ -517,7 +521,12 @@ export class PaletteView extends ItemView {
 			if (match) return match;
 		}
 		const active = this.app.workspace.activeLeaf;
-		return active && this.isCenterLeaf(active) ? active : undefined;
+		if (active && this.isCenterLeaf(active)) return active;
+		// Why: opening or restoring the sidebar can make the palette the active
+		// leaf before tracking is registered. The most recent center leaf preserves
+		// the user's current tab in that startup window, including non-file views.
+		const recent = this.app.workspace.getMostRecentLeaf(this.app.workspace.rootSplit);
+		return recent && this.isCenterLeaf(recent) ? recent : undefined;
 	}
 
 	private sourceFile(sourcePath?: string) {
