@@ -45,9 +45,11 @@ export class PaletteHistoryControls {
 	update(input = this.options.inputEl.value): void {
 		if (!this.suggest.isOpen) return;
 		const context = this.options.getContext(input);
+		// Why: the history picker is a separate browsing surface; typing a new
+		// search must not hide or reorder the saved entries shown in that picker.
 		this.suggest.update(
 			this.options.plugin.getSearchHistorySuggestions(
-				context.query,
+				"",
 				context.category,
 				context.includeIgnored,
 			),
@@ -160,11 +162,7 @@ export class PaletteHistoryControls {
 		const { inputEl, plugin } = this.options;
 		const context = this.options.getContext(inputEl.value);
 		this.suggest.show(
-			plugin.getSearchHistorySuggestions(
-				context.query,
-				context.category,
-				context.includeIgnored,
-			),
+			plugin.getSearchHistorySuggestions("", context.category, context.includeIgnored),
 		);
 		inputEl.focus({ preventScroll: true });
 		inputEl.setSelectionRange(inputEl.value.length, inputEl.value.length);
