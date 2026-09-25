@@ -1,4 +1,3 @@
-import { obsidianCopyVite } from "@22-2/obsidian-copy-bundler-plugin";
 import { builtinModules } from "module";
 import path from "path";
 import { defineConfig, type UserConfig } from "vite-plus";
@@ -17,17 +16,6 @@ export default defineConfig(async ({ mode }) => {
 			"src/**/*.{ts}": "vp check --fix",
 		},
 
-		plugins: [
-			// Ensure CI/build output `dist/` contains files Obsidian expects (manifest.json, main.js)
-			obsidianCopyVite({
-				targetDir: path.resolve(__dirname, "dist"),
-				force: true,
-			}),
-			obsidianCopyVite({
-				targetDir: "E:\\AppData\\obsidian\\vaults\\suizen\\.obsidian\\plugins\\my-palette",
-				force: true,
-			}),
-		],
 		build: {
 			lib: {
 				entry: resolve(__dirname, "src/main.ts"),

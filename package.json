@@ -23,7 +23,6 @@
 		"idb": "^8.0.3"
 	},
 	"devDependencies": {
-		"@22-2/obsidian-copy-bundler-plugin": "1.0.2",
 		"@obsidian-typings/obsidian-public-latest": "^6.20.0",
 		"@types/node": "26.1.0",
 		"obsidian": "^1.13.1",
