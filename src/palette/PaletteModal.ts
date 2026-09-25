@@ -222,6 +222,9 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		};
 		const result = chooser.chooser?.values?.[chooser.chooser.selectedItem ?? -1];
 		if (!result || result.mode === "command") return;
+		// Right Arrow opens the selected result without moving focus to the list,
+		// so it must commit the query before this keyboard-only action runs.
+		this.session.commitCurrentSearch();
 		const selectionStart = this.inputEl.selectionStart;
 		const selectionEnd = this.inputEl.selectionEnd;
 		await this.activatePaletteResult("primary", result, false);

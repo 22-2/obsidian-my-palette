@@ -183,6 +183,10 @@ export class SuggestionPanel<T> extends Component {
 		if (event.key === "ArrowDown" || event.key === "ArrowUp") {
 			event.preventDefault();
 			event.stopPropagation();
+			if (!this.chooser.values.length) return;
+			// Keyboard selection uses the result list while focus remains in the input.
+			// Record that interaction just as we do for a pointer press on a result.
+			this.props.onResultFocus?.();
 			const next = Math.max(
 				0,
 				Math.min(
@@ -203,6 +207,7 @@ export class SuggestionPanel<T> extends Component {
 			if (item === undefined) return;
 			event.preventDefault();
 			event.stopPropagation();
+			this.props.onResultFocus?.();
 			this.selected = item;
 			void this.props.onChoose(item, event);
 		}

@@ -269,6 +269,10 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		if (event.key === "ArrowDown" || event.key === "ArrowUp") {
 			event.preventDefault();
 			event.stopPropagation();
+			if (!this.chooser.values.length) return;
+			// Keyboard selection uses the result list while focus remains in the input.
+			// Record that interaction just as we do for a pointer press on a result.
+			this.onResultFocus();
 			const delta = event.key === "ArrowDown" ? 1 : -1;
 			const next = Math.max(
 				0,
@@ -287,6 +291,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			if (item === undefined) return;
 			event.preventDefault();
 			event.stopPropagation();
+			this.onResultFocus();
 			this.onChooseSuggestion(item, event);
 		}
 	}
@@ -306,6 +311,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		}
 		const count = this.chooser.values.length;
 		if (!count) return false;
+		this.onResultFocus();
 		this.setSelectedIndex(event.key === "Home" ? 0 : count - 1, true);
 		return false;
 	}
