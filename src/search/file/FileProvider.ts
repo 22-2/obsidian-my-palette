@@ -123,7 +123,11 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		const ignoreFilters = getUserIgnoreFilters(this.app);
 		// プラグイン共通の除外フォルダはObsidianの除外設定と合わせて判定する。
 		// includeIgnored指定時のみ両方をまとめて解除し、通常検索では常に除外する。
-		const entries = [...this.cache.values()].filter(
+		// The include-ignored prefix is an explicit broad search, so use the
+		// uncapped index to include file types excluded by the normal extension setting.
+		const entries = [
+			...(includeIgnored ? this.allEntries.values() : this.cache.values()),
+		].filter(
 			(entry) =>
 				!isUserIgnoredPathWithFilters(ignoreFilters, entry.path) &&
 				(includeIgnored || !isExcludedFolder(this.excludedFolders, entry.path)),
@@ -144,7 +148,8 @@ export class FileProvider implements PaletteProvider<FileResult> {
 					mtime: ignored.mtime,
 					ignored: true,
 				};
-				if (this.isAllowedExtension(entry.extension)) entries.push(entry);
+				// Keep extension filtering aligned for both indexed Vault files and ignored notes.
+				entries.push(entry);
 			}
 		}
 		if (!query.trim()) {
