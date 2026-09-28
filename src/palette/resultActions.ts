@@ -1,10 +1,6 @@
 import { Notice, TFile, type App, type WorkspaceLeaf } from "obsidian";
 import { getLeafForAction, type LeafOpenAction } from "src/workspace/openLeaf";
-import {
-	getVaultFullPath,
-	isAbsolutePathUserIgnored,
-	isUserIgnoredPath,
-} from "src/ignored-notes/ignoredPaths";
+import { getVaultFullPath, isUserIgnoredPath } from "src/ignored-notes/ignoredPaths";
 import { getDesktopAdapter } from "src/platform/desktopAdapter";
 import { resolveExternalOpenTarget, type ExternalOpenTarget } from "src/palette/openTargets";
 
@@ -16,7 +12,6 @@ declare const electron: {
 	};
 };
 import type { EverythingResult, PaletteResult } from "src/palette/results";
-import { openPathInCode } from "src/platform/vscode";
 
 export type ActionKind = LeafOpenAction;
 export interface ActionOutcome {
@@ -41,11 +36,6 @@ export interface ResultActionOptions {
 	active?: boolean;
 }
 
-async function openAbsolutePathInCode(absolutePath: string): Promise<ActionOutcome> {
-	const error = await openPathInCode(absolutePath);
-	return error ? { close: false, message: error } : { close: true };
-}
-
 async function openExternalTarget(
 	target: ExternalOpenTarget,
 	action: ActionKind,
@@ -62,7 +52,6 @@ async function openExternalTarget(
 		);
 		return { close: true };
 	}
-	if (target.kind === "code") return await openAbsolutePathInCode(target.absolutePath);
 	await electron.shell.openPath(target.absolutePath);
 	return { close: true };
 }
@@ -92,7 +81,6 @@ export async function runResultAction(
 			// MOC link insertion owns the separate copy/materialize workflow.
 			const target = resolveExternalOpenTarget(absolutePath, {
 				openMarkdownInObsidian: externalMarkdown.openExternalMarkdownInObsidian,
-				ignored: true,
 			});
 			return await openExternalTarget(
 				target,
@@ -138,11 +126,6 @@ export async function runResultAction(
 	}
 	const target = resolveExternalOpenTarget(everythingResult.absolutePath, {
 		openMarkdownInObsidian: externalMarkdown.openExternalMarkdownInObsidian,
-		// A Vault-relative result that Obsidian does not expose as TFile is still
-		// intentionally routed to a safe external viewer/editor.
-		ignored:
-			Boolean(everythingResult.vaultPath) ||
-			isAbsolutePathUserIgnored(app, everythingResult.absolutePath),
 	});
 	return await openExternalTarget(
 		target,

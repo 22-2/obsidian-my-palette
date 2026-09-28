@@ -1,11 +1,7 @@
 import { Notice, TFile } from "obsidian";
 import { getLeafForAction } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
-import {
-	getVaultFullPath,
-	isAbsolutePathUserIgnored,
-	isUserIgnoredPath,
-} from "src/ignored-notes/ignoredPaths";
+import { getVaultFullPath, isUserIgnoredPath } from "src/ignored-notes/ignoredPaths";
 import { getDesktopAdapter } from "src/platform/desktopAdapter";
 import type { PaletteResult } from "src/palette/results";
 import { resolveExternalOpenTarget } from "src/palette/openTargets";
@@ -59,7 +55,6 @@ async function openPaletteResultInBackgroundInternal(
 			}
 			const target = resolveExternalOpenTarget(absolutePath, {
 				openMarkdownInObsidian: plugin.settings.openExternalMarkdownInObsidian,
-				ignored: true,
 			});
 			if (target.kind === "markdown") {
 				await openExternalMarkdownInBackground(plugin, absolutePath);
@@ -96,8 +91,6 @@ async function openPaletteResultInBackgroundInternal(
 	}
 	const target = resolveExternalOpenTarget(result.absolutePath, {
 		openMarkdownInObsidian: plugin.settings.openExternalMarkdownInObsidian,
-		ignored:
-			Boolean(result.vaultPath) || isAbsolutePathUserIgnored(plugin.app, result.absolutePath),
 	});
 	if (target.kind === "markdown") {
 		await openExternalMarkdownInBackground(plugin, result.absolutePath);

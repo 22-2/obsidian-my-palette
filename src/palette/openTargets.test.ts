@@ -6,25 +6,22 @@ describe("resolveExternalOpenTarget", () => {
 		expect(
 			resolveExternalOpenTarget("C:\\vault\\ignored\\note.md", {
 				openMarkdownInObsidian: true,
-				ignored: true,
 			}),
 		).toEqual({ kind: "markdown", absolutePath: "C:\\vault\\ignored\\note.md" });
 	});
 
-	it("uses VS Code for ignored Markdown when the in-app viewer is disabled", () => {
+	it("uses the system handler for Markdown when the in-app viewer is disabled", () => {
 		expect(
 			resolveExternalOpenTarget("C:\\vault\\ignored\\note.md", {
 				openMarkdownInObsidian: false,
-				ignored: true,
 			}),
-		).toEqual({ kind: "code", absolutePath: "C:\\vault\\ignored\\note.md" });
+		).toEqual({ kind: "system", absolutePath: "C:\\vault\\ignored\\note.md" });
 	});
 
 	it("opens an ordinary external non-Markdown path with the system handler", () => {
 		expect(
 			resolveExternalOpenTarget("C:\\vault\\assets\\image.png", {
 				openMarkdownInObsidian: true,
-				ignored: false,
 			}),
 		).toEqual({ kind: "system", absolutePath: "C:\\vault\\assets\\image.png" });
 	});

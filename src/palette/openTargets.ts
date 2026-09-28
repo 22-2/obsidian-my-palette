@@ -7,20 +7,19 @@ import { isMarkdownPath } from "src/shared/externalFiles";
  */
 export type ExternalOpenTarget =
 	| { kind: "markdown"; absolutePath: string }
-	| { kind: "code"; absolutePath: string }
 	| { kind: "system"; absolutePath: string };
 
 export interface ExternalOpenTargetOptions {
 	openMarkdownInObsidian: boolean;
-	ignored: boolean;
 }
 
 export function resolveExternalOpenTarget(
 	absolutePath: string,
-	{ openMarkdownInObsidian, ignored }: ExternalOpenTargetOptions,
+	{ openMarkdownInObsidian }: ExternalOpenTargetOptions,
 ): ExternalOpenTarget {
+	// なぜMarkdownのみ分岐するか: ignoredを含む非MarkdownはOS関連付け(system)で
+	// 開く方針のため、エディター指定(code)は不要。
 	if (isMarkdownPath(absolutePath) && openMarkdownInObsidian)
 		return { kind: "markdown", absolutePath };
-	if (ignored) return { kind: "code", absolutePath };
 	return { kind: "system", absolutePath };
 }
