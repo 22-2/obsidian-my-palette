@@ -2,6 +2,7 @@ import { Notice } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import { insertLinkToMocRelateds } from "src/moc-relateds/mocRelateds";
 import { MoveFileModal } from "src/palette/MoveFileModal";
+import { OpenFilePathModal } from "src/palette/OpenFilePathModal";
 
 /**
  * Command definitions are kept outside the Plugin class so lifecycle code and
@@ -71,6 +72,11 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 			if (checking) return Boolean(file);
 			if (file) new MoveFileModal(plugin.app, file).open();
 		},
+	});
+	plugin.addCommand({
+		id: "open-file-path-in-editor",
+		name: "Open file path in editor",
+		callback: () => new OpenFilePathModal(plugin).open(),
 	});
 	plugin.addCommand({
 		id: "insert-link-to-moc-relateds",
