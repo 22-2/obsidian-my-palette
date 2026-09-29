@@ -285,7 +285,11 @@ export default class MyPalettePlugin extends Plugin {
 
 	rememberPaletteQuery(mode: PaletteMode, query: string, rawInput?: string): void {
 		if (!this.settings.rememberLastInput) return;
-		this.rememberedPaletteQueries[mode] = query;
+		// なぜfileだけrawInputか: fileの再開入力はプレフィックス込みの生入力を
+		// そのまま使うため(i fooなど)。commandは呼び出し側でプレフィックスを
+		// 付与して復元するのでqueryのままにする。
+		this.rememberedPaletteQueries[mode] =
+			mode === "file" && rawInput !== undefined ? rawInput : query;
 		if (mode === "everything" && rawInput !== undefined)
 			this.rememberedPaletteQueries.file = rawInput;
 	}
