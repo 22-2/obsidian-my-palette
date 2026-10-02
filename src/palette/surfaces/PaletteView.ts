@@ -216,7 +216,12 @@ export class PaletteView extends ItemView {
 			selectionMode: "extended",
 			placeholder: palettePlaceholder(state.fixedMode ?? "file"),
 			onInput: (input) => this.updateInput(input),
-			onResultFocus: () => this.session?.commitCurrentSearch(),
+			onResultFocus: () => {
+				// Why: table row handlers stop mousedown propagation before Obsidian can
+				// dismiss the result menu when a different result is clicked.
+				this.activeMenu?.close();
+				this.session?.commitCurrentSearch();
+			},
 			renderSuggestion: (result, el, query) =>
 				renderSelectionItem(
 					toPaletteSelectionItem(this.app, result, {
