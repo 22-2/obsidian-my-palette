@@ -22,6 +22,8 @@ export interface SuggestionPanelResults<T> {
 	items: T[];
 	total?: number;
 	error?: string;
+	/** Parsed search text when a host strips mode prefixes before matching. */
+	query?: string;
 }
 
 export interface SuggestionPanelResultsLayout<T> {
@@ -50,7 +52,7 @@ export class SuggestionPanel<T> extends Component {
 	readonly statusTextEl: HTMLElement;
 	readonly resultCountEl: HTMLElement;
 	readonly chooser: SuggestionChooser<T> = { values: [], selectedItem: -1 };
-	readonly limit: number;
+	limit: number;
 	selected: T | null = null;
 	query = "";
 	emptyStateText = "No suggestions";
@@ -59,7 +61,6 @@ export class SuggestionPanel<T> extends Component {
 	private readonly props: SuggestionPanelProps<T>;
 	private readonly initialInput: string;
 	private readonly selectionMode: "single" | "extended";
-	private pointerActionsRegistered = false;
 	private readonly extendedSelection = new ExtendedSelection();
 	private readonly leftClickRows = new WeakSet<Element>();
 	private readonly middleClickRows = new WeakSet<Element>();
@@ -119,9 +120,10 @@ export class SuggestionPanel<T> extends Component {
 		this.props.onReady?.();
 	}
 
-	setResults({ items, total = items.length, error }: SuggestionPanelResults<T>): void {
+	setResults({ items, total = items.length, error, query }: SuggestionPanelResults<T>): void {
 		this.emptyStateText = error ?? "No suggestions";
-		this.query = this.inputEl.value;
+		// Hosts may parse prefixes; highlighting must use the same text as matching.
+		this.query = query ?? this.inputEl.value;
 		this.chooser.values = items.slice(0, this.limit);
 		this.chooser.selectedItem = this.chooser.values.length ? 0 : -1;
 		this.extendedSelection.reset(this.chooser.values.length);
@@ -248,8 +250,8 @@ export class SuggestionPanel<T> extends Component {
 	}
 
 	private registerPointerActions(): void {
-		if (this.pointerActionsRegistered) return;
-		this.pointerActionsRegistered = true;
+		// Component unload removes every listener, so each load must register them
+		// again when the same modal instance is reopened.
 		this.registerDomEvent(
 			this.resultContainerEl,
 			"pointermove",
@@ -268,11 +270,15 @@ export class SuggestionPanel<T> extends Component {
 			(event) => {
 				// Result clicks are the concrete browser event that moves the user's
 				// attention from typing to the result list.
+				// Modal list-space clicks historically commit the query too; views
+				// also contain table headers, so they commit only actual result rows.
+				const modal = this.props.surface !== "view";
+				if (modal) this.props.onResultFocus?.();
 				const row = this.suggestionRowAtEvent(event);
 				if (!row) return;
 				// Sorting headers share the result container, but only interacting
 				// with an actual result should commit the search to usage history.
-				this.props.onResultFocus?.();
+				if (!modal) this.props.onResultFocus?.();
 				const item = this.itemAtRow(row);
 				if (item === undefined) return;
 				const index = Number(row.getAttribute("data-index"));
@@ -287,9 +293,10 @@ export class SuggestionPanel<T> extends Component {
 						range: event.shiftKey,
 					});
 					this.setSelectedIndex(index, false);
-				} else if (event.button === 0) {
+				} else if (event.button === 0 && this.props.surface === "view") {
 					// Sidebar clicks can be consumed by Obsidian after mousedown, so run
 					// the primary action here and let the later click only clear the guard.
+					// Single-choice modals retain normal click activation.
 					event.preventDefault();
 					event.stopImmediatePropagation();
 					this.leftClickRows.add(row);
@@ -419,11 +426,11 @@ export class SuggestionPanel<T> extends Component {
 		return Number.isInteger(index) && index >= 0 ? this.chooser.values[index] : undefined;
 	}
 
-	private getSelectedItem(): T | undefined {
+	getSelectedItem(): T | undefined {
 		return this.chooser.values[this.chooser.selectedItem];
 	}
 
-	private setSelectedIndex(index: number, scroll: boolean): void {
+	setSelectedIndex(index: number, scroll: boolean): void {
 		if (!this.chooser.values.length) {
 			this.chooser.selectedItem = -1;
 			this.selected = null;

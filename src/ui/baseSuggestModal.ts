@@ -1,5 +1,5 @@
 import { App, Modal, type KeymapEventHandler } from "obsidian";
-import { ExtendedSelection } from "src/ui/extendedSelection";
+import { SuggestionPanel } from "src/ui/suggestionPanel";
 
 export interface SuggestModalProps<T> {
 	title?: string;
@@ -13,37 +13,18 @@ export interface SuggestModalProps<T> {
 	search?: (query: string) => T[] | Promise<T[]>;
 }
 
-interface SuggestionChooser<T> {
-	values: T[];
-	selectedItem: number;
-	setSelectedItem: (index: number) => void;
-}
-
 /**
- * Obsidian SuggestModal互換のDOMと操作を提供する基底モーダル。
- * 検索と候補行の描画は派生クラスに任せ、ポインターイベントはここで一元管理する。
+ * Obsidian SuggestModal互換の検索・ライフサイクルを提供する薄いモーダル。
+ * 候補の描画と操作は常設ビューと同じ部品に任せ、修正箇所が分岐しないようにする。
  */
 export abstract class BaseSuggestModal<T> extends Modal {
 	protected items: T[];
-	selected: T | null;
-	inputEl!: HTMLInputElement;
-	resultContainerEl!: HTMLElement;
-	limit = 50;
-	emptyStateText = "No suggestions";
-	protected initialInputReady: boolean;
-	protected readonly chooser: SuggestionChooser<T>;
-	protected query = "";
-	private resultCountEl?: HTMLElement;
-	private statusTextEl?: HTMLElement;
-	private readonly footerText?: string;
+	readonly inputEl: HTMLInputElement;
+	readonly resultContainerEl: HTMLElement;
+	private readonly panel: SuggestionPanel<T>;
 	private readonly initialInput: string;
-	private readonly selectionMode: "single" | "extended";
 	private refreshGeneration = 0;
-	private pointerActionsRegistered = false;
-	private readonly extendedSelection = new ExtendedSelection();
-	private readonly leftClickRows = new WeakSet<Element>();
-	private readonly middleClickRows = new WeakSet<Element>();
-	private readonly rightClickRows = new WeakSet<Element>();
+	private resultTotal = 0;
 
 	constructor(
 		{
@@ -58,17 +39,28 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	) {
 		super(app);
 		this.items = [...items];
-		this.selected = defaultValue ?? null;
 		this.initialInput = initialInput;
-		this.initialInputReady = !initialInput;
-		this.footerText = footerText;
-		this.selectionMode = selectionMode;
-		this.chooser = {
-			values: [],
-			selectedItem: -1,
-			setSelectedItem: (index) => this.setSelectedIndex(index, true),
-		};
-		this.createInterface(placeholder);
+		this.panel = new SuggestionPanel(this.modalEl, {
+			surface: "modal",
+			placeholder,
+			initialInput,
+			footerText,
+			selectionMode,
+			onInput: () => this.refreshSuggestions(),
+			renderSuggestion: (item, el) => this.renderSuggestion(item, el),
+			onChoose: (item, event) => this.onChooseSuggestion(item, event),
+			onResultFocus: () => this.onResultFocus(),
+			onMiddleClick: this.handlesSuggestionMiddleClick()
+				? (item, event) => this.onSuggestionMiddleClick(item, event)
+				: undefined,
+			onContextMenu: this.handlesSuggestionContextMenu()
+				? (item, event) => this.onSuggestionContextMenu(item, event)
+				: undefined,
+			onEscape: () => this.close(),
+		});
+		this.panel.selected = defaultValue ?? null;
+		this.inputEl = this.panel.inputEl;
+		this.resultContainerEl = this.panel.resultContainerEl;
 		const scopeHandlers = (this.scope as unknown as { keys?: KeymapEventHandler[] }).keys ?? [];
 		for (let index = scopeHandlers.length - 1; index >= 0; index -= 1) {
 			const handler = scopeHandlers[index];
@@ -84,18 +76,44 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		}
 	}
 
+	get selected(): T | null {
+		return this.panel.selected;
+	}
+	set selected(item: T | null) {
+		this.panel.selected = item;
+	}
+	get limit(): number {
+		return this.panel.limit;
+	}
+	set limit(limit: number) {
+		this.panel.limit = limit;
+	}
+	get emptyStateText(): string {
+		return this.panel.emptyStateText;
+	}
+	set emptyStateText(text: string) {
+		this.panel.emptyStateText = text;
+	}
+	protected get query(): string {
+		return this.panel.query;
+	}
+	protected set query(query: string) {
+		this.panel.query = query;
+	}
+
 	onOpen(): void {
 		super.onOpen();
 		this.modalEl.removeClass("modal");
 		this.modalEl.addClass("prompt", "my-palette-suggest-modal");
-		this.createStatusBar();
-		this.registerPointerActions();
+		// ModalはComponentを継承しないため、開閉に合わせて部品のイベントを管理する。
+		// 同じインスタンスを再度開いてもフッターやハンドラを増やさない。
+		this.panel.load();
 		this.onSelectionModalOpen();
-		this.inputEl.focus({ preventScroll: true });
+		this.focusSearchInput();
 		if (this.initialInput) {
+			const generation = this.refreshGeneration;
 			window.setTimeout(() => {
-				if (!this.inputEl.isConnected) return;
-				this.initialInputReady = true;
+				if (generation !== this.refreshGeneration || !this.inputEl.isConnected) return;
 				this.refreshSuggestions();
 				const [selectionStart, selectionEnd] = this.getInitialInputSelectionRange();
 				this.inputEl.setSelectionRange(selectionStart, selectionEnd);
@@ -108,6 +126,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	onClose(): void {
 		this.refreshGeneration += 1;
 		this.onSelectionModalClose();
+		this.panel.unload();
 		super.onClose();
 	}
 
@@ -131,14 +150,10 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	protected onSuggestionContextMenu(_item: T, _event: MouseEvent): void {}
 	protected onResultFocus(): void {}
 	protected getSelectedItems(): T[] {
-		if (this.selectionMode !== "extended") {
-			const item = this.getSelectedItem();
-			return item === undefined ? [] : [item];
-		}
-		return this.extendedSelection
-			.indexes()
-			.map((index) => this.chooser.values[index])
-			.filter((item): item is T => item !== undefined);
+		return this.panel.getSelectedItems();
+	}
+	protected getSelectedItem(): T | undefined {
+		return this.panel.getSelectedItem();
 	}
 
 	protected getInitialInputSelectionRange(): [number, number] {
@@ -155,24 +170,21 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	}
 
 	protected updateResultCount(total: number): void {
-		this.resultCountEl?.setText(`${Math.min(total, this.limit)} / ${total}`);
+		this.resultTotal = total;
+		this.panel.updateResultCount(total);
 	}
 
 	protected updateFooterText(text: string): void {
-		this.statusTextEl?.setText(text);
+		this.panel.updateFooterText(text);
 	}
-
 	protected updateMatchQuery(query: string): void {
 		this.query = query;
 	}
-
 	focusSearchInput(): void {
-		if (!this.inputEl.isConnected) return;
-		this.inputEl.focus({ preventScroll: true });
+		this.panel.focusSearchInput();
 	}
-
 	protected updatePlaceholder(placeholder: string): void {
-		this.inputEl.placeholder = placeholder;
+		this.panel.updatePlaceholder(placeholder);
 	}
 
 	protected registerSelectionDomEvent<K extends keyof HTMLElementEventMap>(
@@ -181,7 +193,8 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		callback: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any,
 		options?: boolean | AddEventListenerOptions,
 	): void {
-		el.addEventListener(type, callback as EventListener, options);
+		// モーダル専用のプレビュー操作も、閉じた時点で共通部品と一緒に解除する。
+		this.panel.registerDomEvent(el, type, callback, options);
 	}
 
 	protected refreshSuggestions(): void {
@@ -193,107 +206,15 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		const suggestions = this.getSuggestions(query);
 		void Promise.resolve(suggestions).then((items) => {
 			if (generation !== this.refreshGeneration || !this.inputEl.isConnected) return;
-			this.renderSuggestions(items);
-		});
-	}
-
-	private createInterface(placeholder: string): void {
-		this.modalEl.empty();
-		this.modalEl.addClass("prompt");
-		const inputContainer = this.modalEl.createDiv("prompt-input-container");
-		this.inputEl = inputContainer.createEl("input", {
-			cls: "prompt-input",
-			attr: {
-				autocapitalize: "off",
-				spellcheck: "false",
-				enterkeyhint: "done",
-				type: "text",
-				placeholder,
-			},
-		});
-		this.inputEl.value = this.initialInput;
-		const cta = inputContainer.createDiv("prompt-input-cta");
-		cta.setAttribute("aria-hidden", "true");
-		const clearButton = inputContainer.createDiv("search-input-clear-button");
-		clearButton.setAttribute("aria-hidden", "true");
-		this.resultContainerEl = this.modalEl.createDiv("prompt-results");
-		this.resultContainerEl.setAttribute("role", "listbox");
-		if (this.selectionMode === "extended")
-			this.resultContainerEl.setAttribute("aria-multiselectable", "true");
-		this.inputEl.addEventListener("input", () => this.refreshSuggestions());
-		this.inputEl.addEventListener("keydown", (event) => this.handleInputKeyDown(event));
-	}
-
-	private createStatusBar(): void {
-		const statusBar = this.modalEl.createDiv("my-palette-status-bar");
-		this.statusTextEl = statusBar.createSpan({
-			cls: "my-palette-status-bar__text",
-			text: this.footerText ?? "",
-		});
-		this.resultCountEl = statusBar.createSpan("my-palette-status-bar__count");
-		this.updateResultCount(0);
-	}
-
-	private renderSuggestions(items: T[]): void {
-		const visibleItems = items.slice(0, this.limit);
-		this.chooser.values = visibleItems;
-		this.chooser.selectedItem = visibleItems.length ? 0 : -1;
-		this.extendedSelection.reset(visibleItems.length);
-		this.selected = visibleItems[0] ?? null;
-		this.resultContainerEl.empty();
-		if (!visibleItems.length) {
-			this.resultContainerEl.createDiv({
-				cls: "suggestion-empty",
-				text: this.emptyStateText,
+			// パレットはプレフィックスを除いた検索語を使い、検索側の総件数を表示する。
+			// 生入力や表示件数で上書きすると強調表示と件数が検索モードによって変わる。
+			this.panel.setResults({
+				items,
+				total: this.resultTotal,
+				query: this.query,
+				error: this.emptyStateText,
 			});
-			return;
-		}
-		for (const [index, item] of visibleItems.entries()) {
-			const el = this.resultContainerEl.createDiv("suggestion-item");
-			el.setAttribute("data-index", String(index));
-			el.setAttribute("role", "option");
-			el.setAttribute("aria-selected", String(index === 0));
-			if (index === 0) el.addClass("is-selected", "is-active");
-			this.renderSuggestion(item, el);
-		}
-	}
-
-	private handleInputKeyDown(event: KeyboardEvent): void {
-		if (event.isComposing) return;
-		if (event.key === "Escape") {
-			event.preventDefault();
-			event.stopPropagation();
-			this.close();
-			return;
-		}
-		if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-			event.preventDefault();
-			event.stopPropagation();
-			if (!this.chooser.values.length) return;
-			// Keyboard selection uses the result list while focus remains in the input.
-			// Record that interaction just as we do for a pointer press on a result.
-			this.onResultFocus();
-			const delta = event.key === "ArrowDown" ? 1 : -1;
-			const next = Math.max(
-				0,
-				Math.min(this.chooser.values.length - 1, this.chooser.selectedItem + delta),
-			);
-			if (this.selectionMode === "extended" && !(event.ctrlKey || event.metaKey))
-				this.extendedSelection.select(next, this.chooser.values.length, {
-					toggle: false,
-					range: event.shiftKey,
-				});
-			this.setSelectedIndex(next, true);
-			return;
-		}
-		if (event.key === "Enter") {
-			const item = this.getSelectedItem();
-			if (item === undefined) return;
-			event.preventDefault();
-			event.stopPropagation();
-			this.onResultFocus();
-			this.onChooseSuggestion(item, event);
-		}
+		});
 	}
 
 	private handleHomeEnd(event: KeyboardEvent): false | undefined {
@@ -309,207 +230,10 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			this.inputEl.setSelectionRange(position, position);
 			return false;
 		}
-		const count = this.chooser.values.length;
+		const count = this.panel.chooser.values.length;
 		if (!count) return false;
 		this.onResultFocus();
-		this.setSelectedIndex(event.key === "Home" ? 0 : count - 1, true);
+		this.panel.setSelectedIndex(event.key === "Home" ? 0 : count - 1, true);
 		return false;
-	}
-
-	private registerPointerActions(): void {
-		if (this.pointerActionsRegistered) return;
-		this.pointerActionsRegistered = true;
-		this.registerSelectionDomEvent(
-			this.resultContainerEl,
-			"pointermove",
-			(event) => {
-				if (this.selectionMode === "extended") return;
-				const row = this.suggestionRowAtEvent(event);
-				if (!row) return;
-				const index = Number(row.getAttribute("data-index"));
-				if (Number.isInteger(index)) this.setSelectedIndex(index, false);
-			},
-			true,
-		);
-		this.registerSelectionDomEvent(
-			this.resultContainerEl,
-			"mousedown",
-			(event) => {
-				// A result-list interaction is the explicit boundary after which the
-				// current query is considered used; input blur alone is not enough.
-				this.onResultFocus();
-				const row = this.suggestionRowAtEvent(event);
-				if (!row) return;
-				const item = this.itemAtRow(row);
-				if (item === undefined) return;
-				const index = Number(row.getAttribute("data-index"));
-				if (event.button === 0 && this.selectionMode === "extended") {
-					// Why: select on press so Obsidian cannot consume the later click;
-					// activation is deliberately reserved for the double-click event.
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					this.leftClickRows.add(row);
-					this.extendedSelection.select(index, this.chooser.values.length, {
-						toggle: event.ctrlKey || event.metaKey,
-						range: event.shiftKey,
-					});
-					this.setSelectedIndex(index, false);
-				} else if (event.button === 1 && this.handlesSuggestionMiddleClick()) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					this.middleClickRows.add(row);
-					this.setSelectedIndex(index, false);
-					void this.onSuggestionMiddleClick(item, event);
-				} else if (event.button === 2 && this.handlesSuggestionContextMenu()) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					this.rightClickRows.add(row);
-					if (this.selectionMode === "extended")
-						this.extendedSelection.selectForContextMenu(
-							index,
-							this.chooser.values.length,
-						);
-					this.setSelectedIndex(index, false);
-				}
-			},
-			true,
-		);
-		this.registerSelectionDomEvent(
-			this.resultContainerEl,
-			"auxclick",
-			(event) => {
-				if (event.button !== 1 && event.button !== 2) return;
-				const row = this.suggestionRowAtEvent(event);
-				if (!row) return;
-				event.preventDefault();
-				event.stopImmediatePropagation();
-				if (this.rightClickRows.delete(row)) return;
-				if (this.middleClickRows.delete(row)) return;
-				const item = this.itemAtRow(row);
-				if (item !== undefined && this.handlesSuggestionMiddleClick())
-					void this.onSuggestionMiddleClick(item, event);
-			},
-			true,
-		);
-		this.registerSelectionDomEvent(
-			this.resultContainerEl,
-			"click",
-			(event) => {
-				// 中・右クリック後の click が primary 扱いで onChooseSuggestion へ
-				// 落ちてアクティブタブを上書きするため、左以外は確実に消費する。
-				if (event.button !== 0) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					return;
-				}
-				const row = this.suggestionRowAtEvent(event);
-				if (!row) return;
-				if (this.middleClickRows.delete(row)) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					return;
-				}
-				if (this.leftClickRows.delete(row)) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					return;
-				}
-				if (this.rightClickRows.delete(row)) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					return;
-				}
-				if (this.selectionMode === "extended") return;
-				const item = this.itemAtRow(row);
-				if (item === undefined) return;
-				this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
-				this.onChooseSuggestion(item, event);
-			},
-			true,
-		);
-		this.registerSelectionDomEvent(
-			this.resultContainerEl,
-			"dblclick",
-			(event) => {
-				if (this.selectionMode !== "extended" || event.button !== 0) return;
-				const row = this.suggestionRowAtEvent(event);
-				const item = row ? this.itemAtRow(row) : undefined;
-				if (!row || item === undefined) return;
-				event.preventDefault();
-				event.stopImmediatePropagation();
-				this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
-				this.onChooseSuggestion(item, event);
-			},
-			true,
-		);
-		this.registerSelectionDomEvent(
-			this.resultContainerEl,
-			"contextmenu",
-			(event) => {
-				if (!this.handlesSuggestionContextMenu()) return;
-				const row = this.suggestionRowAtEvent(event);
-				const item = row ? this.itemAtRow(row) : undefined;
-				if (!row || item === undefined) return;
-				event.preventDefault();
-				event.stopImmediatePropagation();
-				this.rightClickRows.add(row);
-				const index = Number(row.getAttribute("data-index"));
-				if (this.selectionMode === "extended")
-					this.extendedSelection.selectForContextMenu(index, this.chooser.values.length);
-				this.setSelectedIndex(index, false);
-				this.onSuggestionContextMenu(item, event);
-			},
-			true,
-		);
-	}
-
-	private suggestionRowAtEvent(event: Event): Element | undefined {
-		const target = event.target;
-		if (!(target instanceof Element)) return undefined;
-		const row = target.closest(".suggestion-item");
-		return row && this.resultContainerEl.contains(row) ? row : undefined;
-	}
-
-	private itemAtRow(row: Element): T | undefined {
-		const index = Number(row.getAttribute("data-index"));
-		return Number.isInteger(index) && index >= 0 ? this.chooser.values[index] : undefined;
-	}
-
-	private getSelectedItem(): T | undefined {
-		return this.chooser.values[this.chooser.selectedItem];
-	}
-
-	private setSelectedIndex(index: number, scroll: boolean): void {
-		if (!this.chooser.values.length) {
-			this.chooser.selectedItem = -1;
-			this.selected = null;
-			return;
-		}
-		const next = Math.max(0, Math.min(this.chooser.values.length - 1, index));
-		this.chooser.selectedItem = next;
-		this.selected = this.chooser.values[next] ?? null;
-		for (const [rowIndex, row] of [
-			...this.resultContainerEl.querySelectorAll<HTMLElement>(".suggestion-item"),
-		].entries()) {
-			row.toggleClass(
-				"is-selected",
-				this.selectionMode === "extended"
-					? this.extendedSelection.has(rowIndex)
-					: rowIndex === next,
-			);
-			row.toggleClass("is-active", rowIndex === next);
-			row.setAttribute(
-				"aria-selected",
-				String(
-					this.selectionMode === "extended"
-						? this.extendedSelection.has(rowIndex)
-						: rowIndex === next,
-				),
-			);
-		}
-		if (scroll)
-			this.resultContainerEl
-				.querySelector<HTMLElement>(`.suggestion-item[data-index="${next}"]`)
-				?.scrollIntoView({ block: "nearest" });
 	}
 }

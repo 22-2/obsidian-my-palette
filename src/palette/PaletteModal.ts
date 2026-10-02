@@ -61,7 +61,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			getContext: (input) => this.session.getSearchHistoryContext(input),
 			apply: (result) => this.applySearchHistory(result),
 		});
-		this.plugin.registerDomEvent(
+		this.registerSelectionDomEvent(
 			this.inputEl,
 			"keydown",
 			(event) => {
@@ -130,15 +130,6 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 
 	protected override handlesSuggestionContextMenu(): boolean {
 		return true;
-	}
-
-	protected override registerSelectionDomEvent<K extends keyof HTMLElementEventMap>(
-		el: HTMLElement,
-		type: K,
-		callback: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any,
-		options?: boolean | AddEventListenerOptions,
-	): void {
-		this.plugin.registerDomEvent(el, type, callback, options);
 	}
 
 	protected override onSuggestionContextMenu(result: PaletteResult, event: MouseEvent): void {
@@ -217,10 +208,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	private async openSelectedWithoutClosing(): Promise<void> {
-		const chooser = this as unknown as {
-			chooser?: { values?: PaletteResult[]; selectedItem?: number };
-		};
-		const result = chooser.chooser?.values?.[chooser.chooser.selectedItem ?? -1];
+		// The shared panel owns selection; preview the same item as Enter/double-click.
+		const result = this.getSelectedItem();
 		if (!result || result.mode === "command") return;
 		// Right Arrow opens the selected result without moving focus to the list,
 		// so it must commit the query before this keyboard-only action runs.

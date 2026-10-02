@@ -188,6 +188,9 @@ refactor: separate core modules by responsibility
 
 - [x] 検索状態をModalとItemViewから共有する
 - [x] 結果行の表示と左右中クリック処理を共通化する
+- [x] `BaseSuggestModal` を `SuggestionPanel` を組み込む薄いホストにする
+- [x] モーダル開閉に合わせて共通部品とプレビュー操作のイベントを登録・解除する
+- [x] DOMイベントで複数選択、クリック、キー操作、再オープン、古い検索結果の破棄を検証する
 - [x] 右サイドバーから本文leafを差し替える
 - [x] workspace stateへ入力、固定モード、検索元を保存する
 - [x] 検索履歴コントロールのイベント登録を共通コントローラへ移す
