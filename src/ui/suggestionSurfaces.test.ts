@@ -243,6 +243,35 @@ it("keeps click activation for single-choice modals and press activation for vie
 	}
 });
 
+it("selects and opens sidebar results created in a restored popout window", async () => {
+	const mainDocument = document;
+	const mainElement = Element;
+	const mainHTMLElement = HTMLElement;
+	const popout = new Window();
+	vi.stubGlobal("document", popout.document);
+	vi.stubGlobal("Element", popout.Element);
+	vi.stubGlobal("HTMLElement", popout.HTMLElement);
+	installObsidianDom();
+	const f = await fixture("view");
+	vi.stubGlobal("document", mainDocument);
+	// Happy DOM shares Element across windows; give the main realm its own
+	// constructor so native instanceof rejects the popout's nodes as Electron does.
+	vi.stubGlobal("Element", class Element extends mainElement {});
+	vi.stubGlobal("HTMLElement", mainHTMLElement);
+
+	expect(f.rows()[1] instanceof Element).toBe(false);
+	mouse(f.rows()[1], "mousedown");
+	mouse(f.rows()[1], "click");
+	expect(f.selection()).toEqual(["beta"]);
+	mouse(f.rows()[1], "dblclick");
+	expect(f.choose).toHaveBeenCalledExactlyOnceWith("beta");
+	mouse(f.rows()[2], "mousedown", { button: 1 });
+	mouse(f.rows()[2], "auxclick", { button: 1 });
+	expect(f.middle).toHaveBeenCalledExactlyOnceWith("gamma");
+	mouse(f.rows()[3], "contextmenu", { button: 2 });
+	expect(f.context).toHaveBeenCalledWith("delta", ["delta"]);
+});
+
 it("preserves modal Home/End scope handling and closes on Escape", async () => {
 	const f = await fixture("modal");
 	f.input.value = "query";

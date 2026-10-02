@@ -427,8 +427,10 @@ export class SuggestionPanel<T> extends Component {
 	}
 
 	private suggestionRowAtEvent(event: Event): Element | undefined {
-		const target = event.target;
-		if (!(target instanceof Element)) return undefined;
+		const target = event.target as Node | null;
+		// Why: restored popout panes create nodes in another window, whose Element
+		// constructor differs from the plugin's window. Obsidian checks across realms.
+		if (!target?.instanceOf(Element)) return undefined;
 		const row = target.closest(".suggestion-item");
 		return row && this.resultContainerEl.contains(row) ? row : undefined;
 	}

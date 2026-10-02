@@ -95,10 +95,8 @@ export class PaletteTableControls extends Component {
 		});
 		this.registerDomEvent(this.panel.resultContainerEl, "dragleave", (event) => {
 			const header = this.headerAtEvent(event);
-			if (
-				header &&
-				!(event.relatedTarget instanceof Node && header.contains(event.relatedTarget))
-			) {
+			const relatedTarget = event.relatedTarget as Node | null;
+			if (header && !(relatedTarget?.instanceOf(Node) && header.contains(relatedTarget))) {
 				delete header.dataset.dropPosition;
 			}
 		});
@@ -299,8 +297,10 @@ export class PaletteTableControls extends Component {
 	}
 
 	private headerAtEvent(event: Event): HTMLElement | undefined {
-		return event.target instanceof Element
-			? (event.target.closest<HTMLElement>("th[data-column]") ?? undefined)
+		const target = event.target as Node | null;
+		// Why: popout headers belong to another DOM realm after workspace restore.
+		return target?.instanceOf(Element)
+			? (target.closest<HTMLElement>("th[data-column]") ?? undefined)
 			: undefined;
 	}
 
@@ -363,8 +363,10 @@ export class PaletteTableControls extends Component {
 	}
 
 	private buttonAtEvent(event: MouseEvent): HTMLButtonElement | undefined {
-		return event.target instanceof Element
-			? (event.target.closest<HTMLButtonElement>("button[data-action]") ?? undefined)
+		const target = event.target as Node | null;
+		// Why: paging and sorting must recognize buttons created in a popout window.
+		return target?.instanceOf(Element)
+			? (target.closest<HTMLButtonElement>("button[data-action]") ?? undefined)
 			: undefined;
 	}
 

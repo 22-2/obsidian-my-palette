@@ -25,6 +25,15 @@ export function installObsidianDom(): void {
 		return element;
 	};
 	Object.defineProperties(HTMLElement.prototype, {
+		instanceOf: {
+			configurable: true,
+			value(this: HTMLElement, type: { name: string }) {
+				// Match Obsidian's cross-window check using the node's owning realm.
+				const realm = this.ownerDocument.defaultView;
+				const constructor = type.name === "Node" ? realm?.Node : realm?.Element;
+				return !!constructor && this instanceof constructor;
+			},
+		},
 		createEl: { configurable: true, value: create },
 		createDiv: {
 			configurable: true,
