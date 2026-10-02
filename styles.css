@@ -5,6 +5,9 @@
 /* The persistent palette is a compact workspace surface, not a modal embedded
    in a leaf. Every width boundary is explicit so narrow sidebars stay stable. */
 .my-palette-view.my-palette-panel--view {
+	padding-bottom: 0px;
+	padding-right: 0px;
+	padding-left: 0px;
 	display: flex;
 	flex-direction: column;
 	box-sizing: border-box;
@@ -82,29 +85,22 @@
 }
 
 .my-palette-table-controls {
-	/* Keep sort guidance and pagination on one row so controls leave more room
-	   for results; only the sort area scrolls when the pane is narrow. */
-	display: flex;
-	align-items: center;
-	gap: 8px;
 	flex: 0 0 auto;
 	min-width: 0;
-	padding: 6px 8px;
 	border-bottom: 1px solid var(--background-modifier-border);
 	font-size: var(--font-ui-smaller);
 }
 
 .my-palette-table-toolbar,
-.my-palette-table-pager,
-.my-palette-table-priority {
+.my-palette-table-pager {
 	display: flex;
 	align-items: center;
 	gap: 4px;
 }
 
 .my-palette-table-toolbar {
-	flex: 0 0 auto;
 	justify-content: flex-end;
+	padding: 6px 8px;
 }
 
 .my-palette-table-controls .my-palette-table-button {
@@ -119,31 +115,6 @@
 
 .my-palette-table-pager {
 	color: var(--text-muted);
-	white-space: nowrap;
-}
-
-.my-palette-table-sort-bar {
-	order: -1;
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	flex: 1 1 auto;
-	min-width: 0;
-	overflow: auto;
-	color: var(--text-muted);
-	white-space: nowrap;
-}
-
-.my-palette-table-sort-bar[hidden] {
-	display: none;
-}
-
-.my-palette-table-priority {
-	flex: 0 0 auto;
-	padding: 2px 4px 2px 7px;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: var(--radius-s);
-	background: var(--background-primary);
 	white-space: nowrap;
 }
 

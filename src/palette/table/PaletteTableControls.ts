@@ -24,7 +24,6 @@ export class PaletteTableControls extends Component {
 	private readonly model: PaletteTableModel;
 	private readonly controlsEl: HTMLElement;
 	private readonly toolbarEl: HTMLElement;
-	private readonly sortBarEl: HTMLElement;
 	private readonly dateFormat = new Intl.DateTimeFormat(undefined, {
 		dateStyle: "short",
 		timeStyle: "short",
@@ -47,7 +46,6 @@ export class PaletteTableControls extends Component {
 		this.controlsEl = createDiv({ cls: "my-palette-table-controls" });
 		panel.resultContainerEl.before(this.controlsEl);
 		this.toolbarEl = this.controlsEl.createDiv("my-palette-table-toolbar");
-		this.sortBarEl = this.controlsEl.createDiv("my-palette-table-sort-bar");
 	}
 
 	onload(): void {
@@ -181,11 +179,10 @@ export class PaletteTableControls extends Component {
 	}
 
 	private render(): void {
-		// Why: these controls belong exclusively to PaletteTableView. Fix the
-		// presentation so persisted legacy state cannot reintroduce a mode toggle.
+		// Why: the presentation belongs exclusively to PaletteTableView, so
+		// persisted legacy state cannot reintroduce a mode toggle.
 		this.panel.setAttribute("data-result-layout", "table");
 		this.renderToolbar();
-		this.renderSortBar();
 		this.panel.setResultsLayout({
 			render: (container, items, query, decorateRow) =>
 				this.renderTable(container, items, query, decorateRow),
@@ -214,45 +211,6 @@ export class PaletteTableControls extends Component {
 		pager.createSpan({ text: `${this.pageIndex + 1} / ${pages}` });
 		this.button(pager, "next", "Next page", "chevron-right").disabled =
 			this.pageIndex + 1 >= pages;
-	}
-
-	private renderSortBar(): void {
-		this.sortBarEl.empty();
-		if (!this.model.sorting.length) {
-			this.sortBarEl.createSpan({
-				text: "Search order · Click headers to sort · Drag to reorder · Right-click for columns",
-			});
-			return;
-		}
-		for (const [index, sort] of this.model.sorting.entries()) {
-			const label = PALETTE_TABLE_COLUMNS.find(({ id }) => id === sort.id)?.label ?? sort.id;
-			const priority = this.sortBarEl.createDiv("my-palette-table-priority");
-			priority.createSpan({ text: `${index + 1}. ${label}` });
-			this.button(
-				priority,
-				"direction",
-				`${label}: ${sort.desc ? "descending" : "ascending"}. Reverse sort`,
-				sort.desc ? "arrow-down" : "arrow-up",
-				sort.id,
-			);
-			this.button(
-				priority,
-				"earlier",
-				`Move ${label} earlier`,
-				"chevron-left",
-				sort.id,
-			).disabled = index === 0;
-			this.button(
-				priority,
-				"later",
-				`Move ${label} later`,
-				"chevron-right",
-				sort.id,
-			).disabled = index === this.model.sorting.length - 1;
-			this.button(priority, "remove", `Remove ${label} sort`, "x", sort.id);
-		}
-		const reset = this.button(this.sortBarEl, "reset", "Restore search order");
-		reset.setText("Reset");
 	}
 
 	private renderTable(
@@ -374,37 +332,19 @@ export class PaletteTableControls extends Component {
 		const button = this.buttonAtEvent(event);
 		if (!button) return;
 		const action = button.dataset.action;
-		const id = button.dataset.column;
-		if (action === "previous" || action === "next") {
-			const lastPage = Math.max(
-				0,
-				Math.ceil(this.results.items.length / PALETTE_TABLE_PAGE_SIZE) - 1,
-			);
-			this.pageIndex = Math.max(
-				0,
-				Math.min(lastPage, this.pageIndex + (action === "next" ? 1 : -1)),
-			);
-			this.render();
-			this.panel.resultContainerEl.scrollTop = 0;
-			this.restoreControlFocus(action);
-			return;
-		} else if (action === "reset") this.model.setSorting([]);
-		else if (id && (action === "earlier" || action === "later"))
-			this.model.movePriority(id, action === "earlier" ? -1 : 1);
-		else if (id && (action === "remove" || action === "direction")) {
-			this.model.setSorting(
-				this.model.sorting.flatMap((sort) =>
-					sort.id !== id
-						? [sort]
-						: action === "remove"
-							? []
-							: [{ ...sort, desc: !sort.desc }],
-				),
-			);
-		} else return;
-		this.pageIndex = 0;
-		this.changed();
-		this.restoreControlFocus(action ?? "", id);
+		if (action !== "previous" && action !== "next") return;
+		const lastPage = Math.max(
+			0,
+			Math.ceil(this.results.items.length / PALETTE_TABLE_PAGE_SIZE) - 1,
+		);
+		this.pageIndex = Math.max(
+			0,
+			Math.min(lastPage, this.pageIndex + (action === "next" ? 1 : -1)),
+		);
+		this.render();
+		this.panel.resultContainerEl.scrollTop = 0;
+		this.restoreControlFocus(action);
+		return;
 	}
 
 	private changed(): void {
@@ -413,8 +353,8 @@ export class PaletteTableControls extends Component {
 	}
 
 	private restoreControlFocus(action: string, id?: string): void {
-		// Rendering replaces buttons; restore focus so keyboard users can keep
-		// changing direction or priority without tabbing back through the toolbar.
+		// Rendering replaces pager buttons; restore focus so keyboard users can
+		// continue paging without tabbing back through the toolbar.
 		this.controlsEl
 			.querySelector<HTMLButtonElement>(
 				`button[data-action="${action}"]${id ? `[data-column="${id}"]` : ""}`,

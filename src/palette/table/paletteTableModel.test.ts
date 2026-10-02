@@ -44,18 +44,17 @@ describe("PaletteTableModel", () => {
 		expect(names(model, 2).at(-1)).toBe("Note 0");
 	});
 
-	it("uses multiple column priorities and changes their precedence independently of direction", () => {
+	it("uses multiple column priorities", () => {
 		const model = new PaletteTableModel([
 			{ id: "prior", desc: true },
 			{ id: "modified", desc: true },
 		]);
 		model.setRows([row("High old", 10, 2), row("Low new", 30, 1), row("High new", 20, 2)]);
 		expect(names(model)).toEqual(["High new", "High old", "Low new"]);
-		model.movePriority("modified", -1);
-		expect(names(model)).toEqual(["Low new", "High new", "High old"]);
+		expect(names(model)).toEqual(["High new", "High old", "Low new"]);
 		expect(model.sorting).toEqual([
-			{ id: "modified", desc: true },
 			{ id: "prior", desc: true },
+			{ id: "modified", desc: true },
 		]);
 	});
 

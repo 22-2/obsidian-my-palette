@@ -178,19 +178,9 @@ export class PaletteTableModel {
 		const hiddenColumns = this.columnState.hiddenColumns.includes(id)
 			? this.columnState.hiddenColumns.filter((column) => column !== id)
 			: [...this.columnState.hiddenColumns, id];
-		// Why: hiding a column changes presentation only; its active sort remains
-		// editable in the priority bar and is preserved when the column is shown.
+		// Why: hiding a column changes presentation only; its active sort is
+		// preserved when the column is shown again.
 		this.setColumnLayout({ ...this.columnLayout, hiddenColumns });
-	}
-
-	movePriority(id: string, offset: -1 | 1): void {
-		const sorting = [...this.sorting];
-		const index = sorting.findIndex((sort) => sort.id === id);
-		const target = index + offset;
-		if (index < 0 || target < 0 || target >= sorting.length) return;
-		const [sort] = sorting.splice(index, 1);
-		sorting.splice(target, 0, sort);
-		this.setSorting(sorting);
 	}
 
 	page(index: number, size: number): PaletteTableRow[] {
