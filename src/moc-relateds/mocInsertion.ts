@@ -48,31 +48,63 @@ export function addMocInsertionMenuItem(
 	onSelected?: () => void,
 	getContext?: () => MocInsertionContext,
 ): void {
-	if (result.mode === "command" || result.mode === "search-history") return;
-	if (result.mode === "everything" && (result.kind === "folder" || !result.vaultPath)) return;
-	if (result.mode === "bookmark" && result.kind === "search") return;
+	addMocInsertionMenuItems(menu, plugin, [result], onSelected, getContext);
+}
+
+/** Adds one action for eligible notes so a multi-selection shares one MOC destination. */
+export function addMocInsertionMenuItems(
+	menu: Menu,
+	plugin: MyPalettePlugin,
+	results: readonly PaletteResult[],
+	onSelected?: () => void,
+	getContext?: () => MocInsertionContext,
+): void {
+	const insertableResults = results.filter((result) => {
+		if (result.mode === "command" || result.mode === "search-history") return false;
+		if (result.mode === "everything" && (result.kind === "folder" || !result.vaultPath))
+			return false;
+		return !(result.mode === "bookmark" && result.kind === "search");
+	});
+	if (!insertableResults.length) return;
 	menu.addSeparator();
 	menu.addItem((item) =>
 		item
-			.setTitle("Insert into MOC Relateds")
+			.setTitle(
+				results.length > 1
+					? "Insert selected into MOC Relateds"
+					: "Insert into MOC Relateds",
+			)
 			.setIcon("list-plus")
 			.onClick(() => {
 				onSelected?.();
 				void (async () => {
-					const target = await resolveMocTarget(plugin, result);
-					if (!target) {
-						new Notice("This result is not an available vault note.");
-						return;
+					const targets = new Map<string, TFile>();
+					let unavailableCount = 0;
+					for (const result of insertableResults) {
+						const target = await resolveMocTarget(plugin, result);
+						if (target) targets.set(target.path, target);
+						else unavailableCount++;
 					}
-					const context = getContext?.();
-					if (context)
-						await insertFileToMocRelateds(
-							plugin,
-							context.mocFile,
-							target,
-							context.mocLeaf,
+					if (unavailableCount === 1 && insertableResults.length === 1)
+						new Notice("This result is not an available vault note.");
+					else if (unavailableCount > 0)
+						new Notice(
+							`${unavailableCount} selected results are not available vault notes.`,
 						);
-					else await insertFileToActiveMocRelateds(plugin, target);
+					if (!targets.size) return;
+					const context = getContext?.();
+					// Why: each insertion reads and updates the shared MOC, so process targets
+					// serially to keep one selection from overwriting another's changes.
+					for (const target of targets.values()) {
+						if (context)
+							await insertFileToMocRelateds(
+								plugin,
+								context.mocFile,
+								target,
+								context.mocLeaf,
+							);
+						else await insertFileToActiveMocRelateds(plugin, target);
+					}
 				})();
 			}),
 	);

@@ -1,7 +1,7 @@
 import type { App, Menu } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import type { MocInsertionContext } from "src/moc-relateds/mocInsertion";
-import { addMocInsertionMenuItem } from "src/moc-relateds/mocInsertion";
+import { addMocInsertionMenuItem, addMocInsertionMenuItems } from "src/moc-relateds/mocInsertion";
 import type { ActionKind } from "src/palette/resultActions";
 import { getCopyablePaths, isCopyablePaletteResult } from "src/palette/resultPresentation";
 import type { PaletteResult } from "src/palette/results";
@@ -45,13 +45,14 @@ export function populatePaletteResultMenu({
 			Boolean(fileName || relativePath || absolutePath),
 		);
 	if (selectedPaths.length > 1) {
-		// Why: opening or mutating heterogeneous selections has ambiguous focus and
-		// failure semantics, while copying their paths is deterministic and safe.
+		// Why: a multi-selection has no single result for navigation actions, so expose
+		// actions that can operate on all selected paths or notes.
 		addCopyPathListMenuItems(
 			menu,
 			selectedPaths,
 			(values) => void copyPathListToClipboard(values),
 		);
+		addMocInsertionMenuItems(menu, plugin, selectedItems, onMocSelected, getMocContext);
 		return;
 	}
 
