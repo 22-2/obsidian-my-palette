@@ -82,8 +82,14 @@
 }
 
 .my-palette-table-controls {
+	/* Keep sort guidance and pagination on one row so controls leave more room
+	   for results; only the sort area scrolls when the pane is narrow. */
+	display: flex;
+	align-items: center;
+	gap: 8px;
 	flex: 0 0 auto;
 	min-width: 0;
+	padding: 6px 8px;
 	border-bottom: 1px solid var(--background-modifier-border);
 	font-size: var(--font-ui-smaller);
 }
@@ -97,8 +103,8 @@
 }
 
 .my-palette-table-toolbar {
+	flex: 0 0 auto;
 	justify-content: flex-end;
-	padding: 6px 8px;
 }
 
 .my-palette-table-controls .my-palette-table-button {
@@ -117,13 +123,15 @@
 }
 
 .my-palette-table-sort-bar {
+	order: -1;
 	display: flex;
 	align-items: center;
 	gap: 6px;
-	max-height: 120px;
+	flex: 1 1 auto;
+	min-width: 0;
 	overflow: auto;
-	padding: 0 8px 6px;
 	color: var(--text-muted);
+	white-space: nowrap;
 }
 
 .my-palette-table-sort-bar[hidden] {
