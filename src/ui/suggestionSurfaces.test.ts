@@ -198,6 +198,20 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 		expect(f.middle).not.toHaveBeenCalled();
 		expect(f.choose).not.toHaveBeenCalled();
 	});
+	it.each(["click", "auxclick"])("opens a standalone middle %s once", async (type) => {
+		const f = await fixture(surface);
+		mouse(f.rows()[1], type, { button: 1 });
+		mouse(f.rows()[1], "click");
+		mouse(f.rows()[1], "auxclick", { button: 1 });
+		expect(f.middle).toHaveBeenCalledExactlyOnceWith("beta");
+		expect(f.choose).not.toHaveBeenCalled();
+	});
+	it("does not treat a standalone right auxclick as a middle-click", async () => {
+		const f = await fixture(surface);
+		mouse(f.rows()[1], "auxclick", { button: 2 });
+		expect(f.middle).not.toHaveBeenCalled();
+		expect(f.choose).not.toHaveBeenCalled();
+	});
 	it("extends keyboard selection, keeps it while moving with Ctrl, and ignores IME", async () => {
 		const f = await fixture(surface);
 		key(f.input, "ArrowDown", { shiftKey: true });

@@ -281,6 +281,9 @@ export class SuggestionPanel<T> extends Component {
 				if (!modal) this.props.onResultFocus?.();
 				const item = this.itemAtRow(row);
 				if (item === undefined) return;
+				// Why: keep the middle-click guard through click/auxclick, then reset
+				// it on the next press so one gesture cannot open the same note twice.
+				this.middleClickRows.delete(row);
 				const index = Number(row.getAttribute("data-index"));
 				if (event.button === 0 && this.selectionMode === "extended") {
 					// Why: the sidebar can lose its click to Obsidian after mousedown;
@@ -305,9 +308,7 @@ export class SuggestionPanel<T> extends Component {
 				} else if (event.button === 1 && this.props.onMiddleClick) {
 					event.preventDefault();
 					event.stopImmediatePropagation();
-					this.middleClickRows.add(row);
-					this.setSelectedIndex(index, false);
-					void this.props.onMiddleClick(item, event);
+					this.handleMiddleClick(row, event);
 				} else if (event.button === 2 && this.props.onContextMenu) {
 					event.preventDefault();
 					event.stopImmediatePropagation();
@@ -346,11 +347,9 @@ export class SuggestionPanel<T> extends Component {
 				if (!row) return;
 				event.preventDefault();
 				event.stopImmediatePropagation();
-				if (this.rightClickRows.delete(row)) return;
-				if (this.middleClickRows.delete(row)) return;
-				const item = this.itemAtRow(row);
-				if (item !== undefined && this.props.onMiddleClick)
-					void this.props.onMiddleClick(item, event);
+				// Why: an auxiliary right-click must never use the middle-click action,
+				// even when the host did not deliver its preceding mousedown.
+				if (event.button === 1) this.handleMiddleClick(row, event);
 			},
 			true,
 		);
@@ -366,11 +365,15 @@ export class SuggestionPanel<T> extends Component {
 				if (event.button !== 0) {
 					event.preventDefault();
 					event.stopImmediatePropagation();
+					// Why: some Electron hosts send click instead of auxclick for the
+					// middle button; share the guard with the normal mousedown route.
+					const row = this.suggestionRowAtEvent(event);
+					if (event.button === 1 && row) this.handleMiddleClick(row, event);
 					return;
 				}
 				const row = this.suggestionRowAtEvent(event);
 				if (!row) return;
-				if (this.middleClickRows.delete(row)) {
+				if (this.middleClickRows.has(row)) {
 					event.preventDefault();
 					event.stopImmediatePropagation();
 					return;
@@ -412,6 +415,15 @@ export class SuggestionPanel<T> extends Component {
 			},
 			true,
 		);
+	}
+
+	private handleMiddleClick(row: Element, event: MouseEvent): void {
+		if (this.middleClickRows.has(row) || !this.props.onMiddleClick) return;
+		const item = this.itemAtRow(row);
+		if (item === undefined) return;
+		this.middleClickRows.add(row);
+		this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
+		void this.props.onMiddleClick(item, event);
 	}
 
 	private suggestionRowAtEvent(event: Event): Element | undefined {
