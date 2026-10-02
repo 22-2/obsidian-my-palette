@@ -53,10 +53,19 @@
 	min-width: 0;
 	height: 34px;
 	padding: 5px 38px 5px 32px;
-	border: 1px solid var(--background-modifier-border);
 	border-radius: var(--radius-m);
 	background: var(--background-primary);
 	font-size: var(--font-ui-small);
+}
+
+/* Why: the persistent search bar is already separated by its background and
+   container divider; reset theme focus rings too so it stays borderless while typing. */
+.my-palette-panel--view .prompt-input,
+.my-palette-panel--view .prompt-input:focus,
+.my-palette-panel--view .prompt-input:focus-visible {
+	border: 0;
+	outline: none;
+	box-shadow: none;
 }
 
 .my-palette-panel--view .prompt-results {
