@@ -165,7 +165,8 @@
 }
 
 .my-palette-results-table th button {
-	cursor: grab;
+	/* Why: header clicks sort; column dragging should not impose a grab cursor at rest. */
+	cursor: default;
 	width: 100%;
 	height: 30px;
 	padding: 4px 8px;
