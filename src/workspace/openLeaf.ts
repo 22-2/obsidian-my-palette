@@ -27,3 +27,15 @@ export function getLeafForAction(
 export function isPinnedLeaf(leaf: WorkspaceLeaf): boolean {
 	return leaf.getViewState().pinned === true;
 }
+
+/** Reveal the actual destination before focusing its fully loaded view. */
+export async function revealOpenedLeaf(
+	app: App,
+	leaf: WorkspaceLeaf,
+	autoFocus = true,
+): Promise<void> {
+	// Deferred tabs need to finish loading before they can receive editor focus.
+	// Preview actions reveal the note too, but keep keyboard focus in the palette.
+	await app.workspace.revealLeaf(leaf);
+	if (autoFocus) app.workspace.setActiveLeaf(leaf, { focus: true });
+}

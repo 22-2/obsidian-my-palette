@@ -2,7 +2,7 @@ import { Modal, Notice, TFile } from "obsidian";
 import { getDesktopAdapter } from "src/platform/desktopAdapter";
 import { getVaultFullPath, getVaultRootPath } from "src/ignored-notes/ignoredPaths";
 import { isMarkdownPath } from "src/shared/externalFiles";
-import { getLeafForAction } from "src/workspace/openLeaf";
+import { getLeafForAction, revealOpenedLeaf } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
 
 /** 入力パス前後のクォートを除去する。エクスプローラからのコピー貼付け対策。 */
@@ -57,9 +57,12 @@ export class OpenFilePathModal extends Modal {
 		// 一貫した扱いになり、外部Markdownはfile:ビューで別扱いになるため。
 		const vaultFile = this.plugin.app.vault.getAbstractFileByPath(input);
 		if (vaultFile instanceof TFile) {
-			await getLeafForAction(this.plugin.app, "primary").openFile(vaultFile, {
+			const leaf = getLeafForAction(this.plugin.app, "primary");
+			await leaf.openFile(vaultFile, {
 				active: true,
 			});
+			// File-path opens should focus the resolved destination like palette opens.
+			await revealOpenedLeaf(this.plugin.app, leaf);
 			this.close();
 			return;
 		}

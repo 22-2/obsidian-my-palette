@@ -1,5 +1,5 @@
 import { type App, type WorkspaceLeaf } from "obsidian";
-import { getLeafForAction } from "src/workspace/openLeaf";
+import { getLeafForAction, revealOpenedLeaf } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
@@ -9,10 +9,10 @@ export interface PaletteResultExecutionOptions {
 	closeWhenDone: boolean;
 	/** The本文 leaf that a primary open should replace. */
 	targetLeaf?: WorkspaceLeaf;
-	/** Persistent sidebars keep focus in the search input while zapping notes. */
+	/** Normal opens activate the destination; background actions remain separate. */
 	active: boolean;
 	/** Modal's ArrowRight preview keeps the target active but avoids editor focus. */
-	externalAutoFocus?: boolean;
+	autoFocus?: boolean;
 	close: () => void;
 	showError: (message: string) => void;
 }
@@ -88,7 +88,7 @@ export async function executePaletteResult(
 				plugin.openExternalMarkdown(
 					absolutePath,
 					openAction,
-					options.externalAutoFocus ?? active,
+					options.autoFocus ?? active,
 					active,
 					targetLeaf,
 				),
@@ -96,6 +96,7 @@ export async function executePaletteResult(
 		{
 			targetLeaf: options.targetLeaf,
 			active: options.active,
+			autoFocus: options.autoFocus,
 		},
 	);
 	if (outcome.close) {
@@ -117,6 +118,7 @@ async function executeBookmark(
 	if (!result.file) return false;
 	const leaf = getLeafForAction(app, action, options.targetLeaf);
 	await leaf.openFile(result.file, action === "primary" ? { active: options.active } : undefined);
+	if (options.active) await revealOpenedLeaf(app, leaf, options.autoFocus);
 	return true;
 }
 
@@ -128,6 +130,7 @@ async function openFileResult(
 ): Promise<WorkspaceLeaf> {
 	const leaf = getLeafForAction(app, action, options.targetLeaf);
 	await leaf.openFile(result.file, action === "primary" ? { active: options.active } : undefined);
+	if (options.active) await revealOpenedLeaf(app, leaf, options.autoFocus);
 	return leaf;
 }
 

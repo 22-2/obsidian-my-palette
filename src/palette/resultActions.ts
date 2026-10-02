@@ -1,5 +1,5 @@
 import { Notice, TFile, type App, type WorkspaceLeaf } from "obsidian";
-import { getLeafForAction, type LeafOpenAction } from "src/workspace/openLeaf";
+import { getLeafForAction, revealOpenedLeaf, type LeafOpenAction } from "src/workspace/openLeaf";
 import { getVaultFullPath, isUserIgnoredPath } from "src/ignored-notes/ignoredPaths";
 import { getDesktopAdapter } from "src/platform/desktopAdapter";
 import { resolveExternalOpenTarget, type ExternalOpenTarget } from "src/palette/openTargets";
@@ -34,6 +34,8 @@ export interface ResultActionOptions {
 	targetLeaf?: WorkspaceLeaf;
 	/** Whether a primary external/open-file action should focus its target. */
 	active?: boolean;
+	/** Preview actions reveal the destination without focusing the editor. */
+	autoFocus?: boolean;
 }
 
 async function openExternalTarget(
@@ -98,6 +100,7 @@ export async function runResultAction(
 			current,
 			action === "primary" ? { active: options.active ?? true } : undefined,
 		);
+		if (options.active ?? true) await revealOpenedLeaf(app, leaf, options.autoFocus);
 		return { close: true };
 	}
 	if (result.mode === "command") return { close: true };
@@ -121,6 +124,7 @@ export async function runResultAction(
 				current,
 				action === "primary" ? { active: options.active ?? true } : undefined,
 			);
+			if (options.active ?? true) await revealOpenedLeaf(app, leaf, options.autoFocus);
 			return { close: true };
 		}
 	}

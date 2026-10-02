@@ -1,6 +1,6 @@
 import type { App, WorkspaceLeaf } from "obsidian";
 import { getDesktopAdapter } from "src/platform/desktopAdapter";
-import { getLeafForAction, type LeafOpenAction } from "src/workspace/openLeaf";
+import { getLeafForAction, revealOpenedLeaf, type LeafOpenAction } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
 
 const MARKDOWN_VIEW_TYPE = "markdown";
@@ -31,7 +31,6 @@ export async function openExternalMarkdown(
 	active = true,
 	targetLeaf?: WorkspaceLeaf,
 ): Promise<void> {
-	void autoFocus;
 	const resolvedPath = getDesktopAdapter(plugin.app).path.resolve(absolutePath);
 	const externalLeaves = getExternalMarkdownLeaves(plugin.app);
 	const existing = externalLeaves.find(
@@ -45,7 +44,9 @@ export async function openExternalMarkdown(
 			active: true,
 			state: markdownViewState(resolvedPath),
 		});
-		plugin.app.workspace.revealLeaf(existing);
+		// Reused external notes still navigate to their existing tab; await its
+		// load and honor preview focus just as we do for a newly opened note.
+		await revealOpenedLeaf(plugin.app, existing, autoFocus);
 		return;
 	}
 	const leaf: WorkspaceLeaf = getLeafForAction(plugin.app, action, targetLeaf);
@@ -54,7 +55,7 @@ export async function openExternalMarkdown(
 		active,
 		state: markdownViewState(resolvedPath),
 	});
-	if (active) plugin.app.workspace.revealLeaf(leaf);
+	if (active) await revealOpenedLeaf(plugin.app, leaf, autoFocus);
 }
 
 function markdownViewState(absolutePath: string): Record<string, unknown> {

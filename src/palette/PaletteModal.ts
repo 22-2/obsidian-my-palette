@@ -175,7 +175,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		await executePaletteResult(this.plugin, result, action, {
 			closeWhenDone: closePalette,
 			active: true,
-			externalAutoFocus: closePalette,
+			autoFocus: closePalette,
 			close: () => this.close(),
 			showError: (message) => {
 				this.emptyStateText = message;

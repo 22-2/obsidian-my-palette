@@ -1,6 +1,6 @@
 import type { App, WorkspaceLeaf } from "obsidian";
 import { describe, expect, it, vi } from "vitest";
-import { getLeafForAction } from "src/workspace/openLeaf";
+import { getLeafForAction, revealOpenedLeaf } from "src/workspace/openLeaf";
 
 function fakeLeaf(pinned: boolean): WorkspaceLeaf {
 	return { getViewState: () => ({ pinned }) } as unknown as WorkspaceLeaf;
@@ -47,5 +47,38 @@ describe("getLeafForAction", () => {
 		expect(getLeaf).toHaveBeenNthCalledWith(1, "tab");
 		expect(getLeaf).toHaveBeenNthCalledWith(2, "split", "horizontal");
 		expect(getLeaf).toHaveBeenNthCalledWith(3, "split", "vertical");
+	});
+});
+
+describe("revealOpenedLeaf", () => {
+	it("waits for a deferred destination before giving it focus", async () => {
+		const leaf = fakeLeaf(false);
+		let loaded!: () => void;
+		const revealLeaf = vi.fn(
+			() =>
+				new Promise<void>((resolve) => {
+					loaded = resolve;
+				}),
+		);
+		const setActiveLeaf = vi.fn();
+		const app = { workspace: { revealLeaf, setActiveLeaf } } as unknown as App;
+		const revealing = revealOpenedLeaf(app, leaf);
+		expect(revealLeaf).toHaveBeenCalledWith(leaf);
+		expect(setActiveLeaf).not.toHaveBeenCalled();
+		loaded();
+		await revealing;
+		expect(setActiveLeaf).toHaveBeenCalledExactlyOnceWith(leaf, { focus: true });
+	});
+	it("reveals a preview without moving keyboard focus", async () => {
+		const leaf = fakeLeaf(false);
+		const revealLeaf = vi.fn().mockResolvedValue(undefined);
+		const setActiveLeaf = vi.fn();
+		await revealOpenedLeaf(
+			{ workspace: { revealLeaf, setActiveLeaf } } as unknown as App,
+			leaf,
+			false,
+		);
+		expect(revealLeaf).toHaveBeenCalledWith(leaf);
+		expect(setActiveLeaf).not.toHaveBeenCalled();
 	});
 });

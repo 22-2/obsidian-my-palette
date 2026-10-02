@@ -403,12 +403,13 @@ export class PaletteView extends ItemView {
 			if (result.mode === "search-history") this.applySearchHistory(result);
 			return;
 		}
-		const existingExternalLeaves = getExternalMarkdownLeaves(this.app);
 		const targetLeaf = this.resolveTargetLeaf();
 		const execution: PaletteResultExecutionOptions = {
 			closeWhenDone: false,
 			targetLeaf,
-			active: action !== "primary",
+			// Opening a note is a navigation action: focus the destination rather
+			// than returning to this palette's input after the open completes.
+			active: true,
 			close: () => undefined,
 			showError: (message) => {
 				this.actionMessage = message;
@@ -418,7 +419,6 @@ export class PaletteView extends ItemView {
 			},
 		};
 		await executePaletteResult(this.plugin, result, action, execution);
-		this.focusPanelAfterAction(existingExternalLeaves);
 	}
 
 	private resolveTargetLeaf(): WorkspaceLeaf {
