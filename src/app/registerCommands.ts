@@ -28,7 +28,7 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	// in the existing palette. Additional panes remain available in each pane menu.
 	plugin.addCommand({
 		id: "open-table-view",
-		name: "Open palette table in right sidebar",
+		name: "Open palette table in center",
 		callback: () => void plugin.openPaletteTableView(),
 	});
 	plugin.addCommand({

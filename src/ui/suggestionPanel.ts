@@ -156,7 +156,6 @@ export class SuggestionPanel<T> extends Component {
 	setResultsLayout(layout?: SuggestionPanelResultsLayout<T>): void {
 		this.resultsLayout = layout;
 		this.resultContainerEl.setAttribute("role", layout ? "region" : "listbox");
-		this.resultContainerEl.setAttribute("aria-label", "Search results");
 		if (layout) this.resultContainerEl.removeAttribute("aria-multiselectable");
 		else if (this.selectionMode === "extended")
 			this.resultContainerEl.setAttribute("aria-multiselectable", "true");

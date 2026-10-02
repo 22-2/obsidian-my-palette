@@ -1,11 +1,13 @@
-import { Component, TFile, setIcon, type App } from "obsidian";
+import { Component, Menu, TFile, setIcon, type App } from "obsidian";
 import type { PaletteResult } from "src/palette/results";
 import {
 	PALETTE_TABLE_COLUMNS,
+	PALETTE_TABLE_PAGE_SIZE,
 	PaletteTableModel,
 	normalizePaletteTableState,
 	type PaletteTableRow,
 	type PaletteTableState,
+	type PaletteTableColumnId,
 } from "src/palette/table/paletteTableModel";
 import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
 import { renderSelectionItem, type SelectionItem } from "src/ui/selectionModal";
@@ -30,6 +32,9 @@ export class PaletteTableControls extends Component {
 	private pageIndex = 0;
 	private results: SuggestionPanelResults<PaletteResult> = { items: [] };
 	private rowsByResult = new Map<PaletteResult, PaletteTableRow>();
+	private draggedColumn?: PaletteTableColumnId;
+	private dragEndedAt = 0;
+	private columnMenu?: Menu;
 
 	constructor(
 		private readonly panel: SuggestionPanel<PaletteResult>,
@@ -38,6 +43,7 @@ export class PaletteTableControls extends Component {
 	) {
 		super();
 		this.model = new PaletteTableModel(options.initialState.sorting);
+		this.model.setColumnLayout(normalizePaletteTableState(options.initialState));
 		this.controlsEl = createDiv({ cls: "my-palette-table-controls" });
 		panel.resultContainerEl.before(this.controlsEl);
 		this.toolbarEl = this.controlsEl.createDiv("my-palette-table-toolbar");
@@ -51,18 +57,69 @@ export class PaletteTableControls extends Component {
 			if (!button || button.dataset.action !== "sort") return;
 			event.preventDefault();
 			event.stopPropagation();
+			// Why: some hosts emit a pointer click after a native drag. Do not let
+			// reordering accidentally cycle sorting; keyboard activation still works.
+			if (event.detail > 0 && Date.now() - this.dragEndedAt < 250) return;
 			const column = PALETTE_TABLE_COLUMNS.find(({ id }) => id === button.dataset.column);
 			if (!column) return;
-			this.model.toggleSorting(column.id, event.shiftKey);
+			this.model.toggleSorting(column.id);
 			this.pageIndex = 0;
 			this.changed();
 			this.panel.resultContainerEl
 				.querySelector<HTMLButtonElement>(`button[data-column="${column.id}"]`)
 				?.focus({ preventScroll: true });
 		});
+		this.registerDomEvent(this.panel.resultContainerEl, "contextmenu", (event) => {
+			if (!this.headerAtEvent(event)) return;
+			event.preventDefault();
+			event.stopPropagation();
+			this.showColumnMenu(event);
+		});
+		this.registerDomEvent(this.panel.resultContainerEl, "dragstart", (event) => {
+			const header = this.headerAtEvent(event);
+			const column = PALETTE_TABLE_COLUMNS.find(({ id }) => id === header?.dataset.column);
+			if (!header || !column || !event.dataTransfer) return;
+			this.draggedColumn = column.id;
+			this.columnMenu?.close();
+			event.dataTransfer.effectAllowed = "move";
+			event.dataTransfer.setData("text/plain", column.id);
+			header.addClass("is-dragging");
+			event.stopPropagation();
+		});
+		this.registerDomEvent(this.panel.resultContainerEl, "dragover", (event) => {
+			const header = this.headerAtEvent(event);
+			if (!this.draggedColumn || !header) return;
+			event.preventDefault();
+			event.stopPropagation();
+			if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+			this.clearDropMarkers();
+			header.dataset.dropPosition = this.dropPosition(header, event);
+		});
+		this.registerDomEvent(this.panel.resultContainerEl, "dragleave", (event) => {
+			const header = this.headerAtEvent(event);
+			if (
+				header &&
+				!(event.relatedTarget instanceof Node && header.contains(event.relatedTarget))
+			) {
+				delete header.dataset.dropPosition;
+			}
+		});
+		this.registerDomEvent(this.panel.resultContainerEl, "drop", (event) => {
+			const header = this.headerAtEvent(event);
+			const target = PALETTE_TABLE_COLUMNS.find(({ id }) => id === header?.dataset.column);
+			if (!this.draggedColumn || !header || !target) return;
+			event.preventDefault();
+			event.stopPropagation();
+			this.model.moveColumn(this.draggedColumn, target.id, this.dropPosition(header, event));
+			this.endColumnDrag();
+			this.changed();
+		});
+		this.registerDomEvent(this.panel.resultContainerEl, "dragend", () => this.endColumnDrag());
 	}
 
 	onunload(): void {
+		this.columnMenu?.close();
+		this.endColumnDrag();
 		this.controlsEl.remove();
 	}
 
@@ -70,12 +127,14 @@ export class PaletteTableControls extends Component {
 		return {
 			displayMode: "table",
 			sorting: this.model.sorting.map((sort) => ({ ...sort })),
+			...this.model.columnLayout,
 		};
 	}
 
 	setState(state: PaletteTableState): void {
 		const next = normalizePaletteTableState(state);
 		this.model.setSorting(next.sorting);
+		this.model.setColumnLayout(next);
 		this.pageIndex = 0;
 		this.render();
 	}
@@ -131,14 +190,16 @@ export class PaletteTableControls extends Component {
 			render: (container, items, query, decorateRow) =>
 				this.renderTable(container, items, query, decorateRow),
 		});
-		const items = this.model.page(this.pageIndex, this.panel.limit).map((row) => row.result);
+		const items = this.model
+			.page(this.pageIndex, PALETTE_TABLE_PAGE_SIZE)
+			.map((row) => row.result);
 		this.panel.setResults({
 			...this.results,
 			items,
 			total: this.results.total ?? this.results.items.length,
 		});
-		const start = items.length ? this.pageIndex * this.panel.limit + 1 : 0;
-		const end = this.pageIndex * this.panel.limit + items.length;
+		const start = items.length ? this.pageIndex * PALETTE_TABLE_PAGE_SIZE + 1 : 0;
+		const end = this.pageIndex * PALETTE_TABLE_PAGE_SIZE + items.length;
 		this.panel.resultCountEl.setText(
 			`${start}–${end} / ${this.results.total ?? this.results.items.length}`,
 		);
@@ -147,7 +208,7 @@ export class PaletteTableControls extends Component {
 	private renderToolbar(): void {
 		this.toolbarEl.empty();
 		const pager = this.toolbarEl.createDiv("my-palette-table-pager");
-		const pages = Math.max(1, Math.ceil(this.results.items.length / this.panel.limit));
+		const pages = Math.max(1, Math.ceil(this.results.items.length / PALETTE_TABLE_PAGE_SIZE));
 		this.button(pager, "previous", "Previous page", "chevron-left").disabled =
 			this.pageIndex === 0;
 		pager.createSpan({ text: `${this.pageIndex + 1} / ${pages}` });
@@ -159,7 +220,7 @@ export class PaletteTableControls extends Component {
 		this.sortBarEl.empty();
 		if (!this.model.sorting.length) {
 			this.sortBarEl.createSpan({
-				text: "Search order · Shift-click headers to sort by multiple columns",
+				text: "Search order · Click headers to sort · Drag to reorder · Right-click for columns",
 			});
 			return;
 		}
@@ -202,11 +263,23 @@ export class PaletteTableControls extends Component {
 	): void {
 		const table = container.createEl("table", {
 			cls: "my-palette-results-table",
-			attr: { role: "grid", "aria-label": "Search results", "aria-multiselectable": "true" },
+			attr: { role: "grid", "aria-multiselectable": "true" },
 		});
 		const head = table.createEl("thead").createEl("tr");
-		for (const column of PALETTE_TABLE_COLUMNS) {
-			const th = head.createEl("th", { attr: { scope: "col" } });
+		const visibleColumns = this.model.visibleColumns;
+		const totalWidth = visibleColumns.reduce((total, column) => total + column.width, 0);
+		// Why: widths follow column identities, not positions, and hidden columns
+		// release their space instead of keeping an unnecessarily wide table.
+		table.style.minWidth = `${Math.max(260, totalWidth * 7.4)}px`;
+		for (const column of visibleColumns) {
+			const th = head.createEl("th", {
+				attr: {
+					scope: "col",
+					"data-column": column.id,
+					draggable: "true",
+				},
+			});
+			th.style.width = `${(column.width / totalWidth) * 100}%`;
 			const index = this.model.sorting.findIndex((sort) => sort.id === column.id);
 			const sort = this.model.sorting[index];
 			if (sort)
@@ -217,7 +290,7 @@ export class PaletteTableControls extends Component {
 			const button = this.button(
 				th,
 				"sort",
-				`Sort by ${column.label}. Shift-click to add to sorting`,
+				`Sort by ${column.label}. Click to cycle sorting, drag to reorder, right-click for columns`,
 				undefined,
 				column.id,
 			);
@@ -228,15 +301,72 @@ export class PaletteTableControls extends Component {
 			const row = body.createEl("tr");
 			decorateRow(row, index);
 			const data = this.rowsByResult.get(result);
-			const name = row.createEl("td");
-			const presentation = this.options.presentation(result);
-			renderSelectionItem({ ...presentation, description: undefined }, name, query);
-			const path = row.createEl("td", { text: data?.path ?? result.secondary });
-			path.setAttribute("title", data?.path ?? result.secondary);
-			row.createEl("td", {
-				text: data?.modified === undefined ? "—" : this.dateFormat.format(data.modified),
-			});
-			row.createEl("td", { text: data?.prior === undefined ? "—" : String(data.prior) });
+			// Why: render headers and cells from the same visible order so hiding or
+			// moving a column cannot leave another column's values beneath its label.
+			for (const column of visibleColumns) {
+				const cell = row.createEl("td", { attr: { "data-column": column.id } });
+				if (column.id === "name") {
+					const presentation = this.options.presentation(result);
+					renderSelectionItem({ ...presentation, description: undefined }, cell, query);
+				} else if (column.id === "path") {
+					cell.setText(data?.path ?? result.secondary);
+					cell.setAttribute("title", data?.path ?? result.secondary);
+				} else if (column.id === "modified") {
+					cell.setText(
+						data?.modified === undefined ? "—" : this.dateFormat.format(data.modified),
+					);
+				} else cell.setText(data?.prior === undefined ? "—" : String(data.prior));
+			}
+		}
+	}
+
+	private showColumnMenu(event: MouseEvent): void {
+		this.columnMenu?.close();
+		const menu = new Menu();
+		this.columnMenu = menu;
+		const { hiddenColumns } = this.model.columnLayout;
+		for (const column of PALETTE_TABLE_COLUMNS) {
+			menu.addItem((item) =>
+				item
+					.setTitle(column.label)
+					.setChecked(!hiddenColumns.includes(column.id))
+					.setDisabled(column.id === "name")
+					.onClick(() => {
+						this.model.toggleColumnVisibility(column.id);
+						this.changed();
+					}),
+			);
+		}
+		menu.showAtMouseEvent(event);
+	}
+
+	private headerAtEvent(event: Event): HTMLElement | undefined {
+		return event.target instanceof Element
+			? (event.target.closest<HTMLElement>("th[data-column]") ?? undefined)
+			: undefined;
+	}
+
+	private dropPosition(header: HTMLElement, event: DragEvent): "before" | "after" {
+		const bounds = header.getBoundingClientRect();
+		return event.clientX < bounds.left + bounds.width / 2 ? "before" : "after";
+	}
+
+	private clearDropMarkers(): void {
+		for (const header of this.panel.resultContainerEl.querySelectorAll<HTMLElement>(
+			"th[data-drop-position]",
+		)) {
+			delete header.dataset.dropPosition;
+		}
+	}
+
+	private endColumnDrag(): void {
+		if (this.draggedColumn) this.dragEndedAt = Date.now();
+		this.draggedColumn = undefined;
+		this.clearDropMarkers();
+		for (const header of this.panel.resultContainerEl.querySelectorAll<HTMLElement>(
+			"th.is-dragging",
+		)) {
+			header.removeClass("is-dragging");
 		}
 	}
 
@@ -248,7 +378,7 @@ export class PaletteTableControls extends Component {
 		if (action === "previous" || action === "next") {
 			const lastPage = Math.max(
 				0,
-				Math.ceil(this.results.items.length / this.panel.limit) - 1,
+				Math.ceil(this.results.items.length / PALETTE_TABLE_PAGE_SIZE) - 1,
 			);
 			this.pageIndex = Math.max(
 				0,
@@ -307,7 +437,8 @@ export class PaletteTableControls extends Component {
 	): HTMLButtonElement {
 		const button = container.createEl("button", {
 			cls: icon ? "clickable-icon" : "my-palette-table-button",
-			attr: { type: "button", title, "aria-label": title, "data-action": action },
+			// Why: keep operation hints in the tooltip without adding aria-labels.
+			attr: { type: "button", title, "data-action": action },
 		});
 		if (column) button.dataset.column = column;
 		if (icon) setIcon(button, icon);

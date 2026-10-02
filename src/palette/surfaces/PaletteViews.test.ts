@@ -44,12 +44,16 @@ describe("dedicated palette views", () => {
 			input: "table query",
 			displayMode: "list",
 			sorting: [{ id: "prior", desc: true }],
+			columnOrder: ["prior", "name", "path", "modified"],
+			hiddenColumns: ["path"],
 		});
 		expect(list.getState()).toMatchObject({ input: "list query", displayMode: "list" });
 		expect(table.getState()).toMatchObject({
 			input: "table query",
 			displayMode: "table",
 			sorting: [{ id: "prior", desc: true }],
+			columnOrder: ["prior", "name", "path", "modified"],
+			hiddenColumns: ["path"],
 		});
 	});
 
@@ -60,6 +64,8 @@ describe("dedicated palette views", () => {
 			fixedMode: "backlink",
 			sourcePath: "Projects/Home.md",
 			sourcePinned: true,
+			columnOrder: ["prior", "name", "path", "modified"],
+			hiddenColumns: ["path"],
 			sorting: [
 				{ id: "modified", desc: true },
 				{ id: "name", desc: false },
@@ -84,6 +90,8 @@ describe("dedicated palette views", () => {
 			"Projects/Home.md",
 			true,
 			expect.objectContaining({
+				columnOrder: ["prior", "name", "path", "modified"],
+				hiddenColumns: ["path"],
 				sorting: [
 					{ id: "modified", desc: true },
 					{ id: "name", desc: false },

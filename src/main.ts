@@ -146,7 +146,21 @@ export default class MyPalettePlugin extends Plugin {
 		initialInput = this.getRememberedPaletteQuery("file"),
 		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
 	): Promise<void> {
-		await this.openSidebarPaletteView(PALETTE_TABLE_VIEW_TYPE, initialInput, fixedMode);
+		// Why: reuse a center table without overwriting its query. A new tab keeps
+		// the current note intact and avoids reopening a restored sidebar table.
+		const existing = this.app.workspace
+			.getLeavesOfType(PALETTE_TABLE_VIEW_TYPE)
+			.find((leaf) => leaf.getRoot() === this.app.workspace.rootSplit);
+		const leaf = existing ?? this.app.workspace.getLeaf("tab");
+		if (!existing) {
+			await leaf.setViewState({
+				type: PALETTE_TABLE_VIEW_TYPE,
+				active: true,
+				state: this.paletteViewState(initialInput, fixedMode),
+			});
+		}
+		await this.app.workspace.revealLeaf(leaf);
+		this.focusPaletteView(leaf);
 	}
 
 	private async openSidebarPaletteView(
@@ -181,10 +195,12 @@ export default class MyPalettePlugin extends Plugin {
 		tableState?: PaletteTableState,
 		viewType: PaletteViewType = PALETTE_VIEW_TYPE,
 	): Promise<void> {
-		// ensureSideLeaf intentionally reuses a view of the same type. A separate
-		// right-sidebar leaf is required here so users can keep independent searches
-		// open at the same time.
-		const leaf = this.app.workspace.getRightLeaf(false);
+		// Why: duplicating a table needs a fresh center tab, while list palettes
+		// keep independent right-sidebar panes for simultaneous searches.
+		const leaf =
+			viewType === PALETTE_TABLE_VIEW_TYPE
+				? this.app.workspace.getLeaf("tab")
+				: this.app.workspace.getRightLeaf(false);
 		if (!leaf) return;
 		await leaf.setViewState({
 			type: viewType,
@@ -196,7 +212,7 @@ export default class MyPalettePlugin extends Plugin {
 				...tableState,
 			},
 		});
-		this.app.workspace.revealLeaf(leaf);
+		await this.app.workspace.revealLeaf(leaf);
 		this.focusPaletteView(leaf);
 	}
 

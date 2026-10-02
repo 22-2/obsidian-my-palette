@@ -63,13 +63,18 @@ additional matches. Hover the row to see the full matching-tag list.
 ### File sort priorities
 
 Use `Open palette in right sidebar` for the regular list view, or
-`Open palette table in right sidebar` for a separate table view. Each command
-reuses its own sidebar pane without replacing the other view. In the table, click
-a column header to cycle its sort direction; Shift-click to add another column.
+`Open palette table in center` for a separate table view in a center tab. Each command
+reuses its own pane without replacing the other view. Duplicating a table opens
+another center tab. In the table, click
+a column header to add it to the sort priorities or cycle its direction and remove
+it. Other sort priorities stay active; no modifier key is needed. Drag a header
+to reorder columns, or right-click a header to show or hide columns. Name stays
+visible so results can always be identified.
 The numbered sort controls let you change each direction, move priorities earlier
 or later, remove a sort, or reset to the search ranking. Columns include Name,
 Path, Modified, and `prior`; missing metadata sorts last. Each table pane remembers
-its sort priorities, including when duplicated or restored.
+its sort priorities, column order, and hidden columns, including when duplicated
+or restored. Hidden columns retain their active sort priorities.
 
 Table pages contain 50 rows, sorted across all results returned by the search
 provider before paging. Everything searches remain limited by their configured

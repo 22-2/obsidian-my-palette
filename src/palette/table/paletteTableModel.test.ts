@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	PaletteTableModel,
+	PALETTE_TABLE_PAGE_SIZE,
 	normalizePaletteTableState,
 	type PaletteTableRow,
 } from "src/palette/table/paletteTableModel";
@@ -27,7 +28,7 @@ function row(
 	};
 }
 
-function names(model: PaletteTableModel, index = 0, size = 50): string[] {
+function names(model: PaletteTableModel, index = 0, size = PALETTE_TABLE_PAGE_SIZE): string[] {
 	return model.page(index, size).map((item) => item.name);
 }
 
@@ -35,6 +36,8 @@ describe("PaletteTableModel", () => {
 	it("sorts all matches before paging, including records past the original display limit", () => {
 		const model = new PaletteTableModel([{ id: "modified", desc: true }]);
 		model.setRows(Array.from({ length: 120 }, (_, index) => row(`Note ${index}`, index)));
+		expect(names(model)).toHaveLength(50);
+		expect(names(model, 1)).toHaveLength(50);
 		expect(names(model).at(0)).toBe("Note 119");
 		expect(names(model).at(-1)).toBe("Note 70");
 		expect(names(model, 2)).toHaveLength(20);
@@ -74,20 +77,69 @@ describe("PaletteTableModel", () => {
 		expect(names(model)).toEqual(["Second", "First"]);
 	});
 
-	it("supports header cycling, additive sorts, and replacing sorts", () => {
+	it("adds and cycles header sorts without modifier keys or replacing other priorities", () => {
 		const model = new PaletteTableModel();
 		model.setRows([row("Note 10", 1), row("Note 2", 2)]);
 		model.toggleSorting("name");
 		expect(names(model)).toEqual(["Note 2", "Note 10"]);
-		model.toggleSorting("modified", true);
+		model.toggleSorting("modified");
 		expect(model.sorting).toEqual([
 			{ id: "name", desc: false },
 			{ id: "modified", desc: true },
 		]);
 		model.toggleSorting("name");
-		expect(model.sorting).toEqual([{ id: "name", desc: true }]);
+		expect(model.sorting).toEqual([
+			{ id: "name", desc: true },
+			{ id: "modified", desc: true },
+		]);
 		model.toggleSorting("name");
+		expect(model.sorting).toEqual([{ id: "modified", desc: true }]);
+		model.toggleSorting("modified");
+		expect(model.sorting).toEqual([{ id: "modified", desc: false }]);
+		model.toggleSorting("modified");
 		expect(model.sorting).toEqual([]);
+	});
+
+	it("moves columns to either side of a header without changing sort precedence", () => {
+		const model = new PaletteTableModel([{ id: "prior", desc: true }]);
+		model.moveColumn("prior", "name", "before");
+		expect(model.visibleColumns.map(({ id }) => id)).toEqual([
+			"prior",
+			"name",
+			"path",
+			"modified",
+		]);
+		model.moveColumn("name", "modified", "after");
+		expect(model.visibleColumns.map(({ id }) => id)).toEqual([
+			"prior",
+			"path",
+			"modified",
+			"name",
+		]);
+		model.moveColumn("prior", "prior", "after");
+		expect(model.columnLayout.columnOrder).toEqual(["prior", "path", "modified", "name"]);
+		expect(model.sorting).toEqual([{ id: "prior", desc: true }]);
+	});
+
+	it("restores hidden columns in their saved position while keeping Name visible and sorts active", () => {
+		const model = new PaletteTableModel([{ id: "prior", desc: true }]);
+		model.moveColumn("prior", "name", "before");
+		model.toggleColumnVisibility("prior");
+		model.toggleColumnVisibility("name");
+		expect(model.visibleColumns.map(({ id }) => id)).toEqual(["name", "path", "modified"]);
+		expect(model.sorting).toEqual([{ id: "prior", desc: true }]);
+		const restored = new PaletteTableModel(model.sorting);
+		restored.setColumnLayout(model.columnLayout);
+		restored.toggleColumnVisibility("prior");
+		expect(restored.visibleColumns.map(({ id }) => id)).toEqual([
+			"prior",
+			"name",
+			"path",
+			"modified",
+		]);
+		const saved = restored.columnLayout;
+		saved.columnOrder.reverse();
+		expect(restored.visibleColumns[0].id).toBe("prior");
 	});
 
 	it("reapplies the current sort to new search results without changing the original arrays", () => {
@@ -118,6 +170,8 @@ describe("normalizePaletteTableState", () => {
 			}),
 		).toEqual({
 			displayMode: "table",
+			columnOrder: ["name", "path", "modified", "prior"],
+			hiddenColumns: [],
 			sorting: [
 				{ id: "prior", desc: true },
 				{ id: "name", desc: false },
@@ -126,10 +180,35 @@ describe("normalizePaletteTableState", () => {
 	});
 
 	it("keeps old workspace layouts in list mode with search ranking", () => {
-		expect(normalizePaletteTableState({})).toEqual({ displayMode: "list", sorting: [] });
+		expect(normalizePaletteTableState({})).toEqual({
+			displayMode: "list",
+			sorting: [],
+			columnOrder: ["name", "path", "modified", "prior"],
+			hiddenColumns: [],
+		});
 		expect(normalizePaletteTableState({ displayMode: "removed", sorting: {} })).toEqual({
 			displayMode: "list",
 			sorting: [],
+			columnOrder: ["name", "path", "modified", "prior"],
+			hiddenColumns: [],
+		});
+	});
+
+	it("normalizes malformed layouts and appends missing columns while retaining valid saved order", () => {
+		expect(
+			normalizePaletteTableState({
+				columnOrder: ["prior", "removed", "name", "prior", null],
+				hiddenColumns: ["name", "prior", "removed", "prior", null],
+			}),
+		).toMatchObject({
+			columnOrder: ["prior", "name", "path", "modified"],
+			hiddenColumns: ["prior"],
+		});
+		expect(
+			normalizePaletteTableState({ columnOrder: {}, hiddenColumns: "path" }),
+		).toMatchObject({
+			columnOrder: ["name", "path", "modified", "prior"],
+			hiddenColumns: [],
 		});
 	});
 });

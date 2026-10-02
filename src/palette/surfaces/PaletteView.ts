@@ -26,6 +26,7 @@ import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryCon
 import { PaletteTableControls } from "src/palette/table/PaletteTableControls";
 import {
 	normalizePaletteTableState,
+	PALETTE_TABLE_PAGE_SIZE,
 	type PaletteTableState,
 } from "src/palette/table/paletteTableModel";
 
@@ -38,6 +39,8 @@ interface PaletteViewState extends Record<string, unknown> {
 	sourcePinned?: unknown;
 	displayMode?: unknown;
 	sorting?: unknown;
+	columnOrder?: unknown;
+	hiddenColumns?: unknown;
 }
 
 interface NormalizedPaletteViewState extends PaletteTableState {
@@ -65,8 +68,7 @@ export class PaletteView extends ItemView {
 	private pendingState: NormalizedPaletteViewState = {
 		input: "",
 		sourcePinned: false,
-		displayMode: "list",
-		sorting: [],
+		...normalizePaletteTableState({}),
 	};
 
 	constructor(
@@ -99,7 +101,7 @@ export class PaletteView extends ItemView {
 			item
 				.setTitle(
 					this.tableView
-						? "Open new table in right sidebar"
+						? "Open new table in center"
 						: "Open new palette in right sidebar",
 				)
 				.setIcon("plus")
@@ -207,6 +209,9 @@ export class PaletteView extends ItemView {
 		});
 		this.panel = new SuggestionPanel<PaletteResult>(this.contentEl, {
 			initialInput,
+			// Why: table pagination and the panel's selectable rows must share the
+			// same 50-row limit even if the generic panel default changes later.
+			limit: this.tableView ? PALETTE_TABLE_PAGE_SIZE : undefined,
 			surface: "view",
 			selectionMode: "extended",
 			placeholder: palettePlaceholder(state.fixedMode ?? "file"),
