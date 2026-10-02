@@ -74,6 +74,170 @@
 	text-align: center;
 }
 
+/* A table can be wider than a sidebar. Keep scrolling inside the results so
+   search, sort priorities, and source controls remain reachable at any width. */
+.my-palette-panel--view[data-result-layout="table"] .prompt-results {
+	overflow: auto;
+	padding: 0;
+}
+
+.my-palette-table-controls {
+	flex: 0 0 auto;
+	min-width: 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+	font-size: var(--font-ui-smaller);
+}
+
+.my-palette-table-toolbar,
+.my-palette-table-modes,
+.my-palette-table-pager,
+.my-palette-table-priority {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.my-palette-table-toolbar {
+	justify-content: space-between;
+	padding: 6px 8px;
+}
+
+.my-palette-table-controls .my-palette-table-button {
+	height: 26px;
+	padding: 2px 8px;
+	border: 0;
+	box-shadow: none;
+	background: transparent;
+	color: var(--text-muted);
+	font-size: inherit;
+}
+
+.my-palette-table-modes button[aria-pressed="true"] {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.my-palette-table-pager {
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+
+.my-palette-table-sort-bar {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	max-height: 120px;
+	overflow: auto;
+	padding: 0 8px 6px;
+	color: var(--text-muted);
+}
+
+.my-palette-table-sort-bar[hidden] {
+	display: none;
+}
+
+.my-palette-table-priority {
+	flex: 0 0 auto;
+	padding: 2px 4px 2px 7px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	white-space: nowrap;
+}
+
+.my-palette-table-controls .clickable-icon {
+	padding: 3px;
+}
+
+.my-palette-table-controls .clickable-icon svg {
+	width: 13px;
+	height: 13px;
+}
+
+.my-palette-table-controls button:disabled {
+	opacity: 0.35;
+	cursor: default;
+}
+
+.my-palette-results-table {
+	width: 100%;
+	min-width: 740px;
+	margin: 0;
+	border-spacing: 0;
+	table-layout: fixed;
+	font-size: var(--font-ui-small);
+}
+
+.my-palette-results-table th {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	padding: 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	text-align: left;
+}
+
+.my-palette-results-table th:nth-child(1) {
+	width: 30%;
+}
+.my-palette-results-table th:nth-child(2) {
+	width: 38%;
+}
+.my-palette-results-table th:nth-child(3) {
+	width: 23%;
+}
+.my-palette-results-table th:nth-child(4) {
+	width: 9%;
+}
+
+.my-palette-results-table th button {
+	width: 100%;
+	height: 30px;
+	padding: 4px 8px;
+	border: 0;
+	border-radius: 0;
+	box-shadow: none;
+	background: transparent;
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	text-align: left;
+}
+
+.my-palette-results-table th[aria-sort] button {
+	color: var(--text-normal);
+}
+
+/* List rows use flex below; scope the override to the table inside a pane so
+   those shared rules cannot collapse every cell into the first column. */
+.my-palette-panel--view .my-palette-results-table .suggestion-item {
+	display: table-row;
+	width: auto;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	border-radius: 0;
+}
+
+.my-palette-results-table td {
+	overflow: hidden;
+	padding: 6px 8px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	color: var(--text-muted);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.my-palette-results-table .my-palette-suggestion__label {
+	color: var(--text-normal);
+}
+
+.my-palette-results-table button:focus-visible,
+.my-palette-table-controls button:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: -2px;
+}
+
 .my-palette-suggest-modal .search-input-clear-button,
 .my-palette-panel .search-input-clear-button {
 	display: none;

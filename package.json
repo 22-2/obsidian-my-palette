@@ -14,10 +14,11 @@
 		"dev": "vp dev",
 		"build": "vp build",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
-		"check-types": "pnpm exec tsc6 --noEmit",
+		"check-types": "pnpm exec tsc --noEmit",
 		"prepare": "vp config"
 	},
 	"dependencies": {
+		"@tanstack/table-core": "^9.2.4",
 		"consola": "^3.4.2",
 		"fuzzysort": "^3.1.0",
 		"idb": "^8.0.3"

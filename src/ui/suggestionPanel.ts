@@ -24,6 +24,15 @@ export interface SuggestionPanelResults<T> {
 	error?: string;
 }
 
+export interface SuggestionPanelResultsLayout<T> {
+	render: (
+		container: HTMLElement,
+		items: readonly T[],
+		query: string,
+		decorateRow: (row: HTMLElement, index: number) => void,
+	) => void;
+}
+
 interface SuggestionChooser<T> {
 	values: T[];
 	selectedItem: number;
@@ -55,6 +64,7 @@ export class SuggestionPanel<T> extends Component {
 	private readonly leftClickRows = new WeakSet<Element>();
 	private readonly middleClickRows = new WeakSet<Element>();
 	private readonly rightClickRows = new WeakSet<Element>();
+	private resultsLayout?: SuggestionPanelResultsLayout<T>;
 
 	constructor(rootEl: HTMLElement, props: SuggestionPanelProps<T>) {
 		super();
@@ -118,6 +128,16 @@ export class SuggestionPanel<T> extends Component {
 		this.selected = this.chooser.values[0] ?? null;
 		this.updateResultCount(total);
 		this.resultContainerEl.empty();
+		if (this.resultsLayout) {
+			// The layout owns markup while this panel owns row indexes and selection.
+			// Both keyboard and pointer actions therefore use the displayed sort order.
+			this.resultsLayout.render(
+				this.resultContainerEl,
+				this.chooser.values,
+				this.query,
+				(row, index) => this.decorateRow(row, index),
+			);
+		}
 		if (!this.chooser.values.length) {
 			this.resultContainerEl.createDiv({
 				cls: "suggestion-empty",
@@ -125,14 +145,29 @@ export class SuggestionPanel<T> extends Component {
 			});
 			return;
 		}
+		if (this.resultsLayout) return;
 		for (const [index, item] of this.chooser.values.entries()) {
 			const el = this.resultContainerEl.createDiv("suggestion-item");
-			el.setAttribute("data-index", String(index));
-			el.setAttribute("role", "option");
-			el.setAttribute("aria-selected", String(index === 0));
-			if (index === 0) el.addClass("is-selected", "is-active");
+			this.decorateRow(el, index);
 			this.props.renderSuggestion(item, el, this.query);
 		}
+	}
+
+	setResultsLayout(layout?: SuggestionPanelResultsLayout<T>): void {
+		this.resultsLayout = layout;
+		this.resultContainerEl.setAttribute("role", layout ? "region" : "listbox");
+		this.resultContainerEl.setAttribute("aria-label", "Search results");
+		if (layout) this.resultContainerEl.removeAttribute("aria-multiselectable");
+		else if (this.selectionMode === "extended")
+			this.resultContainerEl.setAttribute("aria-multiselectable", "true");
+	}
+
+	private decorateRow(row: HTMLElement, index: number): void {
+		row.addClass("suggestion-item");
+		row.setAttribute("data-index", String(index));
+		row.setAttribute("role", this.resultsLayout ? "row" : "option");
+		row.setAttribute("aria-selected", String(index === 0));
+		if (index === 0) row.addClass("is-selected", "is-active");
 	}
 
 	setInput(input: string, selection: "all" | "end" | "none" = "none"): void {
@@ -234,9 +269,11 @@ export class SuggestionPanel<T> extends Component {
 			(event) => {
 				// Result clicks are the concrete browser event that moves the user's
 				// attention from typing to the result list.
-				this.props.onResultFocus?.();
 				const row = this.suggestionRowAtEvent(event);
 				if (!row) return;
+				// Sorting headers share the result container, but only interacting
+				// with an actual result should commit the search to usage history.
+				this.props.onResultFocus?.();
 				const item = this.itemAtRow(row);
 				if (item === undefined) return;
 				const index = Number(row.getAttribute("data-index"));

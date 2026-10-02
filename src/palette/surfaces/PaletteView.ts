@@ -23,6 +23,11 @@ import {
 	isExternalMarkdownLeaf,
 } from "src/workspace/external-markdown/openExternalMarkdown";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
+import { PaletteTableControls } from "src/palette/table/PaletteTableControls";
+import {
+	normalizePaletteTableState,
+	type PaletteTableState,
+} from "src/palette/table/paletteTableModel";
 
 export const PALETTE_VIEW_TYPE = "my-palette-search";
 
@@ -31,9 +36,11 @@ interface PaletteViewState extends Record<string, unknown> {
 	fixedMode?: unknown;
 	sourcePath?: unknown;
 	sourcePinned?: unknown;
+	displayMode?: unknown;
+	sorting?: unknown;
 }
 
-interface NormalizedPaletteViewState {
+interface NormalizedPaletteViewState extends PaletteTableState {
 	input: string;
 	fixedMode?: FixedPaletteMode;
 	sourcePath?: string;
@@ -47,6 +54,7 @@ export class PaletteView extends ItemView {
 	private panel?: SuggestionPanel<PaletteResult>;
 	private session?: PaletteSearchSession;
 	private historyControls?: PaletteHistoryControls;
+	private tableControls?: PaletteTableControls;
 	private activeMenu?: Menu;
 	private targetLeaf?: WorkspaceLeaf;
 	private sourcePath?: string;
@@ -54,7 +62,12 @@ export class PaletteView extends ItemView {
 	private sourcePinButton?: HTMLButtonElement;
 	private actionMessage?: string;
 	private targetTrackingRegistered = false;
-	private pendingState: NormalizedPaletteViewState = { input: "", sourcePinned: false };
+	private pendingState: NormalizedPaletteViewState = {
+		input: "",
+		sourcePinned: false,
+		displayMode: "list",
+		sorting: [],
+	};
 
 	constructor(
 		leaf: WorkspaceLeaf,
@@ -88,6 +101,7 @@ export class PaletteView extends ItemView {
 						state.fixedMode,
 						state.sourcePath,
 						state.sourcePinned,
+						state,
 					);
 				}),
 		);
@@ -99,6 +113,7 @@ export class PaletteView extends ItemView {
 			fixedMode: this.session?.fixed ?? this.pendingState.fixedMode,
 			sourcePath: this.sourcePinned ? this.sourcePath : undefined,
 			sourcePinned: this.sourcePinned,
+			...normalizePaletteTableState(this.tableControls?.getState() ?? this.pendingState),
 		};
 	}
 
@@ -115,6 +130,7 @@ export class PaletteView extends ItemView {
 			this.createSurface(this.pendingState);
 			return;
 		}
+		this.tableControls?.setState(next);
 		this.panel.setInput(next.input, "end");
 		this.session.setInput(next.input, { suppressHistory: true });
 	}
@@ -133,6 +149,8 @@ export class PaletteView extends ItemView {
 		this.activeMenu = undefined;
 		this.historyControls?.destroy();
 		this.historyControls = undefined;
+		if (this.tableControls) this.removeChild(this.tableControls);
+		this.tableControls = undefined;
 		this.session?.dispose();
 		this.session = undefined;
 		if (this.panel) this.removeChild(this.panel);
@@ -149,6 +167,8 @@ export class PaletteView extends ItemView {
 		this.activeMenu?.close();
 		this.historyControls?.destroy();
 		this.historyControls = undefined;
+		if (this.tableControls) this.removeChild(this.tableControls);
+		this.tableControls = undefined;
 		this.session?.dispose();
 		if (this.panel) this.removeChild(this.panel);
 		this.session = undefined;
@@ -197,6 +217,22 @@ export class PaletteView extends ItemView {
 		});
 		this.addChild(this.panel);
 		this.panel.load();
+		this.tableControls = new PaletteTableControls(this.panel, this.app, {
+			initialState: state,
+			presentation: (result) =>
+				toPaletteSelectionItem(this.app, result, {
+					openExternalMarkdownInObsidian:
+						this.plugin.settings.openExternalMarkdownInObsidian,
+				}),
+			onChange: (tableState) => {
+				// The same query can have different sort priorities in separate panes.
+				// Save presentation in the leaf layout rather than global file settings.
+				this.pendingState = { ...this.pendingState, ...tableState };
+				void this.app.workspace.requestSaveLayout();
+			},
+		});
+		this.addChild(this.tableControls);
+		this.tableControls.load();
 		this.addSourcePinControl();
 		this.addHistoryControls();
 		this.registerTargetLeafTracking();
@@ -217,6 +253,7 @@ export class PaletteView extends ItemView {
 			fixedMode: this.session?.fixed ?? this.pendingState.fixedMode,
 			sourcePath: this.sourcePinned ? this.sourcePath : undefined,
 			sourcePinned: this.sourcePinned,
+			...normalizePaletteTableState(this.tableControls?.getState() ?? this.pendingState),
 		};
 	}
 
@@ -229,7 +266,7 @@ export class PaletteView extends ItemView {
 		const suffix = this.actionMessage ? ` · ${this.actionMessage}` : "";
 		this.panel.updateFooterText(`Source: ${source}${suffix}`);
 		this.updateSourcePinControl();
-		this.panel.setResults({
+		this.tableControls?.setResults({
 			items: state.results,
 			total: state.resultCount,
 			error: state.error,
@@ -556,5 +593,6 @@ function normalizeState(state: PaletteViewState): NormalizedPaletteViewState {
 		fixedMode,
 		sourcePath: typeof state.sourcePath === "string" ? state.sourcePath : undefined,
 		sourcePinned: state.sourcePinned === true,
+		...normalizePaletteTableState(state),
 	};
 }

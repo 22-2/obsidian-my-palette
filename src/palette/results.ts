@@ -36,6 +36,9 @@ export interface FileResult extends BaseResult {
 	ignored?: boolean;
 	/** Tags matched by the current query; omitted for empty-query results. */
 	matchedTags?: string[];
+	/** Search snapshots also cover ignored notes that have no Obsidian TFile. */
+	mtime?: number;
+	prior?: number;
 }
 
 export interface CommandResult extends BaseResult {

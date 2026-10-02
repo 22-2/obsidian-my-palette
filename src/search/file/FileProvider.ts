@@ -202,6 +202,9 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			file: entry.file,
 			ignored: entry.ignored,
 			matchedTags: matchedTags?.length ? [...matchedTags] : undefined,
+			// Table sorting must use the same metadata for indexed and ignored notes.
+			mtime: entry.mtime,
+			prior: entry.prior,
 		};
 	}
 

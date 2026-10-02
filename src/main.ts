@@ -12,6 +12,7 @@ import { registerPluginEvents } from "src/app/registerEvents";
 import { openExternalMarkdown } from "src/workspace/external-markdown/openExternalMarkdown";
 import { PaletteModal } from "src/palette/PaletteModal";
 import { PALETTE_VIEW_TYPE, PaletteView } from "src/palette/surfaces/PaletteView";
+import type { PaletteTableState } from "src/palette/table/paletteTableModel";
 import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
 import type { PaletteMode, PaletteResult, SearchHistoryResult } from "src/palette/results";
 import type { SearchHistoryCategory, SearchHistoryEntry } from "src/settings/model";
@@ -155,6 +156,7 @@ export default class MyPalettePlugin extends Plugin {
 		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
 		sourcePath?: string,
 		sourcePinned = false,
+		tableState?: PaletteTableState,
 	): Promise<void> {
 		// ensureSideLeaf intentionally reuses a view of the same type. A separate
 		// right-sidebar leaf is required here so users can keep independent searches
@@ -164,7 +166,12 @@ export default class MyPalettePlugin extends Plugin {
 		await leaf.setViewState({
 			type: PALETTE_VIEW_TYPE,
 			active: true,
-			state: this.paletteViewState(initialInput, fixedMode, sourcePath, sourcePinned),
+			// A duplicated palette starts with the same presentation, then persists
+			// its own sort state independently from the original pane.
+			state: {
+				...this.paletteViewState(initialInput, fixedMode, sourcePath, sourcePinned),
+				...tableState,
+			},
 		});
 		this.app.workspace.revealLeaf(leaf);
 		this.focusPaletteView(leaf);

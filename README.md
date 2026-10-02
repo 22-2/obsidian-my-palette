@@ -62,6 +62,17 @@ additional matches. Hover the row to see the full matching-tag list.
 
 ### File sort priorities
 
+The sidebar palette also offers `List` and `Table` presentations. In `Table`, click
+a column header to cycle its sort direction; Shift-click to add another column.
+The numbered sort controls let you change each direction, move priorities earlier
+or later, remove a sort, or reset to the search ranking. Columns include Name,
+Path, Modified, and `prior`; missing metadata sorts last. Each pane remembers its
+presentation and sort priorities, including when duplicated or restored.
+
+Table pages contain 50 rows, sorted across all results returned by the search
+provider before paging. Everything searches remain limited by their configured
+maximum result count.
+
 File ordering is configured from `Settings → My Palette → Vault file search → Sort
 priorities`, with one priority per line. The first priority that differs wins.
 Supported priorities are `Filename prefix match`, `Filename fuzzy match`,
