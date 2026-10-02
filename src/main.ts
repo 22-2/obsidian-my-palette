@@ -11,7 +11,12 @@ import { registerPluginCommands } from "src/app/registerCommands";
 import { registerPluginEvents } from "src/app/registerEvents";
 import { openExternalMarkdown } from "src/workspace/external-markdown/openExternalMarkdown";
 import { PaletteModal } from "src/palette/PaletteModal";
-import { PALETTE_VIEW_TYPE, PaletteView } from "src/palette/surfaces/PaletteView";
+import { PaletteView } from "src/palette/surfaces/PaletteView";
+import {
+	PALETTE_VIEW_TYPE,
+	PALETTE_TABLE_VIEW_TYPE,
+	type PaletteViewType,
+} from "src/palette/surfaces/paletteViewTypes";
 import type { PaletteTableState } from "src/palette/table/paletteTableModel";
 import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
 import type { PaletteMode, PaletteResult, SearchHistoryResult } from "src/palette/results";
@@ -134,8 +139,25 @@ export default class MyPalettePlugin extends Plugin {
 		initialInput = this.getRememberedPaletteQuery("file"),
 		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
 	): Promise<void> {
+		await this.openSidebarPaletteView(PALETTE_VIEW_TYPE, initialInput, fixedMode);
+	}
+
+	async openPaletteTableView(
+		initialInput = this.getRememberedPaletteQuery("file"),
+		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
+	): Promise<void> {
+		await this.openSidebarPaletteView(PALETTE_TABLE_VIEW_TYPE, initialInput, fixedMode);
+	}
+
+	private async openSidebarPaletteView(
+		viewType: PaletteViewType,
+		initialInput: string,
+		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
+	): Promise<void> {
+		// Why: reuse only the requested view type, so opening a table cannot replace
+		// the regular palette's query or its independently persisted sidebar pane.
 		const hasRightSidebarPalette = this.app.workspace
-			.getLeavesOfType(PALETTE_VIEW_TYPE)
+			.getLeavesOfType(viewType)
 			.some((leaf) => leaf.getRoot() === this.app.workspace.rightSplit);
 		// Why: PaletteView.getState() is stored independently by Obsidian for each
 		// leaf. Passing the plugin-wide remembered input every time would overwrite
@@ -147,7 +169,7 @@ export default class MyPalettePlugin extends Plugin {
 				? {}
 				: { state: this.paletteViewState(initialInput, fixedMode) }),
 		};
-		const leaf = await this.app.workspace.ensureSideLeaf(PALETTE_VIEW_TYPE, "right", options);
+		const leaf = await this.app.workspace.ensureSideLeaf(viewType, "right", options);
 		this.focusPaletteView(leaf);
 	}
 
@@ -157,6 +179,7 @@ export default class MyPalettePlugin extends Plugin {
 		sourcePath?: string,
 		sourcePinned = false,
 		tableState?: PaletteTableState,
+		viewType: PaletteViewType = PALETTE_VIEW_TYPE,
 	): Promise<void> {
 		// ensureSideLeaf intentionally reuses a view of the same type. A separate
 		// right-sidebar leaf is required here so users can keep independent searches
@@ -164,7 +187,7 @@ export default class MyPalettePlugin extends Plugin {
 		const leaf = this.app.workspace.getRightLeaf(false);
 		if (!leaf) return;
 		await leaf.setViewState({
-			type: PALETTE_VIEW_TYPE,
+			type: viewType,
 			active: true,
 			// A duplicated palette starts with the same presentation, then persists
 			// its own sort state independently from the original pane.

@@ -27,7 +27,6 @@ export class PaletteTableControls extends Component {
 		dateStyle: "short",
 		timeStyle: "short",
 	});
-	private displayMode: PaletteTableState["displayMode"];
 	private pageIndex = 0;
 	private results: SuggestionPanelResults<PaletteResult> = { items: [] };
 	private rowsByResult = new Map<PaletteResult, PaletteTableRow>();
@@ -38,7 +37,6 @@ export class PaletteTableControls extends Component {
 		private readonly options: PaletteTableControlsOptions,
 	) {
 		super();
-		this.displayMode = options.initialState.displayMode;
 		this.model = new PaletteTableModel(options.initialState.sorting);
 		this.controlsEl = createDiv({ cls: "my-palette-table-controls" });
 		panel.resultContainerEl.before(this.controlsEl);
@@ -70,14 +68,13 @@ export class PaletteTableControls extends Component {
 
 	getState(): PaletteTableState {
 		return {
-			displayMode: this.displayMode,
+			displayMode: "table",
 			sorting: this.model.sorting.map((sort) => ({ ...sort })),
 		};
 	}
 
 	setState(state: PaletteTableState): void {
 		const next = normalizePaletteTableState(state);
-		this.displayMode = next.displayMode;
 		this.model.setSorting(next.sorting);
 		this.pageIndex = 0;
 		this.render();
@@ -125,22 +122,15 @@ export class PaletteTableControls extends Component {
 	}
 
 	private render(): void {
-		const tableMode = this.displayMode === "table";
-		this.panel.setAttribute("data-result-layout", this.displayMode);
+		// Why: these controls belong exclusively to PaletteTableView. Fix the
+		// presentation so persisted legacy state cannot reintroduce a mode toggle.
+		this.panel.setAttribute("data-result-layout", "table");
 		this.renderToolbar();
 		this.renderSortBar();
-		this.panel.setResultsLayout(
-			tableMode
-				? {
-						render: (container, items, query, decorateRow) =>
-							this.renderTable(container, items, query, decorateRow),
-					}
-				: undefined,
-		);
-		if (!tableMode) {
-			this.panel.setResults(this.results);
-			return;
-		}
+		this.panel.setResultsLayout({
+			render: (container, items, query, decorateRow) =>
+				this.renderTable(container, items, query, decorateRow),
+		});
 		const items = this.model.page(this.pageIndex, this.panel.limit).map((row) => row.result);
 		this.panel.setResults({
 			...this.results,
@@ -156,16 +146,6 @@ export class PaletteTableControls extends Component {
 
 	private renderToolbar(): void {
 		this.toolbarEl.empty();
-		const modes = this.toolbarEl.createDiv("my-palette-table-modes");
-		for (const [mode, label] of [
-			["list", "List"],
-			["table", "Table"],
-		] as const) {
-			const button = this.button(modes, mode, label);
-			button.setText(label);
-			button.setAttribute("aria-pressed", String(this.displayMode === mode));
-		}
-		if (this.displayMode !== "table") return;
 		const pager = this.toolbarEl.createDiv("my-palette-table-pager");
 		const pages = Math.max(1, Math.ceil(this.results.items.length / this.panel.limit));
 		this.button(pager, "previous", "Previous page", "chevron-left").disabled =
@@ -177,8 +157,6 @@ export class PaletteTableControls extends Component {
 
 	private renderSortBar(): void {
 		this.sortBarEl.empty();
-		this.sortBarEl.hidden = this.displayMode !== "table";
-		if (this.displayMode !== "table") return;
 		if (!this.model.sorting.length) {
 			this.sortBarEl.createSpan({
 				text: "Search order · Shift-click headers to sort by multiple columns",
@@ -267,8 +245,7 @@ export class PaletteTableControls extends Component {
 		if (!button) return;
 		const action = button.dataset.action;
 		const id = button.dataset.column;
-		if (action === "list" || action === "table") this.displayMode = action;
-		else if (action === "previous" || action === "next") {
+		if (action === "previous" || action === "next") {
 			const lastPage = Math.max(
 				0,
 				Math.ceil(this.results.items.length / this.panel.limit) - 1,

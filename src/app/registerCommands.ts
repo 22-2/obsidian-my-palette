@@ -24,8 +24,13 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		name: "Open palette in right sidebar",
 		callback: () => void plugin.openPaletteView(),
 	});
-	// Why: one command keeps the command palette discoverable; independent
-	// additional sidebar views remain available from the view pane menu.
+	// Why: table search has its own entry point rather than a presentation toggle
+	// in the existing palette. Additional panes remain available in each pane menu.
+	plugin.addCommand({
+		id: "open-table-view",
+		name: "Open palette table in right sidebar",
+		callback: () => void plugin.openPaletteTableView(),
+	});
 	plugin.addCommand({
 		id: "show-current-line-number",
 		name: "Show current line number",

@@ -89,7 +89,6 @@
 }
 
 .my-palette-table-toolbar,
-.my-palette-table-modes,
 .my-palette-table-pager,
 .my-palette-table-priority {
 	display: flex;
@@ -98,7 +97,7 @@
 }
 
 .my-palette-table-toolbar {
-	justify-content: space-between;
+	justify-content: flex-end;
 	padding: 6px 8px;
 }
 
@@ -110,11 +109,6 @@
 	background: transparent;
 	color: var(--text-muted);
 	font-size: inherit;
-}
-
-.my-palette-table-modes button[aria-pressed="true"] {
-	background: var(--background-modifier-hover);
-	color: var(--text-normal);
 }
 
 .my-palette-table-pager {

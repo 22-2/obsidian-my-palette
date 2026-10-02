@@ -29,7 +29,7 @@ import {
 	type PaletteTableState,
 } from "src/palette/table/paletteTableModel";
 
-export const PALETTE_VIEW_TYPE = "my-palette-search";
+import { PALETTE_VIEW_TYPE, type PaletteViewType } from "src/palette/surfaces/paletteViewTypes";
 
 interface PaletteViewState extends Record<string, unknown> {
 	input?: unknown;
@@ -74,9 +74,14 @@ export class PaletteView extends ItemView {
 		private readonly plugin: MyPalettePlugin,
 	) {
 		super(leaf);
+		this.pendingState.displayMode = this.tableView ? "table" : "list";
 	}
 
-	getViewType(): string {
+	protected get tableView(): boolean {
+		return false;
+	}
+
+	getViewType(): PaletteViewType {
 		return PALETTE_VIEW_TYPE;
 	}
 
@@ -92,7 +97,11 @@ export class PaletteView extends ItemView {
 		super.onPaneMenu(menu, source);
 		menu.addItem((item) =>
 			item
-				.setTitle("Open new palette in right sidebar")
+				.setTitle(
+					this.tableView
+						? "Open new table in right sidebar"
+						: "Open new palette in right sidebar",
+				)
 				.setIcon("plus")
 				.onClick(() => {
 					const state = this.newPaletteViewState();
@@ -102,6 +111,7 @@ export class PaletteView extends ItemView {
 						state.sourcePath,
 						state.sourcePinned,
 						state,
+						this.getViewType(),
 					);
 				}),
 		);
@@ -118,7 +128,9 @@ export class PaletteView extends ItemView {
 	}
 
 	async setState(state: PaletteViewState): Promise<void> {
-		const next = normalizeState(state);
+		// Why: the registered view type owns presentation. Ignore legacy List/Table
+		// state so restoring a pane cannot turn a regular palette into a table.
+		const next = normalizeState({ ...state, displayMode: this.tableView ? "table" : "list" });
 		const fixedModeChanged = next.fixedMode !== this.pendingState.fixedMode;
 		const sourceChanged = next.sourcePath !== this.pendingState.sourcePath;
 		const sourcePinChanged = next.sourcePinned !== this.pendingState.sourcePinned;
@@ -217,22 +229,26 @@ export class PaletteView extends ItemView {
 		});
 		this.addChild(this.panel);
 		this.panel.load();
-		this.tableControls = new PaletteTableControls(this.panel, this.app, {
-			initialState: state,
-			presentation: (result) =>
-				toPaletteSelectionItem(this.app, result, {
-					openExternalMarkdownInObsidian:
-						this.plugin.settings.openExternalMarkdownInObsidian,
-				}),
-			onChange: (tableState) => {
-				// The same query can have different sort priorities in separate panes.
-				// Save presentation in the leaf layout rather than global file settings.
-				this.pendingState = { ...this.pendingState, ...tableState };
-				void this.app.workspace.requestSaveLayout();
-			},
-		});
-		this.addChild(this.tableControls);
-		this.tableControls.load();
+		// Why: only the dedicated table view adds sorting and pagination controls;
+		// both views still use the same search session and result actions.
+		if (this.tableView) {
+			this.tableControls = new PaletteTableControls(this.panel, this.app, {
+				initialState: state,
+				presentation: (result) =>
+					toPaletteSelectionItem(this.app, result, {
+						openExternalMarkdownInObsidian:
+							this.plugin.settings.openExternalMarkdownInObsidian,
+					}),
+				onChange: (tableState) => {
+					// The same query can have different sort priorities in separate panes.
+					// Save presentation in the leaf layout rather than global file settings.
+					this.pendingState = { ...this.pendingState, ...tableState };
+					void this.app.workspace.requestSaveLayout();
+				},
+			});
+			this.addChild(this.tableControls);
+			this.tableControls.load();
+		}
 		this.addSourcePinControl();
 		this.addHistoryControls();
 		this.registerTargetLeafTracking();
@@ -266,11 +282,13 @@ export class PaletteView extends ItemView {
 		const suffix = this.actionMessage ? ` · ${this.actionMessage}` : "";
 		this.panel.updateFooterText(`Source: ${source}${suffix}`);
 		this.updateSourcePinControl();
-		this.tableControls?.setResults({
+		const results = {
 			items: state.results,
 			total: state.resultCount,
 			error: state.error,
-		});
+		};
+		if (this.tableControls) this.tableControls.setResults(results);
+		else this.panel.setResults(results);
 		this.actionMessage = undefined;
 		this.historyControls?.update(state.input);
 	}
@@ -533,7 +551,9 @@ export class PaletteView extends ItemView {
 	}
 
 	private isCenterLeaf(leaf: WorkspaceLeaf): boolean {
-		if (leaf === this.leaf || leaf.view.getViewType() === PALETTE_VIEW_TYPE) return false;
+		// Why: a table moved into the center must never become another palette's
+		// open target or source note. The shared base covers both registered views.
+		if (leaf === this.leaf || leaf.view instanceof PaletteView) return false;
 		try {
 			// Sidebar leaves live under leftSplit/rightSplit; only rootSplit is center.
 			return leaf.getRoot() === this.app.workspace.rootSplit;
