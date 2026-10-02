@@ -119,6 +119,34 @@ describe("note opening focus", () => {
 		expect(f.workspace.revealLeaf).not.toHaveBeenCalled();
 		expect(f.workspace.setActiveLeaf).not.toHaveBeenCalled();
 	});
+	it("passes the explicit new-tab policy to external Markdown opening", async () => {
+		const f = fixture();
+		f.plugin.openExternalMarkdown = vi.fn().mockResolvedValue(undefined);
+		const external: PaletteResult = {
+			id: "external",
+			mode: "everything",
+			primary: "Outside",
+			secondary: "",
+			icon: "file",
+			absolutePath: "C:/outside.md",
+			scope: "directory",
+			kind: "file",
+			attributes: "",
+		};
+		await executePaletteResult(f.plugin, external, "primary", {
+			...f.options,
+			targetLeaf: f.leaf as unknown as WorkspaceLeaf,
+			reuseExternalMarkdownLeaf: false,
+		});
+		expect(f.plugin.openExternalMarkdown).toHaveBeenCalledExactlyOnceWith(
+			"C:/outside.md",
+			"primary",
+			true,
+			true,
+			f.leaf,
+			false,
+		);
+	});
 	it("does not focus a destination after an open fails", async () => {
 		const f = fixture();
 		f.leaf.openFile.mockRejectedValue(new Error("open failed"));

@@ -9,6 +9,8 @@ export interface PaletteResultExecutionOptions {
 	closeWhenDone: boolean;
 	/** The本文 leaf that a primary open should replace. */
 	targetLeaf?: WorkspaceLeaf;
+	/** Explicit new-tab actions must bypass external Markdown tab reuse. */
+	reuseExternalMarkdownLeaf?: boolean;
 	/** Normal opens activate the destination; background actions remain separate. */
 	active: boolean;
 	/** Modal's ArrowRight preview keeps the target active but avoids editor focus. */
@@ -91,6 +93,7 @@ export async function executePaletteResult(
 					options.autoFocus ?? active,
 					active,
 					targetLeaf,
+					options.reuseExternalMarkdownLeaf ?? true,
 				),
 		},
 		{

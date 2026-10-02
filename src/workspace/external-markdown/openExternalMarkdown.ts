@@ -30,11 +30,17 @@ export async function openExternalMarkdown(
 	autoFocus = true,
 	active = true,
 	targetLeaf?: WorkspaceLeaf,
+	reuseExisting = true,
 ): Promise<void> {
 	const resolvedPath = getDesktopAdapter(plugin.app).path.resolve(absolutePath);
 	const externalLeaves = getExternalMarkdownLeaves(plugin.app);
 	const existing = externalLeaves.find(
-		(leaf) => externalPathOf(leaf)?.toLocaleLowerCase() === resolvedPath.toLocaleLowerCase(),
+		// Why: an explicit destination window must not be overridden by a matching
+		// external note in another window (for example, Open in main window).
+		(leaf) =>
+			reuseExisting &&
+			(!targetLeaf || leaf.getContainer() === targetLeaf.getContainer()) &&
+			externalPathOf(leaf)?.toLocaleLowerCase() === resolvedPath.toLocaleLowerCase(),
 	);
 	if (existing) {
 		// Why: a native Markdown leaf already owns this external path, so reopening

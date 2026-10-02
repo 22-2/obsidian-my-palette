@@ -251,8 +251,18 @@ export default class MyPalettePlugin extends Plugin {
 		autoFocus = true,
 		active = true,
 		targetLeaf?: WorkspaceLeaf,
+		reuseExisting = true,
 	): Promise<void> {
-		await openExternalMarkdown(this, absolutePath, action, autoFocus, active, targetLeaf);
+		// Why: main-window new-tab actions intentionally bypass existing external tabs.
+		await openExternalMarkdown(
+			this,
+			absolutePath,
+			action,
+			autoFocus,
+			active,
+			targetLeaf,
+			reuseExisting,
+		);
 	}
 
 	onunload(): void {

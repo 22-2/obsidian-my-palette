@@ -1,4 +1,4 @@
-import type { App } from "obsidian";
+import type { App, WorkspaceLeaf } from "obsidian";
 import { expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
 import { openExternalMarkdown } from "src/workspace/external-markdown/openExternalMarkdown";
@@ -45,4 +45,40 @@ it("does not reveal or focus newly created background external notes", async () 
 	expect(f.leaf.setViewState).toHaveBeenCalledWith(expect.objectContaining({ active: false }));
 	expect(f.workspace.revealLeaf).not.toHaveBeenCalled();
 	expect(f.workspace.setActiveLeaf).not.toHaveBeenCalled();
+});
+
+it("honors an explicit main-window target when the external file is already open in a popout", async () => {
+	const f = fixture(true);
+	const popout = {};
+	const mainWindow = {};
+	Object.assign(f.leaf, { getContainer: () => popout });
+	const target = {
+		getContainer: () => mainWindow,
+		getViewState: () => ({ pinned: false }),
+		setViewState: vi.fn().mockResolvedValue(undefined),
+	} as unknown as WorkspaceLeaf;
+	await openExternalMarkdown(f.plugin, "C:/outside.md", "primary", true, true, target);
+	expect(target.setViewState).toHaveBeenCalledWith(
+		expect.objectContaining({
+			active: true,
+			state: expect.objectContaining({ file: "file:C:/outside.md" }),
+		}),
+	);
+	expect(f.leaf.setViewState).not.toHaveBeenCalled();
+	expect(f.workspace.setActiveLeaf).toHaveBeenCalledExactlyOnceWith(target, { focus: true });
+});
+
+it("opens a fresh external Markdown tab even when the same path exists in the main window", async () => {
+	const f = fixture(true);
+	const mainWindow = {};
+	Object.assign(f.leaf, { getContainer: () => mainWindow });
+	const target = {
+		getContainer: () => mainWindow,
+		getViewState: () => ({ pinned: false }),
+		setViewState: vi.fn().mockResolvedValue(undefined),
+	} as unknown as WorkspaceLeaf;
+	await openExternalMarkdown(f.plugin, "C:/outside.md", "primary", true, true, target, false);
+	expect(target.setViewState).toHaveBeenCalled();
+	expect(f.leaf.setViewState).not.toHaveBeenCalled();
+	expect(f.workspace.setActiveLeaf).toHaveBeenCalledExactlyOnceWith(target, { focus: true });
 });

@@ -20,6 +20,7 @@ interface PaletteResultMenuOptions {
 	selectedItems: PaletteResult[];
 	activate: (action: ActionKind, result: PaletteResult) => void | Promise<void>;
 	openInBackground: (result: PaletteResult) => void | Promise<void>;
+	openInMainWindow?: (result: PaletteResult) => void | Promise<void>;
 	applySearchHistory: (result: Extract<PaletteResult, { mode: "search-history" }>) => void;
 	onMocSelected?: () => void;
 	getMocContext?: () => MocInsertionContext;
@@ -34,6 +35,7 @@ export function populatePaletteResultMenu({
 	selectedItems,
 	activate,
 	openInBackground,
+	openInMainWindow,
 	applySearchHistory,
 	onMocSelected,
 	getMocContext,
@@ -82,6 +84,16 @@ export function populatePaletteResultMenu({
 			.setIcon("external-link")
 			.onClick(() => void activate("primary", result)),
 	);
+	// Why: only popout hosts provide this action; ordinary palettes already open
+	// in the main window and should not offer a redundant navigation command.
+	if (openInMainWindow) {
+		menu.addItem((item) =>
+			item
+				.setTitle("Open in main window")
+				.setIcon("app-window")
+				.onClick(() => void openInMainWindow(result)),
+		);
+	}
 	menu.addItem((item) =>
 		item
 			.setTitle("Open in new tab (background)")

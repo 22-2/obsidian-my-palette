@@ -398,15 +398,23 @@ export class PaletteView extends ItemView {
 		this.panel?.focusSearchInput();
 	}
 
-	private async execute(result: PaletteResult, action: ActionKind): Promise<void> {
+	private async execute(
+		result: PaletteResult,
+		action: ActionKind,
+		targetOverride?: WorkspaceLeaf,
+		reuseExternalMarkdownLeaf = true,
+	): Promise<void> {
 		if (!this.session || !this.panel || result.mode === "search-history") {
 			if (result.mode === "search-history") this.applySearchHistory(result);
 			return;
 		}
-		const targetLeaf = this.resolveTargetLeaf();
+		// Why: explicit main-window navigation must bypass the currently active
+		// popout and any cached target leaf belonging to the palette.
+		const targetLeaf = targetOverride ?? this.resolveTargetLeaf();
 		const execution: PaletteResultExecutionOptions = {
 			closeWhenDone: false,
 			targetLeaf,
+			reuseExternalMarkdownLeaf,
 			// Opening a note is a navigation action: focus the destination rather
 			// than returning to this palette's input after the open completes.
 			active: true,
@@ -447,6 +455,14 @@ export class PaletteView extends ItemView {
 		this.focusPanelAfterAction(existingExternalLeaves);
 	}
 
+	private async openInMainWindow(result: PaletteResult): Promise<void> {
+		const { workspace } = this.app;
+		// Why: this menu action promises a fresh main-window tab on every use,
+		// including external Markdown that already has a tab in the same window.
+		const target = workspace.createLeafInParent(workspace.rootSplit, 0);
+		await this.execute(result, "primary", target, false);
+	}
+
 	private focusPanelAfterAction(existingExternalLeaves: readonly WorkspaceLeaf[]): void {
 		const activeLeaf = this.app.workspace.activeLeaf;
 		// Reusing an external Markdown leaf reveals the requested tab. Focusing the sidebar
@@ -479,6 +495,12 @@ export class PaletteView extends ItemView {
 			selectedItems,
 			activate: (action, selected) => this.execute(selected, action),
 			openInBackground: (selected) => this.openInBackground(selected),
+			// Why: compare owning documents at menu-open time so moving the same
+			// view between windows immediately updates the available navigation action.
+			openInMainWindow:
+				this.contentEl.ownerDocument !== this.app.workspace.rootSplit.doc
+					? (selected) => this.openInMainWindow(selected)
+					: undefined,
 			applySearchHistory: (history) => this.applySearchHistory(history),
 			getMocContext: () => this.resolveMocInsertionContext(),
 		});
