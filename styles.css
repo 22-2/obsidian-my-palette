@@ -30,6 +30,17 @@
 	border-bottom: 1px solid var(--background-modifier-border);
 }
 
+/* Why: theme hover/focus effects can flash the separator even with a borderless
+   input; keep the container's line and decoration identical in every mouse state. */
+.my-palette-view.my-palette-panel--view .prompt-input-container,
+.my-palette-view.my-palette-panel--view .prompt-input-container:hover,
+.my-palette-view.my-palette-panel--view .prompt-input-container:focus-within {
+	border-bottom-color: var(--background-modifier-border);
+	outline: none;
+	box-shadow: none;
+	transition: none;
+}
+
 .my-palette-panel--view .my-palette-panel__search-icon {
 	position: absolute;
 	top: 50%;
@@ -61,11 +72,15 @@
 /* Why: the persistent search bar is already separated by its background and
    container divider; reset theme focus rings too so it stays borderless while typing. */
 .my-palette-panel--view .prompt-input,
+.my-palette-panel--view .prompt-input:hover,
+.my-palette-panel--view .prompt-input:active,
 .my-palette-panel--view .prompt-input:focus,
 .my-palette-panel--view .prompt-input:focus-visible {
 	border: 0;
 	outline: none;
 	box-shadow: none;
+	/* Why: inherited input transitions can briefly paint the theme's hover ring. */
+	transition: none;
 }
 
 .my-palette-panel--view .prompt-results {
