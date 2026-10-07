@@ -29,7 +29,9 @@ function toRelatedCandidate(
 	const path = result.vaultPath;
 	if (file && file.extension !== "md") return;
 	if (!file && !isUserIgnoredPath(app, path)) return;
-	if (path === activePath || (outgoing.has(path) && incoming.has(path))) return;
+	if (path === activePath) return;
+	// Why: linked notes can still be selected to complete or retry MOC insertion;
+	// relation badges make their existing link state visible in the candidate list.
 	const ignored = isUserIgnoredPath(app, path);
 	return {
 		path,
