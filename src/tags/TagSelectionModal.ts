@@ -1,6 +1,5 @@
 import type { App } from "obsidian";
-import { BaseSuggestModal } from "src/ui/baseSuggestModal";
-import { renderSelectionItem, type SelectionItem } from "src/ui/selectionModal";
+import { MultiSelectModal, type MultiSelectCandidate } from "src/ui/MultiSelectModal";
 import type { TagChoice } from "src/tags/tagChoices";
 import {
 	buildTagSuggestions,
@@ -9,131 +8,102 @@ import {
 	type TagSuggestion,
 } from "src/tags/tagSuggestions";
 
-const KEY_HINTS = "Enter: toggle · Ctrl+Enter: add · Esc: cancel";
-
-function choiceBadge(choice: TagChoice): string | undefined {
+function choiceBadge(choice: TagChoice, targetCount: number): string | undefined {
 	if (choice.registered) return "Registered";
+	// Partly applied tags say how many notes still lack them; this outranks the ranking reason.
+	if (choice.appliedCount) return `On ${choice.appliedCount}/${targetCount} notes`;
 	if (choice.reason === "recent") return "Recent";
 	// The vault-wide count alone does not tell how common the tag is among related notes.
 	if (choice.reason === "related") return `Related ${choice.relatedCount ?? 0}`;
 	return undefined;
 }
 
-/**
- * Multi-tag selector. Choosing a row toggles it and keeps the modal open; the
- * confirm row or Ctrl+Enter resolves the selection, any other close cancels.
- * Selected tags are kept by name rather than by row index because the list is
- * filtered again for every query while the selection must survive searches.
- */
-export class TagSelectionModal extends BaseSuggestModal<TagSuggestion> {
-	private readonly selectedTags = new Set<string>();
-	private confirmed = false;
-	private resolveResult?: (tags: string[] | null) => void;
+function toCandidate(
+	suggestion: TagSuggestion,
+	targetCount: number,
+	removeTag: (tag: string) => Promise<void>,
+): MultiSelectCandidate<string> {
+	const key = tagSuggestionKey(suggestion);
+	if (suggestion.type === "new") {
+		return {
+			key,
+			value: suggestion.tag,
+			item: { label: `#${suggestion.tag}`, badge: "New tag" },
+			uncheckedIcon: "plus",
+		};
+	}
+	const { choice } = suggestion;
+	return {
+		key,
+		value: choice.tag,
+		item: {
+			label: `#${choice.tag}`,
+			description: `${choice.count} ${choice.count === 1 ? "note" : "notes"}`,
+			badge: choiceBadge(choice, targetCount),
+		},
+		// Tags every target already has are listed for reference only.
+		locked: choice.registered,
+		removal: choice.appliedCount
+			? { label: "Remove tag", run: () => removeTag(choice.tag) }
+			: undefined,
+	};
+}
 
+/** Multi-tag selector built on the shared toggle selector. */
+export class TagSelectionModal extends MultiSelectModal<string> {
 	/**
 	 * @param choices Candidates in display order, registered tags last.
 	 * @param targetLabel Shown in the footer so the user knows which notes change.
 	 */
 	constructor(
 		app: App,
-		private readonly choices: readonly TagChoice[],
+		private choices: readonly TagChoice[],
 		targetLabel: string,
+		private readonly targetCount: number,
+		private readonly removeFromTargets: (tag: string) => Promise<boolean>,
 	) {
 		super(
 			{
 				placeholder: "Select tags to add (type to create a new tag)",
-				footerText: `${targetLabel} · ${KEY_HINTS}`,
+				footerLabel: targetLabel,
+				actionLabel: "Add",
+				describeSelection: (tags) => tags.map((tag) => `#${tag}`).join(" "),
 			},
 			app,
 		);
 	}
 
-	/** Opens the modal and resolves with tags without `#`, or null when cancelled. */
-	openAndWait(): Promise<string[] | null> {
-		return new Promise((resolve) => {
-			this.resolveResult = resolve;
-			this.open();
+	protected searchCandidates(query: string): MultiSelectCandidate<string>[] {
+		return buildTagSuggestions(this.choices, query).map((suggestion) =>
+			toCandidate(suggestion, this.targetCount, (tag) => this.removeTag(tag)),
+		);
+	}
+
+	/** Removes from the notes, then shows the tag as unapplied without waiting for the metadata cache. */
+	private async removeTag(tag: string): Promise<void> {
+		if (!(await this.removeFromTargets(tag))) return;
+		this.choices = this.choices.map((choice) => {
+			if (choice.tag !== tag) return choice;
+			const { appliedCount, ...rest } = choice;
+			return {
+				...rest,
+				registered: false,
+				count: Math.max(0, choice.count - (appliedCount ?? 0)),
+			};
 		});
 	}
 
-	getSuggestions(query: string): TagSuggestion[] {
-		// Highlight with the same text used for matching, without the optional `#`.
-		this.updateMatchQuery(normalizeTagQuery(query));
-		const suggestions = buildTagSuggestions(this.choices, query, [...this.selectedTags]);
-		this.updateResultCount(suggestions.filter(({ type }) => type === "tag").length);
-		return suggestions;
+	// Highlight with the same text used for matching, without the optional `#`.
+	protected override matchQuery(query: string): string {
+		return normalizeTagQuery(query);
 	}
 
-	renderSuggestion(item: TagSuggestion, el: HTMLElement): void {
-		renderSelectionItem(this.toSelectionItem(item), el, this.query);
-		if (item.type === "tag" && item.choice.registered) el.addClass("is-registered");
-		if (item.type === "confirm") {
-			// The action word is muted so the selected tags stand out in the confirm row.
-			const label = el.querySelector<HTMLElement>(".my-palette-suggestion__label");
-			label?.prepend(
-				label.createSpan({ cls: "my-palette-tag-select__action", text: "Add " }),
-			);
-		}
+	protected override hasActiveQuery(query: string): boolean {
+		return normalizeTagQuery(query) !== "";
 	}
 
 	protected override onSelectionModalOpen(): void {
+		super.onSelectionModalOpen();
 		this.modalEl.addClass("my-palette-tag-select");
-	}
-
-	protected override onSelectionModalClose(): void {
-		this.resolveResult?.(this.confirmed ? [...this.selectedTags] : null);
-		this.resolveResult = undefined;
-	}
-
-	protected override async onItemActivated(item: TagSuggestion, event: Event): Promise<void> {
-		// Ctrl+Enter confirms from any row so the user need not move to the confirm row.
-		const confirmShortcut =
-			event.type === "keydown" &&
-			((event as KeyboardEvent).ctrlKey || (event as KeyboardEvent).metaKey);
-		if (item.type === "confirm" || confirmShortcut) {
-			if (this.selectedTags.size === 0) return;
-			this.confirmed = true;
-			this.close();
-			return;
-		}
-		// Registered tags are listed for reference only.
-		if (item.type === "tag" && item.choice.registered) return;
-
-		const tag = item.type === "new" ? item.tag : item.choice.tag;
-		if (this.selectedTags.has(tag)) this.selectedTags.delete(tag);
-		else this.selectedTags.add(tag);
-
-		const key = tagSuggestionKey(item);
-		this.refreshSuggestionsKeepingCursor((candidate) => tagSuggestionKey(candidate) === key);
-		// Keep the query but select it, so typing the next tag replaces it directly.
-		this.inputEl.select();
-	}
-
-	private toSelectionItem(item: TagSuggestion): SelectionItem {
-		if (item.type === "confirm") {
-			return {
-				// "Add " is prepended in renderSuggestion so it can be styled separately.
-				label: item.tags.map((tag) => `#${tag}`).join(" "),
-				icon: "corner-down-left",
-			};
-		}
-		if (item.type === "new") {
-			return {
-				label: `#${item.tag}`,
-				icon: this.selectedTags.has(item.tag) ? "square-check" : "plus",
-				badge: "New tag",
-			};
-		}
-		const { choice } = item;
-		return {
-			label: `#${choice.tag}`,
-			icon: choice.registered
-				? "lock"
-				: this.selectedTags.has(choice.tag)
-					? "square-check"
-					: "square",
-			description: `${choice.count} ${choice.count === 1 ? "note" : "notes"}`,
-			badge: choiceBadge(choice),
-		};
 	}
 }

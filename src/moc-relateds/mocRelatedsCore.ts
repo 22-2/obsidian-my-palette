@@ -56,3 +56,54 @@ export function addLinkToMocRelateds(
 	lines.splice(insertIndex, 0, `${childIndent}- ${wikiLink}`);
 	return { success: true, newContent: lines.join("\n") };
 }
+
+export type RemoveLinkResult =
+	| { success: true; newContent: string }
+	| { success: false; message: string };
+
+/** Removes the direct child item linking to a note from the MOC Relateds item. */
+export function removeLinkFromMocRelateds(content: string, linkBasename: string): RemoveLinkResult {
+	const lines = content.split("\n");
+	const mocHeaderIndex = lines.findIndex((line) => line.trim().startsWith(MOC_HEADER));
+	if (mocHeaderIndex === -1) {
+		return { success: false, message: `"${MOC_HEADER}" header not found.` };
+	}
+
+	let relatedsIndex = -1;
+	for (let index = mocHeaderIndex + 1; index < lines.length; index += 1) {
+		const trimmed = lines[index].trim();
+		if (trimmed.startsWith("##")) break;
+		if (trimmed.startsWith(RELATEDS_ITEM)) {
+			relatedsIndex = index;
+			break;
+		}
+	}
+	if (relatedsIndex === -1) {
+		return {
+			success: false,
+			message: `"${MOC_HEADER}" section does not contain "${RELATEDS_ITEM}".`,
+		};
+	}
+
+	const relatedsIndent = lines[relatedsIndex].match(/^\s*/)?.[0].length ?? 0;
+	const wikiLink = new RegExp(`\\[\\[${escapeRegExp(linkBasename)}(\\|[^\\]]*)?\\]\\]`);
+	for (let index = relatedsIndex + 1; index < lines.length; index += 1) {
+		const line = lines[index];
+		if (line.trim().startsWith("##")) break;
+		if (line.trim() === "") continue;
+		const indent = line.match(/^\s*/)?.[0].length ?? 0;
+		if (indent <= relatedsIndent) break;
+		if (!/^\s*[-*+]\s+/.test(line) || !wikiLink.test(line)) continue;
+		// Why: deleting a parent line would silently drop or re-parent its nested notes.
+		const next = lines[index + 1];
+		if (next?.trim() && (next.match(/^\s*/)?.[0].length ?? 0) > indent)
+			return { success: false, message: "The link has nested items; remove it manually." };
+		lines.splice(index, 1);
+		return { success: true, newContent: lines.join("\n") };
+	}
+	return { success: false, message: "Link not found." };
+}
+
+function escapeRegExp(text: string): string {
+	return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}

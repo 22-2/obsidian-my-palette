@@ -9,8 +9,7 @@ const choices: TagChoice[] = [
 	{ tag: "writing", count: 5, registered: false },
 ];
 
-const keys = (query: string, selected: string[] = []) =>
-	buildTagSuggestions(choices, query, selected).map(tagSuggestionKey);
+const keys = (query: string) => buildTagSuggestions(choices, query).map(tagSuggestionKey);
 
 describe("buildTagSuggestions", () => {
 	it("shows every choice in the given order without a query", () => {
@@ -26,14 +25,5 @@ describe("buildTagSuggestions", () => {
 		expect(keys("Project")).not.toContain("new:Project");
 		expect(keys("two words")).not.toContain("new:two words");
 		expect(keys("a#b")).not.toContain("new:a#b");
-	});
-
-	it("places the confirm row first without a query and last while searching", () => {
-		expect(keys("", ["writing"])[0]).toBe("confirm");
-		expect(keys("writ", ["writing"]).at(-1)).toBe("confirm");
-		expect(buildTagSuggestions(choices, "", ["writing", "new"])[0]).toEqual({
-			type: "confirm",
-			tags: ["writing", "new"],
-		});
 	});
 });

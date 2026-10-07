@@ -1,5 +1,5 @@
 import { getAllTags, Notice, parseFrontMatterTags, type App, type TFile } from "obsidian";
-import { mergeFrontmatterTags } from "src/shared/frontmatter";
+import { mergeFrontmatterTags, removeFrontmatterTags } from "src/shared/frontmatter";
 import { relationPaths } from "src/shared/noteRelations";
 import { buildTagChoices, tagKey, type TagChoice } from "src/tags/tagChoices";
 import { TagSelectionModal } from "src/tags/TagSelectionModal";
@@ -15,15 +15,17 @@ function frontmatterTags(app: App, file: TFile): string[] {
 }
 
 /**
- * Only frontmatter tags count as registered, because insertion writes there and
- * an inline tag does not stop the user from also adding it to frontmatter.
- * With several targets a tag is registered only when every target has it, so
- * it stays selectable for the notes that still lack it.
+ * Counts targets having each tag in frontmatter. Only frontmatter tags count,
+ * because insertion writes there and an inline tag does not stop the user from
+ * also adding it to frontmatter.
  */
-function registeredOnEveryTarget(app: App, files: readonly TFile[]): string[] {
-	const [first, ...rest] = files.map((file) => new Set(frontmatterTags(app, file).map(tagKey)));
-	if (!first) return [];
-	return [...first].filter((key) => rest.every((tags) => tags.has(key)));
+function frontmatterTagCounts(app: App, files: readonly TFile[]): Map<string, number> {
+	const counts = new Map<string, number>();
+	for (const file of files) {
+		for (const key of new Set(frontmatterTags(app, file).map(tagKey)))
+			counts.set(key, (counts.get(key) ?? 0) + 1);
+	}
+	return counts;
 }
 
 /** Tags of notes linked from or to any target, excluding the targets themselves. */
@@ -42,9 +44,15 @@ function relatedNoteTags(app: App, files: readonly TFile[]): string[][] {
 }
 
 function buildChoices(app: App, files: readonly TFile[], recentTags: RecentTagSource): TagChoice[] {
+	const appliedCounts = frontmatterTagCounts(app, files);
 	return buildTagChoices({
 		allTags: app.metadataCache.getTags(),
-		registeredTags: registeredOnEveryTarget(app, files),
+		// A tag is registered only when every target has it, so it stays selectable
+		// for the notes that still lack it.
+		registeredTags: [...appliedCounts]
+			.filter(([, n]) => n === files.length)
+			.map(([key]) => key),
+		appliedCounts,
 		recentTags: recentTags.getIds(),
 		relatedNoteTags: relatedNoteTags(app, files),
 	});
@@ -72,6 +80,8 @@ export async function insertTags(
 		app,
 		buildChoices(app, targets, recentTags),
 		targetLabel(targets),
+		targets.length,
+		(tag) => removeTag(app, targets, tag),
 	).openAndWait();
 	if (!selected || selected.length === 0) return;
 
@@ -96,4 +106,30 @@ export async function insertTags(
 		new Notice(`Added ${tagText} to ${where}.`);
 	}
 	if (failed > 0) new Notice(`Failed to add tags to ${failed} notes. See the console.`);
+}
+
+/** Removes a tag from the frontmatter of every target that has it; false when nothing was removed. */
+async function removeTag(app: App, files: readonly TFile[], tag: string): Promise<boolean> {
+	const key = tagKey(tag);
+	let removed = 0;
+	let failed = 0;
+	for (const file of files) {
+		if (!frontmatterTags(app, file).some((existing) => tagKey(existing) === key)) continue;
+		try {
+			await app.fileManager.processFrontMatter(file, (frontmatter: { tags?: unknown }) => {
+				const rest = removeFrontmatterTags(frontmatter.tags, [tag]);
+				if (rest.length > 0) frontmatter.tags = rest;
+				else delete frontmatter.tags;
+			});
+			removed += 1;
+		} catch (error) {
+			failed += 1;
+			console.error(`Failed to remove tag from ${file.path}`, error);
+		}
+	}
+	if (removed > 0)
+		new Notice(`Removed #${tag} from ${removed === 1 ? "1 note" : `${removed} notes`}.`);
+	else if (failed === 0) new Notice(`#${tag} is not in the frontmatter of the target notes.`);
+	if (failed > 0) new Notice(`Failed to remove #${tag} from ${failed} notes. See the console.`);
+	return removed > 0;
 }

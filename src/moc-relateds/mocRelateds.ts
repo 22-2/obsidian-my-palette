@@ -1,9 +1,10 @@
-import { Menu, Notice, TFile, type App, type WorkspaceLeaf } from "obsidian";
+import { Notice, TFile, type App, type Menu, type WorkspaceLeaf } from "obsidian";
 import { getLeafForAction } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
 import type { FileResult } from "src/palette/results";
-import { openSelectionModal, type SelectionItem } from "src/ui/selectionModal";
-import { addLinkToMocRelateds } from "src/moc-relateds/mocRelatedsCore";
+import type { SelectionItem } from "src/ui/selectionModal";
+import { MultiSelectModal, type MultiSelectCandidate } from "src/ui/MultiSelectModal";
+import { addLinkToMocRelateds, removeLinkFromMocRelateds } from "src/moc-relateds/mocRelatedsCore";
 import { getVaultFullPath, isUserIgnoredPath } from "src/ignored-notes/ignoredPaths";
 import { materializeIgnoredNote } from "src/ignored-notes/ignoredNoteMaterializer";
 import { addCopyPathMenuItems, copyPathToClipboard } from "src/platform/pathClipboard";
@@ -13,45 +14,49 @@ import { runResultAction, type ActionKind } from "src/palette/resultActions";
 import { matchedTagPresentation } from "src/palette/resultPresentation";
 import { relationPaths } from "src/shared/noteRelations";
 
-interface RelatedCandidate {
-	path: string;
-	label: string;
-	badge?: string;
-	matchedTags: string[];
-	ignored: boolean;
-}
-
 function toRelatedCandidate(
 	app: App,
 	result: FileResult,
 	activePath: string,
 	outgoing: ReadonlySet<string>,
 	incoming: ReadonlySet<string>,
-): RelatedCandidate | undefined {
+	removeLink: (file: TFile) => Promise<void>,
+): MultiSelectCandidate<string> | undefined {
 	const file = result.file;
 	const path = result.vaultPath;
 	if (file && file.extension !== "md") return;
 	if (!file && !isUserIgnoredPath(app, path)) return;
 	if (path === activePath) return;
-	// Why: linked notes can still be selected to complete or retry MOC insertion;
-	// relation badges make their existing link state visible in the candidate list.
+	// Why: a note linked in one direction only can still be selected to complete the
+	// mutual link; only a note linked both ways has nothing left to insert.
 	const ignored = isUserIgnoredPath(app, path);
+	const mutual = outgoing.has(path) && incoming.has(path);
 	return {
-		path,
-		label: result.primary,
-		// Why: a `#tag` query can match a note with no tag text in its name, so
-		// show the matching tags as the palette does to explain the hit.
-		matchedTags: result.matchedTags ?? [],
-		ignored,
-		badge: ignored
-			? "Ignored · Import"
-			: outgoing.has(path) && incoming.has(path)
-				? "Mutual link exists"
-				: outgoing.has(path)
-					? "Outgoing link exists"
-					: incoming.has(path)
-						? "Backlink exists"
-						: undefined,
+		key: path,
+		value: path,
+		item: {
+			label: result.primary,
+			description: path,
+			icon: "file-text",
+			// Why: a `#tag` query can match a note with no tag text in its name, so
+			// show the matching tags as the palette does to explain the hit.
+			...matchedTagPresentation(result.matchedTags ?? []),
+			badge: ignored
+				? "Ignored · Import"
+				: mutual
+					? "Mutual link exists"
+					: outgoing.has(path)
+						? "Outgoing link exists"
+						: incoming.has(path)
+							? "Backlink exists"
+							: undefined,
+			value: path,
+		},
+		locked: mutual && !ignored,
+		removal:
+			file && !ignored && (outgoing.has(path) || incoming.has(path))
+				? { label: "Remove link", run: () => removeLink(file) }
+				: undefined,
 	};
 }
 
@@ -113,15 +118,14 @@ async function openCandidateInBackground(
 	new Notice("The file no longer exists.");
 }
 
-function showCandidateMenu(
+function populateCandidateMenu(
 	plugin: MyPalettePlugin,
 	item: SelectionItem,
-	event: MouseEvent,
+	menu: Menu,
 	close: () => void,
 ): void {
 	const result = toCandidateResult(plugin, item);
 	if (!result) return;
-	const menu = new Menu();
 	menu.addItem((menuItem) =>
 		menuItem
 			.setTitle("Open")
@@ -166,16 +170,35 @@ function showCandidateMenu(
 		},
 		(path) => void copyPathToClipboard(path),
 	);
-	menu.showAtMouseEvent(event);
 }
 
-async function openTargetFileSelector(
-	plugin: MyPalettePlugin,
-	activeFile: TFile,
-	onChoose: (file: TFile) => void | Promise<void>,
-): Promise<void> {
-	const { outgoing, incoming } = relationPaths(plugin.app, activeFile);
-	const searchCandidates = async (input: string): Promise<RelatedCandidate[]> => {
+/** Candidate selector for the active MOC; linked notes can be removed from its context menu. */
+class MocTargetModal extends MultiSelectModal<string> {
+	private readonly relations: ReturnType<typeof relationPaths>;
+
+	constructor(
+		private readonly plugin: MyPalettePlugin,
+		private readonly activeFile: TFile,
+	) {
+		super(
+			{
+				// Explain the destination because this selector chooses the notes to link into the active MOC.
+				placeholder:
+					"Search notes to insert into the MOC · i old notes includes Excluded files",
+				footerLabel: `Source: ${activeFile.path}`,
+				actionLabel: "Insert",
+				describeSelection: (paths) =>
+					paths.length === 1
+						? (paths[0].split("/").pop()?.replace(/\.md$/, "") ?? paths[0])
+						: `${paths.length} notes`,
+			},
+			plugin.app,
+		);
+		this.relations = relationPaths(plugin.app, activeFile);
+	}
+
+	protected async searchCandidates(input: string): Promise<MultiSelectCandidate<string>[]> {
+		const { plugin, activeFile } = this;
 		const parsed = parseInput(input, plugin.settings.prefixes);
 		if (parsed.mode !== "file") return [];
 		// Keep MOC insertion on the same explicit-prefix path as the main palette:
@@ -187,48 +210,49 @@ async function openTargetFileSelector(
 		});
 		return results
 			.map((result) =>
-				toRelatedCandidate(plugin.app, result, activeFile.path, outgoing, incoming),
+				toRelatedCandidate(
+					plugin.app,
+					result,
+					activeFile.path,
+					this.relations.outgoing,
+					this.relations.incoming,
+					(file) => this.removeLink(file),
+				),
 			)
-			.filter((candidate): candidate is RelatedCandidate => candidate !== undefined);
-	};
+			.filter(
+				(candidate): candidate is MultiSelectCandidate<string> => candidate !== undefined,
+			);
+	}
 
-	openSelectionModal<SelectionItem>(
-		{
-			search: async (input) =>
-				(await searchCandidates(input)).map(({ path, label, badge, matchedTags }) => ({
-					label,
-					description: path,
-					icon: "file-text",
-					...matchedTagPresentation(matchedTags),
-					badge,
-					value: path,
-				})),
-			// Explain the destination because this selector chooses the note to link into the active MOC.
-			placeholder:
-				"Search a note to insert into the MOC · i old notes includes Excluded files",
-			footerText: `Source: ${activeFile.path}`,
-		},
-		plugin.app,
-		async (selected) => {
-			if (typeof selected.value !== "string") return;
-			const selectedPath = selected.value;
-			const file = plugin.app.vault.getAbstractFileByPath(selectedPath);
-			if (file instanceof TFile && !isUserIgnoredPath(plugin.app, selectedPath)) {
-				await onChoose(file);
-				return;
-			}
-			try {
-				const imported = await materializeIgnoredNote(plugin.app, selectedPath);
-				await onChoose(imported);
-			} catch (error) {
-				console.error("Failed to import ignored note", error);
-				new Notice(
-					error instanceof Error ? error.message : "Failed to import ignored note.",
-				);
-			}
-		},
-		(item, event, close) => showCandidateMenu(plugin, item, event, close),
-	);
+	protected override populateCandidateMenu(
+		menu: Menu,
+		candidate: MultiSelectCandidate<string>,
+		close: () => void,
+	): void {
+		populateCandidateMenu(this.plugin, candidate.item, menu, close);
+	}
+
+	/** Updates the shown relations directly because the metadata cache lags behind the edit. */
+	private async removeLink(file: TFile): Promise<void> {
+		if (!(await removeFileFromMocRelateds(this.plugin, this.activeFile, file))) return;
+		this.relations.outgoing.delete(file.path);
+		this.relations.incoming.delete(file.path);
+	}
+}
+
+async function resolveInsertTarget(
+	plugin: MyPalettePlugin,
+	path: string,
+): Promise<TFile | undefined> {
+	const file = plugin.app.vault.getAbstractFileByPath(path);
+	if (file instanceof TFile && !isUserIgnoredPath(plugin.app, path)) return file;
+	try {
+		return await materializeIgnoredNote(plugin.app, path);
+	} catch (error) {
+		console.error("Failed to import ignored note", error);
+		new Notice(error instanceof Error ? error.message : "Failed to import ignored note.");
+		return undefined;
+	}
 }
 
 async function addLink(app: App, mocFile: TFile, fileToLink: TFile): Promise<void> {
@@ -248,6 +272,44 @@ async function addLink(app: App, mocFile: TFile, fileToLink: TFile): Promise<voi
 		console.error("Failed to insert link to MOC", error);
 		new Notice("Failed to insert a link to the MOC.");
 	}
+}
+
+async function removeLink(
+	app: App,
+	note: TFile,
+	linkedFile: TFile,
+): Promise<"removed" | "missing" | "failed"> {
+	try {
+		const result = removeLinkFromMocRelateds(await app.vault.read(note), linkedFile.basename);
+		if (result.success) {
+			await app.vault.modify(note, result.newContent);
+			return "removed";
+		}
+		if (result.message === "Link not found.") return "missing";
+		new Notice(`${note.basename}: ${result.message}`);
+		return "failed";
+	} catch (error) {
+		console.error("Failed to remove link from MOC", error);
+		new Notice("Failed to remove the link.");
+		return "failed";
+	}
+}
+
+/** Removes the mutual Relateds links between a MOC and a note; true when any link was removed. */
+export async function removeFileFromMocRelateds(
+	plugin: MyPalettePlugin,
+	mocFile: TFile,
+	file: TFile,
+): Promise<boolean> {
+	const fromMoc = await removeLink(plugin.app, mocFile, file);
+	const fromNote = await removeLink(plugin.app, file, mocFile);
+	if (fromMoc === "removed" || fromNote === "removed") {
+		new Notice(`${mocFile.basename}: removed ${file.basename} from Relateds.`);
+		return true;
+	}
+	if (fromMoc === "missing" && fromNote === "missing")
+		new Notice(`No Relateds link between ${mocFile.basename} and ${file.basename}.`);
+	return false;
 }
 
 /** Inserts a known note into the active MOC and keeps the existing mutual-link behavior. */
@@ -284,7 +346,7 @@ export async function insertFileToMocRelateds(
 	await mocLeaf?.openFile(mocFile);
 }
 
-/** Selects a note from the current file list and adds mutual MOC Relateds links. */
+/** Selects notes from the current file list and adds mutual MOC Relateds links to each. */
 export async function insertLinkToMocRelateds(plugin: MyPalettePlugin): Promise<void> {
 	const activeFile = plugin.app.workspace.getActiveFile();
 	if (!(activeFile instanceof TFile)) {
@@ -292,7 +354,13 @@ export async function insertLinkToMocRelateds(plugin: MyPalettePlugin): Promise<
 		return;
 	}
 
-	await openTargetFileSelector(plugin, activeFile, async (targetFile) => {
-		await insertFileToActiveMocRelateds(plugin, targetFile);
-	});
+	const paths = await new MocTargetModal(plugin, activeFile).openAndWait();
+	if (!paths?.length) return;
+	// Why: each insertion reads and updates the shared MOC, so process targets
+	// serially to keep one selection from overwriting another's changes.
+	for (const path of paths) {
+		// Ignored notes are imported only now, so cancelling never touches the vault.
+		const target = await resolveInsertTarget(plugin, path);
+		if (target) await insertFileToActiveMocRelateds(plugin, target);
+	}
 }

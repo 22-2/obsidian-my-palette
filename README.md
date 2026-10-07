@@ -70,10 +70,23 @@ every selected Markdown note. Excluded files are skipped.
 Candidates are ordered as recently inserted tags, then tags used by linked notes
 (outgoing links and backlinks, up to 10 tags marked `Related N`), then by usage
 count. Tags that every target note already has are shown last as `Registered`
-and cannot be selected. Press `Enter` to select or deselect a tag without
-closing the list, and `Ctrl+Enter` or the `Add …` row to add the selection.
-Typing a tag that does not exist yet offers it as a new tag. Recently inserted
-tags are stored per Vault in local IndexedDB.
+and cannot be selected; tags only some targets have show `On N/M notes` and stay
+selectable. Press `Enter` to select or deselect a tag without closing the list,
+and `Ctrl+Enter` or the `Add …` row to add the selection. Typing a tag that does
+not exist yet offers it as a new tag. Right-click a registered or partly applied
+tag and choose `Remove tag` to remove it from the frontmatter of the target
+notes; right-clicking a selected tag removes every selected one. Recently
+inserted tags are stored per Vault in local IndexedDB.
+
+### Inserting into a MOC
+
+The MOC insertion selector works the same way: `Enter` selects or deselects
+notes, and `Ctrl+Enter` or the `Insert …` row adds mutual Relateds links to the
+active MOC for every selected note. Notes linked in both directions are shown
+last and cannot be selected; notes linked in one direction stay selectable to
+complete the link. Right-click a linked note and choose `Remove link` to remove
+the Relateds links in both directions; right-clicking a selected note removes
+the links of every selected note.
 
 ### File sort priorities
 

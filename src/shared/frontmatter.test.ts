@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { mergeFrontmatterTags, normalizeFrontmatterTags } from "src/shared/frontmatter";
+import {
+	mergeFrontmatterTags,
+	normalizeFrontmatterTags,
+	removeFrontmatterTags,
+} from "src/shared/frontmatter";
 
 describe("normalizeFrontmatterTags", () => {
 	it("reads list and string forms", () => {
@@ -17,5 +21,12 @@ describe("mergeFrontmatterTags", () => {
 			"a",
 			"b",
 		]);
+	});
+});
+
+describe("removeFrontmatterTags", () => {
+	it("removes tags ignoring case and hashes while keeping the original order", () => {
+		expect(removeFrontmatterTags(["b", "Project", "a"], ["#project", "x"])).toEqual(["b", "a"]);
+		expect(removeFrontmatterTags("a, b", ["a", "b"])).toEqual([]);
 	});
 });

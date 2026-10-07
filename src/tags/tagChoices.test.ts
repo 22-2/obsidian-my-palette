@@ -54,4 +54,16 @@ describe("buildTagChoices", () => {
 		expect(choices.find(({ tag }) => tag === "t0")?.reason).toBeUndefined();
 		expect(choices.find(({ tag }) => tag === "t1")?.reason).toBe("recent");
 	});
+
+	it("records how many targets have a tag so partly applied tags can be removed", () => {
+		const choices = buildTagChoices({
+			allTags: { "#half": 3, "#none": 1 },
+			registeredTags: [],
+			appliedCounts: new Map([["half", 2]]),
+			recentTags: [],
+			relatedNoteTags: [],
+		});
+		expect(choices.find(({ tag }) => tag === "half")?.appliedCount).toBe(2);
+		expect(choices.find(({ tag }) => tag === "none")).not.toHaveProperty("appliedCount");
+	});
 });

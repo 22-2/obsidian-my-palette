@@ -796,8 +796,8 @@
 	color: inherit;
 }
 
-/* Registered tags stay listed for reference, but they cannot be selected. */
-.my-palette-tag-select .suggestion-item.is-registered {
+/* Rows with nothing left to apply (registered tags, fully linked notes) stay listed but cannot be selected. */
+.my-palette-multi-select .suggestion-item.is-locked {
 	opacity: 0.5;
 }
 
@@ -816,6 +816,6 @@
 }
 
 /* Applied to the span itself so selected and hovered rows cannot override it. */
-.my-palette-tag-select__action {
+.my-palette-multi-select__action {
 	color: var(--text-muted);
 }
