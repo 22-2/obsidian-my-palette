@@ -3,6 +3,7 @@ import type MyPalettePlugin from "src/main";
 import { insertLinkToMocRelateds } from "src/moc-relateds/mocRelateds";
 import { MoveFileModal } from "src/palette/MoveFileModal";
 import { OpenFilePathModal } from "src/palette/OpenFilePathModal";
+import { insertTags } from "src/tags/insertTags";
 
 /**
  * Command definitions are kept outside the Plugin class so lifecycle code and
@@ -82,6 +83,16 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		id: "open-file-path-in-editor",
 		name: "Open file path in editor",
 		callback: () => new OpenFilePathModal(plugin).open(),
+	});
+	plugin.addCommand({
+		id: "insert-tags",
+		name: "Insert tags into current note",
+		checkCallback: (checking) => {
+			const file = plugin.app.workspace.getActiveFile();
+			const canRun = file?.extension === "md";
+			if (checking) return canRun;
+			if (file && canRun) void insertTags(plugin.app, [file], plugin.recentTagStore);
+		},
 	});
 	plugin.addCommand({
 		id: "insert-link-to-moc-relateds",

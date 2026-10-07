@@ -59,6 +59,9 @@ class TestModal extends BaseSuggestModal<string> {
 	refresh() {
 		this.refreshSuggestions();
 	}
+	refreshKeepingCursor(item: string) {
+		this.refreshSuggestionsKeepingCursor((candidate) => candidate === item);
+	}
 	setCount(total: number) {
 		this.updateResultCount(total);
 	}
@@ -320,6 +323,16 @@ it("discards stale searches and preserves the provider's match query and total",
 	await Promise.resolve();
 	expect(f.rows().map((row) => row.textContent)).toEqual(["parsed:new"]);
 	expect(f.root.querySelector(".my-palette-status-bar__count")?.textContent).toBe("50 / 120");
+});
+
+it("restores the cursor to the same item after a keep-open rerender", async () => {
+	const f = await fixture("modal", "single");
+	// The item moves to another index so restoring by index would pick the wrong row.
+	f.modal!.search.mockReturnValue(["delta", "alpha", "gamma"]);
+	f.modal!.refreshKeepingCursor("gamma");
+	await Promise.resolve();
+	key(f.input, "Enter");
+	expect(f.choose).toHaveBeenCalledWith("gamma");
 });
 
 it("does not duplicate handlers or the footer when reopening a modal", async () => {

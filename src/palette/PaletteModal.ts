@@ -145,7 +145,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			activate: (action, selected) => this.activatePaletteResult(action, selected),
 			openInBackground: (selected) => this.openResultInBackground(selected),
 			applySearchHistory: (history) => this.applySearchHistory(history),
-			onMocSelected: () => this.close(),
+			onNoteActionSelected: () => this.close(),
 		});
 		menu.setParentElement(this.modalEl);
 		menu.showAtMouseEvent(event);

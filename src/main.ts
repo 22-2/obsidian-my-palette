@@ -38,6 +38,7 @@ import {
 	RecentCommandStore,
 } from "src/search/command/recentCommandStore";
 import { SearchHistoryStore } from "src/palette/searchHistoryStore";
+import { RecentTagStore } from "src/tags/recentTagStore";
 import { PaletteDisplaySettingsStore } from "src/settings/paletteDisplaySettingsStore";
 import "../styles.css";
 
@@ -62,6 +63,7 @@ export default class MyPalettePlugin extends Plugin {
 	private fileUsageHistory?: FileUsageHistory;
 	private searchHistoryStore?: SearchHistoryStore;
 	private recentCommandStore?: RecentCommandStore;
+	recentTagStore!: RecentTagStore;
 	private legacySearchHistoryEntries?: SearchHistoryEntry[];
 	private legacyRecentCommandIds?: string[];
 	private rememberedPaletteQueries: Partial<Record<PaletteMode, string>> = {};
@@ -92,6 +94,11 @@ export default class MyPalettePlugin extends Plugin {
 			? undefined
 			: [...this.recentCommandStore.getIds()];
 		if (loadedSettings.shouldSave) await this.saveSettings();
+		this.recentTagStore = new RecentTagStore(this.app, (message, detail) =>
+			logger.debug(message, detail),
+		);
+		// Recent tags were never stored in data.json, so there is nothing to migrate.
+		await this.recentTagStore.load();
 		this.fileUsageHistory = new FileUsageHistory(this.app, (message, detail) =>
 			logger.debug(message, detail),
 		);
@@ -279,6 +286,7 @@ export default class MyPalettePlugin extends Plugin {
 		this.fileProvider?.dispose();
 		void this.searchHistoryStore?.dispose();
 		void this.recentCommandStore?.dispose();
+		void this.recentTagStore?.dispose();
 		void this.fileUsageHistory?.dispose();
 		logger.debug("Plugin unloaded");
 	}

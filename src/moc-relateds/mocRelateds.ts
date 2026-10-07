@@ -10,6 +10,7 @@ import { addCopyPathMenuItems, copyPathToClipboard } from "src/platform/pathClip
 import { isMarkdownPath } from "src/shared/externalFiles";
 import { parseInput } from "src/palette/inputParser";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
+import { relationPaths } from "src/shared/noteRelations";
 
 interface RelatedCandidate {
 	path: string;
@@ -47,26 +48,6 @@ function toRelatedCandidate(
 						? "Backlink exists"
 						: undefined,
 	};
-}
-
-function relationPaths(
-	app: App,
-	activeFile: TFile,
-): {
-	outgoing: Set<string>;
-	incoming: Set<string>;
-} {
-	const outgoing = new Set<string>();
-	for (const link of app.metadataCache.getFileCache(activeFile)?.links ?? []) {
-		const file = app.metadataCache.getFirstLinkpathDest(link.link, activeFile.path);
-		if (file instanceof TFile) outgoing.add(file.path);
-	}
-
-	const incoming = new Set<string>();
-	for (const path of app.metadataCache.getBacklinksForFile(activeFile)?.data?.keys() ?? []) {
-		incoming.add(path);
-	}
-	return { outgoing, incoming };
 }
 
 function toCandidateResult(plugin: MyPalettePlugin, item: SelectionItem): FileResult | undefined {

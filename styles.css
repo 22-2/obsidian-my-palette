@@ -795,3 +795,8 @@
 	.my-palette-suggestion__match {
 	color: inherit;
 }
+
+/* Registered tags stay listed for reference, but they cannot be selected. */
+.my-palette-tag-select .suggestion-item.is-registered {
+	opacity: 0.5;
+}

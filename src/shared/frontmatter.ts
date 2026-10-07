@@ -6,3 +6,28 @@
 export function normalizeFrontmatterPrior(value: unknown): number | undefined {
 	return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
+
+/**
+ * Read `tags` as a list. It may be written as `tags: foo` or `tags: a, b`, and
+ * spreading such a string would split it into single characters.
+ */
+export function normalizeFrontmatterTags(value: unknown): string[] {
+	if (Array.isArray(value)) return value.map(String);
+	if (typeof value === "string") return value.split(/[,\s]+/).filter((tag) => tag.length > 0);
+	return [];
+}
+
+/**
+ * Add tags to a frontmatter `tags` value and return the sorted list.
+ * Duplicates are compared case-insensitively and the existing spelling wins,
+ * because a multi-note insertion can offer a tag that some notes already have
+ * in another case, and Obsidian treats those spellings as the same tag.
+ */
+export function mergeFrontmatterTags(existing: unknown, added: readonly string[]): string[] {
+	const merged = new Map<string, string>();
+	for (const tag of [...normalizeFrontmatterTags(existing), ...added]) {
+		const key = tag.replace(/^#/, "").toLowerCase();
+		if (!merged.has(key)) merged.set(key, tag);
+	}
+	return [...merged.values()].sort();
+}

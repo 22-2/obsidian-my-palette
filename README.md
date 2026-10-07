@@ -60,6 +60,21 @@ File search includes both inline tags and frontmatter `tags`. A query such as
 tags are shown below the file name, with up to three tags and a `+N` count for
 additional matches. Hover the row to see the full matching-tag list.
 
+### Adding tags
+
+Run `Insert tags into current note` to add tags to the frontmatter `tags` of the
+active note. To tag notes from search results, right-click a palette result and
+choose `Add tags…`; with several results selected, the chosen tags are added to
+every selected Markdown note. Excluded files are skipped.
+
+Candidates are ordered as recently inserted tags, then tags used by linked notes
+(outgoing links and backlinks, up to 10 tags marked `Related N`), then by usage
+count. Tags that every target note already has are shown last as `Registered`
+and cannot be selected. Press `Enter` to select or deselect a tag without
+closing the list, and `Ctrl+Enter` or the `Add …` row to add the selection.
+Typing a tag that does not exist yet offers it as a new tag. Recently inserted
+tags are stored per Vault in local IndexedDB.
+
 ### File sort priorities
 
 Use `Open palette in right sidebar` for the regular list view, or

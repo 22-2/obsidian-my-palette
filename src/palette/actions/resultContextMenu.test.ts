@@ -13,6 +13,9 @@ vi.mock("src/moc-relateds/mocInsertion", () => ({
 	addMocInsertionMenuItem: vi.fn(),
 	addMocInsertionMenuItems: vi.fn(),
 }));
+vi.mock("src/tags/tagInsertionMenu", () => ({
+	addTagInsertionMenuItems: vi.fn(),
+}));
 vi.mock("src/platform/pathClipboard", () => ({
 	addCopyPathListMenuItems: vi.fn(),
 	addCopyPathMenuItems: vi.fn(),

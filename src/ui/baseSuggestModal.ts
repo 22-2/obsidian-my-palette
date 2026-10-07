@@ -197,7 +197,22 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		this.panel.registerDomEvent(el, type, callback, options);
 	}
 
-	protected refreshSuggestions(): void {
+	/**
+	 * Rerender for the current input and move the cursor back to the matching row.
+	 * Hosts that keep the modal open after choosing (multi-toggle selectors) need
+	 * this because a normal rerender moves the cursor to the first row and loses
+	 * the user's place in the list.
+	 */
+	protected refreshSuggestionsKeepingCursor(isSameItem: (item: T) => boolean): void {
+		const scrollTop = this.resultContainerEl.scrollTop;
+		this.refreshSuggestions(() => {
+			this.resultContainerEl.scrollTop = scrollTop;
+			const index = this.panel.chooser.values.findIndex(isSameItem);
+			if (index >= 0) this.panel.setSelectedIndex(index, false);
+		});
+	}
+
+	protected refreshSuggestions(afterRender?: () => void): void {
 		if (!this.inputEl.isConnected) return;
 		const query = this.inputEl.value;
 		const generation = ++this.refreshGeneration;
@@ -214,6 +229,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 				query: this.query,
 				error: this.emptyStateText,
 			});
+			afterRender?.();
 		});
 	}
 

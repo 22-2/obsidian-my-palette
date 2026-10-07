@@ -11,6 +11,7 @@ import {
 	copyPathListToClipboard,
 	copyPathToClipboard,
 } from "src/platform/pathClipboard";
+import { addTagInsertionMenuItems } from "src/tags/tagInsertionMenu";
 
 interface PaletteResultMenuOptions {
 	app: App;
@@ -22,7 +23,8 @@ interface PaletteResultMenuOptions {
 	openInBackground: (result: PaletteResult) => void | Promise<void>;
 	openInMainWindow?: (result: PaletteResult) => void | Promise<void>;
 	applySearchHistory: (result: Extract<PaletteResult, { mode: "search-history" }>) => void;
-	onMocSelected?: () => void;
+	/** Lets a modal palette close before an action that opens its own modal or edits notes. */
+	onNoteActionSelected?: () => void;
 	getMocContext?: () => MocInsertionContext;
 }
 
@@ -37,7 +39,7 @@ export function populatePaletteResultMenu({
 	openInBackground,
 	openInMainWindow,
 	applySearchHistory,
-	onMocSelected,
+	onNoteActionSelected,
 	getMocContext,
 }: PaletteResultMenuOptions): void {
 	const selectedPaths = selectedItems
@@ -54,7 +56,14 @@ export function populatePaletteResultMenu({
 			selectedPaths,
 			(values) => void copyPathListToClipboard(values),
 		);
-		addMocInsertionMenuItems(menu, plugin, selectedItems, onMocSelected, getMocContext);
+		addMocInsertionMenuItems(menu, plugin, selectedItems, onNoteActionSelected, getMocContext);
+		addTagInsertionMenuItems(
+			menu,
+			app,
+			plugin.recentTagStore,
+			selectedItems,
+			onNoteActionSelected,
+		);
 		return;
 	}
 
@@ -124,5 +133,6 @@ export function populatePaletteResultMenu({
 	addCopyPathMenuItems(menu, paths, (path) => void copyPathToClipboard(path));
 	// Why: MOC insertion mutates multiple notes, so keep it after navigation and
 	// non-mutating copy actions in both palette surfaces.
-	addMocInsertionMenuItem(menu, plugin, result, onMocSelected, getMocContext);
+	addMocInsertionMenuItem(menu, plugin, result, onNoteActionSelected, getMocContext);
+	addTagInsertionMenuItems(menu, app, plugin.recentTagStore, [result], onNoteActionSelected);
 }
