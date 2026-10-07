@@ -101,6 +101,7 @@ export default class MyPalettePlugin extends Plugin {
 			vaultExtensions: () => this.settings.everything.vaultExtensions,
 			fileSortPriorities: () => this.settings.file.sortPriorities,
 			excludedFolders: () => this.settings.file.excludedFolders,
+			demotedPriorFolders: () => this.settings.file.demotedPriorFolders,
 			recentCommandIds: () =>
 				this.recentCommandStore
 					? [...this.recentCommandStore.getIds()]

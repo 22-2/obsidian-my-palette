@@ -85,6 +85,8 @@ File 検索では、インラインタグと frontmatter の `tags` の両方を
 
 `@prior:desc` は frontmatter の数値 `prior` が大きいノートを先に置きます。既定では、ファイル名、alias、タグ、検索範囲、フォルダーパス、`prior`、`Activity`、更新日時の順に評価します。
 
+`Settings → My Palette → Vault file search → Lower prior folders` にフォルダーパスを1行ずつ指定すると、その配下のノートは `@prior` の比較で他のフォルダーのノートより後ろに並びます。指定したフォルダー内では通常どおり `prior` の値で比較します。
+
 `Folder path match` はファイル名を除いた Vault 内の相対フォルダーパスを比較します。`Activity` は Obsidian の最近開いた順を先に使い、同じ状態の候補ではパレットの永続利用履歴をタイブレークに使います。`Last modified` は明示的に指定した場合だけ更新日時で比較し、設定した priority がすべて同点なら Vault 内の相対パスを決定的なフォールバックに使います。
 
 完全な連続一致がある候補は、設定した fuzzy 系 priority より先に置かれます。`Tag match` は一致したタグ数、`Match coverage` はファイル名・パス・alias・tag に含まれる一致文字数、`Aliases count` は alias の数を基準に並べます。

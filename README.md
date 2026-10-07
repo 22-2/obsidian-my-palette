@@ -101,6 +101,11 @@ aliases, and tags, using only the strongest OR branch.
 `Aliases count` is available as an optional secondary signal and orders notes with
 more aliases first.
 
+The `Lower prior folders` setting under `Vault file search` accepts one folder
+path per line. Notes in those folders and their subfolders sort after notes in
+other folders when `@prior` is compared; notes within the listed folders still
+sort by their own `prior` values.
+
 Complete contiguous matches across a filename, path, alias, or tag are always
 preferred over fuzzy-only matches before the configured priority list is applied.
 

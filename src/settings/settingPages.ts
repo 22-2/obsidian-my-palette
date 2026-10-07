@@ -94,6 +94,24 @@ function createFileSearchPage(plugin: MyPalettePlugin, helpers: SettingPageHelpe
 						),
 				),
 			]),
+			helpers.group("Lower prior folders", [
+				helpers.render(
+					"Lower prior folders",
+					"Folders whose notes sort after other notes when @prior is compared, one path per line. Subfolders are included.",
+					(setting) =>
+						setting.addTextArea((text) =>
+							text
+								.setPlaceholder("archive\nreference")
+								.setValue(plugin.settings.file.demotedPriorFolders.join("\n"))
+								.onChange(async (value) => {
+									// Preserve the same path cleanup as exclusions so folder matching stays consistent.
+									plugin.settings.file.demotedPriorFolders =
+										excludedFolders(value);
+									await plugin.saveSettings();
+								}),
+						),
+				),
+			]),
 			helpers.group("Ignored note index", [
 				{
 					name: "Rebuild ignored note index",

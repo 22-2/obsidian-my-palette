@@ -10,6 +10,7 @@ import {
 	type FileMatchSignals,
 	type SortableFileEntry,
 } from "src/search/file/fileMatch";
+import { isUserIgnoredPathWithFilters } from "src/ignored-notes/ignoredPaths";
 
 // Keep the existing module exports stable while the match data model lives
 // outside the comparator, so future providers can create signals without
@@ -23,6 +24,7 @@ interface SortContext {
 	usageScores: ReadonlyMap<string, number>;
 	signalsA: FileMatchSignals;
 	signalsB: FileMatchSignals;
+	demotedPriorFolders: readonly string[];
 }
 
 const EMPTY_MATCH_SIGNALS: FileMatchSignals = {};
@@ -81,7 +83,12 @@ function compareOptionalPrior(
 	a: SortableFileEntry,
 	b: SortableFileEntry,
 	order: "asc" | "desc",
+	demotedFolders: readonly string[],
 ): number {
+	// Use a separate tier so demotion works consistently for ascending and descending prior.
+	const demotedA = isUserIgnoredPathWithFilters(demotedFolders, a.path);
+	const demotedB = isUserIgnoredPathWithFilters(demotedFolders, b.path);
+	if (demotedA !== demotedB) return demotedA ? 1 : -1;
 	const priorA = typeof a.prior === "number" && Number.isFinite(a.prior) ? a.prior : undefined;
 	const priorB = typeof b.prior === "number" && Number.isFinite(b.prior) ? b.prior : undefined;
 	// Missing and null values are not priorities; keeping them last preserves the
@@ -199,7 +206,9 @@ function comparePriority(
 			return compareAlphabetical(a, b, true);
 		default: {
 			const property = parseFileSortPriority(priority);
-			return property?.key === "prior" ? compareOptionalPrior(a, b, property.order) : 0;
+			return property?.key === "prior"
+				? compareOptionalPrior(a, b, property.order, context.demotedPriorFolders)
+				: 0;
 		}
 	}
 }
@@ -230,6 +239,7 @@ export function sortFilesWithoutQuery<T extends SortableFileEntry>(
 	recent: ReadonlyMap<string, number>,
 	priorities: readonly FileSortPriority[] = DEFAULT_FILE_SORT_PRIORITIES,
 	usageScores?: ReadonlyMap<string, number>,
+	demotedPriorFolders: readonly string[] = [],
 ): T[] {
 	const noQueryPriorities = filterNoQueryPriorities(priorities);
 	return entries.sort(
@@ -239,6 +249,7 @@ export function sortFilesWithoutQuery<T extends SortableFileEntry>(
 			// still receives an explicit empty signal set to keep its contract uniform.
 			comparePriorities(a, b, noQueryPriorities, {
 				recent,
+				demotedPriorFolders,
 				usageScores: usageScores ?? EMPTY_USAGE_SCORES,
 				signalsA: EMPTY_MATCH_SIGNALS,
 				signalsB: EMPTY_MATCH_SIGNALS,
@@ -253,6 +264,7 @@ export function sortFileMatches<T extends SortableFileEntry>(
 	recent: ReadonlyMap<string, number>,
 	priorities: readonly FileSortPriority[] = DEFAULT_FILE_SORT_PRIORITIES,
 	usageScores?: ReadonlyMap<string, number>,
+	demotedPriorFolders: readonly string[] = [],
 ): T[] {
 	// Extract once before sorting so the comparator only compares stable signals;
 	// this keeps the compatibility boundary cheap when a vault has many matches.
@@ -270,6 +282,7 @@ export function sortFileMatches<T extends SortableFileEntry>(
 				comparePriorities(a.obj, b.obj, priorities, {
 					query,
 					recent,
+					demotedPriorFolders,
 					usageScores: usageScores ?? EMPTY_USAGE_SCORES,
 					signalsA,
 					signalsB,

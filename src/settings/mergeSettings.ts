@@ -125,6 +125,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 		file: {
 			sortPriorities,
 			excludedFolders: excludedFolders(rawFile.excludedFolders),
+			demotedPriorFolders: excludedFolders(rawFile.demotedPriorFolders),
 		},
 		everything: {
 			httpUrl:

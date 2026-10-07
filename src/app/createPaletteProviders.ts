@@ -29,6 +29,7 @@ interface ProviderFactoryOptions {
 	vaultExtensions: () => string[];
 	fileSortPriorities: () => FileSortPriorities;
 	excludedFolders?: ExcludedFolderSource;
+	demotedPriorFolders?: ExcludedFolderSource;
 	recentCommandIds: () => string[];
 	everythingSettings: () => MyPaletteSettings["everything"];
 	fileUsageHistory?: FileUsageScoreSource;
@@ -52,6 +53,7 @@ export function createPaletteProviders(
 		options.fileSortPriorities,
 		options.fileUsageHistory,
 		excludedFolders,
+		options.demotedPriorFolders,
 	);
 	const commandProvider = new CommandProvider(app, options.recentCommandIds);
 	const everythingProvider = new EverythingProvider(

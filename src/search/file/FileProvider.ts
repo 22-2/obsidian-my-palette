@@ -42,6 +42,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		}),
 		private readonly usageHistory?: FileUsageScoreSource,
 		private readonly excludedFolders: ExcludedFolderSource = EMPTY_EXCLUDED_FOLDER_SOURCE,
+		private readonly demotedPriorFolders: () => readonly string[] = () => [],
 	) {
 		this.updateAllowedExtensions();
 		this.rebuild();
@@ -182,6 +183,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 				recent,
 				this.fileSortPriorities().blank,
 				usageScores,
+				this.demotedPriorFolders(),
 			);
 			return files.map((entry) => this.result(entry));
 		}
@@ -210,6 +212,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			recent,
 			inputSortPriorities,
 			usageScores,
+			this.demotedPriorFolders(),
 		).map((entry) => this.result(entry, matchedTagsByPath.get(entry.path)));
 	}
 

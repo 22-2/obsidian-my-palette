@@ -273,6 +273,7 @@ export interface MyPaletteSettings {
 	file: {
 		sortPriorities: FileSortPriorities;
 		excludedFolders: string[];
+		demotedPriorFolders: string[];
 	};
 	everything: {
 		httpUrl: string;
@@ -310,6 +311,8 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		},
 		// プラグイン共通の除外フォルダ。Obsidianの除外設定とは独立に全リストへ適用する。
 		excludedFolders: [],
+		// Keep lower-priority folders visible while letting ordinary notes win @prior ties.
+		demotedPriorFolders: [],
 	},
 	everything: {
 		httpUrl: "http://127.0.0.1:51361/",
