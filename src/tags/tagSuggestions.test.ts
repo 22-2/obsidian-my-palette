@@ -1,13 +1,24 @@
 import { describe, expect, it } from "vitest";
 import type { TagChoice } from "src/tags/tagChoices";
-import { buildTagSuggestions, tagSuggestionKey } from "src/tags/tagSuggestions";
+import { buildTagSuggestions, tagContextActions, tagSuggestionKey } from "src/tags/tagSuggestions";
 
 const choices: TagChoice[] = [
-	{ tag: "project", count: 3, registered: false, reason: "recent" },
-	{ tag: "projection", count: 9, registered: false },
-	{ tag: "proj", count: 1, registered: true },
-	{ tag: "writing", count: 5, registered: false },
+	{ tag: "project", count: 3, registered: false, present: false, reason: "recent" },
+	{ tag: "projection", count: 9, registered: false, present: true },
+	{ tag: "proj", count: 1, registered: true, present: true },
+	{ tag: "writing", count: 5, registered: false, present: false },
 ];
+
+describe("tagContextActions", () => {
+	it("offers add while a target lacks the tag and remove while one has it", () => {
+		const [project, projection, proj] = choices;
+		expect(tagContextActions({ type: "tag", choice: project })).toEqual(["add"]);
+		expect(tagContextActions({ type: "tag", choice: projection })).toEqual(["add", "remove"]);
+		expect(tagContextActions({ type: "tag", choice: proj })).toEqual(["remove"]);
+		expect(tagContextActions({ type: "new", tag: "fresh" })).toEqual(["add"]);
+		expect(tagContextActions({ type: "confirm", tags: ["a"] })).toEqual([]);
+	});
+});
 
 const keys = (query: string, selected: string[] = []) =>
 	buildTagSuggestions(choices, query, selected).map(tagSuggestionKey);

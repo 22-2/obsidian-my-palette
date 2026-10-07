@@ -138,3 +138,36 @@ export class Modal {
 }
 
 export function setIcon(): void {}
+
+interface MenuItemRecord {
+	title: string;
+	icon: string;
+	click: () => void;
+}
+
+/** Records menu items so tests can inspect and click what a context menu offers. */
+export class Menu {
+	static lastShown?: Menu;
+	readonly items: MenuItemRecord[] = [];
+
+	addItem(configure: (item: unknown) => void): this {
+		const record: MenuItemRecord = { title: "", icon: "", click: () => undefined };
+		const item = {
+			setTitle: (title: string) => ((record.title = title), item),
+			setIcon: (icon: string) => ((record.icon = icon), item),
+			onClick: (click: () => void) => ((record.click = click), item),
+		};
+		configure(item);
+		this.items.push(record);
+		return this;
+	}
+
+	setParentElement(): this {
+		return this;
+	}
+
+	showAtMouseEvent(): this {
+		Menu.lastShown = this;
+		return this;
+	}
+}

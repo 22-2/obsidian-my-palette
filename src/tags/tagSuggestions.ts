@@ -9,6 +9,23 @@ export type TagSuggestion =
 // Text containing `#` or whitespace cannot form one tag, so it is not offered as new.
 const VALID_NEW_TAG = /^[^\s#]+$/;
 
+/** What the tag modal asks the caller to do with the target notes' frontmatter. */
+export type TagEditAction = "add" | "remove";
+
+/**
+ * Context-menu actions for a row. Add is offered when some target still lacks
+ * the tag; remove when some target has it in frontmatter. A tag on only part of
+ * several targets therefore offers both.
+ */
+export function tagContextActions(item: TagSuggestion): TagEditAction[] {
+	if (item.type === "new") return ["add"];
+	if (item.type !== "tag") return [];
+	const actions: TagEditAction[] = [];
+	if (!item.choice.registered) actions.push("add");
+	if (item.choice.present) actions.push("remove");
+	return actions;
+}
+
 /** Removes the optional leading `#` users type out of habit. */
 export function normalizeTagQuery(query: string): string {
 	return query.trim().replace(/^#/, "");

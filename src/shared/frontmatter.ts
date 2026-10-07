@@ -31,3 +31,14 @@ export function mergeFrontmatterTags(existing: unknown, added: readonly string[]
 	}
 	return [...merged.values()].sort();
 }
+
+/**
+ * Remove tags from a frontmatter `tags` value, ignoring case and a leading `#`.
+ * The remaining order is kept because removing a tag is not a reason to reorder.
+ */
+export function removeFrontmatterTags(existing: unknown, removed: readonly string[]): string[] {
+	const removedKeys = new Set(removed.map((tag) => tag.replace(/^#/, "").toLowerCase()));
+	return normalizeFrontmatterTags(existing).filter(
+		(tag) => !removedKeys.has(tag.replace(/^#/, "").toLowerCase()),
+	);
+}
