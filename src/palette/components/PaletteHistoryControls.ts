@@ -1,4 +1,4 @@
-import { setIcon } from "obsidian";
+import { Menu, setIcon } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
 import type { SearchHistoryCategory } from "src/settings/model";
@@ -20,13 +20,17 @@ interface PaletteHistoryControlsOptions {
 	apply: (result: Extract<PaletteResult, { mode: "search-history" }>) => void;
 }
 
-/** Shared search-history and help controls for both palette surfaces. */
+/** Shared search-history and options controls for both palette surfaces. */
 export class PaletteHistoryControls {
+	private static readonly instances = new Set<PaletteHistoryControls>();
 	private readonly suggest: SearchHistorySuggest;
 	private readonly eventController = new AbortController();
+	private activeMenu?: Menu;
 
 	constructor(private readonly options: PaletteHistoryControlsOptions) {
 		this.suggest = new SearchHistorySuggest(options.containerEl, options.apply);
+		PaletteHistoryControls.instances.add(this);
+		this.updateHighlight();
 		this.addButtons();
 		this.registerEvents();
 	}
@@ -35,6 +39,9 @@ export class PaletteHistoryControls {
 		// Why: sidebar surfaces can be rebuilt without unloading the plugin, so
 		// listeners owned by an old surface must be released at the same time.
 		this.eventController.abort();
+		this.activeMenu?.close();
+		PaletteHistoryControls.instances.delete(this);
+		this.options.hostEl.removeClass("my-palette-highlight-disabled");
 		this.suggest.destroy();
 	}
 
@@ -57,7 +64,7 @@ export class PaletteHistoryControls {
 	}
 
 	private addButtons(): void {
-		const { containerEl, plugin } = this.options;
+		const { containerEl } = this.options;
 		const historyButton = containerEl.createEl("button", {
 			cls: "clickable-icon my-palette-history-button",
 			attr: {
@@ -74,16 +81,59 @@ export class PaletteHistoryControls {
 			this.toggle();
 		});
 
-		const helpButton = containerEl.createEl("button", {
-			cls: "clickable-icon my-palette-help-button",
-			attr: { type: "button", "aria-label": "Palette help", title: "Palette help" },
+		const optionsButton = containerEl.createEl("button", {
+			cls: "clickable-icon my-palette-options-button",
+			attr: { type: "button", title: "Palette options" },
 		});
-		setIcon(helpButton, "help-circle");
-		this.listen(helpButton, "mousedown", consumePointerEvent);
-		this.listen(helpButton, "click", (event) => {
+		setIcon(optionsButton, "settings");
+		this.listen(optionsButton, "mousedown", consumePointerEvent);
+		this.listen(optionsButton, "click", (event) => {
 			consumePointerEvent(event);
-			new PaletteHelpModal(plugin.app, plugin.settings.prefixes).open();
+			this.showOptionsMenu(event);
 		});
+	}
+
+	private updateHighlight(): void {
+		this.options.hostEl.toggleClass(
+			"my-palette-highlight-disabled",
+			!this.options.plugin.settings.highlightSearchMatches,
+		);
+	}
+
+	private showOptionsMenu(event: MouseEvent): void {
+		const { plugin, hostEl } = this.options;
+		this.close();
+		this.activeMenu?.close();
+		const menu = new Menu();
+		this.activeMenu = menu;
+		menu.onHide(() => {
+			if (this.activeMenu === menu) this.activeMenu = undefined;
+		});
+		menu.addItem((item) =>
+			item
+				.setTitle("Help")
+				.setIcon("help-circle")
+				.onClick(() => {
+					new PaletteHelpModal(plugin.app, plugin.settings.prefixes).open();
+				}),
+		);
+		menu.addItem((item) =>
+			item
+				.setTitle("Highlight search matches")
+				.setIcon("highlighter")
+				.setChecked(plugin.settings.highlightSearchMatches)
+				.onClick(async () => {
+					plugin.settings.highlightSearchMatches =
+						!plugin.settings.highlightSearchMatches;
+					// Why: update every open surface without rerunning searches or resetting selection.
+					for (const controls of PaletteHistoryControls.instances) {
+						if (controls.options.plugin === plugin) controls.updateHighlight();
+					}
+					await plugin.saveSettings();
+				}),
+		);
+		menu.setParentElement(hostEl);
+		menu.showAtMouseEvent(event);
 	}
 
 	private registerEvents(): void {

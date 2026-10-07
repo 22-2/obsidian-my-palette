@@ -96,6 +96,11 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 		...DEFAULT_SETTINGS,
 		schemaVersion: SETTINGS_SCHEMA_VERSION,
 		showLog: typeof source.showLog === "boolean" ? source.showLog : false,
+		// Keep highlighting enabled for existing installations until explicitly disabled.
+		highlightSearchMatches:
+			typeof source.highlightSearchMatches === "boolean"
+				? source.highlightSearchMatches
+				: true,
 		rememberLastInput:
 			typeof source.rememberLastInput === "boolean" ? source.rememberLastInput : false,
 		openExternalMarkdownInObsidian:

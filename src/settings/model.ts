@@ -260,6 +260,7 @@ export interface MyPaletteSettings {
 	schemaVersion: typeof SETTINGS_SCHEMA_VERSION;
 	showLog: boolean;
 	rememberLastInput: boolean;
+	highlightSearchMatches: boolean;
 	openExternalMarkdownInObsidian: boolean;
 	searchHistory: SearchHistorySettings;
 	prefixes: { command: string; everything: string; includeIgnored: string };
@@ -282,6 +283,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 	schemaVersion: SETTINGS_SCHEMA_VERSION,
 	showLog: false,
 	rememberLastInput: false,
+	highlightSearchMatches: true,
 	openExternalMarkdownInObsidian: true,
 	searchHistory: {
 		enabled: true,

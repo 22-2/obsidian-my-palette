@@ -391,7 +391,7 @@
 	transform: translateY(-50%);
 }
 
-.my-palette-help-button {
+.my-palette-options-button {
 	position: absolute;
 	top: 50%;
 	right: 40px;
@@ -401,7 +401,7 @@
 	transform: translateY(-50%);
 }
 
-.my-palette-help-button svg {
+.my-palette-options-button svg {
 	width: 16px;
 	height: 16px;
 }
@@ -787,4 +787,11 @@
 	color: var(--text-muted);
 	font-size: var(--font-ui-smaller);
 	white-space: nowrap;
+}
+
+/* Preserve each label's color when highlighting is disabled, including selected rows. */
+.my-palette-highlight-disabled
+	:is(.suggestion-item, .suggestion-item:hover, .suggestion-item.is-selected)
+	.my-palette-suggestion__match {
+	color: inherit;
 }
