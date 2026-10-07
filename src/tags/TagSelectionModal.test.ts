@@ -57,7 +57,7 @@ describe("TagSelectionModal", () => {
 		const f = await open();
 		f.key("ArrowDown");
 		f.key("Enter");
-		expect(f.footer()).toContain("1 selected");
+		expect(f.footer()).toContain("1 checked");
 		// The list is not rebuilt, so the cursor moves on from beta to mine (a no-op)
 		// instead of jumping back to the first row and toggling alpha.
 		f.key("ArrowDown");
@@ -82,7 +82,7 @@ describe("TagSelectionModal", () => {
 		await Promise.resolve();
 		// Ctrl+Enter without any selection must not confirm an empty insertion.
 		f.key("Enter", { ctrlKey: true });
-		expect(f.footer()).not.toContain("selected");
+		expect(f.footer()).not.toContain("checked");
 		f.key("Escape");
 		await expect(f.result).resolves.toBeNull();
 	});
@@ -97,20 +97,44 @@ describe("TagSelectionModal context menu", () => {
 		[...modal.modalEl.querySelectorAll(".suggestion-item")].find((row) =>
 			row.textContent?.startsWith(label),
 		)!;
+	const mouseDown = (row: Element, options: MouseEventInit = {}) =>
+		row.dispatchEvent(
+			new MouseEvent("mousedown", { bubbles: true, cancelable: true, ...options }),
+		);
 	const titles = () => Menu.lastShown?.items.map(({ title }) => title);
 
 	beforeEach(() => {
 		Menu.lastShown = undefined;
 	});
 
-	it("inserts only the clicked tag immediately, discarding toggled tags", async () => {
+	it("inserts the checked tags together with the right-clicked one", async () => {
 		const f = await open();
 		f.key("Enter");
-		await Promise.resolve();
 		rightClick(rowFor(f.modal, "#beta"));
-		expect(titles()).toEqual(["Insert #beta now", "Remove #beta from note"]);
+		expect(titles()).toEqual(["Check #beta", "Insert 2 tags now", "Remove #beta from note"]);
+		Menu.lastShown!.items[1].click();
+		await expect(f.result).resolves.toEqual({ action: "add", tags: ["alpha", "beta"] });
+	});
+
+	it("checks every highlighted row from the menu", async () => {
+		const f = await open();
+		mouseDown(rowFor(f.modal, "#alpha"));
+		mouseDown(rowFor(f.modal, "#beta"), { shiftKey: true });
+		rightClick(rowFor(f.modal, "#beta"));
+		expect(titles()).toEqual(["Check 2 tags", "Insert 2 tags now", "Remove #beta from note"]);
 		Menu.lastShown!.items[0].click();
-		await expect(f.result).resolves.toEqual({ action: "add", tags: ["beta"] });
+		expect(f.footer()).toContain("2 checked");
+		f.key("Enter", { ctrlKey: true });
+		await expect(f.result).resolves.toEqual({ action: "add", tags: ["alpha", "beta"] });
+	});
+
+	it("toggles every highlighted row with Enter", async () => {
+		const f = await open();
+		f.key("ArrowDown", { shiftKey: true });
+		f.key("Enter");
+		expect(f.footer()).toContain("2 checked");
+		f.key("Enter");
+		expect(f.footer()).not.toContain("checked");
 	});
 
 	it("removes a registered tag from the target", async () => {

@@ -72,9 +72,11 @@ Candidates are ordered as recently inserted tags, then tags used by linked notes
 count. Tags that every target note already has are shown last as `Registered`
 and cannot be selected. Press `Enter` to select or deselect a tag without
 closing the list, and `Ctrl+Enter` to add the checked tags.
-Typing a tag that does not exist yet offers it as a new tag. Right-click a tag to
-insert only that tag immediately, or to remove it from the frontmatter of the
-target notes that have it; tags toggled so far are discarded. Recently inserted
+Typing a tag that does not exist yet offers it as a new tag. Rows support
+Ctrl/Shift multi-selection: `Enter`, double-click, and the right-click menu toggle
+the checks of every highlighted row. The right-click menu can also insert the
+checked and highlighted tags immediately, or remove the highlighted tags from the
+frontmatter of the target notes that have them. Recently inserted
 tags are stored per Vault in local IndexedDB.
 
 ### File sort priorities

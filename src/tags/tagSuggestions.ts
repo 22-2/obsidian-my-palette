@@ -27,6 +27,25 @@ export function normalizeTagQuery(query: string): string {
 	return query.trim().replace(/^#/, "");
 }
 
+/** Registered tags are listed for reference only and cannot be checked. */
+export function isCheckable(item: TagSuggestion): boolean {
+	return item.type === "new" || !item.choice.registered;
+}
+
+/**
+ * Flip several checks as one: all become checked unless all already are, like a
+ * file manager's bulk toggle, so mixed rows never end up swapped individually.
+ */
+export function toggleChecks(checked: ReadonlySet<string>, tags: readonly string[]): Set<string> {
+	const next = new Set(checked);
+	const allChecked = tags.every((tag) => checked.has(tag));
+	for (const tag of tags) {
+		if (allChecked) next.delete(tag);
+		else next.add(tag);
+	}
+	return next;
+}
+
 /** Tag name a row stands for, without `#`. */
 export function suggestionTag(item: TagSuggestion): string {
 	return item.type === "new" ? item.tag : item.choice.tag;

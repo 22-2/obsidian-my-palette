@@ -3,6 +3,7 @@ import type { TagChoice } from "src/tags/tagChoices";
 import {
 	buildTagSuggestions,
 	tagContextActions,
+	toggleChecks,
 	type TagSuggestion,
 } from "src/tags/tagSuggestions";
 
@@ -57,5 +58,12 @@ describe("buildTagSuggestions", () => {
 		// The typed text is the checked tag itself, so it is not offered twice.
 		expect(keys("fresh", ["Fresh"])).toEqual(["new:Fresh"]);
 		expect(keys("writ", ["Fresh"])).not.toContain("new:Fresh");
+	});
+});
+
+describe("toggleChecks", () => {
+	it("checks every tag unless all are already checked", () => {
+		expect([...toggleChecks(new Set(["a"]), ["a", "b"])]).toEqual(["a", "b"]);
+		expect([...toggleChecks(new Set(["a", "b", "c"]), ["a", "b"])]).toEqual(["c"]);
 	});
 });
