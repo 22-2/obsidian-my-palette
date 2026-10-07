@@ -65,6 +65,8 @@ export class PaletteView extends ItemView {
 	private sourcePinButton?: HTMLButtonElement;
 	private actionMessage?: string;
 	private targetTrackingRegistered = false;
+	private fileListRefreshRegistered = false;
+	private fileListRefreshTimer?: number;
 	private pendingState: NormalizedPaletteViewState = {
 		input: "",
 		sourcePinned: false,
@@ -158,6 +160,10 @@ export class PaletteView extends ItemView {
 			// Why: Obsidian may collect the workspace state after onClose has
 			// disposed the session, so keep the last input in the fallback state too.
 			this.pendingState = { ...this.pendingState, input: this.session.input };
+		}
+		if (this.fileListRefreshTimer !== undefined) {
+			window.clearTimeout(this.fileListRefreshTimer);
+			this.fileListRefreshTimer = undefined;
 		}
 		this.activeMenu?.close();
 		this.activeMenu = undefined;
@@ -262,6 +268,7 @@ export class PaletteView extends ItemView {
 		this.addSourcePinControl();
 		this.addHistoryControls();
 		this.registerTargetLeafTracking();
+		this.registerFileListRefresh();
 		this.renderState(this.session.current);
 		void this.session.search(initialInput);
 		this.panel.setInput(initialInput, "end");
@@ -566,6 +573,35 @@ export class PaletteView extends ItemView {
 				if (!this.sourcePinned) this.updateSource(file);
 			}),
 		);
+	}
+
+	private registerFileListRefresh(): void {
+		if (this.fileListRefreshRegistered) return;
+		this.fileListRefreshRegistered = true;
+		// Why: the file index (FileProvider) already updates on these events, but
+		// the open list would stay stale until the next keystroke. Re-run the
+		// current search so mtime/alias/frontmatter edits reorder the visible list.
+		// Note: metadataCache `resolved` fires after the initial index pass and
+		// again after later modifications, so it covers the startup bulk load too.
+		const schedule = (): void => this.scheduleFileListRefresh();
+		this.registerEvent(this.app.vault.on("create", schedule));
+		this.registerEvent(this.app.vault.on("modify", schedule));
+		this.registerEvent(this.app.vault.on("delete", schedule));
+		this.registerEvent(this.app.vault.on("rename", schedule));
+		this.registerEvent(this.app.metadataCache.on("changed", schedule));
+		this.registerEvent(this.app.metadataCache.on("resolved", schedule));
+	}
+
+	private scheduleFileListRefresh(): void {
+		if (!this.session) return;
+		// vault `modify` fires per keystroke while editing; debounce the re-search
+		// so a long edit session does not queue a search per character.
+		if (this.fileListRefreshTimer !== undefined) window.clearTimeout(this.fileListRefreshTimer);
+		this.fileListRefreshTimer = window.setTimeout(() => {
+			this.fileListRefreshTimer = undefined;
+			if (!this.session) return;
+			void this.session.search(this.session.input);
+		}, 400);
 	}
 
 	private currentSourceFile(): TFile | undefined {

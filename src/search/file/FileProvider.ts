@@ -51,6 +51,11 @@ export class FileProvider implements PaletteProvider<FileResult> {
 				if ("extension" in file) this.update(file as TFile);
 			}),
 		);
+		this.refs.push(
+			app.vault.on("modify", (file) => {
+				if ("extension" in file) this.update(file as TFile);
+			}),
+		);
 		this.refs.push(app.vault.on("delete", (file) => this.deleteEntry(file.path)));
 		this.refs.push(
 			app.vault.on("rename", (file, oldPath) => {
@@ -62,6 +67,9 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		// FileProvider can be constructed before Obsidian has finished parsing all
 		// frontmatter. Re-read files once that initial metadata pass completes so
 		// aliases are not permanently cached as empty until their note is edited.
+		// Note: `resolved` also fires after later modifications, so this stays a
+		// full rebuild to guarantee the index converges even if a single-file
+		// event was missed.
 		this.refs.push(
 			app.metadataCache.on("resolved", () => {
 				this.app.vault.getFiles().forEach((file) => this.update(file));
@@ -70,7 +78,11 @@ export class FileProvider implements PaletteProvider<FileResult> {
 	}
 
 	dispose(): void {
-		this.refs.forEach((ref) => this.app.vault.offref(ref));
+		for (const ref of this.refs) {
+			this.app.vault.offref(ref);
+			this.app.metadataCache.offref(ref);
+		}
+		this.refs.length = 0;
 		void this.ignoredIndex.dispose();
 	}
 
