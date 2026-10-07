@@ -100,7 +100,7 @@ describe("TagSelectionModal", () => {
 			choices,
 			"Targets: 2 notes",
 			2,
-			async () => true,
+			async () => undefined,
 		);
 		void modal.openAndWait();
 		await flush();
