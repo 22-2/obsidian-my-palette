@@ -1,7 +1,7 @@
 import { Menu, setIcon } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
-import type { SearchHistoryCategory } from "src/settings/model";
+import type { PaletteSurface, SearchHistoryCategory } from "src/settings/model";
 import { PaletteHelpModal } from "src/ui/paletteHelpModal";
 import { SearchHistorySuggest } from "src/ui/searchHistorySuggest";
 
@@ -13,6 +13,7 @@ interface PaletteHistoryContext {
 
 interface PaletteHistoryControlsOptions {
 	plugin: MyPalettePlugin;
+	surface: PaletteSurface;
 	inputEl: HTMLInputElement;
 	containerEl: HTMLElement;
 	hostEl: HTMLElement;
@@ -22,15 +23,21 @@ interface PaletteHistoryControlsOptions {
 
 /** Shared search-history and options controls for both palette surfaces. */
 export class PaletteHistoryControls {
-	private static readonly instances = new Set<PaletteHistoryControls>();
+	private readonly unsubscribeDisplay: () => void;
 	private readonly suggest: SearchHistorySuggest;
 	private readonly eventController = new AbortController();
 	private activeMenu?: Menu;
 
 	constructor(private readonly options: PaletteHistoryControlsOptions) {
 		this.suggest = new SearchHistorySuggest(options.containerEl, options.apply);
-		PaletteHistoryControls.instances.add(this);
-		this.updateHighlight();
+		this.unsubscribeDisplay = options.plugin.paletteDisplaySettings.subscribe(
+			options.surface,
+			({ highlightSearchMatches }) =>
+				options.hostEl.toggleClass(
+					"my-palette-highlight-disabled",
+					!highlightSearchMatches,
+				),
+		);
 		this.addButtons();
 		this.registerEvents();
 	}
@@ -40,7 +47,7 @@ export class PaletteHistoryControls {
 		// listeners owned by an old surface must be released at the same time.
 		this.eventController.abort();
 		this.activeMenu?.close();
-		PaletteHistoryControls.instances.delete(this);
+		this.unsubscribeDisplay();
 		this.options.hostEl.removeClass("my-palette-highlight-disabled");
 		this.suggest.destroy();
 	}
@@ -93,15 +100,8 @@ export class PaletteHistoryControls {
 		});
 	}
 
-	private updateHighlight(): void {
-		this.options.hostEl.toggleClass(
-			"my-palette-highlight-disabled",
-			!this.options.plugin.settings.highlightSearchMatches,
-		);
-	}
-
 	private showOptionsMenu(event: MouseEvent): void {
-		const { plugin, hostEl } = this.options;
+		const { plugin, hostEl, surface } = this.options;
 		this.close();
 		this.activeMenu?.close();
 		const menu = new Menu();
@@ -121,16 +121,8 @@ export class PaletteHistoryControls {
 			item
 				.setTitle("Highlight search matches")
 				.setIcon("highlighter")
-				.setChecked(plugin.settings.highlightSearchMatches)
-				.onClick(async () => {
-					plugin.settings.highlightSearchMatches =
-						!plugin.settings.highlightSearchMatches;
-					// Why: update every open surface without rerunning searches or resetting selection.
-					for (const controls of PaletteHistoryControls.instances) {
-						if (controls.options.plugin === plugin) controls.updateHighlight();
-					}
-					await plugin.saveSettings();
-				}),
+				.setChecked(plugin.paletteDisplaySettings.get(surface).highlightSearchMatches)
+				.onClick(() => plugin.paletteDisplaySettings.toggleHighlight(surface)),
 		);
 		menu.setParentElement(hostEl);
 		menu.showAtMouseEvent(event);

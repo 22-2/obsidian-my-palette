@@ -22,7 +22,7 @@ export interface SearchHistorySettings {
 	daysToKeep: number;
 }
 
-export const SETTINGS_SCHEMA_VERSION = 16;
+export const SETTINGS_SCHEMA_VERSION = 17;
 export const MAX_RECENT_COMMAND_IDS = 20;
 export const MILLISECONDS_PER_SECOND = 1_000;
 export const DISABLED_DELAY_MS = 0;
@@ -256,11 +256,17 @@ export const DEFAULT_BLANK_FILE_SORT_PRIORITIES: readonly FileSortPriority[] = [
 	FILE_SORT_PRIORITIES.priorDesc,
 ];
 
+export type PaletteSurface = "table" | "view" | "palette";
+
+export interface PaletteDisplaySettings {
+	highlightSearchMatches: boolean;
+}
+
 export interface MyPaletteSettings {
 	schemaVersion: typeof SETTINGS_SCHEMA_VERSION;
 	showLog: boolean;
 	rememberLastInput: boolean;
-	highlightSearchMatches: boolean;
+	paletteDisplay: Record<PaletteSurface, PaletteDisplaySettings>;
 	openExternalMarkdownInObsidian: boolean;
 	searchHistory: SearchHistorySettings;
 	prefixes: { command: string; everything: string; includeIgnored: string };
@@ -283,7 +289,11 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 	schemaVersion: SETTINGS_SCHEMA_VERSION,
 	showLog: false,
 	rememberLastInput: false,
-	highlightSearchMatches: true,
+	paletteDisplay: {
+		table: { highlightSearchMatches: true },
+		view: { highlightSearchMatches: true },
+		palette: { highlightSearchMatches: true },
+	},
 	openExternalMarkdownInObsidian: true,
 	searchHistory: {
 		enabled: true,

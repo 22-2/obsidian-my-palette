@@ -8,6 +8,33 @@ import {
 import { mergeSettings } from "src/settings/mergeSettings";
 
 describe("mergeSettings", () => {
+	it("migrates shared highlighting into independent surface preferences", () => {
+		const settings = mergeSettings({ schemaVersion: 16, highlightSearchMatches: false });
+		expect(settings.paletteDisplay).toEqual({
+			table: { highlightSearchMatches: false },
+			view: { highlightSearchMatches: false },
+			palette: { highlightSearchMatches: false },
+		});
+		expect(settings.paletteDisplay.table).not.toBe(settings.paletteDisplay.view);
+		expect(settings).not.toHaveProperty("highlightSearchMatches");
+	});
+
+	it("restores each surface and sanitizes invalid display preferences", () => {
+		expect(
+			mergeSettings({
+				paletteDisplay: {
+					table: { highlightSearchMatches: false },
+					view: { highlightSearchMatches: "false" },
+					palette: null,
+				},
+			}).paletteDisplay,
+		).toEqual({
+			table: { highlightSearchMatches: false },
+			view: { highlightSearchMatches: true },
+			palette: { highlightSearchMatches: true },
+		});
+	});
+
 	it("fills missing data with the documented defaults", () => {
 		expect(mergeSettings(undefined)).toEqual(DEFAULT_SETTINGS);
 	});

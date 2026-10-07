@@ -55,6 +55,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		// SelectionModal applies and refreshes the initial input.
 		this.historyControls = new PaletteHistoryControls({
 			plugin: this.plugin,
+			surface: "palette",
 			inputEl: this.inputEl,
 			containerEl: this.inputEl.parentElement ?? this.modalEl,
 			hostEl: this.modalEl,

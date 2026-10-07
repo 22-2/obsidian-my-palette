@@ -378,6 +378,7 @@ export class PaletteView extends ItemView {
 		if (!container) return;
 		this.historyControls = new PaletteHistoryControls({
 			plugin: this.plugin,
+			surface: this.tableView ? "table" : "view",
 			inputEl: this.panel.inputEl,
 			containerEl: container,
 			hostEl: this.contentEl,

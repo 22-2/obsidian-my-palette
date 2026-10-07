@@ -38,12 +38,17 @@ import {
 	RecentCommandStore,
 } from "src/search/command/recentCommandStore";
 import { SearchHistoryStore } from "src/palette/searchHistoryStore";
+import { PaletteDisplaySettingsStore } from "src/settings/paletteDisplaySettingsStore";
 import "../styles.css";
 
 const logger = log.withTag("MyPalette");
 
 export default class MyPalettePlugin extends Plugin {
 	settings: MyPaletteSettings = DEFAULT_SETTINGS;
+	readonly paletteDisplaySettings = new PaletteDisplaySettingsStore(
+		() => this.settings,
+		() => this.saveSettings(),
+	);
 	readonly everythingClient = new EverythingHttpClient((message, detail) =>
 		logger.debug(message, detail),
 	);
@@ -269,6 +274,7 @@ export default class MyPalettePlugin extends Plugin {
 		this.activePaletteModal?.close();
 		this.activePaletteModal = undefined;
 		this.everythingClient.cancel();
+		this.paletteDisplaySettings.dispose();
 		this.fileProvider?.dispose();
 		void this.searchHistoryStore?.dispose();
 		void this.recentCommandStore?.dispose();

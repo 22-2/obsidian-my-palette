@@ -1,4 +1,4 @@
-import type { MyPaletteSettings } from "src/settings/model";
+import type { MyPaletteSettings, PaletteSurface } from "src/settings/model";
 import {
 	DEFAULT_BLANK_FILE_SORT_PRIORITIES,
 	DEFAULT_SETTINGS,
@@ -96,11 +96,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 		...DEFAULT_SETTINGS,
 		schemaVersion: SETTINGS_SCHEMA_VERSION,
 		showLog: typeof source.showLog === "boolean" ? source.showLog : false,
-		// Keep highlighting enabled for existing installations until explicitly disabled.
-		highlightSearchMatches:
-			typeof source.highlightSearchMatches === "boolean"
-				? source.highlightSearchMatches
-				: true,
+		paletteDisplay: normalizePaletteDisplay(source),
 		rememberLastInput:
 			typeof source.rememberLastInput === "boolean" ? source.rememberLastInput : false,
 		openExternalMarkdownInObsidian:
@@ -158,4 +154,27 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 			vaultExtensions: extensions(rawEverything.vaultExtensions),
 		},
 	};
+}
+
+function normalizePaletteDisplay(
+	source: Record<string, unknown>,
+): MyPaletteSettings["paletteDisplay"] {
+	const raw =
+		source.paletteDisplay && typeof source.paletteDisplay === "object"
+			? (source.paletteDisplay as Record<string, unknown>)
+			: {};
+	// Why: preserve the previous shared preference in each surface when upgrading.
+	const legacyHighlight =
+		typeof source.highlightSearchMatches === "boolean" ? source.highlightSearchMatches : true;
+	const normalize = (surface: PaletteSurface) => {
+		const branch = raw[surface];
+		const highlight =
+			branch && typeof branch === "object" && "highlightSearchMatches" in branch
+				? branch.highlightSearchMatches
+				: undefined;
+		return {
+			highlightSearchMatches: typeof highlight === "boolean" ? highlight : legacyHighlight,
+		};
+	};
+	return { table: normalize("table"), view: normalize("view"), palette: normalize("palette") };
 }
