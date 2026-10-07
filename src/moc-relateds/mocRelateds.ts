@@ -10,12 +10,14 @@ import { addCopyPathMenuItems, copyPathToClipboard } from "src/platform/pathClip
 import { isMarkdownPath } from "src/shared/externalFiles";
 import { parseInput } from "src/palette/inputParser";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
+import { matchedTagPresentation } from "src/palette/resultPresentation";
 import { relationPaths } from "src/shared/noteRelations";
 
 interface RelatedCandidate {
 	path: string;
 	label: string;
 	badge?: string;
+	matchedTags: string[];
 	ignored: boolean;
 }
 
@@ -37,6 +39,9 @@ function toRelatedCandidate(
 	return {
 		path,
 		label: result.primary,
+		// Why: a `#tag` query can match a note with no tag text in its name, so
+		// show the matching tags as the palette does to explain the hit.
+		matchedTags: result.matchedTags ?? [],
 		ignored,
 		badge: ignored
 			? "Ignored · Import"
@@ -190,10 +195,11 @@ async function openTargetFileSelector(
 	openSelectionModal<SelectionItem>(
 		{
 			search: async (input) =>
-				(await searchCandidates(input)).map(({ path, label, badge }) => ({
+				(await searchCandidates(input)).map(({ path, label, badge, matchedTags }) => ({
 					label,
 					description: path,
 					icon: "file-text",
+					...matchedTagPresentation(matchedTags),
 					badge,
 					value: path,
 				})),

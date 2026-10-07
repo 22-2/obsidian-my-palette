@@ -12,7 +12,8 @@ export interface PaletteResultPresentationOptions {
 
 const MAX_VISIBLE_MATCHED_TAGS = 3;
 
-function matchedTagPresentation(
+/** Shared so other file selectors (e.g. MOC insertion) show matched tags the same way. */
+export function matchedTagPresentation(
 	tags: readonly string[],
 ): Pick<SelectionItem, "tags" | "tagsTitle"> {
 	if (tags.length === 0) return {};
