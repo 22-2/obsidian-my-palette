@@ -145,3 +145,37 @@ describe("TagSelectionModal context menu", () => {
 		await expect(f.result).resolves.toEqual({ action: "remove", tags: ["mine"] });
 	});
 });
+
+describe("TagSelectionModal check icon", () => {
+	const icon = (modal: TagSelectionModal, label: string) =>
+		[...modal.modalEl.querySelectorAll(".suggestion-item")]
+			.find((row) => row.textContent?.startsWith(label))!
+			.querySelector(".my-palette-suggestion__icon")!;
+	const press = (el: Element, type: string) =>
+		el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true }));
+
+	it("toggles only its own row on a single press, keeping the highlight", async () => {
+		const f = await open();
+		press(icon(f.modal, "#beta"), "mousedown");
+		expect(f.footer()).toContain("1 checked");
+		// The highlight stayed on alpha, so Enter checks alpha rather than beta again.
+		f.key("Enter");
+		expect(f.footer()).toContain("2 checked");
+		f.key("Enter", { ctrlKey: true });
+		await expect(f.result).resolves.toEqual({ action: "add", tags: ["beta", "alpha"] });
+	});
+
+	it("does not toggle again on the double-click that follows two presses", async () => {
+		const f = await open();
+		press(icon(f.modal, "#beta"), "mousedown");
+		press(icon(f.modal, "#beta"), "mousedown");
+		press(icon(f.modal, "#beta"), "dblclick");
+		expect(f.footer()).not.toContain("checked");
+	});
+
+	it("is not a toggle on registered rows", async () => {
+		const f = await open();
+		expect(icon(f.modal, "#mine").hasAttribute("data-row-toggle")).toBe(false);
+		expect(icon(f.modal, "#beta").hasAttribute("data-row-toggle")).toBe(true);
+	});
+});

@@ -814,3 +814,12 @@
 	order: 2;
 	text-align: right;
 }
+
+/* The check icon toggles its row on click, so it should look clickable. */
+.my-palette-tag-select [data-row-toggle] {
+	cursor: pointer;
+}
+
+.my-palette-tag-select [data-row-toggle]:hover {
+	color: var(--text-normal);
+}

@@ -13,6 +13,8 @@ export interface SuggestionPanelProps<T> {
 	onChoose: (item: T, event: MouseEvent | KeyboardEvent) => void | Promise<void>;
 	onResultFocus?: () => void;
 	onMiddleClick?: (item: T, event: MouseEvent) => void | Promise<void>;
+	/** Left press on an element marked `data-row-toggle` inside a row. */
+	onRowToggle?: (item: T, event: MouseEvent) => void;
 	onContextMenu?: (item: T, event: MouseEvent, selectedItems: T[]) => void;
 	onEscape?: () => void;
 	onReady?: () => void;
@@ -302,7 +304,14 @@ export class SuggestionPanel<T> extends Component {
 				// it on the next press so one gesture cannot open the same note twice.
 				this.middleClickRows.delete(row);
 				const index = Number(row.getAttribute("data-index"));
-				if (event.button === 0 && this.selectionMode === "extended") {
+				if (event.button === 0 && this.isRowToggleEvent(event)) {
+					// Why: a toggle control acts at once on its own row; letting the press
+					// fall through would also change the highlighted selection.
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					this.leftClickRows.add(row);
+					this.props.onRowToggle?.(item, event);
+				} else if (event.button === 0 && this.selectionMode === "extended") {
 					// Why: the sidebar can lose its click to Obsidian after mousedown;
 					// select now and leave opening exclusively to double-click/Enter.
 					event.preventDefault();
@@ -345,6 +354,13 @@ export class SuggestionPanel<T> extends Component {
 			"dblclick",
 			(event) => {
 				if (this.selectionMode !== "extended" || event.button !== 0) return;
+				// Two quick presses on a toggle already toggled twice; the dblclick that
+				// follows must not activate the row as well.
+				if (this.isRowToggleEvent(event)) {
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					return;
+				}
 				const row = this.suggestionRowAtEvent(event);
 				const item = row ? this.itemAtRow(row) : undefined;
 				if (!row || item === undefined) return;
@@ -441,6 +457,12 @@ export class SuggestionPanel<T> extends Component {
 		this.middleClickRows.add(row);
 		this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
 		void this.props.onMiddleClick(item, event);
+	}
+
+	private isRowToggleEvent(event: Event): boolean {
+		if (!this.props.onRowToggle) return false;
+		const target = event.target as Node | null;
+		return Boolean(target?.instanceOf(Element) && target.closest("[data-row-toggle]"));
 	}
 
 	private suggestionRowAtEvent(event: Event): Element | undefined {

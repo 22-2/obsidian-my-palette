@@ -53,6 +53,9 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			onMiddleClick: this.handlesSuggestionMiddleClick()
 				? (item, event) => this.onSuggestionMiddleClick(item, event)
 				: undefined,
+			onRowToggle: this.handlesSuggestionRowToggle()
+				? (item, event) => this.onSuggestionRowToggle(item, event)
+				: undefined,
 			onContextMenu: this.handlesSuggestionContextMenu()
 				? (item, event) => this.onSuggestionContextMenu(item, event)
 				: undefined,
@@ -146,8 +149,12 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	protected handlesSuggestionContextMenu(): boolean {
 		return false;
 	}
+	protected handlesSuggestionRowToggle(): boolean {
+		return false;
+	}
 	protected async onSuggestionMiddleClick(_item: T, _event: MouseEvent): Promise<void> {}
 	protected onSuggestionContextMenu(_item: T, _event: MouseEvent): void {}
+	protected onSuggestionRowToggle(_item: T, _event: MouseEvent): void {}
 	protected onResultFocus(): void {}
 	protected getSelectedItems(): T[] {
 		return this.panel.getSelectedItems();

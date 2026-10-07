@@ -89,6 +89,10 @@ export class TagSelectionModal extends BaseSuggestModal<TagSuggestion> {
 	renderSuggestion(item: TagSuggestion, el: HTMLElement): void {
 		renderSelectionItem(this.toSelectionItem(item), el, this.query);
 		if (item.type === "tag" && item.choice.registered) el.addClass("is-registered");
+		// The check icon toggles its row on a single click; extended selection
+		// otherwise needs a double-click or Enter to change a check.
+		if (isCheckable(item))
+			el.querySelector(".my-palette-suggestion__icon")?.setAttribute("data-row-toggle", "");
 	}
 
 	protected override onSelectionModalOpen(): void {
@@ -147,6 +151,14 @@ export class TagSelectionModal extends BaseSuggestModal<TagSuggestion> {
 		// Keep the menu inside the modal so clicking it does not close the modal first.
 		menu.setParentElement(this.modalEl);
 		menu.showAtMouseEvent(event);
+	}
+
+	protected override handlesSuggestionRowToggle(): boolean {
+		return true;
+	}
+
+	protected override onSuggestionRowToggle(item: TagSuggestion): void {
+		if (isCheckable(item)) this.toggle([suggestionTag(item)]);
 	}
 
 	protected override async onItemActivated(item: TagSuggestion, event: Event): Promise<void> {
