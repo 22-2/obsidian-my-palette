@@ -50,6 +50,9 @@ describe("TagSelectionModal", () => {
 		await Promise.resolve();
 		// The confirm row is inserted above, yet the cursor stays on the toggled tag.
 		expect(f.labels()[0]).toBe("Add #alpha");
+		expect(f.modal.modalEl.querySelector(".my-palette-tag-select__action")?.textContent).toBe(
+			"Add ",
+		);
 		f.key("ArrowDown");
 		f.key("Enter");
 		await Promise.resolve();

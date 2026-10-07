@@ -67,6 +67,13 @@ export class TagSelectionModal extends BaseSuggestModal<TagSuggestion> {
 	renderSuggestion(item: TagSuggestion, el: HTMLElement): void {
 		renderSelectionItem(this.toSelectionItem(item), el, this.query);
 		if (item.type === "tag" && item.choice.registered) el.addClass("is-registered");
+		if (item.type === "confirm") {
+			// The action word is muted so the selected tags stand out in the confirm row.
+			const label = el.querySelector<HTMLElement>(".my-palette-suggestion__label");
+			label?.prepend(
+				label.createSpan({ cls: "my-palette-tag-select__action", text: "Add " }),
+			);
+		}
 	}
 
 	protected override onSelectionModalOpen(): void {
@@ -105,7 +112,8 @@ export class TagSelectionModal extends BaseSuggestModal<TagSuggestion> {
 	private toSelectionItem(item: TagSuggestion): SelectionItem {
 		if (item.type === "confirm") {
 			return {
-				label: `Add ${item.tags.map((tag) => `#${tag}`).join(" ")}`,
+				// "Add " is prepended in renderSuggestion so it can be styled separately.
+				label: item.tags.map((tag) => `#${tag}`).join(" "),
 				icon: "corner-down-left",
 			};
 		}

@@ -800,3 +800,8 @@
 .my-palette-tag-select .suggestion-item.is-registered {
 	opacity: 0.5;
 }
+
+/* Applied to the span itself so selected and hovered rows cannot override it. */
+.my-palette-tag-select__action {
+	color: var(--text-muted);
+}
