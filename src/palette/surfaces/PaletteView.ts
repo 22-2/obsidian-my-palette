@@ -589,6 +589,8 @@ export class PaletteView extends ItemView {
 		this.registerEvent(this.app.vault.on("delete", schedule));
 		this.registerEvent(this.app.vault.on("rename", schedule));
 		this.registerEvent(this.app.metadataCache.on("changed", schedule));
+		this.registerEvent(this.app.metadataCache.on("deleted", schedule));
+		this.registerEvent(this.app.metadataCache.on("resolve", schedule));
 		this.registerEvent(this.app.metadataCache.on("resolved", schedule));
 	}
 

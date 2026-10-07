@@ -64,6 +64,8 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			}),
 		);
 		this.refs.push(app.metadataCache.on("changed", (file) => this.update(file)));
+		this.refs.push(app.metadataCache.on("deleted", (file) => this.deleteEntry(file.path)));
+		this.refs.push(app.metadataCache.on("resolve", (file) => this.update(file)));
 		// FileProvider can be constructed before Obsidian has finished parsing all
 		// frontmatter. Re-read files once that initial metadata pass completes so
 		// aliases are not permanently cached as empty until their note is edited.
