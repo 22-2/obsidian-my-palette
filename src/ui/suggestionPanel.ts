@@ -155,6 +155,23 @@ export class SuggestionPanel<T> extends Component {
 		}
 	}
 
+	/**
+	 * Redraw the visible rows in place. Unlike setResults this keeps the cursor,
+	 * the extended selection and the scroll position, for hosts whose rows change
+	 * appearance (such as a check mark) without changing the list itself.
+	 */
+	rerenderRows(): void {
+		if (this.resultsLayout) return;
+		for (const row of this.resultContainerEl.querySelectorAll<HTMLElement>(
+			".suggestion-item",
+		)) {
+			const item = this.itemAtRow(row);
+			if (item === undefined) continue;
+			row.empty();
+			this.props.renderSuggestion(item, row, this.query);
+		}
+	}
+
 	setResultsLayout(layout?: SuggestionPanelResultsLayout<T>): void {
 		this.resultsLayout = layout;
 		this.resultContainerEl.setAttribute("role", layout ? "region" : "listbox");

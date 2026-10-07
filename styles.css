@@ -814,8 +814,3 @@
 	order: 2;
 	text-align: right;
 }
-
-/* Applied to the span itself so selected and hovered rows cannot override it. */
-.my-palette-tag-select__action {
-	color: var(--text-muted);
-}

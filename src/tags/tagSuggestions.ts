@@ -1,10 +1,7 @@
 import fuzzysort from "fuzzysort";
 import { tagKey, type TagChoice } from "src/tags/tagChoices";
 
-export type TagSuggestion =
-	| { type: "tag"; choice: TagChoice }
-	| { type: "new"; tag: string }
-	| { type: "confirm"; tags: string[] };
+export type TagSuggestion = { type: "tag"; choice: TagChoice } | { type: "new"; tag: string };
 
 // Text containing `#` or whitespace cannot form one tag, so it is not offered as new.
 const VALID_NEW_TAG = /^[^\s#]+$/;
@@ -19,7 +16,6 @@ export type TagEditAction = "add" | "remove";
  */
 export function tagContextActions(item: TagSuggestion): TagEditAction[] {
 	if (item.type === "new") return ["add"];
-	if (item.type !== "tag") return [];
 	const actions: TagEditAction[] = [];
 	if (!item.choice.registered) actions.push("add");
 	if (item.choice.present) actions.push("remove");
@@ -31,11 +27,9 @@ export function normalizeTagQuery(query: string): string {
 	return query.trim().replace(/^#/, "");
 }
 
-/** Stable identity used to restore the cursor after rerendering suggestions. */
-export function tagSuggestionKey(item: TagSuggestion): string {
-	if (item.type === "confirm") return "confirm";
-	if (item.type === "new") return `new:${item.tag}`;
-	return `tag:${item.choice.tag}`;
+/** Tag name a row stands for, without `#`. */
+export function suggestionTag(item: TagSuggestion): string {
+	return item.type === "new" ? item.tag : item.choice.tag;
 }
 
 function filterChoices(choices: readonly TagChoice[], needle: string): TagChoice[] {
@@ -52,8 +46,9 @@ function filterChoices(choices: readonly TagChoice[], needle: string): TagChoice
 }
 
 /**
- * Builds the rows shown for the current input: matching tags, a new-tag row when
- * the input is not an existing tag, and a confirm row once something is selected.
+ * Builds the rows shown for the current input: new tags first, then matching
+ * existing tags. Checked new tags stay listed while they match the input, because
+ * the check icon is the only place that shows what is selected.
  */
 export function buildTagSuggestions(
 	choices: readonly TagChoice[],
@@ -61,20 +56,21 @@ export function buildTagSuggestions(
 	selected: readonly string[],
 ): TagSuggestion[] {
 	const needle = normalizeTagQuery(query);
+	const known = new Set(choices.map((choice) => tagKey(choice.tag)));
+	const pendingNew = selected.filter(
+		(tag) => !known.has(tagKey(tag)) && (!needle || fuzzysort.single(needle, tag) !== null),
+	);
+	const newTags = [...pendingNew];
+	const typedIsNew =
+		needle &&
+		VALID_NEW_TAG.test(needle) &&
+		!known.has(tagKey(needle)) &&
+		!pendingNew.some((tag) => tagKey(tag) === tagKey(needle));
+	if (typedIsNew) newTags.unshift(needle);
+
 	const matched = needle ? filterChoices(choices, needle) : choices;
-	const suggestions: TagSuggestion[] = matched.map((choice) => ({ type: "tag", choice }));
-
-	const exists = choices.some((choice) => tagKey(choice.tag) === tagKey(needle));
-	if (needle && !exists && VALID_NEW_TAG.test(needle)) {
-		suggestions.unshift({ type: "new", tag: needle });
-	}
-
-	if (selected.length > 0) {
-		const confirm: TagSuggestion = { type: "confirm", tags: [...selected] };
-		// Without a query the confirm row comes first so Enter can confirm immediately;
-		// while searching it goes last so it does not hide the best match.
-		if (needle) suggestions.push(confirm);
-		else suggestions.unshift(confirm);
-	}
-	return suggestions;
+	return [
+		...newTags.map((tag): TagSuggestion => ({ type: "new", tag })),
+		...matched.map((choice): TagSuggestion => ({ type: "tag", choice })),
+	];
 }

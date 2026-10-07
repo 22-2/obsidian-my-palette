@@ -5,8 +5,8 @@ import type { TagChoice } from "src/tags/tagChoices";
 import {
 	buildTagSuggestions,
 	normalizeTagQuery,
+	suggestionTag,
 	tagContextActions,
-	tagSuggestionKey,
 	type TagEditAction,
 	type TagSuggestion,
 } from "src/tags/tagSuggestions";
@@ -34,10 +34,10 @@ function choiceBadge(choice: TagChoice): string | undefined {
 }
 
 /**
- * Multi-tag selector. Choosing a row toggles it and keeps the modal open; the
- * confirm row or Ctrl+Enter resolves the selection, any other close cancels.
- * Selected tags are kept by name rather than by row index because the list is
- * filtered again for every query while the selection must survive searches.
+ * Multi-tag selector. Choosing a row toggles its check and keeps the modal open;
+ * Ctrl+Enter adds the checked tags, any other close cancels. Checked tags are
+ * kept by name rather than by row index because the list is filtered again for
+ * every query while the checks must survive searches.
  * The row context menu adds or removes that single tag immediately.
  */
 export class TagSelectionModal extends BaseSuggestModal<TagSuggestion> {
@@ -81,13 +81,6 @@ export class TagSelectionModal extends BaseSuggestModal<TagSuggestion> {
 	renderSuggestion(item: TagSuggestion, el: HTMLElement): void {
 		renderSelectionItem(this.toSelectionItem(item), el, this.query);
 		if (item.type === "tag" && item.choice.registered) el.addClass("is-registered");
-		if (item.type === "confirm") {
-			// The action word is muted so the selected tags stand out in the confirm row.
-			const label = el.querySelector<HTMLElement>(".my-palette-suggestion__label");
-			label?.prepend(
-				label.createSpan({ cls: "my-palette-tag-select__action", text: "Add " }),
-			);
-		}
 	}
 
 	protected override onSelectionModalOpen(): void {
@@ -104,9 +97,9 @@ export class TagSelectionModal extends BaseSuggestModal<TagSuggestion> {
 	}
 
 	protected override onSuggestionContextMenu(item: TagSuggestion, event: MouseEvent): void {
-		const tag = item.type === "new" ? item.tag : item.type === "tag" ? item.choice.tag : "";
+		const tag = suggestionTag(item);
 		const actions = tagContextActions(item);
-		if (!tag || actions.length === 0) return;
+		if (actions.length === 0) return;
 		const menu = new Menu();
 		for (const action of actions) {
 			menu.addItem((menuItem) =>
@@ -123,11 +116,11 @@ export class TagSelectionModal extends BaseSuggestModal<TagSuggestion> {
 	}
 
 	protected override async onItemActivated(item: TagSuggestion, event: Event): Promise<void> {
-		// Ctrl+Enter confirms from any row so the user need not move to the confirm row.
+		// Ctrl+Enter adds the checked tags from any row.
 		const confirmShortcut =
 			event.type === "keydown" &&
 			((event as KeyboardEvent).ctrlKey || (event as KeyboardEvent).metaKey);
-		if (item.type === "confirm" || confirmShortcut) {
+		if (confirmShortcut) {
 			if (this.selectedTags.size === 0) return;
 			this.finish({ action: "add", tags: [...this.selectedTags] });
 			return;
@@ -135,14 +128,21 @@ export class TagSelectionModal extends BaseSuggestModal<TagSuggestion> {
 		// Registered tags are listed for reference only.
 		if (item.type === "tag" && item.choice.registered) return;
 
-		const tag = item.type === "new" ? item.tag : item.choice.tag;
+		const tag = suggestionTag(item);
 		if (this.selectedTags.has(tag)) this.selectedTags.delete(tag);
 		else this.selectedTags.add(tag);
-
-		const key = tagSuggestionKey(item);
-		this.refreshSuggestionsKeepingCursor((candidate) => tagSuggestionKey(candidate) === key);
+		this.onSelectionChanged();
 		// Keep the query but select it, so typing the next tag replaces it directly.
 		this.inputEl.select();
+	}
+
+	/** Checks only change row icons, so rows are redrawn in place to keep the cursor. */
+	private onSelectionChanged(): void {
+		this.rerenderVisibleSuggestions();
+		const count = this.selectedTags.size;
+		// The footer count replaces the old confirm row as the overview of checked tags.
+		const selection = count > 0 ? ` · ${count} selected` : "";
+		this.updateFooterText(`${this.targets.label}${selection} · ${KEY_HINTS}`);
 	}
 
 	private finish(result: TagSelectionResult): void {
@@ -159,13 +159,6 @@ export class TagSelectionModal extends BaseSuggestModal<TagSuggestion> {
 	}
 
 	private toSelectionItem(item: TagSuggestion): SelectionItem {
-		if (item.type === "confirm") {
-			return {
-				// "Add " is prepended in renderSuggestion so it can be styled separately.
-				label: item.tags.map((tag) => `#${tag}`).join(" "),
-				icon: "corner-down-left",
-			};
-		}
 		if (item.type === "new") {
 			return {
 				label: `#${item.tag}`,

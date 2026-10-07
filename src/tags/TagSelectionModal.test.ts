@@ -47,27 +47,23 @@ async function open() {
 		modal.inputEl.dispatchEvent(new Event("input"));
 		await Promise.resolve();
 	};
-	return { modal, result, labels, key, type };
+	const footer = () =>
+		modal.modalEl.querySelector(".my-palette-status-bar__text")?.textContent ?? "";
+	return { modal, result, labels, key, type, footer };
 }
 
 describe("TagSelectionModal", () => {
-	it("toggles tags without closing and resolves them from the confirm row", async () => {
+	it("toggles checks in place and adds the checked tags with Ctrl+Enter", async () => {
 		const f = await open();
-		f.key("Enter");
-		await Promise.resolve();
-		// The confirm row is inserted above, yet the cursor stays on the toggled tag.
-		expect(f.labels()[0]).toBe("Add #alpha");
-		expect(f.modal.modalEl.querySelector(".my-palette-tag-select__action")?.textContent).toBe(
-			"Add ",
-		);
 		f.key("ArrowDown");
 		f.key("Enter");
-		await Promise.resolve();
-		expect(f.labels()[0]).toBe("Add #alpha #beta");
-		f.key("ArrowUp");
-		f.key("ArrowUp");
+		expect(f.footer()).toContain("1 selected");
+		// The list is not rebuilt, so the cursor moves on from beta to mine (a no-op)
+		// instead of jumping back to the first row and toggling alpha.
+		f.key("ArrowDown");
 		f.key("Enter");
-		await expect(f.result).resolves.toEqual({ action: "add", tags: ["alpha", "beta"] });
+		f.key("Enter", { ctrlKey: true });
+		await expect(f.result).resolves.toEqual({ action: "add", tags: ["beta"] });
 	});
 
 	it("adds a typed new tag and confirms with Ctrl+Enter", async () => {
@@ -86,7 +82,7 @@ describe("TagSelectionModal", () => {
 		await Promise.resolve();
 		// Ctrl+Enter without any selection must not confirm an empty insertion.
 		f.key("Enter", { ctrlKey: true });
-		expect(f.labels().some((label) => label?.startsWith("Add"))).toBe(false);
+		expect(f.footer()).not.toContain("selected");
 		f.key("Escape");
 		await expect(f.result).resolves.toBeNull();
 	});
@@ -123,13 +119,5 @@ describe("TagSelectionModal context menu", () => {
 		expect(titles()).toEqual(["Remove #mine from note"]);
 		Menu.lastShown!.items[0].click();
 		await expect(f.result).resolves.toEqual({ action: "remove", tags: ["mine"] });
-	});
-
-	it("shows no menu for the confirm row", async () => {
-		const f = await open();
-		f.key("Enter");
-		await Promise.resolve();
-		rightClick(rowFor(f.modal, "Add "));
-		expect(Menu.lastShown).toBeUndefined();
 	});
 });

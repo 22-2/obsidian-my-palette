@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { TagChoice } from "src/tags/tagChoices";
-import { buildTagSuggestions, tagContextActions, tagSuggestionKey } from "src/tags/tagSuggestions";
+import {
+	buildTagSuggestions,
+	tagContextActions,
+	type TagSuggestion,
+} from "src/tags/tagSuggestions";
+
+const keyOf = (item: TagSuggestion) =>
+	item.type === "new" ? `new:${item.tag}` : `tag:${item.choice.tag}`;
 
 const choices: TagChoice[] = [
 	{ tag: "project", count: 3, registered: false, present: false, reason: "recent" },
@@ -16,12 +23,11 @@ describe("tagContextActions", () => {
 		expect(tagContextActions({ type: "tag", choice: projection })).toEqual(["add", "remove"]);
 		expect(tagContextActions({ type: "tag", choice: proj })).toEqual(["remove"]);
 		expect(tagContextActions({ type: "new", tag: "fresh" })).toEqual(["add"]);
-		expect(tagContextActions({ type: "confirm", tags: ["a"] })).toEqual([]);
 	});
 });
 
 const keys = (query: string, selected: string[] = []) =>
-	buildTagSuggestions(choices, query, selected).map(tagSuggestionKey);
+	buildTagSuggestions(choices, query, selected).map(keyOf);
 
 describe("buildTagSuggestions", () => {
 	it("shows every choice in the given order without a query", () => {
@@ -39,12 +45,17 @@ describe("buildTagSuggestions", () => {
 		expect(keys("a#b")).not.toContain("new:a#b");
 	});
 
-	it("places the confirm row first without a query and last while searching", () => {
-		expect(keys("", ["writing"])[0]).toBe("confirm");
-		expect(keys("writ", ["writing"]).at(-1)).toBe("confirm");
-		expect(buildTagSuggestions(choices, "", ["writing", "new"])[0]).toEqual({
-			type: "confirm",
-			tags: ["writing", "new"],
-		});
+	it("keeps checked new tags listed while they match the input", () => {
+		expect(keys("", ["writing", "Fresh"])).toEqual([
+			"new:Fresh",
+			"tag:project",
+			"tag:projection",
+			"tag:proj",
+			"tag:writing",
+		]);
+		expect(keys("fre", ["Fresh"])).toEqual(["new:fre", "new:Fresh"]);
+		// The typed text is the checked tag itself, so it is not offered twice.
+		expect(keys("fresh", ["Fresh"])).toEqual(["new:Fresh"]);
+		expect(keys("writ", ["Fresh"])).not.toContain("new:Fresh");
 	});
 });
