@@ -1,5 +1,6 @@
 import type { App } from "obsidian";
 import { MultiSelectModal, type MultiSelectCandidate } from "src/ui/MultiSelectModal";
+import type { TagRemoval } from "src/tags/insertTags";
 import type { TagChoice } from "src/tags/tagChoices";
 import {
 	buildTagSuggestions,
@@ -60,7 +61,7 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 		private choices: readonly TagChoice[],
 		targetLabel: string,
 		private readonly targetCount: number,
-		private readonly removeFromTargets: (tag: string) => Promise<boolean>,
+		private readonly removeFromTargets: (tag: string) => Promise<TagRemoval | undefined>,
 	) {
 		super(
 			{
@@ -81,14 +82,16 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 
 	/** Removes from the notes, then shows the tag as unapplied without waiting for the metadata cache. */
 	private async removeTag(tag: string): Promise<void> {
-		if (!(await this.removeFromTargets(tag))) return;
+		const removal = await this.removeFromTargets(tag);
+		if (!removal) return;
 		this.choices = this.choices.map((choice) => {
 			if (choice.tag !== tag) return choice;
-			const { appliedCount, ...rest } = choice;
+			const { appliedCount: _applied, ...rest } = choice;
+			// Notes that still have the tag inline keep counting toward its usage.
 			return {
 				...rest,
 				registered: false,
-				count: Math.max(0, choice.count - (appliedCount ?? 0)),
+				count: Math.max(0, choice.count - removal.noLongerUsed),
 			};
 		});
 	}

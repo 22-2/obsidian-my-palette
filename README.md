@@ -82,7 +82,8 @@ inserted tags are stored per Vault in local IndexedDB.
 
 The MOC insertion selector works the same way: `Enter` selects or deselects
 notes, and `Ctrl+Enter` or the `Insert …` row adds mutual Relateds links to the
-active MOC for every selected note. Notes linked in both directions are shown
+active MOC for every selected note. Only links inside a `Relateds` item count, not
+other links in the body. Notes linked in both directions are shown
 last and cannot be selected; notes linked in one direction stay selectable to
 complete the link. Right-click a linked note and choose `Remove link` to remove
 the Relateds links in both directions; right-clicking a selected note removes

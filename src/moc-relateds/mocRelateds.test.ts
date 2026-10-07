@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { addLinkToMocRelateds, removeLinkFromMocRelateds } from "src/moc-relateds/mocRelatedsCore";
+import {
+	addLinkToMocRelateds,
+	relatedsLineRange,
+	removeLinkFromMocRelateds,
+} from "src/moc-relateds/mocRelatedsCore";
 
 describe("addLinkToMocRelateds", () => {
 	it("adds a link using the existing Relateds child indentation", () => {
@@ -57,5 +61,26 @@ describe("removeLinkFromMocRelateds", () => {
 	it("refuses to delete a link that has nested items", () => {
 		const nested = "## MOC\n- Relateds\n    - [[A]]\n        - note";
 		expect(removeLinkFromMocRelateds(nested, "A")).toMatchObject({ success: false });
+	});
+});
+
+describe("relatedsLineRange", () => {
+	it("covers only the items nested under Relateds", () => {
+		const content = [
+			"intro [[X]]",
+			"## MOC",
+			"- Relateds",
+			"    - [[A]]",
+			"",
+			"    - [[B]]",
+			"- References",
+			"    - [[C]]",
+		].join("\n");
+		expect(relatedsLineRange(content)).toEqual([3, 6]);
+	});
+
+	it("is undefined without a MOC Relateds item", () => {
+		expect(relatedsLineRange("## MOC\n- References")).toBeUndefined();
+		expect(relatedsLineRange("plain note")).toBeUndefined();
 	});
 });

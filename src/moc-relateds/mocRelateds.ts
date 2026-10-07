@@ -4,7 +4,11 @@ import type MyPalettePlugin from "src/main";
 import type { FileResult } from "src/palette/results";
 import type { SelectionItem } from "src/ui/selectionModal";
 import { MultiSelectModal, type MultiSelectCandidate } from "src/ui/MultiSelectModal";
-import { addLinkToMocRelateds, removeLinkFromMocRelateds } from "src/moc-relateds/mocRelatedsCore";
+import {
+	addLinkToMocRelateds,
+	relatedsLineRange,
+	removeLinkFromMocRelateds,
+} from "src/moc-relateds/mocRelatedsCore";
 import { getVaultFullPath, isUserIgnoredPath } from "src/ignored-notes/ignoredPaths";
 import { materializeIgnoredNote } from "src/ignored-notes/ignoredNoteMaterializer";
 import { addCopyPathMenuItems, copyPathToClipboard } from "src/platform/pathClipboard";
@@ -172,9 +176,42 @@ function populateCandidateMenu(
 	);
 }
 
+/** Paths a note links to from inside its MOC Relateds item, ignoring links elsewhere in the body. */
+async function linksInRelateds(app: App, file: TFile): Promise<Set<string>> {
+	const targets = new Set<string>();
+	const range = relatedsLineRange(await app.vault.cachedRead(file));
+	if (!range) return targets;
+	for (const link of app.metadataCache.getFileCache(file)?.links ?? []) {
+		const line = link.position.start.line;
+		if (line < range[0] || line >= range[1]) continue;
+		const target = app.metadataCache.getFirstLinkpathDest(link.link, file.path);
+		if (target instanceof TFile) targets.add(target.path);
+	}
+	return targets;
+}
+
+/**
+ * Notes the MOC lists in Relateds (outgoing) and notes listing the MOC in their
+ * own Relateds (incoming). Only these are what insertion and removal edit, so
+ * other body links must not show as an existing relation.
+ */
+async function relatedsRelations(
+	app: App,
+	mocFile: TFile,
+): Promise<{ outgoing: Set<string>; incoming: Set<string> }> {
+	const outgoing = await linksInRelateds(app, mocFile);
+	const incoming = new Set<string>();
+	// Only notes linking to the MOC at all can list it in Relateds, so read just those.
+	for (const path of relationPaths(app, mocFile).incoming) {
+		const file = app.vault.getFileByPath(path);
+		if (file && (await linksInRelateds(app, file)).has(mocFile.path)) incoming.add(path);
+	}
+	return { outgoing, incoming };
+}
+
 /** Candidate selector for the active MOC; linked notes can be removed from its context menu. */
 class MocTargetModal extends MultiSelectModal<string> {
-	private readonly relations: ReturnType<typeof relationPaths>;
+	private relations?: ReturnType<typeof relatedsRelations>;
 
 	constructor(
 		private readonly plugin: MyPalettePlugin,
@@ -194,11 +231,13 @@ class MocTargetModal extends MultiSelectModal<string> {
 			},
 			plugin.app,
 		);
-		this.relations = relationPaths(plugin.app, activeFile);
 	}
 
 	protected async searchCandidates(input: string): Promise<MultiSelectCandidate<string>[]> {
 		const { plugin, activeFile } = this;
+		// Read once on the first search, since linked notes must be opened to find Relateds links.
+		this.relations ??= relatedsRelations(plugin.app, activeFile);
+		const relations = await this.relations;
 		const parsed = parseInput(input, plugin.settings.prefixes);
 		if (parsed.mode !== "file") return [];
 		// Keep MOC insertion on the same explicit-prefix path as the main palette:
@@ -214,8 +253,8 @@ class MocTargetModal extends MultiSelectModal<string> {
 					plugin.app,
 					result,
 					activeFile.path,
-					this.relations.outgoing,
-					this.relations.incoming,
+					relations.outgoing,
+					relations.incoming,
 					(file) => this.removeLink(file),
 				),
 			)
@@ -235,8 +274,9 @@ class MocTargetModal extends MultiSelectModal<string> {
 	/** Updates the shown relations directly because the metadata cache lags behind the edit. */
 	private async removeLink(file: TFile): Promise<void> {
 		if (!(await removeFileFromMocRelateds(this.plugin, this.activeFile, file))) return;
-		this.relations.outgoing.delete(file.path);
-		this.relations.incoming.delete(file.path);
+		const relations = await this.relations;
+		relations?.outgoing.delete(file.path);
+		relations?.incoming.delete(file.path);
 	}
 }
 

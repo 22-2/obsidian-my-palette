@@ -30,7 +30,13 @@ const flush = async () => {
 };
 
 async function open() {
-	const modal = new TagSelectionModal({} as App, choices, "Target: note.md", 1, async () => true);
+	const modal = new TagSelectionModal(
+		{} as App,
+		choices,
+		"Target: note.md",
+		1,
+		async () => undefined,
+	);
 	const result = modal.openAndWait();
 	await flush();
 	const labels = () =>

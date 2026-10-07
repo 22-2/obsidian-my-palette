@@ -108,28 +108,47 @@ export async function insertTags(
 	if (failed > 0) new Notice(`Failed to add tags to ${failed} notes. See the console.`);
 }
 
-/** Removes a tag from the frontmatter of every target that has it; false when nothing was removed. */
-async function removeTag(app: App, files: readonly TFile[], tag: string): Promise<boolean> {
+/** Result of removing a tag from the targets' frontmatter. */
+export interface TagRemoval {
+	/** Targets whose frontmatter lost the tag. */
+	removed: number;
+	/** Of those, notes that no longer use the tag at all, because it is not also written inline. */
+	noLongerUsed: number;
+}
+
+/** Removes a tag from the frontmatter of every target that has it; undefined when nothing was removed. */
+async function removeTag(
+	app: App,
+	files: readonly TFile[],
+	tag: string,
+): Promise<TagRemoval | undefined> {
 	const key = tagKey(tag);
-	let removed = 0;
+	const removal: TagRemoval = { removed: 0, noLongerUsed: 0 };
 	let failed = 0;
 	for (const file of files) {
 		if (!frontmatterTags(app, file).some((existing) => tagKey(existing) === key)) continue;
+		// Read before editing: the cache still describes the note as it was.
+		const inline = app.metadataCache
+			.getFileCache(file)
+			?.tags?.some((entry) => tagKey(entry.tag) === key);
 		try {
 			await app.fileManager.processFrontMatter(file, (frontmatter: { tags?: unknown }) => {
 				const rest = removeFrontmatterTags(frontmatter.tags, [tag]);
 				if (rest.length > 0) frontmatter.tags = rest;
 				else delete frontmatter.tags;
 			});
-			removed += 1;
+			removal.removed += 1;
+			if (!inline) removal.noLongerUsed += 1;
 		} catch (error) {
 			failed += 1;
 			console.error(`Failed to remove tag from ${file.path}`, error);
 		}
 	}
-	if (removed > 0)
-		new Notice(`Removed #${tag} from ${removed === 1 ? "1 note" : `${removed} notes`}.`);
+	if (removal.removed > 0)
+		new Notice(
+			`Removed #${tag} from ${removal.removed === 1 ? "1 note" : `${removal.removed} notes`}.`,
+		);
 	else if (failed === 0) new Notice(`#${tag} is not in the frontmatter of the target notes.`);
 	if (failed > 0) new Notice(`Failed to remove #${tag} from ${failed} notes. See the console.`);
-	return removed > 0;
+	return removal.removed > 0 ? removal : undefined;
 }
