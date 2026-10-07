@@ -10,7 +10,7 @@ import {
 	type FileMatchSignals,
 	type SortableFileEntry,
 } from "src/search/file/fileMatch";
-import { isUserIgnoredPathWithFilters } from "src/ignored-notes/ignoredPaths";
+import { isUserIgnoredPathWithFilters } from "src/ignored-notes/ignoredPathMatching";
 
 // Keep the existing module exports stable while the match data model lives
 // outside the comparator, so future providers can create signals without
@@ -83,12 +83,7 @@ function compareOptionalPrior(
 	a: SortableFileEntry,
 	b: SortableFileEntry,
 	order: "asc" | "desc",
-	demotedFolders: readonly string[],
 ): number {
-	// Use a separate tier so demotion works consistently for ascending and descending prior.
-	const demotedA = isUserIgnoredPathWithFilters(demotedFolders, a.path);
-	const demotedB = isUserIgnoredPathWithFilters(demotedFolders, b.path);
-	if (demotedA !== demotedB) return demotedA ? 1 : -1;
 	const priorA = typeof a.prior === "number" && Number.isFinite(a.prior) ? a.prior : undefined;
 	const priorB = typeof b.prior === "number" && Number.isFinite(b.prior) ? b.prior : undefined;
 	// Missing and null values are not priorities; keeping them last preserves the
@@ -156,6 +151,12 @@ function comparePriority(
 	context: SortContext,
 ): number {
 	switch (priority) {
+		case FILE_SORT_PRIORITIES.lowerPriorFolders:
+			// Compare folders at the chosen position so custom rankings need not reach @prior.
+			return (
+				Number(isUserIgnoredPathWithFilters(context.demotedPriorFolders, a.path)) -
+				Number(isUserIgnoredPathWithFilters(context.demotedPriorFolders, b.path))
+			);
 		case FILE_SORT_PRIORITIES.filenamePrefixMatch:
 			return context.query === undefined
 				? 0
@@ -206,9 +207,7 @@ function comparePriority(
 			return compareAlphabetical(a, b, true);
 		default: {
 			const property = parseFileSortPriority(priority);
-			return property?.key === "prior"
-				? compareOptionalPrior(a, b, property.order, context.demotedPriorFolders)
-				: 0;
+			return property?.key === "prior" ? compareOptionalPrior(a, b, property.order) : 0;
 		}
 	}
 }

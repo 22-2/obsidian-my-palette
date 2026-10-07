@@ -22,7 +22,7 @@ export interface SearchHistorySettings {
 	daysToKeep: number;
 }
 
-export const SETTINGS_SCHEMA_VERSION = 17;
+export const SETTINGS_SCHEMA_VERSION = 18;
 export const MAX_RECENT_COMMAND_IDS = 20;
 export const MILLISECONDS_PER_SECOND = 1_000;
 export const DISABLED_DELAY_MS = 0;
@@ -75,6 +75,7 @@ export const FILE_SORT_PRIORITIES = {
 	tagMatch: "Tag match",
 	matchCoverage: "Match coverage",
 	folderPathMatch: "Folder path match",
+	lowerPriorFolders: "Lower prior folders",
 	activity: "Activity",
 	lastModified: "Last modified",
 	aliasesCount: "Aliases count",
@@ -93,6 +94,7 @@ export const FILE_SORT_PRIORITY_LIST = [
 	FILE_SORT_PRIORITIES.tagMatch,
 	FILE_SORT_PRIORITIES.matchCoverage,
 	FILE_SORT_PRIORITIES.folderPathMatch,
+	FILE_SORT_PRIORITIES.lowerPriorFolders,
 	FILE_SORT_PRIORITIES.activity,
 	FILE_SORT_PRIORITIES.lastModified,
 	FILE_SORT_PRIORITIES.aliasesCount,
@@ -311,7 +313,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		},
 		// プラグイン共通の除外フォルダ。Obsidianの除外設定とは独立に全リストへ適用する。
 		excludedFolders: [],
-		// Keep lower-priority folders visible while letting ordinary notes win @prior ties.
+		// Keep folder demotion separate from frontmatter so users can choose its ranking position.
 		demotedPriorFolders: [],
 	},
 	everything: {

@@ -8,6 +8,22 @@ import {
 import { mergeSettings } from "src/settings/mergeSettings";
 
 describe("mergeSettings", () => {
+	it("enables independent folder demotion once for existing configured folders", () => {
+		const settings = mergeSettings({
+			schemaVersion: 17,
+			file: {
+				demotedPriorFolders: ["archive"],
+				sortPriorities: { blank: ["Activity"], input: ["Filename fuzzy match"] },
+			},
+		});
+		expect(settings.file.sortPriorities).toEqual({
+			blank: ["Lower prior folders", "Activity"],
+			input: ["Lower prior folders", "Filename fuzzy match"],
+		});
+		settings.file.sortPriorities.blank = ["Activity"];
+		expect(mergeSettings(settings).file.sortPriorities.blank).toEqual(["Activity"]);
+	});
+
 	it("migrates shared highlighting into independent surface preferences", () => {
 		const settings = mergeSettings({ schemaVersion: 16, highlightSearchMatches: false });
 		expect(settings.paletteDisplay).toEqual({

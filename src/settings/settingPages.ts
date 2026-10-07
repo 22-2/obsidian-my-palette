@@ -97,7 +97,7 @@ function createFileSearchPage(plugin: MyPalettePlugin, helpers: SettingPageHelpe
 			helpers.group("Lower prior folders", [
 				helpers.render(
 					"Lower prior folders",
-					"Folders whose notes sort after other notes when @prior is compared, one path per line. Subfolders are included.",
+					"Folder paths to rank lower, one per line, including subfolders. Enable Lower prior folders in Sort priorities and move it before criteria you want it to override. Configure blank and typed input separately.",
 					(setting) =>
 						setting.addTextArea((text) =>
 							text

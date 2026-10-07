@@ -102,9 +102,12 @@ aliases, and tags, using only the strongest OR branch.
 more aliases first.
 
 The `Lower prior folders` setting under `Vault file search` accepts one folder
-path per line. Notes in those folders and their subfolders sort after notes in
-other folders when `@prior` is compared; notes within the listed folders still
-sort by their own `prior` values.
+path per line. Enable the independent `Lower prior folders` criterion in `Sort
+priorities` to rank notes in those folders and subfolders lower, even without
+`@prior`. Move it above filename or activity criteria to give folder demotion
+precedence; configure blank and typed input separately. Contiguous matches and
+include-ignored preference still run first. Existing configured folder rules
+enable this criterion at the top of both lists once on upgrade.
 
 Complete contiguous matches across a filename, path, alias, or tag are always
 preferred over fuzzy-only matches before the configured priority list is applied.

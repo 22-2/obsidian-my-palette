@@ -29,6 +29,52 @@ function file(
 }
 
 describe("file sorting", () => {
+	it("lets folder demotion override custom criteria independently of prior", () => {
+		const entries = [
+			file("archive/nested/project.md", 100, [], false, 100),
+			file("archive-other/project.md", 1, [], false, 1),
+		];
+		const folders = ["archive"];
+		expect(
+			sortFilesWithoutQuery(
+				entries.slice(),
+				new Map(),
+				["Lower prior folders", "Last modified"],
+				undefined,
+				folders,
+			).map(({ path }) => path),
+		).toEqual(["archive-other/project.md", "archive/nested/project.md"]);
+		expect(
+			sortFilesWithoutQuery(
+				entries.slice(),
+				new Map(),
+				["Last modified", "Lower prior folders"],
+				undefined,
+				folders,
+			).map(({ path }) => path),
+		).toEqual(["archive/nested/project.md", "archive-other/project.md"]);
+		// Disabling the independent criterion must restore the original numeric prior order.
+		expect(
+			sortFilesWithoutQuery(
+				entries.slice(),
+				new Map(),
+				["@prior:desc"],
+				undefined,
+				folders,
+			).map(({ path }) => path),
+		).toEqual(["archive/nested/project.md", "archive-other/project.md"]);
+		expect(
+			sortFileMatches(
+				entries.map((obj, index) => ({ obj, score: -index })),
+				"project",
+				new Map(),
+				["Lower prior folders", "Filename fuzzy match"],
+				undefined,
+				folders,
+			).map(({ path }) => path),
+		).toEqual(["archive-other/project.md", "archive/nested/project.md"]);
+	});
+
 	it("normalizes legacy and field-specific match signals at the sorter boundary", () => {
 		const legacy = { obj: file("legacy.md", 1), score: -4 };
 		const fieldSpecific = {

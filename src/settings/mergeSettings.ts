@@ -2,6 +2,7 @@ import type { MyPaletteSettings, PaletteSurface } from "src/settings/model";
 import {
 	DEFAULT_BLANK_FILE_SORT_PRIORITIES,
 	DEFAULT_SETTINGS,
+	FILE_SORT_PRIORITIES,
 	SETTING_LIMITS,
 	SETTINGS_SCHEMA_VERSION,
 	normalizeFileSortPriorities,
@@ -91,6 +92,16 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 					),
 				}
 			: { blank: [...legacyBlankSortPriorities], input: [...legacySortPriorities] };
+	const demotedPriorFolders = excludedFolders(rawFile.demotedPriorFolders);
+	// Existing folder rules should stay effective after decoupling from @prior.
+	// Migrate once so later edits can disable or reposition the independent criterion.
+	if ((storedSchemaVersion ?? 0) < 18 && demotedPriorFolders.length > 0) {
+		for (const state of ["blank", "input"] as const) {
+			if (!sortPriorities[state].includes(FILE_SORT_PRIORITIES.lowerPriorFolders)) {
+				sortPriorities[state].unshift(FILE_SORT_PRIORITIES.lowerPriorFolders);
+			}
+		}
+	}
 
 	return {
 		...DEFAULT_SETTINGS,
@@ -125,7 +136,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 		file: {
 			sortPriorities,
 			excludedFolders: excludedFolders(rawFile.excludedFolders),
-			demotedPriorFolders: excludedFolders(rawFile.demotedPriorFolders),
+			demotedPriorFolders,
 		},
 		everything: {
 			httpUrl:
