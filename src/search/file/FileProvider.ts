@@ -64,7 +64,15 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			}),
 		);
 		this.refs.push(app.metadataCache.on("changed", (file) => this.update(file)));
-		this.refs.push(app.metadataCache.on("deleted", (file) => this.deleteEntry(file.path)));
+		this.refs.push(
+			app.metadataCache.on("deleted", (file) => {
+				// Why: `deleted` can fire for bookkeeping around a rename with a
+				// path that still exists in the vault. Only drop the entry when
+				// the path is actually gone so a rename cannot erase its own update.
+				if (this.app.vault.getAbstractFileByPath(file.path)) return;
+				this.deleteEntry(file.path);
+			}),
+		);
 		this.refs.push(app.metadataCache.on("resolve", (file) => this.update(file)));
 		// FileProvider can be constructed before Obsidian has finished parsing all
 		// frontmatter. Re-read files once that initial metadata pass completes so
