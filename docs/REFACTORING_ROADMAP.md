@@ -56,8 +56,7 @@
 
 ### 6. 重複の確認(調査から)
 
-- [ ] `src/ui/suggestionPanel.ts`(約530行)と `src/ui/MultiSelectModal.ts`(約350行)で、選択・チェック・実行のロジックが重複していないか確認する
-- [ ] 重複があり、変更理由が同じなら共通化する。違うなら現状維持とする
+- [x] `src/ui/suggestionPanel.ts` と `src/ui/MultiSelectModal.ts` の重複を確認した。`MultiSelectModal` は `BaseSuggestModal` 経由でパネルを使い、チェック状態は `MultiSelectModal` だけが持つため、重複はなく現状維持とする
 
 ## テストの不足(必要になった時点で補う)
 
