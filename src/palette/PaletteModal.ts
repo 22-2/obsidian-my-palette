@@ -61,6 +61,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			hostEl: this.modalEl,
 			getContext: (input) => this.session.getSearchHistoryContext(input),
 			apply: (result) => this.applySearchHistory(result),
+			moveToSidebar: () => this.moveToSidebar(),
 		});
 		this.registerSelectionDomEvent(
 			this.inputEl,
@@ -161,6 +162,15 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.updatePlaceholder(palettePlaceholder(this.mode));
 		this.modalEl.setAttribute("data-mode", this.mode);
 		this.modalEl.setAttribute("data-everything-scope", this.everythingScope);
+	}
+
+	private moveToSidebar(): void {
+		// Why: copy the live input, including prefixes, and the fixed mode before
+		// closing. A fresh pane preserves this search without replacing another
+		// sidebar palette, and closing first lets the new input retain focus.
+		const input = this.inputEl.value;
+		this.close();
+		void this.plugin.paletteOpener.openNewPaletteView({ input, fixedMode: this.fixedMode });
 	}
 
 	private async activatePaletteResult(

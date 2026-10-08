@@ -19,6 +19,8 @@ interface PaletteHistoryControlsOptions {
 	hostEl: HTMLElement;
 	getContext: (input: string) => PaletteHistoryContext;
 	apply: (result: Extract<PaletteResult, { mode: "search-history" }>) => void;
+	/** Only modal hosts can move their current search into a sidebar pane. */
+	moveToSidebar?: () => void;
 }
 
 /** Shared search-history and options controls for both palette surfaces. */
@@ -109,6 +111,20 @@ export class PaletteHistoryControls {
 		menu.onHide(() => {
 			if (this.activeMenu === menu) this.activeMenu = undefined;
 		});
+		// Why: disabled headings and a separator match the pane-menu pattern,
+		// keeping one-off actions before persistent display preferences.
+		menu.addItem((item) => item.setTitle("Actions").setIcon("zap").setDisabled(true));
+		const { moveToSidebar } = this.options;
+		if (moveToSidebar) {
+			// Why: the shared controls also serve persistent views, which already
+			// live in the workspace and must not offer the modal's move action.
+			menu.addItem((item) =>
+				item
+					.setTitle("Move to right sidebar")
+					.setIcon("panel-right")
+					.onClick(moveToSidebar),
+			);
+		}
 		menu.addItem((item) =>
 			item
 				.setTitle("Help")
@@ -117,6 +133,8 @@ export class PaletteHistoryControls {
 					new PaletteHelpModal(plugin.app, plugin.settings.prefixes).open();
 				}),
 		);
+		menu.addSeparator();
+		menu.addItem((item) => item.setTitle("Options").setIcon("settings").setDisabled(true));
 		menu.addItem((item) =>
 			item
 				.setTitle("Highlight search matches")

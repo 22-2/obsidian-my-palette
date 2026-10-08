@@ -43,6 +43,43 @@ test("right click offers the open actions", async ({ obsidian }) => {
 	await expect(menuItems(page).filter({ hasText: "Open side by side" })).toBeVisible();
 });
 
+test("moves the current modal search into a fresh sidebar pane", async ({ obsidian }) => {
+	await runPaletteCommand(obsidian, "open-view");
+	const page = obsidian.page;
+	const sidebarInputs = page.locator(".my-palette-view .prompt-input");
+	await sidebarInputs.first().fill("beta");
+	await openPaletteWith(obsidian, "alpha");
+	await page.locator(".my-palette-suggest-modal .my-palette-options-button").click();
+	await menuItems(page)
+		.filter({ hasText: /^Move to right sidebar$/ })
+		.click();
+	await expect(page.locator(MODAL_INPUT)).toHaveCount(0);
+	await expect(sidebarInputs).toHaveCount(2);
+	await expect(sidebarInputs.first()).toHaveValue("beta");
+	await expect(sidebarInputs.last()).toHaveValue("alpha");
+	await expect(sidebarInputs.last()).toBeFocused();
+	await expect(page.locator(".my-palette-view").last()).toContainText("Alpha plan");
+	await page.locator(".my-palette-view .my-palette-options-button").last().click();
+	await expect(menuItems(page).filter({ hasText: /^Move to right sidebar$/ })).toHaveCount(0);
+});
+
+test("moving a link search preserves its fixed mode and source note", async ({ obsidian }) => {
+	await obsidian.createNote("Source.md", "[[Alpha plan]]");
+	await obsidian.open("Source.md");
+	await runPaletteCommand(obsidian, "link-search");
+	const page = obsidian.page;
+	await page.locator(MODAL_INPUT).fill("alpha");
+	await expect(page.locator(MODAL_ROW).first()).toContainText("Alpha plan");
+	await page.locator(".my-palette-suggest-modal .my-palette-options-button").click();
+	await menuItems(page)
+		.filter({ hasText: /^Move to right sidebar$/ })
+		.click();
+	await expect(page.locator(MODAL_INPUT)).toHaveCount(0);
+	await expect(page.locator(".my-palette-view .prompt-input")).toHaveValue("alpha");
+	await expect(page.locator(".my-palette-view")).toHaveAttribute("data-mode", "link");
+	await expect(page.locator(".my-palette-view .suggestion-item")).toContainText("Alpha plan");
+});
+
 test("middle click opens a background tab and keeps the current note", async ({ obsidian }) => {
 	await obsidian.open("Beta notes.md");
 	const page = await openPaletteWith(obsidian, "alpha");
