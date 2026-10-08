@@ -262,6 +262,17 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 		expect(f.choose).toHaveBeenCalledExactlyOnceWith("gamma");
 		expect(f.resultFocus).toHaveBeenCalledTimes(4);
 	});
+	it("returns focus to the input in selection mode when empty list space is pressed", async () => {
+		const f = await fixture(surface);
+		f.input.blur();
+		const space = f.root.querySelector<HTMLElement>(".prompt-results")!;
+		mouse(space, "mousedown");
+		expect(document.activeElement).toBe(f.input);
+		expect(f.input.readOnly).toBe(true);
+		key(f.input, "ArrowDown");
+		expect(f.rows()[1].classList.contains("is-active")).toBe(true);
+		expect(f.choose).not.toHaveBeenCalled();
+	});
 	it("keeps the history focus boundary for empty modal space and table headers", async () => {
 		const f = await fixture(surface);
 		const header = f.root.querySelector<HTMLElement>(".prompt-results")!.createDiv("header");

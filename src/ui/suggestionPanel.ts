@@ -222,6 +222,26 @@ export class SuggestionPanel<T> extends Component {
 		this.props.onResultFocus?.();
 	}
 
+	/**
+	 * Why: after focus left the input, a press on empty list space moved focus to
+	 * nothing, so the arrow keys (handled on the input) went unheard until a row
+	 * was clicked. Hand focus back to the input, in selection mode so typing
+	 * stays blocked, without committing history the way a result press does.
+	 */
+	private restoreFocusFromListSpace(event: MouseEvent): void {
+		if (event.button !== 0) return;
+		const target = event.target as Node | null;
+		// Controls such as table header buttons keep their own focus behavior.
+		if (
+			target?.instanceOf(Element) &&
+			target.closest("button, input, select, textarea, a, [tabindex]")
+		)
+			return;
+		event.preventDefault();
+		this.setInteractionMode("selection");
+		if (this.inputEl.isConnected) this.inputEl.focus({ preventScroll: true });
+	}
+
 	updatePlaceholder(placeholder: string): void {
 		this.inputEl.placeholder = placeholder;
 	}
@@ -356,7 +376,10 @@ export class SuggestionPanel<T> extends Component {
 				const modal = this.props.surface !== "view";
 				if (modal) this.focusResults();
 				const row = this.suggestionRowAtEvent(event);
-				if (!row) return;
+				if (!row) {
+					this.restoreFocusFromListSpace(event);
+					return;
+				}
 				// Sorting headers share the result container, but only interacting
 				// with an actual result should commit the search to usage history.
 				if (!modal) this.focusResults();
