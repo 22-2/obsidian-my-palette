@@ -27,23 +27,15 @@ import {
 	type SearchHistoryResult,
 } from "src/palette/results";
 import type { SearchHistoryCategory, SearchHistoryEntry } from "src/settings/model";
-import {
-	formatSearchHistoryInput,
-	getSearchHistorySuggestions,
-	recordSearchHistory,
-	SEARCH_HISTORY_MAX_ENTRIES,
-} from "src/palette/searchHistory";
+import { formatSearchHistoryInput, SEARCH_HISTORY_MAX_ENTRIES } from "src/palette/searchHistory";
 import {
 	loadPluginSettings,
 	savePluginSettings,
 	type LoadedPluginSettings,
 } from "src/settings/settingsStore";
 import { FileUsageHistory } from "src/search/file/fileUsageHistory";
-import {
-	normalizeRecentCommandIds,
-	RecentCommandStore,
-} from "src/search/command/recentCommandStore";
-import { SearchHistoryStore } from "src/palette/searchHistoryStore";
+import { RecentCommandService } from "src/search/command/recentCommandService";
+import { SearchHistoryService } from "src/palette/searchHistoryService";
 import { RecentTagStore } from "src/tags/recentTagStore";
 import { PaletteDisplaySettingsStore } from "src/settings/paletteDisplaySettingsStore";
 import "../styles.css";
@@ -66,34 +58,23 @@ export default class MyPalettePlugin extends Plugin {
 	smartConnectionProvider!: PaletteProviderInstances["smartConnectionProvider"];
 	providers!: PaletteProviderInstances["providers"];
 	private fileUsageHistory?: FileUsageHistory;
-	private searchHistoryStore?: SearchHistoryStore;
-	private recentCommandStore?: RecentCommandStore;
+	private searchHistory?: SearchHistoryService;
+	private recentCommands?: RecentCommandService;
 	recentTagStore!: RecentTagStore;
-	private legacySearchHistoryEntries?: SearchHistoryEntry[];
-	private legacyRecentCommandIds?: string[];
 	private rememberedPaletteQueries: Partial<Record<PaletteMode, string>> = {};
 	private activePaletteModal?: PaletteModal;
 
 	async onload(): Promise<void> {
 		const loadedSettings = await this.loadSettings();
 		this.initializeLogger();
-		this.searchHistoryStore = new SearchHistoryStore(this.app, debugLog);
-		const persistentHistory = await this.searchHistoryStore.load(
+		const saveLegacyFallback = () => void this.saveSettings();
+		this.searchHistory = new SearchHistoryService(this.app, debugLog, saveLegacyFallback);
+		await this.searchHistory.load(
 			loadedSettings.legacySearchHistoryEntries,
 			this.settings.searchHistory.daysToKeep,
 		);
-		// Keep the legacy payload in data.json only when IndexedDB cannot accept
-		// the migration, so a later settings save cannot erase search history.
-		this.legacySearchHistoryEntries = persistentHistory
-			? undefined
-			: [...this.searchHistoryStore.getEntries()];
-		this.recentCommandStore = new RecentCommandStore(this.app, debugLog);
-		const persistentRecentCommands = await this.recentCommandStore.load(
-			loadedSettings.legacyRecentCommandIds,
-		);
-		this.legacyRecentCommandIds = persistentRecentCommands
-			? undefined
-			: [...this.recentCommandStore.getIds()];
+		this.recentCommands = new RecentCommandService(this.app, debugLog, saveLegacyFallback);
+		await this.recentCommands.load(loadedSettings.legacyRecentCommandIds);
 		if (loadedSettings.shouldSave) await this.saveSettings();
 		this.recentTagStore = new RecentTagStore(this.app, debugLog);
 		// Recent tags were never stored in data.json, so there is nothing to migrate.
@@ -106,10 +87,7 @@ export default class MyPalettePlugin extends Plugin {
 			fileSortPriorities: () => this.settings.file.sortPriorities,
 			excludedFolders: () => this.settings.file.excludedFolders,
 			demotedPriorFolders: () => this.settings.file.demotedPriorFolders,
-			recentCommandIds: () =>
-				this.recentCommandStore
-					? [...this.recentCommandStore.getIds()]
-					: (this.legacyRecentCommandIds ?? []),
+			recentCommandIds: () => this.recentCommands?.getIds() ?? [],
 			everythingSettings: () => this.settings.everything,
 			fileUsageHistory: this.fileUsageHistory,
 			log: debugLog,
@@ -278,8 +256,8 @@ export default class MyPalettePlugin extends Plugin {
 		this.everythingClient.cancel();
 		this.paletteDisplaySettings.dispose();
 		this.fileProvider?.dispose();
-		void this.searchHistoryStore?.dispose();
-		void this.recentCommandStore?.dispose();
+		void this.searchHistory?.dispose();
+		void this.recentCommands?.dispose();
 		void this.recentTagStore?.dispose();
 		void this.fileUsageHistory?.dispose();
 		logger.debug("Plugin unloaded");
@@ -296,8 +274,8 @@ export default class MyPalettePlugin extends Plugin {
 	async saveSettings(): Promise<void> {
 		await savePluginSettings(
 			this,
-			this.legacySearchHistoryEntries,
-			this.legacyRecentCommandIds,
+			this.searchHistory?.getLegacyEntries(),
+			this.recentCommands?.getLegacyIds(),
 		);
 	}
 
@@ -316,16 +294,7 @@ export default class MyPalettePlugin extends Plugin {
 	}
 
 	recordCommand(id: string): void {
-		if (this.recentCommandStore) {
-			this.recentCommandStore.record(id);
-			this.syncLegacyRecentCommandFallback();
-		} else {
-			this.legacyRecentCommandIds = normalizeRecentCommandIds([
-				id,
-				...(this.legacyRecentCommandIds ?? []),
-			]);
-		}
-		if (this.legacyRecentCommandIds !== undefined) void this.saveSettings();
+		this.recentCommands?.record(id);
 	}
 
 	recordFileUsage(path: string): void {
@@ -353,15 +322,7 @@ export default class MyPalettePlugin extends Plugin {
 		category: SearchHistoryCategory,
 		includeIgnored = false,
 	): SearchHistoryResult[] {
-		const entries =
-			this.searchHistoryStore?.getSuggestions(input, category, 30, includeIgnored) ??
-			getSearchHistorySuggestions(
-				this.legacySearchHistoryEntries ?? [],
-				input,
-				category,
-				30,
-				includeIgnored,
-			);
+		const entries = this.searchHistory?.getSuggestions(input, category, includeIgnored) ?? [];
 		return entries.map((entry) => ({
 			id: `search-history:${entry.category}:${entry.input}`,
 			mode: "search-history",
@@ -385,38 +346,11 @@ export default class MyPalettePlugin extends Plugin {
 			maxEntries: SEARCH_HISTORY_MAX_ENTRIES,
 			includeIgnored,
 		};
-		if (this.searchHistoryStore) {
-			this.searchHistoryStore.record(input, category, options);
-			this.syncLegacySearchHistoryFallback();
-		} else {
-			this.legacySearchHistoryEntries = recordSearchHistory(
-				this.legacySearchHistoryEntries ?? [],
-				input,
-				category,
-				options,
-			);
-		}
-		if (this.legacySearchHistoryEntries !== undefined) void this.saveSettings();
+		this.searchHistory?.record(input, category, options);
 	}
 
 	clearSearchHistory(): void {
-		if (this.searchHistoryStore) {
-			this.searchHistoryStore.clear();
-			this.syncLegacySearchHistoryFallback();
-		} else {
-			this.legacySearchHistoryEntries = [];
-		}
-		if (this.legacySearchHistoryEntries !== undefined) void this.saveSettings();
-	}
-
-	private syncLegacySearchHistoryFallback(): void {
-		if (this.searchHistoryStore && !this.searchHistoryStore.isPersistent)
-			this.legacySearchHistoryEntries = [...this.searchHistoryStore.getEntries()];
-	}
-
-	private syncLegacyRecentCommandFallback(): void {
-		if (this.recentCommandStore && !this.recentCommandStore.isPersistent)
-			this.legacyRecentCommandIds = [...this.recentCommandStore.getIds()];
+		this.searchHistory?.clear();
 	}
 
 	clearRememberedPaletteQueries(): void {

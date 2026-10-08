@@ -37,7 +37,7 @@
 
 `main.ts` は Plugin のライフサイクルと依存の組み立てに集中させる。
 
-- [ ] 検索履歴と最近のコマンドの「store があれば store、無ければ legacy 配列」という分岐を、小さなサービスにまとめる
+- [x] 検索履歴と最近のコマンドの「store があれば store、無ければ legacy 配列」という分岐を、小さなサービスにまとめる
     - 対象: `legacySearchHistoryEntries`、`legacyRecentCommandIds`、`syncLegacy*Fallback`、`recordSearch`、`recordCommand`、`clearSearchHistory`、`getSearchHistorySuggestions`
     - 不変条件: IndexedDB が使えないときは、legacy ペイロードを `data.json` に残し、設定保存で履歴が消えない
 - [ ] パレットを開く処理(`openPalette*`、`paletteViewState`、`focusPaletteView`、`rememberedPaletteQueries`)を `src/app/` の `PaletteOpener` へ移す
