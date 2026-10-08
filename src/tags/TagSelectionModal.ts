@@ -1,4 +1,4 @@
-import type { App } from "obsidian";
+import type { SelectorControls } from "src/ui/selectorControls";
 import { MultiSelectModal, type MultiSelectCandidate } from "src/ui/MultiSelectModal";
 import type { TagRemoval } from "src/tags/insertTags";
 import type { TagChoice } from "src/tags/tagChoices";
@@ -57,7 +57,7 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 	 * @param targetLabel Shown in the footer so the user knows which notes change.
 	 */
 	constructor(
-		app: App,
+		plugin: SelectorControls["plugin"],
 		private choices: readonly TagChoice[],
 		targetLabel: string,
 		private readonly targetCount: number,
@@ -68,8 +68,20 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 				placeholder: "Select tags to add (type to create a new tag)",
 				footerLabel: targetLabel,
 				actionLabel: "Add",
+				controls: {
+					plugin,
+					category: "tag-insertion",
+					title: "Tag insertion",
+					description:
+						"Search existing tags or type a new tag to add to the target notes.",
+					actionLabel: "Add",
+					shortcuts: [
+						["Space", "Toggle checks in selection mode"],
+						["Ctrl+Enter", "Add all checked tags"],
+					],
+				},
 			},
-			app,
+			plugin.app,
 		);
 	}
 

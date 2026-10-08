@@ -11,8 +11,13 @@ interface PaletteHistoryContext {
 	includeIgnored: boolean;
 }
 
+export type PaletteControlsPlugin = Pick<
+	MyPalettePlugin,
+	"app" | "settings" | "paletteDisplaySettings" | "getSearchHistorySuggestions"
+>;
+
 interface PaletteHistoryControlsOptions {
-	plugin: MyPalettePlugin;
+	plugin: PaletteControlsPlugin;
 	surface: PaletteSurface;
 	inputEl: HTMLInputElement;
 	containerEl: HTMLElement;
@@ -21,6 +26,10 @@ interface PaletteHistoryControlsOptions {
 	apply: (result: Extract<PaletteResult, { mode: "search-history" }>) => void;
 	/** Only modal hosts can move their current search into a sidebar pane. */
 	moveToSidebar?: () => void;
+	/** Selector hosts supply only actions that apply to their own candidates. */
+	populateActions?: (menu: Menu, event: MouseEvent) => void;
+	showHelp?: () => void;
+	focusInput?: () => void;
 }
 
 /** Shared search-history and options controls for both palette surfaces. */
@@ -28,6 +37,7 @@ export class PaletteHistoryControls {
 	private readonly unsubscribeDisplay: () => void;
 	private readonly suggest: SearchHistorySuggest;
 	private readonly eventController = new AbortController();
+	private readonly buttons: HTMLElement[] = [];
 	private activeMenu?: Menu;
 
 	constructor(private readonly options: PaletteHistoryControlsOptions) {
@@ -52,9 +62,12 @@ export class PaletteHistoryControls {
 		this.unsubscribeDisplay();
 		this.options.hostEl.removeClass("my-palette-highlight-disabled");
 		this.suggest.destroy();
+		for (const button of this.buttons) button.remove();
 	}
 
 	close(): void {
+		// Result presses stop propagation, so hosts explicitly dismiss both overlays.
+		this.activeMenu?.close();
 		this.suggest.close();
 	}
 
@@ -97,6 +110,7 @@ export class PaletteHistoryControls {
 		});
 		// Why: a clock identifies saved searches without suggesting a generic dropdown.
 		setIcon(historyButton, "clock");
+		this.buttons.push(optionsButton, historyButton);
 		this.listen(historyButton, "mousedown", consumePointerEvent);
 		this.listen(historyButton, "click", (event) => {
 			consumePointerEvent(event);
@@ -107,7 +121,6 @@ export class PaletteHistoryControls {
 	private showOptionsMenu(event: MouseEvent): void {
 		const { plugin, hostEl, surface } = this.options;
 		this.close();
-		this.activeMenu?.close();
 		const menu = new Menu();
 		this.activeMenu = menu;
 		menu.onHide(() => {
@@ -116,6 +129,7 @@ export class PaletteHistoryControls {
 		// Why: disabled headings and a separator match the pane-menu pattern,
 		// keeping one-off actions before persistent display preferences.
 		menu.addItem((item) => item.setTitle("Actions").setIcon("zap").setDisabled(true));
+		this.options.populateActions?.(menu, event);
 		const { moveToSidebar } = this.options;
 		if (moveToSidebar) {
 			// Why: the shared controls also serve persistent views, which already
@@ -132,7 +146,8 @@ export class PaletteHistoryControls {
 				.setTitle("Help")
 				.setIcon("help-circle")
 				.onClick(() => {
-					new PaletteHelpModal(plugin.app, plugin.settings.prefixes).open();
+					if (this.options.showHelp) this.options.showHelp();
+					else new PaletteHelpModal(plugin.app, plugin.settings.prefixes).open();
 				}),
 		);
 		menu.addSeparator();
@@ -196,6 +211,8 @@ export class PaletteHistoryControls {
 	}
 
 	private handleKeyDown(event: KeyboardEvent): void {
+		// Composition keys belong to the IME, including Enter used to confirm text.
+		if (event.isComposing) return;
 		if (
 			event.ctrlKey &&
 			!event.shiftKey &&
@@ -221,11 +238,13 @@ export class PaletteHistoryControls {
 	}
 
 	private show(): void {
+		this.activeMenu?.close();
 		const { inputEl, plugin } = this.options;
 		const context = this.options.getContext(inputEl.value);
 		this.suggest.show(
 			plugin.getSearchHistorySuggestions("", context.category, context.includeIgnored),
 		);
+		this.options.focusInput?.();
 		inputEl.focus({ preventScroll: true });
 		inputEl.setSelectionRange(inputEl.value.length, inputEl.value.length);
 	}

@@ -1,6 +1,7 @@
 import { Menu, setIcon, type App } from "obsidian";
 import { BaseSuggestModal } from "src/ui/baseSuggestModal";
 import { renderSelectionItem, type SelectionItem } from "src/ui/selectionModal";
+import type { SelectorControls } from "src/ui/selectorControls";
 
 /** One selectable row. `value` is what the modal resolves with when the row is checked. */
 export interface MultiSelectCandidate<V> {
@@ -31,6 +32,7 @@ export interface MultiSelectModalProps {
 	footerLabel: string;
 	/** Verb of the run action and of the Ctrl+Enter hint, such as "Add". */
 	actionLabel: string;
+	controls: SelectorControls;
 }
 
 /**
@@ -54,6 +56,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		super(
 			{
 				placeholder: multiSelect.placeholder,
+				controls: multiSelect.controls,
 				footerText: `${multiSelect.footerLabel} · Enter: ${multiSelect.actionLabel.toLowerCase()} · Space: check · Ctrl+Enter: ${multiSelect.actionLabel.toLowerCase()} checked · Esc: cancel`,
 				// Same Explorer-style selection as the palette: pick rows with click,
 				// Ctrl and Shift, check them, then run the action.
@@ -120,6 +123,24 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 
 	protected override handlesSuggestionContextMenu(): boolean {
 		return true;
+	}
+
+	protected override populateSelectorActions(menu: Menu): void {
+		const targets = this.getSelectedItems();
+		this.populateSelectionMenu(menu, targets, () => this.close());
+		this.addCheckMenuItems(menu, targets);
+		this.addRemovalMenuItem(menu, targets);
+		menu.addItem((item) =>
+			item
+				.setTitle("Uncheck all")
+				.setIcon("square")
+				.setDisabled(this.checked.size === 0)
+				.onClick(() => {
+					this.checked.clear();
+					this.updateCheckedButton();
+					this.rerenderVisibleSuggestions();
+				}),
+		);
 	}
 
 	protected override onSuggestionContextMenu(
@@ -208,6 +229,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 	/** Resolves with the given rows, or with every checked row by default. */
 	private confirm(rows: readonly MultiSelectCandidate<V>[] = [...this.checked.values()]): void {
 		if (rows.length === 0) return;
+		this.commitSearchHistory();
 		this.confirmedValues = rows.map(({ value }) => value);
 		this.close();
 	}

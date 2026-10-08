@@ -6,7 +6,10 @@ export interface SearchHistoryEntry {
 	count: number;
 }
 
+export type SelectorHistoryCategory = "tag-insertion" | "moc-insertion" | "folder-move";
+
 export type SearchHistoryCategory =
+	| SelectorHistoryCategory
 	| "file"
 	| "command"
 	| "bookmark"

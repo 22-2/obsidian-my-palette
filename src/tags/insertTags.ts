@@ -1,4 +1,5 @@
 import { getAllTags, Notice, parseFrontMatterTags, type App, type TFile } from "obsidian";
+import type MyPalettePlugin from "src/main";
 import { mergeFrontmatterTags, removeFrontmatterTags } from "src/shared/frontmatter";
 import { relationPaths } from "src/shared/noteRelations";
 import { buildTagChoices, tagKey, type TagChoice } from "src/tags/tagChoices";
@@ -65,11 +66,8 @@ function targetLabel(files: readonly TFile[]): string {
 /**
  * Lets the user pick tags and adds them to the frontmatter of every target note.
  */
-export async function insertTags(
-	app: App,
-	files: readonly TFile[],
-	recentTags: RecentTagSource,
-): Promise<void> {
+export async function insertTags(plugin: MyPalettePlugin, files: readonly TFile[]): Promise<void> {
+	const { app, recentTagStore: recentTags } = plugin;
 	const targets = files.filter((file) => file.extension === "md");
 	if (targets.length === 0) {
 		new Notice("No Markdown note to add tags to.");
@@ -77,7 +75,7 @@ export async function insertTags(
 	}
 
 	const selected = await new TagSelectionModal(
-		app,
+		plugin,
 		buildChoices(app, targets, recentTags),
 		targetLabel(targets),
 		targets.length,

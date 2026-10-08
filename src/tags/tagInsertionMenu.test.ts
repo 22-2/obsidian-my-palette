@@ -1,4 +1,5 @@
 import type { App, Menu } from "obsidian";
+import type MyPalettePlugin from "src/main";
 import { TFile } from "obsidian";
 import { expect, it, vi } from "vitest";
 import type { PaletteResult } from "src/palette/results";
@@ -29,6 +30,7 @@ const app = {
 	vault: { getAbstractFileByPath: (path: string) => files.get(path) ?? null },
 } as unknown as App;
 const recentTags = { getIds: () => [], record: vi.fn() };
+const plugin = { app, recentTagStore: recentTags } as unknown as MyPalettePlugin;
 
 function menu() {
 	const titles: string[] = [];
@@ -68,22 +70,16 @@ it("adds tags only to distinct indexed Markdown notes", () => {
 	const onSelected = vi.fn();
 	const m = menu();
 
-	addTagInsertionMenuItems(m.instance, app, recentTags, results, onSelected);
+	addTagInsertionMenuItems(m.instance, plugin, results, onSelected);
 	expect(m.titles).toEqual(["Add tags to 2 notes…"]);
 	m.click();
 
 	expect(onSelected).toHaveBeenCalledOnce();
-	expect(insertTags).toHaveBeenCalledWith(
-		app,
-		[files.get("a.md"), files.get("b.md")],
-		recentTags,
-	);
+	expect(insertTags).toHaveBeenCalledWith(plugin, [files.get("a.md"), files.get("b.md")]);
 });
 
 it("adds no item when nothing can be tagged", () => {
 	const m = menu();
-	addTagInsertionMenuItems(m.instance, app, recentTags, [
-		{ ...base, mode: "command", commandId: "x" },
-	]);
+	addTagInsertionMenuItems(m.instance, plugin, [{ ...base, mode: "command", commandId: "x" }]);
 	expect(m.titles).toEqual([]);
 });

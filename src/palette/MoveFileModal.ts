@@ -1,4 +1,5 @@
-import { Notice, TFile, TFolder, type App } from "obsidian";
+import { Notice, TFile, TFolder } from "obsidian";
+import type { SelectorControls } from "src/ui/selectorControls";
 import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
 
 interface FolderItem extends SelectionItem {
@@ -8,16 +9,24 @@ interface FolderItem extends SelectionItem {
 /** Folder picker for moving the file that was active when the command was invoked. */
 export class MoveFileModal extends SelectionModal<FolderItem> {
 	constructor(
-		app: App,
+		plugin: SelectorControls["plugin"],
 		private readonly file: TFile,
 	) {
 		super(
 			{
 				placeholder: "Search destination folders",
 				footerText: `Moving: ${file.path}`,
+				controls: {
+					plugin,
+					category: "folder-move",
+					title: "Move file",
+					description:
+						"Search destination folders for the current file. Restoring history only changes the folder search.",
+					actionLabel: "Move to",
+				},
 				items: [
 					{ label: "Vault root", description: "/", icon: "folder-root", path: "" },
-					...app.vault
+					...plugin.app.vault
 						.getAllLoadedFiles()
 						.filter((entry): entry is TFolder => entry instanceof TFolder)
 						.map((folder) => ({
@@ -28,7 +37,7 @@ export class MoveFileModal extends SelectionModal<FolderItem> {
 						})),
 				],
 			},
-			app,
+			plugin.app,
 		);
 	}
 

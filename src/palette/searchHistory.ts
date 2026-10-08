@@ -1,6 +1,10 @@
 import type { Prefixes } from "src/palette/inputParser";
 import { getSearchHistoryCategory, parseInput, RELATED_PREFIXES } from "src/palette/inputParser";
-import type { SearchHistoryCategory, SearchHistoryEntry } from "src/settings/model";
+import type {
+	SearchHistoryCategory,
+	SearchHistoryEntry,
+	SelectorHistoryCategory,
+} from "src/settings/model";
 
 export interface RecordSearchHistoryOptions {
 	now: number;
@@ -11,6 +15,10 @@ export interface RecordSearchHistoryOptions {
 
 export const SEARCH_HISTORY_MAX_ENTRIES = 256;
 
+function isSelectorHistoryCategory(value: unknown): value is SelectorHistoryCategory {
+	return value === "tag-insertion" || value === "moc-insertion" || value === "folder-move";
+}
+
 function isSearchHistoryCategory(value: unknown): value is SearchHistoryCategory {
 	return (
 		value === "file" ||
@@ -20,7 +28,8 @@ function isSearchHistoryCategory(value: unknown): value is SearchHistoryCategory
 		value === "everything" ||
 		value === "everything-directory" ||
 		value === "link" ||
-		value === "backlink"
+		value === "backlink" ||
+		isSelectorHistoryCategory(value)
 	);
 }
 
@@ -54,7 +63,10 @@ export function normalizeSearchHistoryEntry(value: unknown): SearchHistoryEntry 
 	return {
 		input: source.input,
 		category: source.category,
-		includeIgnored: source.includeIgnored === true ? true : undefined,
+		includeIgnored:
+			!isSelectorHistoryCategory(source.category) && source.includeIgnored === true
+				? true
+				: undefined,
 		lastSearchedAt: source.lastSearchedAt,
 		count: Math.max(1, Math.round(source.count)),
 	};
@@ -85,12 +97,15 @@ export function parseStoredSearchHistoryEntries(
 		const category = isSearchHistoryCategory(source.category)
 			? source.category
 			: getSearchHistoryCategory(parsed);
+		// Selector entries store the complete input, including MOC prefixes and
+		// folder names. Do not reinterpret their text as a palette search scope.
 		return [
 			{
 				input: isSearchHistoryCategory(source.category) ? source.input : parsed.query,
 				category,
-				includeIgnored:
-					typeof source.includeIgnored === "boolean"
+				includeIgnored: isSelectorHistoryCategory(category)
+					? undefined
+					: typeof source.includeIgnored === "boolean"
 						? source.includeIgnored || undefined
 						: parsed.includeIgnored || undefined,
 				lastSearchedAt: source.lastSearchedAt,
@@ -201,6 +216,7 @@ export function getSearchHistorySuggestions(
 
 /** Rebuilds the palette input that would produce the given history entry. */
 export function formatSearchHistoryInput(entry: SearchHistoryEntry, prefixes: Prefixes): string {
+	if (isSelectorHistoryCategory(entry.category)) return entry.input;
 	const modeInput = `${historyCategoryPrefix(entry.category, prefixes)}${entry.input}`;
 	// Related searches intentionally do not support the ignored-note scope;
 	// avoid reconstructing an input that the parser would interpret as File mode.
@@ -226,6 +242,9 @@ function historyCategoryPrefix(category: SearchHistoryCategory, prefixes: Prefix
 		case "backlink":
 			return RELATED_PREFIXES.backlink;
 		case "file":
+		case "tag-insertion":
+		case "moc-insertion":
+		case "folder-move":
 			return "";
 	}
 }

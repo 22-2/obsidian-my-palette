@@ -376,6 +376,7 @@ export class PaletteView extends ItemView {
 					includeIgnored: false,
 				},
 			apply: (result) => this.applySearchHistory(result),
+			focusInput: () => this.panel?.focusSearchInput(),
 		});
 	}
 

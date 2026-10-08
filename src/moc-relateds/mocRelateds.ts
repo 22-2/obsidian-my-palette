@@ -229,6 +229,18 @@ class MocTargetModal extends MultiSelectModal<string> {
 					"Search notes to insert into the MOC · i old notes includes Excluded files",
 				footerLabel: `Source: ${activeFile.path}`,
 				actionLabel: "Insert",
+				controls: {
+					plugin,
+					category: "moc-insertion",
+					title: "MOC link insertion",
+					description:
+						"Search notes to link in the active MOC. Prefix i followed by a space includes Excluded files.",
+					actionLabel: "Insert",
+					shortcuts: [
+						["Space", "Toggle checks in selection mode"],
+						["Ctrl+Enter", "Insert all checked notes"],
+					],
+				},
 			},
 			plugin.app,
 		);

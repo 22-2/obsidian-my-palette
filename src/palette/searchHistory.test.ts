@@ -9,6 +9,28 @@ import {
 } from "src/palette/searchHistory";
 
 describe("search history", () => {
+	it.each(["tag-insertion", "moc-insertion", "folder-move"] as const)(
+		"preserves %s entries through storage normalization",
+		(category) => {
+			const entry = { input: "i example", category, lastSearchedAt: 1_000, count: 1 };
+			const normalized = parseStoredSearchHistoryEntries([entry], {
+				command: ">",
+				everything: "e ",
+				includeIgnored: "i ",
+			});
+			expect(normalized).toEqual([{ ...entry, includeIgnored: undefined }]);
+			expect(
+				formatSearchHistoryInput(entry, {
+					command: ">",
+					everything: "e ",
+					includeIgnored: "i ",
+				}),
+			).toBe("i example");
+			expect(getSearchHistorySuggestions(normalized, "", "file")).toEqual([]);
+			expect(getSearchHistorySuggestions(normalized, "", category)).toEqual(normalized);
+		},
+	);
+
 	it("increments a committed search and merges case-only duplicates", () => {
 		const first = recordSearchHistory([], "report", "everything", {
 			now: 1_000,

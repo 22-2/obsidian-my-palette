@@ -57,13 +57,7 @@ export function populatePaletteResultMenu({
 			(values) => void copyPathListToClipboard(values),
 		);
 		addMocInsertionMenuItems(menu, plugin, selectedItems, onNoteActionSelected, getMocContext);
-		addTagInsertionMenuItems(
-			menu,
-			app,
-			plugin.recentTagStore,
-			selectedItems,
-			onNoteActionSelected,
-		);
+		addTagInsertionMenuItems(menu, plugin, selectedItems, onNoteActionSelected);
 		return;
 	}
 
@@ -134,5 +128,5 @@ export function populatePaletteResultMenu({
 	// Why: MOC insertion mutates multiple notes, so keep it after navigation and
 	// non-mutating copy actions in both palette surfaces.
 	addMocInsertionMenuItem(menu, plugin, result, onNoteActionSelected, getMocContext);
-	addTagInsertionMenuItems(menu, app, plugin.recentTagStore, [result], onNoteActionSelected);
+	addTagInsertionMenuItems(menu, plugin, [result], onNoteActionSelected);
 }

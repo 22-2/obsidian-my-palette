@@ -1,6 +1,7 @@
 import { TFile, type App, type Menu } from "obsidian";
 import type { PaletteResult } from "src/palette/results";
-import { insertTags, type RecentTagSource } from "src/tags/insertTags";
+import { insertTags } from "src/tags/insertTags";
+import type MyPalettePlugin from "src/main";
 
 /**
  * Resolves a palette result to an indexed Markdown note. Ignored notes are
@@ -22,14 +23,13 @@ function resolveTagTarget(app: App, result: PaletteResult): TFile | undefined {
 /** Adds one action that inserts the chosen tags into every selected note. */
 export function addTagInsertionMenuItems(
 	menu: Menu,
-	app: App,
-	recentTags: RecentTagSource,
+	plugin: MyPalettePlugin,
 	results: readonly PaletteResult[],
 	onSelected?: () => void,
 ): void {
 	const targets = new Map<string, TFile>();
 	for (const result of results) {
-		const file = resolveTagTarget(app, result);
+		const file = resolveTagTarget(plugin.app, result);
 		if (file) targets.set(file.path, file);
 	}
 	if (targets.size === 0) return;
@@ -39,7 +39,7 @@ export function addTagInsertionMenuItems(
 			.setIcon("tags")
 			.onClick(() => {
 				onSelected?.();
-				void insertTags(app, [...targets.values()], recentTags);
+				void insertTags(plugin, [...targets.values()]);
 			}),
 	);
 }

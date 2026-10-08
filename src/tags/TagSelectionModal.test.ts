@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { TagChoice } from "src/tags/tagChoices";
 import { TagSelectionModal } from "src/tags/TagSelectionModal";
 import { installObsidianDom, Menu } from "src/ui/testing/obsidianDom";
+import { createSelectorPlugin } from "src/ui/testing/selectorPlugin";
 
 vi.mock("obsidian", () => import("src/ui/testing/obsidianDom"));
 
@@ -18,6 +19,7 @@ beforeEach(() => {
 	for (const name of [
 		"document",
 		"Element",
+		"Node",
 		"HTMLElement",
 		"Event",
 		"KeyboardEvent",
@@ -37,9 +39,9 @@ const flush = async () => {
 	for (let turn = 0; turn < 5; turn += 1) await Promise.resolve();
 };
 
-async function open(targetCount = 1) {
+async function open(targetCount = 1, plugin = createSelectorPlugin({} as App)) {
 	const modal = new TagSelectionModal(
-		{} as App,
+		plugin,
 		choices,
 		"Target: note.md",
 		targetCount,
@@ -70,10 +72,50 @@ async function open(targetCount = 1) {
 		modal.inputEl.dispatchEvent(new Event("input"));
 		await flush();
 	};
-	return { modal, result, rows, labels, checked, button, key, mouse, type };
+	return { plugin, modal, result, rows, labels, checked, button, key, mouse, type };
 }
 
 describe("TagSelectionModal", () => {
+	it("offers insertion and check actions in the shared action button", async () => {
+		const f = await open();
+		const actionButton = f.modal.modalEl.querySelector<HTMLElement>(
+			".my-palette-options-button",
+		)!;
+		f.mouse(actionButton, "click");
+		expect(Menu.last?.titles()).toEqual([
+			"Actions",
+			"Check",
+			"Add 1 now",
+			"Uncheck all",
+			"Help",
+			"Options",
+			"Highlight search matches",
+		]);
+		Menu.last?.items.find(({ title }) => title === "Check")?.click();
+		expect(f.checked()).toEqual(["#alpha"]);
+		f.mouse(actionButton, "click");
+		expect(Menu.last?.titles()).toContain("Add 1 checked");
+		Menu.last?.items.find(({ title }) => title === "Add 1 checked")?.click();
+		await expect(f.result).resolves.toEqual(["alpha"]);
+	});
+
+	it("restores tag history without discarding checks or inserting tags", async () => {
+		const f = await open();
+		await f.type("#fresh");
+		f.key("ArrowUp");
+		f.key(" ");
+		f.key("f");
+		await f.type("");
+		f.key("r", { ctrlKey: true });
+		f.key("Enter");
+		await flush();
+		expect(f.modal.inputEl.value).toBe("#fresh");
+		expect(f.checked()).toEqual(["#fresh"]);
+		expect(f.modal.modalEl.isConnected).toBe(true);
+		f.key("Enter", { ctrlKey: true });
+		await expect(f.result).resolves.toEqual(["fresh"]);
+	});
+
 	it.each(["ArrowUp", "ArrowDown"])(
 		"starts selection at the first row with %s",
 		async (arrow) => {

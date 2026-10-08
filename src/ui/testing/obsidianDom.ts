@@ -77,6 +77,18 @@ export function installObsidianDom(): void {
 				this.textContent = text;
 			},
 		},
+		hasClass: {
+			configurable: true,
+			value(this: HTMLElement, name: string) {
+				return this.classList.contains(name);
+			},
+		},
+		setAttr: {
+			configurable: true,
+			value(this: HTMLElement, name: string, value: string) {
+				this.setAttribute(name, value);
+			},
+		},
 		scrollIntoView: { configurable: true, value() {} },
 	});
 }
@@ -107,6 +119,8 @@ export class Component {
 
 export class Modal {
 	readonly modalEl = document.createElement("div");
+	readonly titleEl = this.modalEl.appendChild(document.createElement("h2"));
+	readonly contentEl = this.modalEl.appendChild(document.createElement("div"));
 	readonly scope = {
 		keys: ["Home", "End", "Escape"].map((key) => ({
 			key,

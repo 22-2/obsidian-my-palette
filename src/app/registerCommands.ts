@@ -78,7 +78,7 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		checkCallback: (checking) => {
 			const file = plugin.app.workspace.getActiveFile();
 			if (checking) return Boolean(file);
-			if (file) new MoveFileModal(plugin.app, file).open();
+			if (file) new MoveFileModal(plugin, file).open();
 		},
 	});
 	plugin.addCommand({
@@ -93,7 +93,7 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 			const file = plugin.app.workspace.getActiveFile();
 			const canRun = file?.extension === "md";
 			if (checking) return canRun;
-			if (file && canRun) void insertTags(plugin.app, [file], plugin.recentTagStore);
+			if (file && canRun) void insertTags(plugin, [file]);
 		},
 	});
 	plugin.addCommand({

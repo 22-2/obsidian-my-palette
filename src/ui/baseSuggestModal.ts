@@ -1,4 +1,6 @@
-import { App, Modal, type KeymapEventHandler } from "obsidian";
+import { App, Modal, type KeymapEventHandler, type Menu } from "obsidian";
+import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
+import { SelectorHelpModal, type SelectorControls } from "src/ui/selectorControls";
 import { SuggestionPanel } from "src/ui/suggestionPanel";
 
 export interface SuggestModalProps<T> {
@@ -9,6 +11,7 @@ export interface SuggestModalProps<T> {
 	initialInput?: string;
 	footerText?: string;
 	selectionMode?: "single" | "extended";
+	controls?: SelectorControls;
 	/** Optional dynamic source used by selectors whose candidates depend on input. */
 	search?: (query: string) => T[] | Promise<T[]>;
 }
@@ -25,6 +28,10 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	private readonly initialInput: string;
 	private refreshGeneration = 0;
 	private resultTotal = 0;
+	private readonly controls?: SelectorControls;
+	private selectorHistoryControls?: PaletteHistoryControls;
+	private historyTimer?: number;
+	private historyCommitted = false;
 
 	constructor(
 		{
@@ -34,22 +41,32 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			initialInput = "",
 			footerText,
 			selectionMode = "single",
+			controls,
 		}: SuggestModalProps<T>,
 		app: App,
 	) {
 		super(app);
 		this.items = [...items];
 		this.initialInput = initialInput;
+		this.controls = controls;
 		this.panel = new SuggestionPanel(this.modalEl, {
 			surface: "modal",
 			placeholder,
 			initialInput,
 			footerText,
 			selectionMode,
-			onInput: () => this.refreshSuggestions(),
+			onInput: () => {
+				this.historyCommitted = false;
+				this.refreshSuggestions();
+				this.scheduleSearchHistory();
+			},
 			renderSuggestion: (item, el) => this.renderSuggestion(item, el),
 			onChoose: (item, event) => this.onChooseSuggestion(item, event),
-			onResultFocus: () => this.onResultFocus(),
+			onResultFocus: () => {
+				this.commitSearchHistory();
+				this.selectorHistoryControls?.close();
+				this.onResultFocus();
+			},
 			onMiddleClick: this.handlesSuggestionMiddleClick()
 				? (item, event) => this.onSuggestionMiddleClick(item, event)
 				: undefined,
@@ -111,6 +128,35 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		// ModalはComponentを継承しないため、開閉に合わせて部品のイベントを管理する。
 		// 同じインスタンスを再度開いてもフッターやハンドラを増やさない。
 		this.panel.load();
+		this.historyCommitted = false;
+		if (this.controls) {
+			const controls = this.controls;
+			this.selectorHistoryControls = new PaletteHistoryControls({
+				plugin: controls.plugin,
+				surface: "palette",
+				inputEl: this.inputEl,
+				containerEl: this.inputEl.parentElement ?? this.modalEl,
+				hostEl: this.modalEl,
+				getContext: (input) => ({
+					query: input,
+					category: controls.category,
+					includeIgnored: false,
+				}),
+				// Restoring a history entry only replaces the query. In particular, a
+				// saved MOC prefix must stay intact and must never trigger insertion.
+				apply: (result) => {
+					this.cancelHistoryTimer();
+					this.historyCommitted = false;
+					this.selectorHistoryControls?.close();
+					this.panel.setInput(result.input, "end");
+					this.focusSearchInput();
+					this.refreshSuggestions();
+				},
+				populateActions: (menu, event) => this.populateSelectorActions(menu, event),
+				showHelp: () => new SelectorHelpModal(this.app, controls).open(),
+				focusInput: () => this.focusSearchInput(),
+			});
+		}
 		this.onSelectionModalOpen();
 		this.focusSearchInput();
 		if (this.initialInput) {
@@ -128,6 +174,9 @@ export abstract class BaseSuggestModal<T> extends Modal {
 
 	onClose(): void {
 		this.refreshGeneration += 1;
+		this.cancelHistoryTimer();
+		this.selectorHistoryControls?.destroy();
+		this.selectorHistoryControls = undefined;
 		this.onSelectionModalClose();
 		this.panel.unload();
 		super.onClose();
@@ -137,11 +186,46 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	abstract renderSuggestion(item: T, el: HTMLElement): void;
 
 	onChooseSuggestion(item: T, event: MouseEvent | KeyboardEvent): void {
+		this.commitSearchHistory();
 		this.selected = item;
 		void this.onItemActivated(item, event);
 	}
 
 	protected onSelectionModalOpen(): void {}
+
+	protected populateSelectorActions(menu: Menu, event: MouseEvent): void {
+		const candidate = this.getSelectedItem();
+		const controls = this.controls;
+		if (!controls) return;
+		menu.addItem((item) =>
+			item
+				.setTitle(`${controls.actionLabel} selected`)
+				.setIcon("corner-down-left")
+				.setDisabled(candidate === undefined)
+				.onClick(() => {
+					if (candidate !== undefined) this.onChooseSuggestion(candidate, event);
+				}),
+		);
+	}
+
+	protected commitSearchHistory(): void {
+		this.cancelHistoryTimer();
+		if (!this.controls || this.historyCommitted || !this.inputEl.value.trim()) return;
+		this.controls.plugin.recordSearch(this.inputEl.value, this.controls.category);
+		this.historyCommitted = true;
+	}
+
+	private scheduleSearchHistory(): void {
+		this.cancelHistoryTimer();
+		const history = this.controls?.plugin.settings.searchHistory;
+		if (!history?.enabled || history.addDelayMs <= 0) return;
+		this.historyTimer = window.setTimeout(() => this.commitSearchHistory(), history.addDelayMs);
+	}
+
+	private cancelHistoryTimer(): void {
+		if (this.historyTimer !== undefined) window.clearTimeout(this.historyTimer);
+		this.historyTimer = undefined;
+	}
 	protected onSelectionModalClose(): void {}
 	protected handlesSuggestionMiddleClick(): boolean {
 		return false;
