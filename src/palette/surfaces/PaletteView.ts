@@ -663,11 +663,9 @@ export class PaletteView extends ItemView {
 		return file instanceof TFile ? file : undefined;
 	}
 
-	private fileOf(leaf: WorkspaceLeaf): import("obsidian").TFile | undefined {
+	private fileOf(leaf: WorkspaceLeaf): TFile | undefined {
 		const file = (leaf.view as { file?: unknown }).file;
-		return file && typeof file === "object" && "path" in file
-			? (file as import("obsidian").TFile)
-			: undefined;
+		return file && typeof file === "object" && "path" in file ? (file as TFile) : undefined;
 	}
 }
 

@@ -11,6 +11,7 @@ import { registerPluginCommands } from "src/app/registerCommands";
 import { registerPluginEvents } from "src/app/registerEvents";
 import { openExternalMarkdown } from "src/workspace/external-markdown/openExternalMarkdown";
 import { PaletteModal } from "src/palette/PaletteModal";
+import type { FixedPaletteMode } from "src/palette/PaletteSearchSession";
 import { PaletteView } from "src/palette/surfaces/PaletteView";
 import {
 	PALETTE_VIEW_TYPE,
@@ -43,6 +44,7 @@ import { PaletteDisplaySettingsStore } from "src/settings/paletteDisplaySettings
 import "../styles.css";
 
 const logger = log.withTag("MyPalette");
+const debugLog = (message: string, detail?: unknown): void => logger.debug(message, detail);
 
 export default class MyPalettePlugin extends Plugin {
 	settings: MyPaletteSettings = DEFAULT_SETTINGS;
@@ -50,9 +52,7 @@ export default class MyPalettePlugin extends Plugin {
 		() => this.settings,
 		() => this.saveSettings(),
 	);
-	readonly everythingClient = new EverythingHttpClient((message, detail) =>
-		logger.debug(message, detail),
-	);
+	readonly everythingClient = new EverythingHttpClient(debugLog);
 	fileProvider!: PaletteProviderInstances["fileProvider"];
 	commandProvider!: PaletteProviderInstances["commandProvider"];
 	everythingProvider!: PaletteProviderInstances["everythingProvider"];
@@ -72,9 +72,7 @@ export default class MyPalettePlugin extends Plugin {
 	async onload(): Promise<void> {
 		const loadedSettings = await this.loadSettings();
 		this.initializeLogger();
-		this.searchHistoryStore = new SearchHistoryStore(this.app, (message, detail) =>
-			logger.debug(message, detail),
-		);
+		this.searchHistoryStore = new SearchHistoryStore(this.app, debugLog);
 		const persistentHistory = await this.searchHistoryStore.load(
 			loadedSettings.legacySearchHistoryEntries,
 			this.settings.searchHistory.daysToKeep,
@@ -84,9 +82,7 @@ export default class MyPalettePlugin extends Plugin {
 		this.legacySearchHistoryEntries = persistentHistory
 			? undefined
 			: [...this.searchHistoryStore.getEntries()];
-		this.recentCommandStore = new RecentCommandStore(this.app, (message, detail) =>
-			logger.debug(message, detail),
-		);
+		this.recentCommandStore = new RecentCommandStore(this.app, debugLog);
 		const persistentRecentCommands = await this.recentCommandStore.load(
 			loadedSettings.legacyRecentCommandIds,
 		);
@@ -94,14 +90,10 @@ export default class MyPalettePlugin extends Plugin {
 			? undefined
 			: [...this.recentCommandStore.getIds()];
 		if (loadedSettings.shouldSave) await this.saveSettings();
-		this.recentTagStore = new RecentTagStore(this.app, (message, detail) =>
-			logger.debug(message, detail),
-		);
+		this.recentTagStore = new RecentTagStore(this.app, debugLog);
 		// Recent tags were never stored in data.json, so there is nothing to migrate.
 		await this.recentTagStore.load();
-		this.fileUsageHistory = new FileUsageHistory(this.app, (message, detail) =>
-			logger.debug(message, detail),
-		);
+		this.fileUsageHistory = new FileUsageHistory(this.app, debugLog);
 		await this.fileUsageHistory.load();
 		registerPluginEvents(this);
 		const providers = createPaletteProviders(this.app, this.everythingClient, {
@@ -115,7 +107,7 @@ export default class MyPalettePlugin extends Plugin {
 					: (this.legacyRecentCommandIds ?? []),
 			everythingSettings: () => this.settings.everything,
 			fileUsageHistory: this.fileUsageHistory,
-			log: (message, detail) => logger.debug(message, detail),
+			log: debugLog,
 		});
 		this.fileProvider = providers.fileProvider;
 		this.commandProvider = providers.commandProvider;
@@ -128,10 +120,7 @@ export default class MyPalettePlugin extends Plugin {
 		registerPluginCommands(this);
 	}
 
-	openPalette(
-		initialInput = "",
-		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
-	): void {
+	openPalette(initialInput = "", fixedMode?: FixedPaletteMode): void {
 		if (this.activePaletteModal) {
 			this.activePaletteModal.focusSearchInput();
 			return;
@@ -150,14 +139,14 @@ export default class MyPalettePlugin extends Plugin {
 
 	async openPaletteView(
 		initialInput = this.getRememberedPaletteQuery("file"),
-		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
+		fixedMode?: FixedPaletteMode,
 	): Promise<void> {
 		await this.openSidebarPaletteView(PALETTE_VIEW_TYPE, initialInput, fixedMode);
 	}
 
 	async openPaletteTableView(
 		initialInput = this.getRememberedPaletteQuery("file"),
-		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
+		fixedMode?: FixedPaletteMode,
 	): Promise<void> {
 		// Why: reuse a center table without overwriting its query. A new tab keeps
 		// the current note intact and avoids reopening a restored sidebar table.
@@ -179,7 +168,7 @@ export default class MyPalettePlugin extends Plugin {
 	private async openSidebarPaletteView(
 		viewType: PaletteViewType,
 		initialInput: string,
-		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
+		fixedMode?: FixedPaletteMode,
 	): Promise<void> {
 		// Why: reuse only the requested view type, so opening a table cannot replace
 		// the regular palette's query or its independently persisted sidebar pane.
@@ -202,7 +191,7 @@ export default class MyPalettePlugin extends Plugin {
 
 	async openNewPaletteView(
 		initialInput = this.getRememberedPaletteQuery("file"),
-		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
+		fixedMode?: FixedPaletteMode,
 		sourcePath?: string,
 		sourcePinned = false,
 		tableState?: PaletteTableState,
@@ -231,7 +220,7 @@ export default class MyPalettePlugin extends Plugin {
 
 	private paletteViewState(
 		initialInput: string,
-		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
+		fixedMode?: FixedPaletteMode,
 		sourcePath?: string,
 		sourcePinned = false,
 	): {

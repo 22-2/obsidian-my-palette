@@ -24,9 +24,9 @@
 
 ### 1. 重複した型とロガー(リスク最小)
 
-- [ ] `Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">` を `FixedPaletteMode`(`src/palette/PaletteSearchSession.ts`)に置き換える(`main.ts` に6箇所)
-- [ ] `(message, detail) => logger.debug(message, detail)` を `main.ts` 内で1つにまとめる(6箇所)
-- [ ] `PaletteView.ts` のインライン `import("obsidian").TFile` を `import type` に直す
+- [x] `Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">` を `FixedPaletteMode`(`src/palette/PaletteSearchSession.ts`)に置き換える(`main.ts` に6箇所)
+- [x] `(message, detail) => logger.debug(message, detail)` を `main.ts` 内で1つにまとめる(6箇所)
+- [x] `PaletteView.ts` のインライン `import("obsidian").TFile` を `import type` に直す
 
 ### 2. `main.ts` の純粋ロジックの切り出し
 
