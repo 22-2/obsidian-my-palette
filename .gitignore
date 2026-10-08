@@ -34,3 +34,8 @@ wheels/
 
 repomix-output.md
 .env
+
+# e2e
+.e2e
+test-results
+playwright-report

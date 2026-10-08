@@ -117,7 +117,7 @@ export class PaletteSearchSession {
 		};
 		this.emit();
 
-		this.plugin.rememberPaletteQuery(parsed.mode, parsed.query, input);
+		this.plugin.paletteOpener.rememberQuery(parsed.mode, parsed.query, input);
 		// History is committed when the result list receives focus. Keeping it out
 		// of the search pipeline prevents typing alone from creating history.
 

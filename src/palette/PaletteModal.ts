@@ -79,7 +79,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override onSelectionModalClose(): void {
-		this.plugin.releasePaletteModal(this);
+		this.plugin.paletteOpener.releaseModal(this);
 		// This session owns the request signal; canceling the shared client here
 		// would also interrupt searches in still-open sidebar views.
 		this.session.dispose();

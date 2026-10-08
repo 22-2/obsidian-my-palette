@@ -12,6 +12,10 @@ export default defineConfig(async ({ mode }) => {
 		resolve: {
 			alias: { src: path.resolve(__dirname, "src") },
 		},
+		test: {
+			// Playwright owns e2e/; run it with `pnpm e2e`.
+			include: ["src/**/*.test.ts"],
+		},
 		staged: {
 			"src/**/*.{ts}": "vp check --fix",
 		},

@@ -7,42 +7,32 @@ import {
 	createPaletteProviders,
 	type PaletteProviderInstances,
 } from "src/app/createPaletteProviders";
+import { PaletteOpener } from "src/app/paletteOpener";
 import { registerPluginCommands } from "src/app/registerCommands";
 import { registerPluginEvents } from "src/app/registerEvents";
 import { openExternalMarkdown } from "src/workspace/external-markdown/openExternalMarkdown";
-import { PaletteModal } from "src/palette/PaletteModal";
-import { PaletteView } from "src/palette/surfaces/PaletteView";
-import {
-	PALETTE_VIEW_TYPE,
-	PALETTE_TABLE_VIEW_TYPE,
-	type PaletteViewType,
-} from "src/palette/surfaces/paletteViewTypes";
-import type { PaletteTableState } from "src/palette/table/paletteTableModel";
 import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
-import type { PaletteMode, PaletteResult, SearchHistoryResult } from "src/palette/results";
-import type { SearchHistoryCategory, SearchHistoryEntry } from "src/settings/model";
 import {
-	getSearchHistorySuggestions,
-	recordSearchHistory,
-	SEARCH_HISTORY_MAX_ENTRIES,
-} from "src/palette/searchHistory";
-import { RELATED_PREFIXES } from "src/palette/inputParser";
+	getResultFilePath,
+	type PaletteResult,
+	type SearchHistoryResult,
+} from "src/palette/results";
+import type { SearchHistoryCategory, SearchHistoryEntry } from "src/settings/model";
+import { formatSearchHistoryInput, SEARCH_HISTORY_MAX_ENTRIES } from "src/palette/searchHistory";
 import {
 	loadPluginSettings,
 	savePluginSettings,
 	type LoadedPluginSettings,
 } from "src/settings/settingsStore";
 import { FileUsageHistory } from "src/search/file/fileUsageHistory";
-import {
-	normalizeRecentCommandIds,
-	RecentCommandStore,
-} from "src/search/command/recentCommandStore";
-import { SearchHistoryStore } from "src/palette/searchHistoryStore";
+import { RecentCommandService } from "src/search/command/recentCommandService";
+import { SearchHistoryService } from "src/palette/searchHistoryService";
 import { RecentTagStore } from "src/tags/recentTagStore";
 import { PaletteDisplaySettingsStore } from "src/settings/paletteDisplaySettingsStore";
 import "../styles.css";
 
 const logger = log.withTag("MyPalette");
+const debugLog = (message: string, detail?: unknown): void => logger.debug(message, detail);
 
 export default class MyPalettePlugin extends Plugin {
 	settings: MyPaletteSettings = DEFAULT_SETTINGS;
@@ -50,9 +40,7 @@ export default class MyPalettePlugin extends Plugin {
 		() => this.settings,
 		() => this.saveSettings(),
 	);
-	readonly everythingClient = new EverythingHttpClient((message, detail) =>
-		logger.debug(message, detail),
-	);
+	readonly everythingClient = new EverythingHttpClient(debugLog);
 	fileProvider!: PaletteProviderInstances["fileProvider"];
 	commandProvider!: PaletteProviderInstances["commandProvider"];
 	everythingProvider!: PaletteProviderInstances["everythingProvider"];
@@ -61,47 +49,27 @@ export default class MyPalettePlugin extends Plugin {
 	smartConnectionProvider!: PaletteProviderInstances["smartConnectionProvider"];
 	providers!: PaletteProviderInstances["providers"];
 	private fileUsageHistory?: FileUsageHistory;
-	private searchHistoryStore?: SearchHistoryStore;
-	private recentCommandStore?: RecentCommandStore;
+	private searchHistory?: SearchHistoryService;
+	private recentCommands?: RecentCommandService;
 	recentTagStore!: RecentTagStore;
-	private legacySearchHistoryEntries?: SearchHistoryEntry[];
-	private legacyRecentCommandIds?: string[];
-	private rememberedPaletteQueries: Partial<Record<PaletteMode, string>> = {};
-	private activePaletteModal?: PaletteModal;
+	readonly paletteOpener = new PaletteOpener(this.app, this);
 
 	async onload(): Promise<void> {
 		const loadedSettings = await this.loadSettings();
 		this.initializeLogger();
-		this.searchHistoryStore = new SearchHistoryStore(this.app, (message, detail) =>
-			logger.debug(message, detail),
-		);
-		const persistentHistory = await this.searchHistoryStore.load(
+		const saveLegacyFallback = () => void this.saveSettings();
+		this.searchHistory = new SearchHistoryService(this.app, debugLog, saveLegacyFallback);
+		await this.searchHistory.load(
 			loadedSettings.legacySearchHistoryEntries,
 			this.settings.searchHistory.daysToKeep,
 		);
-		// Keep the legacy payload in data.json only when IndexedDB cannot accept
-		// the migration, so a later settings save cannot erase search history.
-		this.legacySearchHistoryEntries = persistentHistory
-			? undefined
-			: [...this.searchHistoryStore.getEntries()];
-		this.recentCommandStore = new RecentCommandStore(this.app, (message, detail) =>
-			logger.debug(message, detail),
-		);
-		const persistentRecentCommands = await this.recentCommandStore.load(
-			loadedSettings.legacyRecentCommandIds,
-		);
-		this.legacyRecentCommandIds = persistentRecentCommands
-			? undefined
-			: [...this.recentCommandStore.getIds()];
+		this.recentCommands = new RecentCommandService(this.app, debugLog, saveLegacyFallback);
+		await this.recentCommands.load(loadedSettings.legacyRecentCommandIds);
 		if (loadedSettings.shouldSave) await this.saveSettings();
-		this.recentTagStore = new RecentTagStore(this.app, (message, detail) =>
-			logger.debug(message, detail),
-		);
+		this.recentTagStore = new RecentTagStore(this.app, debugLog);
 		// Recent tags were never stored in data.json, so there is nothing to migrate.
 		await this.recentTagStore.load();
-		this.fileUsageHistory = new FileUsageHistory(this.app, (message, detail) =>
-			logger.debug(message, detail),
-		);
+		this.fileUsageHistory = new FileUsageHistory(this.app, debugLog);
 		await this.fileUsageHistory.load();
 		registerPluginEvents(this);
 		const providers = createPaletteProviders(this.app, this.everythingClient, {
@@ -109,13 +77,10 @@ export default class MyPalettePlugin extends Plugin {
 			fileSortPriorities: () => this.settings.file.sortPriorities,
 			excludedFolders: () => this.settings.file.excludedFolders,
 			demotedPriorFolders: () => this.settings.file.demotedPriorFolders,
-			recentCommandIds: () =>
-				this.recentCommandStore
-					? [...this.recentCommandStore.getIds()]
-					: (this.legacyRecentCommandIds ?? []),
+			recentCommandIds: () => this.recentCommands?.getIds() ?? [],
 			everythingSettings: () => this.settings.everything,
 			fileUsageHistory: this.fileUsageHistory,
-			log: (message, detail) => logger.debug(message, detail),
+			log: debugLog,
 		});
 		this.fileProvider = providers.fileProvider;
 		this.commandProvider = providers.commandProvider;
@@ -126,136 +91,6 @@ export default class MyPalettePlugin extends Plugin {
 		this.providers = providers.providers;
 		this.addSettingTab(new MyPaletteSettingTab(this));
 		registerPluginCommands(this);
-	}
-
-	openPalette(
-		initialInput = "",
-		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
-	): void {
-		if (this.activePaletteModal) {
-			this.activePaletteModal.focusSearchInput();
-			return;
-		}
-		const existingInput = document.querySelector<HTMLInputElement>(
-			".my-palette-suggest-modal .prompt-input",
-		);
-		if (existingInput) {
-			existingInput.focus({ preventScroll: true });
-			return;
-		}
-		const modal = new PaletteModal(this.app, this, initialInput, fixedMode);
-		this.activePaletteModal = modal;
-		modal.open();
-	}
-
-	async openPaletteView(
-		initialInput = this.getRememberedPaletteQuery("file"),
-		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
-	): Promise<void> {
-		await this.openSidebarPaletteView(PALETTE_VIEW_TYPE, initialInput, fixedMode);
-	}
-
-	async openPaletteTableView(
-		initialInput = this.getRememberedPaletteQuery("file"),
-		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
-	): Promise<void> {
-		// Why: reuse a center table without overwriting its query. A new tab keeps
-		// the current note intact and avoids reopening a restored sidebar table.
-		const existing = this.app.workspace
-			.getLeavesOfType(PALETTE_TABLE_VIEW_TYPE)
-			.find((leaf) => leaf.getRoot() === this.app.workspace.rootSplit);
-		const leaf = existing ?? this.app.workspace.getLeaf("tab");
-		if (!existing) {
-			await leaf.setViewState({
-				type: PALETTE_TABLE_VIEW_TYPE,
-				active: true,
-				state: this.paletteViewState(initialInput, fixedMode),
-			});
-		}
-		await this.app.workspace.revealLeaf(leaf);
-		this.focusPaletteView(leaf);
-	}
-
-	private async openSidebarPaletteView(
-		viewType: PaletteViewType,
-		initialInput: string,
-		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
-	): Promise<void> {
-		// Why: reuse only the requested view type, so opening a table cannot replace
-		// the regular palette's query or its independently persisted sidebar pane.
-		const hasRightSidebarPalette = this.app.workspace
-			.getLeavesOfType(viewType)
-			.some((leaf) => leaf.getRoot() === this.app.workspace.rightSplit);
-		// Why: PaletteView.getState() is stored independently by Obsidian for each
-		// leaf. Passing the plugin-wide remembered input every time would overwrite
-		// that leaf's own query when the sidebar command is invoked again.
-		const options = {
-			active: true,
-			reveal: true,
-			...(hasRightSidebarPalette
-				? {}
-				: { state: this.paletteViewState(initialInput, fixedMode) }),
-		};
-		const leaf = await this.app.workspace.ensureSideLeaf(viewType, "right", options);
-		this.focusPaletteView(leaf);
-	}
-
-	async openNewPaletteView(
-		initialInput = this.getRememberedPaletteQuery("file"),
-		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
-		sourcePath?: string,
-		sourcePinned = false,
-		tableState?: PaletteTableState,
-		viewType: PaletteViewType = PALETTE_VIEW_TYPE,
-	): Promise<void> {
-		// Why: duplicating a table needs a fresh center tab, while list palettes
-		// keep independent right-sidebar panes for simultaneous searches.
-		const leaf =
-			viewType === PALETTE_TABLE_VIEW_TYPE
-				? this.app.workspace.getLeaf("tab")
-				: this.app.workspace.getRightLeaf(false);
-		if (!leaf) return;
-		await leaf.setViewState({
-			type: viewType,
-			active: true,
-			// A duplicated palette starts with the same presentation, then persists
-			// its own sort state independently from the original pane.
-			state: {
-				...this.paletteViewState(initialInput, fixedMode, sourcePath, sourcePinned),
-				...tableState,
-			},
-		});
-		await this.app.workspace.revealLeaf(leaf);
-		this.focusPaletteView(leaf);
-	}
-
-	private paletteViewState(
-		initialInput: string,
-		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">,
-		sourcePath?: string,
-		sourcePinned = false,
-	): {
-		input: string;
-		fixedMode?: typeof fixedMode;
-		sourcePath?: string;
-		sourcePinned: boolean;
-	} {
-		return {
-			input: initialInput,
-			fixedMode,
-			sourcePath: sourcePinned ? sourcePath : undefined,
-			sourcePinned,
-		};
-	}
-
-	private focusPaletteView(leaf: WorkspaceLeaf): void {
-		// Focus is explicit for command-created views; restored views must not steal
-		// focus from the editor merely because Obsidian reopened their ItemView.
-		if (leaf.view instanceof PaletteView) leaf.view.focusSearchInput();
-	}
-
-	releasePaletteModal(modal: PaletteModal): void {
-		if (this.activePaletteModal === modal) this.activePaletteModal = undefined;
 	}
 
 	async openExternalMarkdown(
@@ -279,13 +114,12 @@ export default class MyPalettePlugin extends Plugin {
 	}
 
 	onunload(): void {
-		this.activePaletteModal?.close();
-		this.activePaletteModal = undefined;
+		this.paletteOpener.closeModal();
 		this.everythingClient.cancel();
 		this.paletteDisplaySettings.dispose();
 		this.fileProvider?.dispose();
-		void this.searchHistoryStore?.dispose();
-		void this.recentCommandStore?.dispose();
+		void this.searchHistory?.dispose();
+		void this.recentCommands?.dispose();
 		void this.recentTagStore?.dispose();
 		void this.fileUsageHistory?.dispose();
 		logger.debug("Plugin unloaded");
@@ -302,8 +136,8 @@ export default class MyPalettePlugin extends Plugin {
 	async saveSettings(): Promise<void> {
 		await savePluginSettings(
 			this,
-			this.legacySearchHistoryEntries,
-			this.legacyRecentCommandIds,
+			this.searchHistory?.getLegacyEntries(),
+			this.recentCommands?.getLegacyIds(),
 		);
 	}
 
@@ -322,16 +156,7 @@ export default class MyPalettePlugin extends Plugin {
 	}
 
 	recordCommand(id: string): void {
-		if (this.recentCommandStore) {
-			this.recentCommandStore.record(id);
-			this.syncLegacyRecentCommandFallback();
-		} else {
-			this.legacyRecentCommandIds = normalizeRecentCommandIds([
-				id,
-				...(this.legacyRecentCommandIds ?? []),
-			]);
-		}
-		if (this.legacyRecentCommandIds !== undefined) void this.saveSettings();
+		this.recentCommands?.record(id);
 	}
 
 	recordFileUsage(path: string): void {
@@ -339,30 +164,8 @@ export default class MyPalettePlugin extends Plugin {
 	}
 
 	recordResultUsage(result: PaletteResult): void {
-		const path =
-			result.mode === "file"
-				? result.vaultPath
-				: result.mode === "everything" && result.kind === "file"
-					? result.vaultPath
-					: result.mode === "bookmark"
-						? result.file?.path
-						: result.mode === "link" ||
-							  result.mode === "backlink" ||
-							  result.mode === "smart"
-							? result.file.path
-							: undefined;
+		const path = getResultFilePath(result);
 		if (path) this.recordFileUsage(path);
-	}
-
-	rememberPaletteQuery(mode: PaletteMode, query: string, rawInput?: string): void {
-		if (!this.settings.rememberLastInput) return;
-		// なぜfileだけrawInputか: fileの再開入力はプレフィックス込みの生入力を
-		// そのまま使うため(i fooなど)。commandは呼び出し側でプレフィックスを
-		// 付与して復元するのでqueryのままにする。
-		this.rememberedPaletteQueries[mode] =
-			mode === "file" && rawInput !== undefined ? rawInput : query;
-		if (mode === "everything" && rawInput !== undefined)
-			this.rememberedPaletteQueries.file = rawInput;
 	}
 
 	getSearchHistorySuggestions(
@@ -370,15 +173,7 @@ export default class MyPalettePlugin extends Plugin {
 		category: SearchHistoryCategory,
 		includeIgnored = false,
 	): SearchHistoryResult[] {
-		const entries =
-			this.searchHistoryStore?.getSuggestions(input, category, 30, includeIgnored) ??
-			getSearchHistorySuggestions(
-				this.legacySearchHistoryEntries ?? [],
-				input,
-				category,
-				30,
-				includeIgnored,
-			);
+		const entries = this.searchHistory?.getSuggestions(input, category, includeIgnored) ?? [];
 		return entries.map((entry) => ({
 			id: `search-history:${entry.category}:${entry.input}`,
 			mode: "search-history",
@@ -390,27 +185,7 @@ export default class MyPalettePlugin extends Plugin {
 	}
 
 	formatSearchHistoryInput(entry: SearchHistoryEntry): string {
-		const modeInput =
-			entry.category === "command"
-				? `${this.settings.prefixes.command.trimEnd()} ${entry.input}`
-				: entry.category === "bookmark"
-					? `bk ${entry.input}`
-					: entry.category === "smart"
-						? `sc ${entry.input}`
-						: entry.category === "everything"
-							? `${this.settings.prefixes.everything.trimEnd()} ${entry.input}`
-							: entry.category === "everything-directory"
-								? `esdir ${entry.input}`
-								: entry.category === "link"
-									? `${RELATED_PREFIXES.link}${entry.input}`
-									: entry.category === "backlink"
-										? `${RELATED_PREFIXES.backlink}${entry.input}`
-										: entry.input;
-		// Related searches intentionally do not support the ignored-note scope;
-		// avoid reconstructing an input that the parser would interpret as File mode.
-		return entry.includeIgnored && entry.category !== "link" && entry.category !== "backlink"
-			? `${this.settings.prefixes.includeIgnored.trimEnd()} ${modeInput}`
-			: modeInput;
+		return formatSearchHistoryInput(entry, this.settings.prefixes);
 	}
 
 	recordSearch(input: string, category: SearchHistoryCategory, includeIgnored = false): void {
@@ -422,53 +197,11 @@ export default class MyPalettePlugin extends Plugin {
 			maxEntries: SEARCH_HISTORY_MAX_ENTRIES,
 			includeIgnored,
 		};
-		if (this.searchHistoryStore) {
-			this.searchHistoryStore.record(input, category, options);
-			this.syncLegacySearchHistoryFallback();
-		} else {
-			this.legacySearchHistoryEntries = recordSearchHistory(
-				this.legacySearchHistoryEntries ?? [],
-				input,
-				category,
-				options,
-			);
-		}
-		if (this.legacySearchHistoryEntries !== undefined) void this.saveSettings();
+		this.searchHistory?.record(input, category, options);
 	}
 
 	clearSearchHistory(): void {
-		if (this.searchHistoryStore) {
-			this.searchHistoryStore.clear();
-			this.syncLegacySearchHistoryFallback();
-		} else {
-			this.legacySearchHistoryEntries = [];
-		}
-		if (this.legacySearchHistoryEntries !== undefined) void this.saveSettings();
-	}
-
-	private syncLegacySearchHistoryFallback(): void {
-		if (this.searchHistoryStore && !this.searchHistoryStore.isPersistent)
-			this.legacySearchHistoryEntries = [...this.searchHistoryStore.getEntries()];
-	}
-
-	private syncLegacyRecentCommandFallback(): void {
-		if (this.recentCommandStore && !this.recentCommandStore.isPersistent)
-			this.legacyRecentCommandIds = [...this.recentCommandStore.getIds()];
-	}
-
-	clearRememberedPaletteQueries(): void {
-		this.rememberedPaletteQueries = {};
-	}
-
-	getRememberedPaletteQuery(mode: PaletteMode): string {
-		if (!this.settings.rememberLastInput) return "";
-		return this.rememberedPaletteQueries[mode] ?? "";
-	}
-
-	commandPaletteInitialInput(): string {
-		const prefix = this.settings.prefixes.command.trimEnd();
-		const query = this.getRememberedPaletteQuery("command");
-		return `${prefix} ${query}`;
+		this.searchHistory?.clear();
 	}
 
 	openSettings(): void {

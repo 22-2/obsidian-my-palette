@@ -12,10 +12,22 @@ Requirements: Node.js, pnpm, and the global Vite+ CLI (`vp`). Install `vp` by fo
 - `vp test --run`: run unit tests.
 - `pnpm check-types`: run the TypeScript check.
 - `vp build`: build a production bundle.
+- `pnpm e2e`: run the end-to-end tests (see below).
 
 Formatting and linting run through `vp check`; type checking and tests are separate so they can be run independently while refactoring.
 
 The Vite configuration copies the production bundle to `dist/` and to the configured development Vault plugin directory. Enable or reload the plugin in Obsidian after the bundle is copied.
+
+## End-to-end tests
+
+`pnpm e2e` builds the plugin, installs it into a temporary Vault and drives a real Obsidian with Playwright through [obsidian-e2e-toolkit](https://github.com/22-2/obsidian-e2e-toolkit). The specs live in `e2e/`; Vitest only runs `src/**/*.test.ts`.
+
+- Node.js 23 or later is required by the toolkit.
+- `pnpm e2e` first runs Electron's `install.js`, which downloads the Electron binary on the first run; a plain `pnpm install` does not fetch it.
+- On a machine without a display (Linux servers, containers), run `xvfb-run -a pnpm e2e`.
+- The Obsidian build is the one bundled with the toolkit. Set `OBSIDIAN_E2E_TOOLKIT_OBSIDIAN_VERSION` and rerun `node node_modules/obsidian-e2e-toolkit/setup.mjs` to test another version.
+- Failed tests attach a screenshot and the DOM to the Playwright report in `test-results/`.
+- Everything search only checks the request sent to the HTTP server, because the plugin accepts Windows-style paths only.
 
 ## Releasing
 

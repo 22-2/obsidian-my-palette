@@ -8,7 +8,7 @@ import {
 	type SettingDefinitionRender,
 	type SettingGroupItem,
 } from "obsidian";
-import type MyPalettePlugin from "src/main";
+import type { SettingsHost } from "src/settings/settingsHost";
 import { DEFAULT_SETTINGS } from "src/settings/model";
 import { excludedFolders, extensions } from "src/settings/mergeSettings";
 import { renderFileSortPriorityControl } from "src/settings/fileSortPriorityControl";
@@ -60,7 +60,7 @@ const createSettingPageHelpers = (): SettingPageHelpers => ({
  * users hunt through links before they can see the controls they need.
  */
 export function createSettingPages(
-	plugin: MyPalettePlugin,
+	plugin: SettingsHost,
 	setControlValue: SetControlValue,
 ): SettingDefinitionItem[] {
 	const helpers = createSettingPageHelpers();
@@ -72,7 +72,7 @@ export function createSettingPages(
 	];
 }
 
-function createFileSearchPage(plugin: MyPalettePlugin, helpers: SettingPageHelpers): PageItem {
+function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
 	return helpers.page(
 		"Vault file search",
 		"Excluded folders, ignored-note indexing, and result sorting for Vault files.",
@@ -141,7 +141,7 @@ function createFileSearchPage(plugin: MyPalettePlugin, helpers: SettingPageHelpe
 	);
 }
 
-function createPalettePage(plugin: MyPalettePlugin, helpers: SettingPageHelpers): PageItem {
+function createPalettePage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
 	return helpers.page("Palette", "Remembered input, search history, and diagnostics.", [
 		helpers.group("Palette behavior", [
 			{
@@ -171,7 +171,7 @@ function createPalettePage(plugin: MyPalettePlugin, helpers: SettingPageHelpers)
 }
 
 function createEverythingPage(
-	plugin: MyPalettePlugin,
+	plugin: SettingsHost,
 	setControlValue: SetControlValue,
 	helpers: SettingPageHelpers,
 ): PageItem {

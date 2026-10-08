@@ -1,327 +1,84 @@
-# リファクタリング・整理整頓ロードマップ
+# リファクタリング・ロードマップ
 
-## 目的
+旧ロードマップ(Phase 0〜6)の構造整理は完了している。このファイルは、その後の実コードを確認して残った課題だけを扱う。
 
-- [ ] ファイル数が増えても、変更理由ごとの責務が追いやすい構成にする
-- [ ] 検索・設定・ignored note・UI・Obsidian依存部分の境界を明確にする
-- [ ] 挙動を維持したまま、共通化できる処理だけを共通化する
-- [ ] 大きな差分を避け、各段階でテスト可能なコミットに分ける
+## 完了済みの整理(再作業しない)
 
-## 基本方針
+- `src/core` を `ignored-notes` / `platform` / `shared` / `palette` へ分離済み
+- 未使用モジュールの削除済み
+- `PaletteModal` の責務分割済み(結果表示、アクション振り分け、履歴コントローラ、バックグラウンドオープン)
+- 永続パレットビュー(`PaletteView` / `PaletteTableView`)と `SuggestionPanel` の共有化済み
+- `main.ts` から Provider 生成、コマンド登録、イベント登録、外部 Markdown、設定ロード・保存を分離済み
+- `settings` のモデル、`mergeSettings`、設定画面定義の分離済み
+- Provider は `src/search/<機能>/` 単位に整理済み
 
-- [ ] 先にすべてのテストを完成させるのではなく、壊れると困る境界をテストで固定してから整理する
-- [ ] ファイル移動・責務分割・挙動変更を同じコミットに混ぜない
-- [ ] 共通化は「似ている」だけでなく、変更理由と不変条件が同じ処理に限定する
-- [ ] UIの抽象化を優先せず、純粋ロジックと外部依存の境界を先に作る
-- [ ] 各コミット後にテストと型チェックを実行する
+## 方針
 
-## 現在の基準値
+- 移動、責務分割、挙動変更を同じコミットに混ぜない
+- 共通化は、変更理由と不変条件が同じ処理に限る
+- 抽象化のためだけの Base class は追加しない
+- 各コミットの前に `vp check`、`vp test --run`、`pnpm check-types` を実行する
+- 分割した純粋ロジックには単体テストを付ける
 
-調査時点の状態を整理作業の比較基準にする。
+## 課題
 
-- [x] `vp test --run` が成功する（9ファイル、39テスト）
-- [x] `pnpm check-types` が成功する
-- [x] `vp check` を成功させる
-- [x] 整理開始前のGitワークツリーがcleanである
+### 1. 重複した型とロガー(リスク最小)
 
-## Phase 0: 基準値とフォーマットの固定
+- [x] `Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">` を `FixedPaletteMode`(`src/palette/PaletteSearchSession.ts`)に置き換える(`main.ts` に6箇所)
+- [x] `(message, detail) => logger.debug(message, detail)` を `main.ts` 内で1つにまとめる(6箇所)
+- [x] `PaletteView.ts` のインライン `import("obsidian").TFile` を `import type` に直す
 
-### 作業
+### 2. `main.ts` の純粋ロジックの切り出し
 
-- [x] `vp check --fix` を実行する
-- [x] フォーマット変更だけを確認する
-- [x] 実行結果を確認する
-    - [x] `vp check`
-    - [x] `vp test --run`
-    - [x] `pnpm check-types`
+- [x] `formatSearchHistoryInput` を、category から prefix を引く純関数にして `src/palette/searchHistory.ts` へ移し、テストを追加する
+- [x] `recordResultUsage` のパス抽出を `getResultFilePath(result)` として `src/palette/results.ts` に切り出し、テストを追加する
 
-### 完了条件
+### 3. `main.ts` の責務の縮小
 
-- [x] フォーマット変更に機能変更が混ざっていない
-- [x] `vp check`、`vp test --run`、`pnpm check-types` が成功する
-- [x] 後続作業はフォーマット差分を含まない
+`main.ts` は Plugin のライフサイクルと依存の組み立てに集中させる。
 
-### コミット案
+- [x] 検索履歴と最近のコマンドの「store があれば store、無ければ legacy 配列」という分岐を、小さなサービスにまとめる
+    - 対象: `legacySearchHistoryEntries`、`legacyRecentCommandIds`、`syncLegacy*Fallback`、`recordSearch`、`recordCommand`、`clearSearchHistory`、`getSearchHistorySuggestions`
+    - 不変条件: IndexedDB が使えないときは、legacy ペイロードを `data.json` に残し、設定保存で履歴が消えない
+- [x] パレットを開く処理(`openPalette*`、`paletteViewState`、`focusPaletteView`、`rememberedPaletteQueries`)を `src/app/` の `PaletteOpener` へ移す
+- [x] `openNewPaletteView` などの位置引数が増えた箇所をオプションオブジェクトに変える(上の `PaletteOpener` 化と同時に行う)
 
-```text
-chore: format existing sources
+### 4. `PaletteView.ts`(約690行)の分割
 
-- apply the repository formatter
-- keep runtime behavior unchanged
-```
+- [x] 対象リーフの追跡(`registerTargetLeafTracking`、`findTargetLeaf`、`resolveTargetLeaf`、`isCenterLeaf`、`fileOf`)を分離する
+- [x] ソースピンのボタン(`SourcePinControl`)を分離する。ピン状態の更新(`toggleSourcePin`、`updateSource`)は `pendingState` と結びついているため `PaletteView` に残す
+- [x] ファイル一覧の更新タイマー(`registerFileListRefresh`、`scheduleFileListRefresh`)を分離する
+- [x] `PaletteView` は ItemView のライフサイクル、状態の保存、各部品の接続に集中させる。結果の実行とコンテキストメニューの組み立て(`execute`、`showContextMenu`)は、まだ `PaletteView` に残っている。変更の必要が出たときに分ける
 
-## Phase 1: 未使用コードと古い仕様記述の整理
+### 5. 設定画面と Plugin 本体の依存
 
-### 作業
+- [x] `settingPages.ts` が受け取る型を `SettingsHost`(必要な操作だけのインターフェース)に絞る。`settingTab.ts` は `PluginSettingTab` の継承に Plugin 本体が必要なので、そのまま残す
 
-- [x] `src/core/strings.ts` の参照元を確認し、未使用なので削除する
-- [x] `src/ui/ResultList.ts` の参照元を確認し、未使用なので削除する
-- [x] `src/ui/statusMessage.ts` の参照元を確認し、未使用なので削除する
-- [x] `docs/DETAILED_SPECIFICATION.md` の古い構成図を現状に合わせる
-- [x] 削除後にビルドエントリから参照されていないことを確認する
+### 6. 重複の確認(調査から)
 
-### 完了条件
+- [x] `src/ui/suggestionPanel.ts` と `src/ui/MultiSelectModal.ts` の重複を確認した。`MultiSelectModal` は `BaseSuggestModal` 経由でパネルを使い、チェック状態は `MultiSelectModal` だけが持つため、重複はなく現状維持とする
 
-- [x] 未使用ファイルが削除されている
-- [x] 仕様書に存在しないファイルや古い構成が残っていない
-- [x] `vp test --run` が成功する
-- [x] `pnpm check-types` が成功する
+## テストの不足(必要になった時点で補う)
 
-### コミット案
+- [x] `schemaVersion` と保存判断(`settingsStore.test.ts`)
+- [x] ignored note: 存在しない除外フォルダのスキップ(`ignoredNoteScanner.test.ts`)
+- [ ] ignored note: キャッシュ再利用条件(`IgnoredNoteIndex` は IndexedDB を直接開くため、`fake-indexeddb` などを導入するか、永続化層を分離しないとテストできない)
+- [x] staleな非同期検索結果の破棄(`suggestionSurfaces.test.ts` で網羅済み)
 
-```text
-chore: remove unused modules
+## 動作確認(E2E)
 
-- remove modules with no runtime imports
-- update the architecture specification to match the source tree
-```
+`pnpm e2e`(`e2e/` 配下、Playwright と obsidian-e2e-toolkit)で、実際の Obsidian を起動して確認する。
 
-## Phase 2: 高リスク領域の振る舞いをテストで固定
+- [x] 通常ファイル検索、Enter で開く(`file-search.spec.mts`)
+- [x] `i ` の ignored note 検索と、外部ファイルとして開く要求(`ignored-notes.spec.mts`)
+- [x] Everything 検索の要求クエリ(`everything.spec.mts`)。結果行の表示は、プラグインが Windows 形式のパスだけを受け付けるため Linux では検証できない
+- [x] command、bookmark、link、backlink、smart 検索(`modes.spec.mts`)。smart は Smart Connections が無い場合の表示のみ
+- [x] 履歴表示と履歴復元、右クリックメニュー、中クリック(`history-and-menus.spec.mts`)
+- [x] MOC Relateds へのリンク追加、タグの複数選択と挿入(`moc-and-tags.spec.mts`)
+- [ ] ignored Markdown を外部ファイルのビューとして開く。ツールキット同梱の Obsidian 1.13.7 は `file:` 形式を開けないため、テストはスキップされる。対応した Obsidian では自動で実行される
+- [ ] Smart Connections 本体がある環境での smart 検索
+- [ ] Windows 上での Everything の結果表示
 
-テスト対象を増やしてから、ディレクトリ移動と責務分割を始める。
+## ドキュメント
 
-### 設定
-
-- [x] `mergeSettings` のデフォルト補完をテストする
-- [x] 不正な型・範囲外の数値をデフォルトへ戻すことをテストする
-- [x] prefix変更後の履歴分類をテストする
-- [x] 古い履歴データの読み込みとカテゴリ補完をテストする
-- [ ] `schemaVersion` と保存判断をテストする
-
-対象: `src/settings/mergeSettings.ts`、`src/settings/model.ts`
-
-### ignored note
-
-- [x] 通常の除外フォルダ判定をテストする
-- [x] 正規表現形式の除外フィルターをテストする
-- [x] 壊れた正規表現を安全に扱うことをテストする
-- [ ] 存在しない除外フォルダをスキップすることをテストする
-- [ ] キャッシュ済みエントリの再利用条件をテストする
-- [ ] 同じノートを二重importしないことをテストする
-- [ ] 同名ファイルの衝突時に決定的なsuffixを付けることをテストする
-- [ ] frontmatterを既存・新規の両方で正しく追加することをテストする
-- [ ] dot-folder由来のパスをlink可能な表示先へ変換することをテストする
-
-対象: `src/ignored-notes/ignoredPaths.ts`、`src/ignored-notes/ignoredNoteIndex.ts`、`src/ignored-notes/ignoredNoteMaterializer.ts`
-
-### 結果アクションとモード振り分け
-
-- [ ] 通常のVaultファイルの開き先をテストする
-- [ ] ignored noteの開き先をテストする
-- [ ] Markdown・非Markdown・Everything結果の分岐をテストする
-- [ ] command、bookmark、link、backlink、smartのアクション分岐をテストする
-- [ ] staleな非同期検索結果を破棄することをテストする
-
-対象: `src/palette/PaletteModal.ts`、`src/palette/resultActions.ts`
-
-### 完了条件
-
-- [ ] 高リスク領域の仕様がテスト名から読める
-- [ ] テストはUI操作全体ではなく、まず純粋関数・分岐・変換を中心にしている
-- [ ] `vp test --run` が成功する
-- [ ] `pnpm check-types` が成功する
-
-### コミット案
-
-```text
-test: characterize settings and ignored note behavior
-
-- cover malformed settings and history migration
-- cover ignored path indexing and idempotent materialization
-- preserve current behavior before structural refactoring
-```
-
-## Phase 3: `core` の責務を分離
-
-`core` をさらに大きくするのではなく、変更理由が異なるものを分ける。
-
-### 移動案
-
-- [x] `src/core/ignoredPaths.ts` → `src/ignored-notes/ignoredPaths.ts`
-- [x] `src/core/ignoredNoteIndex.ts` → `src/ignored-notes/ignoredNoteIndex.ts`
-- [x] `src/core/ignoredNoteMaterializer.ts` → `src/ignored-notes/ignoredNoteMaterializer.ts`
-- [x] `src/core/desktopAdapter.ts` → `src/platform/desktopAdapter.ts`
-- [x] `src/core/vscode.ts` → `src/platform/vscode.ts`
-- [x] `src/core/pathClipboard.ts` → `src/platform/pathClipboard.ts`
-- [x] `src/core/pathDisplay.ts` → `src/shared/pathDisplay.ts`
-- [x] `src/core/externalFiles.ts` → `src/shared/externalFiles.ts`
-- [x] `src/core/searchHistory.ts` → `src/palette/searchHistory.ts`
-
-### ルール
-
-- [x] 移動コミットではロジックを変更しない
-- [x] テストファイルも実装と同じディレクトリへ移動する
-- [x] import pathの変更だけで済ませる
-- [x] 移動後に `rg` で古いimport pathが残っていないことを確認する
-
-### 完了条件
-
-- [x] `src/core` が空、または明確な共通処理だけになっている
-- [x] ignored noteの処理が一つの機能領域として追える
-- [x] Obsidian/Electron依存の処理が `platform` に集約されている
-- [x] `vp test --run` と `pnpm check-types` が成功する
-
-### コミット案
-
-```text
-refactor: separate core modules by responsibility
-
-- move ignored note logic into its feature boundary
-- move desktop and path integrations into platform modules
-- keep runtime behavior unchanged
-```
-
-## Phase 4: 大きなファイルを責務ごとに分割
-
-### `PaletteModal.ts`
-
-- [x] 結果を`SelectionItem`へ変換する処理を分離する
-- [x] 結果ごとの表示バッジ判定を分離する
-- [x] 結果アクションの振り分けを分離する
-- [x] 検索履歴のイベント登録を共通コントローラへ分離する
-- [x] バックグラウンドオープン処理を分離する
-- [x] `PaletteModal` は入力・選択状態・検索世代管理に集中させる
-
-対象: `src/palette/PaletteModal.ts`
-
-### 永続パレットビュー
-
-- [x] 検索状態をModalとItemViewから共有する
-- [x] 結果行の表示と左右中クリック処理を共通化する
-- [x] `BaseSuggestModal` を `SuggestionPanel` を組み込む薄いホストにする
-- [x] モーダル開閉に合わせて共通部品とプレビュー操作のイベントを登録・解除する
-- [x] DOMイベントで複数選択、クリック、キー操作、再オープン、古い検索結果の破棄を検証する
-- [x] 右サイドバーから本文leafを差し替える
-- [x] workspace stateへ入力、固定モード、検索元を保存する
-- [x] 検索履歴コントロールのイベント登録を共通コントローラへ移す
-
-対象: `src/palette/PaletteSearchSession.ts`、`src/ui/suggestionPanel.ts`、`src/palette/surfaces/PaletteView.ts`
-
-### `main.ts`
-
-- [x] Provider生成とregistry構築を分離する
-- [x] Obsidian command登録を分離する
-- [x] file-menuなどのイベント登録を分離する
-- [x] 外部Markdown viewのライフサイクルを分離する
-- [x] 設定ロード・保存を設定ストアへ移す
-- [ ] `main.ts` はPluginのライフサイクルと依存関係の組み立てに集中させる
-
-対象: `src/main.ts`、`src/workspace/external-markdown/openExternalMarkdown.ts`、`src/settings/settingsStore.ts`
-
-### `settings.ts`
-
-- [x] 設定モデルとデフォルト値を分離する
-- [x] `mergeSettings` と入力値の正規化を分離する
-- [x] 設定画面の定義を分離する
-- [ ] 設定画面からPlugin本体への依存を薄くする
-
-対象: `src/settings/settingTab.ts`、`src/settings/mergeSettings.ts`、`src/settings/model.ts`
-
-### 完了条件
-
-- [ ] 各ファイルの責務を一文で説明できる
-- [ ] 分割した純粋ロジックに単体テストがある
-- [ ] UIイベントの挙動が変わっていない
-- [ ] `vp test --run`、`pnpm check-types` が成功する
-
-### コミット案
-
-```text
-refactor: split palette orchestration responsibilities
-
-- extract result presentation and action routing
-- isolate search history event handling
-- keep modal lifecycle behavior unchanged
-```
-
-```text
-refactor: separate plugin registration from lifecycle management
-
-- extract command and event registration
-- keep provider wiring and unload behavior unchanged
-```
-
-## Phase 5: Providerを機能単位に整理
-
-最終的にはProviderの種類ではなく、検索機能単位で追える構成を目指す。
-
-```text
-src/
-├── app/
-├── palette/
-├── search/
-│   ├── PaletteProvider.ts
-│   ├── file/
-│   │   ├── FileProvider.ts
-│   │   └── fileSorting.ts
-│   ├── command/
-│   │   ├── CommandProvider.ts
-│   │   └── commandSorting.ts
-│   ├── everything/
-│   │   ├── EverythingProvider.ts
-│   │   ├── EverythingHttpClient.ts
-│   │   └── everythingQuery.ts
-│   ├── related/
-│   ├── bookmark/
-│   └── smart/
-├── ignored-notes/
-├── settings/
-├── platform/
-├── ui/
-├── workspace/
-└── shared/
-```
-
-### 共通化の判断基準
-
-- [ ] 同じ変更理由で変更される処理か確認する
-- [ ] 同じ入力・出力契約を持つか確認する
-- [ ] 共通化後の例外処理や副作用が一つの方針になるか確認する
-- [ ] 抽象化のためだけのBase classを追加しない
-- [ ] `fuzzysort` の利用は、スコアリング規則が同じ場合だけ共通化する
-- [ ] `BaseSuggestModal`、`SelectionModal`、`PaletteProvider` は現状の共通境界をまず維持する
-
-### 完了条件
-
-- [x] Providerごとの責務と外部依存がディレクトリから分かる
-- [ ] 検索結果の型が意図せず機能間へ漏れていない
-- [ ] Providerの共通化が実装の重複削減とテスト容易性の両方に効いている
-- [ ] `vp test --run`、`pnpm check-types` が成功する
-
-## Phase 6: 最終確認と仕様書更新
-
-- [ ] `vp check`
-- [ ] `vp test --run`
-- [ ] `pnpm check-types`
-- [x] `vp build`
-- [ ] Obsidian上でパレットを開く
-- [ ] 通常ファイル検索を確認する
-- [ ] `i ` のignored note検索を確認する
-- [ ] Everything検索を確認する
-- [ ] command、bookmark、link、backlink、smart検索を確認する
-- [ ] 履歴表示と履歴復元を確認する
-- [ ] 中クリック・右クリックメニューを確認する
-- [ ] ignored MarkdownのReadonly表示を確認する
-- [ ] MOC Relatedsへのリンク追加を確認する
-- [ ] `docs/DETAILED_SPECIFICATION.md` の構成・挙動記述を更新する
-- [x] READMEの開発手順をVite+ / pnpmに合わせる
-
-### 最終コミット案
-
-```text
-docs: update architecture and refactoring roadmap
-
-- document the feature boundaries and validation commands
-- align the detailed specification with the current implementation
-- record the completed refactoring steps
-```
-
-## 各コミット共通の完了チェック
-
-- [ ] 変更範囲が1つの責務に収まっている
-- [ ] 移動と挙動変更が混ざっていない
-- [ ] 必要なテストを追加・移動している
-- [ ] `vp test --run` が成功する
-- [ ] `pnpm check-types` が成功する
-- [ ] フォーマット差分が意図したものだけである
-- [ ] コミット本文に背景と維持したい挙動を箇条書きで書いている
+- [x] `docs/DETAILED_SPECIFICATION.md` の構成図と責務表を現状に合わせた。以後、構成を変えるたびに更新する

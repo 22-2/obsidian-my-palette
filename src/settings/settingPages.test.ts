@@ -4,7 +4,7 @@ import type {
 	SettingDefinitionItem,
 	SettingDefinitionPage,
 } from "obsidian";
-import type MyPalettePlugin from "src/main";
+import type { SettingsHost } from "src/settings/settingsHost";
 import { createSettingPages } from "src/settings/settingPages";
 
 vi.mock("obsidian", () => ({
@@ -26,7 +26,7 @@ function groupsOf(page: SettingDefinitionPage): SettingDefinitionGroup[] {
 
 describe("settings page layout", () => {
 	it("keeps related controls discoverable in three task-oriented pages", () => {
-		const pages = createSettingPages({} as MyPalettePlugin, async () => {});
+		const pages = createSettingPages({} as SettingsHost, async () => {});
 
 		expect(pages.filter(isPage).map((page) => page.name)).toEqual([
 			"Palette",

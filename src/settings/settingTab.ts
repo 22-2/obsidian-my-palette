@@ -104,7 +104,7 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 				break;
 			case "rememberLastInput":
 				settings.rememberLastInput = Boolean(value);
-				if (!settings.rememberLastInput) this.plugin.clearRememberedPaletteQueries();
+				if (!settings.rememberLastInput) this.plugin.paletteOpener.clearRememberedQueries();
 				break;
 			case "showLog":
 				settings.showLog = Boolean(value);

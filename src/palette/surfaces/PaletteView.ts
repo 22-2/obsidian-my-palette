@@ -1,4 +1,4 @@
-import { ItemView, Menu, TFile, setIcon, type WorkspaceLeaf } from "obsidian";
+import { ItemView, Menu, TFile, type WorkspaceLeaf } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
 import {
@@ -22,6 +22,7 @@ import {
 	getExternalMarkdownLeaves,
 	isExternalMarkdownLeaf,
 } from "src/workspace/external-markdown/openExternalMarkdown";
+import { SourcePinControl } from "src/palette/components/SourcePinControl";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 import { PaletteTableControls } from "src/palette/table/PaletteTableControls";
 import {
@@ -30,6 +31,8 @@ import {
 	type PaletteTableState,
 } from "src/palette/table/paletteTableModel";
 
+import { FileListRefresh } from "src/palette/surfaces/fileListRefresh";
+import { PaletteLeafTracker } from "src/palette/surfaces/paletteLeafTracker";
 import { PALETTE_VIEW_TYPE, type PaletteViewType } from "src/palette/surfaces/paletteViewTypes";
 
 interface PaletteViewState extends Record<string, unknown> {
@@ -59,14 +62,18 @@ export class PaletteView extends ItemView {
 	private historyControls?: PaletteHistoryControls;
 	private tableControls?: PaletteTableControls;
 	private activeMenu?: Menu;
-	private targetLeaf?: WorkspaceLeaf;
+	private readonly leafTracker: PaletteLeafTracker;
+	private readonly fileListRefresh = new FileListRefresh(
+		this.app,
+		(ref) => this.registerEvent(ref),
+		() => this.session !== undefined,
+		() => void this.session?.search(this.session.input),
+	);
 	private sourcePath?: string;
 	private sourcePinned = false;
-	private sourcePinButton?: HTMLButtonElement;
+	private sourcePinControl?: SourcePinControl;
 	private actionMessage?: string;
 	private targetTrackingRegistered = false;
-	private fileListRefreshRegistered = false;
-	private fileListRefreshTimer?: number;
 	private pendingState: NormalizedPaletteViewState = {
 		input: "",
 		sourcePinned: false,
@@ -78,6 +85,11 @@ export class PaletteView extends ItemView {
 		private readonly plugin: MyPalettePlugin,
 	) {
 		super(leaf);
+		this.leafTracker = new PaletteLeafTracker(
+			this.app,
+			leaf,
+			(view) => view instanceof PaletteView,
+		);
 		this.pendingState.displayMode = this.tableView ? "table" : "list";
 	}
 
@@ -109,14 +121,14 @@ export class PaletteView extends ItemView {
 				.setIcon("plus")
 				.onClick(() => {
 					const state = this.newPaletteViewState();
-					void this.plugin.openNewPaletteView(
-						state.input,
-						state.fixedMode,
-						state.sourcePath,
-						state.sourcePinned,
-						state,
-						this.getViewType(),
-					);
+					void this.plugin.paletteOpener.openNewPaletteView({
+						input: state.input,
+						fixedMode: state.fixedMode,
+						sourcePath: state.sourcePath,
+						sourcePinned: state.sourcePinned,
+						tableState: state,
+						viewType: this.getViewType(),
+					});
 				}),
 		);
 	}
@@ -161,10 +173,7 @@ export class PaletteView extends ItemView {
 			// disposed the session, so keep the last input in the fallback state too.
 			this.pendingState = { ...this.pendingState, input: this.session.input };
 		}
-		if (this.fileListRefreshTimer !== undefined) {
-			window.clearTimeout(this.fileListRefreshTimer);
-			this.fileListRefreshTimer = undefined;
-		}
+		this.fileListRefresh.cancel();
 		this.activeMenu?.close();
 		this.activeMenu = undefined;
 		this.historyControls?.destroy();
@@ -175,12 +184,7 @@ export class PaletteView extends ItemView {
 		this.session = undefined;
 		if (this.panel) this.removeChild(this.panel);
 		this.panel = undefined;
-		this.sourcePinButton = undefined;
-	}
-
-	setTargetLeaf(leaf: WorkspaceLeaf | undefined): void {
-		if (!leaf || !this.isCenterLeaf(leaf)) return;
-		this.targetLeaf = leaf;
+		this.sourcePinControl = undefined;
 	}
 
 	private createSurface(state: NormalizedPaletteViewState): void {
@@ -196,11 +200,13 @@ export class PaletteView extends ItemView {
 		this.actionMessage = undefined;
 		this.pendingState = state;
 		this.sourcePinned = state.sourcePinned;
-		this.sourcePath = this.sourcePinned ? state.sourcePath : this.currentSourcePath();
+		this.sourcePath = this.sourcePinned
+			? state.sourcePath
+			: this.leafTracker.currentSourceFile()?.path;
 		// Why: sourcePath identifies the note used for searching, while targetLeaf
 		// identifies the center pane that receives an open action. Keeping them
 		// independent prevents a pinned search source from becoming the write target.
-		this.targetLeaf = this.findTargetLeaf() ?? this.targetLeaf;
+		this.leafTracker.refresh();
 		this.contentEl.empty();
 		this.contentEl.addClass("my-palette-view");
 
@@ -210,7 +216,7 @@ export class PaletteView extends ItemView {
 			fixedMode: state.fixedMode,
 			// Why: unpinned views derive the source from the current center note;
 			// passing the persisted state here would make their first search stale.
-			sourceFile: this.sourceFile(this.sourcePath),
+			sourceFile: this.leafTracker.sourceFile(this.sourcePath),
 			onStateChange: (next) => this.renderState(next),
 		});
 		this.panel = new SuggestionPanel<PaletteResult>(this.contentEl, {
@@ -265,10 +271,15 @@ export class PaletteView extends ItemView {
 			this.addChild(this.tableControls);
 			this.tableControls.load();
 		}
-		this.addSourcePinControl();
+		this.sourcePinControl = new SourcePinControl({
+			owner: this,
+			statusBarEl: this.panel.statusBarEl,
+			isPinned: () => this.sourcePinned,
+			onToggle: () => this.toggleSourcePin(),
+		});
 		this.addHistoryControls();
 		this.registerTargetLeafTracking();
-		this.registerFileListRefresh();
+		this.fileListRefresh.register();
 		this.renderState(this.session.current);
 		void this.session.search(initialInput);
 		this.panel.setInput(initialInput, "end");
@@ -298,7 +309,7 @@ export class PaletteView extends ItemView {
 		const source = this.sourcePath ?? "No active note";
 		const suffix = this.actionMessage ? ` · ${this.actionMessage}` : "";
 		this.panel.updateFooterText(`Source: ${source}${suffix}`);
-		this.updateSourcePinControl();
+		this.sourcePinControl?.update();
 		const results = {
 			items: state.results,
 			total: state.resultCount,
@@ -310,37 +321,6 @@ export class PaletteView extends ItemView {
 		this.historyControls?.update(state.input);
 	}
 
-	private addSourcePinControl(): void {
-		if (!this.panel) return;
-		this.sourcePinButton = this.panel.statusBarEl.createEl("button", {
-			cls: "clickable-icon my-palette-source-pin",
-			attr: { type: "button" },
-		});
-		// Why: createEl appends after the result count; prepend keeps the pin action
-		// immediately beside the Source label as the footer's context control.
-		this.panel.statusBarEl.prepend(this.sourcePinButton);
-		this.registerDomEvent(this.sourcePinButton, "mousedown", (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-		});
-		this.registerDomEvent(this.sourcePinButton, "click", (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-			this.toggleSourcePin();
-		});
-		this.updateSourcePinControl();
-	}
-
-	private updateSourcePinControl(): void {
-		if (!this.sourcePinButton) return;
-		this.sourcePinButton.empty();
-		setIcon(this.sourcePinButton, this.sourcePinned ? "pin-off" : "pin");
-		const action = this.sourcePinned ? "Unpin source note" : "Pin source note";
-		this.sourcePinButton.setAttribute("aria-label", action);
-		this.sourcePinButton.setAttribute("title", action);
-		this.sourcePinButton.setAttribute("aria-pressed", String(this.sourcePinned));
-	}
-
 	private toggleSourcePin(): void {
 		if (!this.session) return;
 		if (this.sourcePinned) {
@@ -350,10 +330,10 @@ export class PaletteView extends ItemView {
 				sourcePinned: false,
 				sourcePath: undefined,
 			};
-			this.updateSource(this.currentSourceFile());
+			this.updateSource(this.leafTracker.currentSourceFile());
 			return;
 		}
-		const sourceFile = this.currentSourceFile();
+		const sourceFile = this.leafTracker.currentSourceFile();
 		if (!sourceFile) return;
 		this.sourcePinned = true;
 		this.sourcePath = sourceFile.path;
@@ -418,7 +398,7 @@ export class PaletteView extends ItemView {
 		}
 		// Why: explicit main-window navigation must bypass the currently active
 		// popout and any cached target leaf belonging to the palette.
-		const targetLeaf = targetOverride ?? this.resolveTargetLeaf();
+		const targetLeaf = targetOverride ?? this.leafTracker.resolveTargetLeaf();
 		const execution: PaletteResultExecutionOptions = {
 			closeWhenDone: false,
 			targetLeaf,
@@ -435,22 +415,6 @@ export class PaletteView extends ItemView {
 			},
 		};
 		await executePaletteResult(this.plugin, result, action, execution);
-	}
-
-	private resolveTargetLeaf(): WorkspaceLeaf {
-		// Clicks in the sidebar must always open in the center: never reuse a
-		// sidebar leaf, and never trust a cached leaf that has moved out of
-		// the main area. Prefer the current center leaf over any history.
-		const active = this.app.workspace.activeLeaf;
-		if (active && this.isCenterLeaf(active)) {
-			this.targetLeaf = active;
-			return active;
-		}
-		if (this.targetLeaf && this.isCenterLeaf(this.targetLeaf)) return this.targetLeaf;
-		// A sidebar can be opened with no note pane at all. Allocate a normal tab
-		// once so a first zap can never replace the palette view itself.
-		this.targetLeaf = this.app.workspace.getLeaf("tab");
-		return this.targetLeaf;
 	}
 
 	private async openInBackground(result: PaletteResult): Promise<void> {
@@ -521,15 +485,18 @@ export class PaletteView extends ItemView {
 		// sourcePath/targetLeaf can point at the previously active note. Prefer
 		// the currently active center note at click time.
 		const activeLeaf =
-			this.app.workspace.activeLeaf && this.isCenterLeaf(this.app.workspace.activeLeaf)
+			this.app.workspace.activeLeaf &&
+			this.leafTracker.isCenterLeaf(this.app.workspace.activeLeaf)
 				? this.app.workspace.activeLeaf
 				: undefined;
-		const activeFile = activeLeaf ? this.fileOf(activeLeaf) : undefined;
+		const activeFile = activeLeaf ? this.leafTracker.fileOf(activeLeaf) : undefined;
 		if (activeFile) return { mocFile: activeFile, mocLeaf: activeLeaf };
-		const mocLeaf = this.findTargetLeaf(this.sourcePath);
+		const mocLeaf = this.leafTracker.findTargetLeaf(this.sourcePath);
 		return {
 			mocFile:
-				this.sourceFile(this.sourcePath) ?? (mocLeaf ? this.fileOf(mocLeaf) : null) ?? null,
+				this.leafTracker.sourceFile(this.sourcePath) ??
+				(mocLeaf ? this.leafTracker.fileOf(mocLeaf) : null) ??
+				null,
 			mocLeaf,
 		};
 	}
@@ -567,107 +534,11 @@ export class PaletteView extends ItemView {
 				// Why: a non-Markdown center view can still be the user's current tab
 				// and must be replaced by a primary open. Track the leaf independently
 				// from fileOf(), which is only needed for source-note searches.
-				if (!leaf || !this.isCenterLeaf(leaf)) return;
-				this.targetLeaf = leaf;
-				const file = this.fileOf(leaf);
+				if (!leaf || !this.leafTracker.track(leaf)) return;
+				const file = this.leafTracker.fileOf(leaf);
 				if (!this.sourcePinned) this.updateSource(file);
 			}),
 		);
-	}
-
-	private registerFileListRefresh(): void {
-		if (this.fileListRefreshRegistered) return;
-		this.fileListRefreshRegistered = true;
-		// Why: the file index (FileProvider) already updates on these events, but
-		// the open list would stay stale until the next keystroke. Re-run the
-		// current search so mtime/alias/frontmatter edits reorder the visible list.
-		// Note: metadataCache `resolved` fires after the initial index pass and
-		// again after later modifications, so it covers the startup bulk load too.
-		const schedule = (): void => this.scheduleFileListRefresh();
-		this.registerEvent(this.app.vault.on("create", schedule));
-		this.registerEvent(this.app.vault.on("modify", schedule));
-		this.registerEvent(this.app.vault.on("delete", schedule));
-		this.registerEvent(this.app.vault.on("rename", schedule));
-		this.registerEvent(this.app.metadataCache.on("changed", schedule));
-		this.registerEvent(this.app.metadataCache.on("deleted", schedule));
-		this.registerEvent(this.app.metadataCache.on("resolve", schedule));
-		this.registerEvent(this.app.metadataCache.on("resolved", schedule));
-	}
-
-	private scheduleFileListRefresh(): void {
-		if (!this.session) return;
-		// vault `modify` fires per keystroke while editing; debounce the re-search
-		// so a long edit session does not queue a search per character.
-		if (this.fileListRefreshTimer !== undefined) window.clearTimeout(this.fileListRefreshTimer);
-		this.fileListRefreshTimer = window.setTimeout(() => {
-			this.fileListRefreshTimer = undefined;
-			if (!this.session) return;
-			void this.session.search(this.session.input);
-		}, 400);
-	}
-
-	private currentSourceFile(): TFile | undefined {
-		const activeLeaf = this.app.workspace.activeLeaf;
-		if (activeLeaf && this.isCenterLeaf(activeLeaf)) return this.fileOf(activeLeaf);
-		if (this.targetLeaf && this.isCenterLeaf(this.targetLeaf))
-			return this.fileOf(this.targetLeaf);
-		const recentLeaf = this.app.workspace.getMostRecentLeaf(this.app.workspace.rootSplit);
-		return recentLeaf
-			? this.fileOf(recentLeaf)
-			: (this.app.workspace.getActiveFile() ?? undefined);
-	}
-
-	private currentSourcePath(): string | undefined {
-		return this.currentSourceFile()?.path;
-	}
-
-	private isCenterLeaf(leaf: WorkspaceLeaf): boolean {
-		// Why: a table moved into the center must never become another palette's
-		// open target or source note. The shared base covers both registered views.
-		if (leaf === this.leaf || leaf.view instanceof PaletteView) return false;
-		try {
-			// Sidebar leaves live under leftSplit/rightSplit; only rootSplit is center.
-			return leaf.getRoot() === this.app.workspace.rootSplit;
-		} catch {
-			return true;
-		}
-	}
-
-	private findTargetLeaf(sourcePath?: string): WorkspaceLeaf | undefined {
-		if (
-			this.targetLeaf &&
-			this.isCenterLeaf(this.targetLeaf) &&
-			(!sourcePath || this.fileOf(this.targetLeaf)?.path === sourcePath)
-		)
-			return this.targetLeaf;
-		if (sourcePath) {
-			let match: WorkspaceLeaf | undefined;
-			this.app.workspace.iterateAllLeaves((leaf) => {
-				if (!match && this.isCenterLeaf(leaf) && this.fileOf(leaf)?.path === sourcePath)
-					match = leaf;
-			});
-			if (match) return match;
-		}
-		const active = this.app.workspace.activeLeaf;
-		if (active && this.isCenterLeaf(active)) return active;
-		// Why: opening or restoring the sidebar can make the palette the active
-		// leaf before tracking is registered. The most recent center leaf preserves
-		// the user's current tab in that startup window, including non-file views.
-		const recent = this.app.workspace.getMostRecentLeaf(this.app.workspace.rootSplit);
-		return recent && this.isCenterLeaf(recent) ? recent : undefined;
-	}
-
-	private sourceFile(sourcePath?: string) {
-		if (!sourcePath) return undefined;
-		const file = this.app.vault.getAbstractFileByPath(sourcePath);
-		return file instanceof TFile ? file : undefined;
-	}
-
-	private fileOf(leaf: WorkspaceLeaf): import("obsidian").TFile | undefined {
-		const file = (leaf.view as { file?: unknown }).file;
-		return file && typeof file === "object" && "path" in file
-			? (file as import("obsidian").TFile)
-			: undefined;
 	}
 }
 

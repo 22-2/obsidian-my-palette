@@ -87,3 +87,22 @@ export type PaletteResult =
 	| RelatedFileResult
 	| BookmarkResult
 	| SmartConnectionResult;
+
+/** The vault file a result opens, when it has one; used to record file usage. */
+export function getResultFilePath(result: PaletteResult): string | undefined {
+	switch (result.mode) {
+		case "file":
+			return result.vaultPath;
+		case "everything":
+			return result.kind === "file" ? result.vaultPath : undefined;
+		case "bookmark":
+			return result.file?.path;
+		case "link":
+		case "backlink":
+		case "smart":
+			return result.file.path;
+		case "command":
+		case "search-history":
+			return undefined;
+	}
+}

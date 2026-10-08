@@ -48,4 +48,24 @@ describe("settings store", () => {
 		);
 		expect(savedData).toHaveProperty("recentCommandIds", ["first", "second"]);
 	});
+
+	describe("save decision", () => {
+		const load = (data: unknown) =>
+			loadPluginSettings({ loadData: async () => data } as unknown as MyPalettePlugin);
+
+		it("saves when the stored schema is older than the current one", async () => {
+			const loaded = await load({ schemaVersion: SETTINGS_SCHEMA_VERSION - 1 });
+			expect(loaded.shouldSave).toBe(true);
+		});
+
+		it("does not save when the schema is current and there is no legacy data", async () => {
+			const loaded = await load({ schemaVersion: SETTINGS_SCHEMA_VERSION });
+			expect(loaded.shouldSave).toBe(false);
+		});
+
+		it("does not save for first-run data", async () => {
+			const loaded = await load(null);
+			expect(loaded.shouldSave).toBe(false);
+		});
+	});
 });
