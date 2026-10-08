@@ -15,7 +15,7 @@
 		"build": "vp build",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
 		"check-types": "pnpm exec tsc --noEmit",
-		"e2e": "vp build && node e2e/prepare-plugin.mjs && playwright test",
+		"e2e": "node node_modules/electron/install.js && vp build && node e2e/prepare-plugin.mjs && playwright test",
 		"prepare": "vp config"
 	},
 	"dependencies": {
