@@ -50,14 +50,13 @@ test("middle click opens a background tab and keeps the current note", async ({ 
 	// query would hit a row that is about to be replaced.
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Alpha plan");
 	await page.locator(MODAL_ROW).first().click({ button: "middle" });
-	// Background tabs are matched through the workspace, not allTabs(), which can miss them.
-	const openNotes = () =>
-		obsidian.evaluateApp(() =>
-			app.workspace
-				.getLeavesOfType("markdown")
-				.map((leaf) => (leaf.getViewState().state as { file?: string }).file)
+	await expect
+		.poll(async () =>
+			(await obsidian.allTabs())
+				.filter((tab) => tab.viewType === "markdown")
+				.map((tab) => tab.filePath)
 				.sort(),
-		);
-	await expect.poll(openNotes).toEqual(["Alpha plan.md", "Beta notes.md"]);
+		)
+		.toEqual(["Alpha plan.md", "Beta notes.md"]);
 	expect((await obsidian.activeTab())?.filePath).toBe("Beta notes.md");
 });
