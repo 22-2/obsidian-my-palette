@@ -39,10 +39,14 @@ const flush = async () => {
 	for (let turn = 0; turn < 5; turn += 1) await Promise.resolve();
 };
 
-async function open(targetCount = 1, plugin = createSelectorPlugin({} as App)) {
+async function open(
+	targetCount = 1,
+	plugin = createSelectorPlugin({} as App),
+	candidates: readonly TagChoice[] = choices,
+) {
 	const modal = new TagSelectionModal(
 		plugin,
-		choices,
+		candidates,
 		"Target: note.md",
 		targetCount,
 		async () => undefined,
@@ -339,6 +343,32 @@ describe("TagSelectionModal", () => {
 		// The check survives the new list, and the tag can still be run.
 		f.key("Enter", { ctrlKey: true });
 		await expect(f.result).resolves.toEqual(["fresh"]);
+	});
+
+	it("keeps unchecked candidates accessible after fifty tags have been pinned", async () => {
+		const candidates = Array.from({ length: 51 }, (_, index) => ({
+			tag: `tag${index}`,
+			count: 1,
+			registered: false,
+		}));
+		const f = await open(1, undefined, candidates);
+		expect(f.rows()).toHaveLength(50);
+		f.key("ArrowDown");
+		for (let index = 1; index < 50; index++) f.key("ArrowDown", { shiftKey: true });
+		f.key(" ");
+		await flush();
+		expect(f.checked()).toHaveLength(50);
+		expect(f.rows()).toHaveLength(51);
+		f.mouse(f.rows()[50].querySelector(".my-palette-suggestion__icon")!, "mousedown");
+		await flush();
+		expect(f.checked()).toHaveLength(51);
+		f.key("f");
+		await f.type("fresh");
+		expect(f.rows()).toHaveLength(52);
+		f.mouse(f.rows()[51].querySelector(".my-palette-suggestion__icon")!, "mousedown");
+		await flush();
+		f.key("Enter", { ctrlKey: true });
+		await expect(f.result).resolves.toEqual([...candidates.map(({ tag }) => tag), "fresh"]);
 	});
 
 	it("pins checked existing and new tags above matches across queries", async () => {

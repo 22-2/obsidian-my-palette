@@ -108,7 +108,8 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		const checked = this.checkedCandidates().map(
 			(candidate) => foundByKey.get(candidate.key) ?? candidate,
 		);
-		this.limit = Math.max(this.candidateLimit, checked.length);
+		// Pinned rows must not use up the space for the next unchecked candidate.
+		this.limit = this.candidateLimit + checked.length;
 		const unchecked = found.filter(({ key }) => !this.checked.has(key));
 		// Stable groups preserve check order and the host's ranking within each group.
 		const candidates = [
