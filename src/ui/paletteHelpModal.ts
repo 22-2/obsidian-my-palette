@@ -32,7 +32,7 @@ export class PaletteHelpModal extends Modal {
 				"Everything",
 				"Search the whole Everything index",
 			],
-			["esdir ", "Everything directory", "Search the current note's directory"],
+			["esdir ", "Everything directory", "Search every file under the Vault folder"],
 			[
 				`${this.prefixes.includeIgnored.trimEnd()} `,
 				"Excluded files",
