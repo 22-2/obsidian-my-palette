@@ -401,19 +401,30 @@
 	transform: translateY(-50%);
 }
 
-/* Previews the checked rows of a multi-select modal at the right end of the input. */
+/* Keep variable-width checked counts before the shared options/history controls
+   in normal flow, so neither the buttons nor the input text can overlap. */
+.my-palette-multi-select .prompt-input-container {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding-right: 8px;
+}
+
+.my-palette-multi-select .my-palette-options-button,
+.my-palette-multi-select .my-palette-history-button,
 .my-palette-checked-button {
-	position: absolute;
-	top: 50%;
-	right: 8px;
-	z-index: 1;
+	position: static;
+	flex-shrink: 0;
+	transform: none;
+}
+
+.my-palette-checked-button {
 	display: flex;
 	align-items: center;
 	gap: 2px;
 	width: auto;
 	height: 28px;
 	padding-inline: 6px;
-	transform: translateY(-50%);
 }
 
 .my-palette-checked-button[hidden] {
@@ -432,7 +443,10 @@
 }
 
 .my-palette-multi-select .prompt-input {
-	padding-right: 56px;
+	flex: 1;
+	min-width: 0;
+	width: 0;
+	padding-right: 8px;
 }
 
 .my-palette-options-button svg {

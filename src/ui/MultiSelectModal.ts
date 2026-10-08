@@ -305,7 +305,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		);
 	}
 
-	/** Button at the right end of the input that previews the checked rows and runs them. */
+	/** Button before the shared input controls that previews the checked rows and runs them. */
 	private createCheckedButton(): void {
 		const container = this.inputEl.parentElement;
 		if (!container) return;
@@ -314,6 +314,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 			cls: "clickable-icon my-palette-checked-button",
 			attr: { type: "button", title: "Checked items" },
 		});
+		container.insertBefore(button, container.querySelector(".my-palette-options-button"));
 		setIcon(button, "list-checks");
 		this.checkedCountEl = button.createSpan("my-palette-checked-button__count");
 		this.checkedButtonEl = button;
