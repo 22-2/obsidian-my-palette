@@ -830,6 +830,24 @@
 	color: inherit;
 }
 
+/* Input mode gives the accent to the search field instead of a retained list cursor. */
+.my-palette-panel.is-input-mode .prompt-input {
+	box-shadow: inset 2px 0 var(--interactive-accent);
+	background-color: color-mix(in srgb, var(--interactive-accent) 8%, var(--background-primary));
+}
+
+.my-palette-panel.is-input-mode .suggestion-item {
+	/* Override selection and hover fills so only the input reads as active. */
+	background-color: transparent !important;
+	box-shadow: none;
+}
+
+.my-palette-panel:not(.is-input-mode) .prompt-input {
+	/* DOM focus remains here for list shortcuts, but the visual focus is on a row. */
+	box-shadow: none;
+	border-color: var(--background-modifier-border);
+}
+
 /* Rows with nothing left to apply (registered tags, fully linked notes) stay listed but cannot be selected. */
 .my-palette-multi-select .suggestion-item.is-locked {
 	opacity: 0.5;

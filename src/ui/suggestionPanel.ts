@@ -68,6 +68,8 @@ export class SuggestionPanel<T> extends Component {
 	private readonly middleClickRows = new WeakSet<Element>();
 	private readonly rightClickRows = new WeakSet<Element>();
 	private resultsLayout?: SuggestionPanelResultsLayout<T>;
+	private interactionMode: "input" | "selection" = "input";
+	private readonly modeTextEl: HTMLElement;
 
 	constructor(rootEl: HTMLElement, props: SuggestionPanelProps<T>) {
 		super();
@@ -107,6 +109,7 @@ export class SuggestionPanel<T> extends Component {
 		if (this.selectionMode === "extended")
 			this.resultContainerEl.setAttribute("aria-multiselectable", "true");
 		this.statusBarEl = this.rootEl.createDiv("my-palette-status-bar");
+		this.modeTextEl = this.statusBarEl.createSpan("my-palette-status-bar__mode");
 		this.statusTextEl = this.statusBarEl.createSpan({
 			cls: "my-palette-status-bar__text",
 			text: props.footerText ?? "",
@@ -116,6 +119,8 @@ export class SuggestionPanel<T> extends Component {
 	}
 
 	onload(): void {
+		this.setInteractionMode("input");
+		this.registerDomEvent(this.inputEl, "mousedown", () => this.setInteractionMode("input"));
 		this.registerDomEvent(this.inputEl, "input", () => this.props.onInput(this.inputEl.value));
 		this.registerDomEvent(this.inputEl, "keydown", (event) => this.handleInputKeyDown(event));
 		this.registerPointerActions();
@@ -191,13 +196,30 @@ export class SuggestionPanel<T> extends Component {
 	}
 
 	setInput(input: string, selection: "all" | "end" | "none" = "none"): void {
+		// History and source controls replace the query for further editing.
+		this.setInteractionMode("input");
 		this.inputEl.value = input;
 		if (selection === "all") this.inputEl.select();
 		if (selection === "end") this.inputEl.setSelectionRange(input.length, input.length);
 	}
 
 	focusSearchInput(): void {
+		this.setInteractionMode("input");
 		if (this.inputEl.isConnected) this.inputEl.focus({ preventScroll: true });
+	}
+
+	private setInteractionMode(mode: "input" | "selection"): void {
+		this.interactionMode = mode;
+		this.rootEl.classList.toggle("is-input-mode", mode === "input");
+		// Retain DOM focus for list shortcuts while blocking typing, paste and IME
+		// from changing the query until the user explicitly returns to input mode.
+		this.inputEl.readOnly = mode === "selection";
+		this.modeTextEl.setText(mode === "input" ? "Input · ↑/↓: select" : "Selection · f: input");
+	}
+
+	private focusResults(): void {
+		this.setInteractionMode("selection");
+		this.props.onResultFocus?.();
 	}
 
 	updatePlaceholder(placeholder: string): void {
@@ -229,6 +251,38 @@ export class SuggestionPanel<T> extends Component {
 
 	private handleInputKeyDown(event: KeyboardEvent): void {
 		if (event.isComposing) return;
+		if (
+			this.interactionMode === "selection" &&
+			!event.ctrlKey &&
+			!event.metaKey &&
+			!event.altKey &&
+			event.key.toLowerCase() === "f"
+		) {
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			this.focusSearchInput();
+			return;
+		}
+		if (
+			this.interactionMode === "selection" &&
+			this.selectionMode === "extended" &&
+			event.key === " " &&
+			!event.ctrlKey &&
+			!event.metaKey &&
+			!event.altKey
+		) {
+			event.preventDefault();
+			event.stopPropagation();
+			if (!event.repeat) {
+				this.extendedSelection.select(
+					this.chooser.selectedItem,
+					this.chooser.values.length,
+					{ toggle: true, range: event.shiftKey },
+				);
+				this.setSelectedIndex(this.chooser.selectedItem, false);
+			}
+			return;
+		}
 		if (event.key === "Escape") {
 			event.preventDefault();
 			event.stopPropagation();
@@ -238,10 +292,18 @@ export class SuggestionPanel<T> extends Component {
 		if (event.key === "ArrowDown" || event.key === "ArrowUp") {
 			event.preventDefault();
 			event.stopPropagation();
+			if (this.interactionMode === "input") {
+				// The first arrow transfers focus to row zero without skipping a result
+				// or extending a selection retained from the previous interaction.
+				this.focusResults();
+				this.extendedSelection.reset(this.chooser.values.length);
+				this.setSelectedIndex(0, true);
+				return;
+			}
 			if (!this.chooser.values.length) return;
 			// Keyboard selection uses the result list while focus remains in the input.
 			// Record that interaction just as we do for a pointer press on a result.
-			this.props.onResultFocus?.();
+			this.focusResults();
 			const next = Math.max(
 				0,
 				Math.min(
@@ -262,7 +324,7 @@ export class SuggestionPanel<T> extends Component {
 			if (item === undefined) return;
 			event.preventDefault();
 			event.stopPropagation();
-			this.props.onResultFocus?.();
+			this.focusResults();
 			this.selected = item;
 			void this.props.onChoose(item, event);
 		}
@@ -292,12 +354,12 @@ export class SuggestionPanel<T> extends Component {
 				// Modal list-space clicks historically commit the query too; views
 				// also contain table headers, so they commit only actual result rows.
 				const modal = this.props.surface !== "view";
-				if (modal) this.props.onResultFocus?.();
+				if (modal) this.focusResults();
 				const row = this.suggestionRowAtEvent(event);
 				if (!row) return;
 				// Sorting headers share the result container, but only interacting
 				// with an actual result should commit the search to usage history.
-				if (!modal) this.props.onResultFocus?.();
+				if (!modal) this.focusResults();
 				const item = this.itemAtRow(row);
 				if (item === undefined) return;
 				// Why: keep the middle-click guard through click/auxclick, then reset

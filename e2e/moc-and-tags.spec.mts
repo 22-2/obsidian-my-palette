@@ -38,12 +38,15 @@ test("several tags can be checked and inserted into the note together", async ({
 	await page.locator(MODAL_INPUT).waitFor();
 	await page.locator(MODAL_INPUT).fill("alpha");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("#alpha");
-	await page.keyboard.press("Enter");
+	await page.keyboard.press("ArrowUp");
+	await page.keyboard.press("Space");
 	await expect(page.locator(`${MODAL_ROW}.is-checked`)).toHaveCount(1);
 
+	await page.keyboard.press("f");
 	await page.locator(MODAL_INPUT).fill("beta");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("#beta");
-	await page.keyboard.press("Enter");
+	await page.keyboard.press("ArrowUp");
+	await page.keyboard.press("Space");
 	await page.keyboard.press("Control+Enter");
 
 	await expect

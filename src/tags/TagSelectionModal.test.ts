@@ -56,7 +56,12 @@ async function open(targetCount = 1) {
 	const button = () => modal.modalEl.querySelector<HTMLElement>(".my-palette-checked-button")!;
 	const key = (name: string, options: KeyboardEventInit = {}) =>
 		modal.inputEl.dispatchEvent(
-			new KeyboardEvent("keydown", { key: name, bubbles: true, ...options }),
+			new KeyboardEvent("keydown", {
+				key: name,
+				bubbles: true,
+				cancelable: true,
+				...options,
+			}),
 		);
 	const mouse = (target: Element, type: string, options: MouseEventInit = {}) =>
 		target.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, ...options }));
@@ -69,27 +74,86 @@ async function open(targetCount = 1) {
 }
 
 describe("TagSelectionModal", () => {
+	it.each(["ArrowUp", "ArrowDown"])(
+		"starts selection at the first row with %s",
+		async (arrow) => {
+			const f = await open();
+			expect(f.modal.modalEl.classList.contains("is-input-mode")).toBe(true);
+			f.key(arrow);
+			expect(f.modal.modalEl.classList.contains("is-input-mode")).toBe(false);
+			expect(f.rows()[0].classList.contains("is-active")).toBe(true);
+			f.key("ArrowDown");
+			expect(f.rows()[1].classList.contains("is-active")).toBe(true);
+			f.key("f");
+			expect(f.modal.modalEl.classList.contains("is-input-mode")).toBe(true);
+			f.key(arrow);
+			expect(f.rows()[0].classList.contains("is-active")).toBe(true);
+			expect(f.rows()[1].classList.contains("is-selected")).toBe(false);
+			f.key("Enter");
+			await expect(f.result).resolves.toEqual(["alpha"]);
+		},
+	);
+
+	it("allows Space and f in input mode, then uses them as selection commands", async () => {
+		const f = await open();
+		expect(f.modal.inputEl.readOnly).toBe(false);
+		expect(f.key(" ")).toBe(true);
+		expect(f.key("f")).toBe(true);
+		await f.type("alpha");
+		f.key("ArrowUp", { isComposing: true });
+		expect(f.modal.inputEl.readOnly).toBe(false);
+		f.key("ArrowUp");
+		expect(f.modal.inputEl.readOnly).toBe(true);
+		expect(f.modal.modalEl.textContent).toContain("Selection · f: input");
+		f.key(" ", { isComposing: true });
+		expect(f.checked()).toEqual([]);
+		expect(f.key(" ")).toBe(false);
+		expect(f.checked()).toEqual(["#alpha"]);
+		f.key(" ", { repeat: true });
+		expect(f.checked()).toEqual(["#alpha"]);
+		expect(f.key("f")).toBe(false);
+		expect(f.modal.inputEl.readOnly).toBe(false);
+		expect(f.modal.inputEl.value).toBe("alpha");
+		expect(f.modal.modalEl.textContent).toContain("Input · ↑/↓: select");
+		f.key("ArrowDown");
+		f.mouse(f.modal.inputEl, "mousedown");
+		expect(f.modal.inputEl.readOnly).toBe(false);
+		f.modal.close();
+	});
+
+	it("starts in input mode again when reopened", async () => {
+		const f = await open();
+		f.key("ArrowDown");
+		f.modal.close();
+		f.modal.open();
+		await flush();
+		expect(f.modal.inputEl.readOnly).toBe(false);
+		f.key("ArrowUp");
+		f.key(" ");
+		expect(f.checked()).toEqual(["#alpha"]);
+		f.modal.close();
+	});
+
 	it("checks tags without closing and runs the checked ones with Ctrl+Enter", async () => {
 		const f = await open();
-		f.key("Enter");
+		f.key("ArrowUp");
+		f.key(" ");
 		await flush();
 		// There is no confirm row; the cursor stays on the checked tag.
 		expect(f.labels()[0]).toContain("#alpha");
 		expect(f.checked()).toEqual(["#alpha"]);
 		f.key("ArrowDown");
-		f.key("Enter");
+		f.key(" ");
 		await flush();
 		expect(f.checked()).toEqual(["#alpha", "#beta"]);
 		f.key("Enter", { ctrlKey: true });
 		await expect(f.result).resolves.toEqual(["alpha", "beta"]);
 	});
 
-	it("adds a typed new tag and runs it with Ctrl+Enter", async () => {
+	it.each(["Enter", "NumpadEnter"])("immediately inserts a new tag with %s", async (code) => {
 		const f = await open();
 		await f.type("#fresh");
-		f.key("Enter");
-		await flush();
-		f.key("Enter", { ctrlKey: true });
+		f.key("Enter", { code });
 		await expect(f.result).resolves.toEqual(["fresh"]);
 	});
 
@@ -104,13 +168,14 @@ describe("TagSelectionModal", () => {
 		await expect(f.result).resolves.toBeNull();
 	});
 
-	it("checks every selected row at once and unchecks them on the next Enter", async () => {
+	it("checks every selected row at once and unchecks them on the next Space", async () => {
 		const f = await open();
+		f.key("ArrowDown");
 		f.key("ArrowDown", { shiftKey: true });
-		f.key("Enter");
+		f.key(" ");
 		await flush();
 		expect(f.checked()).toEqual(["#alpha", "#beta"]);
-		f.key("Enter");
+		f.key(" ");
 		await flush();
 		expect(f.checked()).toEqual([]);
 		f.key("Escape");
@@ -166,7 +231,8 @@ describe("TagSelectionModal", () => {
 	it("previews the checked tags from the input button and can run or clear them", async () => {
 		const f = await open();
 		expect(f.button().hidden).toBe(true);
-		f.key("Enter");
+		f.key("ArrowUp");
+		f.key(" ");
 		await flush();
 		expect(f.button().hidden).toBe(false);
 		expect(f.button().textContent).toBe("1");
@@ -176,7 +242,7 @@ describe("TagSelectionModal", () => {
 		await flush();
 		expect(f.checked()).toEqual([]);
 		expect(f.button().hidden).toBe(true);
-		f.key("Enter");
+		f.key(" ");
 		await flush();
 		f.mouse(f.button(), "click");
 		Menu.last?.items[0].click();
@@ -186,8 +252,10 @@ describe("TagSelectionModal", () => {
 	it("keeps a checked new tag listed after the input changes", async () => {
 		const f = await open();
 		await f.type("fresh");
-		f.key("Enter");
+		f.key("ArrowUp");
+		f.key(" ");
 		await flush();
+		f.key("f");
 		await f.type("");
 		expect(f.checked()).toEqual(["#fresh"]);
 		// The check survives the new list, and the tag can still be run.

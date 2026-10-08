@@ -163,6 +163,36 @@ function key(el: HTMLElement, name: string, options: KeyboardEventInit = {}) {
 }
 
 describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface) => {
+	it.each(["single", "extended"] as const)(
+		"shares input/list modes in %s selection",
+		async (selectionMode) => {
+			const f = await fixture(surface, selectionMode);
+			expect(f.root.classList.contains("is-input-mode")).toBe(true);
+			expect(key(f.input, " ").defaultPrevented).toBe(false);
+			expect(key(f.input, "f").defaultPrevented).toBe(false);
+			key(f.input, "ArrowDown", { isComposing: true });
+			expect(f.input.readOnly).toBe(false);
+			key(f.input, "ArrowDown");
+			expect(f.input.readOnly).toBe(true);
+			expect(f.rows()[0].classList.contains("is-active")).toBe(true);
+			key(f.input, "ArrowDown");
+			expect(f.rows()[1].classList.contains("is-active")).toBe(true);
+			if (selectionMode === "extended") {
+				key(f.input, " ");
+				expect(f.selection()).toEqual([]);
+				key(f.input, " ");
+				expect(f.selection()).toEqual(["beta"]);
+			}
+			key(f.input, "f");
+			expect(f.input.readOnly).toBe(false);
+			expect(f.root.classList.contains("is-input-mode")).toBe(true);
+			key(f.input, "ArrowUp");
+			expect(f.rows()[0].classList.contains("is-active")).toBe(true);
+			mouse(f.input, "mousedown");
+			expect(f.input.readOnly).toBe(false);
+		},
+	);
+
 	it("selects on press, extends with modifiers, and preserves bulk context selection", async () => {
 		const f = await fixture(surface);
 		mouse(f.rows()[1], "mousedown");
@@ -221,6 +251,7 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 	});
 	it("extends keyboard selection, keeps it while moving with Ctrl, and ignores IME", async () => {
 		const f = await fixture(surface);
+		key(f.input, "ArrowDown");
 		key(f.input, "ArrowDown", { shiftKey: true });
 		expect(f.selection()).toEqual(["alpha", "beta"]);
 		key(f.input, "ArrowDown", { ctrlKey: true });
@@ -229,7 +260,7 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 		expect(f.choose).not.toHaveBeenCalled();
 		key(f.input, "Enter");
 		expect(f.choose).toHaveBeenCalledExactlyOnceWith("gamma");
-		expect(f.resultFocus).toHaveBeenCalledTimes(3);
+		expect(f.resultFocus).toHaveBeenCalledTimes(4);
 	});
 	it("keeps the history focus boundary for empty modal space and table headers", async () => {
 		const f = await fixture(surface);

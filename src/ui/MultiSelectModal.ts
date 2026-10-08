@@ -35,9 +35,9 @@ export interface MultiSelectModalProps {
 
 /**
  * Multi selector shared by tag and MOC insertion so both behave and look alike.
- * Flow: select rows (click, Ctrl, Shift, arrows) → check them (Enter, double
- * click, the check box or the context menu) → run (Ctrl+Enter or the menu of the
- * checked-list button). Checking keeps the modal open; any other close cancels.
+ * Flow: select rows (click, Ctrl, Shift, arrows) → run them (Enter) or check
+ * them (Space, the check box or context menu) → run checked rows with Ctrl+Enter
+ * or the checked-list button. Checking keeps the modal open; any other close cancels.
  */
 export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCandidate<V>> {
 	private readonly checked = new Map<string, MultiSelectCandidate<V>>();
@@ -54,7 +54,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		super(
 			{
 				placeholder: multiSelect.placeholder,
-				footerText: `${multiSelect.footerLabel} · Enter: check · Ctrl+Enter: ${multiSelect.actionLabel.toLowerCase()} · Esc: cancel`,
+				footerText: `${multiSelect.footerLabel} · Enter: ${multiSelect.actionLabel.toLowerCase()} · Space: check · Ctrl+Enter: ${multiSelect.actionLabel.toLowerCase()} checked · Esc: cancel`,
 				// Same Explorer-style selection as the palette: pick rows with click,
 				// Ctrl and Shift, check them, then run the action.
 				selectionMode: "extended",
@@ -112,8 +112,8 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		el.classList.toggle("is-locked", Boolean(candidate.locked));
 		el.classList.toggle("is-checked", checked);
 		el.setAttribute("aria-checked", String(checked));
-		// The check icon toggles its row on a single press; extended selection
-		// otherwise needs a double-click or Enter to change a check.
+		// The check icon toggles its row on a single press, independently of the
+		// keyboard mode, so pointer users can also build a checked list.
 		if (!candidate.locked)
 			el.querySelector(".my-palette-suggestion__icon")?.setAttribute("data-row-toggle", "");
 	}
@@ -156,8 +156,30 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 	protected override onSelectionModalOpen(): void {
 		this.modalEl.addClass("my-palette-multi-select");
 		this.createCheckedButton();
+		this.registerSelectionDomEvent(
+			this.inputEl,
+			"keydown",
+			(event) => this.handleModeKeyDown(event),
+			true,
+		);
 	}
 
+	private handleModeKeyDown(event: KeyboardEvent): void {
+		// The shared panel owns input/list focus; Space checks insertion candidates
+		// rather than changing the highlighted selection in these two selectors.
+		if (
+			event.isComposing ||
+			!this.inputEl.readOnly ||
+			event.key !== " " ||
+			event.ctrlKey ||
+			event.metaKey ||
+			event.altKey
+		)
+			return;
+		event.preventDefault();
+		event.stopImmediatePropagation();
+		if (!event.repeat) this.toggleChecks(this.getSelectedItems());
+	}
 	protected override onSelectionModalClose(): void {
 		this.activeMenu?.close();
 		this.resolveResult?.(this.confirmedValues ?? null);
@@ -176,11 +198,11 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 			this.confirm();
 			return;
 		}
-		// Enter checks every selected row at once; the activated row is included even
-		// if a rerender left it out of the selection.
+		// Enter inserts the selected rows immediately; include the activated row if
+		// a rerender left it out of the selection.
 		const rows = [...this.getSelectedItems()];
 		if (!rows.some(({ key }) => key === candidate.key)) rows.push(candidate);
-		this.toggleChecks(rows);
+		this.confirm(rows.filter(({ locked }) => !locked));
 	}
 
 	/** Resolves with the given rows, or with every checked row by default. */
@@ -203,8 +225,6 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		// selection stay put and an asynchronous source is not searched again.
 		this.updateCheckedButton();
 		this.rerenderVisibleSuggestions();
-		// Keep the query but select it, so typing the next entry replaces it directly.
-		this.inputEl.select();
 	}
 
 	private refreshKeepingSelection(): void {
