@@ -52,7 +52,7 @@
 
 ### 5. 設定画面と Plugin 本体の依存
 
-- [ ] `settingTab.ts` と `settingPages.ts` が `plugin.` を直接参照している箇所(約38箇所)を、必要な操作だけのインターフェースに絞る
+- [x] `settingPages.ts` が受け取る型を `SettingsHost`(必要な操作だけのインターフェース)に絞る。`settingTab.ts` は `PluginSettingTab` の継承に Plugin 本体が必要なので、そのまま残す
 
 ### 6. 重複の確認(調査から)
 
