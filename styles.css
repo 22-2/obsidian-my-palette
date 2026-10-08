@@ -2,9 +2,9 @@
 	max-height: min(60vh, 480px);
 }
 
-/* Fade the backdrop too so a held preview shortcut exposes the workspace. */
-.my-palette-modal-container.is-preview-transparent {
-	opacity: 0.1;
+/* Remove the modal and its backdrop while the held shortcut exposes the workspace. */
+.my-palette-modal-container.is-preview-hidden {
+	display: none;
 }
 
 /* The persistent palette is a compact workspace surface, not a modal embedded

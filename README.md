@@ -70,7 +70,7 @@ The action (`…`) and history (clock) buttons are also available in tag inserti
 | `Ctrl+R`               | Search history                                     |
 | `Esc`                  | Clear the query, then move focus back to the field |
 
-The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current picker. Modals have no footer; keyboard instructions and insertion targets live in Help. Hold `Alt+H` to make the modal and its backdrop 90% transparent while inspecting a preview; releasing either key restores them. `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
+The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current picker. Modals have no footer; keyboard instructions and insertion targets live in Help. Hold `Alt+H` to hide the modal and its backdrop while inspecting a preview; releasing either key restores them and returns focus to the search field. `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
 
 ### Search modes
 

@@ -65,7 +65,7 @@ export class PaletteHelpModal extends Modal {
 						["Ctrl+Home / Ctrl+End", "Move to the first or last result"],
 						[
 							"Hold Alt+H",
-							"Make the modal 90% transparent to inspect the preview; release to restore",
+							"Temporarily hide the modal to inspect the preview; release to restore",
 						],
 					] satisfies Array<[string, string]>)
 				: []),

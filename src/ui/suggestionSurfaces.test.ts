@@ -441,35 +441,36 @@ it("redraws rows in place without losing the extended selection", async () => {
 	expect(f.selection()).toEqual(["beta", "gamma", "delta"]);
 });
 
-it("makes a held Alt+H transparent and restores on release, blur and close", async () => {
+it("hides for held Alt+H and restores on release, blur and close", async () => {
 	const f = await fixture("modal", "extended", true);
 	key(f.input, "ArrowDown");
 	const container = f.modal!.containerEl;
-	const transparent = () => container.classList.contains("is-preview-transparent");
+	const hidden = () => container.classList.contains("is-preview-hidden");
 	key(f.input, "h", { altKey: true, isComposing: true });
 	key(f.input, "h", { altKey: true, ctrlKey: true });
-	expect(transparent()).toBe(false);
+	expect(hidden()).toBe(false);
 	key(f.input, "h", { altKey: true });
-	expect(transparent()).toBe(true);
+	expect(hidden()).toBe(true);
 	expect(f.input.readOnly).toBe(true);
 	expect(f.input.value).toBe("");
 	key(f.input, "h", { altKey: true, repeat: true });
-	expect(transparent()).toBe(true);
+	expect(hidden()).toBe(true);
 	window.dispatchEvent(new KeyboardEvent("keyup", { key: "h", altKey: true }));
-	expect(transparent()).toBe(false);
+	expect(hidden()).toBe(false);
+	expect(document.activeElement).toBe(f.input);
 	key(f.input, "h", { altKey: true });
 	window.dispatchEvent(new KeyboardEvent("keyup", { key: "Alt" }));
-	expect(transparent()).toBe(false);
+	expect(hidden()).toBe(false);
 	key(f.input, "h", { altKey: true });
 	window.dispatchEvent(new Event("blur"));
-	expect(transparent()).toBe(false);
+	expect(hidden()).toBe(false);
 	key(f.input, "h", { altKey: true });
 	f.modal!.close();
-	expect(transparent()).toBe(false);
+	expect(hidden()).toBe(false);
 	key(f.input, "h", { altKey: true });
-	expect(transparent()).toBe(false);
+	expect(hidden()).toBe(false);
 	f.modal!.open();
-	expect(transparent()).toBe(false);
+	expect(hidden()).toBe(false);
 });
 
 it("does not duplicate handlers or the footer when reopening a modal", async () => {

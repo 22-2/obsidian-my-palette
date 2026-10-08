@@ -36,6 +36,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	private historyCommitted = false;
 	private previewGeneration = 0;
 	private previewPending = false;
+	private previewEventController?: AbortController;
 
 	constructor(
 		{
@@ -197,7 +198,9 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	}
 
 	onClose(): void {
-		this.containerEl.removeClass("my-palette-modal-container", "is-preview-transparent");
+		this.containerEl.removeClass("my-palette-modal-container", "is-preview-hidden");
+		this.previewEventController?.abort();
+		this.previewEventController = undefined;
 		this.previewGeneration += 1;
 		this.refreshGeneration += 1;
 		this.cancelHistoryTimer();
@@ -221,7 +224,11 @@ export abstract class BaseSuggestModal<T> extends Modal {
 
 	private registerPreviewTransparency(): void {
 		this.containerEl.addClass("my-palette-modal-container");
-		const restore = () => this.containerEl.removeClass("is-preview-transparent");
+		const restore = (returnFocus = false) => {
+			this.containerEl.removeClass("is-preview-hidden");
+			if (returnFocus && this.inputEl.isConnected)
+				this.inputEl.focus({ preventScroll: true });
+		};
 		this.panel.registerDomEvent(
 			this.modalEl,
 			"keydown",
@@ -237,23 +244,24 @@ export abstract class BaseSuggestModal<T> extends Modal {
 					return;
 				event.preventDefault();
 				event.stopImmediatePropagation();
-				this.containerEl.addClass("is-preview-transparent");
+				this.containerEl.addClass("is-preview-hidden");
 			},
 			true,
 		);
 		const ownerWindow = this.modalEl.ownerDocument.defaultView;
 		if (!ownerWindow) return;
+		const eventController = new AbortController();
+		this.previewEventController = eventController;
 		// Key release may happen outside the input; blur covers switching apps
 		// while holding the shortcut, where the release never reaches this window.
-		this.panel.registerDomEvent(
-			ownerWindow,
+		ownerWindow.addEventListener(
 			"keyup",
 			(event) => {
-				if (event.key.toLowerCase() === "h" || event.key === "Alt") restore();
+				if (event.key.toLowerCase() === "h" || event.key === "Alt") restore(true);
 			},
-			true,
+			{ capture: true, signal: eventController.signal },
 		);
-		this.panel.registerDomEvent(ownerWindow, "blur", restore);
+		ownerWindow.addEventListener("blur", () => restore(), { signal: eventController.signal });
 	}
 
 	protected handlesSuggestionPreview(): boolean {
