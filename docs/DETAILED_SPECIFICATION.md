@@ -570,6 +570,7 @@ src/
 ├── settings.ts
 ├── app/
 │   ├── createPaletteProviders.ts
+│   ├── paletteOpener.ts
 │   ├── registerCommands.ts
 │   └── registerEvents.ts
 ├── ignored-notes/
@@ -585,60 +586,98 @@ src/
 │   ├── mocRelateds.ts
 │   └── mocRelatedsCore.ts
 ├── palette/
-│   ├── actions/
-│   │   └── resultContextMenu.ts
-│   ├── components/
-│   │   └── PaletteHistoryControls.ts
-│   ├── PaletteModal.ts
-│   ├── PaletteSearchSession.ts
 │   ├── backgroundResultActions.ts
 │   ├── executePaletteResult.ts
 │   ├── inputParser.ts
 │   ├── MoveFileModal.ts
+│   ├── OpenFilePathModal.ts
 │   ├── openTargets.ts
-│   ├── resultPresentation.ts
+│   ├── PaletteModal.ts
+│   ├── PaletteSearchSession.ts
 │   ├── resultActions.ts
+│   ├── resultPresentation.ts
 │   ├── results.ts
 │   ├── searchHistory.ts
+│   ├── searchHistoryService.ts
 │   ├── searchHistoryStore.ts
-│   └── surfaces/
-│       └── PaletteView.ts
+│   ├── actions/
+│   │   └── resultContextMenu.ts
+│   ├── components/
+│   │   ├── PaletteHistoryControls.ts
+│   │   └── SourcePinControl.ts
+│   ├── surfaces/
+│   │   ├── fileListRefresh.ts
+│   │   ├── paletteLeafTracker.ts
+│   │   ├── PaletteTableView.ts
+│   │   ├── PaletteView.ts
+│   │   └── paletteViewTypes.ts
+│   └── table/
+│       ├── PaletteTableControls.ts
+│       └── paletteTableModel.ts
 ├── platform/
 │   ├── desktopAdapter.ts
 │   ├── pathClipboard.ts
 │   └── vscode.ts
 ├── search/
+│   ├── excludedFolders.ts
+│   ├── fuzzyQuery.ts
 │   ├── PaletteProvider.ts
 │   ├── bookmark/
 │   │   └── BookmarkProvider.ts
 │   ├── command/
 │   │   ├── CommandProvider.ts
 │   │   ├── commandSorting.ts
+│   │   ├── recentCommandService.ts
 │   │   └── recentCommandStore.ts
 │   ├── everything/
 │   │   ├── EverythingHttpClient.ts
 │   │   ├── EverythingProvider.ts
 │   │   └── everythingQuery.ts
 │   ├── file/
+│   │   ├── fileMatch.ts
 │   │   ├── FileProvider.ts
-│   │   └── fileSorting.ts
+│   │   ├── fileSorting.ts
+│   │   ├── fileTags.ts
+│   │   └── fileUsageHistory.ts
 │   ├── related/
 │   │   └── RelatedFileProvider.ts
 │   └── smart/
 │       └── SmartConnectionProvider.ts
 ├── settings/
-│   ├── model.ts
+│   ├── fileSortPriorityControl.ts
+│   ├── fileSortPriorityOrdering.ts
 │   ├── mergeSettings.ts
+│   ├── model.ts
+│   ├── paletteDisplaySettingsStore.ts
+│   ├── settingPages.ts
+│   ├── settingsHost.ts
 │   ├── settingsStore.ts
 │   └── settingTab.ts
 ├── shared/
 │   ├── externalFiles.ts
-│   └── pathDisplay.ts
+│   ├── frontmatter.ts
+│   ├── noteRelations.ts
+│   ├── pathDisplay.ts
+│   ├── recentIdStore.ts
+│   └── vaultIdentity.ts
+├── tags/
+│   ├── insertTags.ts
+│   ├── recentTagStore.ts
+│   ├── tagChoices.ts
+│   ├── tagInsertionMenu.ts
+│   ├── TagSelectionModal.ts
+│   └── tagSuggestions.ts
 ├── ui/
 │   ├── baseSuggestModal.ts
+│   ├── extendedSelection.ts
+│   ├── MultiSelectModal.ts
+│   ├── paletteHelpModal.ts
+│   ├── queryHighlight.ts
 │   ├── searchHistorySuggest.ts
 │   ├── selectionModal.ts
-│   └── suggestionPanel.ts
+│   ├── suggestionPanel.ts
+│   └── testing/
+│       └── obsidianDom.ts
 └── workspace/
     ├── openLeaf.ts
     └── external-markdown/
@@ -651,7 +690,8 @@ src/
 
 | コンポーネント                | 責務                                                                       |
 | ----------------------------- | -------------------------------------------------------------------------- |
-| `main.ts`                     | 設定ロード、Pluginライフサイクル、依存関係の組み立て                       |
+| `main.ts`                     | Pluginライフサイクル、設定ロード・保存、各ストアとサービスの組み立て       |
+| `app/paletteOpener`           | モーダルと永続ビューを開く処理、モードごとの直前クエリの保持               |
 | `app/registerCommands`        | Obsidianコマンドの登録と実行条件                                           |
 | `app/registerEvents`          | ViewとVaultイベントの登録                                                  |
 | `app/createPaletteProviders`  | Providerの生成とモードregistryの構築                                       |
@@ -662,7 +702,10 @@ src/
 | `SuggestionPanel`             | Modal / ItemView共通の入力、候補行、選択、ポインター操作                   |
 | `executePaletteResult`        | 結果モードごとのアクション振り分けとホスト差分の吸収                       |
 | `PaletteModal`                | モーダルのライフサイクル、フォーカス、閉じる挙動                           |
-| `PaletteView`                 | 右サイドバーの永続パレット、本文leaf追跡、workspace state                  |
+| `PaletteView`                 | 永続パレットのItemView、workspace state、各部品の接続                      |
+| `paletteLeafTracker`          | 永続ビューが操作する本文leafと検索元ノートの解決                           |
+| `fileListRefresh`             | Vault・メタデータ変更時の検索再実行(デバウンス付き)                        |
+| `SourcePinControl`            | フッターの検索元ノートのピン留めボタン                                     |
 | `ignoredNoteEntry`            | ignored noteのパス・frontmatterを検索用エントリへ変換                      |
 | `ignoredNoteScanner`          | 除外対象のVault走査と並列処理                                              |
 | `ignoredNoteIndex`            | ignored noteエントリのキャッシュ制御とIndexedDB永続化                      |
@@ -674,8 +717,11 @@ src/
 | `settings/mergeSettings`      | 永続化データの検証と既定値の補完                                           |
 | `settings/settingsStore`      | `data.json` のロード・保存と旧履歴データの移行準備                         |
 | `SearchHistoryStore`          | Vault単位のIndexedDB保存、履歴の読み書き、削除、フォールバック             |
+| `SearchHistoryService`        | `SearchHistoryStore` と `data.json` へのフォールバックの同期               |
 | `RecentCommandStore`          | Vault単位のIndexedDB保存、最近実行コマンドの並び替え、削除、フォールバック |
+| `RecentCommandService`        | `RecentCommandStore` と `data.json` へのフォールバックの同期               |
 | `settings/settingTab`         | 設定 UI と入力値の反映                                                     |
+| `settings/settingsHost`       | 設定画面がPluginに求める操作だけを定義したインターフェース                 |
 | `IgnoredNoteIndex`            | 除外ファイルを検索可能にする再構築可能なキャッシュ                         |
 | `workspace/external-markdown` | 外部Markdownをnative `markdown` viewへ開くworkspace state変換とleaf再利用  |
 

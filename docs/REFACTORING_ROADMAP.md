@@ -48,7 +48,7 @@
 - [x] 対象リーフの追跡(`registerTargetLeafTracking`、`findTargetLeaf`、`resolveTargetLeaf`、`isCenterLeaf`、`fileOf`)を分離する
 - [x] ソースピンのボタン(`SourcePinControl`)を分離する。ピン状態の更新(`toggleSourcePin`、`updateSource`)は `pendingState` と結びついているため `PaletteView` に残す
 - [x] ファイル一覧の更新タイマー(`registerFileListRefresh`、`scheduleFileListRefresh`)を分離する
-- [ ] `PaletteView` は ItemView のライフサイクル、状態の保存、各部品の接続に集中させる
+- [x] `PaletteView` は ItemView のライフサイクル、状態の保存、各部品の接続に集中させる。結果の実行とコンテキストメニューの組み立て(`execute`、`showContextMenu`)は、まだ `PaletteView` に残っている。変更の必要が出たときに分ける
 
 ### 5. 設定画面と Plugin 本体の依存
 
@@ -60,9 +60,10 @@
 
 ## テストの不足(必要になった時点で補う)
 
-- [ ] `schemaVersion` と保存判断(`settingsStore.test.ts` で既に網羅されているか確認する)
-- [ ] ignored note: 存在しない除外フォルダのスキップ、キャッシュ再利用条件
-- [ ] staleな非同期検索結果の破棄(`suggestionSurfaces.test.ts` で既に網羅されているか確認する)
+- [x] `schemaVersion` と保存判断(`settingsStore.test.ts`)
+- [x] ignored note: 存在しない除外フォルダのスキップ(`ignoredNoteScanner.test.ts`)
+- [ ] ignored note: キャッシュ再利用条件(`IgnoredNoteIndex` は IndexedDB を直接開くため、`fake-indexeddb` などを導入するか、永続化層を分離しないとテストできない)
+- [x] staleな非同期検索結果の破棄(`suggestionSurfaces.test.ts` で網羅済み)
 
 ## 手動確認(リリース前)
 
@@ -76,4 +77,4 @@
 
 ## ドキュメント
 
-- [ ] 上の課題を完了するごとに、`docs/DETAILED_SPECIFICATION.md` の構成図を更新する
+- [x] `docs/DETAILED_SPECIFICATION.md` の構成図と責務表を現状に合わせた。以後、構成を変えるたびに更新する
