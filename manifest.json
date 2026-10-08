@@ -3,7 +3,7 @@
 	"name": "My Palette",
 	"version": "0.1.0",
 	"minAppVersion": "1.13.0",
-	"description": "A keyboard-first command palette for Obsidian with Everything 1.5a search.",
+	"description": "A VS Code-style palette for Obsidian: find files first, then decide how to open or act on them. Optional Everything 1.5a search.",
 	"author": "My Palette",
 	"isDesktopOnly": true
 }

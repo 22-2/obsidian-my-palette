@@ -1,160 +1,179 @@
 # My Palette
 
-My Palette は、キーボード操作を中心に使える Obsidian 用コマンドパレットです。Everything 1.5a の検索にも対応しています。
+まずファイルを見つけて、その扱い方は見つけたあとに決める Obsidian 用パレットです。見た目は VS Code のコマンドパレットがベースですが、キーボードだけでなくマウスでも同じくらい快適に使えるように作っています。
 
 [English README](README.md)
 
-## 開発
+## なぜ作ったか
 
-必要なものは Node.js と pnpm です。
+Another Quick Switcher、標準の Quick Switcher、Quick Switcher++、Omnisearch を一通り使いましたが、どれも一長一短で、全体としてしっくりきませんでした。それで自分で作りました。
 
-- `vp install` で依存関係をインストールする
-- `vp dev` でウォッチビルドを開始する
-- `vp check` でフォーマット・lint チェックを実行する
-- `vp test` でユニットテストを実行する
-- `pnpm check-types` で TypeScript の型チェックを実行する
-- `vp build` で本番用バンドルを作成する
-- `pnpm e2e` で E2E テストを実行する。[obsidian-e2e-toolkit](https://github.com/22-2/obsidian-e2e-toolkit) と Playwright で実際の Obsidian を起動するため、Node.js 23 以上が必要。ディスプレイのない環境(Linux サーバーやコンテナ)では `xvfb-run -a pnpm e2e` で実行する
+最初は VS Code のパレットをほぼそのまま真似していました。文字を入力し、候補を選び、実行する、という流れです。ただ、Obsidian では「どれを実行するか」以外に決めることが多く、この文法は合いませんでした。
 
-Vite+ の設定により、本番用バンドルは `dist/` と設定済みの開発用 Vault のプラグインディレクトリへコピーされます。
+- **対象**: どのノート、どの外部ファイルか
+- **検索元**: Vault、Everything、リンク、バックリンク、ブックマークのどれか
+- **開き方**: 現在のタブ、別タブ、分割、サイドバーのどれか
+- **操作**: 開く以外に、パスのコピー、MOC への挿入、タグ付け、移動などもある
 
-## 使い方
+そこで現在は次の流れにしています。
 
-- このリポジトリをクローンする
-- `vp install` を実行する
-- 開発中は `vp dev` を実行する
-- バンドルがコピーされた開発用 Vault でプラグインを有効化または再読み込みする
+1. 探したいものを自然に入力する。通常のファイル検索にモード切り替えは要りません。
+2. 扱い方は結果を選んだあとに決める（クリック、ダブルクリック、中クリック、右クリック、キー操作）。
+3. 高度な操作は、適用する結果があるときだけ表示する。
 
-Obsidian のコマンドパレットから `My Palette: Open Recent palette` を実行すると、最近使ったファイルを検索できます。`My Palette: Open command list` ではコマンド検索、`My Palette: Open palette in right sidebar` では右サイドバーのパレットを開けます。複数の独立した固定ビューを追加したい場合は、パレットビューのペインメニューから実行できます。必要に応じて Obsidian のホットキー設定から各コマンドにショートカットを割り当ててください。
+プレフィックス（`>`、`e `、`bk ` など）は検索元を切り替えるためのもので、操作の主役ではありません。
 
-通常のリスト表示は `My Palette: Open palette in right sidebar`、独立したテーブルビューは `My Palette: Open palette table in center` からセンターのタブに開けます。それぞれのコマンドは同じ種類の既存ペインを再利用し、別のビューの検索を置き換えません。各ビューのペインメニューから同じ種類のビューを複製できます。テーブルの複製は新しいセンターのタブに開きます。テーブルの列は名前・パス・更新日時・`prior` で、列ヘッダーのクリックだけでソート条件を追加し、方向の切り替えや解除ができます。他の列のソート条件は維持され、Shift キーは不要です。列ヘッダーのドラッグで列順を変更でき、ヘッダーの右クリックメニューで列の表示・非表示を切り替えられます。結果を識別できるように名前列は常に表示します。非表示の列もソート条件は維持されます。番号付きのソート操作から方向の反転、優先順位の前後移動、個別解除、`Reset` による検索順位への復帰ができます。更新日時や `prior` がない結果は末尾に並びます。ソート条件・列順・表示状態はテーブルのペインごとに保存され、複製や再起動後の復元にも引き継がれます。
+## 機能
 
-テーブルは検索プロバイダーが返した全件をソートしてから50件ずつ表示します。ページの切り替えは上部の矢印ボタンから行えます。Everything 検索の取得件数は引き続き設定の上限に従います。
+- **Vault のファイル検索**: AND / OR 検索、alias、frontmatter とインラインのタグに対応し、並び順を細かく設定できます。
+- **Everything 1.5a 検索**: Vault 外のファイルも検索でき、Markdown は Obsidian で、それ以外は OS の関連付けアプリで開きます。
+- **コマンド・ブックマーク・リンク・バックリンク・Smart Connections の検索**を同じウィンドウで行えます。
+- **複数選択**: ファイルマネージャーと同じ操作で選び、選択したノートへまとめてパスのコピー、タグ追加、MOC リンク挿入ができます。
+- **3つの表示面**: モーダル、右サイドバーのリストビュー、センタータブのソート可能なテーブルビュー。
+- **除外ファイルは必要なときだけ**: Obsidian の除外フォルダーにあるノートは普段は出さず、`i ` を付けたときだけ検索対象にできます。
+- デスクトップ専用です（主な対象は Windows）。
 
-Everything モードを使うには、Everything 1.5a と公式 HTTP Server Plugin を起動しておく必要があります。
+## はじめかた
 
-検索履歴と最近実行したコマンドのIDは Vault ごとのローカル IndexedDB に保存されます。既存の履歴は初回起動時に移行され、IndexedDB が利用できない場合は `data.json` を一時的なフォールバックとして使います。
+Obsidian のコマンドパレットから次のコマンドを実行します。必要に応じてホットキーを割り当ててください。
 
-### 検索モードのプレフィックス
+| コマンド                                     | 内容                                                     |
+| -------------------------------------------- | -------------------------------------------------------- |
+| `My Palette: Open Recent palette`            | 最近使ったファイルから始まるファイル検索                 |
+| `My Palette: Open command list`              | コマンド検索（最初から `>` プレフィックス付き）          |
+| `My Palette: Open palette in right sidebar`  | 右サイドバーに常駐するリストビュー                       |
+| `My Palette: Open palette table in center`   | センターのタブに常駐するテーブルビュー                   |
+| `My Palette: Link search` / `Backlink search` | 現在のノートからのリンク先 / 現在のノートへのリンク元   |
+| `My Palette: Bookmark search`                | 保存したブックマーク                                     |
+| `My Palette: Smart Connections search`       | 現在のノートに関連するノート（Smart Connections が必要） |
+| `My Palette: Move file to another folder`    | 現在のファイルを別フォルダーへ移動                       |
+| `My Palette: Open file path in editor`       | Vault 内パスまたは絶対パスでファイルを開く               |
+| `My Palette: Insert tags into current note`  | 現在のノートにタグを追加                                 |
+| `My Palette: Insert link to MOC Relateds`    | アクティブな MOC に相互 Relateds リンクを追加            |
 
-既定のプレフィックスは次のとおりです。設定から変更できるプレフィックスもあります。
+## パレットの使い方
 
-| プレフィックス | モード               | 用途                                               |
-| -------------- | -------------------- | -------------------------------------------------- |
-| なし           | Files                | Vault 内のファイルを検索                           |
-| `>`            | Commands             | Obsidian のコマンドを検索・実行                    |
-| `e `           | Everything           | Everything のインデックス全体を検索                |
-| `esdir `       | Everything directory | 現在のノートがあるディレクトリを Everything で検索 |
-| `bk `          | Bookmarks            | 保存したブックマークを検索                         |
-| `sc `          | Smart Connections    | 現在のノートに関連するノートを検索                 |
-| `i `           | Excluded files       | File 検索に除外ファイルを含める                    |
+### マウスとキーボード
 
-現在のノートに関係する検索では、`o ` でアウトリンク、`b ` でバックリンクを検索できます。実際のプレフィックスは設定画面の値が優先されます。
+| 操作                   | 動作                                             |
+| ---------------------- | ------------------------------------------------ |
+| クリック               | 結果を選択                                       |
+| `Ctrl`+クリック        | 選択に追加 / 選択から除外                        |
+| `Shift`+クリック       | 範囲選択                                         |
+| ダブルクリック / `Enter` | 結果を開く（コマンドなら実行）                 |
+| 中クリック             | 新しいタブをバックグラウンドで開く               |
+| 右クリック             | アクションメニュー（選択中の全件が対象）         |
+| `Ctrl+R`               | 検索履歴                                         |
+| `Esc`                  | 入力をクリアし、もう一度で入力欄にフォーカス     |
 
-### 検索演算子
+アクションメニューには、開く、バックグラウンドタブで開く、左右に分割して開く、下に分割して開く、エクスプローラーで表示（Everything の結果）、ファイル名・Vault 相対パス・絶対パスのコピー、MOC への挿入、タグの追加があります。パレットのメニューボタンにある `Help` からも、プレフィックスと操作の一覧を確認できます。
 
-Everything 以外の検索モードでは、スペースで語を区切ると AND 検索になります。`|` で区切ると OR 条件になります。たとえば `meeting project | agenda` は、`meeting` と `project` の両方に一致するノート、または `agenda` に一致するノートを検索します。
+### 検索モード
 
-Everything のクエリは変換せず、そのまま Everything 独自の検索構文へ渡されます。
+プレフィックスのあとにスペースを入力すると検索元が切り替わります。`>`、`e `、`i ` は設定から変更できます。
 
-### タグ検索
+| プレフィックス | モード               | 用途                                                |
+| -------------- | -------------------- | --------------------------------------------------- |
+| なし           | Files                | Vault 内のファイルを検索                            |
+| `>`            | Commands             | Obsidian のコマンドを検索・実行                     |
+| `e `           | Everything           | Everything のインデックス全体を検索                 |
+| `esdir`        | Everything directory | 現在のノートがあるディレクトリを Everything で検索  |
+| `o `           | Outlinks             | 現在のノートからリンクしているノート                |
+| `b `           | Backlinks            | 現在のノートへリンクしているノート                  |
+| `bk `          | Bookmarks            | 保存したブックマークを検索                          |
+| `sc `          | Smart Connections    | 現在のノートに関連するノートを検索                  |
+| `i `           | Excluded files       | 除外ファイルを含めてファイル検索（ファイル検索のみ）|
 
-File 検索では、インラインタグと frontmatter の `tags` の両方を検索します。`#project` のようなクエリはタグを直接検索し、通常の検索語でもタグに fuzzy match します。一致したタグはファイル名の下に最大3件表示され、残りは `+N` にまとめられます。行にカーソルを合わせると、一致したタグ全体を確認できます。
+`es` と `esdir` は、末尾のスペースなしでも空クエリの検索として使えます。
+
+### 検索構文
+
+Everything 以外のモードでは、スペース区切りが AND、`|` 区切りが OR です。たとえば `meeting project | agenda` は、`meeting` と `project` の両方を含むノート、または `agenda` を含むノートに一致します。
+
+ファイル検索はインラインタグと frontmatter の `tags` の両方を対象にします。`#project` はタグを直接検索し、通常の検索語でもタグに一致します。一致したタグはファイル名の下に最大3件表示され、残りは `+N` にまとまります。行にカーソルを合わせると全件を確認できます。
+
+Everything のクエリは変換せず、そのまま Everything 独自の構文に渡されます。Everything モードには Everything 1.5a と公式 HTTP Server Plugin の起動が必要です。詳しくは [Everything の設定](#everything-の設定)を参照してください。
+
+## 複数のノートをまとめて扱う
+
+選択操作は、パレット、タグ選択、MOC 選択で共通です。クリック、`Ctrl` / `Shift`+クリック、矢印キーで選びます。
 
 ### タグの追加
 
-`My Palette: Insert tags into current note` を実行すると、開いているノートの frontmatter の `tags` にタグを追加できます。検索結果のノートに追加する場合は、パレットの結果を右クリックして `Add tags…` を選びます。複数の結果を選択していると、選択したすべての Markdown ノートに同じタグを追加します。除外ファイルは対象外です。
+`Insert tags into current note` を実行するか、結果を右クリックして `Add tags…` を選びます。複数の結果を選択していると、選択したすべての Markdown ノートに同じタグを追加します。除外ファイルは対象外です。
 
-候補は、最近追加したタグ、リンクでつながったノート（アウトリンクとバックリンク）で使われているタグ（最大10件、`Related N` と表示）、使用回数の順に並びます。対象のノートすべてに登録済みのタグは `Registered` として末尾に表示され、選択できません。一部のノートにだけ付いているタグは `On N/M notes` と表示され、選択できます。パレットと同じ操作で行を選択（クリック、`Ctrl`/`Shift`+クリック、矢印キー）し、`Enter`・ダブルクリック・右クリックメニュー・チェックアイコンのクリック（その行だけ切り替え）でチェックを切り替え、`Ctrl+Enter` で実行します。右クリックメニューの `Add N now` で、チェック済みと選択中の行をまとめてすぐに実行することもできます。入力欄右端のボタンからチェック済みの一覧を確認し、チェックを外したり実行したりできます。存在しないタグを入力すると、新しいタグとして追加できます。登録済み・一部登録のタグを右クリックして `Remove tag` を選ぶと、対象ノートの frontmatter からタグを削除できます。複数行を選択した状態で右クリックすると、選択したすべてのタグを削除します。最近追加したタグは Vault ごとのローカル IndexedDB に保存されます。
+- 候補は、最近追加したタグ、リンクでつながったノートで使われているタグ（最大10件、`Related N` と表示）、使用回数の順に並びます。
+- 対象すべてに登録済みのタグは `Registered` として末尾に表示され、選択できません。一部だけに付いているタグは `On N/M notes` と表示され、選択できます。
+- `Enter`、ダブルクリック、右クリックメニュー、チェックアイコンのクリック（その行だけ切り替え）でチェックを切り替え、`Ctrl+Enter` で実行します。右クリックメニューの `Add N now` で、チェック済みと選択中の行をまとめてすぐ実行することもできます。
+- 入力欄右端のボタンでチェック済みの一覧を確認し、チェックを外したり実行したりできます。
+- 存在しないタグを入力すると、新しいタグとして追加できます。
+- 登録済み・一部登録のタグを右クリックして `Remove tag` を選ぶと、対象ノートからタグを削除できます。複数行を選択していれば、選択した全タグを削除します。
+
+最近追加したタグは Vault ごとのローカル IndexedDB に保存されます。
 
 ### MOC への挿入
 
-MOC への挿入も同じ操作です。行の選択・チェック・実行は同じ操作です。`Enter` で選択したノートのチェックを切り替え、`Ctrl+Enter` または入力欄右端のチェック済み一覧ボタンから、選択したすべてのノートへの相互 Relateds リンクをアクティブな MOC に追加します。リンクの有無は `Relateds` 項目内のものだけで判定し、本文中の他のリンクは数えません。双方向にリンク済みのノートは末尾に表示され、選択できません。片方向だけのノートはリンクを補完するために選択できます。リンク済みのノートを右クリックして `Remove link` を選ぶと、双方向の Relateds リンクを削除できます。複数行を選択した状態で右クリックすると、選択したすべてのノートのリンクを削除します。
+MOC の選択画面も同じ操作です。`Enter` で選択したノートのチェックを切り替え、`Ctrl+Enter` または入力欄右端のチェック済み一覧ボタンで、選択したすべてのノートへの相互 `Relateds` リンクをアクティブな MOC に追加します。リンクの有無は `Relateds` 項目内のものだけで判定し、本文中の他のリンクは数えません。
 
-### ファイルのソート
+双方向にリンク済みのノートは末尾に表示され、選択できません。片方向だけのノートは、リンクを補完するために選択できます。リンク済みのノートを右クリックして `Remove link` を選ぶと、双方向の Relateds リンクを削除できます。
 
-ファイルの並び順は `Settings → My Palette → Vault file search → Sort priorities` で、1行につき1つの priority を指定して設定します。上から順に比較し、差がついた最初の priority が採用されます。
+## ビュー
 
-利用できる priority は `Filename prefix match`、`Filename fuzzy match`、`Alias prefix match`、`Alias fuzzy match`、`Tag match`、`Match coverage`、`Folder path match`、`Activity`、`Last modified`、`Aliases count`、`Alphabetical`、`Alphabetical reverse`、および任意の `:asc` / `:desc` を付けられる `@prior` です。`prior` が未設定のファイルは後ろに置かれます。
+`Open palette in right sidebar` は通常のリスト表示、`Open palette table in center` はセンタータブのテーブル表示です。それぞれ同じ種類の既存ペインを再利用し、もう一方の検索を置き換えません。ペインメニューから複製もできます。
 
-| ソートキー              | 説明                                                                                               |
-| ----------------------- | -------------------------------------------------------------------------------------------------- |
-| `Filename prefix match` | ファイル名が検索語で始まる候補を先に置く                                                           |
-| `Filename fuzzy match`  | ファイル名の fuzzy score が高い候補を先に置く                                                      |
-| `Alias prefix match`    | alias が検索語で始まる候補を先に置く                                                               |
-| `Alias fuzzy match`     | alias の fuzzy score が高い候補を先に置く                                                          |
-| `Tag match`             | 検索に一致したタグが多い候補を先に置く                                                             |
-| `Match coverage`        | ファイル名・パス・alias・tag で一致した検索文字数が多い候補を先に置く                              |
-| `Folder path match`     | ファイル名を除いた相対フォルダーパスの fuzzy score が高い候補を先に置く                            |
-| `Activity`              | 最近開いた順を優先し、最近開いた履歴で差がつかない候補では永続利用履歴のスコアが高い候補を先に置く |
-| `Last modified`         | ファイルの更新日時が新しい候補を先に置く                                                           |
-| `Aliases count`         | alias の数が多い候補を先に置く                                                                     |
-| `Alphabetical`          | ファイル名、次に相対パスの昇順で並べる                                                             |
-| `Alphabetical reverse`  | ファイル名、次に相対パスの降順で並べる                                                             |
-| `@prior` / `@prior:asc` | frontmatter の数値 `prior` が小さい候補を先に置く                                                  |
-| `@prior:desc`           | frontmatter の数値 `prior` が大きい候補を先に置く                                                  |
+テーブルでは次の操作ができます。
 
-`@prior:desc` は frontmatter の数値 `prior` が大きいノートを先に置きます。既定では、ファイル名、alias、タグ、検索範囲、フォルダーパス、`prior`、`Activity`、更新日時の順に評価します。
+- 列ヘッダーをクリックすると、ソート条件に追加するか、方向を切り替えて解除できます。他のソート条件は維持され、修飾キーは不要です。
+- ヘッダーをドラッグして列順を変更し、ヘッダーを右クリックして列の表示・非表示を切り替えられます（名前列は常に表示）。
+- 番号付きのソート操作で、方向の反転、優先順位の前後移動、個別解除、検索順位への復帰ができます。
+- 列は名前・パス・更新日時・`prior` です。値がないものは末尾に並びます。
+- ソート条件・列順・非表示の列は、ペインごとに保存され、複製や再起動後も引き継がれます。
+- 1ページ50件で、検索プロバイダーが返した全件をソートしてから分割します。Everything 検索の取得件数は設定の上限に従います。
 
-`Settings → My Palette → Vault file search → Lower prior folders` にフォルダーパスを1行ずつ指定し、`Sort priorities` の独立した項目 `Lower prior folders` を有効にすると、その配下のノートを後ろに並べられます。`@prior` が無効でも使えます。名前・更新日時などより優先したい場合は、それらの項目より上に置いてください。空入力と入力ありでそれぞれ設定します。完全な連続一致と include-ignored の優先は従来どおり先に評価されます。既存のフォルダー指定がある設定は、更新時にこの項目を各リストの先頭へ追加します。
+## ファイルのソート
 
-`Folder path match` はファイル名を除いた Vault 内の相対フォルダーパスを比較します。`Activity` は Obsidian の最近開いた順を先に使い、同じ状態の候補ではパレットの永続利用履歴をタイブレークに使います。`Last modified` は明示的に指定した場合だけ更新日時で比較し、設定した priority がすべて同点なら Vault 内の相対パスを決定的なフォールバックに使います。
+並び順は `Settings → My Palette → Vault file search → Sort priorities` で、空入力と入力ありのそれぞれについて設定します。有効な項目を上から順に比較し、差がついた最初の項目が採用されます。すべて同点なら Vault 内の相対パスで決まります。
 
-完全な連続一致がある候補は、設定した fuzzy 系 priority より先に置かれます。`Tag match` は一致したタグ数、`Match coverage` はファイル名・パス・alias・tag に含まれる一致文字数、`Aliases count` は alias の数を基準に並べます。
+| ソートキー              | 先に置かれる候補                                                      |
+| ----------------------- | --------------------------------------------------------------------- |
+| `Filename prefix match` | ファイル名が検索語で始まる                                            |
+| `Filename fuzzy match`  | ファイル名の fuzzy score が高い                                       |
+| `Alias prefix match`    | alias が検索語で始まる                                                |
+| `Alias fuzzy match`     | alias の fuzzy score が高い                                           |
+| `Tag match`             | 一致したタグが多い                                                    |
+| `Match coverage`        | ファイル名・パス・alias・タグで一致した文字数が多い（最良の OR 枝）   |
+| `Folder path match`     | ファイル名を除いたフォルダーパスの fuzzy score が高い                 |
+| `Lower prior folders`   | 設定したフォルダー配下を後ろへ送る（下記）                            |
+| `Activity`              | 最近開いた順。差がつかなければ永続的な利用履歴のスコアが高い          |
+| `Last modified`         | 更新日時が新しい                                                      |
+| `Aliases count`         | alias の数が多い                                                      |
+| `Alphabetical` / `Alphabetical reverse` | ファイル名、次にパスの昇順 / 降順                     |
+| `@prior` / `@prior:asc` | frontmatter の数値 `prior` が小さい                                   |
+| `@prior:desc`           | frontmatter の数値 `prior` が大きい                                   |
 
-## 手動インストール
+`prior` がないノートは末尾です。ファイル名・パス・alias・タグのいずれかに完全な連続一致がある候補は、この一覧を適用する前に fuzzy のみの一致より先に置かれます。
 
-`main.js`、`styles.css`、`manifest.json` を Vault の次のディレクトリへコピーします。
+`Lower prior folders` には、フォルダーパスを1行ずつ指定します（サブフォルダーを含む）。`Sort priorities` で同名の項目を有効にすると、`@prior` なしでもその配下のノートを後ろに並べられます。名前や Activity より優先したい場合は、それらより上に置いてください。include-ignored の優先は従来どおり先に評価されます。
 
-```text
-VaultFolder/.obsidian/plugins/my-palette/
-```
+## 設定
 
-その後、Obsidian の設定から My Palette を有効化してください。
+設定は3ページに分かれています。パレット本体（プレフィックス、検索履歴、デバッグメッセージ）、Vault file search（除外フォルダー、無視ノートのインデックス、ソート）、Everything です。
 
-## リリース
+### Everything の設定
 
-- `manifest.json` のバージョン番号と、対応する最低 Obsidian バージョンを更新する
-- `versions.json` に `"新しいプラグインバージョン": "最低Obsidianバージョン"` の対応を追加する
-- 新しいバージョン番号を GitHub Release の Tag version としてリリースを作成する。`v` などの接頭辞は付けない
-- `manifest.json`、`main.js`、`styles.css` をバイナリ添付する
-- リリースを公開する
+1. Everything 1.5a と公式 HTTP Server Plugin をインストールして起動する。
+2. `Settings → My Palette → Everything` で HTTP server URL（ユーザー名・パスワードを設定した場合はそれも）を入力し、`Test connection` を押す。
 
-`minAppVersion` を手動で更新したあと、`npm version patch`、`npm version minor`、`npm version major` を使うとバージョン更新を簡略化できます。コマンドは `manifest.json` と `package.json` のバージョンを更新し、`versions.json` に新しいエントリを追加します。
+通信は localhost のみで、外部サービスには何も送信しません。
 
-## コミュニティプラグイン一覧への追加
+### 検索履歴
 
-- [Obsidian の plugin review ガイド](https://github.com/obsidianmd/obsidian-releases/blob/master/plugin-review.md)を確認する
-- 初回バージョンを公開する
-- リポジトリのルートに `README.md` があることを確認する
-- [obsidian-releases](https://github.com/obsidianmd/obsidian-releases) に追加用の Pull Request を作成する
+検索履歴と最近実行したコマンドの ID は Vault ごとのローカル IndexedDB に保存されます。IndexedDB が使えない場合に限り、`data.json` を一時的なフォールバックとして使います。
 
-## コード品質
+## インストール
 
-フォーマットと lint は Vite+ の `vp check` で実行します。型チェックとテストは個別に実行できるため、リファクタリング中も分けて確認できます。
+コミュニティプラグイン一覧にはまだ登録されていません。手動でインストールするには、リリースの `main.js`、`styles.css`、`manifest.json` を `VaultFolder/.obsidian/plugins/my-palette/` にコピーし、Obsidian の設定で My Palette を有効化してください。
 
-## Funding URL
+## 開発
 
-`manifest.json` に Funding URL を設定すると、利用者がプロジェクトを支援するためのリンクを追加できます。
-
-```json
-{
-	"fundingUrl": "https://buymeacoffee.com"
-}
-```
-
-複数のリンクを設定する場合は、次のようにします。
-
-```json
-{
-	"fundingUrl": {
-		"Buy Me a Coffee": "https://buymeacoffee.com",
-		"GitHub Sponsor": "https://github.com/sponsors",
-		"Patreon": "https://www.patreon.com/"
-	}
-}
-```
-
-## API ドキュメント
-
-[Obsidian API](https://github.com/obsidianmd/obsidian-api)を参照してください。
+ビルドには [Vite+](https://viteplus.dev/guide/) の CLI（`vp`）が必要です。ビルド・テスト・リリースの手順は [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) を参照してください。
