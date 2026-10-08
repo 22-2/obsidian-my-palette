@@ -111,7 +111,7 @@ Obsidian 標準の「ホットキー」設定から、利用者がこのコマ�
 
 既存の `PaletteView` のペインメニューからは、現在の状態を引き継いだ独立した新しい `ItemView` も作成できる。各ビューは入力と検索セッションを独立して保持し、Sourceをピン留めしている場合だけ検索元ノートも独立して保持する。
 
-主クリックは検索ビューを閉じず、現在の本文leafへ候補を開く。未ピンの検索元ノート（link / backlink / Smart Connectionsの基準）はアクティブな本文ノートへ追従し、ノート切り替え時に再検索する。Sourceをピン留めした場合は、ピン留め時のノートを検索元として固定する。
+主クリックは検索ビューを閉じず、現在の本文leafへ候補を開く。未ピンの検索元ノート（link / backlink / Smart Connectionsの基準）はアクティブな本文ノートへ追従し、ノート切り替え時に再検索する。Sourceをピン留めした場合は、ピン留め時のノートを検索元として固定する。ピン留めの切り替えはフッターのSource名を右クリックして出るメニューで行い（ピン留め中だけSource名の前にピンアイコンを表示する）、Source名の通常クリックはそのノートへフォーカスを移す。
 
 ### 4.2 初期フォーカス
 
@@ -603,8 +603,7 @@ src/
 │   ├── actions/
 │   │   └── resultContextMenu.ts
 │   ├── components/
-│   │   ├── PaletteHistoryControls.ts
-│   │   └── SourcePinControl.ts
+│   │   └── PaletteHistoryControls.ts
 │   ├── surfaces/
 │   │   ├── fileListRefresh.ts
 │   │   ├── paletteLeafTracker.ts
@@ -705,7 +704,6 @@ src/
 | `PaletteView`                 | 永続パレットのItemView、workspace state、各部品の接続                      |
 | `paletteLeafTracker`          | 永続ビューが操作する本文leafと検索元ノートの解決                           |
 | `fileListRefresh`             | Vault・メタデータ変更時の検索再実行(デバウンス付き)                        |
-| `SourcePinControl`            | フッターの検索元ノートのピン留めボタン                                     |
 | `ignoredNoteEntry`            | ignored noteのパス・frontmatterを検索用エントリへ変換                      |
 | `ignoredNoteScanner`          | 除外対象のVault走査と並列処理                                              |
 | `ignoredNoteIndex`            | ignored noteエントリのキャッシュ制御とIndexedDB永続化                      |

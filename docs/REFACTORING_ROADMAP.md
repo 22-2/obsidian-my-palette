@@ -46,7 +46,7 @@
 ### 4. `PaletteView.ts`(約690行)の分割
 
 - [x] 対象リーフの追跡(`registerTargetLeafTracking`、`findTargetLeaf`、`resolveTargetLeaf`、`isCenterLeaf`、`fileOf`)を分離する
-- [x] ソースピンのボタン(`SourcePinControl`)を分離する。ピン状態の更新(`toggleSourcePin`、`updateSource`)は `pendingState` と結びついているため `PaletteView` に残す
+- [x] ソースピンの切り替え(フッターのSource名のメニュー)。ピン状態の更新(`toggleSourcePin`、`updateSource`)は `pendingState` と結びついているため `PaletteView` に残す
 - [x] ファイル一覧の更新タイマー(`registerFileListRefresh`、`scheduleFileListRefresh`)を分離する
 - [x] `PaletteView` は ItemView のライフサイクル、状態の保存、各部品の接続に集中させる。結果の実行とコンテキストメニューの組み立て(`execute`、`showContextMenu`)は、まだ `PaletteView` に残っている。変更の必要が出たときに分ける
 

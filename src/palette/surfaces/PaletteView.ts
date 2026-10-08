@@ -1,6 +1,7 @@
 import { ItemView, Menu, TFile, type WorkspaceLeaf } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
+import { getLeafForAction, revealOpenedLeaf } from "src/workspace/openLeaf";
 import {
 	executePaletteResult,
 	type PaletteResultExecutionOptions,
@@ -22,7 +23,6 @@ import {
 	getExternalMarkdownLeaves,
 	isExternalMarkdownLeaf,
 } from "src/workspace/external-markdown/openExternalMarkdown";
-import { SourcePinControl } from "src/palette/components/SourcePinControl";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 import { PaletteTableControls } from "src/palette/table/PaletteTableControls";
 import {
@@ -71,7 +71,6 @@ export class PaletteView extends ItemView {
 	);
 	private sourcePath?: string;
 	private sourcePinned = false;
-	private sourcePinControl?: SourcePinControl;
 	private actionMessage?: string;
 	private targetTrackingRegistered = false;
 	private pendingState: NormalizedPaletteViewState = {
@@ -184,7 +183,6 @@ export class PaletteView extends ItemView {
 		this.session = undefined;
 		if (this.panel) this.removeChild(this.panel);
 		this.panel = undefined;
-		this.sourcePinControl = undefined;
 	}
 
 	private createSurface(state: NormalizedPaletteViewState): void {
@@ -248,6 +246,10 @@ export class PaletteView extends ItemView {
 			onContextMenu: (result, event, selectedItems) =>
 				this.showContextMenu(result, event, selectedItems),
 			onEscape: () => this.clearOrFocus(),
+			// Why: the pin is rarely toggled, so it lives in the source name's menu
+			// instead of a permanent footer button; a plain click goes to the note.
+			onFooterTextClick: () => void this.focusSourceNote(),
+			onFooterTextContextMenu: (event) => this.showSourceMenu(event),
 		});
 		this.addChild(this.panel);
 		this.panel.load();
@@ -271,12 +273,6 @@ export class PaletteView extends ItemView {
 			this.addChild(this.tableControls);
 			this.tableControls.load();
 		}
-		this.sourcePinControl = new SourcePinControl({
-			owner: this,
-			statusBarEl: this.panel.statusBarEl,
-			isPinned: () => this.sourcePinned,
-			onToggle: () => this.toggleSourcePin(),
-		});
 		this.addHistoryControls();
 		this.registerTargetLeafTracking();
 		this.fileListRefresh.register();
@@ -306,10 +302,7 @@ export class PaletteView extends ItemView {
 		this.panel.updatePlaceholder(palettePlaceholder(state.mode));
 		this.panel.setAttribute("data-mode", state.mode);
 		this.panel.setAttribute("data-everything-scope", state.everythingScope);
-		const source = this.sourcePath ?? "No active note";
-		const suffix = this.actionMessage ? ` · ${this.actionMessage}` : "";
-		this.panel.updateFooterText(`Source: ${source}${suffix}`);
-		this.sourcePinControl?.update();
+		this.renderFooter(this.actionMessage);
 		const results = {
 			items: state.results,
 			total: state.resultCount,
@@ -319,6 +312,50 @@ export class PaletteView extends ItemView {
 		else this.panel.setResults(results);
 		this.actionMessage = undefined;
 		this.historyControls?.update(state.input);
+	}
+
+	private renderFooter(message?: string): void {
+		const source = this.sourcePath ?? "No active note";
+		const suffix = message ? ` · ${message}` : "";
+		// Why: the pin has no button of its own, so a pinned source is the only
+		// state the footer must show; an unpinned source follows the active note.
+		this.panel?.updateFooterText(
+			`Source: ${source}${suffix}`,
+			this.sourcePinned ? "pin" : undefined,
+		);
+	}
+
+	private async focusSourceNote(): Promise<void> {
+		const file = this.leafTracker.sourceFile(this.sourcePath);
+		if (!file) return;
+		const leaf = this.leafTracker.findTargetLeaf(file.path);
+		if (leaf && this.leafTracker.fileOf(leaf)?.path === file.path) {
+			await revealOpenedLeaf(this.app, leaf);
+			return;
+		}
+		// The note is not open in the center: open it where a primary action would.
+		const target = getLeafForAction(this.app, "primary", this.leafTracker.resolveTargetLeaf());
+		await target.openFile(file);
+		await revealOpenedLeaf(this.app, target);
+	}
+
+	private showSourceMenu(event: MouseEvent): void {
+		this.activeMenu?.close();
+		const menu = new Menu();
+		this.activeMenu = menu;
+		menu.onHide(() => {
+			if (this.activeMenu === menu) this.activeMenu = undefined;
+		});
+		const canPin = this.sourcePinned || this.leafTracker.currentSourceFile() !== undefined;
+		menu.addItem((item) =>
+			item
+				.setTitle(this.sourcePinned ? "Unpin source note" : "Pin source note")
+				.setIcon(this.sourcePinned ? "pin-off" : "pin")
+				.setDisabled(!canPin)
+				.onClick(() => this.toggleSourcePin()),
+		);
+		menu.setParentElement(this.contentEl);
+		menu.showAtMouseEvent(event);
 	}
 
 	private toggleSourcePin(): void {
@@ -410,9 +447,7 @@ export class PaletteView extends ItemView {
 			close: () => undefined,
 			showError: (message) => {
 				this.actionMessage = message;
-				this.panel?.updateFooterText(
-					`Source: ${this.sourcePath ?? "No active note"} · ${message}`,
-				);
+				this.renderFooter(message);
 			},
 		};
 		await executePaletteResult(this.plugin, result, action, execution);

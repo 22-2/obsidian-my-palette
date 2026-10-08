@@ -17,6 +17,9 @@ export interface SuggestionPanelProps<T> {
 	onRowToggle?: (item: T, event: MouseEvent) => void;
 	onContextMenu?: (item: T, event: MouseEvent, selectedItems: T[]) => void;
 	onEscape?: () => void;
+	/** Left click on the footer's context text, such as the source note's name. */
+	onFooterTextClick?: (event: MouseEvent) => void;
+	onFooterTextContextMenu?: (event: MouseEvent) => void;
 	onReady?: () => void;
 }
 
@@ -124,6 +127,7 @@ export class SuggestionPanel<T> extends Component {
 		this.registerDomEvent(this.inputEl, "input", () => this.props.onInput(this.inputEl.value));
 		this.registerDomEvent(this.inputEl, "keydown", (event) => this.handleInputKeyDown(event));
 		this.registerPointerActions();
+		this.registerFooterTextActions();
 		this.props.onReady?.();
 	}
 
@@ -248,8 +252,27 @@ export class SuggestionPanel<T> extends Component {
 		this.inputEl.placeholder = placeholder;
 	}
 
-	updateFooterText(text: string): void {
-		this.statusTextEl.setText(text);
+	updateFooterText(text: string, icon?: string): void {
+		this.statusTextEl.empty();
+		this.statusTextEl.setAttribute("title", text);
+		if (icon) setIcon(this.statusTextEl.createSpan("my-palette-status-bar__icon"), icon);
+		this.statusTextEl.appendText(text);
+	}
+
+	private registerFooterTextActions(): void {
+		const { onFooterTextClick, onFooterTextContextMenu } = this.props;
+		if (!onFooterTextClick && !onFooterTextContextMenu) return;
+		this.statusTextEl.addClass("is-interactive");
+		// Why: a press on the footer must not pull focus out of the input, which
+		// would silence the arrow keys exactly like pressing empty list space did.
+		this.registerDomEvent(this.statusTextEl, "mousedown", (event) => event.preventDefault());
+		if (onFooterTextClick)
+			this.registerDomEvent(this.statusTextEl, "click", (event) => onFooterTextClick(event));
+		if (onFooterTextContextMenu)
+			this.registerDomEvent(this.statusTextEl, "contextmenu", (event) => {
+				event.preventDefault();
+				onFooterTextContextMenu(event);
+			});
 	}
 
 	updateResultCount(total: number): void {
