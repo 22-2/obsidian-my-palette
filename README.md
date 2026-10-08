@@ -176,4 +176,4 @@ The plugin is not in the community plugin list yet. To install it manually, copy
 
 ## Development
 
-See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for the build, test and release workflow.
+Building requires the [Vite+](https://viteplus.dev/guide/) CLI (`vp`). See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for the build, test and release workflow.

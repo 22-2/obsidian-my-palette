@@ -2,7 +2,7 @@
 
 My Palette is written in TypeScript and built with Vite+. Source is organized by feature under `src/`, with unit tests colocated next to the pure search, settings and ignored-note logic.
 
-Requirements: Node.js and pnpm.
+Requirements: Node.js, pnpm, and the global Vite+ CLI (`vp`). Install `vp` by following the [Vite+ guide](https://viteplus.dev/guide/); every `vp` command below fails without it. `vp help` lists what it can do.
 
 ## Commands
 

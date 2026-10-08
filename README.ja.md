@@ -176,4 +176,4 @@ MOC の選択画面も同じ操作です。`Enter` で選択したノートの�
 
 ## 開発
 
-ビルド・テスト・リリースの手順は [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) を参照してください。
+ビルドには [Vite+](https://viteplus.dev/guide/) の CLI（`vp`）が必要です。ビルド・テスト・リリースの手順は [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) を参照してください。
