@@ -38,3 +38,35 @@ jobs:
 
       - name: Unit tests
         run: pnpm exec vp test
+
+  e2e:
+    runs-on: ubuntu-latest
+    # obsidian-e2e-toolkit documents that Electron can fail to launch on GitHub's
+    # Ubuntu runners (microsoft/playwright#11932). Report the result without
+    # blocking merges until the job has proven stable.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.9.1
+
+      # The toolkit requires Node.js 23 or later.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: End-to-end tests
+        run: xvfb-run -a pnpm e2e
+
+      - name: Upload failure artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: test-results/
+          if-no-files-found: ignore
