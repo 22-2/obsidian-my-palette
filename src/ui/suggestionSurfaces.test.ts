@@ -46,10 +46,11 @@ class TestModal extends BaseSuggestModal<string> {
 	protected override onResultFocus() {
 		this.resultFocus();
 	}
-	protected override onSelectionModalOpen() {
-		this.registerSelectionDomEvent(this.inputEl, "keydown", (event) => {
-			if (event.key === "ArrowRight") this.preview();
-		});
+	protected override handlesSuggestionPreview() {
+		return true;
+	}
+	protected override async onSuggestionPreview(item: string) {
+		this.preview(item);
 	}
 	protected override getInitialInputSelectionRange(): [number, number] {
 		return this.initialRange ?? super.getInitialInputSelectionRange();

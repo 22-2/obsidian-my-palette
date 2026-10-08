@@ -1,4 +1,4 @@
-import { App, Modal, type KeymapEventHandler, type Menu } from "obsidian";
+import { App, Modal, Notice, type KeymapEventHandler, type Menu } from "obsidian";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 import { SelectorHelpModal, type SelectorControls } from "src/ui/selectorControls";
 import { SuggestionPanel } from "src/ui/suggestionPanel";
@@ -34,6 +34,8 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	private selectorHistoryControls?: PaletteHistoryControls;
 	private historyTimer?: number;
 	private historyCommitted = false;
+	private previewGeneration = 0;
+	private previewPending = false;
 
 	constructor(
 		{
@@ -135,6 +137,13 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		// ModalはComponentを継承しないため、開閉に合わせて部品のイベントを管理する。
 		// 同じインスタンスを再度開いてもフッターやハンドラを増やさない。
 		this.panel.load();
+		if (this.handlesSuggestionPreview())
+			this.registerSelectionDomEvent(
+				this.inputEl,
+				"keydown",
+				(event) => this.handlePreviewKey(event),
+				true,
+			);
 		this.historyCommitted = false;
 		if (this.controls) {
 			const controls = this.controls;
@@ -180,6 +189,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	}
 
 	onClose(): void {
+		this.previewGeneration += 1;
 		this.refreshGeneration += 1;
 		this.cancelHistoryTimer();
 		this.selectorHistoryControls?.destroy();
@@ -199,6 +209,58 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	}
 
 	protected onSelectionModalOpen(): void {}
+
+	protected handlesSuggestionPreview(): boolean {
+		return false;
+	}
+
+	protected async onSuggestionPreview(_item: T): Promise<void> {}
+
+	private handlePreviewKey(event: KeyboardEvent): void {
+		const cursorIsAtEnd =
+			this.inputEl.selectionStart === this.inputEl.value.length &&
+			this.inputEl.selectionEnd === this.inputEl.value.length;
+		if (
+			event.key !== "ArrowRight" ||
+			event.isComposing ||
+			event.ctrlKey ||
+			event.metaKey ||
+			event.altKey ||
+			event.shiftKey ||
+			(!this.inputEl.readOnly && !cursorIsAtEnd)
+		)
+			return;
+		event.preventDefault();
+		event.stopImmediatePropagation();
+		const item = this.getSelectedItem();
+		if (item === undefined || event.repeat || this.previewPending) return;
+		this.commitSearchHistory();
+		void this.previewSuggestion(item);
+	}
+
+	private async previewSuggestion(item: T): Promise<void> {
+		this.previewPending = true;
+		const generation = this.previewGeneration;
+		const selectionStart = this.inputEl.selectionStart;
+		const selectionEnd = this.inputEl.selectionEnd;
+		const restoreFocus = () => {
+			if (generation !== this.previewGeneration || !this.inputEl.isConnected) return;
+			// Focus the DOM input directly: switching to input mode would discard
+			// the selector's read-only selection mode after every preview.
+			this.inputEl.focus({ preventScroll: true });
+			this.inputEl.setSelectionRange(selectionStart, selectionEnd);
+		};
+		try {
+			await this.onSuggestionPreview(item);
+		} catch (error) {
+			console.error("Failed to preview selection", error);
+			new Notice(error instanceof Error ? error.message : "Failed to preview selection.");
+		} finally {
+			this.previewPending = false;
+			restoreFocus();
+			window.setTimeout(restoreFocus, 0);
+		}
+	}
 
 	protected populateSelectorActions(menu: Menu, event: MouseEvent): void {
 		const candidate = this.getSelectedItem();

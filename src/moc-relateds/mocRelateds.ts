@@ -20,6 +20,7 @@ import {
 import { isMarkdownPath } from "src/shared/externalFiles";
 import { parseInput } from "src/palette/inputParser";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
+import { executePaletteResult } from "src/palette/executePaletteResult";
 import { matchedMetadataPresentation } from "src/palette/resultPresentation";
 import { relationPaths } from "src/shared/noteRelations";
 
@@ -297,6 +298,27 @@ class MocTargetModal extends MultiSelectModal<string> {
 		);
 	}
 
+	protected override handlesSuggestionPreview(): boolean {
+		return true;
+	}
+
+	protected override async onSuggestionPreview(
+		candidate: MultiSelectCandidate<string>,
+	): Promise<void> {
+		const result = toCandidateResult(this.plugin, candidate.item);
+		if (!result) {
+			new Notice("The file no longer exists.");
+			return;
+		}
+		await executePaletteResult(this.plugin, result, "primary", {
+			closeWhenDone: false,
+			active: true,
+			autoFocus: false,
+			close: () => this.close(),
+			showError: (message) => new Notice(message),
+		});
+	}
+
 	/** Updates the shown relations directly because the metadata cache lags behind the edit. */
 	private async removeLink(file: TFile): Promise<void> {
 		if (!(await removeFileFromMocRelateds(this.plugin, this.activeFile, file))) return;
@@ -420,6 +442,10 @@ export async function insertLinkToMocRelateds(plugin: MyPalettePlugin): Promise<
 		return;
 	}
 
+	// Preview changes the visible note; insertion must keep the original destination.
+	const activeLeaf = plugin.app.workspace.activeLeaf;
+	const mocLeaf =
+		activeLeaf && (activeLeaf.view as { file?: unknown }).file ? activeLeaf : undefined;
 	const paths = await new MocTargetModal(plugin, activeFile).openAndWait();
 	if (!paths?.length) return;
 	// Why: each insertion reads and updates the shared MOC, so process targets
@@ -427,6 +453,6 @@ export async function insertLinkToMocRelateds(plugin: MyPalettePlugin): Promise<
 	for (const path of paths) {
 		// Ignored notes are imported only now, so cancelling never touches the vault.
 		const target = await resolveInsertTarget(plugin, path);
-		if (target) await insertFileToActiveMocRelateds(plugin, target);
+		if (target) await insertFileToMocRelateds(plugin, activeFile, target, mocLeaf);
 	}
 }

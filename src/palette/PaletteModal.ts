@@ -64,20 +64,6 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			focusInput: () => this.focusSearchInput(),
 			moveToSidebar: () => this.moveToSidebar(),
 		});
-		this.registerSelectionDomEvent(
-			this.inputEl,
-			"keydown",
-			(event) => {
-				const cursorIsAtEnd =
-					this.inputEl.selectionStart === this.inputEl.value.length &&
-					this.inputEl.selectionEnd === this.inputEl.value.length;
-				if (event.key !== "ArrowRight" || event.isComposing || !cursorIsAtEnd) return;
-				event.preventDefault();
-				event.stopImmediatePropagation();
-				void this.openSelectedWithoutClosing();
-			},
-			true,
-		);
 	}
 
 	protected override onSelectionModalClose(): void {
@@ -219,20 +205,13 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		await openPaletteResultInBackground(this.plugin, result);
 	}
 
-	private async openSelectedWithoutClosing(): Promise<void> {
-		// The shared panel owns selection; preview the same item as Enter/double-click.
-		const result = this.getSelectedItem();
-		if (!result || result.mode === "command") return;
-		// Right Arrow opens the selected result without moving focus to the list,
-		// so it must commit the query before this keyboard-only action runs.
+	protected override handlesSuggestionPreview(): boolean {
+		return true;
+	}
+
+	protected override async onSuggestionPreview(result: PaletteResult): Promise<void> {
+		if (result.mode === "command") return;
 		this.session.commitCurrentSearch();
-		const selectionStart = this.inputEl.selectionStart;
-		const selectionEnd = this.inputEl.selectionEnd;
 		await this.activatePaletteResult("primary", result, false);
-		window.setTimeout(() => {
-			if (!this.inputEl.isConnected) return;
-			this.inputEl.focus({ preventScroll: true });
-			this.inputEl.setSelectionRange(selectionStart, selectionEnd);
-		});
 	}
 }

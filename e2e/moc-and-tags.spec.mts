@@ -44,9 +44,46 @@ test("checked MOC notes stay above results from a different query", async ({ obs
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Alpha child");
 	await expect(page.locator(MODAL_ROW).nth(1)).toContainText("Beta child");
 	await expect(page.locator(`${MODAL_ROW}.is-checked`)).toHaveCount(1);
+	await page.keyboard.press("ArrowDown");
+	await page.keyboard.press("ArrowDown");
+	await page.keyboard.press("ArrowRight");
+	await expect.poll(() => obsidian.filePath()).toBe("Beta child.md");
+	await expect(page.locator(MODAL_INPUT)).toBeFocused();
+	await expect(page.locator(MODAL_INPUT)).toHaveAttribute("readonly", "");
 	await page.keyboard.press("Control+Enter");
 	await expect.poll(() => obsidian.read("Topic MOC.md")).toContain("[[Alpha child]]");
 	expect(await obsidian.read("Topic MOC.md")).not.toContain("[[Beta child]]");
+	expect(await obsidian.read("Beta child.md")).not.toContain("[[Alpha child]]");
+});
+
+test("tag preview reveals core search while the insertion modal retains focus", async ({
+	obsidian,
+}) => {
+	await obsidian.createNote("Target.md", "target");
+	await obsidian.createNote("Tagged.md", "#alpha\n");
+	await obsidian.open("Target.md");
+	const page = obsidian.page;
+	await runPaletteCommand(obsidian, "insert-tags");
+	await page.locator(MODAL_INPUT).fill("alpha");
+	await expect(page.locator(MODAL_ROW).first()).toContainText("#alpha");
+	await page.keyboard.press("ArrowDown");
+	await page.keyboard.press("ArrowRight");
+	await expect
+		.poll(() =>
+			obsidian.evaluateApp(() =>
+				app.workspace
+					.getLeavesOfType("search")
+					.map((leaf) => leaf.getViewState().state?.query),
+			),
+		)
+		.toContain("tag:#alpha");
+	await expect(page.locator(MODAL_INPUT)).toBeFocused();
+	await expect(page.locator(MODAL_INPUT)).toHaveAttribute("readonly", "");
+	await expect.poll(() => obsidian.filePath()).toBe("Target.md");
+	await page.keyboard.press("Space");
+	await expect(page.locator(`${MODAL_ROW}.is-checked`)).toHaveCount(1);
+	await page.keyboard.press("Control+Enter");
+	await expect.poll(() => obsidian.read("Target.md")).toContain("alpha");
 });
 
 test("several tags can be checked and inserted into the note together", async ({ obsidian }) => {

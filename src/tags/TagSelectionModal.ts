@@ -1,3 +1,4 @@
+import { Notice } from "obsidian";
 import type { SelectorControls } from "src/ui/selectorControls";
 import { MultiSelectModal, type MultiSelectCandidate } from "src/ui/MultiSelectModal";
 import type { TagRemoval } from "src/tags/insertTags";
@@ -57,7 +58,7 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 	 * @param targetLabel Shown in the footer so the user knows which notes change.
 	 */
 	constructor(
-		plugin: SelectorControls["plugin"],
+		private readonly plugin: SelectorControls["plugin"],
 		private choices: readonly TagChoice[],
 		targetLabel: string,
 		private readonly targetCount: number,
@@ -89,6 +90,30 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 		return buildTagSuggestions(this.choices, query).map((suggestion) =>
 			toCandidate(suggestion, this.targetCount, (tag) => this.removeTag(tag)),
 		);
+	}
+
+	protected override handlesSuggestionPreview(): boolean {
+		return true;
+	}
+
+	protected override async onSuggestionPreview(
+		candidate: MultiSelectCandidate<string>,
+	): Promise<void> {
+		const search = (
+			this.plugin.app as unknown as {
+				internalPlugins: {
+					getEnabledPluginById(
+						id: string,
+					): { openGlobalSearch(query: string, active: boolean): void } | undefined;
+				};
+			}
+		).internalPlugins.getEnabledPluginById("global-search");
+		if (!search) {
+			new Notice("Enable Obsidian's Search core plugin to preview tags.");
+			return;
+		}
+		// The core API's second argument reveals search without activating its leaf.
+		search.openGlobalSearch(`tag:#${candidate.value}`, false);
 	}
 
 	/** Removes from the notes, then shows the tag as unapplied without waiting for the metadata cache. */

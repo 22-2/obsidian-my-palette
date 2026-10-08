@@ -76,6 +76,27 @@ async function open(targetCount = 1, plugin = createSelectorPlugin({} as App)) {
 }
 
 describe("TagSelectionModal", () => {
+	it("previews a tag through core search without activating it or leaving selection mode", async () => {
+		const openGlobalSearch = vi.fn();
+		const plugin = createSelectorPlugin({
+			internalPlugins: { getEnabledPluginById: () => ({ openGlobalSearch }) },
+		} as unknown as App);
+		const f = await open(1, plugin);
+		f.key("ArrowDown");
+		f.modal.inputEl.focus();
+		f.key("ArrowRight", { isComposing: true });
+		f.key("ArrowRight", { ctrlKey: true });
+		expect(openGlobalSearch).not.toHaveBeenCalled();
+		f.key("ArrowRight");
+		await flush();
+		expect(openGlobalSearch).toHaveBeenCalledExactlyOnceWith("tag:#alpha", false);
+		expect(document.activeElement).toBe(f.modal.inputEl);
+		expect(f.modal.inputEl.readOnly).toBe(true);
+		expect(f.checked()).toEqual([]);
+		expect(f.modal.modalEl.isConnected).toBe(true);
+		f.modal.close();
+	});
+
 	it("offers insertion and check actions in the shared action button", async () => {
 		const f = await open();
 		const actionButton = f.modal.modalEl.querySelector<HTMLElement>(
