@@ -1,4 +1,4 @@
-import { ItemView, Menu, TFile, setIcon, type WorkspaceLeaf } from "obsidian";
+import { ItemView, Menu, TFile, type WorkspaceLeaf } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
 import {
@@ -22,6 +22,7 @@ import {
 	getExternalMarkdownLeaves,
 	isExternalMarkdownLeaf,
 } from "src/workspace/external-markdown/openExternalMarkdown";
+import { SourcePinControl } from "src/palette/components/SourcePinControl";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 import { PaletteTableControls } from "src/palette/table/PaletteTableControls";
 import {
@@ -70,7 +71,7 @@ export class PaletteView extends ItemView {
 	);
 	private sourcePath?: string;
 	private sourcePinned = false;
-	private sourcePinButton?: HTMLButtonElement;
+	private sourcePinControl?: SourcePinControl;
 	private actionMessage?: string;
 	private targetTrackingRegistered = false;
 	private pendingState: NormalizedPaletteViewState = {
@@ -183,7 +184,7 @@ export class PaletteView extends ItemView {
 		this.session = undefined;
 		if (this.panel) this.removeChild(this.panel);
 		this.panel = undefined;
-		this.sourcePinButton = undefined;
+		this.sourcePinControl = undefined;
 	}
 
 	private createSurface(state: NormalizedPaletteViewState): void {
@@ -270,7 +271,12 @@ export class PaletteView extends ItemView {
 			this.addChild(this.tableControls);
 			this.tableControls.load();
 		}
-		this.addSourcePinControl();
+		this.sourcePinControl = new SourcePinControl({
+			owner: this,
+			statusBarEl: this.panel.statusBarEl,
+			isPinned: () => this.sourcePinned,
+			onToggle: () => this.toggleSourcePin(),
+		});
 		this.addHistoryControls();
 		this.registerTargetLeafTracking();
 		this.fileListRefresh.register();
@@ -303,7 +309,7 @@ export class PaletteView extends ItemView {
 		const source = this.sourcePath ?? "No active note";
 		const suffix = this.actionMessage ? ` · ${this.actionMessage}` : "";
 		this.panel.updateFooterText(`Source: ${source}${suffix}`);
-		this.updateSourcePinControl();
+		this.sourcePinControl?.update();
 		const results = {
 			items: state.results,
 			total: state.resultCount,
@@ -313,37 +319,6 @@ export class PaletteView extends ItemView {
 		else this.panel.setResults(results);
 		this.actionMessage = undefined;
 		this.historyControls?.update(state.input);
-	}
-
-	private addSourcePinControl(): void {
-		if (!this.panel) return;
-		this.sourcePinButton = this.panel.statusBarEl.createEl("button", {
-			cls: "clickable-icon my-palette-source-pin",
-			attr: { type: "button" },
-		});
-		// Why: createEl appends after the result count; prepend keeps the pin action
-		// immediately beside the Source label as the footer's context control.
-		this.panel.statusBarEl.prepend(this.sourcePinButton);
-		this.registerDomEvent(this.sourcePinButton, "mousedown", (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-		});
-		this.registerDomEvent(this.sourcePinButton, "click", (event) => {
-			event.preventDefault();
-			event.stopPropagation();
-			this.toggleSourcePin();
-		});
-		this.updateSourcePinControl();
-	}
-
-	private updateSourcePinControl(): void {
-		if (!this.sourcePinButton) return;
-		this.sourcePinButton.empty();
-		setIcon(this.sourcePinButton, this.sourcePinned ? "pin-off" : "pin");
-		const action = this.sourcePinned ? "Unpin source note" : "Pin source note";
-		this.sourcePinButton.setAttribute("aria-label", action);
-		this.sourcePinButton.setAttribute("title", action);
-		this.sourcePinButton.setAttribute("aria-pressed", String(this.sourcePinned));
 	}
 
 	private toggleSourcePin(): void {
