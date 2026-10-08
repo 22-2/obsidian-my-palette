@@ -49,7 +49,20 @@ test("moves the current modal search into a fresh sidebar pane", async ({ obsidi
 	const sidebarInputs = page.locator(".my-palette-view .prompt-input");
 	await sidebarInputs.first().fill("beta");
 	await openPaletteWith(obsidian, "alpha");
+	await expect(
+		page.locator(".my-palette-suggest-modal .my-palette-options-button svg"),
+	).toHaveClass(/lucide-ellipsis/);
+	await expect(
+		page.locator(".my-palette-suggest-modal .my-palette-history-button svg"),
+	).toHaveClass(/lucide-clock/);
 	await page.locator(".my-palette-suggest-modal .my-palette-options-button").click();
+	await expect(menuItems(page)).toHaveText([
+		"Actions",
+		"Move to right sidebar",
+		"Help",
+		"Options",
+		"Highlight search matches",
+	]);
 	await menuItems(page)
 		.filter({ hasText: /^Move to right sidebar$/ })
 		.click();

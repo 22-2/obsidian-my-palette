@@ -74,6 +74,18 @@ export class PaletteHistoryControls {
 
 	private addButtons(): void {
 		const { containerEl } = this.options;
+		const optionsButton = containerEl.createEl("button", {
+			cls: "clickable-icon my-palette-options-button",
+			attr: { type: "button", title: "Palette options" },
+		});
+		// Why: this menu contains actions as well as preferences.
+		setIcon(optionsButton, "ellipsis");
+		this.listen(optionsButton, "mousedown", consumePointerEvent);
+		this.listen(optionsButton, "click", (event) => {
+			consumePointerEvent(event);
+			this.showOptionsMenu(event);
+		});
+
 		const historyButton = containerEl.createEl("button", {
 			cls: "clickable-icon my-palette-history-button",
 			attr: {
@@ -83,22 +95,12 @@ export class PaletteHistoryControls {
 				title: "Search history (Ctrl+R)",
 			},
 		});
-		setIcon(historyButton, "chevron-down");
+		// Why: a clock identifies saved searches without suggesting a generic dropdown.
+		setIcon(historyButton, "clock");
 		this.listen(historyButton, "mousedown", consumePointerEvent);
 		this.listen(historyButton, "click", (event) => {
 			consumePointerEvent(event);
 			this.toggle();
-		});
-
-		const optionsButton = containerEl.createEl("button", {
-			cls: "clickable-icon my-palette-options-button",
-			attr: { type: "button", title: "Palette options" },
-		});
-		setIcon(optionsButton, "settings");
-		this.listen(optionsButton, "mousedown", consumePointerEvent);
-		this.listen(optionsButton, "click", (event) => {
-			consumePointerEvent(event);
-			this.showOptionsMenu(event);
 		});
 	}
 
