@@ -17,6 +17,14 @@ export class ExtendedSelection {
 		this.anchorIndex = size > 0 ? 0 : -1;
 	}
 
+	/** Reinstates a selection after a rerender whose rows moved, keeping the anchor on the cursor row. */
+	restore(indexes: readonly number[], anchor: number, size: number): void {
+		const valid = indexes.filter((index) => this.isValidIndex(index, size));
+		if (valid.length === 0) return;
+		this.selectedIndexes = new Set(valid);
+		this.anchorIndex = this.isValidIndex(anchor, size) ? anchor : valid[0];
+	}
+
 	select(index: number, size: number, modifiers: SelectionModifiers): void {
 		if (!this.isValidIndex(index, size)) return;
 		if (modifiers.range && this.anchorIndex >= 0) {

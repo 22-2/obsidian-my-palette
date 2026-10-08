@@ -479,6 +479,20 @@ export class SuggestionPanel<T> extends Component {
 		return Number.isInteger(index) && index >= 0 ? this.chooser.values[index] : undefined;
 	}
 
+	/** Index of the cursor row, or -1 when the list is empty. */
+	get activeIndex(): number {
+		return this.chooser.selectedItem;
+	}
+
+	/**
+	 * Reinstates the selection and cursor after a rerender. Rows are given by index in
+	 * the new list because a rerender resets the selection to the first row.
+	 */
+	restoreSelection(indexes: readonly number[], activeIndex: number): void {
+		this.extendedSelection.restore(indexes, activeIndex, this.chooser.values.length);
+		this.setSelectedIndex(activeIndex >= 0 ? activeIndex : 0, false);
+	}
+
 	getSelectedItem(): T | undefined {
 		return this.chooser.values[this.chooser.selectedItem];
 	}

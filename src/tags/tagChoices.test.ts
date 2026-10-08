@@ -17,25 +17,16 @@ describe("buildTagChoices", () => {
 		const choices = buildTagChoices({
 			allTags: { "#common": 50, "#rare": 1, "#linked": 3, "#recent": 2, "#mine": 99 },
 			registeredTags: ["mine"],
-			presentTags: ["mine", "#Rare"],
 			recentTags: ["Recent"],
 			relatedNoteTags: [["#linked", "#mine", "#recent"], ["#linked"]],
 		});
 
 		expect(choices).toEqual([
-			{ tag: "recent", count: 2, registered: false, present: false, reason: "recent" },
-			{
-				tag: "linked",
-				count: 3,
-				registered: false,
-				present: false,
-				reason: "related",
-				relatedCount: 2,
-			},
-			{ tag: "common", count: 50, registered: false, present: false },
-			// Present on only some targets: still selectable, but removable too.
-			{ tag: "rare", count: 1, registered: false, present: true },
-			{ tag: "mine", count: 99, registered: true, present: true },
+			{ tag: "recent", count: 2, registered: false, reason: "recent" },
+			{ tag: "linked", count: 3, registered: false, reason: "related", relatedCount: 2 },
+			{ tag: "common", count: 50, registered: false },
+			{ tag: "rare", count: 1, registered: false },
+			{ tag: "mine", count: 99, registered: true },
 		]);
 	});
 
@@ -43,7 +34,6 @@ describe("buildTagChoices", () => {
 		const choices = buildTagChoices({
 			allTags: { "#a": 1, "#b": 100 },
 			registeredTags: [],
-			presentTags: [],
 			recentTags: ["a", "b"],
 			relatedNoteTags: [],
 		});
@@ -56,7 +46,6 @@ describe("buildTagChoices", () => {
 		const choices = buildTagChoices({
 			allTags,
 			registeredTags: ["t0"],
-			presentTags: ["t0"],
 			recentTags: ["t1"],
 			relatedNoteTags: [relatedTags],
 		});
@@ -64,5 +53,17 @@ describe("buildTagChoices", () => {
 		expect(choices.filter(({ reason }) => reason === "related")).toHaveLength(MAX_RELATED_TAGS);
 		expect(choices.find(({ tag }) => tag === "t0")?.reason).toBeUndefined();
 		expect(choices.find(({ tag }) => tag === "t1")?.reason).toBe("recent");
+	});
+
+	it("records how many targets have a tag so partly applied tags can be removed", () => {
+		const choices = buildTagChoices({
+			allTags: { "#half": 3, "#none": 1 },
+			registeredTags: [],
+			appliedCounts: new Map([["half", 2]]),
+			recentTags: [],
+			relatedNoteTags: [],
+		});
+		expect(choices.find(({ tag }) => tag === "half")?.appliedCount).toBe(2);
+		expect(choices.find(({ tag }) => tag === "none")).not.toHaveProperty("appliedCount");
 	});
 });

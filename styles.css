@@ -401,6 +401,40 @@
 	transform: translateY(-50%);
 }
 
+/* Previews the checked rows of a multi-select modal at the right end of the input. */
+.my-palette-checked-button {
+	position: absolute;
+	top: 50%;
+	right: 8px;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	width: auto;
+	height: 28px;
+	padding-inline: 6px;
+	transform: translateY(-50%);
+}
+
+.my-palette-checked-button[hidden] {
+	display: none;
+}
+
+.my-palette-checked-button svg {
+	width: 16px;
+	height: 16px;
+}
+
+.my-palette-checked-button__count {
+	color: var(--text-accent);
+	font-size: var(--font-ui-smaller);
+	font-variant-numeric: tabular-nums;
+}
+
+.my-palette-multi-select .prompt-input {
+	padding-right: 56px;
+}
+
 .my-palette-options-button svg {
 	width: 16px;
 	height: 16px;
@@ -796,8 +830,8 @@
 	color: inherit;
 }
 
-/* Registered tags stay listed for reference, but they cannot be selected. */
-.my-palette-tag-select .suggestion-item.is-registered {
+/* Rows with nothing left to apply (registered tags, fully linked notes) stay listed but cannot be selected. */
+.my-palette-multi-select .suggestion-item.is-locked {
 	opacity: 0.5;
 }
 
@@ -816,10 +850,10 @@
 }
 
 /* The check icon toggles its row on click, so it should look clickable. */
-.my-palette-tag-select [data-row-toggle] {
+.my-palette-multi-select [data-row-toggle] {
 	cursor: pointer;
 }
 
-.my-palette-tag-select [data-row-toggle]:hover {
+.my-palette-multi-select [data-row-toggle]:hover {
 	color: var(--text-normal);
 }

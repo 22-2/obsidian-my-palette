@@ -70,14 +70,28 @@ every selected Markdown note. Excluded files are skipped.
 Candidates are ordered as recently inserted tags, then tags used by linked notes
 (outgoing links and backlinks, up to 10 tags marked `Related N`), then by usage
 count. Tags that every target note already has are shown last as `Registered`
-and cannot be selected. Press `Enter` to select or deselect a tag without
-closing the list, and `Ctrl+Enter` to add the checked tags.
-Typing a tag that does not exist yet offers it as a new tag. Rows support
-Ctrl/Shift multi-selection: `Enter`, double-click, and the right-click menu toggle
-the checks of every highlighted row; clicking a check icon toggles only its row. The right-click menu can also insert the
-checked and highlighted tags immediately, or remove the highlighted tags from the
-frontmatter of the target notes that have them. Recently inserted
-tags are stored per Vault in local IndexedDB.
+and cannot be selected; tags only some targets have show `On N/M notes` and stay
+selectable. Select rows like in the palette (click, `Ctrl`/`Shift`+click, arrow keys),
+check them with `Enter`, double-click, the context menu or by clicking the check
+icon (which toggles only its row), and run
+with `Ctrl+Enter`. The context menu can also run the checked and highlighted
+rows at once (`Add N now`). The button at the right end of the input lists the checked
+rows, lets you uncheck them and runs them. Typing a tag that does
+not exist yet offers it as a new tag. Right-click a registered or partly applied
+tag and choose `Remove tag` to remove it from the frontmatter of the target
+notes; right-clicking within a multi-row selection removes every selected one. Recently
+inserted tags are stored per Vault in local IndexedDB.
+
+### Inserting into a MOC
+
+The MOC insertion selector works the same way: rows are selected, checked and run the same way:
+`Enter` checks the selected notes, and `Ctrl+Enter` or the checked-list button adds mutual Relateds links to the
+active MOC for every selected note. Only links inside a `Relateds` item count, not
+other links in the body. Notes linked in both directions are shown
+last and cannot be selected; notes linked in one direction stay selectable to
+complete the link. Right-click a linked note and choose `Remove link` to remove
+the Relateds links in both directions; right-clicking within a multi-row selection
+removes the links of every selected note.
 
 ### File sort priorities
 

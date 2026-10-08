@@ -205,14 +205,36 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	}
 
 	/**
+	 * Rerender for the current input and keep the selection and cursor on the same
+	 * items. Hosts that stay open after an action (multi-toggle selectors) need
+	 * this because a normal rerender resets the selection to the first row and
+	 * loses the user's place in the list.
+	 */
+	protected refreshSuggestionsKeepingSelection(isSameItem: (a: T, b: T) => boolean): void {
+		const scrollTop = this.resultContainerEl.scrollTop;
+		const selected = this.panel.getSelectedItems();
+		const active = this.panel.getSelectedItem();
+		this.refreshSuggestions(() => {
+			this.resultContainerEl.scrollTop = scrollTop;
+			const { values } = this.panel.chooser;
+			const indexOf = (item: T) => values.findIndex((value) => isSameItem(value, item));
+			this.panel.restoreSelection(
+				selected.map(indexOf).filter((index) => index >= 0),
+				active === undefined ? -1 : indexOf(active),
+			);
+		});
+	}
+
+	/**
 	 * Redraw visible rows in place. Multi-toggle selectors use this after a check
-	 * changes, since a full refresh would move the cursor back to the first row.
+	 * changes, since a full refresh would move the cursor back to the first row
+	 * and, for asynchronous sources, search again.
 	 */
 	protected rerenderVisibleSuggestions(): void {
 		this.panel.rerenderRows();
 	}
 
-	protected refreshSuggestions(): void {
+	protected refreshSuggestions(afterRender?: () => void): void {
 		if (!this.inputEl.isConnected) return;
 		const query = this.inputEl.value;
 		const generation = ++this.refreshGeneration;
@@ -229,6 +251,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 				query: this.query,
 				error: this.emptyStateText,
 			});
+			afterRender?.();
 		});
 	}
 

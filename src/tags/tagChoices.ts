@@ -5,8 +5,8 @@ export interface TagChoice {
 	count: number;
 	/** Already present on every target note, so it is shown but cannot be selected. */
 	registered: boolean;
-	/** Present on at least one target note, so it can be removed from the targets. */
-	present: boolean;
+	/** Number of target notes that have the tag; set only when at least one does. */
+	appliedCount?: number;
 	/** Why the tag is ranked above ordinary usage-count order. */
 	reason?: "recent" | "related";
 	/** Number of related notes using the tag; only set when `reason` is `related`. */
@@ -18,8 +18,8 @@ export interface TagChoiceSource {
 	allTags: Readonly<Record<string, number>>;
 	/** Tags already present on every target note, with or without `#`. */
 	registeredTags: Iterable<string>;
-	/** Tags present on at least one target note, with or without `#`. */
-	presentTags: Iterable<string>;
+	/** Target notes having each tag, keyed by {@link tagKey}; lets partly applied tags be removed. */
+	appliedCounts?: ReadonlyMap<string, number>;
 	/** Most recently inserted tags first. */
 	recentTags: readonly string[];
 	/** Tags of each related note, with or without `#`. */
@@ -51,7 +51,6 @@ export function countTagsInNotes(noteTags: readonly (readonly string[])[]): Map<
  */
 export function buildTagChoices(source: TagChoiceSource): TagChoice[] {
 	const registered = new Set([...source.registeredTags].map(tagKey));
-	const present = new Set([...source.presentTags].map(tagKey));
 	const recentIndex = new Map<string, number>();
 	for (const [index, tag] of source.recentTags.entries()) {
 		const key = tagKey(tag);
@@ -74,12 +73,9 @@ export function buildTagChoices(source: TagChoiceSource): TagChoice[] {
 			: relatedCounts.has(key)
 				? "related"
 				: undefined;
-		const choice: TagChoice = {
-			tag,
-			count,
-			registered: registered.has(key),
-			present: present.has(key),
-		};
+		const choice: TagChoice = { tag, count, registered: registered.has(key) };
+		const applied = source.appliedCounts?.get(key);
+		if (applied) choice.appliedCount = applied;
 		if (reason) choice.reason = reason;
 		if (reason === "related") choice.relatedCount = relatedCounts.get(key);
 		return {

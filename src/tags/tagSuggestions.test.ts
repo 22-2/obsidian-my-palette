@@ -1,34 +1,16 @@
 import { describe, expect, it } from "vitest";
 import type { TagChoice } from "src/tags/tagChoices";
-import {
-	buildTagSuggestions,
-	tagContextActions,
-	toggleChecks,
-	type TagSuggestion,
-} from "src/tags/tagSuggestions";
-
-const keyOf = (item: TagSuggestion) =>
-	item.type === "new" ? `new:${item.tag}` : `tag:${item.choice.tag}`;
+import { buildTagSuggestions, tagSuggestionKey } from "src/tags/tagSuggestions";
 
 const choices: TagChoice[] = [
-	{ tag: "project", count: 3, registered: false, present: false, reason: "recent" },
-	{ tag: "projection", count: 9, registered: false, present: true },
-	{ tag: "proj", count: 1, registered: true, present: true },
-	{ tag: "writing", count: 5, registered: false, present: false },
+	{ tag: "project", count: 3, registered: false, reason: "recent" },
+	{ tag: "projection", count: 9, registered: false },
+	{ tag: "proj", count: 1, registered: true },
+	{ tag: "writing", count: 5, registered: false },
 ];
 
-describe("tagContextActions", () => {
-	it("offers add while a target lacks the tag and remove while one has it", () => {
-		const [project, projection, proj] = choices;
-		expect(tagContextActions({ type: "tag", choice: project })).toEqual(["add"]);
-		expect(tagContextActions({ type: "tag", choice: projection })).toEqual(["add", "remove"]);
-		expect(tagContextActions({ type: "tag", choice: proj })).toEqual(["remove"]);
-		expect(tagContextActions({ type: "new", tag: "fresh" })).toEqual(["add"]);
-	});
-});
-
-const keys = (query: string, selected: string[] = []) =>
-	buildTagSuggestions(choices, query, selected).map(keyOf);
+const keys = (query: string, checked: string[] = []) =>
+	buildTagSuggestions(choices, query, checked).map(tagSuggestionKey);
 
 describe("buildTagSuggestions", () => {
 	it("shows every choice in the given order without a query", () => {
@@ -58,12 +40,5 @@ describe("buildTagSuggestions", () => {
 		// The typed text is the checked tag itself, so it is not offered twice.
 		expect(keys("fresh", ["Fresh"])).toEqual(["new:Fresh"]);
 		expect(keys("writ", ["Fresh"])).not.toContain("new:Fresh");
-	});
-});
-
-describe("toggleChecks", () => {
-	it("checks every tag unless all are already checked", () => {
-		expect([...toggleChecks(new Set(["a"]), ["a", "b"])]).toEqual(["a", "b"]);
-		expect([...toggleChecks(new Set(["a", "b", "c"]), ["a", "b"])]).toEqual(["c"]);
 	});
 });

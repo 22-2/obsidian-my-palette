@@ -2,7 +2,7 @@ import { getAllTags, Notice, parseFrontMatterTags, type App, type TFile } from "
 import { mergeFrontmatterTags, removeFrontmatterTags } from "src/shared/frontmatter";
 import { relationPaths } from "src/shared/noteRelations";
 import { buildTagChoices, tagKey, type TagChoice } from "src/tags/tagChoices";
-import { TagSelectionModal, type TagSelectionResult } from "src/tags/TagSelectionModal";
+import { TagSelectionModal } from "src/tags/TagSelectionModal";
 
 /** Recent-tag history used to rank candidates and updated after insertion. */
 export interface RecentTagSource {
@@ -15,21 +15,17 @@ function frontmatterTags(app: App, file: TFile): string[] {
 }
 
 /**
- * Only frontmatter tags count as registered or present, because insertion and
- * removal edit frontmatter and an inline tag cannot be removed from there.
- * With several targets a tag is registered only when every target has it, so
- * it stays selectable for the notes that still lack it.
+ * Counts targets having each tag in frontmatter. Only frontmatter tags count,
+ * because insertion writes there and an inline tag does not stop the user from
+ * also adding it to frontmatter.
  */
-function targetTagKeys(
-	app: App,
-	files: readonly TFile[],
-): { registered: string[]; present: string[] } {
-	const sets = files.map((file) => new Set(frontmatterTags(app, file).map(tagKey)));
-	const present = new Set(sets.flatMap((tags) => [...tags]));
-	return {
-		registered: [...present].filter((key) => sets.every((tags) => tags.has(key))),
-		present: [...present],
-	};
+function frontmatterTagCounts(app: App, files: readonly TFile[]): Map<string, number> {
+	const counts = new Map<string, number>();
+	for (const file of files) {
+		for (const key of new Set(frontmatterTags(app, file).map(tagKey)))
+			counts.set(key, (counts.get(key) ?? 0) + 1);
+	}
+	return counts;
 }
 
 /** Tags of notes linked from or to any target, excluding the targets themselves. */
@@ -48,11 +44,15 @@ function relatedNoteTags(app: App, files: readonly TFile[]): string[][] {
 }
 
 function buildChoices(app: App, files: readonly TFile[], recentTags: RecentTagSource): TagChoice[] {
-	const { registered, present } = targetTagKeys(app, files);
+	const appliedCounts = frontmatterTagCounts(app, files);
 	return buildTagChoices({
 		allTags: app.metadataCache.getTags(),
-		registeredTags: registered,
-		presentTags: present,
+		// A tag is registered only when every target has it, so it stays selectable
+		// for the notes that still lack it.
+		registeredTags: [...appliedCounts]
+			.filter(([, n]) => n === files.length)
+			.map(([key]) => key),
+		appliedCounts,
 		recentTags: recentTags.getIds(),
 		relatedNoteTags: relatedNoteTags(app, files),
 	});
@@ -63,65 +63,7 @@ function targetLabel(files: readonly TFile[]): string {
 }
 
 /**
- * Updates each note on its own so one failing note does not block the rest.
- * Returns how many notes were updated and how many failed.
- */
-async function editFrontmatterTags(
-	app: App,
-	files: readonly TFile[],
-	edit: (frontmatter: { tags?: unknown }) => void,
-): Promise<{ updated: number; failed: number }> {
-	let failed = 0;
-	for (const file of files) {
-		try {
-			await app.fileManager.processFrontMatter(file, edit);
-		} catch (error) {
-			failed += 1;
-			console.error(`Failed to edit tags of ${file.path}`, error);
-		}
-	}
-	return { updated: files.length - failed, failed };
-}
-
-function noteCountText(files: readonly TFile[], updated: number): string {
-	return files.length === 1 ? files[0].basename : `${updated} notes`;
-}
-
-async function addTags(
-	app: App,
-	targets: readonly TFile[],
-	tags: string[],
-	recentTags: RecentTagSource,
-): Promise<void> {
-	const { updated, failed } = await editFrontmatterTags(app, targets, (frontmatter) => {
-		frontmatter.tags = mergeFrontmatterTags(frontmatter.tags, tags);
-	});
-	recentTags.record(...tags);
-	const tagText = tags.map((tag) => `#${tag}`).join(" ");
-	if (updated > 0) new Notice(`Added ${tagText} to ${noteCountText(targets, updated)}.`);
-	if (failed > 0) new Notice(`Failed to add tags to ${failed} notes. See the console.`);
-}
-
-async function removeTags(app: App, targets: readonly TFile[], tags: string[]): Promise<void> {
-	const keys = new Set(tags.map(tagKey));
-	// Notes without the tag are left untouched so their frontmatter is not rewritten.
-	const holders = targets.filter((file) =>
-		frontmatterTags(app, file).some((tag) => keys.has(tagKey(tag))),
-	);
-	const { updated, failed } = await editFrontmatterTags(app, holders, (frontmatter) => {
-		const remaining = removeFrontmatterTags(frontmatter.tags, tags);
-		// An empty `tags:` key carries no information, so drop it with the last tag.
-		if (remaining.length > 0) frontmatter.tags = remaining;
-		else delete frontmatter.tags;
-	});
-	const tagText = tags.map((tag) => `#${tag}`).join(" ");
-	if (updated > 0) new Notice(`Removed ${tagText} from ${noteCountText(holders, updated)}.`);
-	if (failed > 0) new Notice(`Failed to remove tags from ${failed} notes. See the console.`);
-}
-
-/**
- * Lets the user pick tags and adds them to (or, from the row menu, removes one
- * from) the frontmatter of every target note.
+ * Lets the user pick tags and adds them to the frontmatter of every target note.
  */
 export async function insertTags(
 	app: App,
@@ -134,13 +76,79 @@ export async function insertTags(
 		return;
 	}
 
-	const result: TagSelectionResult | null = await new TagSelectionModal(
+	const selected = await new TagSelectionModal(
 		app,
 		buildChoices(app, targets, recentTags),
-		{ label: targetLabel(targets), count: targets.length },
+		targetLabel(targets),
+		targets.length,
+		(tag) => removeTag(app, targets, tag),
 	).openAndWait();
-	if (!result || result.tags.length === 0) return;
+	if (!selected || selected.length === 0) return;
 
-	if (result.action === "add") await addTags(app, targets, result.tags, recentTags);
-	else await removeTags(app, targets, result.tags);
+	let failed = 0;
+	// Each note is updated on its own so one failing note does not block the rest.
+	for (const file of targets) {
+		try {
+			await app.fileManager.processFrontMatter(file, (frontmatter: { tags?: unknown }) => {
+				frontmatter.tags = mergeFrontmatterTags(frontmatter.tags, selected);
+			});
+		} catch (error) {
+			failed += 1;
+			console.error(`Failed to add tags to ${file.path}`, error);
+		}
+	}
+	recentTags.record(...selected);
+
+	const tagText = selected.map((tag) => `#${tag}`).join(" ");
+	const updated = targets.length - failed;
+	if (updated > 0) {
+		const where = targets.length === 1 ? targets[0].basename : `${updated} notes`;
+		new Notice(`Added ${tagText} to ${where}.`);
+	}
+	if (failed > 0) new Notice(`Failed to add tags to ${failed} notes. See the console.`);
+}
+
+/** Result of removing a tag from the targets' frontmatter. */
+export interface TagRemoval {
+	/** Targets whose frontmatter lost the tag. */
+	removed: number;
+	/** Of those, notes that no longer use the tag at all, because it is not also written inline. */
+	noLongerUsed: number;
+}
+
+/** Removes a tag from the frontmatter of every target that has it; undefined when nothing was removed. */
+async function removeTag(
+	app: App,
+	files: readonly TFile[],
+	tag: string,
+): Promise<TagRemoval | undefined> {
+	const key = tagKey(tag);
+	const removal: TagRemoval = { removed: 0, noLongerUsed: 0 };
+	let failed = 0;
+	for (const file of files) {
+		if (!frontmatterTags(app, file).some((existing) => tagKey(existing) === key)) continue;
+		// Read before editing: the cache still describes the note as it was.
+		const inline = app.metadataCache
+			.getFileCache(file)
+			?.tags?.some((entry) => tagKey(entry.tag) === key);
+		try {
+			await app.fileManager.processFrontMatter(file, (frontmatter: { tags?: unknown }) => {
+				const rest = removeFrontmatterTags(frontmatter.tags, [tag]);
+				if (rest.length > 0) frontmatter.tags = rest;
+				else delete frontmatter.tags;
+			});
+			removal.removed += 1;
+			if (!inline) removal.noLongerUsed += 1;
+		} catch (error) {
+			failed += 1;
+			console.error(`Failed to remove tag from ${file.path}`, error);
+		}
+	}
+	if (removal.removed > 0)
+		new Notice(
+			`Removed #${tag} from ${removal.removed === 1 ? "1 note" : `${removal.removed} notes`}.`,
+		);
+	else if (failed === 0) new Notice(`#${tag} is not in the frontmatter of the target notes.`);
+	if (failed > 0) new Notice(`Failed to remove #${tag} from ${failed} notes. See the console.`);
+	return removal.removed > 0 ? removal : undefined;
 }

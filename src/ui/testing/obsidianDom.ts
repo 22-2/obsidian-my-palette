@@ -139,35 +139,62 @@ export class Modal {
 
 export function setIcon(): void {}
 
-interface MenuItemRecord {
+interface MenuEntry {
 	title: string;
-	icon: string;
+	icon?: string;
+	checked?: boolean;
+	disabled?: boolean;
 	click: () => void;
 }
 
-/** Records menu items so tests can inspect and click what a context menu offers. */
+/** Records the items of the last shown menu so tests can assert on their content. */
 export class Menu {
+	static last?: Menu;
+	/** Alias of `last`, kept for tests written against the earlier double. */
 	static lastShown?: Menu;
-	readonly items: MenuItemRecord[] = [];
-
-	addItem(configure: (item: unknown) => void): this {
-		const record: MenuItemRecord = { title: "", icon: "", click: () => undefined };
+	readonly items: MenuEntry[] = [];
+	separators = 0;
+	shown = false;
+	closed = false;
+	private hideHandlers: (() => void)[] = [];
+	addItem(build: (item: Record<string, unknown>) => unknown): this {
+		const entry: MenuEntry = { title: "", click: () => undefined };
 		const item = {
-			setTitle: (title: string) => ((record.title = title), item),
-			setIcon: (icon: string) => ((record.icon = icon), item),
-			onClick: (click: () => void) => ((record.click = click), item),
+			setTitle: (title: string) => ((entry.title = title), item),
+			setIcon: (icon: string) => ((entry.icon = icon), item),
+			setChecked: (checked: boolean) => ((entry.checked = checked), item),
+			setDisabled: (disabled: boolean) => ((entry.disabled = disabled), item),
+			onClick: (click: () => void) => ((entry.click = click), item),
 		};
-		configure(item);
-		this.items.push(record);
+		build(item);
+		this.items.push(entry);
 		return this;
 	}
-
+	addSeparator(): this {
+		this.separators += 1;
+		return this;
+	}
 	setParentElement(): this {
 		return this;
 	}
-
-	showAtMouseEvent(): this {
+	onHide(handler: () => void): void {
+		this.hideHandlers.push(handler);
+	}
+	showAtMouseEvent(): void {
+		this.shown = true;
+		Menu.last = this;
 		Menu.lastShown = this;
-		return this;
+	}
+	showAtPosition(): void {
+		this.shown = true;
+		Menu.last = this;
+		Menu.lastShown = this;
+	}
+	close(): void {
+		this.closed = true;
+		for (const handler of this.hideHandlers) handler();
+	}
+	titles(): string[] {
+		return this.items.map(({ title }) => title);
 	}
 }
