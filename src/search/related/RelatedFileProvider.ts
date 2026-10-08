@@ -26,11 +26,21 @@ export class RelatedFileProvider implements PaletteProvider<RelatedFileResult> {
 			occurrences,
 			({ file }) => file.path,
 		);
+		// The link's line lives in the note that contains it: the origin for
+		// outgoing links, the linking note for backlinks. Read each note once.
+		const lines = new Map<string, Promise<string[]>>();
+		const linesOf = (file: TFile): Promise<string[]> => {
+			let pending = lines.get(file.path);
+			if (!pending) {
+				pending = this.app.vault.cachedRead(file).then((content) => content.split(/\r?\n/));
+				lines.set(file.path, pending);
+			}
+			return pending;
+		};
 		const results = await Promise.all(
 			allowed.map(async ({ file, cache }) => {
-				const content = await this.app.vault.cachedRead(file);
 				const line = cache.position.start.line;
-				const text = content.split(/\r?\n/)[line]?.trim() ?? "";
+				const text = (await linesOf(mode === "link" ? origin : file))[line]?.trim() ?? "";
 				return {
 					id: `${mode}:${file.path}:${line}:${cache.position.start.offset}`,
 					mode,
