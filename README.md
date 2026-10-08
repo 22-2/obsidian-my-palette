@@ -71,23 +71,24 @@ Candidates are ordered as recently inserted tags, then tags used by linked notes
 (outgoing links and backlinks, up to 10 tags marked `Related N`), then by usage
 count. Tags that every target note already has are shown last as `Registered`
 and cannot be selected; tags only some targets have show `On N/M notes` and stay
-selectable. Press `Enter` to select or deselect a tag without closing the list,
-and `Ctrl+Enter` or the `Add …` row to add the selection. Typing a tag that does
+selectable. Select rows like in the palette (click, `Ctrl`/`Shift`+click, arrow keys),
+check them with `Enter`, double-click or the check box, and run with
+`Ctrl+Enter` or the `Add …` row. Typing a tag that does
 not exist yet offers it as a new tag. Right-click a registered or partly applied
 tag and choose `Remove tag` to remove it from the frontmatter of the target
-notes; right-clicking a selected tag removes every selected one. Recently
+notes; right-clicking within a multi-row selection removes every selected one. Recently
 inserted tags are stored per Vault in local IndexedDB.
 
 ### Inserting into a MOC
 
-The MOC insertion selector works the same way: `Enter` selects or deselects
-notes, and `Ctrl+Enter` or the `Insert …` row adds mutual Relateds links to the
+The MOC insertion selector works the same way: rows are selected, checked and run the same way:
+`Enter` checks the selected notes, and `Ctrl+Enter` or the `Insert …` row adds mutual Relateds links to the
 active MOC for every selected note. Only links inside a `Relateds` item count, not
 other links in the body. Notes linked in both directions are shown
 last and cannot be selected; notes linked in one direction stay selectable to
 complete the link. Right-click a linked note and choose `Remove link` to remove
-the Relateds links in both directions; right-clicking a selected note removes
-the links of every selected note.
+the Relateds links in both directions; right-clicking within a multi-row selection
+removes the links of every selected note.
 
 ### File sort priorities
 

@@ -56,6 +56,9 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			onContextMenu: this.handlesSuggestionContextMenu()
 				? (item, event) => this.onSuggestionContextMenu(item, event)
 				: undefined,
+			onIconClick: this.handlesSuggestionIconClick()
+				? (item, event) => this.onSuggestionIconClick(item, event)
+				: undefined,
 			onEscape: () => this.close(),
 		});
 		this.panel.selected = defaultValue ?? null;
@@ -146,6 +149,10 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	protected handlesSuggestionContextMenu(): boolean {
 		return false;
 	}
+	protected handlesSuggestionIconClick(): boolean {
+		return false;
+	}
+	protected onSuggestionIconClick(_item: T, _event: MouseEvent): void {}
 	protected async onSuggestionMiddleClick(_item: T, _event: MouseEvent): Promise<void> {}
 	protected onSuggestionContextMenu(_item: T, _event: MouseEvent): void {}
 	protected onResultFocus(): void {}
@@ -198,17 +205,23 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	}
 
 	/**
-	 * Rerender for the current input and move the cursor back to the matching row.
-	 * Hosts that keep the modal open after choosing (multi-toggle selectors) need
-	 * this because a normal rerender moves the cursor to the first row and loses
-	 * the user's place in the list.
+	 * Rerender for the current input and keep the selection and cursor on the same
+	 * items. Hosts that stay open after an action (multi-toggle selectors) need
+	 * this because a normal rerender resets the selection to the first row and
+	 * loses the user's place in the list.
 	 */
-	protected refreshSuggestionsKeepingCursor(isSameItem: (item: T) => boolean): void {
+	protected refreshSuggestionsKeepingSelection(isSameItem: (a: T, b: T) => boolean): void {
 		const scrollTop = this.resultContainerEl.scrollTop;
+		const selected = this.panel.getSelectedItems();
+		const active = this.panel.getSelectedItem();
 		this.refreshSuggestions(() => {
 			this.resultContainerEl.scrollTop = scrollTop;
-			const index = this.panel.chooser.values.findIndex(isSameItem);
-			if (index >= 0) this.panel.setSelectedIndex(index, false);
+			const { values } = this.panel.chooser;
+			const indexOf = (item: T) => values.findIndex((value) => isSameItem(value, item));
+			this.panel.restoreSelection(
+				selected.map(indexOf).filter((index) => index >= 0),
+				active === undefined ? -1 : indexOf(active),
+			);
 		});
 	}
 

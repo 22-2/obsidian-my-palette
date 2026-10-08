@@ -14,6 +14,8 @@ export interface SuggestionPanelProps<T> {
 	onResultFocus?: () => void;
 	onMiddleClick?: (item: T, event: MouseEvent) => void | Promise<void>;
 	onContextMenu?: (item: T, event: MouseEvent, selectedItems: T[]) => void;
+	/** Handles a plain click on a row's icon (a check box) instead of selecting the row. */
+	onIconClick?: (item: T, event: MouseEvent) => void;
 	onEscape?: () => void;
 	onReady?: () => void;
 }
@@ -285,6 +287,10 @@ export class SuggestionPanel<T> extends Component {
 				// it on the next press so one gesture cannot open the same note twice.
 				this.middleClickRows.delete(row);
 				const index = Number(row.getAttribute("data-index"));
+				const onIcon =
+					this.props.onIconClick !== undefined &&
+					!(event.ctrlKey || event.metaKey || event.shiftKey) &&
+					(event.target as Element | null)?.closest?.(".my-palette-suggestion__icon");
 				if (event.button === 0 && this.selectionMode === "extended") {
 					// Why: the sidebar can lose its click to Obsidian after mousedown;
 					// select now and leave opening exclusively to double-click/Enter.
@@ -296,6 +302,7 @@ export class SuggestionPanel<T> extends Component {
 						range: event.shiftKey,
 					});
 					this.setSelectedIndex(index, false);
+					if (onIcon) this.props.onIconClick?.(item, event);
 				} else if (event.button === 0 && this.props.surface === "view") {
 					// Sidebar clicks can be consumed by Obsidian after mousedown, so run
 					// the primary action here and let the later click only clear the guard.
@@ -438,6 +445,20 @@ export class SuggestionPanel<T> extends Component {
 	private itemAtRow(row: Element): T | undefined {
 		const index = Number(row.getAttribute("data-index"));
 		return Number.isInteger(index) && index >= 0 ? this.chooser.values[index] : undefined;
+	}
+
+	/** Index of the cursor row, or -1 when the list is empty. */
+	get activeIndex(): number {
+		return this.chooser.selectedItem;
+	}
+
+	/**
+	 * Reinstates the selection and cursor after a rerender. Rows are given by index in
+	 * the new list because a rerender resets the selection to the first row.
+	 */
+	restoreSelection(indexes: readonly number[], activeIndex: number): void {
+		this.extendedSelection.restore(indexes, activeIndex, this.chooser.values.length);
+		this.setSelectedIndex(activeIndex >= 0 ? activeIndex : 0, false);
 	}
 
 	getSelectedItem(): T | undefined {

@@ -15,7 +15,14 @@ const choices: TagChoice[] = [
 
 beforeEach(() => {
 	const dom = new Window();
-	for (const name of ["document", "Element", "HTMLElement", "Event", "KeyboardEvent"] as const)
+	for (const name of [
+		"document",
+		"Element",
+		"HTMLElement",
+		"Event",
+		"KeyboardEvent",
+		"MouseEvent",
+	] as const)
 		vi.stubGlobal(name, dom[name]);
 	vi.stubGlobal("window", dom);
 	installObsidianDom();
@@ -109,5 +116,30 @@ describe("TagSelectionModal", () => {
 		expect(rows[1].classList.contains("is-locked")).toBe(false);
 		expect(rows.at(-1)?.classList.contains("is-locked")).toBe(true);
 		modal.close();
+	});
+
+	it("checks every selected row at once and unchecks them on the next Enter", async () => {
+		const f = await open();
+		f.key("ArrowDown", { shiftKey: true });
+		f.key("Enter");
+		await flush();
+		expect(f.labels()[0]).toBe("Add #alpha #beta");
+		f.key("Enter");
+		await flush();
+		expect(f.labels().some((label) => label?.startsWith("Add"))).toBe(false);
+		f.key("Escape");
+		await expect(f.result).resolves.toBeNull();
+	});
+
+	it("checks only the clicked row when its check box is pressed", async () => {
+		const f = await open();
+		const icon = f.modal.modalEl
+			.querySelectorAll(".suggestion-item")[1]
+			.querySelector(".my-palette-suggestion__icon")!;
+		icon.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, button: 0 }));
+		await flush();
+		expect(f.labels()[0]).toBe("Add #beta");
+		f.key("Escape");
+		await expect(f.result).resolves.toBeNull();
 	});
 });

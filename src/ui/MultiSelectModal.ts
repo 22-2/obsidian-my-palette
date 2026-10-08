@@ -44,9 +44,10 @@ function rowKey<V>(row: MultiSelectRow<V>): string {
 }
 
 /**
- * Toggle-style multi selector shared by tag and MOC insertion so both behave
- * and look alike. Choosing a row toggles it and keeps the modal open; the
- * confirm row or Ctrl+Enter resolves the selection, any other close cancels.
+ * Multi selector shared by tag and MOC insertion so both behave and look alike.
+ * Flow: select rows (click, Ctrl, Shift, arrows) → check them (Enter, double
+ * click, or the check box) → run (Ctrl+Enter or the confirm row). Checking keeps
+ * the modal open; any other close cancels.
  */
 export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectRow<V>> {
 	private readonly checked = new Map<string, MultiSelectCandidate<V>>();
@@ -60,7 +61,10 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectRo
 		super(
 			{
 				placeholder: multiSelect.placeholder,
-				footerText: `${multiSelect.footerLabel} · Enter: toggle · Ctrl+Enter: ${multiSelect.actionLabel.toLowerCase()} · Esc: cancel`,
+				footerText: `${multiSelect.footerLabel} · Enter: check · Ctrl+Enter: ${multiSelect.actionLabel.toLowerCase()} · Esc: cancel`,
+				// Same Explorer-style selection as the palette: pick rows with click,
+				// Ctrl and Shift, check them, then run the action.
+				selectionMode: "extended",
 			},
 			app,
 		);
@@ -146,13 +150,9 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectRo
 		const { candidate } = row;
 		const menu = new Menu();
 		this.populateCandidateMenu(menu, candidate, () => this.close());
-		// Right-clicking a checked row acts on every checked row, like the toggle itself;
-		// any other row acts alone.
-		const targets = !candidate.removal
-			? []
-			: this.checked.has(candidate.key)
-				? [...this.checked.values()]
-				: [candidate];
+		// The panel has already moved the selection to the clicked row unless the row was
+		// inside it, so the menu acts on the selected rows like the palette's own menu.
+		const targets = this.selectedCandidates();
 		const removals = targets.flatMap(({ removal }) => (removal ? [removal] : []));
 		if (removals.length > 0) {
 			menu.addSeparator();
@@ -168,7 +168,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectRo
 						void (async () => {
 							// Why: removals may rewrite the same note, so run them one at a time.
 							for (const removal of removals) await removal.run();
-							this.refreshSuggestions();
+							this.refreshKeepingSelection();
 						})();
 					}),
 			);
@@ -198,15 +198,45 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectRo
 			this.close();
 			return;
 		}
-		const { candidate } = row;
-		if (candidate.locked) return;
-		if (this.checked.has(candidate.key)) this.checked.delete(candidate.key);
-		else this.checked.set(candidate.key, candidate);
+		// Enter checks every selected row at once; the activated row is included even
+		// if a rerender left it out of the selection.
+		const rows = this.selectedCandidates();
+		if (!rows.some(({ key }) => key === row.candidate.key)) rows.push(row.candidate);
+		this.toggleChecks(rows);
+	}
 
-		const key = rowKey(row);
-		this.refreshSuggestionsKeepingCursor((other) => rowKey(other) === key);
+	protected override handlesSuggestionIconClick(): boolean {
+		return true;
+	}
+
+	/** Clicking a row's check box checks just that row without running anything. */
+	protected override onSuggestionIconClick(row: MultiSelectRow<V>): void {
+		if (row.type === "candidate") this.toggleChecks([row.candidate]);
+	}
+
+	/** Candidates among the selected rows, in list order. */
+	private selectedCandidates(): MultiSelectCandidate<V>[] {
+		return this.getSelectedItems().flatMap((row) =>
+			row.type === "candidate" ? [row.candidate] : [],
+		);
+	}
+
+	/** Unchecks when every given row is checked, otherwise checks the unchecked ones. */
+	private toggleChecks(candidates: readonly MultiSelectCandidate<V>[]): void {
+		const toggleable = candidates.filter(({ locked }) => !locked);
+		if (toggleable.length === 0) return;
+		const allChecked = toggleable.every(({ key }) => this.checked.has(key));
+		for (const candidate of toggleable) {
+			if (allChecked) this.checked.delete(candidate.key);
+			else this.checked.set(candidate.key, candidate);
+		}
+		this.refreshKeepingSelection();
 		// Keep the query but select it, so typing the next entry replaces it directly.
 		this.inputEl.select();
+	}
+
+	private refreshKeepingSelection(): void {
+		this.refreshSuggestionsKeepingSelection((a, b) => rowKey(a) === rowKey(b));
 	}
 
 	private checkedValues(): V[] {

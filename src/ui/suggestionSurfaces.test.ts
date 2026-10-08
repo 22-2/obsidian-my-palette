@@ -59,8 +59,8 @@ class TestModal extends BaseSuggestModal<string> {
 	refresh() {
 		this.refreshSuggestions();
 	}
-	refreshKeepingCursor(item: string) {
-		this.refreshSuggestionsKeepingCursor((candidate) => candidate === item);
+	refreshKeepingSelection() {
+		this.refreshSuggestionsKeepingSelection((a, b) => a === b);
 	}
 	setCount(total: number) {
 		this.updateResultCount(total);
@@ -325,12 +325,15 @@ it("discards stale searches and preserves the provider's match query and total",
 	expect(f.root.querySelector(".my-palette-status-bar__count")?.textContent).toBe("50 / 120");
 });
 
-it("restores the cursor to the same item after a keep-open rerender", async () => {
-	const f = await fixture("modal", "single");
-	// The item moves to another index so restoring by index would pick the wrong row.
-	f.modal!.search.mockReturnValue(["delta", "alpha", "gamma"]);
-	f.modal!.refreshKeepingCursor("gamma");
+it("restores the selection and cursor to the same items after a keep-open rerender", async () => {
+	const f = await fixture("modal", "extended");
+	mouse(f.rows()[1], "mousedown");
+	mouse(f.rows()[2], "mousedown", { shiftKey: true });
+	// The items move to other indexes so restoring by index would pick the wrong rows.
+	f.modal!.search.mockReturnValue(["delta", "alpha", "beta", "gamma"]);
+	f.modal!.refreshKeepingSelection();
 	await Promise.resolve();
+	expect(f.selection()).toEqual(["beta", "gamma"]);
 	key(f.input, "Enter");
 	expect(f.choose).toHaveBeenCalledWith("gamma");
 });
