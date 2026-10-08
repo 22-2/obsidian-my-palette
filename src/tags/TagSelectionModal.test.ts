@@ -139,11 +139,12 @@ describe("TagSelectionModal", () => {
 	it("shows a check menu for one row and a bulk one for a multi-selection", async () => {
 		const f = await open();
 		f.mouse(f.rows()[0], "contextmenu", { button: 2 });
-		expect(Menu.last?.titles()).toEqual(["Check"]);
+		expect(Menu.last?.titles()).toEqual(["Check", "Add 1 now"]);
 		f.mouse(f.rows()[0], "mousedown");
 		f.mouse(f.rows()[1], "mousedown", { shiftKey: true });
 		f.mouse(f.rows()[1], "contextmenu", { button: 2 });
 		expect(Menu.last?.titles()).toContain("Check 2 selected");
+		expect(Menu.last?.titles()).toContain("Add 2 now");
 		Menu.last?.items.find(({ title }) => title === "Check 2 selected")?.click();
 		await flush();
 		expect(f.checked()).toEqual(["#alpha", "#beta"]);
@@ -180,5 +181,29 @@ describe("TagSelectionModal", () => {
 		f.mouse(f.button(), "click");
 		Menu.last?.items[0].click();
 		await expect(f.result).resolves.toEqual(["alpha"]);
+	});
+
+	it("keeps a checked new tag listed after the input changes", async () => {
+		const f = await open();
+		await f.type("fresh");
+		f.key("Enter");
+		await flush();
+		await f.type("");
+		expect(f.checked()).toEqual(["#fresh"]);
+		// The check survives the new list, and the tag can still be run.
+		f.key("Enter", { ctrlKey: true });
+		await expect(f.result).resolves.toEqual(["fresh"]);
+	});
+
+	it("runs the checked and highlighted tags together from the row menu", async () => {
+		const f = await open();
+		f.mouse(f.rows()[0].querySelector(".my-palette-suggestion__icon")!, "mousedown", {
+			button: 0,
+		});
+		await flush();
+		f.mouse(f.rows()[1], "mousedown");
+		f.mouse(f.rows()[1], "contextmenu", { button: 2 });
+		Menu.last?.items.find(({ title }) => title === "Add 2 now")?.click();
+		await expect(f.result).resolves.toEqual(["alpha", "beta"]);
 	});
 });

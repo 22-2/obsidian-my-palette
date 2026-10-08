@@ -53,11 +53,11 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			onMiddleClick: this.handlesSuggestionMiddleClick()
 				? (item, event) => this.onSuggestionMiddleClick(item, event)
 				: undefined,
+			onRowToggle: this.handlesSuggestionRowToggle()
+				? (item, event) => this.onSuggestionRowToggle(item, event)
+				: undefined,
 			onContextMenu: this.handlesSuggestionContextMenu()
 				? (item, event) => this.onSuggestionContextMenu(item, event)
-				: undefined,
-			onIconClick: this.handlesSuggestionIconClick()
-				? (item, event) => this.onSuggestionIconClick(item, event)
 				: undefined,
 			onEscape: () => this.close(),
 		});
@@ -149,12 +149,12 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	protected handlesSuggestionContextMenu(): boolean {
 		return false;
 	}
-	protected handlesSuggestionIconClick(): boolean {
+	protected handlesSuggestionRowToggle(): boolean {
 		return false;
 	}
-	protected onSuggestionIconClick(_item: T, _event: MouseEvent): void {}
 	protected async onSuggestionMiddleClick(_item: T, _event: MouseEvent): Promise<void> {}
 	protected onSuggestionContextMenu(_item: T, _event: MouseEvent): void {}
+	protected onSuggestionRowToggle(_item: T, _event: MouseEvent): void {}
 	protected onResultFocus(): void {}
 	protected getSelectedItems(): T[] {
 		return this.panel.getSelectedItems();
@@ -223,6 +223,15 @@ export abstract class BaseSuggestModal<T> extends Modal {
 				active === undefined ? -1 : indexOf(active),
 			);
 		});
+	}
+
+	/**
+	 * Redraw visible rows in place. Multi-toggle selectors use this after a check
+	 * changes, since a full refresh would move the cursor back to the first row
+	 * and, for asynchronous sources, search again.
+	 */
+	protected rerenderVisibleSuggestions(): void {
+		this.panel.rerenderRows();
 	}
 
 	protected refreshSuggestions(afterRender?: () => void): void {

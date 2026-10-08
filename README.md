@@ -72,8 +72,10 @@ Candidates are ordered as recently inserted tags, then tags used by linked notes
 count. Tags that every target note already has are shown last as `Registered`
 and cannot be selected; tags only some targets have show `On N/M notes` and stay
 selectable. Select rows like in the palette (click, `Ctrl`/`Shift`+click, arrow keys),
-check them with `Enter`, double-click, the check box or the context menu, and run
-with `Ctrl+Enter`. The button at the right end of the input lists the checked
+check them with `Enter`, double-click, the context menu or by clicking the check
+icon (which toggles only its row), and run
+with `Ctrl+Enter`. The context menu can also run the checked and highlighted
+rows at once (`Add N now`). The button at the right end of the input lists the checked
 rows, lets you uncheck them and runs them. Typing a tag that does
 not exist yet offers it as a new tag. Right-click a registered or partly applied
 tag and choose `Remove tag` to remove it from the frontmatter of the target

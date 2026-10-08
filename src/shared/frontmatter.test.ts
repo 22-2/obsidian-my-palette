@@ -5,6 +5,13 @@ import {
 	removeFrontmatterTags,
 } from "src/shared/frontmatter";
 
+describe("removeFrontmatterTags", () => {
+	it("removes tags regardless of case and hash while keeping the order", () => {
+		expect(removeFrontmatterTags(["z", "#Project", "a"], ["project"])).toEqual(["z", "a"]);
+		expect(removeFrontmatterTags("only", ["#only"])).toEqual([]);
+	});
+});
+
 describe("normalizeFrontmatterTags", () => {
 	it("reads list and string forms", () => {
 		expect(normalizeFrontmatterTags(["a", 1])).toEqual(["a", "1"]);
@@ -21,12 +28,5 @@ describe("mergeFrontmatterTags", () => {
 			"a",
 			"b",
 		]);
-	});
-});
-
-describe("removeFrontmatterTags", () => {
-	it("removes tags ignoring case and hashes while keeping the original order", () => {
-		expect(removeFrontmatterTags(["b", "Project", "a"], ["#project", "x"])).toEqual(["b", "a"]);
-		expect(removeFrontmatterTags("a, b", ["a", "b"])).toEqual([]);
 	});
 });

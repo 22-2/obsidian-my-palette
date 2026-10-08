@@ -13,9 +13,9 @@ export interface SuggestionPanelProps<T> {
 	onChoose: (item: T, event: MouseEvent | KeyboardEvent) => void | Promise<void>;
 	onResultFocus?: () => void;
 	onMiddleClick?: (item: T, event: MouseEvent) => void | Promise<void>;
+	/** Left press on an element marked `data-row-toggle` inside a row. */
+	onRowToggle?: (item: T, event: MouseEvent) => void;
 	onContextMenu?: (item: T, event: MouseEvent, selectedItems: T[]) => void;
-	/** Handles a plain click on a row's icon (a check box) instead of selecting the row. */
-	onIconClick?: (item: T, event: MouseEvent) => void;
 	onEscape?: () => void;
 	onReady?: () => void;
 }
@@ -157,6 +157,23 @@ export class SuggestionPanel<T> extends Component {
 		}
 	}
 
+	/**
+	 * Redraw the visible rows in place. Unlike setResults this keeps the cursor,
+	 * the extended selection and the scroll position, for hosts whose rows change
+	 * appearance (such as a check mark) without changing the list itself.
+	 */
+	rerenderRows(): void {
+		if (this.resultsLayout) return;
+		for (const row of this.resultContainerEl.querySelectorAll<HTMLElement>(
+			".suggestion-item",
+		)) {
+			const item = this.itemAtRow(row);
+			if (item === undefined) continue;
+			row.empty();
+			this.props.renderSuggestion(item, row, this.query);
+		}
+	}
+
 	setResultsLayout(layout?: SuggestionPanelResultsLayout<T>): void {
 		this.resultsLayout = layout;
 		this.resultContainerEl.setAttribute("role", layout ? "region" : "listbox");
@@ -287,11 +304,14 @@ export class SuggestionPanel<T> extends Component {
 				// it on the next press so one gesture cannot open the same note twice.
 				this.middleClickRows.delete(row);
 				const index = Number(row.getAttribute("data-index"));
-				const onIcon =
-					this.props.onIconClick !== undefined &&
-					!(event.ctrlKey || event.metaKey || event.shiftKey) &&
-					(event.target as Element | null)?.closest?.(".my-palette-suggestion__icon");
-				if (event.button === 0 && this.selectionMode === "extended") {
+				if (event.button === 0 && this.isRowToggleEvent(event)) {
+					// Why: a toggle control acts at once on its own row; letting the press
+					// fall through would also change the highlighted selection.
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					this.leftClickRows.add(row);
+					this.props.onRowToggle?.(item, event);
+				} else if (event.button === 0 && this.selectionMode === "extended") {
 					// Why: the sidebar can lose its click to Obsidian after mousedown;
 					// select now and leave opening exclusively to double-click/Enter.
 					event.preventDefault();
@@ -302,7 +322,6 @@ export class SuggestionPanel<T> extends Component {
 						range: event.shiftKey,
 					});
 					this.setSelectedIndex(index, false);
-					if (onIcon) this.props.onIconClick?.(item, event);
 				} else if (event.button === 0 && this.props.surface === "view") {
 					// Sidebar clicks can be consumed by Obsidian after mousedown, so run
 					// the primary action here and let the later click only clear the guard.
@@ -335,6 +354,13 @@ export class SuggestionPanel<T> extends Component {
 			"dblclick",
 			(event) => {
 				if (this.selectionMode !== "extended" || event.button !== 0) return;
+				// Two quick presses on a toggle already toggled twice; the dblclick that
+				// follows must not activate the row as well.
+				if (this.isRowToggleEvent(event)) {
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					return;
+				}
 				const row = this.suggestionRowAtEvent(event);
 				const item = row ? this.itemAtRow(row) : undefined;
 				if (!row || item === undefined) return;
@@ -431,6 +457,12 @@ export class SuggestionPanel<T> extends Component {
 		this.middleClickRows.add(row);
 		this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
 		void this.props.onMiddleClick(item, event);
+	}
+
+	private isRowToggleEvent(event: Event): boolean {
+		if (!this.props.onRowToggle) return false;
+		const target = event.target as Node | null;
+		return Boolean(target?.instanceOf(Element) && target.closest("[data-row-toggle]"));
 	}
 
 	private suggestionRowAtEvent(event: Event): Element | undefined {

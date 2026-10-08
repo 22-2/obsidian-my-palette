@@ -41,7 +41,7 @@ export interface MultiSelectModalProps {
  */
 export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCandidate<V>> {
 	private readonly checked = new Map<string, MultiSelectCandidate<V>>();
-	private confirmed = false;
+	private confirmedValues?: V[];
 	private resolveResult?: (values: V[] | null) => void;
 	private activeMenu?: Menu;
 	private checkedButtonEl?: HTMLElement;
@@ -80,6 +80,11 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		_close: () => void,
 	): void {}
 
+	/** Checked rows, for hosts that rebuild the list and must keep them listed. */
+	protected checkedCandidates(): MultiSelectCandidate<V>[] {
+		return [...this.checked.values()];
+	}
+
 	/** Opens the modal and resolves with the checked values, or null when cancelled. */
 	openAndWait(): Promise<V[] | null> {
 		return new Promise((resolve) => {
@@ -103,9 +108,14 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 	renderSuggestion(candidate: MultiSelectCandidate<V>, el: HTMLElement): void {
 		const checked = this.checked.has(candidate.key);
 		renderSelectionItem(this.toSelectionItem(candidate), el, this.query);
-		if (candidate.locked) el.addClass("is-locked");
-		if (checked) el.addClass("is-checked");
+		// Rows may be redrawn in place, so classes are set both ways.
+		el.classList.toggle("is-locked", Boolean(candidate.locked));
+		el.classList.toggle("is-checked", checked);
 		el.setAttribute("aria-checked", String(checked));
+		// The check icon toggles its row on a single press; extended selection
+		// otherwise needs a double-click or Enter to change a check.
+		if (!candidate.locked)
+			el.querySelector(".my-palette-suggestion__icon")?.setAttribute("data-row-toggle", "");
 	}
 
 	protected override handlesSuggestionContextMenu(): boolean {
@@ -128,12 +138,12 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		menu.showAtMouseEvent(event);
 	}
 
-	protected override handlesSuggestionIconClick(): boolean {
+	protected override handlesSuggestionRowToggle(): boolean {
 		return true;
 	}
 
-	/** Clicking a row's check box checks just that row without running anything. */
-	protected override onSuggestionIconClick(candidate: MultiSelectCandidate<V>): void {
+	/** Pressing a row's check icon toggles just that row without running anything. */
+	protected override onSuggestionRowToggle(candidate: MultiSelectCandidate<V>): void {
 		this.toggleChecks([candidate]);
 	}
 
@@ -150,7 +160,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 
 	protected override onSelectionModalClose(): void {
 		this.activeMenu?.close();
-		this.resolveResult?.(this.confirmed ? this.checkedValues() : null);
+		this.resolveResult?.(this.confirmedValues ?? null);
 		this.resolveResult = undefined;
 	}
 
@@ -173,9 +183,10 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		this.toggleChecks(rows);
 	}
 
-	private confirm(): void {
-		if (this.checked.size === 0) return;
-		this.confirmed = true;
+	/** Resolves with the given rows, or with every checked row by default. */
+	private confirm(rows: readonly MultiSelectCandidate<V>[] = [...this.checked.values()]): void {
+		if (rows.length === 0) return;
+		this.confirmedValues = rows.map(({ value }) => value);
 		this.close();
 	}
 
@@ -188,7 +199,10 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 			if (allChecked) this.checked.delete(candidate.key);
 			else this.checked.set(candidate.key, candidate);
 		}
-		this.refreshKeepingSelection();
+		// Checks only change row icons, so rows are redrawn in place: the cursor and
+		// selection stay put and an asynchronous source is not searched again.
+		this.updateCheckedButton();
+		this.rerenderVisibleSuggestions();
 		// Keep the query but select it, so typing the next entry replaces it directly.
 		this.inputEl.select();
 	}
@@ -196,10 +210,6 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 	private refreshKeepingSelection(): void {
 		this.updateCheckedButton();
 		this.refreshSuggestionsKeepingSelection((a, b) => a.key === b.key);
-	}
-
-	private checkedValues(): V[] {
-		return [...this.checked.values()].map(({ value }) => value);
 	}
 
 	private replaceActiveMenu(menu: Menu): Menu {
@@ -213,7 +223,10 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 
 	private addCheckMenuItems(menu: Menu, targets: readonly MultiSelectCandidate<V>[]): void {
 		const toggleable = targets.filter(({ locked }) => !locked);
-		if (toggleable.length === 0 && this.checked.size === 0) return;
+		// Highlighted rows join the checked ones, so checking several and running is one step.
+		const runSet = new Map(this.checked);
+		for (const candidate of toggleable) runSet.set(candidate.key, candidate);
+		if (runSet.size === 0) return;
 		menu.addSeparator();
 		if (toggleable.length > 0) {
 			const allChecked = toggleable.every(({ key }) => this.checked.has(key));
@@ -225,14 +238,16 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 					.onClick(() => this.toggleChecks(toggleable)),
 			);
 		}
-		if (this.checked.size > 0) {
-			menu.addItem((item) =>
-				item
-					.setTitle(`${this.multiSelect.actionLabel} ${this.checked.size} checked`)
-					.setIcon("corner-down-left")
-					.onClick(() => this.confirm()),
-			);
-		}
+		menu.addItem((item) =>
+			item
+				.setTitle(
+					toggleable.some(({ key }) => !this.checked.has(key))
+						? `${this.multiSelect.actionLabel} ${runSet.size} now`
+						: `${this.multiSelect.actionLabel} ${runSet.size} checked`,
+				)
+				.setIcon("corner-down-left")
+				.onClick(() => this.confirm([...runSet.values()])),
+		);
 	}
 
 	private addRemovalMenuItem(menu: Menu, targets: readonly MultiSelectCandidate<V>[]): void {
@@ -314,7 +329,8 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 				.setIcon("square")
 				.onClick(() => {
 					this.checked.clear();
-					this.refreshKeepingSelection();
+					this.updateCheckedButton();
+					this.rerenderVisibleSuggestions();
 				}),
 		);
 		menu.setParentElement(this.modalEl);

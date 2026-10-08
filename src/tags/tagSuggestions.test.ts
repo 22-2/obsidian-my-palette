@@ -9,7 +9,8 @@ const choices: TagChoice[] = [
 	{ tag: "writing", count: 5, registered: false },
 ];
 
-const keys = (query: string) => buildTagSuggestions(choices, query).map(tagSuggestionKey);
+const keys = (query: string, checked: string[] = []) =>
+	buildTagSuggestions(choices, query, checked).map(tagSuggestionKey);
 
 describe("buildTagSuggestions", () => {
 	it("shows every choice in the given order without a query", () => {
@@ -25,5 +26,19 @@ describe("buildTagSuggestions", () => {
 		expect(keys("Project")).not.toContain("new:Project");
 		expect(keys("two words")).not.toContain("new:two words");
 		expect(keys("a#b")).not.toContain("new:a#b");
+	});
+
+	it("keeps checked new tags listed while they match the input", () => {
+		expect(keys("", ["writing", "Fresh"])).toEqual([
+			"new:Fresh",
+			"tag:project",
+			"tag:projection",
+			"tag:proj",
+			"tag:writing",
+		]);
+		expect(keys("fre", ["Fresh"])).toEqual(["new:fre", "new:Fresh"]);
+		// The typed text is the checked tag itself, so it is not offered twice.
+		expect(keys("fresh", ["Fresh"])).toEqual(["new:Fresh"]);
+		expect(keys("writ", ["Fresh"])).not.toContain("new:Fresh");
 	});
 });

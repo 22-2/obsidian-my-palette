@@ -150,6 +150,8 @@ interface MenuEntry {
 /** Records the items of the last shown menu so tests can assert on their content. */
 export class Menu {
 	static last?: Menu;
+	/** Alias of `last`, kept for tests written against the earlier double. */
+	static lastShown?: Menu;
 	readonly items: MenuEntry[] = [];
 	separators = 0;
 	shown = false;
@@ -181,10 +183,12 @@ export class Menu {
 	showAtMouseEvent(): void {
 		this.shown = true;
 		Menu.last = this;
+		Menu.lastShown = this;
 	}
 	showAtPosition(): void {
 		this.shown = true;
 		Menu.last = this;
+		Menu.lastShown = this;
 	}
 	close(): void {
 		this.closed = true;

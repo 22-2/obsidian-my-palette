@@ -31,17 +31,31 @@ function filterChoices(choices: readonly TagChoice[], needle: string): TagChoice
 }
 
 /**
- * Builds the rows shown for the current input: matching tags and a new-tag row
- * when the input is not an existing tag.
+ * Builds the rows shown for the current input: new tags first, then matching
+ * existing tags. Checked new tags stay listed while they match the input, because
+ * they are in no tag list that could bring them back.
  */
-export function buildTagSuggestions(choices: readonly TagChoice[], query: string): TagSuggestion[] {
+export function buildTagSuggestions(
+	choices: readonly TagChoice[],
+	query: string,
+	checked: readonly string[] = [],
+): TagSuggestion[] {
 	const needle = normalizeTagQuery(query);
-	const matched = needle ? filterChoices(choices, needle) : choices;
-	const suggestions: TagSuggestion[] = matched.map((choice) => ({ type: "tag", choice }));
+	const known = new Set(choices.map((choice) => tagKey(choice.tag)));
+	const pendingNew = checked.filter(
+		(tag) => !known.has(tagKey(tag)) && (!needle || fuzzysort.single(needle, tag) !== null),
+	);
+	const newTags = [...pendingNew];
+	const typedIsNew =
+		needle &&
+		VALID_NEW_TAG.test(needle) &&
+		!known.has(tagKey(needle)) &&
+		!pendingNew.some((tag) => tagKey(tag) === tagKey(needle));
+	if (typedIsNew) newTags.unshift(needle);
 
-	const exists = choices.some((choice) => tagKey(choice.tag) === tagKey(needle));
-	if (needle && !exists && VALID_NEW_TAG.test(needle)) {
-		suggestions.unshift({ type: "new", tag: needle });
-	}
-	return suggestions;
+	const matched = needle ? filterChoices(choices, needle) : choices;
+	return [
+		...newTags.map((tag): TagSuggestion => ({ type: "new", tag })),
+		...matched.map((choice): TagSuggestion => ({ type: "tag", choice })),
+	];
 }

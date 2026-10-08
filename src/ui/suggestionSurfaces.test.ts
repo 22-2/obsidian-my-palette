@@ -17,6 +17,7 @@ class TestModal extends BaseSuggestModal<string> {
 	readonly resultFocus = vi.fn();
 	readonly preview = vi.fn();
 	initialRange?: [number, number];
+	suffix = "";
 	search = vi.fn((_query: string): string[] | Promise<string[]> => items);
 	constructor(props: SuggestModalProps<string> = {}) {
 		super(props, {} as App);
@@ -25,7 +26,7 @@ class TestModal extends BaseSuggestModal<string> {
 		return this.search(query);
 	}
 	renderSuggestion(item: string, el: HTMLElement) {
-		el.setText(`${this.query}:${item}`);
+		el.setText(`${this.query}:${item}${this.suffix}`);
 	}
 	protected override async onItemActivated(item: string) {
 		this.choose(item);
@@ -61,6 +62,9 @@ class TestModal extends BaseSuggestModal<string> {
 	}
 	refreshKeepingSelection() {
 		this.refreshSuggestionsKeepingSelection((a, b) => a === b);
+	}
+	rerender() {
+		this.rerenderVisibleSuggestions();
 	}
 	setCount(total: number) {
 		this.updateResultCount(total);
@@ -336,6 +340,21 @@ it("restores the selection and cursor to the same items after a keep-open rerend
 	expect(f.selection()).toEqual(["beta", "gamma"]);
 	key(f.input, "Enter");
 	expect(f.choose).toHaveBeenCalledWith("gamma");
+});
+
+it("redraws rows in place without losing the extended selection", async () => {
+	const f = await fixture("modal");
+	mouse(f.rows()[1], "mousedown");
+	mouse(f.rows()[3], "mousedown", { shiftKey: true });
+	f.modal!.suffix = "!";
+	f.modal!.rerender();
+	expect(f.rows().map((row) => row.textContent)).toEqual([
+		":alpha!",
+		":beta!",
+		":gamma!",
+		":delta!",
+	]);
+	expect(f.selection()).toEqual(["beta", "gamma", "delta"]);
 });
 
 it("does not duplicate handlers or the footer when reopening a modal", async () => {

@@ -74,7 +74,8 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 	}
 
 	protected searchCandidates(query: string): MultiSelectCandidate<string>[] {
-		return buildTagSuggestions(this.choices, query).map((suggestion) =>
+		const checked = this.checkedCandidates().map(({ value }) => value);
+		return buildTagSuggestions(this.choices, query, checked).map((suggestion) =>
 			toCandidate(suggestion, this.targetCount, (tag) => this.removeTag(tag)),
 		);
 	}

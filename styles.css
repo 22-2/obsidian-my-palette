@@ -849,7 +849,11 @@
 	text-align: right;
 }
 
-/* Applied to the span itself so selected and hovered rows cannot override it. */
-.my-palette-multi-select__action {
-	color: var(--text-muted);
+/* The check icon toggles its row on click, so it should look clickable. */
+.my-palette-multi-select [data-row-toggle] {
+	cursor: pointer;
+}
+
+.my-palette-multi-select [data-row-toggle]:hover {
+	color: var(--text-normal);
 }
