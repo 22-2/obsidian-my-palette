@@ -14,6 +14,7 @@ My Palette は、キーボード操作を中心に使える Obsidian 用コマ�
 - `vp test` でユニットテストを実行する
 - `pnpm check-types` で TypeScript の型チェックを実行する
 - `vp build` で本番用バンドルを作成する
+- `pnpm e2e` で E2E テストを実行する。[obsidian-e2e-toolkit](https://github.com/22-2/obsidian-e2e-toolkit) と Playwright で実際の Obsidian を起動するため、Node.js 23 以上が必要。ディスプレイのない環境(Linux サーバーやコンテナ)では `xvfb-run -a pnpm e2e` で実行する
 
 Vite+ の設定により、本番用バンドルは `dist/` と設定済みの開発用 Vault のプラグインディレクトリへコピーされます。
 

@@ -16,6 +16,7 @@ Requirements: Node.js and pnpm.
 - Run unit tests with `vp test --run`.
 - Run the TypeScript check with `pnpm check-types`.
 - Build a production bundle with `vp build`.
+- Run the end-to-end tests with `pnpm e2e`. They launch a real Obsidian through [obsidian-e2e-toolkit](https://github.com/22-2/obsidian-e2e-toolkit) and Playwright, so they need Node.js 23 or later. On a machine without a display (Linux servers, containers), run them as `xvfb-run -a pnpm e2e`.
 
 The Vite configuration copies the production bundle to `dist/` and the configured development Vault plugin directory.
 

@@ -1,5 +1,7 @@
 allowBuilds:
+    electron: true
     esbuild: true
+    obsidian-e2e-toolkit: true
 catalog:
     vite: npm:@voidzero-dev/vite-plus-core@1.0.0-rc.0
     vitest: 5.0.1

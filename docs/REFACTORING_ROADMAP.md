@@ -65,15 +65,19 @@
 - [ ] ignored note: キャッシュ再利用条件(`IgnoredNoteIndex` は IndexedDB を直接開くため、`fake-indexeddb` などを導入するか、永続化層を分離しないとテストできない)
 - [x] staleな非同期検索結果の破棄(`suggestionSurfaces.test.ts` で網羅済み)
 
-## 手動確認(リリース前)
+## 動作確認(E2E)
 
-- [ ] 通常ファイル検索、`i ` の ignored note 検索、Everything 検索
-- [ ] command、bookmark、link、backlink、smart 検索
-- [ ] 履歴表示と履歴復元
-- [ ] 中クリック・右クリックメニュー
-- [ ] ignored Markdown の Readonly 表示
-- [ ] MOC Relateds へのリンク追加
-- [ ] タグの複数選択と挿入
+`pnpm e2e`(`e2e/` 配下、Playwright と obsidian-e2e-toolkit)で、実際の Obsidian を起動して確認する。
+
+- [x] 通常ファイル検索、Enter で開く(`file-search.spec.mts`)
+- [x] `i ` の ignored note 検索と、外部ファイルとして開く要求(`ignored-notes.spec.mts`)
+- [x] Everything 検索の要求クエリ(`everything.spec.mts`)。結果行の表示は、プラグインが Windows 形式のパスだけを受け付けるため Linux では検証できない
+- [x] command、bookmark、link、backlink、smart 検索(`modes.spec.mts`)。smart は Smart Connections が無い場合の表示のみ
+- [x] 履歴表示と履歴復元、右クリックメニュー、中クリック(`history-and-menus.spec.mts`)
+- [x] MOC Relateds へのリンク追加、タグの複数選択と挿入(`moc-and-tags.spec.mts`)
+- [ ] ignored Markdown を外部ファイルのビューとして開く。ツールキット同梱の Obsidian 1.13.7 は `file:` 形式を開けないため、テストはスキップされる。対応した Obsidian では自動で実行される
+- [ ] Smart Connections 本体がある環境での smart 検索
+- [ ] Windows 上での Everything の結果表示
 
 ## ドキュメント
 

@@ -28,7 +28,10 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      # The unit-test job never launches Obsidian, so skip the large Electron download.
       - run: pnpm install --frozen-lockfile
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
 
       - name: Type check
         run: pnpm run check-types
