@@ -1,10 +1,10 @@
-import { Menu, type App } from "obsidian";
+import { Menu, setIcon, type App } from "obsidian";
 import { BaseSuggestModal } from "src/ui/baseSuggestModal";
 import { renderSelectionItem, type SelectionItem } from "src/ui/selectionModal";
 
-/** One selectable row. `value` is what the modal resolves with when the row is chosen. */
+/** One selectable row. `value` is what the modal resolves with when the row is checked. */
 export interface MultiSelectCandidate<V> {
-	/** Stable identity; the selection is kept by key because the list is refiltered per query. */
+	/** Stable identity; checks are kept by key because the list is refiltered per query. */
 	key: string;
 	value: V;
 	/** Row content; the check icon is supplied by the modal. */
@@ -12,7 +12,7 @@ export interface MultiSelectCandidate<V> {
 	/**
 	 * Nothing is left to do for this row (a tag every target already has, a note
 	 * already linked in both directions). It stays listed after the actionable
-	 * rows, marked by the lock icon, and cannot be selected.
+	 * rows, marked by the lock icon, and cannot be checked.
 	 */
 	locked?: boolean;
 	/** Icon of an unchecked row; defaults to an empty box. */
@@ -25,37 +25,30 @@ export interface MultiSelectCandidate<V> {
 	removal?: { label: string; run: () => void | Promise<void> };
 }
 
-export type MultiSelectRow<V> =
-	| { type: "candidate"; candidate: MultiSelectCandidate<V> }
-	| { type: "confirm"; values: V[] };
-
-export interface MultiSelectModalProps<V> {
+export interface MultiSelectModalProps {
 	placeholder: string;
 	/** Footer text naming what changes; the key hints are appended. */
 	footerLabel: string;
-	/** Verb of the confirm row and of the Ctrl+Enter hint, such as "Add". */
+	/** Verb of the run action and of the Ctrl+Enter hint, such as "Add". */
 	actionLabel: string;
-	/** Text of the confirm row, summarizing the selected values. */
-	describeSelection: (values: V[]) => string;
-}
-
-function rowKey<V>(row: MultiSelectRow<V>): string {
-	return row.type === "confirm" ? "confirm" : `candidate:${row.candidate.key}`;
 }
 
 /**
  * Multi selector shared by tag and MOC insertion so both behave and look alike.
  * Flow: select rows (click, Ctrl, Shift, arrows) → check them (Enter, double
- * click, or the check box) → run (Ctrl+Enter or the confirm row). Checking keeps
- * the modal open; any other close cancels.
+ * click, the check box or the context menu) → run (Ctrl+Enter or the menu of the
+ * checked-list button). Checking keeps the modal open; any other close cancels.
  */
-export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectRow<V>> {
+export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCandidate<V>> {
 	private readonly checked = new Map<string, MultiSelectCandidate<V>>();
 	private confirmed = false;
 	private resolveResult?: (values: V[] | null) => void;
+	private activeMenu?: Menu;
+	private checkedButtonEl?: HTMLElement;
+	private checkedCountEl?: HTMLElement;
 
 	constructor(
-		private readonly multiSelect: MultiSelectModalProps<V>,
+		private readonly multiSelect: MultiSelectModalProps,
 		app: App,
 	) {
 		super(
@@ -80,19 +73,14 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectRo
 		return query;
 	}
 
-	/** Whether the input narrows the list, which decides where the confirm row goes. */
-	protected hasActiveQuery(query: string): boolean {
-		return query.trim() !== "";
-	}
-
-	/** Lets hosts add their own items above the shared removal item. */
-	protected populateCandidateMenu(
+	/** Lets hosts add their own items, such as open and copy actions, for the selected rows. */
+	protected populateSelectionMenu(
 		_menu: Menu,
-		_candidate: MultiSelectCandidate<V>,
+		_selected: readonly MultiSelectCandidate<V>[],
 		_close: () => void,
 	): void {}
 
-	/** Opens the modal and resolves with the selected values, or null when cancelled. */
+	/** Opens the modal and resolves with the checked values, or null when cancelled. */
 	openAndWait(): Promise<V[] | null> {
 		return new Promise((resolve) => {
 			this.resolveResult = resolve;
@@ -100,7 +88,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectRo
 		});
 	}
 
-	async getSuggestions(query: string): Promise<MultiSelectRow<V>[]> {
+	async getSuggestions(query: string): Promise<MultiSelectCandidate<V>[]> {
 		this.updateMatchQuery(this.matchQuery(query));
 		const found = await this.searchCandidates(query);
 		// A stable partition keeps the host's ranking inside each group.
@@ -109,100 +97,35 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectRo
 			...found.filter(({ locked }) => locked),
 		];
 		this.updateResultCount(candidates.length);
-		const rows: MultiSelectRow<V>[] = candidates.map((candidate) => ({
-			type: "candidate",
-			candidate,
-		}));
-		if (this.checked.size > 0) {
-			const confirm: MultiSelectRow<V> = {
-				type: "confirm",
-				values: this.checkedValues(),
-			};
-			// Without a query the confirm row comes first so Enter can confirm immediately;
-			// while searching it goes last so it does not hide the best match.
-			if (this.hasActiveQuery(query)) rows.push(confirm);
-			else rows.unshift(confirm);
-		}
-		return rows;
+		return candidates;
 	}
 
-	renderSuggestion(row: MultiSelectRow<V>, el: HTMLElement): void {
-		renderSelectionItem(this.toSelectionItem(row), el, this.query);
-		if (row.type === "candidate" && row.candidate.locked) el.addClass("is-locked");
-		if (row.type === "confirm") {
-			// The action word is muted so the selected values stand out in the confirm row.
-			const label = el.querySelector<HTMLElement>(".my-palette-suggestion__label");
-			label?.prepend(
-				label.createSpan({
-					cls: "my-palette-multi-select__action",
-					text: `${this.multiSelect.actionLabel} `,
-				}),
-			);
-		}
+	renderSuggestion(candidate: MultiSelectCandidate<V>, el: HTMLElement): void {
+		const checked = this.checked.has(candidate.key);
+		renderSelectionItem(this.toSelectionItem(candidate), el, this.query);
+		if (candidate.locked) el.addClass("is-locked");
+		if (checked) el.addClass("is-checked");
+		el.setAttribute("aria-checked", String(checked));
 	}
 
 	protected override handlesSuggestionContextMenu(): boolean {
 		return true;
 	}
 
-	protected override onSuggestionContextMenu(row: MultiSelectRow<V>, event: MouseEvent): void {
-		if (row.type !== "candidate") return;
-		const { candidate } = row;
-		const menu = new Menu();
-		this.populateCandidateMenu(menu, candidate, () => this.close());
+	protected override onSuggestionContextMenu(
+		candidate: MultiSelectCandidate<V>,
+		event: MouseEvent,
+	): void {
 		// The panel has already moved the selection to the clicked row unless the row was
 		// inside it, so the menu acts on the selected rows like the palette's own menu.
-		const targets = this.selectedCandidates();
-		const removals = targets.flatMap(({ removal }) => (removal ? [removal] : []));
-		if (removals.length > 0) {
-			menu.addSeparator();
-			menu.addItem((item) =>
-				item
-					.setTitle(
-						removals.length > 1
-							? `${removals[0].label} (${removals.length} selected)`
-							: removals[0].label,
-					)
-					.setIcon("trash-2")
-					.onClick(() => {
-						void (async () => {
-							// Why: removals may rewrite the same note, so run them one at a time.
-							for (const removal of removals) await removal.run();
-							this.refreshKeepingSelection();
-						})();
-					}),
-			);
-		}
-		// An empty menu would only flash, so rows without any action show nothing.
-		if (menu.items?.length === 0) return;
+		const selected = this.getSelectedItems();
+		const targets = selected.length > 0 ? selected : [candidate];
+		const menu = this.replaceActiveMenu(new Menu());
+		this.populateSelectionMenu(menu, targets, () => this.close());
+		this.addCheckMenuItems(menu, targets);
+		this.addRemovalMenuItem(menu, targets);
+		menu.setParentElement(this.modalEl);
 		menu.showAtMouseEvent(event);
-	}
-
-	protected override onSelectionModalOpen(): void {
-		this.modalEl.addClass("my-palette-multi-select");
-	}
-
-	protected override onSelectionModalClose(): void {
-		this.resolveResult?.(this.confirmed ? this.checkedValues() : null);
-		this.resolveResult = undefined;
-	}
-
-	protected override async onItemActivated(row: MultiSelectRow<V>, event: Event): Promise<void> {
-		// Ctrl+Enter confirms from any row so the user need not move to the confirm row.
-		const confirmShortcut =
-			event.type === "keydown" &&
-			((event as KeyboardEvent).ctrlKey || (event as KeyboardEvent).metaKey);
-		if (row.type === "confirm" || confirmShortcut) {
-			if (this.checked.size === 0) return;
-			this.confirmed = true;
-			this.close();
-			return;
-		}
-		// Enter checks every selected row at once; the activated row is included even
-		// if a rerender left it out of the selection.
-		const rows = this.selectedCandidates();
-		if (!rows.some(({ key }) => key === row.candidate.key)) rows.push(row.candidate);
-		this.toggleChecks(rows);
 	}
 
 	protected override handlesSuggestionIconClick(): boolean {
@@ -210,15 +133,50 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectRo
 	}
 
 	/** Clicking a row's check box checks just that row without running anything. */
-	protected override onSuggestionIconClick(row: MultiSelectRow<V>): void {
-		if (row.type === "candidate") this.toggleChecks([row.candidate]);
+	protected override onSuggestionIconClick(candidate: MultiSelectCandidate<V>): void {
+		this.toggleChecks([candidate]);
 	}
 
-	/** Candidates among the selected rows, in list order. */
-	private selectedCandidates(): MultiSelectCandidate<V>[] {
-		return this.getSelectedItems().flatMap((row) =>
-			row.type === "candidate" ? [row.candidate] : [],
-		);
+	// Why: the panel stops mousedown propagation on rows, so Obsidian cannot dismiss
+	// an open menu itself when the user clicks a row.
+	protected override onResultFocus(): void {
+		this.activeMenu?.close();
+	}
+
+	protected override onSelectionModalOpen(): void {
+		this.modalEl.addClass("my-palette-multi-select");
+		this.createCheckedButton();
+	}
+
+	protected override onSelectionModalClose(): void {
+		this.activeMenu?.close();
+		this.resolveResult?.(this.confirmed ? this.checkedValues() : null);
+		this.resolveResult = undefined;
+	}
+
+	protected override async onItemActivated(
+		candidate: MultiSelectCandidate<V>,
+		event: Event,
+	): Promise<void> {
+		// Ctrl+Enter runs from any row, so the user need not leave the list.
+		const runShortcut =
+			event.type === "keydown" &&
+			((event as KeyboardEvent).ctrlKey || (event as KeyboardEvent).metaKey);
+		if (runShortcut) {
+			this.confirm();
+			return;
+		}
+		// Enter checks every selected row at once; the activated row is included even
+		// if a rerender left it out of the selection.
+		const rows = [...this.getSelectedItems()];
+		if (!rows.some(({ key }) => key === candidate.key)) rows.push(candidate);
+		this.toggleChecks(rows);
+	}
+
+	private confirm(): void {
+		if (this.checked.size === 0) return;
+		this.confirmed = true;
+		this.close();
 	}
 
 	/** Unchecks when every given row is checked, otherwise checks the unchecked ones. */
@@ -236,22 +194,134 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectRo
 	}
 
 	private refreshKeepingSelection(): void {
-		this.refreshSuggestionsKeepingSelection((a, b) => rowKey(a) === rowKey(b));
+		this.updateCheckedButton();
+		this.refreshSuggestionsKeepingSelection((a, b) => a.key === b.key);
 	}
 
 	private checkedValues(): V[] {
 		return [...this.checked.values()].map(({ value }) => value);
 	}
 
-	private toSelectionItem(row: MultiSelectRow<V>): SelectionItem {
-		if (row.type === "confirm") {
-			// The action word is prepended in renderSuggestion so it can be styled separately.
-			return {
-				label: this.multiSelect.describeSelection(row.values),
-				icon: "corner-down-left",
-			};
+	private replaceActiveMenu(menu: Menu): Menu {
+		this.activeMenu?.close();
+		this.activeMenu = menu;
+		menu.onHide(() => {
+			if (this.activeMenu === menu) this.activeMenu = undefined;
+		});
+		return menu;
+	}
+
+	private addCheckMenuItems(menu: Menu, targets: readonly MultiSelectCandidate<V>[]): void {
+		const toggleable = targets.filter(({ locked }) => !locked);
+		if (toggleable.length === 0 && this.checked.size === 0) return;
+		menu.addSeparator();
+		if (toggleable.length > 0) {
+			const allChecked = toggleable.every(({ key }) => this.checked.has(key));
+			const suffix = toggleable.length > 1 ? ` ${toggleable.length} selected` : "";
+			menu.addItem((item) =>
+				item
+					.setTitle(`${allChecked ? "Uncheck" : "Check"}${suffix}`)
+					.setIcon(allChecked ? "square" : "square-check")
+					.onClick(() => this.toggleChecks(toggleable)),
+			);
 		}
-		const { candidate } = row;
+		if (this.checked.size > 0) {
+			menu.addItem((item) =>
+				item
+					.setTitle(`${this.multiSelect.actionLabel} ${this.checked.size} checked`)
+					.setIcon("corner-down-left")
+					.onClick(() => this.confirm()),
+			);
+		}
+	}
+
+	private addRemovalMenuItem(menu: Menu, targets: readonly MultiSelectCandidate<V>[]): void {
+		const removals = targets.flatMap(({ removal }) => (removal ? [removal] : []));
+		if (removals.length === 0) return;
+		menu.addSeparator();
+		menu.addItem((item) =>
+			item
+				.setTitle(
+					removals.length > 1
+						? `${removals[0].label} (${removals.length} selected)`
+						: removals[0].label,
+				)
+				.setIcon("trash-2")
+				.onClick(() => {
+					void (async () => {
+						// Why: removals may rewrite the same note, so run them one at a time.
+						for (const removal of removals) await removal.run();
+						this.refreshKeepingSelection();
+					})();
+				}),
+		);
+	}
+
+	/** Button at the right end of the input that previews the checked rows and runs them. */
+	private createCheckedButton(): void {
+		const container = this.inputEl.parentElement;
+		if (!container) return;
+		container.querySelector(".my-palette-checked-button")?.remove();
+		const button = container.createEl("button", {
+			cls: "clickable-icon my-palette-checked-button",
+			attr: { type: "button", title: "Checked items" },
+		});
+		setIcon(button, "list-checks");
+		this.checkedCountEl = button.createSpan("my-palette-checked-button__count");
+		this.checkedButtonEl = button;
+		// Keep focus in the input so typing and keyboard selection continue after a click.
+		this.registerSelectionDomEvent(button, "mousedown", (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+		});
+		this.registerSelectionDomEvent(button, "click", (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			this.showCheckedMenu(event);
+		});
+		this.updateCheckedButton();
+	}
+
+	private updateCheckedButton(): void {
+		if (!this.checkedButtonEl) return;
+		this.checkedButtonEl.hidden = this.checked.size === 0;
+		this.checkedCountEl?.setText(String(this.checked.size));
+	}
+
+	private showCheckedMenu(event: MouseEvent): void {
+		if (this.checked.size === 0) return;
+		const menu = this.replaceActiveMenu(new Menu());
+		menu.addItem((item) =>
+			item
+				.setTitle(`${this.multiSelect.actionLabel} ${this.checked.size} checked`)
+				.setIcon("corner-down-left")
+				.onClick(() => this.confirm()),
+		);
+		menu.addSeparator();
+		// Choosing a checked row here unchecks it, so the list doubles as an editor.
+		for (const candidate of this.checked.values()) {
+			menu.addItem((item) =>
+				item
+					.setTitle(candidate.item.label)
+					.setIcon("square-check")
+					.onClick(() => this.toggleChecks([candidate])),
+			);
+		}
+		menu.addSeparator();
+		menu.addItem((item) =>
+			item
+				.setTitle("Uncheck all")
+				.setIcon("square")
+				.onClick(() => {
+					this.checked.clear();
+					this.refreshKeepingSelection();
+				}),
+		);
+		menu.setParentElement(this.modalEl);
+		menu.showAtMouseEvent(event);
+	}
+
+	private toSelectionItem(candidate: MultiSelectCandidate<V>): SelectionItem {
 		return {
 			...candidate.item,
 			icon: candidate.locked

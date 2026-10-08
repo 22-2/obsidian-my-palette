@@ -11,7 +11,12 @@ import {
 } from "src/moc-relateds/mocRelatedsCore";
 import { getVaultFullPath, isUserIgnoredPath } from "src/ignored-notes/ignoredPaths";
 import { materializeIgnoredNote } from "src/ignored-notes/ignoredNoteMaterializer";
-import { addCopyPathMenuItems, copyPathToClipboard } from "src/platform/pathClipboard";
+import {
+	addCopyPathListMenuItems,
+	addCopyPathMenuItems,
+	copyPathListToClipboard,
+	copyPathToClipboard,
+} from "src/platform/pathClipboard";
 import { isMarkdownPath } from "src/shared/externalFiles";
 import { parseInput } from "src/palette/inputParser";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
@@ -224,10 +229,6 @@ class MocTargetModal extends MultiSelectModal<string> {
 					"Search notes to insert into the MOC · i old notes includes Excluded files",
 				footerLabel: `Source: ${activeFile.path}`,
 				actionLabel: "Insert",
-				describeSelection: (paths) =>
-					paths.length === 1
-						? (paths[0].split("/").pop()?.replace(/\.md$/, "") ?? paths[0])
-						: `${paths.length} notes`,
 			},
 			plugin.app,
 		);
@@ -263,12 +264,26 @@ class MocTargetModal extends MultiSelectModal<string> {
 			);
 	}
 
-	protected override populateCandidateMenu(
+	protected override populateSelectionMenu(
 		menu: Menu,
-		candidate: MultiSelectCandidate<string>,
+		selected: readonly MultiSelectCandidate<string>[],
 		close: () => void,
 	): void {
-		populateCandidateMenu(this.plugin, candidate.item, menu, close);
+		if (selected.length === 1) {
+			populateCandidateMenu(this.plugin, selected[0].item, menu, close);
+			return;
+		}
+		// Why: a multi-selection has no single note to open, so offer the actions that
+		// work on every selected path, as the palette's own menu does.
+		addCopyPathListMenuItems(
+			menu,
+			selected.map(({ value, item }) => ({
+				fileName: item.label,
+				relativePath: value,
+				absolutePath: getVaultFullPath(this.plugin.app, value) ?? undefined,
+			})),
+			(values) => void copyPathListToClipboard(values),
+		);
 	}
 
 	/** Updates the shown relations directly because the metadata cache lags behind the edit. */

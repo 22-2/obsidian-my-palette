@@ -68,7 +68,6 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 				placeholder: "Select tags to add (type to create a new tag)",
 				footerLabel: targetLabel,
 				actionLabel: "Add",
-				describeSelection: (tags) => tags.map((tag) => `#${tag}`).join(" "),
 			},
 			app,
 		);
@@ -99,10 +98,6 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 	// Highlight with the same text used for matching, without the optional `#`.
 	protected override matchQuery(query: string): string {
 		return normalizeTagQuery(query);
-	}
-
-	protected override hasActiveQuery(query: string): boolean {
-		return normalizeTagQuery(query) !== "";
 	}
 
 	protected override onSelectionModalOpen(): void {

@@ -72,8 +72,9 @@ Candidates are ordered as recently inserted tags, then tags used by linked notes
 count. Tags that every target note already has are shown last as `Registered`
 and cannot be selected; tags only some targets have show `On N/M notes` and stay
 selectable. Select rows like in the palette (click, `Ctrl`/`Shift`+click, arrow keys),
-check them with `Enter`, double-click or the check box, and run with
-`Ctrl+Enter` or the `Add …` row. Typing a tag that does
+check them with `Enter`, double-click, the check box or the context menu, and run
+with `Ctrl+Enter`. The button at the right end of the input lists the checked
+rows, lets you uncheck them and runs them. Typing a tag that does
 not exist yet offers it as a new tag. Right-click a registered or partly applied
 tag and choose `Remove tag` to remove it from the frontmatter of the target
 notes; right-clicking within a multi-row selection removes every selected one. Recently
@@ -82,7 +83,7 @@ inserted tags are stored per Vault in local IndexedDB.
 ### Inserting into a MOC
 
 The MOC insertion selector works the same way: rows are selected, checked and run the same way:
-`Enter` checks the selected notes, and `Ctrl+Enter` or the `Insert …` row adds mutual Relateds links to the
+`Enter` checks the selected notes, and `Ctrl+Enter` or the checked-list button adds mutual Relateds links to the
 active MOC for every selected note. Only links inside a `Relateds` item count, not
 other links in the body. Notes linked in both directions are shown
 last and cannot be selected; notes linked in one direction stay selectable to

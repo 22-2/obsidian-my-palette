@@ -138,3 +138,59 @@ export class Modal {
 }
 
 export function setIcon(): void {}
+
+interface MenuEntry {
+	title: string;
+	icon?: string;
+	checked?: boolean;
+	disabled?: boolean;
+	click: () => void;
+}
+
+/** Records the items of the last shown menu so tests can assert on their content. */
+export class Menu {
+	static last?: Menu;
+	readonly items: MenuEntry[] = [];
+	separators = 0;
+	shown = false;
+	closed = false;
+	private hideHandlers: (() => void)[] = [];
+	addItem(build: (item: Record<string, unknown>) => unknown): this {
+		const entry: MenuEntry = { title: "", click: () => undefined };
+		const item = {
+			setTitle: (title: string) => ((entry.title = title), item),
+			setIcon: (icon: string) => ((entry.icon = icon), item),
+			setChecked: (checked: boolean) => ((entry.checked = checked), item),
+			setDisabled: (disabled: boolean) => ((entry.disabled = disabled), item),
+			onClick: (click: () => void) => ((entry.click = click), item),
+		};
+		build(item);
+		this.items.push(entry);
+		return this;
+	}
+	addSeparator(): this {
+		this.separators += 1;
+		return this;
+	}
+	setParentElement(): this {
+		return this;
+	}
+	onHide(handler: () => void): void {
+		this.hideHandlers.push(handler);
+	}
+	showAtMouseEvent(): void {
+		this.shown = true;
+		Menu.last = this;
+	}
+	showAtPosition(): void {
+		this.shown = true;
+		Menu.last = this;
+	}
+	close(): void {
+		this.closed = true;
+		for (const handler of this.hideHandlers) handler();
+	}
+	titles(): string[] {
+		return this.items.map(({ title }) => title);
+	}
+}
