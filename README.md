@@ -1,182 +1,179 @@
 # My Palette
 
-My Palette is a keyboard-first command palette for Obsidian with Everything 1.5a search support.
+A command palette for Obsidian that finds a file first and lets you decide what to do with it afterwards. The look is borrowed from the VS Code command palette, but you can drive it with the mouse just as comfortably as with the keyboard.
 
 [日本語版](README.ja.md)
 
-The plugin is written in TypeScript and built with Vite+. Source code is organized by feature under `src/`, with unit tests colocated next to pure search, settings, and ignored-note logic.
+## Why another switcher
 
-## Development
+I tried Another Quick Switcher, the core Quick Switcher, Quick Switcher++ and Omnisearch. Each was good at something, none of them felt right as a whole, so I made my own.
 
-Requirements: Node.js and pnpm.
+My Palette started as a near copy of the VS Code palette: type, pick a candidate, run it. That grammar turned out to be a poor fit for Obsidian, where there is more to decide than which entry to run:
 
-- Install dependencies with `vp install`.
-- Start the watch build with `vp dev`.
-- Run formatting and lint checks with `vp check`.
-- Run unit tests with `vp test --run`.
-- Run the TypeScript check with `pnpm check-types`.
-- Build a production bundle with `vp build`.
+- **Target**: which note or external file?
+- **Source**: the Vault, Everything, links, backlinks, bookmarks?
+- **Destination**: the current tab, a new tab, a split, the sidebar?
+- **Operation**: open, copy a path, insert into a MOC, tag, move?
 
-The Vite configuration copies the production bundle to `dist/` and the configured development Vault plugin directory.
+So the palette now works like this:
 
-## Releasing new releases
+1. Type what you are looking for. No mode switch is needed for ordinary file search.
+2. Choose how to handle the result afterwards (click, double-click, middle-click, right-click, or keys).
+3. Advanced operations are shown only once you have a result to apply them to.
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+Prefixes (`>`, `e `, `bk `, …) exist for switching the search source, not as the main way to operate it.
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+## Features
 
-## Adding your plugin to the community plugin list
+- **Vault file search** with AND / OR terms, aliases, frontmatter and inline tags, and fully configurable sort priorities.
+- **Everything 1.5a search** for files outside the Vault, opened in Obsidian (Markdown) or in the OS default app.
+- **Command, bookmark, link, backlink and Smart Connections search** in the same window.
+- **Multi-select** with the same gestures as a file manager, then copy paths, add tags or insert MOC links to all selected notes at once.
+- **Three surfaces**: a modal, a list view in the right sidebar, and a sortable table view in a center tab.
+- **Excluded files on demand**: notes hidden by Obsidian's excluded folders stay out of the way until you ask for them with `i `.
+- Desktop only (Windows is the primary target).
 
-- Check https://github.com/obsidianmd/obsidian-releases/blob/master/plugin-review.md
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+## Getting started
 
-## How to use
+Open the command palette and run one of these, then bind a hotkey if you like:
 
-- Clone this repository.
-- Run `vp install`.
-- Run `vp dev` while developing.
-- Enable or reload the plugin in Obsidian after the bundle is copied to the development Vault.
+| Command                             | What it does                                                    |
+| ----------------------------------- | --------------------------------------------------------------- |
+| `My Palette: Open Recent palette`   | File search, starting from recently used files                  |
+| `My Palette: Open command list`     | Command search (starts with the `>` prefix)                     |
+| `My Palette: Open palette in right sidebar` | A persistent list view                                  |
+| `My Palette: Open palette table in center`  | A persistent table view in a center tab                 |
+| `My Palette: Link search` / `Backlink search` | Notes linked from / to the current note               |
+| `My Palette: Bookmark search`       | Saved bookmarks                                                 |
+| `My Palette: Smart Connections search` | Notes related to the current note (needs Smart Connections)  |
+| `My Palette: Move file to another folder` | Move the current file                                     |
+| `My Palette: Open file path in editor` | Open a file by Vault path or absolute path                   |
+| `My Palette: Insert tags into current note` | Add tags to the current note                            |
+| `My Palette: Insert link to MOC Relateds` | Add mutual Relateds links to the active MOC               |
 
-### Search operators
+## Using the palette
 
-In non-Everything search modes, separate terms with spaces for AND matching and
-use `|` for OR branches. For example, `meeting project | agenda` matches notes
-containing both `meeting` and `project`, or notes containing `agenda`.
+### Mouse and keyboard
 
-Everything queries are passed through unchanged and continue to use Everything's
-own search syntax.
+| Action                       | Result                                                |
+| ---------------------------- | ----------------------------------------------------- |
+| Click                        | Select a result                                       |
+| `Ctrl`+click                 | Add or remove a result from the selection             |
+| `Shift`+click                | Select a range                                        |
+| Double-click / `Enter`       | Open the result (or run the command)                  |
+| Middle-click                 | Open in a new background tab                          |
+| Right-click                  | Open the action menu (acts on the whole selection)    |
+| `Ctrl+R`                     | Search history                                        |
+| `Esc`                        | Clear the query, then move focus back to the field    |
 
-### Tag search
+The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures.
 
-File search includes both inline tags and frontmatter `tags`. A query such as
-`#project` searches tags directly; ordinary terms can also match tags. Matching
-tags are shown below the file name, with up to three tags and a `+N` count for
-additional matches. Hover the row to see the full matching-tag list.
+### Search modes
+
+Type a prefix followed by a space to switch the search source. `>`, `e ` and `i ` can be changed in the settings.
+
+| Prefix  | Mode                 | Purpose                                                    |
+| ------- | -------------------- | ---------------------------------------------------------- |
+| none    | Files                | Search files in the Vault                                  |
+| `>`     | Commands             | Search and run Obsidian commands                           |
+| `e `    | Everything           | Search the whole Everything index                          |
+| `esdir` | Everything directory | Search the directory of the current note with Everything   |
+| `o `    | Outlinks             | Notes linked from the current note                         |
+| `b `    | Backlinks            | Notes linking to the current note                          |
+| `bk `   | Bookmarks            | Search saved bookmarks                                     |
+| `sc `   | Smart Connections    | Notes related to the current note                          |
+| `i `    | Excluded files       | Include excluded files in file search (files only)         |
+
+`es` and `esdir` also work as zero-query shortcuts without a trailing space.
+
+### Search syntax
+
+Outside Everything mode, separate terms with spaces for AND and use `|` for OR. For example, `meeting project | agenda` matches notes containing both `meeting` and `project`, or notes containing `agenda`.
+
+File search covers inline tags and frontmatter `tags`. `#project` searches tags directly, and ordinary terms can match tags too. Matching tags appear under the file name (up to three, then `+N`); hover a row to see all of them.
+
+Everything queries are passed through unchanged and use Everything's own syntax. Everything mode needs Everything 1.5a with the official HTTP Server plugin running. See [Everything setup](#everything-setup).
+
+## Working with several notes
+
+Selection is shared by the palette, the tag selector and the MOC selector: click, `Ctrl`/`Shift`+click, arrow keys.
 
 ### Adding tags
 
-Run `Insert tags into current note` to add tags to the frontmatter `tags` of the
-active note. To tag notes from search results, right-click a palette result and
-choose `Add tags…`; with several results selected, the chosen tags are added to
-every selected Markdown note. Excluded files are skipped.
+Run `Insert tags into current note`, or right-click results and choose `Add tags…`. With several results selected, the tags are added to every selected Markdown note. Excluded files are skipped.
 
-Candidates are ordered as recently inserted tags, then tags used by linked notes
-(outgoing links and backlinks, up to 10 tags marked `Related N`), then by usage
-count. Tags that every target note already has are shown last as `Registered`
-and cannot be selected; tags only some targets have show `On N/M notes` and stay
-selectable. Select rows like in the palette (click, `Ctrl`/`Shift`+click, arrow keys),
-check them with `Enter`, double-click, the context menu or by clicking the check
-icon (which toggles only its row), and run
-with `Ctrl+Enter`. The context menu can also run the checked and highlighted
-rows at once (`Add N now`). The button at the right end of the input lists the checked
-rows, lets you uncheck them and runs them. Typing a tag that does
-not exist yet offers it as a new tag. Right-click a registered or partly applied
-tag and choose `Remove tag` to remove it from the frontmatter of the target
-notes; right-clicking within a multi-row selection removes every selected one. Recently
-inserted tags are stored per Vault in local IndexedDB.
+- Candidates are ordered as recently inserted tags, tags used by linked notes (up to 10, marked `Related N`), then usage count.
+- Tags that every target already has appear last as `Registered` and cannot be chosen. Tags only some targets have show `On N/M notes` and stay selectable.
+- Check rows with `Enter`, double-click, the context menu or the check icon (which toggles only its row). Run with `Ctrl+Enter`, or use `Add N now` in the context menu to run the checked and highlighted rows at once.
+- The button at the right end of the input lists the checked rows, lets you uncheck them and runs them.
+- Typing a tag that does not exist offers it as a new tag.
+- Right-click a registered or partly applied tag and choose `Remove tag` to remove it from the target notes; inside a multi-row selection it removes every selected tag.
+
+Recently inserted tags are stored per Vault in local IndexedDB.
 
 ### Inserting into a MOC
 
-The MOC insertion selector works the same way: rows are selected, checked and run the same way:
-`Enter` checks the selected notes, and `Ctrl+Enter` or the checked-list button adds mutual Relateds links to the
-active MOC for every selected note. Only links inside a `Relateds` item count, not
-other links in the body. Notes linked in both directions are shown
-last and cannot be selected; notes linked in one direction stay selectable to
-complete the link. Right-click a linked note and choose `Remove link` to remove
-the Relateds links in both directions; right-clicking within a multi-row selection
-removes the links of every selected note.
+The MOC selector uses the same gestures. `Enter` checks the selected notes; `Ctrl+Enter` or the checked-list button adds mutual `Relateds` links to the active MOC for every selected note. Only links inside a `Relateds` item count, not other links in the body.
 
-### File sort priorities
+Notes linked in both directions appear last and cannot be selected. Notes linked in one direction stay selectable so you can complete the link. Right-click a linked note and choose `Remove link` to remove the Relateds links in both directions.
 
-Use `Open palette in right sidebar` for the regular list view, or
-`Open palette table in center` for a separate table view in a center tab. Each command
-reuses its own pane without replacing the other view. Duplicating a table opens
-another center tab. In the table, click
-a column header to add it to the sort priorities or cycle its direction and remove
-it. Other sort priorities stay active; no modifier key is needed. Drag a header
-to reorder columns, or right-click a header to show or hide columns. Name stays
-visible so results can always be identified.
-The numbered sort controls let you change each direction, move priorities earlier
-or later, remove a sort, or reset to the search ranking. Columns include Name,
-Path, Modified, and `prior`; missing metadata sorts last. Each table pane remembers
-its sort priorities, column order, and hidden columns, including when duplicated
-or restored. Hidden columns retain their active sort priorities.
+## Views
 
-Table pages contain 50 rows, sorted across all results returned by the search
-provider before paging. Everything searches remain limited by their configured
-maximum result count.
+`Open palette in right sidebar` gives the regular list view and `Open palette table in center` gives a table in a center tab. Each command reuses its own pane without replacing the other, and each pane can be duplicated from its pane menu.
 
-File ordering is configured from `Settings → My Palette → Vault file search → Sort
-priorities`, with one priority per line. The first priority that differs wins.
-Supported priorities are `Filename prefix match`, `Filename fuzzy match`,
-`Alias prefix match`, `Alias fuzzy match`, `Tag match`, `Match coverage`, `Folder path match`,
-`Activity`, `Last modified`, `Aliases count`, `Alphabetical`, `Alphabetical reverse`,
-and `@prior` with an optional `:asc` or `:desc` suffix. Missing `prior` values are
-sorted last.
+In the table:
 
-For example, `@prior:desc` places notes with higher numeric `prior` values first;
-the default ranks filename matches before alias and tag matches, then match coverage
-and folder path; `prior` comes before `Activity`. `Folder path match` compares the
-directory portion of the Vault-relative path, excluding the filename. `Activity`
-combines the current workspace's recent-open order with persistent palette usage,
-using usage as a tie-breaker after recent-open status. `Last modified` is an explicit
-mtime priority; when all configured priorities tie, the Vault-relative path provides
-a deterministic fallback. `Tag match` orders notes with more matching tags first.
-`Match coverage` totals matched query characters across distinct filenames, paths,
-aliases, and tags, using only the strongest OR branch.
-`Aliases count` is available as an optional secondary signal and orders notes with
-more aliases first.
+- Click a column header to add it to the sort priorities or cycle its direction and remove it. Other priorities stay active; no modifier key is needed.
+- Drag a header to reorder columns. Right-click a header to show or hide columns (Name is always visible).
+- The numbered sort controls change direction, move a priority earlier or later, remove it, or reset to the search ranking.
+- Columns are Name, Path, Modified and `prior`. Missing metadata sorts last.
+- Sort priorities, column order and hidden columns are remembered per pane, including after duplication or restart.
+- Pages hold 50 rows and are sorted across all results from the search provider first. Everything searches are still limited by the configured maximum result count.
 
-The `Lower prior folders` setting under `Vault file search` accepts one folder
-path per line. Enable the independent `Lower prior folders` criterion in `Sort
-priorities` to rank notes in those folders and subfolders lower, even without
-`@prior`. Move it above filename or activity criteria to give folder demotion
-precedence; configure blank and typed input separately. Contiguous matches and
-include-ignored preference still run first. Existing configured folder rules
-enable this criterion at the top of both lists once on upgrade.
+## File sort priorities
 
-Complete contiguous matches across a filename, path, alias, or tag are always
-preferred over fuzzy-only matches before the configured priority list is applied.
+Configure the order under `Settings → My Palette → Vault file search → Sort priorities`, separately for blank and typed input. Enabled priorities run top to bottom and the first one that differs wins. When everything ties, the Vault-relative path decides.
 
-## Manually installing the plugin
+| Priority                | Ranks first                                                              |
+| ----------------------- | ------------------------------------------------------------------------ |
+| `Filename prefix match` | Names that start with the query                                          |
+| `Filename fuzzy match`  | Higher fuzzy score on the name                                           |
+| `Alias prefix match`    | Aliases that start with the query                                        |
+| `Alias fuzzy match`     | Higher fuzzy score on an alias                                           |
+| `Tag match`             | More matching tags                                                       |
+| `Match coverage`        | More matched characters across name, path, aliases and tags (best OR branch) |
+| `Folder path match`     | Higher fuzzy score on the folder portion of the path                     |
+| `Lower prior folders`   | Pushes notes in the configured folders down (see below)                  |
+| `Activity`              | Recently opened first; ties broken by persistent palette usage           |
+| `Last modified`         | Newest modification time                                                 |
+| `Aliases count`         | More aliases                                                             |
+| `Alphabetical` / `Alphabetical reverse` | Name, then path, ascending / descending                  |
+| `@prior` / `@prior:asc` | Smaller numeric `prior` in frontmatter                                   |
+| `@prior:desc`           | Larger numeric `prior` in frontmatter                                    |
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+Notes without a `prior` sort last. Complete contiguous matches on a name, path, alias or tag always beat fuzzy-only matches before this list is applied.
 
-## Code quality
+`Lower prior folders` takes one folder path per line (subfolders included). Enable the criterion in `Sort priorities` to rank those notes lower even without `@prior`, and move it above name or activity criteria to give demotion precedence. Include-ignored preference still runs first.
 
-Formatting and linting are handled by Vite+ through `vp check`. Type checking and tests are separate commands so they can be run independently while refactoring.
+## Settings
 
-## Funding URL
+Settings are split into three pages: the palette itself (prefixes, search history, debug messages), Vault file search (excluded folders, ignored-note index, sort priorities) and Everything.
 
-You can include funding URLs where people who use your plugin can financially support it.
+### Everything setup
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+1. Install Everything 1.5a and the official HTTP Server plugin, and start both.
+2. Under `Settings → My Palette → Everything`, set the HTTP server URL (and username / password if you set them) and press `Test connection`.
 
-```json
-{
-	"fundingUrl": "https://buymeacoffee.com"
-}
-```
+Only localhost communication is used; My Palette sends nothing to external services.
 
-If you have multiple URLs, you can also do:
+### Search history
 
-```json
-{
-	"fundingUrl": {
-		"Buy Me a Coffee": "https://buymeacoffee.com",
-		"GitHub Sponsor": "https://github.com/sponsors",
-		"Patreon": "https://www.patreon.com/"
-	}
-}
-```
+Search history and recently run command IDs are stored per Vault in local IndexedDB. `data.json` is used only as a fallback when IndexedDB is unavailable.
 
-## API Documentation
+## Installation
 
-See https://github.com/obsidianmd/obsidian-api
+The plugin is not in the community plugin list yet. To install it manually, copy `main.js`, `styles.css` and `manifest.json` from a release into `VaultFolder/.obsidian/plugins/my-palette/`, then enable My Palette in Obsidian's settings.
+
+## Development
+
+Building requires the [Vite+](https://viteplus.dev/guide/) CLI (`vp`). See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for the build, test and release workflow.
