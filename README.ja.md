@@ -10,7 +10,7 @@ Another Quick Switcher、標準の Quick Switcher、Quick Switcher++、Omnisearc
 
 最初は VS Code のパレットをほぼそのまま真似していました。文字を入力し、候補を選び、実行する、という流れです。ただ、Obsidian では「どれを実行するか」以外に決めることが多く、この文法は合いませんでした。
 
-- **対象**: どのノート、どの外部ファイルか
+- **対象**: どのノート、どのファイルか
 - **検索元**: Vault、Everything、リンク、バックリンク、ブックマークのどれか
 - **開き方**: 現在のタブ、別タブ、分割、サイドバーのどれか
 - **操作**: 開く以外に、パスのコピー、MOC への挿入、タグ付け、移動などもある
@@ -26,7 +26,7 @@ Another Quick Switcher、標準の Quick Switcher、Quick Switcher++、Omnisearc
 ## 機能
 
 - **Vault のファイル検索**: AND / OR 検索、alias、frontmatter とインラインのタグに対応し、並び順を細かく設定できます。
-- **Everything 1.5a 検索**: Vault 外のファイルも検索でき、Markdown は Obsidian で、それ以外は OS の関連付けアプリで開きます。
+- **Everything 1.5a 検索**: Vault フォルダー内を対象にします。`e ` はノートの高速検索、`esdir` は Markdown 以外も含む Vault 配下のすべてのファイルの検索です。Markdown は Obsidian で、それ以外は OS の関連付けアプリで開きます。
 - **コマンド・ブックマーク・リンク・バックリンク・Smart Connections の検索**を同じウィンドウで行えます。
 - **複数選択**: ファイルマネージャーと同じ操作で選び、選択したノートへまとめてパスのコピー、タグ追加、MOC リンク挿入ができます。
 - **3つの表示面**: モーダル、右サイドバーのリストビュー、センタータブのソート可能なテーブルビュー。
@@ -76,8 +76,8 @@ Obsidian のコマンドパレットから次のコマンドを実行します�
 | -------------- | -------------------- | --------------------------------------------------- |
 | なし           | Files                | Vault 内のファイルを検索                            |
 | `>`            | Commands             | Obsidian のコマンドを検索・実行                     |
-| `e `           | Everything           | Everything のインデックス全体を検索                 |
-| `esdir`        | Everything directory | 現在のノートがあるディレクトリを Everything で検索  |
+| `e `           | Everything           | Vault 全体を Everything で検索（Obsidian の除外ファイルは対象外）|
+| `esdir`        | Everything directory | Vault フォルダー以下のすべてのファイルを Everything で検索 |
 | `o `           | Outlinks             | 現在のノートからリンクしているノート                |
 | `b `           | Backlinks            | 現在のノートへリンクしているノート                  |
 | `bk `          | Bookmarks            | 保存したブックマークを検索                          |
@@ -92,7 +92,17 @@ Everything 以外のモードでは、スペース区切りが AND、`|` 区切�
 
 ファイル検索はインラインタグと frontmatter の `tags` の両方を対象にします。`#project` はタグを直接検索し、通常の検索語でもタグに一致します。一致したタグはファイル名の下に最大3件表示され、残りは `+N` にまとまります。行にカーソルを合わせると全件を確認できます。
 
-Everything のクエリは変換せず、そのまま Everything 独自の構文に渡されます。Everything モードには Everything 1.5a と公式 HTTP Server Plugin の起動が必要です。詳しくは [Everything の設定](#everything-の設定)を参照してください。
+Everything のクエリは変換せず、そのまま Everything 独自の構文に渡されます。どちらの Everything モードも対象は Vault フォルダー内のファイルのみで、ディスク全体の検索には使えません。Everything モードには Everything 1.5a と公式 HTTP Server Plugin の起動が必要です。詳しくは [Everything の設定](#everything-の設定)を参照してください。
+
+#### Everything の検索範囲
+
+| | `e ` | `esdir` |
+| --- | --- | --- |
+| 検索対象 | Vault フォルダー以下 | Vault フォルダー以下 |
+| ファイル種別 | Vault extensions 設定の拡張子のみ（既定は `md`、`canvas`、`base`） | すべて |
+| Obsidian の除外ファイル | 対象外 | 適用されない |
+| 隠しフォルダー・ファイル（`.` で始まる） | 対象外 | 適用されない |
+| My Palette の除外フォルダー | 対象外 | 対象外 |
 
 ## 複数のノートをまとめて扱う
 

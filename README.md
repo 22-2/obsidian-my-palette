@@ -10,7 +10,7 @@ I tried Another Quick Switcher, the core Quick Switcher, Quick Switcher++ and Om
 
 My Palette started as a near copy of the VS Code palette: type, pick a candidate, run it. That grammar turned out to be a poor fit for Obsidian, where there is more to decide than which entry to run:
 
-- **Target**: which note or external file?
+- **Target**: which note or file?
 - **Source**: the Vault, Everything, links, backlinks, bookmarks?
 - **Destination**: the current tab, a new tab, a split, the sidebar?
 - **Operation**: open, copy a path, insert into a MOC, tag, move?
@@ -26,7 +26,7 @@ Prefixes (`>`, `e `, `bk `, …) exist for switching the search source, not as t
 ## Features
 
 - **Vault file search** with AND / OR terms, aliases, frontmatter and inline tags, and fully configurable sort priorities.
-- **Everything 1.5a search** for files outside the Vault, opened in Obsidian (Markdown) or in the OS default app.
+- **Everything 1.5a search** inside the Vault folder: `e ` finds notes quickly, `esdir` finds every file under the Vault, including non-Markdown ones. Markdown opens in Obsidian and other files in the OS default app.
 - **Command, bookmark, link, backlink and Smart Connections search** in the same window.
 - **Multi-select** with the same gestures as a file manager, then copy paths, add tags or insert MOC links to all selected notes at once.
 - **Three surfaces**: a modal, a list view in the right sidebar, and a sortable table view in a center tab.
@@ -76,8 +76,8 @@ Type a prefix followed by a space to switch the search source. `>`, `e ` and `i 
 | ------- | -------------------- | ---------------------------------------------------------- |
 | none    | Files                | Search files in the Vault                                  |
 | `>`     | Commands             | Search and run Obsidian commands                           |
-| `e `    | Everything           | Search the whole Everything index                          |
-| `esdir` | Everything directory | Search the directory of the current note with Everything   |
+| `e `    | Everything           | Search the Vault with Everything (Obsidian's excluded files are left out) |
+| `esdir` | Everything directory | Search every file under the Vault folder with Everything  |
 | `o `    | Outlinks             | Notes linked from the current note                         |
 | `b `    | Backlinks            | Notes linking to the current note                          |
 | `bk `   | Bookmarks            | Search saved bookmarks                                     |
@@ -92,7 +92,17 @@ Outside Everything mode, separate terms with spaces for AND and use `|` for OR. 
 
 File search covers inline tags and frontmatter `tags`. `#project` searches tags directly, and ordinary terms can match tags too. Matching tags appear under the file name (up to three, then `+N`); hover a row to see all of them.
 
-Everything queries are passed through unchanged and use Everything's own syntax. Everything mode needs Everything 1.5a with the official HTTP Server plugin running. See [Everything setup](#everything-setup).
+Everything queries are passed through unchanged and use Everything's own syntax. Both Everything modes only return files inside the Vault folder; they are not a way to search the rest of the disk. Everything mode needs Everything 1.5a with the official HTTP Server plugin running. See [Everything setup](#everything-setup).
+
+#### Everything scopes
+
+| | `e ` | `esdir` |
+| --- | --- | --- |
+| Searches | Files under the Vault folder | Files under the Vault folder |
+| File types | Only the extensions in the Vault extensions setting (default `md`, `canvas`, `base`) | All file types |
+| Obsidian's excluded files | Left out | Not applied |
+| Hidden (dot) folders and files | Left out | Not applied |
+| My Palette's excluded folders | Left out | Left out |
 
 ## Working with several notes
 
