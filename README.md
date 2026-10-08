@@ -55,7 +55,7 @@ Open the command palette and run one of these, then bind a hotkey if you like:
 
 ### Mouse and keyboard
 
-All palette lists and tables start in input mode, with the search field highlighted. The first `↑`/`↓` enters selection mode at the first result; subsequent arrows move through results. `f` or clicking the search field returns to input mode. Space types a query separator in input mode and toggles selected rows in selection mode (checks candidates in tag/MOC insertion).
+Palette lists and tables keep the first result highlighted while you type, so `Enter` runs it right away and `↑`/`↓` move through results. Tag and MOC insertion add separate input and selection modes (see below) because `Space` checks candidates there.
 
 The action (`…`) and history (clock) buttons are also available in tag insertion, MOC link insertion and destination-folder selection. Actions and Help describe the current picker. Each picker has its own search history; selecting an entry restores only the query and never inserts tags, adds links or moves a file. `Ctrl+R` opens history, and the history enablement, delay and retention settings apply to these pickers too. Highlighting uses the shared modal display preference.
 

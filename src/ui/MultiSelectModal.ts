@@ -61,6 +61,10 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 				// Same Explorer-style selection as the palette: pick rows with click,
 				// Ctrl and Shift, check them, then run the action.
 				selectionMode: "extended",
+				// Why: Space checks and f returns to input here, so these single keys need
+				// a selection mode that keeps them out of the query. The palette has no
+				// such commands and leaves modes off so Enter runs the top row at once.
+				interactionModes: true,
 			},
 			app,
 		);
@@ -177,30 +181,17 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 	protected override onSelectionModalOpen(): void {
 		this.modalEl.addClass("my-palette-multi-select");
 		this.createCheckedButton();
-		this.registerSelectionDomEvent(
-			this.inputEl,
-			"keydown",
-			(event) => this.handleModeKeyDown(event),
-			true,
-		);
 	}
 
-	private handleModeKeyDown(event: KeyboardEvent): void {
-		// The shared panel owns input/list focus; Space checks insertion candidates
-		// rather than changing the highlighted selection in these two selectors.
-		if (
-			event.isComposing ||
-			!this.inputEl.readOnly ||
-			event.key !== " " ||
-			event.ctrlKey ||
-			event.metaKey ||
-			event.altKey
-		)
-			return;
-		event.preventDefault();
-		event.stopImmediatePropagation();
-		if (!event.repeat) this.toggleChecks(this.getSelectedItems());
+	protected override handlesSelectionSpace(): boolean {
+		return true;
 	}
+
+	/** Space checks insertion candidates rather than changing the highlighted selection. */
+	protected override onSelectionSpace(selected: MultiSelectCandidate<V>[]): void {
+		this.toggleChecks(selected);
+	}
+
 	protected override onSelectionModalClose(): void {
 		this.activeMenu?.close();
 		this.resolveResult?.(this.confirmedValues ?? null);

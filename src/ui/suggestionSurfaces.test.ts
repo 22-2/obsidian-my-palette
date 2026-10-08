@@ -100,8 +100,10 @@ afterEach(() => {
 async function fixture(
 	surface: "modal" | "view",
 	selectionMode: "single" | "extended" = "extended",
+	interactionModes = false,
 ) {
-	const modal = surface === "modal" ? new TestModal({ selectionMode }) : undefined;
+	const modal =
+		surface === "modal" ? new TestModal({ selectionMode, interactionModes }) : undefined;
 	const root = modal?.modalEl ?? document.body.appendChild(document.createElement("div"));
 	const choose = modal?.choose ?? vi.fn();
 	const middle = modal?.middle ?? vi.fn();
@@ -112,6 +114,7 @@ async function fixture(
 		: new SuggestionPanel<string>(root, {
 				surface,
 				selectionMode,
+				interactionModes,
 				onInput: vi.fn(),
 				renderSuggestion: (item, el) => el.setText(item),
 				onChoose: (item) => {
@@ -166,7 +169,7 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 	it.each(["single", "extended"] as const)(
 		"shares input/list modes in %s selection",
 		async (selectionMode) => {
-			const f = await fixture(surface, selectionMode);
+			const f = await fixture(surface, selectionMode, true);
 			expect(f.root.classList.contains("is-input-mode")).toBe(true);
 			expect(key(f.input, " ").defaultPrevented).toBe(false);
 			expect(key(f.input, "f").defaultPrevented).toBe(false);
@@ -190,6 +193,27 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 			expect(f.rows()[0].classList.contains("is-active")).toBe(true);
 			mouse(f.input, "mousedown");
 			expect(f.input.readOnly).toBe(false);
+		},
+	);
+
+	it.each(["single", "extended"] as const)(
+		"keeps the first row ready while typing without modes in %s selection",
+		async (selectionMode) => {
+			const f = await fixture(surface, selectionMode);
+			expect(f.root.classList.contains("is-input-mode")).toBe(false);
+			expect(f.root.querySelector(".my-palette-status-bar__mode")).toBeNull();
+			expect(f.rows()[0].classList.contains("is-active")).toBe(true);
+			expect(key(f.input, " ").defaultPrevented).toBe(false);
+			expect(key(f.input, "f").defaultPrevented).toBe(false);
+			key(f.input, "ArrowDown");
+			expect(f.input.readOnly).toBe(false);
+			expect(f.rows()[1].classList.contains("is-active")).toBe(true);
+			expect(key(f.input, "f").defaultPrevented).toBe(false);
+			key(f.input, "ArrowUp");
+			key(f.input, "ArrowUp");
+			expect(f.rows()[0].classList.contains("is-active")).toBe(true);
+			key(f.input, "Enter");
+			expect(f.choose).toHaveBeenCalledExactlyOnceWith("alpha");
 		},
 	);
 
@@ -250,7 +274,7 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 		expect(f.choose).not.toHaveBeenCalled();
 	});
 	it("extends keyboard selection, keeps it while moving with Ctrl, and ignores IME", async () => {
-		const f = await fixture(surface);
+		const f = await fixture(surface, "extended", true);
 		key(f.input, "ArrowDown");
 		key(f.input, "ArrowDown", { shiftKey: true });
 		expect(f.selection()).toEqual(["alpha", "beta"]);
@@ -263,7 +287,7 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 		expect(f.resultFocus).toHaveBeenCalledTimes(4);
 	});
 	it("returns to input mode when ArrowUp is pressed on the first row", async () => {
-		const f = await fixture(surface);
+		const f = await fixture(surface, "extended", true);
 		key(f.input, "ArrowDown");
 		key(f.input, "ArrowDown");
 		key(f.input, "ArrowUp");
@@ -275,17 +299,21 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 		expect(f.root.classList.contains("is-input-mode")).toBe(true);
 		expect(f.rows()[0].classList.contains("is-active")).toBe(true);
 	});
-	it("returns focus to the input in selection mode when empty list space is pressed", async () => {
-		const f = await fixture(surface);
-		f.input.blur();
-		const space = f.root.querySelector<HTMLElement>(".prompt-results")!;
-		mouse(space, "mousedown");
-		expect(document.activeElement).toBe(f.input);
-		expect(f.input.readOnly).toBe(true);
-		key(f.input, "ArrowDown");
-		expect(f.rows()[1].classList.contains("is-active")).toBe(true);
-		expect(f.choose).not.toHaveBeenCalled();
-	});
+	it.each([true, false])(
+		"returns focus to the input when empty list space is pressed (modes: %s)",
+		async (interactionModes) => {
+			const f = await fixture(surface, "extended", interactionModes);
+			f.input.blur();
+			const space = f.root.querySelector<HTMLElement>(".prompt-results")!;
+			mouse(space, "mousedown");
+			expect(document.activeElement).toBe(f.input);
+			// Selection mode keeps typing blocked; without modes the input stays editable.
+			expect(f.input.readOnly).toBe(interactionModes);
+			key(f.input, "ArrowDown");
+			expect(f.rows()[1].classList.contains("is-active")).toBe(true);
+			expect(f.choose).not.toHaveBeenCalled();
+		},
+	);
 	it("keeps the history focus boundary for empty modal space and table headers", async () => {
 		const f = await fixture(surface);
 		const header = f.root.querySelector<HTMLElement>(".prompt-results")!.createDiv("header");

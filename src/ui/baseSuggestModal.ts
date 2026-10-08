@@ -11,6 +11,8 @@ export interface SuggestModalProps<T> {
 	initialInput?: string;
 	footerText?: string;
 	selectionMode?: "single" | "extended";
+	/** Input/selection modes; see SuggestionPanelProps.interactionModes. */
+	interactionModes?: boolean;
 	controls?: SelectorControls;
 	/** Optional dynamic source used by selectors whose candidates depend on input. */
 	search?: (query: string) => T[] | Promise<T[]>;
@@ -41,6 +43,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			initialInput = "",
 			footerText,
 			selectionMode = "single",
+			interactionModes,
 			controls,
 		}: SuggestModalProps<T>,
 		app: App,
@@ -55,6 +58,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			initialInput,
 			footerText,
 			selectionMode,
+			interactionModes,
 			onInput: () => {
 				this.historyCommitted = false;
 				this.refreshSuggestions();
@@ -72,6 +76,9 @@ export abstract class BaseSuggestModal<T> extends Modal {
 				: undefined,
 			onRowToggle: this.handlesSuggestionRowToggle()
 				? (item, event) => this.onSuggestionRowToggle(item, event)
+				: undefined,
+			onSelectionSpace: this.handlesSelectionSpace()
+				? (items) => this.onSelectionSpace(items)
 				: undefined,
 			onContextMenu: this.handlesSuggestionContextMenu()
 				? (item, event) => this.onSuggestionContextMenu(item, event)
@@ -236,9 +243,13 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	protected handlesSuggestionRowToggle(): boolean {
 		return false;
 	}
+	protected handlesSelectionSpace(): boolean {
+		return false;
+	}
 	protected async onSuggestionMiddleClick(_item: T, _event: MouseEvent): Promise<void> {}
 	protected onSuggestionContextMenu(_item: T, _event: MouseEvent): void {}
 	protected onSuggestionRowToggle(_item: T, _event: MouseEvent): void {}
+	protected onSelectionSpace(_items: T[]): void {}
 	protected onResultFocus(): void {}
 	protected getSelectedItems(): T[] {
 		return this.panel.getSelectedItems();
