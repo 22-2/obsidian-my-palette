@@ -35,7 +35,7 @@ describe("palette view placement", () => {
 	it("opens a new center tab when only a restored sidebar table exists", async () => {
 		const { plugin, workspace, leaf } = fixture();
 		workspace.getLeavesOfType.mockReturnValue([{ getRoot: () => workspace.rightSplit }]);
-		await plugin.openPaletteTableView("project");
+		await plugin.paletteOpener.openPaletteTableView("project");
 		expect(workspace.getLeaf).toHaveBeenCalledWith("tab");
 		expect(workspace.ensureSideLeaf).not.toHaveBeenCalled();
 		expect(leaf.setViewState).toHaveBeenCalledWith({
@@ -54,7 +54,7 @@ describe("palette view placement", () => {
 			setViewState: vi.fn(),
 		} as unknown as WorkspaceLeaf;
 		workspace.getLeavesOfType.mockReturnValue([existing]);
-		await plugin.openPaletteTableView("replacement query");
+		await plugin.paletteOpener.openPaletteTableView("replacement query");
 		expect(workspace.getLeaf).not.toHaveBeenCalled();
 		expect(existing.setViewState).not.toHaveBeenCalled();
 		expect(workspace.revealLeaf).toHaveBeenCalledWith(existing);
@@ -62,17 +62,17 @@ describe("palette view placement", () => {
 
 	it("duplicates tables into new center tabs with their pinned source and sort state", async () => {
 		const { plugin, workspace, leaf } = fixture();
-		await plugin.openNewPaletteView(
-			"project",
-			"backlink",
-			"Source.md",
-			true,
-			normalizePaletteTableState({
+		await plugin.paletteOpener.openNewPaletteView({
+			input: "project",
+			fixedMode: "backlink",
+			sourcePath: "Source.md",
+			sourcePinned: true,
+			tableState: normalizePaletteTableState({
 				displayMode: "table",
 				sorting: [{ id: "prior", desc: true }],
 			}),
-			PALETTE_TABLE_VIEW_TYPE,
-		);
+			viewType: PALETTE_TABLE_VIEW_TYPE,
+		});
 		expect(workspace.getLeaf).toHaveBeenCalledWith("tab");
 		expect(workspace.getRightLeaf).not.toHaveBeenCalled();
 		expect(leaf.setViewState).toHaveBeenCalledWith({
@@ -93,13 +93,13 @@ describe("palette view placement", () => {
 
 	it("keeps regular palettes and their duplicates in the right sidebar", async () => {
 		const { plugin, workspace } = fixture();
-		await plugin.openPaletteView("list query");
+		await plugin.paletteOpener.openPaletteView("list query");
 		expect(workspace.ensureSideLeaf).toHaveBeenCalledWith(PALETTE_VIEW_TYPE, "right", {
 			active: true,
 			reveal: true,
 			state: expect.objectContaining({ input: "list query" }),
 		});
-		await plugin.openNewPaletteView("another list query");
+		await plugin.paletteOpener.openNewPaletteView({ input: "another list query" });
 		expect(workspace.getRightLeaf).toHaveBeenCalledWith(false);
 		expect(workspace.getLeaf).not.toHaveBeenCalled();
 	});

@@ -109,14 +109,14 @@ export class PaletteView extends ItemView {
 				.setIcon("plus")
 				.onClick(() => {
 					const state = this.newPaletteViewState();
-					void this.plugin.openNewPaletteView(
-						state.input,
-						state.fixedMode,
-						state.sourcePath,
-						state.sourcePinned,
-						state,
-						this.getViewType(),
-					);
+					void this.plugin.paletteOpener.openNewPaletteView({
+						input: state.input,
+						fixedMode: state.fixedMode,
+						sourcePath: state.sourcePath,
+						sourcePinned: state.sourcePinned,
+						tableState: state,
+						viewType: this.getViewType(),
+					});
 				}),
 		);
 	}

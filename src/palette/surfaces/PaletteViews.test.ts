@@ -19,7 +19,8 @@ vi.mock("obsidian", () => ({
 
 function createViews() {
 	const leaf = {} as WorkspaceLeaf;
-	const plugin = { openNewPaletteView: vi.fn() } as unknown as MyPalettePlugin;
+	const paletteOpener = { openNewPaletteView: vi.fn() };
+	const plugin = { paletteOpener } as unknown as MyPalettePlugin;
 	return {
 		list: new PaletteView(leaf, plugin),
 		table: new PaletteTableView(leaf, plugin),
@@ -84,12 +85,12 @@ describe("dedicated palette views", () => {
 		table.onPaneMenu(menu as unknown as Parameters<PaletteTableView["onPaneMenu"]>[0], "test");
 		expect(duplicate).toBeDefined();
 		duplicate?.();
-		expect(plugin.openNewPaletteView).toHaveBeenCalledWith(
-			"project",
-			"backlink",
-			"Projects/Home.md",
-			true,
-			expect.objectContaining({
+		expect(plugin.paletteOpener.openNewPaletteView).toHaveBeenCalledWith({
+			input: "project",
+			fixedMode: "backlink",
+			sourcePath: "Projects/Home.md",
+			sourcePinned: true,
+			tableState: expect.objectContaining({
 				columnOrder: ["prior", "name", "path", "modified"],
 				hiddenColumns: ["path"],
 				sorting: [
@@ -97,7 +98,7 @@ describe("dedicated palette views", () => {
 					{ id: "name", desc: false },
 				],
 			}),
-			PALETTE_TABLE_VIEW_TYPE,
-		);
+			viewType: PALETTE_TABLE_VIEW_TYPE,
+		});
 	});
 });

@@ -40,8 +40,8 @@
 - [x] 検索履歴と最近のコマンドの「store があれば store、無ければ legacy 配列」という分岐を、小さなサービスにまとめる
     - 対象: `legacySearchHistoryEntries`、`legacyRecentCommandIds`、`syncLegacy*Fallback`、`recordSearch`、`recordCommand`、`clearSearchHistory`、`getSearchHistorySuggestions`
     - 不変条件: IndexedDB が使えないときは、legacy ペイロードを `data.json` に残し、設定保存で履歴が消えない
-- [ ] パレットを開く処理(`openPalette*`、`paletteViewState`、`focusPaletteView`、`rememberedPaletteQueries`)を `src/app/` の `PaletteOpener` へ移す
-- [ ] `openNewPaletteView` などの位置引数が増えた箇所をオプションオブジェクトに変える(上の `PaletteOpener` 化と同時に行う)
+- [x] パレットを開く処理(`openPalette*`、`paletteViewState`、`focusPaletteView`、`rememberedPaletteQueries`)を `src/app/` の `PaletteOpener` へ移す
+- [x] `openNewPaletteView` などの位置引数が増えた箇所をオプションオブジェクトに変える(上の `PaletteOpener` 化と同時に行う)
 
 ### 4. `PaletteView.ts`(約690行)の分割
 

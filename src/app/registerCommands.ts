@@ -13,24 +13,26 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	plugin.addCommand({
 		id: "open",
 		name: "Open Recent palette",
-		callback: () => plugin.openPalette(plugin.getRememberedPaletteQuery("file")),
+		callback: () =>
+			plugin.paletteOpener.openPalette(plugin.paletteOpener.getRememberedQuery("file")),
 	});
 	plugin.addCommand({
 		id: "open-command-list",
 		name: "Open command list",
-		callback: () => plugin.openPalette(plugin.commandPaletteInitialInput()),
+		callback: () =>
+			plugin.paletteOpener.openPalette(plugin.paletteOpener.commandPaletteInitialInput()),
 	});
 	plugin.addCommand({
 		id: "open-view",
 		name: "Open palette in right sidebar",
-		callback: () => void plugin.openPaletteView(),
+		callback: () => void plugin.paletteOpener.openPaletteView(),
 	});
 	// Why: table search has its own entry point rather than a presentation toggle
 	// in the existing palette. Additional panes remain available in each pane menu.
 	plugin.addCommand({
 		id: "open-table-view",
 		name: "Open palette table in center",
-		callback: () => void plugin.openPaletteTableView(),
+		callback: () => void plugin.paletteOpener.openPaletteTableView(),
 	});
 	plugin.addCommand({
 		id: "show-current-line-number",
@@ -46,7 +48,7 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		name: "Link search",
 		checkCallback: (checking) => {
 			if (checking) return Boolean(plugin.app.workspace.getActiveFile());
-			plugin.openPalette("", "link");
+			plugin.paletteOpener.openPalette("", "link");
 		},
 	});
 	plugin.addCommand({
@@ -54,20 +56,20 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		name: "Backlink search",
 		checkCallback: (checking) => {
 			if (checking) return Boolean(plugin.app.workspace.getActiveFile());
-			plugin.openPalette("", "backlink");
+			plugin.paletteOpener.openPalette("", "backlink");
 		},
 	});
 	plugin.addCommand({
 		id: "bookmark-search",
 		name: "Bookmark search",
-		callback: () => plugin.openPalette("", "bookmark"),
+		callback: () => plugin.paletteOpener.openPalette("", "bookmark"),
 	});
 	plugin.addCommand({
 		id: "smart-connections-search",
 		name: "Smart Connections search",
 		checkCallback: (checking) => {
 			if (checking) return Boolean(plugin.app.workspace.getActiveFile());
-			plugin.openPalette("", "smart");
+			plugin.paletteOpener.openPalette("", "smart");
 		},
 	});
 	plugin.addCommand({
