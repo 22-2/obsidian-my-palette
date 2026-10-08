@@ -53,7 +53,14 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		super(app);
 		this.items = [...items];
 		this.initialInput = initialInput;
-		this.controls = controls;
+		this.controls = controls
+			? {
+					...controls,
+					interactionModes,
+					selectionMode,
+					context: controls.context ?? footerText,
+				}
+			: undefined;
 		this.panel = new SuggestionPanel(this.modalEl, {
 			surface: "modal",
 			placeholder,

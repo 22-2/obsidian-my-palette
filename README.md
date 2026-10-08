@@ -70,7 +70,7 @@ The action (`…`) and history (clock) buttons are also available in tag inserti
 | `Ctrl+R`               | Search history                                     |
 | `Esc`                  | Clear the query, then move focus back to the field |
 
-The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures.
+The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current picker. Modals have no footer; keyboard instructions and insertion targets live in Help. `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
 
 ### Search modes
 
@@ -110,7 +110,9 @@ Run `Insert tags into current note`, or right-click results and choose `Add tags
 
 - Candidates are ordered as recently inserted tags, tags used by linked notes (up to 10, marked `Related N`), then usage count.
 - Tags that every target already has appear last as `Registered` and cannot be chosen. Tags only some targets have show `On N/M notes` and stay selectable.
-- Start in input mode, where Space is part of the search query. `↑`/`↓` or clicking a result switches to selection mode; `f` or clicking the input returns to input mode. The footer shows the current mode.
+- Start in input mode, where Space is part of the search query. `↑`/`↓` or clicking a result switches to selection mode; `f` or clicking the input returns to input mode.
+- Checked tags always appear first, including new tags, even when they do not match the query. Unchecking returns them to the normal search results.
+- `→` previews the highlighted tag in Obsidian's core Search without moving focus away from the modal. In input mode the cursor must be at the end of the query; in selection mode the shortcut works anywhere.
 - In selection mode, check rows with `Space`, the context menu or the check icon (which toggles only its row). `Enter` (including numpad Enter) or double-click inserts highlighted rows immediately. Run checked rows with `Ctrl+Enter`, or use `Add N now` in the context menu to run the checked and highlighted rows at once.
 - The button at the right end of the input lists the checked rows, lets you uncheck them and runs them.
 - Typing a tag that does not exist offers it as a new tag.
@@ -120,7 +122,7 @@ Recently inserted tags are stored per Vault in local IndexedDB.
 
 ### Inserting into a MOC
 
-The MOC selector uses the same input/selection modes and gestures. `Enter` inserts highlighted notes immediately; `Space` toggles checks in selection mode, and `Ctrl+Enter` or the checked-list button adds mutual `Relateds` links to the active MOC for every checked note. Only links inside a `Relateds` item count, not other links in the body.
+The MOC selector uses the same input/selection modes and gestures. Checked notes always appear first regardless of the query. `→` previews the highlighted note while keeping the modal focused. `Enter` inserts highlighted notes immediately; `Space` toggles checks in selection mode, and `Ctrl+Enter` or the checked-list button adds mutual `Relateds` links to the original MOC for every checked note, even after previewing another note. Only links inside a `Relateds` item count, not other links in the body.
 
 Notes linked in both directions appear last and cannot be selected. Notes linked in one direction stay selectable so you can complete the link. Right-click a linked note and choose `Remove link` to remove the Relateds links in both directions.
 

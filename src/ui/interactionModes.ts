@@ -11,15 +11,11 @@ export type InteractionModeCommand = "to-input" | "enter-list" | "selection-spac
  */
 export class InteractionModes {
 	private mode: InteractionMode = "input";
-	private readonly textEl: HTMLElement;
 
 	constructor(
 		private readonly rootEl: HTMLElement,
 		private readonly inputEl: HTMLInputElement,
-		statusBarEl: HTMLElement,
-	) {
-		this.textEl = statusBarEl.createSpan("my-palette-status-bar__mode");
-	}
+	) {}
 
 	set(mode: InteractionMode): void {
 		this.mode = mode;
@@ -27,7 +23,6 @@ export class InteractionModes {
 		// Retain DOM focus for list shortcuts while blocking typing, paste and IME
 		// from changing the query until the user explicitly returns to input mode.
 		this.inputEl.readOnly = mode === "selection";
-		this.textEl.setText(mode === "input" ? "Input · ↑/↓: select" : "Selection · ↑/f: input");
 	}
 
 	/** Classifies a key press; undefined leaves it to the panel's normal handling. */

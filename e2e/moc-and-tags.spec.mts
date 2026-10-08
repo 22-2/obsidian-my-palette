@@ -36,6 +36,7 @@ test("checked MOC notes stay above results from a different query", async ({ obs
 	await obsidian.open("Topic MOC.md");
 	const page = obsidian.page;
 	await runPaletteCommand(obsidian, "insert-link-to-moc-relateds");
+	await expect(page.locator(".my-palette-suggest-modal .my-palette-status-bar")).toBeHidden();
 	await page.locator(MODAL_INPUT).fill("alpha");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Alpha child");
 	await page.locator(`${MODAL_ROW} [data-row-toggle]`).first().click();
@@ -64,6 +65,7 @@ test("tag preview reveals core search while the insertion modal retains focus", 
 	await obsidian.open("Target.md");
 	const page = obsidian.page;
 	await runPaletteCommand(obsidian, "insert-tags");
+	await expect(page.locator(".my-palette-suggest-modal .my-palette-status-bar")).toBeHidden();
 	await page.locator(MODAL_INPUT).fill("alpha");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("#alpha");
 	await page.keyboard.press("ArrowDown");

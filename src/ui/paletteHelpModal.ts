@@ -1,12 +1,14 @@
 import { App, Modal, setIcon } from "obsidian";
 import type { Prefixes } from "src/palette/inputParser";
 import { RELATED_PREFIXES } from "src/palette/inputParser";
+import type { PaletteSurface } from "src/settings/model";
 
 /** Shows the small, discoverable syntax guide instead of overloading the input placeholder. */
 export class PaletteHelpModal extends Modal {
 	constructor(
 		app: App,
 		private readonly prefixes: Prefixes,
+		private readonly surface: PaletteSurface = "palette",
 	) {
 		super(app);
 	}
@@ -49,13 +51,31 @@ export class PaletteHelpModal extends Modal {
 		const actions = this.contentEl.createDiv("my-palette-help-modal__section");
 		actions.createEl("h3", { text: "Actions" });
 		const actionRows: Array<[string, string]> = [
-			["Enter / double-click", "Open or run the active result"],
+			["Enter / numpad Enter / double-click", "Open or run the active result"],
+			["↑ / ↓", "Move through results"],
+			["Shift+↑ / Shift+↓", "Extend the result selection"],
+			["Ctrl+↑ / Ctrl+↓", "Move the active row without changing the selection"],
+			...(this.surface === "palette"
+				? ([
+						[
+							"→ at the end of input",
+							"Preview the active result without closing the palette",
+						],
+						["Home / End", "Move to the start or end of the search input"],
+						["Ctrl+Home / Ctrl+End", "Move to the first or last result"],
+					] satisfies Array<[string, string]>)
+				: []),
 			["Click / Ctrl+click", "Select one result or toggle several results"],
 			["Shift+click", "Select a range of results"],
 			["Middle-click", "Open the result in a background tab"],
 			["Right-click", "Show actions, including copy actions for a selection"],
 			["Ctrl+R", "Open search history"],
-			["Esc", "Clear the query, then focus the search field"],
+			[
+				"Esc",
+				this.surface === "palette"
+					? "Close the palette"
+					: "Clear the query, then focus the search field",
+			],
 		];
 		for (const [gesture, description] of actionRows) {
 			const row = actions.createDiv("my-palette-help-modal__row");

@@ -28,8 +28,8 @@ export interface MultiSelectCandidate<V> {
 
 export interface MultiSelectModalProps {
 	placeholder: string;
-	/** Footer text naming what changes; the key hints are appended. */
-	footerLabel: string;
+	/** Target context shown in this selector's help. */
+	contextLabel: string;
 	/** Verb of the run action and of the Ctrl+Enter hint, such as "Add". */
 	actionLabel: string;
 	controls: SelectorControls;
@@ -57,8 +57,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		super(
 			{
 				placeholder: multiSelect.placeholder,
-				controls: multiSelect.controls,
-				footerText: `${multiSelect.footerLabel} · Enter: ${multiSelect.actionLabel.toLowerCase()} · Space: check · Ctrl+Enter: ${multiSelect.actionLabel.toLowerCase()} checked · Esc: cancel`,
+				controls: { ...multiSelect.controls, context: multiSelect.contextLabel },
 				// Same Explorer-style selection as the palette: pick rows with click,
 				// Ctrl and Shift, check them, then run the action.
 				selectionMode: "extended",

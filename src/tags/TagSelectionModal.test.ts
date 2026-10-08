@@ -97,6 +97,21 @@ describe("TagSelectionModal", () => {
 		f.modal.close();
 	});
 
+	it("keeps insertion shortcuts and target context in its own help", async () => {
+		const f = await open();
+		f.mouse(f.modal.modalEl.querySelector(".my-palette-options-button")!, "click");
+		Menu.last?.items.find(({ title }) => title === "Help")?.click();
+		const help = document.querySelector(".my-palette-help-modal")!;
+		expect(help.textContent).toContain("Tag insertion help");
+		expect(help.textContent).toContain("Target: note.md");
+		expect(help.textContent).toContain("Return to input mode");
+		expect(help.textContent).toContain("Preview the tag in core Search");
+		expect(help.textContent).toContain("Space");
+		expect(help.textContent).toContain("Ctrl+Enter");
+		expect(f.modal.modalEl.textContent).not.toContain("Space: check");
+		f.modal.close();
+	});
+
 	it("offers insertion and check actions in the shared action button", async () => {
 		const f = await open();
 		const actionButton = f.modal.modalEl.querySelector<HTMLElement>(
@@ -167,7 +182,7 @@ describe("TagSelectionModal", () => {
 		expect(f.modal.inputEl.readOnly).toBe(false);
 		f.key("ArrowUp");
 		expect(f.modal.inputEl.readOnly).toBe(true);
-		expect(f.modal.modalEl.textContent).toContain("Selection · ↑/f: input");
+		expect(f.modal.modalEl.querySelector(".my-palette-status-bar__mode")).toBeNull();
 		f.key(" ", { isComposing: true });
 		expect(f.checked()).toEqual([]);
 		expect(f.key(" ")).toBe(false);
@@ -177,7 +192,7 @@ describe("TagSelectionModal", () => {
 		expect(f.key("f")).toBe(false);
 		expect(f.modal.inputEl.readOnly).toBe(false);
 		expect(f.modal.inputEl.value).toBe("alpha");
-		expect(f.modal.modalEl.textContent).toContain("Input · ↑/↓: select");
+		expect(f.modal.modalEl.textContent).not.toContain("↑/↓: select");
 		f.key("ArrowDown");
 		f.mouse(f.modal.inputEl, "mousedown");
 		expect(f.modal.inputEl.readOnly).toBe(false);

@@ -147,7 +147,7 @@ export class PaletteHistoryControls {
 				.setIcon("help-circle")
 				.onClick(() => {
 					if (this.options.showHelp) this.options.showHelp();
-					else new PaletteHelpModal(plugin.app, plugin.settings.prefixes).open();
+					else new PaletteHelpModal(plugin.app, plugin.settings.prefixes, surface).open();
 				}),
 		);
 		menu.addSeparator();

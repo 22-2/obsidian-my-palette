@@ -120,9 +120,7 @@ export class SuggestionPanel<T> extends Component {
 		if (this.selectionMode === "extended")
 			this.resultContainerEl.setAttribute("aria-multiselectable", "true");
 		this.statusBarEl = this.rootEl.createDiv("my-palette-status-bar");
-		// The mode hint is the first footer slot, so it is created before the context text.
-		if (props.interactionModes)
-			this.modes = new InteractionModes(this.rootEl, this.inputEl, this.statusBarEl);
+		if (props.interactionModes) this.modes = new InteractionModes(this.rootEl, this.inputEl);
 		this.statusTextEl = this.statusBarEl.createSpan({
 			cls: "my-palette-status-bar__text",
 			text: props.footerText ?? "",

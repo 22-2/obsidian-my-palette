@@ -159,6 +159,8 @@ describe("selector controls", () => {
 		expect(help.textContent).toContain("Folder selection help");
 		expect(help.textContent).toContain("Restore a saved search without running an action");
 		expect(help.textContent).not.toContain("Everything");
+		expect(help.textContent).not.toContain("Return to input mode");
+		expect(help.textContent).not.toContain("Space");
 	});
 
 	it("respects idle history timing, commits once per query, and cancels a pending save on close", async () => {

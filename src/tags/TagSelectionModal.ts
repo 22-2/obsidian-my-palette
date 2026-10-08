@@ -55,7 +55,7 @@ function toCandidate(
 export class TagSelectionModal extends MultiSelectModal<string> {
 	/**
 	 * @param choices Candidates in display order, registered tags last.
-	 * @param targetLabel Shown in the footer so the user knows which notes change.
+	 * @param targetLabel Shown in help so the user knows which notes change.
 	 */
 	constructor(
 		private readonly plugin: SelectorControls["plugin"],
@@ -67,7 +67,7 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 		super(
 			{
 				placeholder: "Select tags to add (type to create a new tag)",
-				footerLabel: targetLabel,
+				contextLabel: targetLabel,
 				actionLabel: "Add",
 				controls: {
 					plugin,
@@ -77,6 +77,7 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 						"Search existing tags or type a new tag to add to the target notes.",
 					actionLabel: "Add",
 					shortcuts: [
+						["→", "Preview the tag in core Search without leaving this selector"],
 						["Space", "Toggle checks in selection mode"],
 						["Ctrl+Enter", "Add all checked tags"],
 					],
