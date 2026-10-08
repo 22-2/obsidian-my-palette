@@ -146,7 +146,7 @@ describe("TagSelectionModal", () => {
 		expect(f.modal.inputEl.readOnly).toBe(false);
 		f.key("ArrowUp");
 		expect(f.modal.inputEl.readOnly).toBe(true);
-		expect(f.modal.modalEl.textContent).toContain("Selection · f: input");
+		expect(f.modal.modalEl.textContent).toContain("Selection · ↑/f: input");
 		f.key(" ", { isComposing: true });
 		expect(f.checked()).toEqual([]);
 		expect(f.key(" ")).toBe(false);

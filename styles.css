@@ -676,6 +676,16 @@
 	background: var(--background-secondary);
 }
 
+/* Why: mode hint, context and count are three separate slots in every footer.
+   A fainter, divided hint keeps the shortcut from reading as part of the context. */
+.my-palette-status-bar__mode {
+	flex: 0 0 auto;
+	padding-right: 8px;
+	border-right: 1px solid var(--background-modifier-border);
+	color: var(--text-faint);
+	white-space: nowrap;
+}
+
 .my-palette-status-bar__text {
 	flex: 1 1 auto;
 	min-width: 0;

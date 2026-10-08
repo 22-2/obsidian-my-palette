@@ -214,7 +214,9 @@ export class SuggestionPanel<T> extends Component {
 		// Retain DOM focus for list shortcuts while blocking typing, paste and IME
 		// from changing the query until the user explicitly returns to input mode.
 		this.inputEl.readOnly = mode === "selection";
-		this.modeTextEl.setText(mode === "input" ? "Input · ↑/↓: select" : "Selection · f: input");
+		this.modeTextEl.setText(
+			mode === "input" ? "Input · ↑/↓: select" : "Selection · ↑/f: input",
+		);
 	}
 
 	private focusResults(): void {
