@@ -37,19 +37,19 @@ Prefixes (`>`, `e `, `bk `, …) exist for switching the search source, not as t
 
 Open the command palette and run one of these, then bind a hotkey if you like:
 
-| Command                             | What it does                                                    |
-| ----------------------------------- | --------------------------------------------------------------- |
-| `My Palette: Open Recent palette`   | File search, starting from recently used files                  |
-| `My Palette: Open command list`     | Command search (starts with the `>` prefix)                     |
-| `My Palette: Open palette in right sidebar` | A persistent list view                                  |
-| `My Palette: Open palette table in center`  | A persistent table view in a center tab                 |
-| `My Palette: Link search` / `Backlink search` | Notes linked from / to the current note               |
-| `My Palette: Bookmark search`       | Saved bookmarks                                                 |
-| `My Palette: Smart Connections search` | Notes related to the current note (needs Smart Connections)  |
-| `My Palette: Move file to another folder` | Move the current file                                     |
-| `My Palette: Open file path in editor` | Open a file by Vault path or absolute path                   |
-| `My Palette: Insert tags into current note` | Add tags to the current note                            |
-| `My Palette: Insert link to MOC Relateds` | Add mutual Relateds links to the active MOC               |
+| Command                                       | What it does                                                |
+| --------------------------------------------- | ----------------------------------------------------------- |
+| `My Palette: Open Recent palette`             | File search, starting from recently used files              |
+| `My Palette: Open command list`               | Command search (starts with the `>` prefix)                 |
+| `My Palette: Open palette in right sidebar`   | A persistent list view                                      |
+| `My Palette: Open palette table in center`    | A persistent table view in a center tab                     |
+| `My Palette: Link search` / `Backlink search` | Notes linked from / to the current note                     |
+| `My Palette: Bookmark search`                 | Saved bookmarks                                             |
+| `My Palette: Smart Connections search`        | Notes related to the current note (needs Smart Connections) |
+| `My Palette: Move file to another folder`     | Move the current file                                       |
+| `My Palette: Open file path in editor`        | Open a file by Vault path or absolute path                  |
+| `My Palette: Insert tags into current note`   | Add tags to the current note                                |
+| `My Palette: Insert link to MOC Relateds`     | Add mutual Relateds links to the active MOC                 |
 
 ## Using the palette
 
@@ -59,16 +59,16 @@ Palette lists and tables keep the first result highlighted while you type, so `E
 
 The action (`…`) and history (clock) buttons are also available in tag insertion, MOC link insertion and destination-folder selection. Actions and Help describe the current picker. Each picker has its own search history; selecting an entry restores only the query and never inserts tags, adds links or moves a file. `Ctrl+R` opens history, and the history enablement, delay and retention settings apply to these pickers too. Highlighting uses the shared modal display preference.
 
-| Action                       | Result                                                |
-| ---------------------------- | ----------------------------------------------------- |
-| Click                        | Select a result                                       |
-| `Ctrl`+click                 | Add or remove a result from the selection             |
-| `Shift`+click                | Select a range                                        |
-| Double-click / `Enter`       | Open the result (or run the command)                  |
-| Middle-click                 | Open in a new background tab                          |
-| Right-click                  | Open the action menu (acts on the whole selection)    |
-| `Ctrl+R`                     | Search history                                        |
-| `Esc`                        | Clear the query, then move focus back to the field    |
+| Action                 | Result                                             |
+| ---------------------- | -------------------------------------------------- |
+| Click                  | Select a result                                    |
+| `Ctrl`+click           | Add or remove a result from the selection          |
+| `Shift`+click          | Select a range                                     |
+| Double-click / `Enter` | Open the result (or run the command)               |
+| Middle-click           | Open in a new background tab                       |
+| Right-click            | Open the action menu (acts on the whole selection) |
+| `Ctrl+R`               | Search history                                     |
+| `Esc`                  | Clear the query, then move focus back to the field |
 
 The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures.
 
@@ -76,17 +76,17 @@ The action menu offers: open, open in a background tab, open side by side, open 
 
 Type a prefix followed by a space to switch the search source. `>`, `e ` and `i ` can be changed in the settings.
 
-| Prefix  | Mode                 | Purpose                                                    |
-| ------- | -------------------- | ---------------------------------------------------------- |
-| none    | Files                | Search files in the Vault                                  |
-| `>`     | Commands             | Search and run Obsidian commands                           |
-| `e `    | Everything           | Search the whole Everything index                          |
-| `esdir` | Everything directory | Search the directory of the current note with Everything   |
-| `o `    | Outlinks             | Notes linked from the current note                         |
-| `b `    | Backlinks            | Notes linking to the current note                          |
-| `bk `   | Bookmarks            | Search saved bookmarks                                     |
-| `sc `   | Smart Connections    | Notes related to the current note                          |
-| `i `    | Excluded files       | Include excluded files in file search (files only)         |
+| Prefix  | Mode                 | Purpose                                                  |
+| ------- | -------------------- | -------------------------------------------------------- |
+| none    | Files                | Search files in the Vault                                |
+| `>`     | Commands             | Search and run Obsidian commands                         |
+| `e `    | Everything           | Search the whole Everything index                        |
+| `esdir` | Everything directory | Search the directory of the current note with Everything |
+| `o `    | Outlinks             | Notes linked from the current note                       |
+| `b `    | Backlinks            | Notes linking to the current note                        |
+| `bk `   | Bookmarks            | Search saved bookmarks                                   |
+| `sc `   | Smart Connections    | Notes related to the current note                        |
+| `i `    | Excluded files       | Include excluded files in file search (files only)       |
 
 `es` and `esdir` also work as zero-query shortcuts without a trailing space.
 
@@ -139,22 +139,22 @@ In the table:
 
 Configure the order under `Settings → My Palette → Vault file search → Sort priorities`, separately for blank and typed input. Enabled priorities run top to bottom and the first one that differs wins. When everything ties, the Vault-relative path decides.
 
-| Priority                | Ranks first                                                              |
-| ----------------------- | ------------------------------------------------------------------------ |
-| `Filename prefix match` | Names that start with the query                                          |
-| `Filename fuzzy match`  | Higher fuzzy score on the name                                           |
-| `Alias prefix match`    | Aliases that start with the query                                        |
-| `Alias fuzzy match`     | Higher fuzzy score on an alias                                           |
-| `Tag match`             | More matching tags                                                       |
-| `Match coverage`        | More matched characters across name, path, aliases and tags (best OR branch) |
-| `Folder path match`     | Higher fuzzy score on the folder portion of the path                     |
-| `Lower prior folders`   | Pushes notes in the configured folders down (see below)                  |
-| `Activity`              | Recently opened first; ties broken by persistent palette usage           |
-| `Last modified`         | Newest modification time                                                 |
-| `Aliases count`         | More aliases                                                             |
-| `Alphabetical` / `Alphabetical reverse` | Name, then path, ascending / descending                  |
-| `@prior` / `@prior:asc` | Smaller numeric `prior` in frontmatter                                   |
-| `@prior:desc`           | Larger numeric `prior` in frontmatter                                    |
+| Priority                                | Ranks first                                                                  |
+| --------------------------------------- | ---------------------------------------------------------------------------- |
+| `Filename prefix match`                 | Names that start with the query                                              |
+| `Filename fuzzy match`                  | Higher fuzzy score on the name                                               |
+| `Alias prefix match`                    | Aliases that start with the query                                            |
+| `Alias fuzzy match`                     | Higher fuzzy score on an alias                                               |
+| `Tag match`                             | More matching tags                                                           |
+| `Match coverage`                        | More matched characters across name, path, aliases and tags (best OR branch) |
+| `Folder path match`                     | Higher fuzzy score on the folder portion of the path                         |
+| `Lower prior folders`                   | Pushes notes in the configured folders down (see below)                      |
+| `Activity`                              | Recently opened first; ties broken by persistent palette usage               |
+| `Last modified`                         | Newest modification time                                                     |
+| `Aliases count`                         | More aliases                                                                 |
+| `Alphabetical` / `Alphabetical reverse` | Name, then path, ascending / descending                                      |
+| `@prior` / `@prior:asc`                 | Smaller numeric `prior` in frontmatter                                       |
+| `@prior:desc`                           | Larger numeric `prior` in frontmatter                                        |
 
 Notes without a `prior` sort last. Complete contiguous matches on a name, path, alias or tag always beat fuzzy-only matches before this list is applied.
 

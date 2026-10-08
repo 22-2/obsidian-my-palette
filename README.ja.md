@@ -37,19 +37,19 @@ Another Quick Switcher、標準の Quick Switcher、Quick Switcher++、Omnisearc
 
 Obsidian のコマンドパレットから次のコマンドを実行します。必要に応じてホットキーを割り当ててください。
 
-| コマンド                                     | 内容                                                     |
-| -------------------------------------------- | -------------------------------------------------------- |
-| `My Palette: Open Recent palette`            | 最近使ったファイルから始まるファイル検索                 |
-| `My Palette: Open command list`              | コマンド検索（最初から `>` プレフィックス付き）          |
-| `My Palette: Open palette in right sidebar`  | 右サイドバーに常駐するリストビュー                       |
-| `My Palette: Open palette table in center`   | センターのタブに常駐するテーブルビュー                   |
-| `My Palette: Link search` / `Backlink search` | 現在のノートからのリンク先 / 現在のノートへのリンク元   |
-| `My Palette: Bookmark search`                | 保存したブックマーク                                     |
-| `My Palette: Smart Connections search`       | 現在のノートに関連するノート（Smart Connections が必要） |
-| `My Palette: Move file to another folder`    | 現在のファイルを別フォルダーへ移動                       |
-| `My Palette: Open file path in editor`       | Vault 内パスまたは絶対パスでファイルを開く               |
-| `My Palette: Insert tags into current note`  | 現在のノートにタグを追加                                 |
-| `My Palette: Insert link to MOC Relateds`    | アクティブな MOC に相互 Relateds リンクを追加            |
+| コマンド                                      | 内容                                                     |
+| --------------------------------------------- | -------------------------------------------------------- |
+| `My Palette: Open Recent palette`             | 最近使ったファイルから始まるファイル検索                 |
+| `My Palette: Open command list`               | コマンド検索（最初から `>` プレフィックス付き）          |
+| `My Palette: Open palette in right sidebar`   | 右サイドバーに常駐するリストビュー                       |
+| `My Palette: Open palette table in center`    | センターのタブに常駐するテーブルビュー                   |
+| `My Palette: Link search` / `Backlink search` | 現在のノートからのリンク先 / 現在のノートへのリンク元    |
+| `My Palette: Bookmark search`                 | 保存したブックマーク                                     |
+| `My Palette: Smart Connections search`        | 現在のノートに関連するノート（Smart Connections が必要） |
+| `My Palette: Move file to another folder`     | 現在のファイルを別フォルダーへ移動                       |
+| `My Palette: Open file path in editor`        | Vault 内パスまたは絶対パスでファイルを開く               |
+| `My Palette: Insert tags into current note`   | 現在のノートにタグを追加                                 |
+| `My Palette: Insert link to MOC Relateds`     | アクティブな MOC に相互 Relateds リンクを追加            |
 
 ## パレットの使い方
 
@@ -59,16 +59,16 @@ Obsidian のコマンドパレットから次のコマンドを実行します�
 
 タグ挿入・MOC リンク挿入・移動先フォルダ選択にも、アクション（`…`）と履歴（時計）のボタンを表示します。アクションとヘルプはその画面の用途に合わせた内容です。履歴は用途ごとに分かれ、選択しても検索語を復元するだけで、タグ挿入・リンク追加・ファイル移動は実行しません。`Ctrl+R` でも履歴を開けます。履歴の有効／無効・保存待ち時間・保持期間は既存の設定を使い、ハイライト設定はモーダル間で共有します。
 
-| 操作                   | 動作                                             |
-| ---------------------- | ------------------------------------------------ |
-| クリック               | 結果を選択                                       |
-| `Ctrl`+クリック        | 選択に追加 / 選択から除外                        |
-| `Shift`+クリック       | 範囲選択                                         |
-| ダブルクリック / `Enter` | 結果を開く（コマンドなら実行）                 |
-| 中クリック             | 新しいタブをバックグラウンドで開く               |
-| 右クリック             | アクションメニュー（選択中の全件が対象）         |
-| `Ctrl+R`               | 検索履歴                                         |
-| `Esc`                  | 入力をクリアし、もう一度で入力欄にフォーカス     |
+| 操作                     | 動作                                         |
+| ------------------------ | -------------------------------------------- |
+| クリック                 | 結果を選択                                   |
+| `Ctrl`+クリック          | 選択に追加 / 選択から除外                    |
+| `Shift`+クリック         | 範囲選択                                     |
+| ダブルクリック / `Enter` | 結果を開く（コマンドなら実行）               |
+| 中クリック               | 新しいタブをバックグラウンドで開く           |
+| 右クリック               | アクションメニュー（選択中の全件が対象）     |
+| `Ctrl+R`                 | 検索履歴                                     |
+| `Esc`                    | 入力をクリアし、もう一度で入力欄にフォーカス |
 
 アクションメニューには、開く、バックグラウンドタブで開く、左右に分割して開く、下に分割して開く、エクスプローラーで表示（Everything の結果）、ファイル名・Vault 相対パス・絶対パスのコピー、MOC への挿入、タグの追加があります。パレットのメニューボタンにある `Help` からも、プレフィックスと操作の一覧を確認できます。
 
@@ -76,17 +76,17 @@ Obsidian のコマンドパレットから次のコマンドを実行します�
 
 プレフィックスのあとにスペースを入力すると検索元が切り替わります。`>`、`e `、`i ` は設定から変更できます。
 
-| プレフィックス | モード               | 用途                                                |
-| -------------- | -------------------- | --------------------------------------------------- |
-| なし           | Files                | Vault 内のファイルを検索                            |
-| `>`            | Commands             | Obsidian のコマンドを検索・実行                     |
-| `e `           | Everything           | Everything のインデックス全体を検索                 |
-| `esdir`        | Everything directory | 現在のノートがあるディレクトリを Everything で検索  |
-| `o `           | Outlinks             | 現在のノートからリンクしているノート                |
-| `b `           | Backlinks            | 現在のノートへリンクしているノート                  |
-| `bk `          | Bookmarks            | 保存したブックマークを検索                          |
-| `sc `          | Smart Connections    | 現在のノートに関連するノートを検索                  |
-| `i `           | Excluded files       | 除外ファイルを含めてファイル検索（ファイル検索のみ）|
+| プレフィックス | モード               | 用途                                                 |
+| -------------- | -------------------- | ---------------------------------------------------- |
+| なし           | Files                | Vault 内のファイルを検索                             |
+| `>`            | Commands             | Obsidian のコマンドを検索・実行                      |
+| `e `           | Everything           | Everything のインデックス全体を検索                  |
+| `esdir`        | Everything directory | 現在のノートがあるディレクトリを Everything で検索   |
+| `o `           | Outlinks             | 現在のノートからリンクしているノート                 |
+| `b `           | Backlinks            | 現在のノートへリンクしているノート                   |
+| `bk `          | Bookmarks            | 保存したブックマークを検索                           |
+| `sc `          | Smart Connections    | 現在のノートに関連するノートを検索                   |
+| `i `           | Excluded files       | 除外ファイルを含めてファイル検索（ファイル検索のみ） |
 
 `es` と `esdir` は、末尾のスペースなしでも空クエリの検索として使えます。
 
@@ -139,22 +139,22 @@ MOC の選択画面も同じ入力／選択モードと操作です。`Enter` �
 
 並び順は `Settings → My Palette → Vault file search → Sort priorities` で、空入力と入力ありのそれぞれについて設定します。有効な項目を上から順に比較し、差がついた最初の項目が採用されます。すべて同点なら Vault 内の相対パスで決まります。
 
-| ソートキー              | 先に置かれる候補                                                      |
-| ----------------------- | --------------------------------------------------------------------- |
-| `Filename prefix match` | ファイル名が検索語で始まる                                            |
-| `Filename fuzzy match`  | ファイル名の fuzzy score が高い                                       |
-| `Alias prefix match`    | alias が検索語で始まる                                                |
-| `Alias fuzzy match`     | alias の fuzzy score が高い                                           |
-| `Tag match`             | 一致したタグが多い                                                    |
-| `Match coverage`        | ファイル名・パス・alias・タグで一致した文字数が多い（最良の OR 枝）   |
-| `Folder path match`     | ファイル名を除いたフォルダーパスの fuzzy score が高い                 |
-| `Lower prior folders`   | 設定したフォルダー配下を後ろへ送る（下記）                            |
-| `Activity`              | 最近開いた順。差がつかなければ永続的な利用履歴のスコアが高い          |
-| `Last modified`         | 更新日時が新しい                                                      |
-| `Aliases count`         | alias の数が多い                                                      |
-| `Alphabetical` / `Alphabetical reverse` | ファイル名、次にパスの昇順 / 降順                     |
-| `@prior` / `@prior:asc` | frontmatter の数値 `prior` が小さい                                   |
-| `@prior:desc`           | frontmatter の数値 `prior` が大きい                                   |
+| ソートキー                              | 先に置かれる候補                                                    |
+| --------------------------------------- | ------------------------------------------------------------------- |
+| `Filename prefix match`                 | ファイル名が検索語で始まる                                          |
+| `Filename fuzzy match`                  | ファイル名の fuzzy score が高い                                     |
+| `Alias prefix match`                    | alias が検索語で始まる                                              |
+| `Alias fuzzy match`                     | alias の fuzzy score が高い                                         |
+| `Tag match`                             | 一致したタグが多い                                                  |
+| `Match coverage`                        | ファイル名・パス・alias・タグで一致した文字数が多い（最良の OR 枝） |
+| `Folder path match`                     | ファイル名を除いたフォルダーパスの fuzzy score が高い               |
+| `Lower prior folders`                   | 設定したフォルダー配下を後ろへ送る（下記）                          |
+| `Activity`                              | 最近開いた順。差がつかなければ永続的な利用履歴のスコアが高い        |
+| `Last modified`                         | 更新日時が新しい                                                    |
+| `Aliases count`                         | alias の数が多い                                                    |
+| `Alphabetical` / `Alphabetical reverse` | ファイル名、次にパスの昇順 / 降順                                   |
+| `@prior` / `@prior:asc`                 | frontmatter の数値 `prior` が小さい                                 |
+| `@prior:desc`                           | frontmatter の数値 `prior` が大きい                                 |
 
 `prior` がないノートは末尾です。ファイル名・パス・alias・タグのいずれかに完全な連続一致がある候補は、この一覧を適用する前に fuzzy のみの一致より先に置かれます。
 

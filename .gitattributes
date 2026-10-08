@@ -1,0 +1,3 @@
+# Why: core.autocrlf on Windows checks files out as CRLF, which the formatter
+# rejects because .editorconfig requires LF. Pin LF in the working tree as well.
+* text=auto eol=lf

@@ -8,3 +8,9 @@ insert_final_newline = true
 indent_style = tab
 indent_size = 4
 tab_width = 4
+
+# Why: GitHub workflows follow the usual two-space YAML style, and the formatter
+# would otherwise reindent them with the four-space default above.
+[.github/**.{yml,yaml}]
+indent_style = space
+indent_size = 2
