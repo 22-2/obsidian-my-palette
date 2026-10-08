@@ -262,6 +262,19 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 		expect(f.choose).toHaveBeenCalledExactlyOnceWith("gamma");
 		expect(f.resultFocus).toHaveBeenCalledTimes(4);
 	});
+	it("returns to input mode when ArrowUp is pressed on the first row", async () => {
+		const f = await fixture(surface);
+		key(f.input, "ArrowDown");
+		key(f.input, "ArrowDown");
+		key(f.input, "ArrowUp");
+		expect(f.input.readOnly).toBe(true);
+		expect(f.rows()[0].classList.contains("is-active")).toBe(true);
+		const event = key(f.input, "ArrowUp");
+		expect(event.defaultPrevented).toBe(true);
+		expect(f.input.readOnly).toBe(false);
+		expect(f.root.classList.contains("is-input-mode")).toBe(true);
+		expect(f.rows()[0].classList.contains("is-active")).toBe(true);
+	});
 	it("returns focus to the input in selection mode when empty list space is pressed", async () => {
 		const f = await fixture(surface);
 		f.input.blur();

@@ -320,6 +320,18 @@ export class SuggestionPanel<T> extends Component {
 				this.setSelectedIndex(0, true);
 				return;
 			}
+			if (
+				event.key === "ArrowUp" &&
+				this.chooser.selectedItem <= 0 &&
+				!event.shiftKey &&
+				!event.ctrlKey &&
+				!event.metaKey
+			) {
+				// Why: ArrowDown from the input enters the list, so ArrowUp past the first
+				// row should leave it symmetrically instead of stopping at a dead end.
+				this.focusSearchInput();
+				return;
+			}
 			if (!this.chooser.values.length) return;
 			// Keyboard selection uses the result list while focus remains in the input.
 			// Record that interaction just as we do for a pointer press on a result.
