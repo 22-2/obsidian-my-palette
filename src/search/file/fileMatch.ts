@@ -1,4 +1,5 @@
 import type { TFile } from "obsidian";
+import fuzzysort from "fuzzysort";
 import { matchingTags } from "src/search/file/fileTags";
 import {
 	fuzzyMatchCoverage,
@@ -36,10 +37,13 @@ export interface FileMatch<T extends SortableFileEntry> extends FileMatchSignals
 	score: number;
 	/** Tags that matched the current query; carried through sorting for presentation. */
 	matchedTags?: string[];
+	/** Keywords that matched the query; displayed alongside matching tags. */
+	matchedKeywords?: string[];
 }
 
 export interface FileSearchEntry extends SortableFileEntry {
 	file?: TFile;
+	keywords: string[];
 	tags: string[];
 	extension: string;
 	text: string;
@@ -66,6 +70,7 @@ const FILE_SEARCH_FIELDS = [
 	{ name: "text", value: (entry: FileSearchEntry) => entry.text },
 	{ name: "alias", value: (entry: FileSearchEntry) => entry.aliases.join(" ") },
 	{ name: "tags", value: (entry: FileSearchEntry) => entry.tags.join(" ") },
+	{ name: "keywords", value: (entry: FileSearchEntry) => entry.keywords.join(" ") },
 ] as const;
 
 type FileSearchFieldName = (typeof FILE_SEARCH_FIELDS)[number]["name"];
@@ -132,11 +137,17 @@ export function createFileMatch(
 ): FileMatch<FileSearchEntry> {
 	const { obj, score, fieldScores } = match;
 	const matchedTags = matchingTags(obj.tags, query);
+	const terms = query.split("|").flatMap((branch) => branch.trim().split(/\s+/).filter(Boolean));
+	const matchedKeywords = options.tagOnlyQuery
+		? []
+		: obj.keywords.filter((keyword) =>
+				terms.some((term) => fuzzysort.single(term, keyword) !== null),
+			);
 	// Count source values rather than the compatibility `text` key, which repeats
-	// filename, path, and aliases and would artificially boost rank.
+	// filename, path, aliases, and keywords and would artificially boost rank.
 	const searchableValues = options.tagOnlyQuery
 		? obj.tags
-		: [obj.basename, obj.path, ...obj.aliases, ...obj.tags];
+		: [obj.basename, obj.path, ...obj.aliases, ...obj.tags, ...obj.keywords];
 	const contiguousMatch = hasContiguousQueryMatch(query, searchableValues);
 	const matchCoverage = options.usesMatchCoverage
 		? fuzzyMatchCoverage(query, searchableValues)
@@ -152,5 +163,6 @@ export function createFileMatch(
 		matchCoverage,
 		contiguousMatch,
 		matchedTags,
+		matchedKeywords,
 	};
 }

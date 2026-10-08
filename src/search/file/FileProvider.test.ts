@@ -16,11 +16,13 @@ describe("file provider vault event handling", () => {
 	const vaultHandlers = new Map<string, (...args: never[]) => unknown>();
 	const metadataHandlers = new Map<string, (...args: never[]) => unknown>();
 	let files: TFile[];
+	let frontmatter: Record<string, unknown>;
 
 	beforeEach(() => {
 		vaultHandlers.clear();
 		metadataHandlers.clear();
 		files = [tfile("untitled.md")];
+		frontmatter = {};
 	});
 
 	function createProvider(): FileProvider {
@@ -44,7 +46,7 @@ describe("file provider vault event handling", () => {
 					return {} as EventRef;
 				},
 				offref: () => undefined,
-				getFileCache: () => null,
+				getFileCache: () => ({ frontmatter }),
 			},
 			workspace: {
 				getLastOpenFiles: () => [],
@@ -52,6 +54,29 @@ describe("file provider vault event handling", () => {
 		} as unknown as App;
 		return new FileProvider(app, () => []);
 	}
+
+	it("searches keywords and refreshes matching evidence after property edits", async () => {
+		frontmatter = { keywords: ["宇宙", "星空観察"] };
+		const provider = createProvider();
+		const request = { query: "宇宙 星空", mode: "file" as const };
+		expect(await provider.search(request)).toMatchObject([
+			{
+				vaultPath: "untitled.md",
+				primary: "untitled",
+				matchedKeywords: ["宇宙", "星空観察"],
+			},
+		]);
+		expect(await provider.search({ ...request, query: "" })).toMatchObject([
+			{ matchedKeywords: undefined },
+		]);
+		frontmatter = { keywords: ["読書"] };
+		metadataHandlers.get("changed")?.(files[0] as never);
+		expect(await provider.search(request)).toHaveLength(0);
+		expect(await provider.search({ ...request, query: "読書" })).toMatchObject([
+			{ matchedKeywords: ["読書"] },
+		]);
+		provider.dispose();
+	});
 
 	it("finds the file by its new name after a vault rename event", async () => {
 		const provider = createProvider();

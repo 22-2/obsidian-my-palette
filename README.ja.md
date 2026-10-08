@@ -25,7 +25,7 @@ Another Quick Switcher、標準の Quick Switcher、Quick Switcher++、Omnisearc
 
 ## 機能
 
-- **Vault のファイル検索**: AND / OR 検索、alias、frontmatter とインラインのタグに対応し、並び順を細かく設定できます。
+- **Vault のファイル検索**: AND / OR 検索、alias、frontmatter の `keywords`、frontmatter とインラインのタグに対応し、並び順を細かく設定できます。
 - **Everything 1.5a 検索**: Vault 外のファイルも検索でき、Markdown は Obsidian で、それ以外は OS の関連付けアプリで開きます。
 - **コマンド・ブックマーク・リンク・バックリンク・Smart Connections の検索**を同じウィンドウで行えます。
 - **複数選択**: ファイルマネージャーと同じ操作で選び、選択したノートへまとめてパスのコピー、タグ追加、MOC リンク挿入ができます。
@@ -96,6 +96,8 @@ Everything 以外のモードでは、スペース区切りが AND、`|` 区切�
 
 ファイル検索はインラインタグと frontmatter の `tags` の両方を対象にします。`#project` はタグを直接検索し、通常の検索語でもタグに一致します。一致したタグはファイル名の下に最大3件表示され、残りは `+N` にまとまります。行にカーソルを合わせると全件を確認できます。
 
+frontmatter の `keywords` も文字列配列として検索対象になります（例: `keywords: [宇宙, 星空観察]`）。`i ` で検索する除外ノートにも対応します。一致した keywords はタグの隣に `#` なしで表示し、合わせて最大3件、残りは `+N` にまとめます。チップにカーソルを合わせると全件を確認できます。`#` 付きの語だけを入力した場合はタグのみを検索します。
+
 Everything のクエリは変換せず、そのまま Everything 独自の構文に渡されます。Everything モードには Everything 1.5a と公式 HTTP Server Plugin の起動が必要です。詳しくは [Everything の設定](#everything-の設定)を参照してください。
 
 ## 複数のノートをまとめて扱う
@@ -139,24 +141,24 @@ MOC の選択画面も同じ入力／選択モードと操作です。`Enter` �
 
 並び順は `Settings → My Palette → Vault file search → Sort priorities` で、空入力と入力ありのそれぞれについて設定します。有効な項目を上から順に比較し、差がついた最初の項目が採用されます。すべて同点なら Vault 内の相対パスで決まります。
 
-| ソートキー                              | 先に置かれる候補                                                    |
-| --------------------------------------- | ------------------------------------------------------------------- |
-| `Filename prefix match`                 | ファイル名が検索語で始まる                                          |
-| `Filename fuzzy match`                  | ファイル名の fuzzy score が高い                                     |
-| `Alias prefix match`                    | alias が検索語で始まる                                              |
-| `Alias fuzzy match`                     | alias の fuzzy score が高い                                         |
-| `Tag match`                             | 一致したタグが多い                                                  |
-| `Match coverage`                        | ファイル名・パス・alias・タグで一致した文字数が多い（最良の OR 枝） |
-| `Folder path match`                     | ファイル名を除いたフォルダーパスの fuzzy score が高い               |
-| `Lower prior folders`                   | 設定したフォルダー配下を後ろへ送る（下記）                          |
-| `Activity`                              | 最近開いた順。差がつかなければ永続的な利用履歴のスコアが高い        |
-| `Last modified`                         | 更新日時が新しい                                                    |
-| `Aliases count`                         | alias の数が多い                                                    |
-| `Alphabetical` / `Alphabetical reverse` | ファイル名、次にパスの昇順 / 降順                                   |
-| `@prior` / `@prior:asc`                 | frontmatter の数値 `prior` が小さい                                 |
-| `@prior:desc`                           | frontmatter の数値 `prior` が大きい                                 |
+| ソートキー                              | 先に置かれる候補                                                               |
+| --------------------------------------- | ------------------------------------------------------------------------------ |
+| `Filename prefix match`                 | ファイル名が検索語で始まる                                                     |
+| `Filename fuzzy match`                  | ファイル名の fuzzy score が高い                                                |
+| `Alias prefix match`                    | alias が検索語で始まる                                                         |
+| `Alias fuzzy match`                     | alias の fuzzy score が高い                                                    |
+| `Tag match`                             | 一致したタグが多い                                                             |
+| `Match coverage`                        | ファイル名・パス・alias・タグ・keywords で一致した文字数が多い（最良の OR 枝） |
+| `Folder path match`                     | ファイル名を除いたフォルダーパスの fuzzy score が高い                          |
+| `Lower prior folders`                   | 設定したフォルダー配下を後ろへ送る（下記）                                     |
+| `Activity`                              | 最近開いた順。差がつかなければ永続的な利用履歴のスコアが高い                   |
+| `Last modified`                         | 更新日時が新しい                                                               |
+| `Aliases count`                         | alias の数が多い                                                               |
+| `Alphabetical` / `Alphabetical reverse` | ファイル名、次にパスの昇順 / 降順                                              |
+| `@prior` / `@prior:asc`                 | frontmatter の数値 `prior` が小さい                                            |
+| `@prior:desc`                           | frontmatter の数値 `prior` が大きい                                            |
 
-`prior` がないノートは末尾です。ファイル名・パス・alias・タグのいずれかに完全な連続一致がある候補は、この一覧を適用する前に fuzzy のみの一致より先に置かれます。
+`prior` がないノートは末尾です。ファイル名・パス・alias・タグ・keywords のいずれかに完全な連続一致がある候補は、この一覧を適用する前に fuzzy のみの一致より先に置かれます。
 
 `Lower prior folders` には、フォルダーパスを1行ずつ指定します（サブフォルダーを含む）。`Sort priorities` で同名の項目を有効にすると、`@prior` なしでもその配下のノートを後ろに並べられます。名前や Activity より優先したい場合は、それらより上に置いてください。include-ignored の優先は従来どおり先に評価されます。
 

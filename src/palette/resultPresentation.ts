@@ -10,17 +10,25 @@ export interface PaletteResultPresentationOptions {
 	openExternalMarkdownInObsidian: boolean;
 }
 
-const MAX_VISIBLE_MATCHED_TAGS = 3;
+const MAX_VISIBLE_MATCHED_METADATA = 3;
 
-/** Shared so other file selectors (e.g. MOC insertion) show matched tags the same way. */
-export function matchedTagPresentation(
+/** Shared so file selectors show the metadata explaining a search hit the same way. */
+export function matchedMetadataPresentation(
 	tags: readonly string[],
+	keywords: readonly string[] = [],
 ): Pick<SelectionItem, "tags" | "tagsTitle"> {
-	if (tags.length === 0) return {};
-	const visibleTags = tags.slice(0, MAX_VISIBLE_MATCHED_TAGS);
-	if (tags.length > MAX_VISIBLE_MATCHED_TAGS)
-		visibleTags.push(`+${tags.length - MAX_VISIBLE_MATCHED_TAGS}`);
-	return { tags: visibleTags, tagsTitle: tags.join(" ") };
+	const metadata = [...tags, ...keywords];
+	if (metadata.length === 0) return {};
+	const visible = metadata.slice(0, MAX_VISIBLE_MATCHED_METADATA);
+	if (metadata.length > MAX_VISIBLE_MATCHED_METADATA)
+		visible.push(`+${metadata.length - MAX_VISIBLE_MATCHED_METADATA}`);
+	const title =
+		keywords.length > 0
+			? [tags.length > 0 ? `Tags: ${tags.join(" ")}` : "", `Keywords: ${keywords.join(", ")}`]
+					.filter(Boolean)
+					.join("\n")
+			: tags.join(" ");
+	return { tags: visible, tagsTitle: title };
 }
 
 /**
@@ -57,14 +65,16 @@ export function toPaletteSelectionItem(
 			(Boolean(result.vaultPath) &&
 				!(app.vault.getAbstractFileByPath(result.vaultPath ?? "") instanceof TFile)));
 	const usesPath = result.mode === "file" || result.mode === "everything";
-	const matchedTags =
-		result.mode === "file" ? matchedTagPresentation(result.matchedTags ?? []) : {};
+	const matchedMetadata =
+		result.mode === "file"
+			? matchedMetadataPresentation(result.matchedTags ?? [], result.matchedKeywords ?? [])
+			: {};
 	return {
 		label: result.primary,
 		description: usesPath ? compactPath(result.secondary) : result.secondary,
 		descriptionTitle: usesPath ? result.secondary : undefined,
 		icon: result.icon,
-		...matchedTags,
+		...matchedMetadata,
 		badge:
 			isExternalMarkdown || isIgnoredMarkdown
 				? options.openExternalMarkdownInObsidian

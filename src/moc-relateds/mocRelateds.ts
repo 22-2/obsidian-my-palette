@@ -20,7 +20,7 @@ import {
 import { isMarkdownPath } from "src/shared/externalFiles";
 import { parseInput } from "src/palette/inputParser";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
-import { matchedTagPresentation } from "src/palette/resultPresentation";
+import { matchedMetadataPresentation } from "src/palette/resultPresentation";
 import { relationPaths } from "src/shared/noteRelations";
 
 function toRelatedCandidate(
@@ -47,9 +47,8 @@ function toRelatedCandidate(
 			label: result.primary,
 			description: path,
 			icon: "file-text",
-			// Why: a `#tag` query can match a note with no tag text in its name, so
-			// show the matching tags as the palette does to explain the hit.
-			...matchedTagPresentation(result.matchedTags ?? []),
+			// Show matching metadata to explain hits with no query text in the name.
+			...matchedMetadataPresentation(result.matchedTags ?? [], result.matchedKeywords ?? []),
 			badge: ignored
 				? "Ignored · Import"
 				: mutual

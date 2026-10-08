@@ -7,6 +7,19 @@ export function normalizeFrontmatterPrior(value: unknown): number | undefined {
 	return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
+/** Keywords are a string list; invalid elements must not become searchable text. */
+export function normalizeFrontmatterKeywords(value: unknown): string[] {
+	if (!Array.isArray(value)) return [];
+	return [
+		...new Set(
+			value
+				.filter((item): item is string => typeof item === "string")
+				.map((item) => item.trim())
+				.filter(Boolean),
+		),
+	];
+}
+
 /**
  * Read `tags` as a list. It may be written as `tags: foo` or `tags: a, b`, and
  * spreading such a string would split it into single characters.

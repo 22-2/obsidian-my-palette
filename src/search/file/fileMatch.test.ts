@@ -7,6 +7,7 @@ function entry(overrides: Partial<FileSearchEntry> = {}): FileSearchEntry {
 		path: "notes/project-plan.md",
 		basename: "project-plan",
 		aliases: ["Project roadmap"],
+		keywords: [],
 		tags: ["#project", "#work"],
 		extension: "md",
 		text: "project-plan notes/project-plan.md Project roadmap",
@@ -17,6 +18,41 @@ function entry(overrides: Partial<FileSearchEntry> = {}): FileSearchEntry {
 }
 
 describe("file match signal construction", () => {
+	it("matches keywords across AND / OR terms and includes them in ranking evidence", () => {
+		const note = entry({ keywords: ["宇宙", "星空観察", "unrelated"] });
+		const [candidate] = searchFuzzyQueryWithFieldScores(
+			"宇宙 星空 | missing",
+			[note],
+			fileSearchKeys(false),
+		);
+		expect(candidate).toBeDefined();
+		if (!candidate) return;
+		const match = createFileMatch(candidate, "宇宙 星空 | missing", {
+			tagOnlyQuery: false,
+			usesMatchCoverage: true,
+		});
+		expect(match).toMatchObject({
+			matchedKeywords: ["宇宙", "星空観察"],
+			contiguousMatch: true,
+			matchCoverage: 4,
+		});
+		expect(match.filenameScore).toBeUndefined();
+		expect(match.aliasScore).toBeUndefined();
+		expect(searchFuzzyQueryWithFieldScores("#宇宙", [note], fileSearchKeys(true))).toHaveLength(
+			0,
+		);
+	});
+
+	it("does not present keywords as evidence for tag-only queries", () => {
+		const note = entry({ tags: ["#宇宙"], keywords: ["#宇宙"] });
+		const [candidate] = searchFuzzyQueryWithFieldScores("#宇宙", [note], fileSearchKeys(true));
+		expect(candidate).toBeDefined();
+		if (!candidate) return;
+		expect(
+			createFileMatch(candidate, "#宇宙", { tagOnlyQuery: true, usesMatchCoverage: true }),
+		).toMatchObject({ matchedKeywords: [], matchedTags: ["#宇宙"], matchCoverage: 3 });
+	});
+
 	it("maps shared search keys back to their named field signals", () => {
 		const [candidate] = searchFuzzyQueryWithFieldScores(
 			"roadmap",

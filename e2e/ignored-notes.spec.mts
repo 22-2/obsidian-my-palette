@@ -26,6 +26,21 @@ test("the i prefix finds notes hidden by Excluded files", async ({ obsidian }) =
 	});
 });
 
+test("the i prefix searches excluded notes by keywords", async ({ obsidian }) => {
+	await writeRaw(
+		obsidian,
+		"hidden-dir/Observations.md",
+		"---\nkeywords:\n  - 宇宙\n  - 星空観察\n---\n# Observations",
+	);
+	const page = await openPaletteWith(obsidian, "i 宇宙 星空");
+	await expect(page.locator(MODAL_ROW)).toHaveCount(1, { timeout: 15_000 });
+	await expect(page.locator(MODAL_ROW).first()).toContainText("Observations");
+	await expect(page.locator(`${MODAL_ROW} .my-palette-suggestion__tag`)).toHaveText([
+		"宇宙",
+		"星空観察",
+	]);
+});
+
 test("Enter opens an ignored Markdown note as an external Markdown view", async ({ obsidian }) => {
 	const page = await openPaletteWith(obsidian, "i secret");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Secret plan", {

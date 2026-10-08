@@ -25,7 +25,7 @@ Prefixes (`>`, `e `, `bk `, …) exist for switching the search source, not as t
 
 ## Features
 
-- **Vault file search** with AND / OR terms, aliases, frontmatter and inline tags, and fully configurable sort priorities.
+- **Vault file search** with AND / OR terms, aliases, frontmatter `keywords`, frontmatter and inline tags, and fully configurable sort priorities.
 - **Everything 1.5a search** for files outside the Vault, opened in Obsidian (Markdown) or in the OS default app.
 - **Command, bookmark, link, backlink and Smart Connections search** in the same window.
 - **Multi-select** with the same gestures as a file manager, then copy paths, add tags or insert MOC links to all selected notes at once.
@@ -96,6 +96,8 @@ Outside Everything mode, separate terms with spaces for AND and use `|` for OR. 
 
 File search covers inline tags and frontmatter `tags`. `#project` searches tags directly, and ordinary terms can match tags too. Matching tags appear under the file name (up to three, then `+N`); hover a row to see all of them.
 
+Frontmatter `keywords` is also searchable as a string array (for example, `keywords: [astronomy, stargazing]`), including in excluded notes searched with `i `. Matching keywords appear beside matching tags without a `#`, with up to three chips in total followed by `+N`. Hover the chips to see all matches. Hash-prefixed tag-only queries search tags only.
+
 Everything queries are passed through unchanged and use Everything's own syntax. Everything mode needs Everything 1.5a with the official HTTP Server plugin running. See [Everything setup](#everything-setup).
 
 ## Working with several notes
@@ -139,24 +141,24 @@ In the table:
 
 Configure the order under `Settings → My Palette → Vault file search → Sort priorities`, separately for blank and typed input. Enabled priorities run top to bottom and the first one that differs wins. When everything ties, the Vault-relative path decides.
 
-| Priority                                | Ranks first                                                                  |
-| --------------------------------------- | ---------------------------------------------------------------------------- |
-| `Filename prefix match`                 | Names that start with the query                                              |
-| `Filename fuzzy match`                  | Higher fuzzy score on the name                                               |
-| `Alias prefix match`                    | Aliases that start with the query                                            |
-| `Alias fuzzy match`                     | Higher fuzzy score on an alias                                               |
-| `Tag match`                             | More matching tags                                                           |
-| `Match coverage`                        | More matched characters across name, path, aliases and tags (best OR branch) |
-| `Folder path match`                     | Higher fuzzy score on the folder portion of the path                         |
-| `Lower prior folders`                   | Pushes notes in the configured folders down (see below)                      |
-| `Activity`                              | Recently opened first; ties broken by persistent palette usage               |
-| `Last modified`                         | Newest modification time                                                     |
-| `Aliases count`                         | More aliases                                                                 |
-| `Alphabetical` / `Alphabetical reverse` | Name, then path, ascending / descending                                      |
-| `@prior` / `@prior:asc`                 | Smaller numeric `prior` in frontmatter                                       |
-| `@prior:desc`                           | Larger numeric `prior` in frontmatter                                        |
+| Priority                                | Ranks first                                                                            |
+| --------------------------------------- | -------------------------------------------------------------------------------------- |
+| `Filename prefix match`                 | Names that start with the query                                                        |
+| `Filename fuzzy match`                  | Higher fuzzy score on the name                                                         |
+| `Alias prefix match`                    | Aliases that start with the query                                                      |
+| `Alias fuzzy match`                     | Higher fuzzy score on an alias                                                         |
+| `Tag match`                             | More matching tags                                                                     |
+| `Match coverage`                        | More matched characters across name, path, aliases, tags and keywords (best OR branch) |
+| `Folder path match`                     | Higher fuzzy score on the folder portion of the path                                   |
+| `Lower prior folders`                   | Pushes notes in the configured folders down (see below)                                |
+| `Activity`                              | Recently opened first; ties broken by persistent palette usage                         |
+| `Last modified`                         | Newest modification time                                                               |
+| `Aliases count`                         | More aliases                                                                           |
+| `Alphabetical` / `Alphabetical reverse` | Name, then path, ascending / descending                                                |
+| `@prior` / `@prior:asc`                 | Smaller numeric `prior` in frontmatter                                                 |
+| `@prior:desc`                           | Larger numeric `prior` in frontmatter                                                  |
 
-Notes without a `prior` sort last. Complete contiguous matches on a name, path, alias or tag always beat fuzzy-only matches before this list is applied.
+Notes without a `prior` sort last. Complete contiguous matches on a name, path, alias, tag or keyword always beat fuzzy-only matches before this list is applied.
 
 `Lower prior folders` takes one folder path per line (subfolders included). Enable the criterion in `Sort priorities` to rank those notes lower even without `@prior`, and move it above name or activity criteria to give demotion precedence. Include-ignored preference still runs first.
 

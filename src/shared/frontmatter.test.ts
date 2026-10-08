@@ -1,9 +1,20 @@
 import { describe, expect, it } from "vitest";
 import {
 	mergeFrontmatterTags,
+	normalizeFrontmatterKeywords,
 	normalizeFrontmatterTags,
 	removeFrontmatterTags,
 } from "src/shared/frontmatter";
+
+describe("normalizeFrontmatterKeywords", () => {
+	it("accepts only string arrays and skips empty or invalid elements", () => {
+		expect(
+			normalizeFrontmatterKeywords([" 日本語 ", "two words", "", " ", 42, null, "日本語"]),
+		).toEqual(["日本語", "two words"]);
+		expect(normalizeFrontmatterKeywords(undefined)).toEqual([]);
+		expect(normalizeFrontmatterKeywords("keyword")).toEqual([]);
+	});
+});
 
 describe("removeFrontmatterTags", () => {
 	it("removes tags regardless of case and hash while keeping the order", () => {

@@ -17,7 +17,7 @@ export type { IgnoredNoteIndexEntry } from "src/ignored-notes/ignoredNoteEntry";
 
 const DATABASE_NAME = "my-palette-ignored-notes";
 const DATABASE_VERSION = 1;
-const INDEX_SCHEMA_VERSION = 3;
+const INDEX_SCHEMA_VERSION = 4;
 const INDEX_TTL_MS = 24 * 60 * 60 * 1000;
 const SCAN_CONCURRENCY = 8;
 const PROGRESS_INTERVAL = 250;
@@ -201,12 +201,13 @@ export class IgnoredNoteIndex {
 				parts.extension === "md" ? await this.app.vault.adapter.read(path) : undefined;
 			const frontmatter =
 				content === undefined
-					? { aliases: [], tags: [] }
+					? { aliases: [], keywords: [], tags: [] }
 					: parseIgnoredNoteFrontmatter(content);
 			return {
 				path,
 				...parts,
 				aliases: frontmatter.aliases,
+				keywords: frontmatter.keywords,
 				tags: frontmatter.tags,
 				prior: frontmatter.prior,
 				mtime: stat.mtime,
@@ -253,6 +254,7 @@ export class IgnoredNoteIndex {
 			basename: entry.basename,
 			extension: entry.extension,
 			aliases: entry.aliases,
+			keywords: entry.keywords,
 			tags: entry.tags,
 			prior: entry.prior,
 			mtime: entry.mtime,

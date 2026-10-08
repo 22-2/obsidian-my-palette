@@ -7,7 +7,7 @@ import {
 	FILE_SORT_PRIORITIES,
 	type FileSortPriorities,
 } from "src/settings/model";
-import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
+import { normalizeFrontmatterKeywords, normalizeFrontmatterPrior } from "src/shared/frontmatter";
 import {
 	EMPTY_EXCLUDED_FOLDER_SOURCE,
 	isExcludedFolder,
@@ -117,6 +117,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		// Keep all entries so extension-setting changes only need an in-memory cache refresh.
 		const metadata = this.app.metadataCache.getFileCache(file);
 		const fileAliases = aliases(metadata?.frontmatter?.aliases ?? metadata?.frontmatter?.alias);
+		const fileKeywords = normalizeFrontmatterKeywords(metadata?.frontmatter?.keywords);
 		const fileTags = normalizeTags([
 			...(metadata?.tags ?? []).map(({ tag }) => tag),
 			...(parseFrontMatterTags(metadata?.frontmatter) ?? []),
@@ -130,10 +131,11 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			path: file.path,
 			basename: file.basename,
 			aliases: fileAliases,
+			keywords: fileKeywords,
 			tags: fileTags,
 			prior,
 			extension: file.extension,
-			text: [file.basename, file.path, ...fileAliases].join(" "),
+			text: [file.basename, file.path, ...fileAliases, ...fileKeywords].join(" "),
 			mtime: file.stat.mtime,
 			ignored: false,
 		});
@@ -164,10 +166,16 @@ export class FileProvider implements PaletteProvider<FileResult> {
 					path: ignored.path,
 					basename: ignored.basename,
 					aliases: ignored.aliases,
+					keywords: ignored.keywords,
 					tags: ignored.tags,
 					prior: ignored.prior,
 					extension: ignored.extension,
-					text: [ignored.basename, ignored.path, ...ignored.aliases].join(" "),
+					text: [
+						ignored.basename,
+						ignored.path,
+						...ignored.aliases,
+						...ignored.keywords,
+					].join(" "),
 					mtime: ignored.mtime,
 					ignored: true,
 				};
@@ -203,9 +211,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			candidates,
 			fileSearchKeys(tagOnlyQuery),
 		).map((match) => createFileMatch(match, query, { tagOnlyQuery, usesMatchCoverage }));
-		const matchedTagsByPath = new Map(
-			matches.map(({ obj, matchedTags }) => [obj.path, matchedTags]),
-		);
+		const matchesByPath = new Map(matches.map((match) => [match.obj.path, match]));
 		return sortFileMatches(
 			matches,
 			tagOnlyQuery ? undefined : query,
@@ -213,10 +219,17 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			inputSortPriorities,
 			usageScores,
 			this.demotedPriorFolders(),
-		).map((entry) => this.result(entry, matchedTagsByPath.get(entry.path)));
+		).map((entry) => {
+			const match = matchesByPath.get(entry.path);
+			return this.result(entry, match?.matchedTags, match?.matchedKeywords);
+		});
 	}
 
-	private result(entry: FileSearchEntry, matchedTags?: readonly string[]): FileResult {
+	private result(
+		entry: FileSearchEntry,
+		matchedTags?: readonly string[],
+		matchedKeywords?: readonly string[],
+	): FileResult {
 		return {
 			id: entry.path,
 			mode: "file",
@@ -227,6 +240,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			file: entry.file,
 			ignored: entry.ignored,
 			matchedTags: matchedTags?.length ? [...matchedTags] : undefined,
+			matchedKeywords: matchedKeywords?.length ? [...matchedKeywords] : undefined,
 			// Table sorting must use the same metadata for indexed and ignored notes.
 			mtime: entry.mtime,
 			prior: entry.prior,
