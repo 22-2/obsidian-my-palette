@@ -144,6 +144,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		// ModalはComponentを継承しないため、開閉に合わせて部品のイベントを管理する。
 		// 同じインスタンスを再度開いてもフッターやハンドラを増やさない。
 		this.panel.load();
+		this.registerPreviewTransparency();
 		if (this.handlesSuggestionPreview())
 			this.registerSelectionDomEvent(
 				this.inputEl,
@@ -196,6 +197,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	}
 
 	onClose(): void {
+		this.containerEl.removeClass("my-palette-modal-container", "is-preview-transparent");
 		this.previewGeneration += 1;
 		this.refreshGeneration += 1;
 		this.cancelHistoryTimer();
@@ -216,6 +218,43 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	}
 
 	protected onSelectionModalOpen(): void {}
+
+	private registerPreviewTransparency(): void {
+		this.containerEl.addClass("my-palette-modal-container");
+		const restore = () => this.containerEl.removeClass("is-preview-transparent");
+		this.panel.registerDomEvent(
+			this.modalEl,
+			"keydown",
+			(event) => {
+				if (
+					event.isComposing ||
+					!event.altKey ||
+					event.ctrlKey ||
+					event.metaKey ||
+					event.shiftKey ||
+					event.key.toLowerCase() !== "h"
+				)
+					return;
+				event.preventDefault();
+				event.stopImmediatePropagation();
+				this.containerEl.addClass("is-preview-transparent");
+			},
+			true,
+		);
+		const ownerWindow = this.modalEl.ownerDocument.defaultView;
+		if (!ownerWindow) return;
+		// Key release may happen outside the input; blur covers switching apps
+		// while holding the shortcut, where the release never reaches this window.
+		this.panel.registerDomEvent(
+			ownerWindow,
+			"keyup",
+			(event) => {
+				if (event.key.toLowerCase() === "h" || event.key === "Alt") restore();
+			},
+			true,
+		);
+		this.panel.registerDomEvent(ownerWindow, "blur", restore);
+	}
 
 	protected handlesSuggestionPreview(): boolean {
 		return false;

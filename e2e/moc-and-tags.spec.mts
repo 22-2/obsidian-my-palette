@@ -1,4 +1,5 @@
 import { expect, test } from "obsidian-e2e-toolkit";
+import type { Page } from "@playwright/test";
 import {
 	menuItems,
 	MODAL_INPUT,
@@ -13,6 +14,21 @@ test.use({ vaultOptions: pluginVaultOptions() });
 test.beforeEach(async ({ obsidian }) => {
 	await obsidian.waitReady();
 });
+
+async function inspectPreviewThroughModal(page: Page): Promise<void> {
+	const container = page.locator(".my-palette-modal-container");
+	await page.keyboard.down("Alt");
+	await page.keyboard.down("h");
+	await expect(container).toHaveCSS("opacity", "0.1");
+	await expect(page.locator(MODAL_INPUT)).toBeFocused();
+	await page.keyboard.up("h");
+	await expect(container).toHaveCSS("opacity", "1");
+	await page.keyboard.down("h");
+	await expect(container).toHaveCSS("opacity", "0.1");
+	await page.keyboard.up("Alt");
+	await expect(container).toHaveCSS("opacity", "1");
+	await page.keyboard.up("h");
+}
 
 test("a result can be inserted into the active note's MOC Relateds", async ({ obsidian }) => {
 	await obsidian.createNote("Topic MOC.md", "## MOC\n- Relateds\n\n## Body\ntext\n");
@@ -51,6 +67,7 @@ test("checked MOC notes stay above results from a different query", async ({ obs
 	await expect.poll(() => obsidian.filePath()).toBe("Beta child.md");
 	await expect(page.locator(MODAL_INPUT)).toBeFocused();
 	await expect(page.locator(MODAL_INPUT)).toHaveAttribute("readonly", "");
+	await inspectPreviewThroughModal(page);
 	await page.keyboard.press("Control+Enter");
 	await expect.poll(() => obsidian.read("Topic MOC.md")).toContain("[[Alpha child]]");
 	expect(await obsidian.read("Topic MOC.md")).not.toContain("[[Beta child]]");
@@ -82,6 +99,7 @@ test("tag preview reveals core search while the insertion modal retains focus", 
 	await expect(page.locator(MODAL_INPUT)).toBeFocused();
 	await expect(page.locator(MODAL_INPUT)).toHaveAttribute("readonly", "");
 	await expect.poll(() => obsidian.filePath()).toBe("Target.md");
+	await inspectPreviewThroughModal(page);
 	await page.keyboard.press("Space");
 	await expect(page.locator(`${MODAL_ROW}.is-checked`)).toHaveCount(1);
 	await page.keyboard.press("Control+Enter");

@@ -66,6 +66,10 @@ export class SelectorHelpModal extends Modal {
 				: ([["Click", `${this.controls.actionLabel} the result`]] as const)),
 			...(this.controls.shortcuts ?? []),
 			["Ctrl+R / history button", "Restore a saved search without running an action"],
+			[
+				"Hold Alt+H",
+				"Make the modal 90% transparent to inspect the preview; release to restore",
+			],
 			["Esc", "Cancel"],
 		];
 		for (const [key, description] of shortcuts) {

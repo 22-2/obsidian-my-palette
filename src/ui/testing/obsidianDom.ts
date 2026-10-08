@@ -119,6 +119,7 @@ export class Component {
 
 export class Modal {
 	readonly modalEl = document.createElement("div");
+	readonly containerEl = this.modalEl;
 	readonly titleEl = this.modalEl.appendChild(document.createElement("h2"));
 	readonly contentEl = this.modalEl.appendChild(document.createElement("div"));
 	readonly scope = {

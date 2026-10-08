@@ -2,6 +2,11 @@
 	max-height: min(60vh, 480px);
 }
 
+/* Fade the backdrop too so a held preview shortcut exposes the workspace. */
+.my-palette-modal-container.is-preview-transparent {
+	opacity: 0.1;
+}
+
 /* The persistent palette is a compact workspace surface, not a modal embedded
    in a leaf. Every width boundary is explicit so narrow sidebars stay stable. */
 .my-palette-view.my-palette-panel--view {
