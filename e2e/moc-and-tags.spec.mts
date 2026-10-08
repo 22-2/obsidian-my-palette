@@ -29,6 +29,26 @@ test("a result can be inserted into the active note's MOC Relateds", async ({ ob
 		.toMatch(/- Relateds\n\s+- \[\[Child note\]\]/);
 });
 
+test("checked MOC notes stay above results from a different query", async ({ obsidian }) => {
+	await obsidian.createNote("Topic MOC.md", "## MOC\n- Relateds\n");
+	await obsidian.createNote("Alpha child.md", "alpha");
+	await obsidian.createNote("Beta child.md", "beta");
+	await obsidian.open("Topic MOC.md");
+	const page = obsidian.page;
+	await runPaletteCommand(obsidian, "insert-link-to-moc-relateds");
+	await page.locator(MODAL_INPUT).fill("alpha");
+	await expect(page.locator(MODAL_ROW).first()).toContainText("Alpha child");
+	await page.locator(`${MODAL_ROW} [data-row-toggle]`).first().click();
+	await page.keyboard.press("f");
+	await page.locator(MODAL_INPUT).fill("beta");
+	await expect(page.locator(MODAL_ROW).first()).toContainText("Alpha child");
+	await expect(page.locator(MODAL_ROW).nth(1)).toContainText("Beta child");
+	await expect(page.locator(`${MODAL_ROW}.is-checked`)).toHaveCount(1);
+	await page.keyboard.press("Control+Enter");
+	await expect.poll(() => obsidian.read("Topic MOC.md")).toContain("[[Alpha child]]");
+	expect(await obsidian.read("Topic MOC.md")).not.toContain("[[Beta child]]");
+});
+
 test("several tags can be checked and inserted into the note together", async ({ obsidian }) => {
 	await obsidian.createNote("Tagged.md", "# Tagged\n");
 	await obsidian.open("Tagged.md");
@@ -44,8 +64,10 @@ test("several tags can be checked and inserted into the note together", async ({
 
 	await page.keyboard.press("f");
 	await page.locator(MODAL_INPUT).fill("beta");
-	await expect(page.locator(MODAL_ROW).first()).toContainText("#beta");
+	await expect(page.locator(MODAL_ROW).first()).toContainText("#alpha");
+	await expect(page.locator(MODAL_ROW).nth(1)).toContainText("#beta");
 	await page.keyboard.press("ArrowUp");
+	await page.keyboard.press("ArrowDown");
 	await page.keyboard.press("Space");
 	await page.keyboard.press("Control+Enter");
 

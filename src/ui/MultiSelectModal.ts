@@ -48,6 +48,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 	private activeMenu?: Menu;
 	private checkedButtonEl?: HTMLElement;
 	private checkedCountEl?: HTMLElement;
+	private readonly candidateLimit = this.limit;
 
 	constructor(
 		private readonly multiSelect: MultiSelectModalProps,
@@ -103,10 +104,18 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 	async getSuggestions(query: string): Promise<MultiSelectCandidate<V>[]> {
 		this.updateMatchQuery(this.matchQuery(query));
 		const found = await this.searchCandidates(query);
-		// A stable partition keeps the host's ranking inside each group.
+		const foundByKey = new Map(found.map((candidate) => [candidate.key, candidate]));
+		// Checks stay visible across queries, even if the host no longer returns them.
+		const checked = this.checkedCandidates().map(
+			(candidate) => foundByKey.get(candidate.key) ?? candidate,
+		);
+		this.limit = Math.max(this.candidateLimit, checked.length);
+		const unchecked = found.filter(({ key }) => !this.checked.has(key));
+		// Stable groups preserve check order and the host's ranking within each group.
 		const candidates = [
-			...found.filter(({ locked }) => !locked),
-			...found.filter(({ locked }) => locked),
+			...checked,
+			...unchecked.filter(({ locked }) => !locked),
+			...unchecked.filter(({ locked }) => locked),
 		];
 		this.updateResultCount(candidates.length);
 		return candidates;
@@ -141,8 +150,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 				.setDisabled(this.checked.size === 0)
 				.onClick(() => {
 					this.checked.clear();
-					this.updateCheckedButton();
-					this.rerenderVisibleSuggestions();
+					this.refreshKeepingSelection();
 				}),
 		);
 	}
@@ -234,10 +242,10 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 			if (allChecked) this.checked.delete(candidate.key);
 			else this.checked.set(candidate.key, candidate);
 		}
-		// Checks only change row icons, so rows are redrawn in place: the cursor and
-		// selection stay put and an asynchronous source is not searched again.
-		this.updateCheckedButton();
+		// Update icons immediately, then rebuild the pinned group while retaining
+		// the cursor and selection by key rather than by their old row indexes.
 		this.rerenderVisibleSuggestions();
+		this.refreshKeepingSelection();
 	}
 
 	private refreshKeepingSelection(): void {
@@ -363,8 +371,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 				.setIcon("square")
 				.onClick(() => {
 					this.checked.clear();
-					this.updateCheckedButton();
-					this.rerenderVisibleSuggestions();
+					this.refreshKeepingSelection();
 				}),
 		);
 		menu.setParentElement(this.modalEl);

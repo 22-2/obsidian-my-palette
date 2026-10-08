@@ -305,6 +305,35 @@ describe("TagSelectionModal", () => {
 		await expect(f.result).resolves.toEqual(["fresh"]);
 	});
 
+	it("pins checked existing and new tags above matches across queries", async () => {
+		const f = await open();
+		f.key("ArrowDown");
+		f.key("ArrowDown");
+		f.key(" ");
+		await flush();
+		expect(f.labels()[0]).toContain("#beta");
+		expect(f.rows()[0].classList.contains("is-active")).toBe(true);
+		f.key("f");
+		await f.type("fresh");
+		expect(f.labels()[0]).toContain("#beta");
+		f.key("ArrowDown");
+		f.key("ArrowDown");
+		f.key(" ");
+		await flush();
+		f.key("f");
+		await f.type("alpha");
+		expect(f.checked()).toEqual(["#beta", "#fresh"]);
+		expect(f.labels().slice(0, 2)).toEqual([
+			expect.stringContaining("#beta"),
+			expect.stringContaining("#fresh"),
+		]);
+		f.mouse(f.rows()[1].querySelector(".my-palette-suggestion__icon")!, "mousedown");
+		await flush();
+		expect(f.labels().join(" ")).not.toContain("#fresh");
+		f.key("Enter", { ctrlKey: true });
+		await expect(f.result).resolves.toEqual(["beta"]);
+	});
+
 	it("runs the checked and highlighted tags together from the row menu", async () => {
 		const f = await open();
 		f.mouse(f.rows()[0].querySelector(".my-palette-suggestion__icon")!, "mousedown", {
