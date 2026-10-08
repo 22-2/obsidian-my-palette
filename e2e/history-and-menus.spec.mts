@@ -1,23 +1,20 @@
 import { expect, test } from "obsidian-e2e-toolkit";
 import {
-	activeFilePath,
 	closePalette,
-	createNote,
 	menuItems,
 	MODAL_INPUT,
 	MODAL_ROW,
-	openNote,
 	openPaletteWith,
 	pluginVaultOptions,
 	runPaletteCommand,
 } from "./support.mts";
 
-test.use({ vaultOptions: pluginVaultOptions });
+test.use({ vaultOptions: pluginVaultOptions() });
 
 test.beforeEach(async ({ obsidian }) => {
 	await obsidian.waitReady();
-	await createNote(obsidian.page, "Alpha plan.md", "# Alpha");
-	await createNote(obsidian.page, "Beta notes.md", "# Beta");
+	await obsidian.createNote("Alpha plan.md", "# Alpha");
+	await obsidian.createNote("Beta notes.md", "# Beta");
 });
 
 test("a committed search shows up in the history and restores its input", async ({ obsidian }) => {
@@ -47,19 +44,20 @@ test("right click offers the open actions", async ({ obsidian }) => {
 });
 
 test("middle click opens a background tab and keeps the current note", async ({ obsidian }) => {
-	const page = obsidian.page;
-	await openNote(page, "Beta notes.md");
-	await openPaletteWith(obsidian, "alpha");
+	await obsidian.open("Beta notes.md");
+	const page = await openPaletteWith(obsidian, "alpha");
+	// Wait for the filtered row: clicking while the list still shows an earlier
+	// query would hit a row that is about to be replaced.
+	await expect(page.locator(MODAL_ROW).first()).toContainText("Alpha plan");
 	await page.locator(MODAL_ROW).first().click({ button: "middle" });
-	await expect
-		.poll(() =>
-			page.evaluate(() =>
-				(window as any).app.workspace
-					.getLeavesOfType("markdown")
-					.map((leaf: any) => leaf.view.file?.path)
-					.sort(),
-			),
-		)
-		.toEqual(["Alpha plan.md", "Beta notes.md"]);
-	expect(await activeFilePath(page)).toBe("Beta notes.md");
+	// Background tabs are matched through the workspace, not allTabs(), which can miss them.
+	const openNotes = () =>
+		obsidian.evaluateApp(() =>
+			app.workspace
+				.getLeavesOfType("markdown")
+				.map((leaf) => (leaf.getViewState().state as { file?: string }).file)
+				.sort(),
+		);
+	await expect.poll(openNotes).toEqual(["Alpha plan.md", "Beta notes.md"]);
+	expect((await obsidian.activeTab())?.filePath).toBe("Beta notes.md");
 });

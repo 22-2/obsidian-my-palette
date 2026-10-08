@@ -31,7 +31,7 @@
 		"electron": "^44.6.0",
 		"happy-dom": "^20.14.5",
 		"obsidian": "^1.13.1",
-		"obsidian-e2e-toolkit": "https://github.com/22-2/obsidian-e2e-toolkit/releases/download/1.2.3/obsidian-e2e-toolkit-1.2.3.tgz",
+		"obsidian-e2e-toolkit": "https://github.com/22-2/obsidian-e2e-toolkit/releases/download/1.3.0/obsidian-e2e-toolkit-1.3.0.tgz",
 		"playwright": "^1.63.0",
 		"typescript": "7.0.2",
 		"vite": "catalog:",
