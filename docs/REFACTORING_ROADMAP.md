@@ -30,8 +30,8 @@
 
 ### 2. `main.ts` の純粋ロジックの切り出し
 
-- [ ] `formatSearchHistoryInput` を、category から prefix を引く純関数にして `src/palette/searchHistory.ts` へ移し、テストを追加する
-- [ ] `recordResultUsage` のパス抽出を `getResultFilePath(result)` として `src/palette/results.ts` に切り出し、テストを追加する
+- [x] `formatSearchHistoryInput` を、category から prefix を引く純関数にして `src/palette/searchHistory.ts` へ移し、テストを追加する
+- [x] `recordResultUsage` のパス抽出を `getResultFilePath(result)` として `src/palette/results.ts` に切り出し、テストを追加する
 
 ### 3. `main.ts` の責務の縮小
 

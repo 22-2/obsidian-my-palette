@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import type { SearchHistoryCategory, SearchHistoryEntry } from "src/settings/model";
 import {
+	formatSearchHistoryInput,
 	getSearchHistorySuggestions,
 	parseStoredSearchHistoryEntries,
 	pruneStoredSearchHistory,
@@ -144,5 +146,39 @@ describe("search history", () => {
 				count: 1,
 			},
 		]);
+	});
+});
+
+describe("formatSearchHistoryInput", () => {
+	const prefixes = { command: ">", everything: "es", includeIgnored: "i" };
+	const entry = (
+		category: SearchHistoryCategory,
+		includeIgnored?: boolean,
+	): SearchHistoryEntry => ({
+		input: "foo",
+		category,
+		includeIgnored,
+		lastSearchedAt: 1,
+		count: 1,
+	});
+
+	it.each([
+		["file", "foo"],
+		["command", "> foo"],
+		["bookmark", "bk foo"],
+		["smart", "sc foo"],
+		["everything", "es foo"],
+		["everything-directory", "esdir foo"],
+		["link", "o foo"],
+		["backlink", "b foo"],
+	] as const)("restores the %s prefix", (category, expected) => {
+		expect(formatSearchHistoryInput(entry(category), prefixes)).toBe(expected);
+	});
+
+	it("adds the ignored-note prefix except for related searches", () => {
+		expect(formatSearchHistoryInput(entry("file", true), prefixes)).toBe("i foo");
+		expect(formatSearchHistoryInput(entry("command", true), prefixes)).toBe("i > foo");
+		expect(formatSearchHistoryInput(entry("link", true), prefixes)).toBe("o foo");
+		expect(formatSearchHistoryInput(entry("backlink", true), prefixes)).toBe("b foo");
 	});
 });

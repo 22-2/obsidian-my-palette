@@ -1,5 +1,5 @@
 import type { Prefixes } from "src/palette/inputParser";
-import { getSearchHistoryCategory, parseInput } from "src/palette/inputParser";
+import { getSearchHistoryCategory, parseInput, RELATED_PREFIXES } from "src/palette/inputParser";
 import type { SearchHistoryCategory, SearchHistoryEntry } from "src/settings/model";
 
 export interface RecordSearchHistoryOptions {
@@ -197,4 +197,35 @@ export function getSearchHistorySuggestions(
 		.sort((a, b) => b.count - a.count || b.lastSearchedAt - a.lastSearchedAt)
 		.slice(0, Math.max(0, limit))
 		.map((entry) => ({ ...entry }));
+}
+
+/** Rebuilds the palette input that would produce the given history entry. */
+export function formatSearchHistoryInput(entry: SearchHistoryEntry, prefixes: Prefixes): string {
+	const modeInput = `${historyCategoryPrefix(entry.category, prefixes)}${entry.input}`;
+	// Related searches intentionally do not support the ignored-note scope;
+	// avoid reconstructing an input that the parser would interpret as File mode.
+	return entry.includeIgnored && entry.category !== "link" && entry.category !== "backlink"
+		? `${prefixes.includeIgnored.trimEnd()} ${modeInput}`
+		: modeInput;
+}
+
+function historyCategoryPrefix(category: SearchHistoryCategory, prefixes: Prefixes): string {
+	switch (category) {
+		case "command":
+			return `${prefixes.command.trimEnd()} `;
+		case "bookmark":
+			return "bk ";
+		case "smart":
+			return "sc ";
+		case "everything":
+			return `${prefixes.everything.trimEnd()} `;
+		case "everything-directory":
+			return "esdir ";
+		case "link":
+			return RELATED_PREFIXES.link;
+		case "backlink":
+			return RELATED_PREFIXES.backlink;
+		case "file":
+			return "";
+	}
 }

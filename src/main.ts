@@ -20,14 +20,19 @@ import {
 } from "src/palette/surfaces/paletteViewTypes";
 import type { PaletteTableState } from "src/palette/table/paletteTableModel";
 import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
-import type { PaletteMode, PaletteResult, SearchHistoryResult } from "src/palette/results";
+import {
+	getResultFilePath,
+	type PaletteMode,
+	type PaletteResult,
+	type SearchHistoryResult,
+} from "src/palette/results";
 import type { SearchHistoryCategory, SearchHistoryEntry } from "src/settings/model";
 import {
+	formatSearchHistoryInput,
 	getSearchHistorySuggestions,
 	recordSearchHistory,
 	SEARCH_HISTORY_MAX_ENTRIES,
 } from "src/palette/searchHistory";
-import { RELATED_PREFIXES } from "src/palette/inputParser";
 import {
 	loadPluginSettings,
 	savePluginSettings,
@@ -328,18 +333,7 @@ export default class MyPalettePlugin extends Plugin {
 	}
 
 	recordResultUsage(result: PaletteResult): void {
-		const path =
-			result.mode === "file"
-				? result.vaultPath
-				: result.mode === "everything" && result.kind === "file"
-					? result.vaultPath
-					: result.mode === "bookmark"
-						? result.file?.path
-						: result.mode === "link" ||
-							  result.mode === "backlink" ||
-							  result.mode === "smart"
-							? result.file.path
-							: undefined;
+		const path = getResultFilePath(result);
 		if (path) this.recordFileUsage(path);
 	}
 
@@ -379,27 +373,7 @@ export default class MyPalettePlugin extends Plugin {
 	}
 
 	formatSearchHistoryInput(entry: SearchHistoryEntry): string {
-		const modeInput =
-			entry.category === "command"
-				? `${this.settings.prefixes.command.trimEnd()} ${entry.input}`
-				: entry.category === "bookmark"
-					? `bk ${entry.input}`
-					: entry.category === "smart"
-						? `sc ${entry.input}`
-						: entry.category === "everything"
-							? `${this.settings.prefixes.everything.trimEnd()} ${entry.input}`
-							: entry.category === "everything-directory"
-								? `esdir ${entry.input}`
-								: entry.category === "link"
-									? `${RELATED_PREFIXES.link}${entry.input}`
-									: entry.category === "backlink"
-										? `${RELATED_PREFIXES.backlink}${entry.input}`
-										: entry.input;
-		// Related searches intentionally do not support the ignored-note scope;
-		// avoid reconstructing an input that the parser would interpret as File mode.
-		return entry.includeIgnored && entry.category !== "link" && entry.category !== "backlink"
-			? `${this.settings.prefixes.includeIgnored.trimEnd()} ${modeInput}`
-			: modeInput;
+		return formatSearchHistoryInput(entry, this.settings.prefixes);
 	}
 
 	recordSearch(input: string, category: SearchHistoryCategory, includeIgnored = false): void {
