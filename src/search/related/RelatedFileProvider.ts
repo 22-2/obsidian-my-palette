@@ -8,7 +8,7 @@ import type { RelatedFileResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 
-/** Finds individual outgoing-link or incoming-link occurrences for the active note. */
+/** Finds outgoing destinations or individual incoming-link occurrences for the active note. */
 export class RelatedFileProvider implements PaletteProvider<RelatedFileResult> {
 	constructor(
 		private readonly app: App,
@@ -52,14 +52,21 @@ export class RelatedFileProvider implements PaletteProvider<RelatedFileResult> {
 				} satisfies RelatedFileResult;
 			}),
 		);
-		if (!query.trim())
-			return results.sort(
-				(a, b) => a.file.path.localeCompare(b.file.path) || a.line - b.line,
-			);
-		return searchFuzzyQuery(query, results, [
-			(result) => result.primary,
-			(result) => result.secondary,
-		]).map(({ obj }) => obj);
+		const ranked = !query.trim()
+			? results.sort((a, b) => a.file.path.localeCompare(b.file.path) || a.line - b.line)
+			: searchFuzzyQuery(query, results, [
+					(result) => result.primary,
+					(result) => result.secondary,
+				]).map(({ obj }) => obj);
+		if (mode === "backlink") return ranked;
+		// Deduplicate after matching so every occurrence remains searchable and
+		// the best-matching line represents each outgoing destination.
+		const seen = new Set<string>();
+		return ranked.filter(({ file }) => {
+			if (seen.has(file.path)) return false;
+			seen.add(file.path);
+			return true;
+		});
 	}
 
 	private outgoing(origin: TFile): Array<{ file: TFile; cache: LinkCache }> {

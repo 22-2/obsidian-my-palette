@@ -61,7 +61,7 @@ export interface SearchHistoryResult extends Omit<BaseResult, "mode">, SearchHis
 	mode: "search-history";
 }
 
-/** A single link occurrence, used by the Link and Backlink commands. */
+/** A representative outgoing link or a single backlink occurrence. */
 export interface RelatedFileResult extends BaseResult {
 	mode: "link" | "backlink";
 	file: TFile;
