@@ -1,4 +1,4 @@
-import type { App } from "obsidian";
+import { Notice, type App } from "obsidian";
 import { Window } from "happy-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { TagChoice } from "src/tags/tagChoices";
@@ -6,7 +6,10 @@ import { TagSelectionModal } from "src/tags/TagSelectionModal";
 import { installObsidianDom, Menu } from "src/ui/testing/obsidianDom";
 import { createSelectorPlugin } from "src/ui/testing/selectorPlugin";
 
-vi.mock("obsidian", () => import("src/ui/testing/obsidianDom"));
+vi.mock("obsidian", async () => ({
+	...(await import("src/ui/testing/obsidianDom")),
+	Notice: vi.fn(),
+}));
 
 const choices: TagChoice[] = [
 	{ tag: "alpha", count: 2, registered: false, reason: "recent" },
@@ -29,6 +32,7 @@ beforeEach(() => {
 	vi.stubGlobal("window", dom);
 	installObsidianDom();
 	Menu.last = undefined;
+	vi.mocked(Notice).mockClear();
 });
 afterEach(() => {
 	document.body.replaceChildren();
@@ -237,6 +241,58 @@ describe("TagSelectionModal", () => {
 		await f.type("#fresh");
 		f.key("Enter", { code });
 		await expect(f.result).resolves.toEqual(["fresh"]);
+	});
+
+	it.each(["Enter", "NumpadEnter"])(
+		"warns on %s with highlighted rows and inserts them with Ctrl+Enter",
+		async (code) => {
+			const f = await open();
+			f.key("ArrowDown");
+			f.key("ArrowDown", { shiftKey: true });
+			f.key("Enter", { code });
+			await flush();
+			expect(Notice).toHaveBeenCalledExactlyOnceWith(
+				expect.stringContaining('Enter will only add "#beta". Press Ctrl+Enter'),
+			);
+			expect(f.modal.modalEl.isConnected).toBe(true);
+			expect(f.checked()).toEqual([]);
+			f.key("Enter", { ctrlKey: true });
+			await expect(f.result).resolves.toEqual(["alpha", "beta"]);
+		},
+	);
+
+	it("keeps checked tags after the Enter warning and prefers them over highlighted rows", async () => {
+		const f = await open();
+		f.key("ArrowDown");
+		f.key("ArrowDown", { shiftKey: true });
+		f.key(" ");
+		await flush();
+		f.key("f");
+		await f.type("fresh");
+		f.key("ArrowDown");
+		f.key("ArrowDown");
+		f.key("ArrowDown");
+		f.key("Enter");
+		await flush();
+		expect(Notice).toHaveBeenCalledExactlyOnceWith(
+			expect.stringContaining('Enter will only add "#fresh". Press Ctrl+Enter'),
+		);
+		expect(f.modal.modalEl.isConnected).toBe(true);
+		expect(f.checked()).toEqual(["#alpha", "#beta"]);
+		f.key("Enter", { ctrlKey: true });
+		await expect(f.result).resolves.toEqual(["alpha", "beta"]);
+	});
+
+	it("allows a single highlighted row to be inserted after the multi-selection warning", async () => {
+		const f = await open();
+		f.key("ArrowDown");
+		f.key("ArrowDown", { shiftKey: true });
+		f.key("Enter");
+		await flush();
+		f.key("ArrowUp");
+		f.key("Enter");
+		await expect(f.result).resolves.toEqual(["alpha"]);
+		expect(Notice).toHaveBeenCalledTimes(1);
 	});
 
 	it("ignores registered tags and runs nothing when nothing is checked", async () => {

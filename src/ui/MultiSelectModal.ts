@@ -1,4 +1,4 @@
-import { Menu, setIcon, type App } from "obsidian";
+import { Menu, Notice, setIcon, type App } from "obsidian";
 import { BaseSuggestModal } from "src/ui/baseSuggestModal";
 import { renderSelectionItem, type SelectionItem } from "src/ui/selectionModal";
 import type { SelectorControls } from "src/ui/selectorControls";
@@ -37,8 +37,8 @@ export interface MultiSelectModalProps {
 
 /**
  * Multi selector shared by tag and MOC insertion so both behave and look alike.
- * Flow: select rows (click, Ctrl, Shift, arrows) → run them (Enter) or check
- * them (Space, the check box or context menu) → run checked rows with Ctrl+Enter
+ * Flow: run one row (Enter), or select/check rows (click, Ctrl, Shift, arrows,
+ * Space, the check box or context menu) → run them with Ctrl+Enter
  * or the checked-list button. Checking keeps the modal open; any other close cancels.
  */
 export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCandidate<V>> {
@@ -215,14 +215,28 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 			event.type === "keydown" &&
 			((event as KeyboardEvent).ctrlKey || (event as KeyboardEvent).metaKey);
 		if (runShortcut) {
-			this.confirm();
+			this.confirm(
+				this.checked.size > 0
+					? this.checkedCandidates()
+					: this.getSelectedItems().filter(({ locked }) => !locked),
+			);
 			return;
 		}
-		// Enter inserts the selected rows immediately; include the activated row if
-		// a rerender left it out of the selection.
-		const rows = [...this.getSelectedItems()];
-		if (!rows.some(({ key }) => key === candidate.key)) rows.push(candidate);
-		this.confirm(rows.filter(({ locked }) => !locked));
+		if (event.type !== "keydown") {
+			const rows = [...this.getSelectedItems()];
+			if (!rows.some(({ key }) => key === candidate.key)) rows.push(candidate);
+			this.confirm(rows.filter(({ locked }) => !locked));
+			return;
+		}
+		if (candidate.locked) return;
+		// Warn before closing so a multi-selection can still be run with Ctrl+Enter.
+		if (this.checked.size > 1 || this.getSelectedItems().length > 1) {
+			new Notice(
+				`Enter will only ${this.multiSelect.actionLabel.toLowerCase()} "${candidate.item.label}". Press Ctrl+Enter to ${this.multiSelect.actionLabel.toLowerCase()} multiple items, or select a single item and press Enter.`,
+			);
+			return;
+		}
+		this.confirm([candidate]);
 	}
 
 	/** Resolves with the given rows, or with every checked row by default. */

@@ -79,7 +79,10 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 					shortcuts: [
 						["→", "Preview the tag in core Search without leaving this selector"],
 						["Space", "Toggle checks in selection mode"],
-						["Ctrl+Enter", "Add all checked tags"],
+						[
+							"Ctrl+Enter",
+							"Add all checked tags, or selected tags if none are checked",
+						],
 					],
 				},
 			},

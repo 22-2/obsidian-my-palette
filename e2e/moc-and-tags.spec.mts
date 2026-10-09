@@ -7,6 +7,7 @@ import {
 	openPaletteWith,
 	pluginVaultOptions,
 	runPaletteCommand,
+	setIgnoreFilters,
 } from "./support.mts";
 
 test.use({ vaultOptions: pluginVaultOptions() });
@@ -72,6 +73,72 @@ test("checked MOC notes stay above results from a different query", async ({ obs
 	await expect.poll(() => obsidian.read("Topic MOC.md")).toContain("[[Alpha child]]");
 	expect(await obsidian.read("Topic MOC.md")).not.toContain("[[Beta child]]");
 	expect(await obsidian.read("Beta child.md")).not.toContain("[[Alpha child]]");
+});
+
+test("MOC insertion hides excluded notes unless the i prefix is supplied", async ({ obsidian }) => {
+	await obsidian.createNote("Topic MOC.md", "## MOC\n- Relateds\n");
+	await obsidian.createNote("Visible child.md", "visible");
+	await obsidian.createNote("Hidden child.md", "hidden");
+	await setIgnoreFilters(obsidian, ["Hidden child.md"]);
+	await obsidian.open("Topic MOC.md");
+	const page = obsidian.page;
+	await runPaletteCommand(obsidian, "insert-link-to-moc-relateds");
+	await expect(page.locator(MODAL_ROW)).toHaveCount(1);
+	await expect(page.locator(MODAL_ROW).first()).toContainText("Visible child");
+	await page.locator(MODAL_INPUT).fill("hidden");
+	await expect(page.locator(MODAL_ROW)).toHaveCount(0);
+	await page.locator(MODAL_INPUT).fill("i hidden");
+	await expect(page.locator(MODAL_ROW).first()).toContainText("Hidden child", {
+		timeout: 15_000,
+	});
+	await page.keyboard.press("Escape");
+	expect(await obsidian.read("Topic MOC.md")).not.toContain("[[Hidden child]]");
+});
+
+test.describe("MOC insertion with plugin exclusions", () => {
+	test.use({
+		vaultOptions: pluginVaultOptions({ file: { excludedFolders: ["Hidden child.md"] } }),
+	});
+
+	test("includes plugin-excluded notes only with the i prefix", async ({ obsidian }) => {
+		await obsidian.createNote("Topic MOC.md", "## MOC\n- Relateds\n");
+		await obsidian.createNote("Visible child.md", "visible");
+		await obsidian.createNote("Hidden child.md", "hidden");
+		await obsidian.open("Topic MOC.md");
+		const page = obsidian.page;
+		await runPaletteCommand(obsidian, "insert-link-to-moc-relateds");
+		await expect(page.locator(MODAL_ROW)).toHaveCount(1);
+		await expect(page.locator(MODAL_ROW).first()).toContainText("Visible child");
+		await page.locator(MODAL_INPUT).fill("hidden");
+		await expect(page.locator(MODAL_ROW)).toHaveCount(0);
+		await page.locator(MODAL_INPUT).fill("i hidden");
+		await expect(page.locator(MODAL_ROW).first()).toContainText("Hidden child");
+		await page.keyboard.press("Escape");
+	});
+});
+
+test("MOC insertion warns on Enter with several selected notes and accepts Ctrl+Enter", async ({
+	obsidian,
+}) => {
+	await obsidian.createNote("Topic MOC.md", "## MOC\n- Relateds\n");
+	await obsidian.createNote("Alpha child.md", "alpha");
+	await obsidian.createNote("Beta child.md", "beta");
+	await obsidian.open("Topic MOC.md");
+	const page = obsidian.page;
+	await runPaletteCommand(obsidian, "insert-link-to-moc-relateds");
+	await expect(page.locator(MODAL_ROW)).toHaveCount(2);
+	await page.keyboard.press("ArrowDown");
+	await page.keyboard.press("Shift+ArrowDown");
+	await expect(page.locator(`${MODAL_ROW}.is-selected`)).toHaveCount(2);
+	await page.keyboard.press("Enter");
+	await expect(page.locator(".notice")).toContainText("Enter will only insert");
+	await expect(page.locator(".notice")).toContainText("Ctrl+Enter");
+	await expect(page.locator(MODAL_INPUT)).toBeVisible();
+	expect(await obsidian.read("Topic MOC.md")).not.toContain("[[Alpha child]]");
+	expect(await obsidian.read("Topic MOC.md")).not.toContain("[[Beta child]]");
+	await page.keyboard.press("Control+Enter");
+	await expect.poll(() => obsidian.read("Topic MOC.md")).toContain("[[Alpha child]]");
+	await expect.poll(() => obsidian.read("Topic MOC.md")).toContain("[[Beta child]]");
 });
 
 test("tag preview reveals core search while the insertion modal retains focus", async ({

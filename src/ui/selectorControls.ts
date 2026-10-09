@@ -52,7 +52,7 @@ export class SelectorHelpModal extends Modal {
 						["↑ from the first result", "Return to input mode"],
 					] as const)
 				: []),
-			["Enter / numpad Enter", `${this.controls.actionLabel} the active selection`],
+			["Enter / numpad Enter", `${this.controls.actionLabel} the active result`],
 			["Home / End", "Move to the start or end of the search input"],
 			["Ctrl+Home / Ctrl+End", "Move to the first or last result"],
 			...(this.controls.selectionMode === "extended"

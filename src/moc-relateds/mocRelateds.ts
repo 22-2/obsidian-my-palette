@@ -23,6 +23,7 @@ import { runResultAction, type ActionKind } from "src/palette/resultActions";
 import { executePaletteResult } from "src/palette/executePaletteResult";
 import { matchedMetadataPresentation } from "src/palette/resultPresentation";
 import { relationPaths } from "src/shared/noteRelations";
+import { isExcludedFolder } from "src/search/excludedFolders";
 
 function toRelatedCandidate(
 	app: App,
@@ -234,12 +235,15 @@ class MocTargetModal extends MultiSelectModal<string> {
 					category: "moc-insertion",
 					title: "MOC link insertion",
 					description:
-						"Search notes to link in the active MOC. Prefix i followed by a space includes Excluded files.",
+						"Search notes to link in the active MOC. Excluded files are hidden by default. Prefix i followed by a space includes them.",
 					actionLabel: "Insert",
 					shortcuts: [
 						["→", "Preview the note without leaving this selector"],
 						["Space", "Toggle checks in selection mode"],
-						["Ctrl+Enter", "Insert all checked notes"],
+						[
+							"Ctrl+Enter",
+							"Insert all checked notes, or selected notes if none are checked",
+						],
 					],
 				},
 			},
@@ -262,6 +266,16 @@ class MocTargetModal extends MultiSelectModal<string> {
 			includeIgnored: parsed.includeIgnored,
 		});
 		return results
+			.filter(
+				(result) =>
+					parsed.includeIgnored ||
+					(!result.ignored &&
+						!isUserIgnoredPath(plugin.app, result.vaultPath) &&
+						!isExcludedFolder(
+							() => plugin.settings.file.excludedFolders,
+							result.vaultPath,
+						)),
+			)
 			.map((result) =>
 				toRelatedCandidate(
 					plugin.app,
