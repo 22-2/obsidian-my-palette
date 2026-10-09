@@ -61,7 +61,7 @@ export interface SearchHistoryResult extends Omit<BaseResult, "mode">, SearchHis
 	mode: "search-history";
 }
 
-/** A representative outgoing link or a single backlink occurrence. */
+/** A representative outgoing link or backlink occurrence for a related note. */
 export interface RelatedFileResult extends BaseResult {
 	mode: "link" | "backlink";
 	file: TFile;

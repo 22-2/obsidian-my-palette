@@ -8,7 +8,7 @@ import type { RelatedFileResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 
-/** Finds outgoing destinations or individual incoming-link occurrences for the active note. */
+/** Finds distinct outgoing destinations or incoming source notes for the active note. */
 export class RelatedFileProvider implements PaletteProvider<RelatedFileResult> {
 	constructor(
 		private readonly app: App,
@@ -58,9 +58,8 @@ export class RelatedFileProvider implements PaletteProvider<RelatedFileResult> {
 					(result) => result.primary,
 					(result) => result.secondary,
 				]).map(({ obj }) => obj);
-		if (mode === "backlink") return ranked;
 		// Deduplicate after matching so every occurrence remains searchable and
-		// the best-matching line represents each outgoing destination.
+		// the best-matching line represents each related note.
 		const seen = new Set<string>();
 		return ranked.filter(({ file }) => {
 			if (seen.has(file.path)) return false;

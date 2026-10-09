@@ -46,17 +46,25 @@ function fixture() {
 		metadataCache: {
 			getFileCache: () => ({ links }),
 			getFirstLinkpathDest: (path: string) => (path === "Other/Target" ? other : target),
-			getBacklinksForFile: () => ({ data: new Map([[origin.path, links.slice(0, 4)]]) }),
+			getBacklinksForFile: () => ({
+				data: new Map([
+					[origin.path, links.slice(0, 4)],
+					[other.path, [link("Target", 0), link("Target#Details", 1)]],
+				]),
+			}),
 		},
 		vault: {
-			cachedRead: vi.fn(async () => content),
-			getAbstractFileByPath: () => origin,
+			cachedRead: vi.fn(async (file: TFile) =>
+				file === other ? "[[Target]]\n[[Target#Details]]" : content,
+			),
+			getAbstractFileByPath: (path: string) =>
+				[origin, target, other].find((file) => file.path === path) ?? null,
 		},
 	} as unknown as App;
 	return { app, origin, target, other, provider: new RelatedFileProvider(app) };
 }
 
-describe("RelatedFileProvider outgoing deduplication", () => {
+describe("RelatedFileProvider deduplication", () => {
 	it("lists each resolved destination once, including repeated, aliased and subpath links", async () => {
 		const { provider, target, other, app } = fixture();
 		const results = await provider.search({ mode: "link", query: "" });
@@ -75,10 +83,22 @@ describe("RelatedFileProvider outgoing deduplication", () => {
 		expect(byContext[0]).toMatchObject({ file: target, line: 1 });
 	});
 
-	it("preserves individual backlink occurrences", async () => {
-		const { provider, origin } = fixture();
-		const results = await provider.search({ mode: "backlink", query: "" });
-		expect(results).toHaveLength(4);
-		expect(results.every(({ file }) => file.path === origin.path)).toBe(true);
+	it("lists each backlink source once and reads each source note once", async () => {
+		const { provider, origin, target, other, app } = fixture();
+		const results = await provider.search({ mode: "backlink", query: "", sourceFile: target });
+		expect(results.map(({ file }) => file.path)).toEqual([origin.path, other.path]);
+		expect(results.map(({ line }) => line)).toEqual([0, 0]);
+		expect(app.vault.cachedRead).toHaveBeenCalledTimes(2);
+	});
+
+	it("deduplicates queried backlinks without hiding matches in later occurrences", async () => {
+		const { provider, origin, target } = fixture();
+		const request = { mode: "backlink" as const, sourceFile: target };
+		const byContext = await provider.search({ ...request, query: "Target" });
+		expect(byContext).toHaveLength(2);
+		expect(byContext.filter(({ file }) => file.path === origin.path)).toHaveLength(1);
+		const laterContext = await provider.search({ ...request, query: "needle" });
+		expect(laterContext).toHaveLength(1);
+		expect(laterContext[0]).toMatchObject({ file: origin, line: 1 });
 	});
 });
