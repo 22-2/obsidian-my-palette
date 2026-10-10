@@ -36,7 +36,6 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	private historyCommitted = false;
 	private previewGeneration = 0;
 	private previewPending = false;
-	private previewEventController?: AbortController;
 
 	constructor(
 		{
@@ -64,6 +63,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			: undefined;
 		this.panel = new SuggestionPanel(this.modalEl, {
 			surface: "modal",
+			previewContainerEl: this.containerEl,
 			placeholder,
 			initialInput,
 			footerText,
@@ -145,7 +145,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		// ModalはComponentを継承しないため、開閉に合わせて部品のイベントを管理する。
 		// 同じインスタンスを再度開いてもフッターやハンドラを増やさない。
 		this.panel.load();
-		this.registerPreviewTransparency();
+		this.containerEl.addClass("my-palette-modal-container");
 		if (this.handlesSuggestionPreview())
 			this.registerSelectionDomEvent(
 				this.inputEl,
@@ -199,8 +199,6 @@ export abstract class BaseSuggestModal<T> extends Modal {
 
 	onClose(): void {
 		this.containerEl.removeClass("my-palette-modal-container", "is-preview-hidden");
-		this.previewEventController?.abort();
-		this.previewEventController = undefined;
 		this.previewGeneration += 1;
 		this.refreshGeneration += 1;
 		this.cancelHistoryTimer();
@@ -221,48 +219,6 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	}
 
 	protected onSelectionModalOpen(): void {}
-
-	private registerPreviewTransparency(): void {
-		this.containerEl.addClass("my-palette-modal-container");
-		const restore = (returnFocus = false) => {
-			this.containerEl.removeClass("is-preview-hidden");
-			if (returnFocus && this.inputEl.isConnected)
-				this.inputEl.focus({ preventScroll: true });
-		};
-		this.panel.registerDomEvent(
-			this.modalEl,
-			"keydown",
-			(event) => {
-				if (
-					event.isComposing ||
-					!event.altKey ||
-					event.ctrlKey ||
-					event.metaKey ||
-					event.shiftKey ||
-					event.key.toLowerCase() !== "h"
-				)
-					return;
-				event.preventDefault();
-				event.stopImmediatePropagation();
-				this.containerEl.addClass("is-preview-hidden");
-			},
-			true,
-		);
-		const ownerWindow = this.modalEl.ownerDocument.defaultView;
-		if (!ownerWindow) return;
-		const eventController = new AbortController();
-		this.previewEventController = eventController;
-		// Key release may happen outside the input; blur covers switching apps
-		// while holding the shortcut, where the release never reaches this window.
-		ownerWindow.addEventListener(
-			"keyup",
-			(event) => {
-				if (event.key.toLowerCase() === "h" || event.key === "Alt") restore(true);
-			},
-			{ capture: true, signal: eventController.signal },
-		);
-		ownerWindow.addEventListener("blur", () => restore(), { signal: eventController.signal });
-	}
 
 	protected handlesSuggestionPreview(): boolean {
 		return false;

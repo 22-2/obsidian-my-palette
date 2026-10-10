@@ -441,36 +441,80 @@ it("redraws rows in place without losing the extended selection", async () => {
 	expect(f.selection()).toEqual(["beta", "gamma", "delta"]);
 });
 
-it("hides for held Alt+H and restores on release, blur and close", async () => {
-	const f = await fixture("modal", "extended", true);
-	key(f.input, "ArrowDown");
-	const container = f.modal!.containerEl;
-	const hidden = () => container.classList.contains("is-preview-hidden");
-	key(f.input, "h", { altKey: true, isComposing: true });
-	key(f.input, "h", { altKey: true, ctrlKey: true });
-	expect(hidden()).toBe(false);
-	key(f.input, "h", { altKey: true });
-	expect(hidden()).toBe(true);
-	expect(f.input.readOnly).toBe(true);
-	expect(f.input.value).toBe("");
-	key(f.input, "h", { altKey: true, repeat: true });
-	expect(hidden()).toBe(true);
-	window.dispatchEvent(new KeyboardEvent("keyup", { key: "h", altKey: true }));
-	expect(hidden()).toBe(false);
-	expect(document.activeElement).toBe(f.input);
-	key(f.input, "h", { altKey: true });
+describe.each(["modal", "view"] as const)("%s preview transparency", (surface) => {
+	it.each([
+		["single", false],
+		["single", true],
+		["extended", false],
+		["extended", true],
+	] as const)(
+		"restores %s selection with selection mode %s",
+		async (selectionMode, selecting) => {
+			const f = await fixture(surface, selectionMode, true);
+			f.input.value = "query";
+			if (selecting) key(f.input, "ArrowDown");
+			const selection = f.selection();
+			const container = f.modal?.containerEl ?? f.root;
+			const hidden = () => container.classList.contains("is-preview-hidden");
+			key(f.input, "h", { altKey: true, isComposing: true });
+			key(f.input, "h", { altKey: true, ctrlKey: true });
+			expect(hidden()).toBe(false);
+			key(f.input, "h", { altKey: true });
+			expect(hidden()).toBe(true);
+			expect(f.input.readOnly).toBe(selecting);
+			expect(f.input.value).toBe("query");
+			key(f.input, "h", { altKey: true, repeat: true });
+			expect(hidden()).toBe(true);
+			window.dispatchEvent(new KeyboardEvent("keyup", { key: "h", altKey: true }));
+			expect(hidden()).toBe(false);
+			expect(document.activeElement).toBe(f.input);
+			expect(f.input.readOnly).toBe(selecting);
+			expect(f.selection()).toEqual(selection);
+			key(f.input, "h", { altKey: true });
+			window.dispatchEvent(new KeyboardEvent("keyup", { key: "Alt" }));
+			expect(hidden()).toBe(false);
+			key(f.input, "h", { altKey: true });
+			window.dispatchEvent(new Event("blur"));
+			expect(hidden()).toBe(false);
+			key(f.input, "h", { altKey: true });
+			if (f.modal) f.modal.close();
+			else f.panel!.unload();
+			expect(hidden()).toBe(false);
+			key(f.input, "h", { altKey: true });
+			expect(hidden()).toBe(false);
+			if (f.modal) f.modal.open();
+			else f.panel!.load();
+			expect(hidden()).toBe(false);
+			key(f.input, "h", { altKey: true });
+			expect(hidden()).toBe(true);
+			window.dispatchEvent(new KeyboardEvent("keyup", { key: "h" }));
+			expect(hidden()).toBe(false);
+		},
+	);
+});
+
+it("does not steal focus from another panel on an ordinary H or Alt release", async () => {
+	const first = await fixture("view");
+	const second = await fixture("view");
+	first.input.focus();
+	window.dispatchEvent(new KeyboardEvent("keyup", { key: "h" }));
 	window.dispatchEvent(new KeyboardEvent("keyup", { key: "Alt" }));
-	expect(hidden()).toBe(false);
-	key(f.input, "h", { altKey: true });
-	window.dispatchEvent(new Event("blur"));
-	expect(hidden()).toBe(false);
-	key(f.input, "h", { altKey: true });
-	f.modal!.close();
-	expect(hidden()).toBe(false);
-	key(f.input, "h", { altKey: true });
-	expect(hidden()).toBe(false);
-	f.modal!.open();
-	expect(hidden()).toBe(false);
+	expect(document.activeElement).toBe(first.input);
+	key(second.input, "h", { altKey: true });
+	window.dispatchEvent(new KeyboardEvent("keyup", { key: "h" }));
+	expect(document.activeElement).toBe(second.input);
+	expect(first.root.classList.contains("is-preview-hidden")).toBe(false);
+});
+
+it("handles Alt+H from controls outside the search input", async () => {
+	const f = await fixture("view");
+	const control = f.root.createEl("button");
+	control.focus();
+	expect(key(control, "h", { altKey: true }).defaultPrevented).toBe(true);
+	expect(f.root.classList.contains("is-preview-hidden")).toBe(true);
+	window.dispatchEvent(new KeyboardEvent("keyup", { key: "Alt" }));
+	expect(f.root.classList.contains("is-preview-hidden")).toBe(false);
+	expect(document.activeElement).toBe(f.input);
 });
 
 it("does not duplicate handlers or the footer when reopening a modal", async () => {

@@ -8,6 +8,8 @@ export interface SuggestionPanelProps<T> {
 	footerText?: string;
 	limit?: number;
 	surface?: "modal" | "view";
+	/** Modal hosts include the backdrop; workspace views hide only their panel. */
+	previewContainerEl?: HTMLElement;
 	selectionMode?: "single" | "extended";
 	/**
 	 * Separate input and selection modes. Only selectors with single-key list
@@ -72,6 +74,7 @@ export class SuggestionPanel<T> extends Component {
 	emptyStateText = "No suggestions";
 
 	private readonly rootEl: HTMLElement;
+	private readonly previewContainerEl: HTMLElement;
 	private readonly props: SuggestionPanelProps<T>;
 	private readonly initialInput: string;
 	private readonly selectionMode: "single" | "extended";
@@ -85,6 +88,7 @@ export class SuggestionPanel<T> extends Component {
 	constructor(rootEl: HTMLElement, props: SuggestionPanelProps<T>) {
 		super();
 		this.rootEl = rootEl;
+		this.previewContainerEl = props.previewContainerEl ?? rootEl;
 		this.props = props;
 		this.initialInput = props.initialInput ?? "";
 		this.selectionMode = props.selectionMode ?? "single";
@@ -130,6 +134,7 @@ export class SuggestionPanel<T> extends Component {
 	}
 
 	onload(): void {
+		this.registerPreviewTransparency();
 		const modes = this.modes;
 		if (modes) {
 			modes.set("input");
@@ -140,6 +145,53 @@ export class SuggestionPanel<T> extends Component {
 		this.registerPointerActions();
 		this.registerFooterTextActions();
 		this.props.onReady?.();
+	}
+
+	onunload(): void {
+		this.previewContainerEl.removeClass("my-palette-preview-surface", "is-preview-hidden");
+	}
+
+	private registerPreviewTransparency(): void {
+		const container = this.previewContainerEl;
+		container.addClass("my-palette-preview-surface");
+		const restore = (returnFocus = false) => {
+			// Other panels share this window: only the hidden panel restores focus.
+			if (!container.hasClass("is-preview-hidden")) return;
+			container.removeClass("is-preview-hidden");
+			if (returnFocus && this.inputEl.isConnected)
+				this.inputEl.focus({ preventScroll: true });
+		};
+		this.registerDomEvent(
+			this.rootEl,
+			"keydown",
+			(event) => {
+				if (
+					event.isComposing ||
+					!event.altKey ||
+					event.ctrlKey ||
+					event.metaKey ||
+					event.shiftKey ||
+					event.key.toLowerCase() !== "h"
+				)
+					return;
+				event.preventDefault();
+				event.stopImmediatePropagation();
+				container.addClass("is-preview-hidden");
+			},
+			true,
+		);
+		const ownerWindow = this.rootEl.ownerDocument.defaultView;
+		if (!ownerWindow) return;
+		// Focus can leave the faded panel; release and app switching still restore it.
+		this.registerDomEvent(
+			ownerWindow,
+			"keyup",
+			(event) => {
+				if (event.key.toLowerCase() === "h" || event.key === "Alt") restore(true);
+			},
+			true,
+		);
+		this.registerDomEvent(ownerWindow, "blur", () => restore());
 	}
 
 	setResults({ items, total = items.length, error, query }: SuggestionPanelResults<T>): void {

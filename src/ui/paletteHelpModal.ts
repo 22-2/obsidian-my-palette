@@ -63,12 +63,9 @@ export class PaletteHelpModal extends Modal {
 						],
 						["Home / End", "Move to the start or end of the search input"],
 						["Ctrl+Home / Ctrl+End", "Move to the first or last result"],
-						[
-							"Hold Alt+H",
-							"Temporarily hide the modal to inspect the preview; release to restore",
-						],
 					] satisfies Array<[string, string]>)
 				: []),
+			["Hold Alt+H", "Temporarily fade out the palette; release to restore"],
 			["Click / Ctrl+click", "Select one result or toggle several results"],
 			["Shift+click", "Select a range of results"],
 			["Middle-click", "Open the result in a background tab"],

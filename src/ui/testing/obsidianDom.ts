@@ -97,6 +97,7 @@ export class Component {
 	private loaded = false;
 	private cleanups: (() => void)[] = [];
 	onload(): void {}
+	onunload(): void {}
 	load(): void {
 		if (this.loaded) return;
 		this.loaded = true;
@@ -104,6 +105,7 @@ export class Component {
 	}
 	unload(): void {
 		this.loaded = false;
+		this.onunload();
 		for (const cleanup of this.cleanups.splice(0)) cleanup();
 	}
 	registerDomEvent(

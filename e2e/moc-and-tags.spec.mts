@@ -20,12 +20,12 @@ async function inspectPreviewThroughModal(page: Page): Promise<void> {
 	const container = page.locator(".my-palette-modal-container");
 	await page.keyboard.down("Alt");
 	await page.keyboard.down("h");
-	await expect(container).toHaveCSS("display", "none");
+	await expect(container).toBeHidden();
 	await page.keyboard.up("h");
 	await expect(container).toBeVisible();
 	await expect(page.locator(MODAL_INPUT)).toBeFocused();
 	await page.keyboard.down("h");
-	await expect(container).toHaveCSS("display", "none");
+	await expect(container).toBeHidden();
 	await page.keyboard.up("Alt");
 	await expect(container).toBeVisible();
 	await page.keyboard.up("h");
