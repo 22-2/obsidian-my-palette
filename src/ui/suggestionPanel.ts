@@ -1,8 +1,15 @@
 import { Component, setIcon } from "obsidian";
 import { ExtendedSelection } from "src/ui/extendedSelection";
 import { InteractionModes } from "src/ui/interactionModes";
+import {
+	DEFAULT_HOTKEYS,
+	matchesHotkey,
+	type PaletteHotkey,
+	type PaletteHotkeys,
+} from "src/ui/hotkeys";
 
 export interface SuggestionPanelProps<T> {
+	getHotkeys?: () => PaletteHotkeys;
 	initialInput?: string;
 	placeholder?: string;
 	footerText?: string;
@@ -124,7 +131,8 @@ export class SuggestionPanel<T> extends Component {
 		if (this.selectionMode === "extended")
 			this.resultContainerEl.setAttribute("aria-multiselectable", "true");
 		this.statusBarEl = this.rootEl.createDiv("my-palette-status-bar");
-		if (props.interactionModes) this.modes = new InteractionModes(this.rootEl, this.inputEl);
+		if (props.interactionModes)
+			this.modes = new InteractionModes(this.rootEl, this.inputEl, () => this.hotkeys);
 		this.statusTextEl = this.statusBarEl.createSpan({
 			cls: "my-palette-status-bar__text",
 			text: props.footerText ?? "",
@@ -151,13 +159,19 @@ export class SuggestionPanel<T> extends Component {
 		this.previewContainerEl.removeClass("my-palette-preview-surface", "is-preview-hidden");
 	}
 
+	private get hotkeys(): PaletteHotkeys {
+		return this.props.getHotkeys?.() ?? DEFAULT_HOTKEYS;
+	}
+
 	private registerPreviewTransparency(): void {
 		const container = this.previewContainerEl;
+		let held: PaletteHotkey | undefined;
 		container.addClass("my-palette-preview-surface");
 		const restore = (returnFocus = false) => {
 			// Other panels share this window: only the hidden panel restores focus.
 			if (!container.hasClass("is-preview-hidden")) return;
 			container.removeClass("is-preview-hidden");
+			held = undefined;
 			if (returnFocus && this.inputEl.isConnected)
 				this.inputEl.focus({ preventScroll: true });
 		};
@@ -165,17 +179,11 @@ export class SuggestionPanel<T> extends Component {
 			this.rootEl,
 			"keydown",
 			(event) => {
-				if (
-					event.isComposing ||
-					!event.altKey ||
-					event.ctrlKey ||
-					event.metaKey ||
-					event.shiftKey ||
-					event.key.toLowerCase() !== "h"
-				)
-					return;
+				const hotkey = this.hotkeys.hidePreview;
+				if (!matchesHotkey(event, hotkey)) return;
 				event.preventDefault();
 				event.stopImmediatePropagation();
+				held = hotkey ?? undefined;
 				container.addClass("is-preview-hidden");
 			},
 			true,
@@ -187,7 +195,14 @@ export class SuggestionPanel<T> extends Component {
 			ownerWindow,
 			"keyup",
 			(event) => {
-				if (event.key.toLowerCase() === "h" || event.key === "Alt") restore(true);
+				if (!held) return;
+				const key = event.key === " " ? "Space" : event.key;
+				const modifier = key === "Control" ? "Ctrl" : key;
+				if (
+					key.toUpperCase() === held.key.toUpperCase() ||
+					held.modifiers.some((item) => item === modifier)
+				)
+					restore(true);
 			},
 			true,
 		);

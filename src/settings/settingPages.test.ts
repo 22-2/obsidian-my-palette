@@ -25,16 +25,28 @@ function groupsOf(page: SettingDefinitionPage): SettingDefinitionGroup[] {
 }
 
 describe("settings page layout", () => {
-	it("keeps related controls discoverable in three task-oriented pages", () => {
+	it("keeps related controls discoverable in task-oriented pages", () => {
 		const pages = createSettingPages({} as SettingsHost, async () => {});
 
 		expect(pages.filter(isPage).map((page) => page.name)).toEqual([
 			"Palette",
+			"Hotkeys",
 			"Vault file search",
 			"Everything",
 		]);
 
-		const [palette, fileSearch, everything] = pages.filter(isPage);
+		const [palette, hotkeys, fileSearch, everything] = pages.filter(isPage);
+		expect(
+			groupsOf(hotkeys)
+				.flatMap((group) => group.items ?? [])
+				.map((item) => ("name" in item ? item.name : undefined)),
+		).toEqual([
+			"Temporarily hide palette",
+			"Preview selected result",
+			"Search history",
+			"Return to input mode",
+			"Toggle selection",
+		]);
 		expect(palette.desc).toContain("search history");
 		expect(groupsOf(palette).map((group) => group.heading)).toEqual([
 			"Palette behavior",

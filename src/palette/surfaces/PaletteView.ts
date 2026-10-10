@@ -218,6 +218,7 @@ export class PaletteView extends ItemView {
 			onStateChange: (next) => this.renderState(next),
 		});
 		this.panel = new SuggestionPanel<PaletteResult>(this.contentEl, {
+			getHotkeys: () => this.plugin.settings.hotkeys,
 			initialInput,
 			// Why: table pagination and the panel's selectable rows must share the
 			// same 50-row limit even if the generic panel default changes later.

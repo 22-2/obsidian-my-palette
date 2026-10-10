@@ -30,6 +30,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		super(
 			{
 				title: "Files",
+				getHotkeys: () => plugin.settings.hotkeys,
 				placeholder: "Search files",
 				initialInput,
 				selectionMode: "extended",

@@ -72,6 +72,17 @@ The action (`…`) and history (clock) buttons are also available in tag inserti
 
 The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current picker. Modals have no footer; keyboard instructions and insertion targets live in Help. Hold `Alt+H` in any search or interaction mode to gently fade out the palette or selector while inspecting a preview; releasing either key fades it back in and returns focus to the search field. This works in modals (including their backdrop), sidebar palettes and table views, preserving the query, selection and workspace layout. `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
 
+### Custom shortcuts
+
+Open **Settings → My Palette → Hotkeys** to change the held preview-hide shortcut,
+result preview, search history, return to input mode and selection toggle. Click
+**Change**, then press the desired shortcut; **Escape** cancels recording.
+**Reset** restores that action's default and **Disable** removes its shortcut.
+Changes are saved and apply immediately to open palettes and selectors. The page
+rejects duplicate assignments and plain typing keys for actions used in input mode.
+Arrow keys, Enter and Escape retain their standard behavior. Hotkeys for opening
+palettes remain available in Obsidian's own **Settings → Hotkeys**.
+
 ### Search modes
 
 Type a prefix followed by a space to switch the search source. `>`, `e ` and `i ` can be changed in the settings.

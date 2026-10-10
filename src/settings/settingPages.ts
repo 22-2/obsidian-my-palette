@@ -12,6 +12,8 @@ import type { SettingsHost } from "src/settings/settingsHost";
 import { DEFAULT_SETTINGS } from "src/settings/model";
 import { excludedFolders, extensions } from "src/settings/mergeSettings";
 import { renderFileSortPriorityControl } from "src/settings/fileSortPriorityControl";
+import { renderHotkeyControl } from "src/settings/hotkeyControl";
+import { HOTKEY_ACTIONS, type HotkeyAction } from "src/ui/hotkeys";
 
 type ControlType = "text" | "toggle" | "slider";
 type ControlItem = Pick<SettingDefinitionControl, "control">;
@@ -55,7 +57,7 @@ const createSettingPageHelpers = (): SettingPageHelpers => ({
 });
 
 /**
- * Keep the top level to three task-oriented pages. Obsidian opens plugin
+ * Keep the top level organized by task. Obsidian opens plugin
  * settings in a separate window, so a page for every small setting group makes
  * users hunt through links before they can see the controls they need.
  */
@@ -67,9 +69,29 @@ export function createSettingPages(
 
 	return [
 		createPalettePage(plugin, helpers),
+		createHotkeysPage(plugin, helpers),
 		createFileSearchPage(plugin, helpers),
 		createEverythingPage(plugin, setControlValue, helpers),
 	];
+}
+
+function createHotkeysPage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
+	return helpers.page(
+		"Hotkeys",
+		"Customize shortcuts inside palettes and selectors. Arrow keys, Enter and Escape keep their standard behavior.",
+		[
+			helpers.group(
+				"Palette and selector shortcuts",
+				(Object.keys(HOTKEY_ACTIONS) as HotkeyAction[]).map((action) =>
+					helpers.render(
+						HOTKEY_ACTIONS[action].name,
+						HOTKEY_ACTIONS[action].description,
+						(setting) => renderHotkeyControl(setting, plugin, action),
+					),
+				),
+			),
+		],
+	);
 }
 
 function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {

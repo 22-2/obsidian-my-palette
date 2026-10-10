@@ -2,8 +2,10 @@ import { App, Modal, Notice, type KeymapEventHandler, type Menu } from "obsidian
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 import { SelectorHelpModal, type SelectorControls } from "src/ui/selectorControls";
 import { SuggestionPanel } from "src/ui/suggestionPanel";
+import { DEFAULT_HOTKEYS, matchesHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
 
 export interface SuggestModalProps<T> {
+	getHotkeys?: () => PaletteHotkeys;
 	title?: string;
 	items?: T[];
 	placeholder?: string;
@@ -36,6 +38,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	private historyCommitted = false;
 	private previewGeneration = 0;
 	private previewPending = false;
+	private readonly getHotkeys: () => PaletteHotkeys;
 
 	constructor(
 		{
@@ -47,12 +50,15 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			selectionMode = "single",
 			interactionModes,
 			controls,
+			getHotkeys,
 		}: SuggestModalProps<T>,
 		app: App,
 	) {
 		super(app);
 		this.items = [...items];
 		this.initialInput = initialInput;
+		this.getHotkeys =
+			getHotkeys ?? (() => controls?.plugin.settings.hotkeys ?? DEFAULT_HOTKEYS);
 		this.controls = controls
 			? {
 					...controls,
@@ -62,6 +68,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 				}
 			: undefined;
 		this.panel = new SuggestionPanel(this.modalEl, {
+			getHotkeys: this.getHotkeys,
 			surface: "modal",
 			previewContainerEl: this.containerEl,
 			placeholder,
@@ -230,14 +237,11 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		const cursorIsAtEnd =
 			this.inputEl.selectionStart === this.inputEl.value.length &&
 			this.inputEl.selectionEnd === this.inputEl.value.length;
+		const hotkey = this.getHotkeys().preview;
+		const usesCursorKey = hotkey?.key === "ArrowRight" && hotkey.modifiers.length === 0;
 		if (
-			event.key !== "ArrowRight" ||
-			event.isComposing ||
-			event.ctrlKey ||
-			event.metaKey ||
-			event.altKey ||
-			event.shiftKey ||
-			(!this.inputEl.readOnly && !cursorIsAtEnd)
+			!matchesHotkey(event, hotkey) ||
+			(usesCursorKey && !this.inputEl.readOnly && !cursorIsAtEnd)
 		)
 			return;
 		event.preventDefault();

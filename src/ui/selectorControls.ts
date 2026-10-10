@@ -2,6 +2,7 @@ import { Modal, type App } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import type { PaletteControlsPlugin } from "src/palette/components/PaletteHistoryControls";
 import type { SelectorHistoryCategory } from "src/settings/model";
+import { DEFAULT_HOTKEYS, formatHotkey } from "src/ui/hotkeys";
 
 export interface SelectorControls {
 	plugin: PaletteControlsPlugin & Pick<MyPalettePlugin, "recordSearch">;
@@ -39,6 +40,7 @@ export class SelectorHelpModal extends Modal {
 				text: this.controls.context,
 			});
 		const section = this.contentEl.createDiv("my-palette-help-modal__section");
+		const hotkeys = this.controls.plugin.settings.hotkeys ?? DEFAULT_HOTKEYS;
 		const shortcuts: readonly (readonly [string, string])[] = [
 			[
 				"↑ / ↓",
@@ -48,7 +50,10 @@ export class SelectorHelpModal extends Modal {
 			],
 			...(this.controls.interactionModes
 				? ([
-						["f / click input", "Return to input mode"],
+						[
+							`${formatHotkey(hotkeys.focusInput)} / click input`,
+							"Return to input mode",
+						],
 						["↑ from the first result", "Return to input mode"],
 					] as const)
 				: []),
@@ -64,9 +69,25 @@ export class SelectorHelpModal extends Modal {
 						["Right-click", "Show actions for the selection"],
 					] as const)
 				: ([["Click", `${this.controls.actionLabel} the result`]] as const)),
-			...(this.controls.shortcuts ?? []),
-			["Ctrl+R / history button", "Restore a saved search without running an action"],
-			["Hold Alt+H", "Temporarily fade out the selector; release to restore"],
+			...(this.controls.shortcuts ?? []).map(
+				([key, description]) =>
+					[
+						key === "→"
+							? formatHotkey(hotkeys.preview)
+							: key === "Space"
+								? formatHotkey(hotkeys.toggleSelection)
+								: key,
+						description,
+					] as const,
+			),
+			[
+				`${formatHotkey(hotkeys.history)} / history button`,
+				"Restore a saved search without running an action",
+			],
+			[
+				hotkeys.hidePreview ? `Hold ${formatHotkey(hotkeys.hidePreview)}` : "Disabled",
+				"Temporarily fade out the selector; release to restore",
+			],
 			["Esc", "Cancel"],
 		];
 		for (const [key, description] of shortcuts) {

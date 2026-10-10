@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BaseSuggestModal, type SuggestModalProps } from "src/ui/baseSuggestModal";
 import { SuggestionPanel } from "src/ui/suggestionPanel";
 import { installObsidianDom } from "src/ui/testing/obsidianDom";
+import { DEFAULT_HOTKEYS, type PaletteHotkeys } from "src/ui/hotkeys";
 
 vi.mock("obsidian", () => import("src/ui/testing/obsidianDom"));
 
@@ -102,9 +103,12 @@ async function fixture(
 	surface: "modal" | "view",
 	selectionMode: "single" | "extended" = "extended",
 	interactionModes = false,
+	getHotkeys?: () => PaletteHotkeys,
 ) {
 	const modal =
-		surface === "modal" ? new TestModal({ selectionMode, interactionModes }) : undefined;
+		surface === "modal"
+			? new TestModal({ selectionMode, interactionModes, getHotkeys })
+			: undefined;
 	const root = modal?.modalEl ?? document.body.appendChild(document.createElement("div"));
 	const choose = modal?.choose ?? vi.fn();
 	const middle = modal?.middle ?? vi.fn();
@@ -113,6 +117,7 @@ async function fixture(
 	const panel = modal
 		? undefined
 		: new SuggestionPanel<string>(root, {
+				getHotkeys,
 				surface,
 				selectionMode,
 				interactionModes,
@@ -515,6 +520,47 @@ it("handles Alt+H from controls outside the search input", async () => {
 	window.dispatchEvent(new KeyboardEvent("keyup", { key: "Alt" }));
 	expect(f.root.classList.contains("is-preview-hidden")).toBe(false);
 	expect(document.activeElement).toBe(f.input);
+});
+
+it.each(["modal", "view"] as const)(
+	"applies live hide and mode bindings in the %s",
+	async (surface) => {
+		const hotkeys = structuredClone(DEFAULT_HOTKEYS);
+		const f = await fixture(surface, "extended", true, () => hotkeys);
+		hotkeys.hidePreview = { key: "N", modifiers: ["Alt"] };
+		hotkeys.focusInput = { key: "G", modifiers: [] };
+		hotkeys.toggleSelection = { key: "X", modifiers: [] };
+		const container = f.modal?.containerEl ?? f.root;
+		key(f.input, "h", { altKey: true });
+		expect(container.classList.contains("is-preview-hidden")).toBe(false);
+		key(f.input, "n", { altKey: true });
+		expect(container.classList.contains("is-preview-hidden")).toBe(true);
+		window.dispatchEvent(new KeyboardEvent("keyup", { key: "n", altKey: true }));
+		expect(container.classList.contains("is-preview-hidden")).toBe(false);
+		key(f.input, "ArrowDown");
+		key(f.input, "f");
+		expect(f.input.readOnly).toBe(true);
+		key(f.input, "x");
+		expect(f.selection()).toEqual([]);
+		key(f.input, "g");
+		expect(f.input.readOnly).toBe(false);
+		hotkeys.hidePreview = null;
+		key(f.input, "n", { altKey: true });
+		expect(container.classList.contains("is-preview-hidden")).toBe(false);
+	},
+);
+
+it("previews with a custom binding away from the end of the query", async () => {
+	const hotkeys = structuredClone(DEFAULT_HOTKEYS);
+	hotkeys.preview = { key: "P", modifiers: ["Alt"] };
+	const f = await fixture("modal", "extended", false, () => hotkeys);
+	f.input.value = "query";
+	f.input.setSelectionRange(0, 0);
+	key(f.input, "ArrowRight");
+	expect(f.modal!.preview).not.toHaveBeenCalled();
+	key(f.input, "p", { altKey: true });
+	await Promise.resolve();
+	expect(f.modal!.preview).toHaveBeenCalledExactlyOnceWith("alpha");
 });
 
 it("does not duplicate handlers or the footer when reopening a modal", async () => {

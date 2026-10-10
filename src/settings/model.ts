@@ -1,3 +1,5 @@
+import { DEFAULT_HOTKEYS, type PaletteHotkeys } from "src/ui/hotkeys";
+
 export interface SearchHistoryEntry {
 	input: string;
 	category: SearchHistoryCategory;
@@ -268,6 +270,7 @@ export interface PaletteDisplaySettings {
 }
 
 export interface MyPaletteSettings {
+	hotkeys: PaletteHotkeys;
 	schemaVersion: typeof SETTINGS_SCHEMA_VERSION;
 	showLog: boolean;
 	rememberLastInput: boolean;
@@ -292,6 +295,7 @@ export interface MyPaletteSettings {
 }
 
 export const DEFAULT_SETTINGS: MyPaletteSettings = {
+	hotkeys: DEFAULT_HOTKEYS,
 	schemaVersion: SETTINGS_SCHEMA_VERSION,
 	showLog: false,
 	rememberLastInput: false,

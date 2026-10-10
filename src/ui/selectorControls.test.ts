@@ -196,4 +196,19 @@ describe("selector controls", () => {
 				?.classList.contains("is-hidden"),
 		).toBe(true);
 	});
+
+	it("uses changed history bindings and shows them in help", async () => {
+		const f = await fixture();
+		f.plugin.settings.hotkeys.history = { key: "Y", modifiers: ["Alt"] };
+		f.key("r", { ctrlKey: true });
+		const history = f.modal.modalEl.querySelector(".my-palette-history-suggest")!;
+		expect(history.classList.contains("is-hidden")).toBe(true);
+		f.key("y", { altKey: true });
+		expect(history.classList.contains("is-hidden")).toBe(false);
+		f.click(".my-palette-options-button");
+		Menu.last?.items.find(({ title }) => title === "Help")?.click();
+		expect(document.querySelector(".my-palette-help-modal")?.textContent).toContain(
+			"Alt+Y / history button",
+		);
+	});
 });

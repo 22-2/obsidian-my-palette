@@ -4,6 +4,7 @@ import type { PaletteResult } from "src/palette/results";
 import type { PaletteSurface, SearchHistoryCategory } from "src/settings/model";
 import { PaletteHelpModal } from "src/ui/paletteHelpModal";
 import { SearchHistorySuggest } from "src/ui/searchHistorySuggest";
+import { DEFAULT_HOTKEYS, formatHotkey, matchesHotkey } from "src/ui/hotkeys";
 
 interface PaletteHistoryContext {
 	query: string;
@@ -39,6 +40,7 @@ export class PaletteHistoryControls {
 	private readonly eventController = new AbortController();
 	private readonly buttons: HTMLElement[] = [];
 	private activeMenu?: Menu;
+	private historyButton?: HTMLButtonElement;
 
 	constructor(private readonly options: PaletteHistoryControlsOptions) {
 		this.suggest = new SearchHistorySuggest(options.containerEl, options.apply);
@@ -72,6 +74,7 @@ export class PaletteHistoryControls {
 	}
 
 	update(input = this.options.inputEl.value): void {
+		this.updateHotkeyHint();
 		if (!this.suggest.isOpen) return;
 		const context = this.options.getContext(input);
 		// Why: the history picker is a separate browsing surface; typing a new
@@ -104,10 +107,10 @@ export class PaletteHistoryControls {
 			attr: {
 				type: "button",
 				"aria-label": "Search history",
-				"aria-keyshortcuts": "Control+R",
-				title: "Search history (Ctrl+R)",
 			},
 		});
+		this.historyButton = historyButton;
+		this.updateHotkeyHint();
 		// Why: a clock identifies saved searches without suggesting a generic dropdown.
 		setIcon(historyButton, "clock");
 		this.buttons.push(optionsButton, historyButton);
@@ -116,6 +119,23 @@ export class PaletteHistoryControls {
 			consumePointerEvent(event);
 			this.toggle();
 		});
+	}
+
+	private updateHotkeyHint(): void {
+		const hotkey = (this.options.plugin.settings.hotkeys ?? DEFAULT_HOTKEYS).history;
+		if (!this.historyButton) return;
+		this.historyButton.title = hotkey
+			? `Search history (${formatHotkey(hotkey)})`
+			: "Search history";
+		if (!hotkey) {
+			this.historyButton.removeAttribute("aria-keyshortcuts");
+			return;
+		}
+		const names = { Ctrl: "Control", Alt: "Alt", Shift: "Shift", Meta: "Meta" };
+		this.historyButton.setAttribute(
+			"aria-keyshortcuts",
+			[...hotkey.modifiers.map((modifier) => names[modifier]), hotkey.key].join("+"),
+		);
 	}
 
 	private showOptionsMenu(event: MouseEvent): void {
@@ -147,7 +167,13 @@ export class PaletteHistoryControls {
 				.setIcon("help-circle")
 				.onClick(() => {
 					if (this.options.showHelp) this.options.showHelp();
-					else new PaletteHelpModal(plugin.app, plugin.settings.prefixes, surface).open();
+					else
+						new PaletteHelpModal(
+							plugin.app,
+							plugin.settings.prefixes,
+							surface,
+							plugin.settings.hotkeys,
+						).open();
 				}),
 		);
 		menu.addSeparator();
@@ -166,6 +192,7 @@ export class PaletteHistoryControls {
 	private registerEvents(): void {
 		const { inputEl, hostEl } = this.options;
 		this.listen(inputEl, "input", () => this.update());
+		this.listen(inputEl, "focus", () => this.updateHotkeyHint());
 		this.listen(inputEl, "keydown", (event) => this.handleKeyDown(event), true);
 		this.listen(
 			window,
@@ -214,11 +241,7 @@ export class PaletteHistoryControls {
 		// Composition keys belong to the IME, including Enter used to confirm text.
 		if (event.isComposing) return;
 		if (
-			event.ctrlKey &&
-			!event.shiftKey &&
-			!event.altKey &&
-			!event.metaKey &&
-			event.key.toLocaleLowerCase() === "r"
+			matchesHotkey(event, (this.options.plugin.settings.hotkeys ?? DEFAULT_HOTKEYS).history)
 		) {
 			event.preventDefault();
 			event.stopImmediatePropagation();

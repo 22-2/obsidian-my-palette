@@ -1,3 +1,5 @@
+import { DEFAULT_HOTKEYS, matchesHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
+
 export type InteractionMode = "input" | "selection";
 
 /** What a key press means for the modes; the panel carries it out on its list. */
@@ -15,6 +17,7 @@ export class InteractionModes {
 	constructor(
 		private readonly rootEl: HTMLElement,
 		private readonly inputEl: HTMLInputElement,
+		private readonly getHotkeys: () => PaletteHotkeys = () => DEFAULT_HOTKEYS,
 	) {}
 
 	set(mode: InteractionMode): void {
@@ -30,14 +33,20 @@ export class InteractionModes {
 		if (event.isComposing) return undefined;
 		const arrow = event.key === "ArrowDown" || event.key === "ArrowUp";
 		if (this.mode === "input") return arrow ? "enter-list" : undefined;
-		if (event.ctrlKey || event.metaKey) return undefined;
 		// Why: ArrowDown from the input enters the list, so ArrowUp past the first
 		// row should leave it symmetrically instead of stopping at a dead end.
 		// Shift extends a range there, so only a plain ArrowUp leaves.
-		if (event.key === "ArrowUp") return atFirstRow && !event.shiftKey ? "to-input" : undefined;
-		if (event.altKey) return undefined;
-		if (event.key.toLowerCase() === "f") return "to-input";
-		if (event.key === " ") return "selection-space";
+		if (event.key === "ArrowUp")
+			return atFirstRow &&
+				!event.shiftKey &&
+				!event.ctrlKey &&
+				!event.metaKey &&
+				!event.altKey
+				? "to-input"
+				: undefined;
+		const hotkeys = this.getHotkeys();
+		if (matchesHotkey(event, hotkeys.focusInput)) return "to-input";
+		if (matchesHotkey(event, hotkeys.toggleSelection, true)) return "selection-space";
 		return undefined;
 	}
 }

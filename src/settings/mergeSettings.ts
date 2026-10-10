@@ -1,4 +1,5 @@
 import type { MyPaletteSettings, PaletteSurface } from "src/settings/model";
+import { normalizeHotkeys } from "src/ui/hotkeys";
 import {
 	DEFAULT_BLANK_FILE_SORT_PRIORITIES,
 	DEFAULT_SETTINGS,
@@ -105,6 +106,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 
 	return {
 		...DEFAULT_SETTINGS,
+		hotkeys: normalizeHotkeys(source.hotkeys),
 		schemaVersion: SETTINGS_SCHEMA_VERSION,
 		showLog: typeof source.showLog === "boolean" ? source.showLog : false,
 		paletteDisplay: normalizePaletteDisplay(source),

@@ -2,6 +2,7 @@ import { App, Modal, setIcon } from "obsidian";
 import type { Prefixes } from "src/palette/inputParser";
 import { RELATED_PREFIXES } from "src/palette/inputParser";
 import type { PaletteSurface } from "src/settings/model";
+import { DEFAULT_HOTKEYS, formatHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
 
 /** Shows the small, discoverable syntax guide instead of overloading the input placeholder. */
 export class PaletteHelpModal extends Modal {
@@ -9,6 +10,7 @@ export class PaletteHelpModal extends Modal {
 		app: App,
 		private readonly prefixes: Prefixes,
 		private readonly surface: PaletteSurface = "palette",
+		private readonly hotkeys: PaletteHotkeys = DEFAULT_HOTKEYS,
 	) {
 		super(app);
 	}
@@ -58,19 +60,24 @@ export class PaletteHelpModal extends Modal {
 			...(this.surface === "palette"
 				? ([
 						[
-							"→ at the end of input",
+							formatHotkey(this.hotkeys.preview),
 							"Preview the active result without closing the palette",
 						],
 						["Home / End", "Move to the start or end of the search input"],
 						["Ctrl+Home / Ctrl+End", "Move to the first or last result"],
 					] satisfies Array<[string, string]>)
 				: []),
-			["Hold Alt+H", "Temporarily fade out the palette; release to restore"],
+			[
+				this.hotkeys.hidePreview
+					? `Hold ${formatHotkey(this.hotkeys.hidePreview)}`
+					: "Disabled",
+				"Temporarily fade out the palette; release to restore",
+			],
 			["Click / Ctrl+click", "Select one result or toggle several results"],
 			["Shift+click", "Select a range of results"],
 			["Middle-click", "Open the result in a background tab"],
 			["Right-click", "Show actions, including copy actions for a selection"],
-			["Ctrl+R", "Open search history"],
+			[formatHotkey(this.hotkeys.history), "Open search history"],
 			[
 				"Esc",
 				this.surface === "palette"
