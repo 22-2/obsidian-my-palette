@@ -77,7 +77,8 @@ The action menu offers: open, open in a background tab, open side by side, open 
 Open **Settings → My Palette → Hotkeys** to change the held preview-hide shortcut,
 result preview, search history, return to input mode and selection toggle. Click
 **Change**, then press the desired shortcut; **Escape** cancels recording.
-**Reset** restores that action's default and **Disable** removes its shortcut.
+**Reset** restores that action's default. Clear the key field with **Backspace** or
+**Delete** to disable a shortcut; an empty field means it is disabled.
 Changes are saved and apply immediately to open palettes and selectors. The page
 rejects duplicate assignments and plain typing keys for actions used in input mode.
 Arrow keys, Enter and Escape retain their standard behavior. Hotkeys for opening

@@ -1,3 +1,33 @@
+/* Keep descriptions readable when themes enlarge controls or settings windows narrow. */
+.setting-item.my-palette-hotkey-setting {
+	flex-direction: column;
+	align-items: stretch;
+	gap: 12px;
+}
+
+.my-palette-hotkey-setting .setting-item-info {
+	flex: 0 1 auto;
+	width: 100%;
+	min-width: 0;
+	margin-right: 0;
+}
+
+.my-palette-hotkey-setting .setting-item-control {
+	flex: 0 1 auto;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+	gap: 8px;
+	width: 100%;
+	min-width: 0;
+}
+
+.my-palette-hotkey-setting .setting-item-control input {
+	flex: 1 1 12rem;
+	width: 12rem;
+	min-width: 0;
+	max-width: 100%;
+}
+
 .my-palette-suggest-modal {
 	max-height: min(60vh, 480px);
 }

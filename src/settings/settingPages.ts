@@ -78,7 +78,7 @@ export function createSettingPages(
 function createHotkeysPage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
 	return helpers.page(
 		"Hotkeys",
-		"Customize shortcuts inside palettes and selectors. Arrow keys, Enter and Escape keep their standard behavior.",
+		"Use Change to record a shortcut. Clear the key field with Backspace or Delete to disable it; an empty field means disabled. Arrow keys, Enter and Escape keep their standard behavior.",
 		[
 			helpers.group(
 				"Palette and selector shortcuts",

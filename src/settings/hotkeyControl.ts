@@ -16,13 +16,16 @@ export function renderHotkeyControl(
 	plugin: SettingsHost,
 	action: HotkeyAction,
 ): void {
+	setting.settingEl.addClass("my-palette-hotkey-setting");
 	const description = HOTKEY_ACTIONS[action].description;
 	let recording = false;
 	let saving = false;
 	let input: HTMLInputElement;
 	const refresh = () => {
 		recording = false;
-		input.value = formatHotkey(plugin.settings.hotkeys[action]);
+		input.value = plugin.settings.hotkeys[action]
+			? formatHotkey(plugin.settings.hotkeys[action])
+			: "";
 		setting.setDesc(description);
 	};
 	const save = async (hotkey: PaletteHotkey | null) => {
@@ -50,11 +53,19 @@ export function renderHotkeyControl(
 	};
 	setting.descEl.setAttribute("aria-live", "polite");
 	setting.addText((text) => {
+		text.setPlaceholder("Disabled");
 		input = text.inputEl;
 		input.readOnly = true;
 		input.setAttribute("aria-label", `${HOTKEY_ACTIONS[action].name} hotkey`);
 		input.addEventListener("keydown", (event) => {
-			if (!recording || event.isComposing) return;
+			if (event.isComposing) return;
+			if (event.key === "Backspace" || event.key === "Delete") {
+				event.preventDefault();
+				event.stopImmediatePropagation();
+				void save(null);
+				return;
+			}
+			if (!recording) return;
 			if (event.key === "Tab") {
 				refresh();
 				return;
@@ -93,6 +104,5 @@ export function renderHotkeyControl(
 			.setButtonText("Reset")
 			.onClick(() => void save(structuredClone(DEFAULT_HOTKEYS[action]))),
 	);
-	setting.addButton((button) => button.setButtonText("Disable").onClick(() => void save(null)));
 	refresh();
 }

@@ -28,6 +28,25 @@ test("hotkey settings record changes, reject conflicts and restore defaults", as
 		.locator(".setting-item")
 		.filter({ has: settingsPage.getByText("Temporarily hide palette", { exact: true }) });
 	const input = row.getByRole("textbox");
+	for (const width of [900, 640, 480]) {
+		await settingsPage.setViewportSize({ width, height: 800 });
+		const layout = await row.evaluate((element) => {
+			const info = element.querySelector(".setting-item-info")!.getBoundingClientRect();
+			const control = element.querySelector(".setting-item-control")!.getBoundingClientRect();
+			const bounds = element.getBoundingClientRect();
+			return {
+				infoWidth: info.width,
+				rowWidth: bounds.width,
+				infoBottom: info.bottom,
+				controlTop: control.top,
+				overflow: element.scrollWidth > element.clientWidth,
+			};
+		});
+		expect(layout.infoWidth).toBeGreaterThan(layout.rowWidth * 0.8);
+		expect(layout.controlTop).toBeGreaterThanOrEqual(layout.infoBottom);
+		expect(layout.overflow).toBe(false);
+	}
+	await settingsPage.setViewportSize({ width: 640, height: 800 });
 	await expect(input).toHaveValue("Alt+H");
 	await row.getByRole("button", { name: "Change", exact: true }).click();
 	await settingsPage.keyboard.press("Escape");
@@ -38,8 +57,15 @@ test("hotkey settings record changes, reject conflicts and restore defaults", as
 	await expect(row).toContainText("Already assigned to Search history");
 	await settingsPage.keyboard.press("Alt+n");
 	await expect(input).toHaveValue("Alt+N");
-	await row.getByRole("button", { name: "Disable", exact: true }).click();
-	await expect(input).toHaveValue("Disabled");
+	await expect(settingsPage.getByRole("button", { name: "Disable", exact: true })).toHaveCount(0);
+	await input.focus();
+	await settingsPage.keyboard.press("Backspace");
+	await expect(input).toHaveValue("");
+	await row.getByRole("button", { name: "Reset", exact: true }).click();
+	await expect(input).toHaveValue("Alt+H");
+	await row.getByRole("button", { name: "Change", exact: true }).click();
+	await settingsPage.keyboard.press("Delete");
+	await expect(input).toHaveValue("");
 	await row.getByRole("button", { name: "Reset", exact: true }).click();
 	await expect(input).toHaveValue("Alt+H");
 	await row.getByRole("button", { name: "Change", exact: true }).click();
