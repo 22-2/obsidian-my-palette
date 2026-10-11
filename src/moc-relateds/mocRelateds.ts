@@ -215,8 +215,65 @@ async function relatedsRelations(
 	return { outgoing, incoming };
 }
 
+const MUTUAL_SHORTCUT = [
+	"Ctrl+M",
+	"Toggle updating the note's link to the MOC as well as the MOC's link to the note",
+] as const;
+
+/**
+ * Selector shared by MOC insertion and removal. Its footer switch chooses whether
+ * the note's own link to the MOC changes too, so both commands read the same way.
+ */
+abstract class MocRelatedsModal extends MultiSelectModal<string> {
+	/** Whether the note's link to the MOC is updated along with the MOC's link to the note. */
+	mutual = true;
+	private toggleEl?: HTMLElement;
+
+	protected override onSelectionModalOpen(): void {
+		super.onSelectionModalOpen();
+		// Modal footers are hidden by default; this class opts in for the switch.
+		this.modalEl.addClass("my-palette-moc-footer");
+		this.createMutualToggle();
+		this.registerSelectionDomEvent(
+			this.inputEl,
+			"keydown",
+			(event) => {
+				if (event.key.toLowerCase() !== "m" || !event.ctrlKey) return;
+				if (event.altKey || event.shiftKey || event.metaKey) return;
+				event.preventDefault();
+				event.stopPropagation();
+				this.setMutual(!this.mutual);
+			},
+			true,
+		);
+	}
+
+	/** Small switch and label at the left end of the footer. */
+	private createMutualToggle(): void {
+		const statusBar = this.modalEl.querySelector<HTMLElement>(".my-palette-status-bar");
+		if (!statusBar) return;
+		statusBar.querySelector(".my-palette-status-toggle")?.remove();
+		const toggle = createDiv({ cls: "my-palette-status-toggle" });
+		toggle.createDiv({ cls: "checkbox-container" });
+		toggle.createSpan({ text: "Mutual" });
+		toggle.setAttribute("title", "Also update the note's link to the MOC (Ctrl+M)");
+		statusBar.prepend(toggle);
+		// Why: a press on the footer must not pull focus out of the input.
+		this.registerSelectionDomEvent(toggle, "mousedown", (event) => event.preventDefault());
+		this.registerSelectionDomEvent(toggle, "click", () => this.setMutual(!this.mutual));
+		this.toggleEl = toggle;
+		this.setMutual(this.mutual);
+	}
+
+	private setMutual(value: boolean): void {
+		this.mutual = value;
+		this.toggleEl?.querySelector(".checkbox-container")?.toggleClass("is-enabled", value);
+		this.toggleEl?.setAttribute("aria-checked", String(value));
+	}
+}
+
 /** Candidate selector for the active MOC; linked notes can be removed from its context menu. */
-class MocTargetModal extends MultiSelectModal<string> {
+class MocTargetModal extends MocRelatedsModal {
 	private relations?: ReturnType<typeof relatedsRelations>;
 
 	constructor(
@@ -244,6 +301,7 @@ class MocTargetModal extends MultiSelectModal<string> {
 							"Ctrl+Enter",
 							"Insert all checked notes, or selected notes if none are checked",
 						],
+						MUTUAL_SHORTCUT,
 					],
 				},
 			},
@@ -439,6 +497,7 @@ export async function insertFileToMocRelateds(
 	mocFile: TFile | null,
 	fileToLink: TFile,
 	mocLeaf?: WorkspaceLeaf,
+	mutual = true,
 ): Promise<void> {
 	if (!(mocFile instanceof TFile)) {
 		new Notice("No active MOC file.");
@@ -449,16 +508,12 @@ export async function insertFileToMocRelateds(
 		return;
 	}
 	await addLink(plugin.app, mocFile, fileToLink);
-	await addLink(plugin.app, fileToLink, mocFile);
+	if (mutual) await addLink(plugin.app, fileToLink, mocFile);
 	await mocLeaf?.openFile(mocFile);
 }
 
 /** Selector for notes linked with the active MOC; the checked ones are unlinked. */
-class MocUnlinkModal extends MultiSelectModal<string> {
-	/** Whether each note's own link back to the MOC is removed too. */
-	mutual = true;
-	private toggleEl?: HTMLElement;
-
+class MocUnlinkModal extends MocRelatedsModal {
 	constructor(
 		plugin: MyPalettePlugin,
 		private readonly notes: readonly TFile[],
@@ -481,53 +536,12 @@ class MocUnlinkModal extends MultiSelectModal<string> {
 							"Ctrl+Enter",
 							"Remove all checked notes, or selected notes if none are checked",
 						],
-						["Ctrl+M", "Toggle removing the note's link back to the MOC"],
+						MUTUAL_SHORTCUT,
 					],
 				},
 			},
 			plugin.app,
 		);
-	}
-
-	protected override onSelectionModalOpen(): void {
-		super.onSelectionModalOpen();
-		this.modalEl.addClass("my-palette-moc-unlink");
-		this.createMutualToggle();
-		this.registerSelectionDomEvent(
-			this.inputEl,
-			"keydown",
-			(event) => {
-				if (event.key.toLowerCase() !== "m" || !event.ctrlKey) return;
-				if (event.altKey || event.shiftKey || event.metaKey) return;
-				event.preventDefault();
-				event.stopPropagation();
-				this.setMutual(!this.mutual);
-			},
-			true,
-		);
-	}
-
-	/** Small switch and label at the left end of the footer. */
-	private createMutualToggle(): void {
-		const statusBar = this.modalEl.querySelector<HTMLElement>(".my-palette-status-bar");
-		if (!statusBar) return;
-		statusBar.querySelector(".my-palette-status-toggle")?.remove();
-		const toggle = createDiv({ cls: "my-palette-status-toggle" });
-		toggle.createDiv({ cls: "checkbox-container" });
-		toggle.createSpan({ text: "Mutual" });
-		toggle.setAttribute("title", "Also remove the note's link back to the MOC (Ctrl+M)");
-		statusBar.prepend(toggle);
-		// Why: a press on the footer must not pull focus out of the input.
-		this.registerSelectionDomEvent(toggle, "mousedown", (event) => event.preventDefault());
-		this.registerSelectionDomEvent(toggle, "click", () => this.setMutual(!this.mutual));
-		this.toggleEl = toggle;
-		this.setMutual(this.mutual);
-	}
-
-	private setMutual(value: boolean): void {
-		this.mutual = value;
-		this.toggleEl?.querySelector(".checkbox-container")?.toggleClass("is-enabled", value);
-		this.toggleEl?.setAttribute("aria-checked", String(value));
 	}
 
 	protected searchCandidates(input: string): MultiSelectCandidate<string>[] {
@@ -585,13 +599,15 @@ export async function insertLinkToMocRelateds(plugin: MyPalettePlugin): Promise<
 	const activeLeaf = plugin.app.workspace.activeLeaf;
 	const mocLeaf =
 		activeLeaf && (activeLeaf.view as { file?: unknown }).file ? activeLeaf : undefined;
-	const paths = await new MocTargetModal(plugin, activeFile).openAndWait();
+	const modal = new MocTargetModal(plugin, activeFile);
+	const paths = await modal.openAndWait();
 	if (!paths?.length) return;
 	// Why: each insertion reads and updates the shared MOC, so process targets
 	// serially to keep one selection from overwriting another's changes.
 	for (const path of paths) {
 		// Ignored notes are imported only now, so cancelling never touches the vault.
 		const target = await resolveInsertTarget(plugin, path);
-		if (target) await insertFileToMocRelateds(plugin, activeFile, target, mocLeaf);
+		if (target)
+			await insertFileToMocRelateds(plugin, activeFile, target, mocLeaf, modal.mutual);
 	}
 }

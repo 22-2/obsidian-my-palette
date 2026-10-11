@@ -749,8 +749,8 @@
 	display: none;
 }
 
-/* The modal footer is hidden by default; the MOC unlink selector keeps it for its toggle. */
-.my-palette-panel--modal.my-palette-moc-unlink .my-palette-status-bar {
+/* The modal footer is hidden by default; the MOC selectors keep it for their toggle. */
+.my-palette-panel--modal.my-palette-moc-footer .my-palette-status-bar {
 	display: flex;
 }
 
