@@ -1,6 +1,6 @@
 import { Notice } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import { insertLinkToMocRelateds } from "src/moc-relateds/mocRelateds";
+import { insertLinkToMocRelateds, removeLinkInMocRelateds } from "src/moc-relateds/mocRelateds";
 import { MoveFileModal } from "src/palette/MoveFileModal";
 import { OpenFilePathModal } from "src/palette/OpenFilePathModal";
 import { insertTags } from "src/tags/insertTags";
@@ -103,6 +103,15 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 			const canRun = Boolean(plugin.app.workspace.getActiveFile());
 			if (checking) return canRun;
 			void insertLinkToMocRelateds(plugin);
+		},
+	});
+	plugin.addCommand({
+		id: "remove-link-in-moc-relateds",
+		name: "Remove link in MOC Relateds",
+		checkCallback: (checking) => {
+			const canRun = Boolean(plugin.app.workspace.getActiveFile());
+			if (checking) return canRun;
+			void removeLinkInMocRelateds(plugin);
 		},
 	});
 }

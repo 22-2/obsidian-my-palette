@@ -749,6 +749,30 @@
 	display: none;
 }
 
+/* The modal footer is hidden by default; the MOC unlink selector keeps it for its toggle. */
+.my-palette-panel--modal.my-palette-moc-unlink .my-palette-status-bar {
+	display: flex;
+}
+
+.my-palette-status-toggle {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.my-palette-status-toggle:hover {
+	color: var(--text-normal);
+}
+
+.my-palette-status-toggle .checkbox-container {
+	flex: 0 0 auto;
+	transform: scale(0.75);
+	transform-origin: left center;
+	margin-right: -8px;
+}
+
 .my-palette-panel--view .my-palette-status-bar {
 	box-sizing: border-box;
 	width: 100%;

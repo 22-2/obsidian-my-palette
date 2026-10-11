@@ -398,14 +398,18 @@ async function removeLink(
 	}
 }
 
-/** Removes the mutual Relateds links between a MOC and a note; true when any link was removed. */
+/**
+ * Removes the Relateds links between a MOC and a note; true when any link was removed.
+ * The note's own link back to the MOC is removed too unless `mutual` is false.
+ */
 export async function removeFileFromMocRelateds(
 	plugin: MyPalettePlugin,
 	mocFile: TFile,
 	file: TFile,
+	mutual = true,
 ): Promise<boolean> {
 	const fromMoc = await removeLink(plugin.app, mocFile, file);
-	const fromNote = await removeLink(plugin.app, file, mocFile);
+	const fromNote = mutual ? await removeLink(plugin.app, file, mocFile) : "missing";
 	if (fromMoc === "removed" || fromNote === "removed") {
 		new Notice(`${mocFile.basename}: removed ${file.basename} from Relateds.`);
 		return true;
@@ -447,6 +451,126 @@ export async function insertFileToMocRelateds(
 	await addLink(plugin.app, mocFile, fileToLink);
 	await addLink(plugin.app, fileToLink, mocFile);
 	await mocLeaf?.openFile(mocFile);
+}
+
+/** Selector for notes linked with the active MOC; the checked ones are unlinked. */
+class MocUnlinkModal extends MultiSelectModal<string> {
+	/** Whether each note's own link back to the MOC is removed too. */
+	mutual = true;
+	private toggleEl?: HTMLElement;
+
+	constructor(
+		plugin: MyPalettePlugin,
+		private readonly notes: readonly TFile[],
+		mocFile: TFile,
+	) {
+		super(
+			{
+				placeholder: "Search notes to unlink from the MOC",
+				contextLabel: `Source: ${mocFile.path}`,
+				actionLabel: "Remove",
+				controls: {
+					plugin,
+					category: "moc-insertion",
+					title: "MOC link removal",
+					description: "Search notes linked in the active MOC's Relateds to unlink them.",
+					actionLabel: "Remove",
+					shortcuts: [
+						["Space", "Toggle checks in selection mode"],
+						[
+							"Ctrl+Enter",
+							"Remove all checked notes, or selected notes if none are checked",
+						],
+						["Ctrl+M", "Toggle removing the note's link back to the MOC"],
+					],
+				},
+			},
+			plugin.app,
+		);
+	}
+
+	protected override onSelectionModalOpen(): void {
+		super.onSelectionModalOpen();
+		this.modalEl.addClass("my-palette-moc-unlink");
+		this.createMutualToggle();
+		this.registerSelectionDomEvent(
+			this.inputEl,
+			"keydown",
+			(event) => {
+				if (event.key.toLowerCase() !== "m" || !event.ctrlKey) return;
+				if (event.altKey || event.shiftKey || event.metaKey) return;
+				event.preventDefault();
+				event.stopPropagation();
+				this.setMutual(!this.mutual);
+			},
+			true,
+		);
+	}
+
+	/** Small switch and label at the left end of the footer. */
+	private createMutualToggle(): void {
+		const statusBar = this.modalEl.querySelector<HTMLElement>(".my-palette-status-bar");
+		if (!statusBar) return;
+		statusBar.querySelector(".my-palette-status-toggle")?.remove();
+		const toggle = createDiv({ cls: "my-palette-status-toggle" });
+		toggle.createDiv({ cls: "checkbox-container" });
+		toggle.createSpan({ text: "Mutual" });
+		toggle.setAttribute("title", "Also remove the note's link back to the MOC (Ctrl+M)");
+		statusBar.prepend(toggle);
+		// Why: a press on the footer must not pull focus out of the input.
+		this.registerSelectionDomEvent(toggle, "mousedown", (event) => event.preventDefault());
+		this.registerSelectionDomEvent(toggle, "click", () => this.setMutual(!this.mutual));
+		this.toggleEl = toggle;
+		this.setMutual(this.mutual);
+	}
+
+	private setMutual(value: boolean): void {
+		this.mutual = value;
+		this.toggleEl?.querySelector(".checkbox-container")?.toggleClass("is-enabled", value);
+		this.toggleEl?.setAttribute("aria-checked", String(value));
+	}
+
+	protected searchCandidates(input: string): MultiSelectCandidate<string>[] {
+		const needle = input.trim().toLowerCase();
+		const matched = this.notes.filter(
+			(file) =>
+				!needle ||
+				file.basename.toLowerCase().includes(needle) ||
+				file.path.toLowerCase().includes(needle),
+		);
+		return matched.map((file) => ({
+			key: file.path,
+			value: file.path,
+			item: { label: file.basename, description: file.path, value: file.path },
+		}));
+	}
+}
+
+/** Lets the user pick notes linked with the active MOC and removes their Relateds links, mutually unless toggled off. */
+export async function removeLinkInMocRelateds(plugin: MyPalettePlugin): Promise<void> {
+	const mocFile = plugin.app.workspace.getActiveFile();
+	if (!(mocFile instanceof TFile)) {
+		new Notice("No active file.");
+		return;
+	}
+
+	const { outgoing, incoming } = await relatedsRelations(plugin.app, mocFile);
+	const notes = [...new Set([...outgoing, ...incoming])]
+		.map((path) => plugin.app.vault.getFileByPath(path))
+		.filter((file): file is TFile => file !== null && file.path !== mocFile.path)
+		.sort((a, b) => a.basename.localeCompare(b.basename));
+	if (!notes.length) {
+		new Notice(`${mocFile.basename}: no Relateds links to remove.`);
+		return;
+	}
+
+	const modal = new MocUnlinkModal(plugin, notes, mocFile);
+	const paths = await modal.openAndWait();
+	if (!paths?.length) return;
+	const targets = notes.filter((file) => paths.includes(file.path));
+	// Why: each removal rewrites the shared MOC, so process targets serially to keep edits.
+	for (const file of targets)
+		await removeFileFromMocRelateds(plugin, mocFile, file, modal.mutual);
 }
 
 /** Selects notes from the current file list and adds mutual MOC Relateds links to each. */
