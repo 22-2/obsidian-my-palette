@@ -766,11 +766,40 @@
 	color: var(--text-normal);
 }
 
+/* Footer padding matches the rows: the switch starts on the check column and the
+   count ends where row text ends. */
+.my-palette-panel--modal.my-palette-moc-footer .my-palette-status-bar {
+	padding: 5px 20px 6px;
+}
+
+/* Why: a scaled-down settings toggle keeps its full layout box, so the label gap
+   and vertical centering drift. Size the switch itself and pin the thumb, which
+   themes may size with their own variables. */
 .my-palette-status-toggle .checkbox-container {
+	--toggle-width: 24px;
+	--toggle-thumb-width: 10px;
+	--toggle-thumb-height: 10px;
+	--toggle-border-width: 2px;
+	--toggle-radius: 7px;
+	--toggle-thumb-radius: 5px;
 	flex: 0 0 auto;
-	transform: scale(0.75);
-	transform-origin: left center;
-	margin-right: -8px;
+	width: var(--toggle-width);
+	height: calc(var(--toggle-thumb-height) + var(--toggle-border-width) * 2);
+}
+
+.my-palette-status-toggle .checkbox-container::after {
+	width: var(--toggle-thumb-width);
+	height: var(--toggle-thumb-height);
+	margin: var(--toggle-border-width) 0 0;
+	transform: translate3d(var(--toggle-border-width), 0, 0);
+}
+
+.my-palette-status-toggle .checkbox-container.is-enabled::after {
+	transform: translate3d(
+		calc(var(--toggle-width) - var(--toggle-thumb-width) - var(--toggle-border-width)),
+		0,
+		0
+	);
 }
 
 .my-palette-panel--view .my-palette-status-bar {
@@ -953,6 +982,70 @@
 	/* DOM focus remains here for list shortcuts, but the visual focus is on a row. */
 	box-shadow: none;
 	border-color: var(--background-modifier-border);
+}
+
+/*
+ * Selection modals draw the field on the container so the options, history and
+ * checked buttons sit inside one slim line instead of beside a tall input.
+ * Margin plus input padding puts the text on the same column as the row checks.
+ */
+.my-palette-panel--modal .prompt-input-container {
+	box-sizing: border-box;
+	height: 34px;
+	margin: 10px 12px 6px;
+	padding: 0 4px 0 0;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	background-color: var(--background-primary);
+	transition:
+		border-color 120ms ease,
+		box-shadow 120ms ease;
+}
+
+.my-palette-panel--modal.is-input-mode .prompt-input-container {
+	border-color: color-mix(in srgb, var(--interactive-accent) 60%, transparent);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--interactive-accent) 18%, transparent);
+}
+
+.my-palette-panel--modal .prompt-input,
+.my-palette-panel--modal .prompt-input:hover,
+.my-palette-panel--modal .prompt-input:focus,
+.my-palette-panel--modal .prompt-input:focus-visible,
+.my-palette-panel--modal.is-input-mode .prompt-input,
+.my-palette-panel--modal:not(.is-input-mode) .prompt-input {
+	height: 100%;
+	padding-block: 0;
+	padding-left: 7px;
+	border: 0;
+	border-radius: 0;
+	box-shadow: none;
+	background: transparent;
+	font-size: var(--font-ui-medium);
+}
+
+.my-palette-panel--modal .prompt-input-container .clickable-icon {
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	color: var(--text-faint);
+}
+
+.my-palette-panel--modal .prompt-input-container .clickable-icon:hover {
+	color: var(--text-normal);
+}
+
+.my-palette-panel--modal .prompt-input-container .clickable-icon svg {
+	width: 15px;
+	height: 15px;
+}
+
+.my-palette-panel--modal .my-palette-checked-button {
+	width: auto;
+	padding-inline: 6px;
+}
+
+.my-palette-panel--modal .prompt-results {
+	padding-top: 0;
 }
 
 /* Rows with nothing left to apply (registered tags, fully linked notes) stay listed but cannot be selected. */
