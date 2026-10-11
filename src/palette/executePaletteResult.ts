@@ -58,6 +58,18 @@ export async function executePaletteResult(
 		}
 		return;
 	}
+	if (result.mode === "tab") {
+		// Switching tabs opens nothing, so every action simply activates the tab;
+		// the preview keeps editor focus out.
+		const leaf = plugin.tabProvider.leafOf(result.id);
+		if (!leaf) {
+			options.showError("The selected tab no longer exists.");
+			return;
+		}
+		plugin.app.workspace.setActiveLeaf(leaf, { focus: options.autoFocus ?? true });
+		finish(options);
+		return;
+	}
 	if (result.mode === "smart") {
 		await openFileResult(plugin.app, result, action, options);
 		plugin.recordResultUsage(result);

@@ -16,6 +16,7 @@ export type SearchHistoryCategory =
 	| "command"
 	| "bookmark"
 	| "smart"
+	| "tab"
 	| "everything"
 	| "everything-directory"
 	| "link"

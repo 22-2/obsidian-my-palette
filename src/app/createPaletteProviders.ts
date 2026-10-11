@@ -8,6 +8,7 @@ import { CommandProvider } from "src/search/command/CommandProvider";
 import { RelatedFileProvider } from "src/search/related/RelatedFileProvider";
 import { BookmarkProvider } from "src/search/bookmark/BookmarkProvider";
 import { SmartConnectionProvider } from "src/search/smart/SmartConnectionProvider";
+import { TabProvider } from "src/search/tab/TabProvider";
 import type { PaletteProvider } from "src/search/PaletteProvider";
 import {
 	EMPTY_EXCLUDED_FOLDER_SOURCE,
@@ -22,6 +23,7 @@ export interface PaletteProviderInstances {
 	relatedFileProvider: RelatedFileProvider;
 	bookmarkProvider: BookmarkProvider;
 	smartConnectionProvider: SmartConnectionProvider;
+	tabProvider: TabProvider;
 	providers: Record<PaletteMode, PaletteProvider>;
 }
 
@@ -65,6 +67,7 @@ export function createPaletteProviders(
 	const relatedFileProvider = new RelatedFileProvider(app, excludedFolders);
 	const bookmarkProvider = new BookmarkProvider(app, excludedFolders);
 	const smartConnectionProvider = new SmartConnectionProvider(app, excludedFolders);
+	const tabProvider = new TabProvider(app);
 	return {
 		fileProvider,
 		commandProvider,
@@ -72,6 +75,7 @@ export function createPaletteProviders(
 		relatedFileProvider,
 		bookmarkProvider,
 		smartConnectionProvider,
+		tabProvider,
 		providers: {
 			file: fileProvider,
 			command: commandProvider,
@@ -80,6 +84,7 @@ export function createPaletteProviders(
 			backlink: relatedFileProvider,
 			bookmark: bookmarkProvider,
 			smart: smartConnectionProvider,
+			tab: tabProvider,
 		},
 	};
 }

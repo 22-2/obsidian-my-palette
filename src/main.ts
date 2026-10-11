@@ -47,6 +47,7 @@ export default class MyPalettePlugin extends Plugin {
 	relatedFileProvider!: PaletteProviderInstances["relatedFileProvider"];
 	bookmarkProvider!: PaletteProviderInstances["bookmarkProvider"];
 	smartConnectionProvider!: PaletteProviderInstances["smartConnectionProvider"];
+	tabProvider!: PaletteProviderInstances["tabProvider"];
 	providers!: PaletteProviderInstances["providers"];
 	private fileUsageHistory?: FileUsageHistory;
 	private searchHistory?: SearchHistoryService;
@@ -88,6 +89,7 @@ export default class MyPalettePlugin extends Plugin {
 		this.relatedFileProvider = providers.relatedFileProvider;
 		this.bookmarkProvider = providers.bookmarkProvider;
 		this.smartConnectionProvider = providers.smartConnectionProvider;
+		this.tabProvider = providers.tabProvider;
 		this.providers = providers.providers;
 		this.addSettingTab(new MyPaletteSettingTab(this));
 		registerPluginCommands(this);

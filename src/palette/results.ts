@@ -8,7 +8,8 @@ export type PaletteMode =
 	| "link"
 	| "backlink"
 	| "bookmark"
-	| "smart";
+	| "smart"
+	| "tab";
 export type EverythingScope = "vault" | "directory";
 
 export interface ParsedInput {
@@ -81,6 +82,12 @@ export interface SmartConnectionResult extends BaseResult {
 	score: number;
 }
 
+/** An open main-area tab; choosing it activates the tab instead of opening a file. */
+export interface TabResult extends BaseResult {
+	mode: "tab";
+	file?: TFile;
+}
+
 export type PaletteResult =
 	| FileResult
 	| CommandResult
@@ -88,7 +95,8 @@ export type PaletteResult =
 	| SearchHistoryResult
 	| RelatedFileResult
 	| BookmarkResult
-	| SmartConnectionResult;
+	| SmartConnectionResult
+	| TabResult;
 
 /** The vault file a result opens, when it has one; used to record file usage. */
 export function getResultFilePath(result: PaletteResult): string | undefined {
@@ -98,6 +106,7 @@ export function getResultFilePath(result: PaletteResult): string | undefined {
 		case "everything":
 			return result.kind === "file" ? result.vaultPath : undefined;
 		case "bookmark":
+		case "tab":
 			return result.file?.path;
 		case "link":
 		case "backlink":

@@ -24,7 +24,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		initialInput = "",
 		private readonly fixedMode?: Extract<
 			PaletteMode,
-			"link" | "backlink" | "bookmark" | "smart"
+			"link" | "backlink" | "bookmark" | "smart" | "tab"
 		>,
 	) {
 		super(

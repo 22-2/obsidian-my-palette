@@ -3,7 +3,6 @@ import type MyPalettePlugin from "src/main";
 import { insertLinkToMocRelateds, removeLinkInMocRelateds } from "src/moc-relateds/mocRelateds";
 import { MoveFileModal } from "src/palette/MoveFileModal";
 import { OpenFilePathModal } from "src/palette/OpenFilePathModal";
-import { openSwitchTabModal } from "src/palette/SwitchTabModal";
 import { insertTags } from "src/tags/insertTags";
 
 /**
@@ -85,7 +84,7 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	plugin.addCommand({
 		id: "switch-tab",
 		name: "Switch tab",
-		callback: () => openSwitchTabModal(plugin.app),
+		callback: () => plugin.paletteOpener.openPalette("", "tab"),
 	});
 	plugin.addCommand({
 		id: "open-file-path-in-editor",

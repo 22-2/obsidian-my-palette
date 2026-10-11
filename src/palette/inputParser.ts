@@ -62,6 +62,7 @@ export function parseInput(raw: string, prefixes: Prefixes): ParsedInput {
 		{ prefix: RELATED_PREFIXES.backlink, mode: "backlink", allowIgnored: false },
 		{ prefix: "bk ", mode: "bookmark" },
 		{ prefix: "sc ", mode: "smart" },
+		{ prefix: "t ", mode: "tab", allowIgnored: false },
 		{ prefix: "esdir ", mode: "everything", everythingScope: "directory" },
 		{
 			prefix: `${prefixes.everything.trimEnd()} `,

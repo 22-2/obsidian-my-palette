@@ -110,6 +110,14 @@ describe("Smart Connections prefix", () => {
 	});
 });
 
+describe("Tab prefix", () => {
+	it("switches to tab search only after t followed by a space", () => {
+		expect(parseInput("t", prefixes)).toMatchObject({ mode: "file", query: "t" });
+		expect(parseInput("t ", prefixes)).toMatchObject({ mode: "tab", query: "" });
+		expect(parseInput("t daily", prefixes)).toMatchObject({ mode: "tab", query: "daily" });
+	});
+});
+
 describe("Related note prefixes", () => {
 	it("switches to outgoing-link search with the o prefix", () => {
 		expect(parseInput("o ", prefixes)).toMatchObject({ mode: "link", query: "" });

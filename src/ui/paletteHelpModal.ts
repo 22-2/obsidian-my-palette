@@ -31,6 +31,7 @@ export class PaletteHelpModal extends Modal {
 			[RELATED_PREFIXES.backlink, "Backlinks", "Notes linking to the current note"],
 			["bk ", "Bookmarks", "Search saved bookmarks"],
 			["sc ", "Smart Connections", "Search notes related to the current note"],
+			["t ", "Tabs", "Switch to an open tab"],
 			[
 				`${this.prefixes.everything.trimEnd()} `,
 				"Everything",

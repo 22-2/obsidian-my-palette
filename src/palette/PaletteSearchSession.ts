@@ -3,7 +3,10 @@ import type { EverythingScope, PaletteMode, PaletteResult, ParsedInput } from "s
 import type MyPalettePlugin from "src/main";
 import { getSearchHistoryCategory, parseInput } from "src/palette/inputParser";
 
-export type FixedPaletteMode = Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart">;
+export type FixedPaletteMode = Extract<
+	PaletteMode,
+	"link" | "backlink" | "bookmark" | "smart" | "tab"
+>;
 
 export type RecordableSearch = {
 	query: string;
@@ -218,5 +221,7 @@ export function palettePlaceholder(mode: PaletteMode): string {
 				? "Search bookmarks"
 				: mode === "smart"
 					? "Search Smart Connections"
-					: "Search files";
+					: mode === "tab"
+						? "Search open tabs"
+						: "Search files";
 }

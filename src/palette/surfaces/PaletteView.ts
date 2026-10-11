@@ -584,7 +584,8 @@ function normalizeState(state: PaletteViewState): NormalizedPaletteViewState {
 		state.fixedMode === "link" ||
 		state.fixedMode === "backlink" ||
 		state.fixedMode === "bookmark" ||
-		state.fixedMode === "smart"
+		state.fixedMode === "smart" ||
+		state.fixedMode === "tab"
 			? state.fixedMode
 			: undefined;
 	return {

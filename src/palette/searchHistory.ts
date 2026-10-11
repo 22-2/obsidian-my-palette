@@ -25,6 +25,7 @@ function isSearchHistoryCategory(value: unknown): value is SearchHistoryCategory
 		value === "command" ||
 		value === "bookmark" ||
 		value === "smart" ||
+		value === "tab" ||
 		value === "everything" ||
 		value === "everything-directory" ||
 		value === "link" ||
@@ -220,7 +221,10 @@ export function formatSearchHistoryInput(entry: SearchHistoryEntry, prefixes: Pr
 	const modeInput = `${historyCategoryPrefix(entry.category, prefixes)}${entry.input}`;
 	// Related searches intentionally do not support the ignored-note scope;
 	// avoid reconstructing an input that the parser would interpret as File mode.
-	return entry.includeIgnored && entry.category !== "link" && entry.category !== "backlink"
+	return entry.includeIgnored &&
+		entry.category !== "link" &&
+		entry.category !== "backlink" &&
+		entry.category !== "tab"
 		? `${prefixes.includeIgnored.trimEnd()} ${modeInput}`
 		: modeInput;
 }
@@ -233,6 +237,8 @@ function historyCategoryPrefix(category: SearchHistoryCategory, prefixes: Prefix
 			return "bk ";
 		case "smart":
 			return "sc ";
+		case "tab":
+			return "t ";
 		case "everything":
 			return `${prefixes.everything.trimEnd()} `;
 		case "everything-directory":
