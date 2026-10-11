@@ -512,6 +512,7 @@ export class PaletteView extends ItemView {
 					: undefined,
 			applySearchHistory: (history) => this.applySearchHistory(history),
 			getMocContext: () => this.resolveMocInsertionContext(),
+			onTabsChanged: () => void this.session?.search(this.session.input),
 		});
 		menu.setParentElement(this.contentEl);
 		menu.showAtMouseEvent(event);

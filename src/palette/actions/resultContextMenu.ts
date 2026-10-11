@@ -2,6 +2,7 @@ import type { App, Menu } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import type { MocInsertionContext } from "src/moc-relateds/mocInsertion";
 import { addMocInsertionMenuItem, addMocInsertionMenuItems } from "src/moc-relateds/mocInsertion";
+import { isTabResult, populateTabMenu } from "src/palette/actions/tabMenu";
 import type { ActionKind } from "src/palette/resultActions";
 import { getCopyablePaths, isCopyablePaletteResult } from "src/palette/resultPresentation";
 import type { PaletteResult } from "src/palette/results";
@@ -26,6 +27,8 @@ interface PaletteResultMenuOptions {
 	/** Lets a modal palette close before an action that opens its own modal or edits notes. */
 	onNoteActionSelected?: () => void;
 	getMocContext?: () => MocInsertionContext;
+	/** Re-runs the search after a tab operation changed the open tabs. */
+	onTabsChanged?: () => void;
 }
 
 /** Populates the result menu shared by modal and persistent palette surfaces. */
@@ -41,7 +44,23 @@ export function populatePaletteResultMenu({
 	applySearchHistory,
 	onNoteActionSelected,
 	getMocContext,
+	onTabsChanged,
 }: PaletteResultMenuOptions): void {
+	// Tab results get their own menu; a mixed selection cannot happen because
+	// one search produces results of a single mode.
+	const targets = selectedItems.length > 1 ? selectedItems : [result];
+	if (targets.every(isTabResult)) {
+		populateTabMenu({
+			app,
+			plugin,
+			menu,
+			tabs: targets,
+			activate,
+			onTabsChanged: onTabsChanged ?? (() => {}),
+			onNoteActionSelected,
+		});
+		return;
+	}
 	const selectedPaths = selectedItems
 		.filter(isCopyablePaletteResult)
 		.map((item) => getCopyablePaths(app, item))
