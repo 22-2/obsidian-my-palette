@@ -757,19 +757,36 @@
 .my-palette-status-toggle {
 	display: flex;
 	align-items: center;
-	gap: 6px;
+	gap: 8px;
 	cursor: pointer;
 	white-space: nowrap;
 }
 
-.my-palette-status-toggle:hover {
+/* The label brightens with the switch so the state also reads from the text. */
+.my-palette-status-toggle:hover,
+.my-palette-status-toggle[aria-checked="true"] {
 	color: var(--text-normal);
 }
 
-/* Footer padding matches the rows: the switch starts on the check column and the
-   count ends where row text ends. */
+/* Why: some themes tint --text-faint toward the accent, which makes quiet footer
+   text read as a link; dim the muted color instead. */
+.my-palette-status-toggle__hint,
+.my-palette-panel--modal .my-palette-status-bar__count {
+	color: var(--text-muted);
+	opacity: 0.6;
+}
+
+/* A recessed tray under the list. Its padding matches the rows: the switch starts
+   on the check column and the count ends where row text ends. */
 .my-palette-panel--modal.my-palette-moc-footer .my-palette-status-bar {
-	padding: 5px 20px 6px;
+	box-sizing: border-box;
+	min-height: 32px;
+	padding: 0 20px;
+	background-color: var(--background-secondary);
+}
+
+.my-palette-panel--modal .my-palette-status-bar__count {
+	font-variant-numeric: tabular-nums;
 }
 
 /* Why: a scaled-down settings toggle keeps its full layout box, so the label gap

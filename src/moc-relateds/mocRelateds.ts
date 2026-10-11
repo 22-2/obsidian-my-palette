@@ -256,6 +256,7 @@ abstract class MocRelatedsModal extends MultiSelectModal<string> {
 		const toggle = createDiv({ cls: "my-palette-status-toggle" });
 		toggle.createDiv({ cls: "checkbox-container" });
 		toggle.createSpan({ text: "Mutual" });
+		toggle.createSpan({ cls: "my-palette-status-toggle__hint", text: "Ctrl+M" });
 		toggle.setAttribute("title", "Also update the note's link to the MOC (Ctrl+M)");
 		statusBar.prepend(toggle);
 		// Why: a press on the footer must not pull focus out of the input.
