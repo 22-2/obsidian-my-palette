@@ -44,6 +44,7 @@ describe("settings page layout", () => {
 			"Temporarily hide palette",
 			"Preview selected result",
 			"Search history",
+			"Show result actions",
 			"Return to input mode",
 			"Toggle selection",
 		]);

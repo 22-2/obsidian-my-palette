@@ -18,6 +18,10 @@ export const HOTKEY_ACTIONS = {
 		name: "Search history",
 		description: "Open saved searches in any palette or selector.",
 	},
+	contextMenu: {
+		name: "Show result actions",
+		description: "Open the right-click menu for the active result from the keyboard.",
+	},
 	focusInput: {
 		name: "Return to input mode",
 		description: "Return from selection mode to typing in tag and MOC selectors.",
@@ -36,6 +40,7 @@ export const DEFAULT_HOTKEYS: PaletteHotkeys = {
 	hidePreview: { key: "H", modifiers: ["Alt"] },
 	preview: { key: "ArrowRight", modifiers: [] },
 	history: { key: "R", modifiers: ["Ctrl"] },
+	contextMenu: { key: "K", modifiers: ["Ctrl"] },
 	focusInput: { key: "F", modifiers: [] },
 	toggleSelection: { key: "Space", modifiers: [] },
 };
@@ -114,7 +119,11 @@ export function hotkeyError(
 function bindingError(action: HotkeyAction, hotkey: PaletteHotkey): string | undefined {
 	if (hotkey.key === "ArrowRight" && action !== "preview")
 		return "Right Arrow is reserved for cursor movement and preview.";
-	const needsModifier = action === "hidePreview" || action === "history" || action === "preview";
+	const needsModifier =
+		action === "hidePreview" ||
+		action === "history" ||
+		action === "preview" ||
+		action === "contextMenu";
 	if (
 		needsModifier &&
 		hotkey.key !== "ArrowRight" &&

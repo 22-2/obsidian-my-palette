@@ -237,6 +237,18 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 		mouse(f.rows()[0], "contextmenu", { button: 2 });
 		expect(f.selection()).toEqual(["alpha"]);
 	});
+	it("opens the context menu for the keyboard selection with Ctrl+K", async () => {
+		const f = await fixture(surface);
+		key(f.input, "ArrowDown");
+		key(f.input, "ArrowDown", { shiftKey: true });
+		const event = key(f.input, "k", { ctrlKey: true });
+		expect(event.defaultPrevented).toBe(true);
+		expect(f.context).toHaveBeenCalledExactlyOnceWith("gamma", ["beta", "gamma"]);
+		mouse(f.rows()[2], "mousedown");
+		mouse(f.rows()[2], "click");
+		mouse(f.rows()[2], "dblclick");
+		expect(f.choose).toHaveBeenCalledExactlyOnceWith("gamma");
+	});
 	it("activates extended selections only on double-click or Enter", async () => {
 		const f = await fixture(surface);
 		mouse(f.rows()[1], "mousedown");

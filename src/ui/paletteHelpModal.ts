@@ -78,6 +78,14 @@ export class PaletteHelpModal extends Modal {
 			["Shift+click", "Select a range of results"],
 			["Middle-click", "Open the result in a background tab"],
 			["Right-click", "Show actions, including copy actions for a selection"],
+			...(this.hotkeys.contextMenu
+				? ([
+						[
+							formatHotkey(this.hotkeys.contextMenu),
+							"Show actions for the active result",
+						],
+					] satisfies Array<[string, string]>)
+				: []),
 			[formatHotkey(this.hotkeys.history), "Open search history"],
 			[
 				"Esc",

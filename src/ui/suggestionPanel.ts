@@ -403,6 +403,12 @@ export class SuggestionPanel<T> extends Component {
 	private handleInputKeyDown(event: KeyboardEvent): void {
 		if (event.isComposing) return;
 		if (this.handleModeCommand(event)) return;
+		if (this.props.onContextMenu && matchesHotkey(event, this.hotkeys.contextMenu)) {
+			event.preventDefault();
+			event.stopPropagation();
+			if (!event.repeat) this.showActiveRowContextMenu();
+			return;
+		}
 		if (event.key === "Escape") {
 			event.preventDefault();
 			event.stopPropagation();
@@ -617,14 +623,36 @@ export class SuggestionPanel<T> extends Component {
 				event.preventDefault();
 				event.stopImmediatePropagation();
 				this.rightClickRows.add(row);
-				const index = Number(row.getAttribute("data-index"));
-				if (this.selectionMode === "extended")
-					this.extendedSelection.selectForContextMenu(index, this.chooser.values.length);
-				this.setSelectedIndex(index, false);
-				this.props.onContextMenu(item, event, this.getSelectedItems());
+				this.showRowContextMenu(Number(row.getAttribute("data-index")), item, event);
 			},
 			true,
 		);
+	}
+
+	private showRowContextMenu(index: number, item: T, event: MouseEvent): void {
+		if (this.selectionMode === "extended")
+			this.extendedSelection.selectForContextMenu(index, this.chooser.values.length);
+		this.setSelectedIndex(index, false);
+		this.props.onContextMenu?.(item, event, this.getSelectedItems());
+	}
+
+	private showActiveRowContextMenu(): void {
+		const index = this.chooser.selectedItem;
+		const item = this.getSelectedItem();
+		const row = this.resultContainerEl.querySelector<HTMLElement>(
+			`.suggestion-item[data-index="${index}"]`,
+		);
+		if (item === undefined || !row) return;
+		row.scrollIntoView({ block: "nearest" });
+		const rect = row.getBoundingClientRect();
+		// Why: menu hosts position menus from a mouse event, so the keyboard path
+		// anchors a synthetic one just below the active row, like a dropdown.
+		const event = new MouseEvent("contextmenu", {
+			clientX: rect.left,
+			clientY: rect.bottom,
+			view: row.win,
+		});
+		this.showRowContextMenu(index, item, event);
 	}
 
 	private handleMiddleClick(row: Element, event: MouseEvent): void {

@@ -67,6 +67,7 @@ export class SelectorHelpModal extends Modal {
 						["Ctrl+↑ / Ctrl+↓", "Move the active row without changing the selection"],
 						["Double-click", `${this.controls.actionLabel} the active selection`],
 						["Right-click", "Show actions for the selection"],
+						[formatHotkey(hotkeys.contextMenu), "Show actions for the selection"],
 					] as const)
 				: ([["Click", `${this.controls.actionLabel} the result`]] as const)),
 			...(this.controls.shortcuts ?? []).map(
