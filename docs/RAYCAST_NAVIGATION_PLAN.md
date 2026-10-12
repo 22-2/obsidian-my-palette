@@ -48,11 +48,11 @@
 
 | エイリアス(バッジ) | タイトル                  | サブタイトル      | アイコン(Lucide)  |
 | ------------------ | ------------------------- | ----------------- | ----------------- |
-| `>`                | Run Command               | Obsidian          | `terminal-square` |
+| `>`                | Run Command               | Obsidian          | `square-terminal` |
 | `e`                | Search Vault Notes        | Everything        | `search`          |
 | `esdir`            | Search All Files in Vault | Everything        | `folder-search`   |
-| `o`                | Search Outgoing Links     | Current note      | `arrow-up-right`  |
-| `b`                | Search Backlinks          | Current note      | `arrow-down-left` |
+| `o`                | Search Outgoing Links     | Current note      | `links-going-out` |
+| `b`                | Search Backlinks          | Current note      | `links-coming-in` |
 | `bk`               | Search Bookmarks          | Obsidian          | `bookmark`        |
 | `sc`               | Search Related Notes      | Smart Connections | `sparkles`        |
 | `t`                | Switch Tab                | Workspace         | `panel-top`       |

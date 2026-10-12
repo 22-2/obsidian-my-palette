@@ -54,7 +54,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		mode: "link",
 		title: "Search Outgoing Links",
 		subtitle: "Current note",
-		icon: "arrow-up-right",
+		icon: "links-going-out",
 		placeholder: "Search links in the active note",
 	},
 	{
@@ -62,7 +62,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		mode: "backlink",
 		title: "Search Backlinks",
 		subtitle: "Current note",
-		icon: "arrow-down-left",
+		icon: "links-coming-in",
 		placeholder: "Search backlinks to the active note",
 	},
 	{
