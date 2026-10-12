@@ -43,6 +43,19 @@ test("right click offers the open actions", async ({ obsidian }) => {
 	await expect(menuItems(page).filter({ hasText: "Open side by side" })).toBeVisible();
 });
 
+test("pressing a result row closes the open result menu", async ({ obsidian }) => {
+	const page = await openPaletteWith(obsidian, "");
+	const rows = page.locator(MODAL_ROW);
+	await expect(rows).toHaveCount(2);
+	// Row presses stop propagation, so Obsidian's own outside-click dismissal never sees them.
+	for (const index of [1, 0]) {
+		await rows.first().click({ button: "right" });
+		await expect(page.locator(".menu")).toHaveCount(1);
+		await rows.nth(index).click();
+		await expect(page.locator(".menu")).toHaveCount(0);
+	}
+});
+
 test("moves the current modal search into a fresh sidebar pane", async ({ obsidian }) => {
 	await runPaletteCommand(obsidian, "open-view");
 	const page = obsidian.page;

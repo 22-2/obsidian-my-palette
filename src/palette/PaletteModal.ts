@@ -123,6 +123,9 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override onResultFocus(): void {
+		// Why: row presses stop propagation before Obsidian can dismiss an open
+		// result menu as an outside click, so a press on any row closes it here.
+		this.activeMenu?.close();
 		// Entering a mode is navigation; the alias typed to reach it is not a search.
 		if (this.getSelectedItem()?.mode === "mode-entry") return;
 		this.session.commitCurrentSearch();
