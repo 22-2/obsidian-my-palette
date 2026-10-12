@@ -1018,6 +1018,8 @@
  */
 .my-palette-panel--modal .prompt-input-container {
 	box-sizing: border-box;
+	/* A long result list fills the modal's max height; the input must not shrink for it. */
+	flex-shrink: 0;
 	height: 34px;
 	margin: 10px 12px 6px;
 	padding: 0 4px 0 0;
@@ -1110,7 +1112,12 @@
 .my-palette-mode-chip {
 	display: inline-flex;
 	flex: 0 0 auto;
+	align-self: center;
 	align-items: center;
+	box-sizing: border-box;
+	/* A fixed height keeps every mode's chip, and so the input row, the same size. */
+	height: 22px;
+	line-height: 1;
 	gap: 4px;
 	margin-left: 6px;
 	padding: 1px 7px;
