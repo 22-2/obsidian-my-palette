@@ -6,14 +6,17 @@ import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
 import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
 import { executePaletteResult } from "src/palette/executePaletteResult";
 import type { ActionKind } from "src/palette/resultActions";
-import { PaletteSearchSession, palettePlaceholder } from "src/palette/PaletteSearchSession";
+import {
+	PaletteSearchSession,
+	paletteRouteChrome,
+	paletteSectionOf,
+	type PaletteSearchState,
+} from "src/palette/PaletteSearchSession";
 import { toPaletteSelectionItem } from "src/palette/resultPresentation";
 import { populatePaletteResultMenu } from "src/palette/actions/resultContextMenu";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 import { ignoredToggleOptions, syncIgnoredToggle } from "src/palette/ignoredToggle";
 import type { StatusToggle } from "src/ui/statusToggle";
-import { getPaletteMode } from "src/palette/modes";
-import type { PaletteSearchState } from "src/palette/PaletteSearchSession";
 
 export interface PaletteModalOptions {
 	/** Root Search lists mode entries above the files; off for the file-only palette. */
@@ -35,10 +38,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		app: App,
 		private readonly plugin: MyPalettePlugin,
 		initialInput = "",
-		private readonly fixedMode?: Extract<
-			PaletteMode,
-			"link" | "backlink" | "bookmark" | "smart" | "tab"
-		>,
+		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart" | "tab">,
 		{ modeEntries = false }: PaletteModalOptions = {},
 	) {
 		super(
@@ -56,7 +56,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.session = new PaletteSearchSession(this.plugin, {
 			initialInput,
 			fixedMode,
-			navigation: { modeEntries },
+			modeEntries,
 			onStateChange: (state) => {
 				this.state = state;
 				// `alias + Space` moves into a mode and leaves only the query behind.
@@ -103,13 +103,6 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.historyControls?.destroy();
 		this.historyControls = undefined;
 		this.ignoredToggle = undefined;
-	}
-
-	protected override getInitialInputSelectionRange(): [number, number] {
-		const commandPrefix = `${this.plugin.settings.prefixes.command.trimEnd()} `;
-		return this.inputEl.value.toLocaleLowerCase().startsWith(commandPrefix.toLocaleLowerCase())
-			? [commandPrefix.length, this.inputEl.value.length]
-			: [0, this.inputEl.value.length];
 	}
 
 	protected override toSelectionItem(result: PaletteResult): SelectionItem {
@@ -180,32 +173,18 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	private updateMode(): void {
-		const route = this.state?.route;
-		this.modalEl.setAttribute("data-route", route?.kind ?? "root");
-		if (route?.kind === "mode") {
-			const definition = getPaletteMode(route.modeId);
-			this.updatePlaceholder(definition.placeholder);
-			this.setModeChip({
-				icon: definition.icon,
-				label: this.session.modeAlias ?? "",
-				title: definition.title,
-			});
-		} else {
-			this.updatePlaceholder(
-				this.modeEntries ? "Search files, or pick a mode" : palettePlaceholder(this.mode),
-			);
-			this.setModeChip();
-		}
+		const state = this.state ?? this.session.current;
+		this.modalEl.setAttribute("data-route", state.route.kind);
+		const chrome = paletteRouteChrome(state, this.session.modeAlias, this.modeEntries);
+		this.updatePlaceholder(chrome.placeholder);
+		this.setModeChip(chrome.chip);
 		this.modalEl.setAttribute("data-mode", this.mode);
 		this.modalEl.setAttribute("data-everything-scope", this.everythingScope);
 		syncIgnoredToggle(this.ignoredToggle, this.mode);
 	}
 
 	protected override sectionOf(result: PaletteResult): string | undefined {
-		if (!this.modeEntries || this.state?.route.kind !== "root") return undefined;
-		// Headings only help when both kinds of rows share the list.
-		if (!this.state.results.some((item) => item.mode === "mode-entry")) return undefined;
-		return result.mode === "mode-entry" ? "Modes" : "Files";
+		return paletteSectionOf(this.state, result);
 	}
 
 	protected override onSuggestionEscape(): void {
@@ -216,6 +195,12 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	protected override onEmptyBackspace(): boolean {
 		if (this.state?.route.kind !== "mode") return false;
 		this.returnToRoot();
+		return true;
+	}
+
+	protected override onSuggestionTab(result: PaletteResult): boolean {
+		if (result.mode !== "mode-entry") return false;
+		this.enterMode(result);
 		return true;
 	}
 
@@ -246,18 +231,14 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	private moveToSidebar(): void {
-		// Why: copy the live input, including prefixes, the Ignored switch and the
-		// fixed mode before closing. A fresh pane preserves this search without
-		// replacing another sidebar palette, and closing first lets the new input
-		// retain focus.
-		const input = this.inputEl.value;
+		// Why: copy the live search and the Ignored switch before closing. The
+		// alias-prefixed input carries the mode, so the new pane enters it again.
+		// A fresh pane preserves this search without replacing another sidebar
+		// palette, and closing first lets the new input retain focus.
+		const input = this.session.prefixedInput;
 		const includeIgnored = this.session.current.ignoredScope;
 		this.close();
-		void this.plugin.paletteOpener.openNewPaletteView({
-			input,
-			fixedMode: this.fixedMode,
-			includeIgnored,
-		});
+		void this.plugin.paletteOpener.openNewPaletteView({ input, includeIgnored });
 	}
 
 	private async activatePaletteResult(

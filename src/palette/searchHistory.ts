@@ -1,5 +1,6 @@
 import type { Prefixes } from "src/palette/inputParser";
-import { getSearchHistoryCategory, parseInput, RELATED_PREFIXES } from "src/palette/inputParser";
+import { getSearchHistoryCategory, parseInput } from "src/palette/inputParser";
+import { paletteModeAlias, type PaletteModeId } from "src/palette/modes";
 import type {
 	SearchHistoryCategory,
 	SearchHistoryEntry,
@@ -234,27 +235,32 @@ export function formatSearchHistoryInput(entry: SearchHistoryEntry, prefixes: Pr
 }
 
 function historyCategoryPrefix(category: SearchHistoryCategory, prefixes: Prefixes): string {
+	const modeId = historyCategoryMode(category);
+	return modeId ? `${paletteModeAlias(modeId, prefixes)} ` : "";
+}
+
+function historyCategoryMode(category: SearchHistoryCategory): PaletteModeId | undefined {
 	switch (category) {
 		case "command":
-			return `${prefixes.command.trimEnd()} `;
+			return "commands";
 		case "bookmark":
-			return "bk ";
+			return "bookmarks";
 		case "smart":
-			return "sc ";
+			return "smart";
 		case "tab":
-			return "t ";
+			return "tabs";
 		case "everything":
-			return `${prefixes.everything.trimEnd()} `;
+			return "everything";
 		case "everything-directory":
-			return "esdir ";
+			return "everything-all";
 		case "link":
-			return RELATED_PREFIXES.link;
+			return "outlinks";
 		case "backlink":
-			return RELATED_PREFIXES.backlink;
+			return "backlinks";
 		case "file":
 		case "tag-insertion":
 		case "moc-insertion":
 		case "folder-move":
-			return "";
+			return undefined;
 	}
 }

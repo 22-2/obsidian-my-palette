@@ -7,7 +7,7 @@ import {
 	type ParsedInput,
 } from "src/palette/results";
 import type MyPalettePlugin from "src/main";
-import { getSearchHistoryCategory, parseInput } from "src/palette/inputParser";
+import { getSearchHistoryCategory } from "src/palette/inputParser";
 import {
 	findPaletteMode,
 	getPaletteMode,
@@ -52,14 +52,12 @@ export interface PaletteSearchState {
 
 export interface PaletteSearchSessionOptions {
 	initialInput?: string;
+	/** The mode to start in. Esc still leaves it for Root Search. */
 	fixedMode?: FixedPaletteMode;
 	sourceFile?: TFile;
 	includeIgnored?: boolean;
-	/**
-	 * Raycast-style navigation: prefixes move into a mode and leave the input,
-	 * and Root Search offers the modes as rows. Hosts without it keep prefixes.
-	 */
-	navigation?: { modeEntries: boolean };
+	/** Root Search lists mode entries above the files; off for file-only palettes and tables. */
+	modeEntries?: boolean;
 	onStateChange?: (state: PaletteSearchState) => void;
 }
 
@@ -74,8 +72,7 @@ export class PaletteSearchSession {
 	private controller?: AbortController;
 	private historyCommittedGeneration = -1;
 	private disposed = false;
-	private readonly fixedMode?: FixedPaletteMode;
-	private readonly navigation?: { modeEntries: boolean };
+	private readonly listsModes: boolean;
 	private route: PaletteRoute = { kind: "root" };
 	private sourceFile?: TFile;
 	private readonly onStateChange?: (state: PaletteSearchState) => void;
@@ -88,18 +85,13 @@ export class PaletteSearchSession {
 			fixedMode,
 			sourceFile,
 			includeIgnored = false,
-			navigation,
+			modeEntries = false,
 			onStateChange,
 		}: PaletteSearchSessionOptions = {},
 	) {
-		this.navigation = navigation;
-		if (navigation && fixedMode) {
-			// A navigating palette starts in the fixed mode but can still leave it.
-			const definition = findPaletteMode(fixedMode);
-			if (definition) this.route = { kind: "mode", modeId: definition.id };
-		} else {
-			this.fixedMode = fixedMode;
-		}
+		this.listsModes = modeEntries;
+		const definition = fixedMode ? findPaletteMode(fixedMode) : undefined;
+		if (definition) this.route = { kind: "mode", modeId: definition.id };
 		this.sourceFile = sourceFile;
 		this.onStateChange = onStateChange;
 		const parsed = this.parse(initialInput);
@@ -136,6 +128,14 @@ export class PaletteSearchSession {
 		return alias;
 	}
 
+	/**
+	 * The input with its mode's alias, for persisting and handing the search to
+	 * another palette: restoring it enters the same mode through `alias + Space`.
+	 */
+	get prefixedInput(): string {
+		return this.rawInput(this.state.input);
+	}
+
 	get modeAlias(): string | undefined {
 		return this.route.kind === "mode"
 			? paletteModeAlias(this.route.modeId, this.plugin.settings.prefixes)
@@ -148,10 +148,6 @@ export class PaletteSearchSession {
 
 	get input(): string {
 		return this.state.input;
-	}
-
-	get fixed(): FixedPaletteMode | undefined {
-		return this.fixedMode;
 	}
 
 	/**
@@ -280,8 +276,6 @@ export class PaletteSearchSession {
 	}
 
 	private parse(input: string): ParsedInput {
-		if (this.fixedMode) return { raw: input, mode: this.fixedMode, query: input };
-		if (!this.navigation) return parseInput(input, this.plugin.settings.prefixes);
 		if (this.route.kind === "root") return { raw: input, mode: "file", query: input };
 		const { mode, everythingScope } = getPaletteMode(this.route.modeId);
 		return { raw: input, mode, query: input, everythingScope };
@@ -289,7 +283,7 @@ export class PaletteSearchSession {
 
 	/** In Root Search, `alias + Space` (typed or pasted) moves into that mode. */
 	private applyDirectModeEntry(input: string): string {
-		if (!this.navigation || this.route.kind !== "root") return input;
+		if (this.route.kind !== "root") return input;
 		const entry = parseDirectModeEntry(input, this.plugin.settings.prefixes);
 		if (!entry) return input;
 		this.route = { kind: "mode", modeId: entry.modeId };
@@ -303,7 +297,7 @@ export class PaletteSearchSession {
 	}
 
 	private modeEntries(input: string): ModeEntryResult[] {
-		if (!this.navigation?.modeEntries || this.route.kind !== "root") return [];
+		if (!this.listsModes || this.route.kind !== "root") return [];
 		const { prefixes } = this.plugin.settings;
 		return matchPaletteModes(input, prefixes).map((definition) => ({
 			id: `mode:${definition.id}`,
@@ -327,6 +321,39 @@ export class PaletteSearchSession {
 	private emit(): void {
 		this.onStateChange?.(this.state);
 	}
+}
+
+export interface PaletteRouteChrome {
+	placeholder: string;
+	chip?: { icon: string; label: string; title: string };
+}
+
+/** The input decoration shared by the modal and the workspace views. */
+export function paletteRouteChrome(
+	state: Pick<PaletteSearchState, "route" | "mode">,
+	alias: string | undefined,
+	modeEntries: boolean,
+): PaletteRouteChrome {
+	if (state.route.kind === "mode") {
+		const definition = getPaletteMode(state.route.modeId);
+		return {
+			placeholder: definition.placeholder,
+			chip: { icon: definition.icon, label: alias ?? "", title: definition.title },
+		};
+	}
+	return {
+		placeholder: modeEntries ? "Search files, or pick a mode" : palettePlaceholder(state.mode),
+	};
+}
+
+/** Root Search headings, shown only while mode entries and files share the list. */
+export function paletteSectionOf(
+	state: Pick<PaletteSearchState, "route" | "results"> | undefined,
+	result: PaletteResult,
+): string | undefined {
+	if (state?.route.kind !== "root") return undefined;
+	if (!state.results.some((item) => item.mode === "mode-entry")) return undefined;
+	return result.mode === "mode-entry" ? "Modes" : "Files";
 }
 
 export function palettePlaceholder(mode: PaletteMode): string {

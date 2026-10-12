@@ -37,6 +37,8 @@ export interface SuggestionPanelProps<T> {
 	onSelectionSpace?: (selectedItems: T[], event: KeyboardEvent) => void;
 	onContextMenu?: (item: T, event: MouseEvent, selectedItems: T[]) => void;
 	onEscape?: () => void;
+	/** Tab on the active row; returning true consumes the key (Root Search enters modes). */
+	onTab?: (item: T) => boolean;
 	/** Backspace in an empty input; returning true consumes the key. */
 	onEmptyBackspace?: () => boolean;
 	/** Click on the mode chip shown left of the input. */
@@ -469,6 +471,14 @@ export class SuggestionPanel<T> extends Component {
 			event.stopPropagation();
 			this.props.onEscape?.();
 			return;
+		}
+		if (event.key === "Tab" && !event.shiftKey && !event.ctrlKey && !event.altKey) {
+			const item = this.getSelectedItem();
+			if (item !== undefined && this.props.onTab?.(item)) {
+				event.preventDefault();
+				event.stopPropagation();
+				return;
+			}
 		}
 		if (
 			event.key === "Backspace" &&

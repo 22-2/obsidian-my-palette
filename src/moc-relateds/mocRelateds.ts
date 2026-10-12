@@ -18,7 +18,6 @@ import {
 	copyPathToClipboard,
 } from "src/platform/pathClipboard";
 import { isMarkdownPath } from "src/shared/externalFiles";
-import { parseInput } from "src/palette/inputParser";
 import { IGNORED_SHORTCUT, ignoredToggleOptions } from "src/palette/ignoredToggle";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
 import { executePaletteResult } from "src/palette/executePaletteResult";
@@ -298,12 +297,11 @@ class MocTargetModal extends MocRelatedsModal {
 		// Read once on the first search, since linked notes must be opened to find Relateds links.
 		this.relations ??= relatedsRelations(plugin.app, activeFile);
 		const relations = await this.relations;
-		const parsed = parseInput(input, plugin.settings.prefixes);
-		if (parsed.mode !== "file") return [];
+		// The selector has no modes, so the whole input is a file query.
 		const { includeIgnored } = this;
 		const results = await plugin.fileProvider.search({
 			mode: "file",
-			query: parsed.query,
+			query: input,
 			includeIgnored,
 		});
 		return results

@@ -103,6 +103,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 				: undefined,
 			onEscape: () => this.onSuggestionEscape(),
 			onEmptyBackspace: () => this.onEmptyBackspace(),
+			onTab: (item) => this.onSuggestionTab(item),
 			onModeChipClick: () => this.onModeChipClick(),
 			sectionOf: (item) => this.sectionOf(item),
 		});
@@ -318,6 +319,9 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		this.close();
 	}
 	protected onEmptyBackspace(): boolean {
+		return false;
+	}
+	protected onSuggestionTab(_item: T): boolean {
 		return false;
 	}
 	protected onModeChipClick(): void {}

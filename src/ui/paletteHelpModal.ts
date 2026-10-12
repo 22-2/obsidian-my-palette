@@ -1,6 +1,6 @@
 import { App, Modal, setIcon } from "obsidian";
 import type { Prefixes } from "src/palette/inputParser";
-import { RELATED_PREFIXES } from "src/palette/inputParser";
+import { PALETTE_MODES, paletteModeAlias } from "src/palette/modes";
 import type { PaletteSurface } from "src/settings/model";
 import { IGNORED_SHORTCUT } from "src/palette/ignoredToggle";
 import { DEFAULT_HOTKEYS, formatHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
@@ -22,24 +22,17 @@ export class PaletteHelpModal extends Modal {
 		this.titleEl.setText("Palette help");
 
 		const intro = this.contentEl.createDiv("my-palette-help-modal__intro");
-		intro.setText("Type a prefix followed by a space to switch search modes.");
+		intro.setText(
+			"Pick a mode in Root Search with Enter or Tab, or type its alias followed by a space. Esc goes back.",
+		);
 
 		const modes = this.contentEl.createDiv("my-palette-help-modal__section");
 		modes.createEl("h3", { text: "Search modes" });
-		const modeRows: Array<[string, string, string]> = [
-			[`${this.prefixes.command.trimEnd()} `, "Commands", "Run an Obsidian command"],
-			[RELATED_PREFIXES.link, "Outlinks", "Notes linked from the current note"],
-			[RELATED_PREFIXES.backlink, "Backlinks", "Notes linking to the current note"],
-			["bk ", "Bookmarks", "Search saved bookmarks"],
-			["sc ", "Smart Connections", "Search notes related to the current note"],
-			["t ", "Tabs", "Switch to an open tab"],
-			[
-				`${this.prefixes.everything.trimEnd()} `,
-				"Everything",
-				"Search the whole Everything index",
-			],
-			["esdir ", "Everything directory", "Search the current note's directory"],
-		];
+		const modeRows = PALETTE_MODES.map((mode): [string, string, string] => [
+			paletteModeAlias(mode.id, this.prefixes),
+			mode.title,
+			mode.subtitle,
+		]);
 		for (const [prefix, name, description] of modeRows) {
 			const row = modes.createDiv("my-palette-help-modal__row");
 			row.createEl("code", { text: prefix });
@@ -84,10 +77,12 @@ export class PaletteHelpModal extends Modal {
 				: []),
 			[formatHotkey(this.hotkeys.history), "Open search history"],
 			[IGNORED_SHORTCUT[0], "Include files hidden by Excluded files in File search"],
+			["Enter / Tab on a mode", "Enter that mode"],
+			["Esc / Backspace in an empty field", "Return from a mode to Root Search"],
 			[
 				"Esc",
 				this.surface === "palette"
-					? "Close the palette"
+					? "Close the palette at Root Search"
 					: "Clear the query, then focus the search field",
 			],
 		];

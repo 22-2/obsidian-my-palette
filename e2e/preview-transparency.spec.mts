@@ -36,8 +36,12 @@ for (const [surface, command, selector] of [
 			["e alpha", "everything"],
 			["esdir alpha", "everything"],
 		] as const) {
+			// An alias moves into its mode, so go back to Root Search before the next one.
+			if (await panel.locator(".my-palette-mode-chip").isVisible())
+				await input.press("Escape");
 			await input.fill(query);
 			await expect(panel).toHaveAttribute("data-mode", mode);
+			const shownInput = mode === "file" ? query : query.slice(query.indexOf(" ") + 1);
 			const bounds = await container.boundingBox();
 			await page.keyboard.down("Alt");
 			await page.keyboard.down("h");
@@ -51,7 +55,7 @@ for (const [surface, command, selector] of [
 			await expect(container).toBeVisible();
 			await expect(container).toHaveCSS("opacity", "1");
 			await expect(input).toBeFocused();
-			await expect(input).toHaveValue(query);
+			await expect(input).toHaveValue(shownInput);
 			await page.keyboard.up("h");
 			await page.keyboard.up("Alt");
 		}

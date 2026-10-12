@@ -10,9 +10,12 @@ import {
 import {
 	PaletteSearchSession,
 	palettePlaceholder,
+	paletteRouteChrome,
+	paletteSectionOf,
 	type FixedPaletteMode,
 	type PaletteSearchState,
 } from "src/palette/PaletteSearchSession";
+import type { PaletteModeId } from "src/palette/modes";
 import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
 import { toPaletteSelectionItem } from "src/palette/resultPresentation";
 import { renderSelectionItem } from "src/ui/selectionModal";
@@ -142,8 +145,8 @@ export class PaletteView extends ItemView {
 
 	getState(): PaletteViewState {
 		return {
-			input: this.session?.input ?? this.pendingState.input,
-			fixedMode: this.session?.fixed ?? this.pendingState.fixedMode,
+			input: this.session?.prefixedInput ?? this.pendingState.input,
+			fixedMode: this.pendingState.fixedMode,
 			sourcePath: this.sourcePinned ? this.sourcePath : undefined,
 			sourcePinned: this.sourcePinned,
 			includeIgnored: this.ignoredScope,
@@ -170,6 +173,8 @@ export class PaletteView extends ItemView {
 		this.panel.setInput(next.input, "end");
 		this.session.setIgnoredScope(next.includeIgnored);
 		this.ignoredToggle?.set(next.includeIgnored);
+		// The saved input carries its alias; Root Search turns it back into a mode.
+		this.session.returnToRoot();
 		this.session.setInput(next.input, { suppressHistory: true });
 	}
 
@@ -183,7 +188,7 @@ export class PaletteView extends ItemView {
 			// disposed the session, so keep the last input in the fallback state too.
 			this.pendingState = {
 				...this.pendingState,
-				input: this.session.input,
+				input: this.session.prefixedInput,
 				includeIgnored: this.session.current.ignoredScope,
 			};
 		}
@@ -232,8 +237,16 @@ export class PaletteView extends ItemView {
 			// passing the persisted state here would make their first search stale.
 			sourceFile: this.leafTracker.sourceFile(this.sourcePath),
 			includeIgnored: state.includeIgnored,
+			// Table columns describe files, so the table offers modes only by alias.
+			modeEntries: !this.tableView,
 			onStateChange: (next) => this.renderState(next),
 		});
+		// A fixed mode is now just the starting mode; persist it as an alias instead.
+		this.pendingState = {
+			...this.pendingState,
+			fixedMode: undefined,
+			input: this.session.prefixedInput,
+		};
 		this.panel = new SuggestionPanel<PaletteResult>(this.contentEl, {
 			getHotkeys: () => this.plugin.settings.hotkeys,
 			initialInput,
@@ -248,6 +261,8 @@ export class PaletteView extends ItemView {
 				// Why: table row handlers stop mousedown propagation before Obsidian can
 				// dismiss the result menu when a different result is clicked.
 				this.activeMenu?.close();
+				// Entering a mode is navigation; the alias typed to reach it is not a search.
+				if (this.panel?.getSelectedItem()?.mode === "mode-entry") return;
 				this.session?.commitCurrentSearch();
 			},
 			renderSuggestion: (result, el, query) =>
@@ -263,7 +278,22 @@ export class PaletteView extends ItemView {
 			onMiddleClick: (result) => this.openInBackground(result),
 			onContextMenu: (result, event, selectedItems) =>
 				this.showContextMenu(result, event, selectedItems),
-			onEscape: () => this.clearOrFocus(),
+			onEscape: () => {
+				if (this.session?.current.route.kind === "mode") this.returnToRoot();
+				else this.clearOrFocus();
+			},
+			onEmptyBackspace: () => {
+				if (this.session?.current.route.kind !== "mode") return false;
+				this.returnToRoot();
+				return true;
+			},
+			onModeChipClick: () => this.returnToRoot(),
+			onTab: (result) => {
+				if (result.mode !== "mode-entry") return false;
+				this.enterMode(result.modeId);
+				return true;
+			},
+			sectionOf: (result) => paletteSectionOf(this.session?.current, result),
 			// Why: the pin is rarely toggled, so it lives in the source name's menu
 			// instead of a permanent footer button; a plain click goes to the note.
 			onFooterTextClick: () => void this.focusSourceNote(),
@@ -298,8 +328,9 @@ export class PaletteView extends ItemView {
 		this.registerTargetLeafTracking();
 		this.fileListRefresh.register();
 		this.renderState(this.session.current);
-		void this.session.search(initialInput);
+		// Set the raw input first: a search that enters a mode replaces it with the query.
 		this.panel.setInput(initialInput, "end");
+		void this.session.search(initialInput);
 	}
 
 	focusSearchInput(): void {
@@ -310,8 +341,8 @@ export class PaletteView extends ItemView {
 		// Duplicate the pin state as well as the query: an unpinned view should keep
 		// following the active note, while a pinned view should remain reproducible.
 		return {
-			input: this.session?.input ?? this.pendingState.input,
-			fixedMode: this.session?.fixed ?? this.pendingState.fixedMode,
+			input: this.session?.prefixedInput ?? this.pendingState.input,
+			fixedMode: this.pendingState.fixedMode,
 			sourcePath: this.sourcePinned ? this.sourcePath : undefined,
 			sourcePinned: this.sourcePinned,
 			includeIgnored: this.ignoredScope,
@@ -324,8 +355,13 @@ export class PaletteView extends ItemView {
 	}
 
 	private renderState(state: PaletteSearchState): void {
-		if (!this.panel) return;
-		this.panel.updatePlaceholder(palettePlaceholder(state.mode));
+		if (!this.panel || !this.session) return;
+		// `alias + Space` moves into a mode and leaves only the query behind.
+		if (this.panel.inputEl.value !== state.input) this.panel.setInput(state.input, "end");
+		const chrome = paletteRouteChrome(state, this.session.modeAlias, !this.tableView);
+		this.panel.updatePlaceholder(chrome.placeholder);
+		this.panel.setModeChip(chrome.chip);
+		this.panel.setAttribute("data-route", state.route.kind);
 		this.panel.setAttribute("data-mode", state.mode);
 		this.panel.setAttribute("data-everything-scope", state.everythingScope);
 		syncIgnoredToggle(this.ignoredToggle, state.mode);
@@ -455,6 +491,8 @@ export class PaletteView extends ItemView {
 	private applySearchHistory(result: Extract<PaletteResult, { mode: "search-history" }>): void {
 		const input = this.plugin.formatSearchHistoryInput(result);
 		this.historyControls?.close();
+		// History stores the prefixed form; Root Search turns it back into a mode.
+		this.session?.returnToRoot();
 		this.session?.setIgnoredScope(Boolean(result.includeIgnored));
 		this.ignoredToggle?.set(Boolean(result.includeIgnored));
 		this.updateInput(input, "end", { suppressHistory: true, syncPanel: true });
@@ -467,6 +505,10 @@ export class PaletteView extends ItemView {
 		targetOverride?: WorkspaceLeaf,
 		reuseExternalMarkdownLeaf = true,
 	): Promise<void> {
+		if (result.mode === "mode-entry") {
+			this.enterMode(result.modeId);
+			return;
+		}
 		if (!this.session || !this.panel || result.mode === "search-history") {
 			if (result.mode === "search-history") this.applySearchHistory(result);
 			return;
@@ -491,7 +533,7 @@ export class PaletteView extends ItemView {
 	}
 
 	private async openInBackground(result: PaletteResult): Promise<void> {
-		if (!this.session || result.mode === "search-history") {
+		if (!this.session || result.mode === "search-history" || result.mode === "mode-entry") {
 			if (result.mode === "search-history") this.applySearchHistory(result);
 			return;
 		}
@@ -575,6 +617,25 @@ export class PaletteView extends ItemView {
 		};
 	}
 
+	private enterMode(modeId: PaletteModeId): void {
+		if (!this.session || !this.panel) return;
+		this.session.enterMode(modeId);
+		this.panel.setInput("", "end");
+		// Empty the list now; a slow provider would otherwise show Root Search rows.
+		this.panel.setResults({ items: [], total: 0, error: "Searching…" });
+		this.updateInput("", "end");
+		this.panel.focusSearchInput();
+	}
+
+	/** Back to Root Search with the alias selected, so Enter re-enters the mode. */
+	private returnToRoot(): void {
+		if (!this.session || !this.panel) return;
+		const alias = this.session.returnToRoot();
+		this.updateInput(alias, "all", { syncPanel: true });
+		this.panel.focusSearchInput();
+		this.panel.inputEl.select();
+	}
+
 	private clearOrFocus(): void {
 		if (!this.panel) return;
 		if (this.panel.inputEl.value) {
@@ -593,10 +654,11 @@ export class PaletteView extends ItemView {
 		// not necessarily request a layout save for each DOM input event. Updating
 		// the fallback and requesting a debounced save keeps the leaf's latest query
 		// available even if the view is deferred or closed immediately afterward.
-		this.pendingState = { ...this.pendingState, input };
 		if (options.syncPanel) this.panel?.setInput(input, selection);
 		if (options.suppressHistory) this.session?.setInputFromHistory(input);
 		else this.session?.setInput(input);
+		// Store the alias-prefixed form so a restored pane re-enters the same mode.
+		this.pendingState = { ...this.pendingState, input: this.session?.prefixedInput ?? input };
 		void this.app.workspace.requestSaveLayout();
 	}
 

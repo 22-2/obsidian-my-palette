@@ -31,6 +31,11 @@ export function validatePrefixes(prefixes: Prefixes): string | null {
 	return null;
 }
 
+/**
+ * Reads a prefixed input the way the palette did before Root Search. Palettes now
+ * enter modes through `src/palette/modes`; this remains for history rows stored
+ * without a category.
+ */
 export function parseInput(raw: string, prefixes: Prefixes): ParsedInput {
 	const lower = raw.toLocaleLowerCase();
 	if (lower === "esdir" || lower === "es") {
