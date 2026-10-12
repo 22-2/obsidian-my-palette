@@ -82,6 +82,17 @@ test("a mode opened by its command returns to Root Search on Esc", async ({ obsi
 	await input.press("Escape");
 	await expect(page.locator(MODAL)).toHaveCount(1);
 	await expect(input).toHaveValue("b");
+	await expect(page.locator(`${MODAL} ${HEADING}`).first()).toHaveText("Modes");
+});
+
+test("the command list returns to Root Search on Esc", async ({ obsidian }) => {
+	await runPaletteCommand(obsidian, "open-command-list");
+	const page = obsidian.page;
+	const input = page.locator(MODAL_INPUT);
+	await expect(page.locator(`${MODAL} ${CHIP}`)).toHaveText(">");
+	await input.press("Escape");
+	await expect(input).toHaveValue(">");
+	await expect(page.locator(`${MODAL} ${HEADING}`).first()).toHaveText("Modes");
 });
 
 test("the sidebar keeps the mode as an alias in its saved input", async ({ obsidian }) => {

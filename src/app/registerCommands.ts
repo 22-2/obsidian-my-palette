@@ -3,6 +3,7 @@ import type MyPalettePlugin from "src/main";
 import { insertLinkToMocRelateds, removeLinkInMocRelateds } from "src/moc-relateds/mocRelateds";
 import { MoveFileModal } from "src/palette/MoveFileModal";
 import { OpenFilePathModal } from "src/palette/OpenFilePathModal";
+import type { FixedPaletteMode } from "src/palette/PaletteSearchSession";
 import { insertTags } from "src/tags/insertTags";
 
 /**
@@ -10,11 +11,15 @@ import { insertTags } from "src/tags/insertTags";
  * command availability rules can evolve independently.
  */
 export function registerPluginCommands(plugin: MyPalettePlugin): void {
+	// Why: Esc from a mode returns to Root Search, so every path that opens a mode
+	// lists the modes too. The file-only palette ("open") is the exception.
+	const openRoot = (input: string, fixedMode?: FixedPaletteMode) =>
+		plugin.paletteOpener.openPalette(input, fixedMode, { modeEntries: true });
 	plugin.addCommand({
 		id: "open-root",
 		name: "Open palette",
 		// Root Search starts empty, like a launcher, and lists modes above files.
-		callback: () => plugin.paletteOpener.openPalette("", undefined, { modeEntries: true }),
+		callback: () => openRoot(""),
 	});
 	plugin.addCommand({
 		id: "open",
@@ -25,8 +30,7 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	plugin.addCommand({
 		id: "open-command-list",
 		name: "Open command list",
-		callback: () =>
-			plugin.paletteOpener.openPalette(plugin.paletteOpener.commandPaletteInitialInput()),
+		callback: () => openRoot(plugin.paletteOpener.commandPaletteInitialInput()),
 	});
 	plugin.addCommand({
 		id: "open-view",
@@ -54,7 +58,7 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		name: "Link search",
 		checkCallback: (checking) => {
 			if (checking) return Boolean(plugin.app.workspace.getActiveFile());
-			plugin.paletteOpener.openPalette("", "link");
+			openRoot("", "link");
 		},
 	});
 	plugin.addCommand({
@@ -62,20 +66,20 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		name: "Backlink search",
 		checkCallback: (checking) => {
 			if (checking) return Boolean(plugin.app.workspace.getActiveFile());
-			plugin.paletteOpener.openPalette("", "backlink");
+			openRoot("", "backlink");
 		},
 	});
 	plugin.addCommand({
 		id: "bookmark-search",
 		name: "Bookmark search",
-		callback: () => plugin.paletteOpener.openPalette("", "bookmark"),
+		callback: () => openRoot("", "bookmark"),
 	});
 	plugin.addCommand({
 		id: "smart-connections-search",
 		name: "Smart Connections search",
 		checkCallback: (checking) => {
 			if (checking) return Boolean(plugin.app.workspace.getActiveFile());
-			plugin.paletteOpener.openPalette("", "smart");
+			openRoot("", "smart");
 		},
 	});
 	plugin.addCommand({
@@ -90,7 +94,7 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	plugin.addCommand({
 		id: "switch-tab",
 		name: "Switch tab",
-		callback: () => plugin.paletteOpener.openPalette("", "tab"),
+		callback: () => openRoot("", "tab"),
 	});
 	plugin.addCommand({
 		id: "open-file-path-in-editor",
