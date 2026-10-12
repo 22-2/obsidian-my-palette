@@ -1,38 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { getSearchHistoryCategory, parseInput } from "src/palette/inputParser";
 
-const prefixes = { command: ">", everything: "e ", includeIgnored: "i " };
+const prefixes = { command: ">", everything: "e " };
 
-describe("include ignored prefix", () => {
-	it("opts file searches into the ignored index", () => {
-		expect(parseInput("i old meeting", prefixes)).toMatchObject({
+describe("ignored-note scope", () => {
+	it("leaves a leading i in the File query now that a switch sets the scope", () => {
+		expect(parseInput("i old meeting", prefixes)).toEqual({
+			raw: "i old meeting",
 			mode: "file",
-			query: "old meeting",
-			includeIgnored: true,
-		});
-	});
-
-	it("keeps the ignored scope when the query is empty", () => {
-		expect(parseInput("i ", prefixes)).toMatchObject({
-			mode: "file",
-			query: "",
-			includeIgnored: true,
-		});
-	});
-
-	it("can wrap another palette prefix", () => {
-		expect(parseInput("i > old", prefixes)).toMatchObject({
-			mode: "command",
-			query: "old",
-			includeIgnored: true,
-		});
-	});
-
-	it("requires the trailing space", () => {
-		expect(parseInput("index", prefixes)).toMatchObject({
-			mode: "file",
-			query: "index",
-			includeIgnored: false,
+			query: "i old meeting",
 		});
 	});
 });
@@ -133,19 +109,6 @@ describe("Related note prefixes", () => {
 			query: "project",
 		});
 		expect(parseInput("bk project", prefixes)).toMatchObject({ mode: "bookmark" });
-	});
-
-	it("does not combine the ignored-note prefix with related searches", () => {
-		expect(parseInput("i o project", prefixes)).toMatchObject({
-			mode: "file",
-			query: "o project",
-			includeIgnored: true,
-		});
-		expect(parseInput("i b project", prefixes)).toMatchObject({
-			mode: "file",
-			query: "b project",
-			includeIgnored: true,
-		});
 	});
 });
 

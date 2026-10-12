@@ -53,7 +53,11 @@ test("checked MOC notes stay above results from a different query", async ({ obs
 	await obsidian.open("Topic MOC.md");
 	const page = obsidian.page;
 	await runPaletteCommand(obsidian, "insert-link-to-moc-relateds");
-	await expect(page.locator(".my-palette-suggest-modal .my-palette-status-bar")).toBeHidden();
+	// The footer holds only the selector's switches, Ignored first as in the palette.
+	await expect(page.locator(".my-palette-suggest-modal .my-palette-status-toggle")).toHaveText([
+		"IgnoredCtrl+I",
+		"MutualCtrl+M",
+	]);
 	await page.locator(MODAL_INPUT).fill("alpha");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Alpha child");
 	await page.locator(`${MODAL_ROW} [data-row-toggle]`).first().click();
@@ -75,7 +79,7 @@ test("checked MOC notes stay above results from a different query", async ({ obs
 	expect(await obsidian.read("Beta child.md")).not.toContain("[[Alpha child]]");
 });
 
-test("MOC insertion hides excluded notes unless the i prefix is supplied", async ({ obsidian }) => {
+test("MOC insertion hides excluded notes unless the Ignored switch is on", async ({ obsidian }) => {
 	await obsidian.createNote("Topic MOC.md", "## MOC\n- Relateds\n");
 	await obsidian.createNote("Visible child.md", "visible");
 	await obsidian.createNote("Hidden child.md", "hidden");
@@ -87,7 +91,7 @@ test("MOC insertion hides excluded notes unless the i prefix is supplied", async
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Visible child");
 	await page.locator(MODAL_INPUT).fill("hidden");
 	await expect(page.locator(MODAL_ROW)).toHaveCount(0);
-	await page.locator(MODAL_INPUT).fill("i hidden");
+	await page.keyboard.press("Control+i");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Hidden child", {
 		timeout: 15_000,
 	});
@@ -100,7 +104,7 @@ test.describe("MOC insertion with plugin exclusions", () => {
 		vaultOptions: pluginVaultOptions({ file: { excludedFolders: ["Hidden child.md"] } }),
 	});
 
-	test("includes plugin-excluded notes only with the i prefix", async ({ obsidian }) => {
+	test("includes plugin-excluded notes only with the Ignored switch", async ({ obsidian }) => {
 		await obsidian.createNote("Topic MOC.md", "## MOC\n- Relateds\n");
 		await obsidian.createNote("Visible child.md", "visible");
 		await obsidian.createNote("Hidden child.md", "hidden");
@@ -111,7 +115,9 @@ test.describe("MOC insertion with plugin exclusions", () => {
 		await expect(page.locator(MODAL_ROW).first()).toContainText("Visible child");
 		await page.locator(MODAL_INPUT).fill("hidden");
 		await expect(page.locator(MODAL_ROW)).toHaveCount(0);
-		await page.locator(MODAL_INPUT).fill("i hidden");
+		await page
+			.locator('.my-palette-status-toggle[data-status-toggle="include-ignored"]')
+			.click();
 		await expect(page.locator(MODAL_ROW).first()).toContainText("Hidden child");
 		await page.keyboard.press("Escape");
 	});

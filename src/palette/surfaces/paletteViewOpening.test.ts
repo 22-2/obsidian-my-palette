@@ -83,6 +83,7 @@ describe("palette view placement", () => {
 				fixedMode: "backlink",
 				sourcePath: "Source.md",
 				sourcePinned: true,
+				includeIgnored: false,
 				displayMode: "table",
 				sorting: [{ id: "prior", desc: true }],
 				columnOrder: ["name", "path", "modified", "prior"],

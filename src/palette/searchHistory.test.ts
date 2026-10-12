@@ -16,14 +16,12 @@ describe("search history", () => {
 			const normalized = parseStoredSearchHistoryEntries([entry], {
 				command: ">",
 				everything: "e ",
-				includeIgnored: "i ",
 			});
 			expect(normalized).toEqual([{ ...entry, includeIgnored: undefined }]);
 			expect(
 				formatSearchHistoryInput(entry, {
 					command: ">",
 					everything: "e ",
-					includeIgnored: "i ",
 				}),
 			).toBe("i example");
 			expect(getSearchHistorySuggestions(normalized, "", "file")).toEqual([]);
@@ -145,7 +143,7 @@ describe("search history", () => {
 					{ input: "report", category: "unknown", lastSearchedAt: 30, count: 1 },
 					{ input: 42, lastSearchedAt: 40, count: 1 },
 				],
-				{ command: ">", everything: "e ", includeIgnored: "i " },
+				{ command: ">", everything: "e " },
 			),
 		).toEqual([
 			{
@@ -172,7 +170,7 @@ describe("search history", () => {
 });
 
 describe("formatSearchHistoryInput", () => {
-	const prefixes = { command: ">", everything: "es", includeIgnored: "i" };
+	const prefixes = { command: ">", everything: "es" };
 	const entry = (
 		category: SearchHistoryCategory,
 		includeIgnored?: boolean,
@@ -197,10 +195,8 @@ describe("formatSearchHistoryInput", () => {
 		expect(formatSearchHistoryInput(entry(category), prefixes)).toBe(expected);
 	});
 
-	it("adds the ignored-note prefix except for related searches", () => {
-		expect(formatSearchHistoryInput(entry("file", true), prefixes)).toBe("i foo");
-		expect(formatSearchHistoryInput(entry("command", true), prefixes)).toBe("i > foo");
-		expect(formatSearchHistoryInput(entry("link", true), prefixes)).toBe("o foo");
-		expect(formatSearchHistoryInput(entry("backlink", true), prefixes)).toBe("b foo");
+	it("leaves the ignored-note scope to the host's switch", () => {
+		expect(formatSearchHistoryInput(entry("file", true), prefixes)).toBe("foo");
+		expect(formatSearchHistoryInput(entry("command", true), prefixes)).toBe("> foo");
 	});
 });

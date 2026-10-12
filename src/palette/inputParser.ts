@@ -4,7 +4,6 @@ import type { SearchHistoryCategory } from "src/settings/model";
 export interface Prefixes {
 	command: string;
 	everything: string;
-	includeIgnored: string;
 }
 
 /** Built-in related prefixes stay short; `b ` is reserved for backlinks. */
@@ -14,7 +13,7 @@ export const RELATED_PREFIXES = {
 } as const;
 
 export function validatePrefixes(prefixes: Prefixes): string | null {
-	const values = [prefixes.command, prefixes.everything, prefixes.includeIgnored];
+	const values = [prefixes.command, prefixes.everything];
 	// eslint-disable-next-line no-control-regex -- \0 check prevents NUL injection into child-process arguments
 	if (values.some((value) => !value || /[\r\n\0]/.test(value)))
 		return "Prefixes cannot be empty or contain a newline or NUL.";
@@ -33,12 +32,7 @@ export function validatePrefixes(prefixes: Prefixes): string | null {
 }
 
 export function parseInput(raw: string, prefixes: Prefixes): ParsedInput {
-	const ignoredPrefix = `${prefixes.includeIgnored.trimEnd()} `;
-	const includeIgnored =
-		Boolean(ignoredPrefix.trim()) &&
-		raw.toLocaleLowerCase().startsWith(ignoredPrefix.toLocaleLowerCase());
-	const modeInput = includeIgnored ? raw.slice(ignoredPrefix.length) : raw;
-	const lower = modeInput.toLocaleLowerCase();
+	const lower = raw.toLocaleLowerCase();
 	if (lower === "esdir" || lower === "es") {
 		// Why: these two built-in commands are useful as zero-query searches;
 		// requiring a trailing space makes the documented `es`/`esdir` shortcuts
@@ -48,21 +42,19 @@ export function parseInput(raw: string, prefixes: Prefixes): ParsedInput {
 			mode: "everything",
 			query: "",
 			everythingScope: lower === "esdir" ? "directory" : "vault",
-			includeIgnored,
 		};
 	}
 	const candidates: Array<{
 		prefix: string;
 		mode: Exclude<PaletteMode, "file">;
 		everythingScope?: EverythingScope;
-		allowIgnored?: boolean;
 	}> = [
 		{ prefix: `${prefixes.command.trimEnd()} `, mode: "command" },
-		{ prefix: RELATED_PREFIXES.link, mode: "link", allowIgnored: false },
-		{ prefix: RELATED_PREFIXES.backlink, mode: "backlink", allowIgnored: false },
+		{ prefix: RELATED_PREFIXES.link, mode: "link" },
+		{ prefix: RELATED_PREFIXES.backlink, mode: "backlink" },
 		{ prefix: "bk ", mode: "bookmark" },
 		{ prefix: "sc ", mode: "smart" },
-		{ prefix: "t ", mode: "tab", allowIgnored: false },
+		{ prefix: "t ", mode: "tab" },
 		{ prefix: "esdir ", mode: "everything", everythingScope: "directory" },
 		{
 			prefix: `${prefixes.everything.trimEnd()} `,
@@ -73,21 +65,16 @@ export function parseInput(raw: string, prefixes: Prefixes): ParsedInput {
 	];
 	candidates.sort((a, b) => b.prefix.length - a.prefix.length);
 	for (const candidate of candidates) {
-		if (
-			candidate.prefix &&
-			(!includeIgnored || candidate.allowIgnored !== false) &&
-			lower.startsWith(candidate.prefix.toLocaleLowerCase())
-		) {
+		if (candidate.prefix && lower.startsWith(candidate.prefix.toLocaleLowerCase())) {
 			return {
 				raw,
 				mode: candidate.mode,
-				query: modeInput.slice(candidate.prefix.length).replace(/^\s+/, ""),
+				query: raw.slice(candidate.prefix.length).replace(/^\s+/, ""),
 				everythingScope: candidate.everythingScope,
-				includeIgnored,
 			};
 		}
 	}
-	return { raw, mode: "file", query: modeInput, includeIgnored };
+	return { raw, mode: "file", query: raw };
 }
 
 export function getSearchHistoryCategory(

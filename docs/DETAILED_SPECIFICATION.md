@@ -455,15 +455,15 @@ Everythingページには次を設ける。
 
 ### 9.3 Mode prefixes
 
-| 設定キー                  | 既定値 |
-| ------------------------- | ------ |
-| `prefixes.command`        | `">"`  |
-| `prefixes.everything`     | `"e "` |
-| `prefixes.includeIgnored` | `"i "` |
+| 設定キー              | 既定値 |
+| --------------------- | ------ |
+| `prefixes.command`    | `">"`  |
+| `prefixes.everything` | `"e "` |
 
 組み込みprefixとして `o `（現在ノートから出るリンク）、`b `（現在ノートへ入るリンク）、
 `bk `（ブックマーク）、`sc `（Smart Connections）、`esdir `（Everythingのdirectory検索）を予約する。
-`i `（Excluded files）はFile検索専用で、関連検索prefixとは組み合わせない。
+除外ファイルを含める指定はprefixではなく、フッター左端の `Ignored` スイッチ（`Ctrl+I`）で切り替える。
+File検索専用で、ほかのモードでは位置を保ったまま無効表示にする。
 
 空文字、改行、NUL、File モードとの区別が不能な値は保存できない。
 

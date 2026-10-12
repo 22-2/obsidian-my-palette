@@ -137,7 +137,7 @@ function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers)
 			helpers.group("Ignored note index", [
 				{
 					name: "Rebuild ignored note index",
-					desc: "Rescan files hidden by Obsidian's excluded-folder filters so they are available with the include-ignored prefix.",
+					desc: "Rescan files hidden by Obsidian's excluded-folder filters so they are available with the Ignored switch.",
 					action: async () => {
 						// Keep index maintenance with the file-search settings because it
 						// repairs the cache used by the include-ignored search scope.

@@ -22,7 +22,6 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 			"searchHistory.daysToKeep": this.plugin.settings.searchHistory.daysToKeep,
 			"prefixes.command": this.plugin.settings.prefixes.command,
 			"prefixes.everything": this.plugin.settings.prefixes.everything,
-			"prefixes.includeIgnored": this.plugin.settings.prefixes.includeIgnored,
 			"file.excludedFolders": this.plugin.settings.file.excludedFolders.join("\n"),
 			openExternalMarkdownInObsidian: this.plugin.settings.openExternalMarkdownInObsidian,
 			rememberLastInput: this.plugin.settings.rememberLastInput,
@@ -92,9 +91,6 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 				break;
 			case "prefixes.everything":
 				settings.prefixes.everything = String(value).replace(/[\r\n]/g, "");
-				break;
-			case "prefixes.includeIgnored":
-				settings.prefixes.includeIgnored = String(value).replace(/[\r\n]/g, "");
 				break;
 			case "file.excludedFolders":
 				settings.file.excludedFolders = excludedFolders(String(value));

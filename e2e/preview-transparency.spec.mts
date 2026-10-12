@@ -35,7 +35,6 @@ for (const [surface, command, selector] of [
 			["sc alpha", "smart"],
 			["e alpha", "everything"],
 			["esdir alpha", "everything"],
-			["i alpha", "file"],
 		] as const) {
 			await input.fill(query);
 			await expect(panel).toHaveAttribute("data-mode", mode);

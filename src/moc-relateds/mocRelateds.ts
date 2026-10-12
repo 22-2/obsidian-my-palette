@@ -19,6 +19,7 @@ import {
 } from "src/platform/pathClipboard";
 import { isMarkdownPath } from "src/shared/externalFiles";
 import { parseInput } from "src/palette/inputParser";
+import { IGNORED_SHORTCUT, ignoredToggleOptions } from "src/palette/ignoredToggle";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
 import { executePaletteResult } from "src/palette/executePaletteResult";
 import { matchedMetadataPresentation } from "src/palette/resultPresentation";
@@ -227,55 +228,26 @@ const MUTUAL_SHORTCUT = [
 abstract class MocRelatedsModal extends MultiSelectModal<string> {
 	/** Whether the note's link to the MOC is updated along with the MOC's link to the note. */
 	mutual = true;
-	private toggleEl?: HTMLElement;
 
 	protected override onSelectionModalOpen(): void {
 		super.onSelectionModalOpen();
-		// Modal footers are hidden by default; this class opts in for the switch.
-		this.modalEl.addClass("my-palette-moc-footer");
-		this.createMutualToggle();
-		this.registerSelectionDomEvent(
-			this.inputEl,
-			"keydown",
-			(event) => {
-				if (event.key.toLowerCase() !== "m" || !event.ctrlKey) return;
-				if (event.altKey || event.shiftKey || event.metaKey) return;
-				event.preventDefault();
-				event.stopPropagation();
-				this.setMutual(!this.mutual);
+		this.addStatusToggle({
+			id: "mutual",
+			label: "Mutual",
+			ctrlKey: "M",
+			description: "Also update the note's link to the MOC",
+			value: this.mutual,
+			onChange: (value) => {
+				this.mutual = value;
 			},
-			true,
-		);
-	}
-
-	/** Small switch and label at the left end of the footer. */
-	private createMutualToggle(): void {
-		const statusBar = this.modalEl.querySelector<HTMLElement>(".my-palette-status-bar");
-		if (!statusBar) return;
-		statusBar.querySelector(".my-palette-status-toggle")?.remove();
-		const toggle = createDiv({ cls: "my-palette-status-toggle" });
-		toggle.createDiv({ cls: "checkbox-container" });
-		toggle.createSpan({ text: "Mutual" });
-		toggle.createSpan({ cls: "my-palette-status-toggle__hint", text: "Ctrl+M" });
-		toggle.setAttribute("title", "Also update the note's link to the MOC (Ctrl+M)");
-		statusBar.prepend(toggle);
-		// Why: a press on the footer must not pull focus out of the input.
-		this.registerSelectionDomEvent(toggle, "mousedown", (event) => event.preventDefault());
-		this.registerSelectionDomEvent(toggle, "click", () => this.setMutual(!this.mutual));
-		this.toggleEl = toggle;
-		this.setMutual(this.mutual);
-	}
-
-	private setMutual(value: boolean): void {
-		this.mutual = value;
-		this.toggleEl?.querySelector(".checkbox-container")?.toggleClass("is-enabled", value);
-		this.toggleEl?.setAttribute("aria-checked", String(value));
+		});
 	}
 }
 
 /** Candidate selector for the active MOC; linked notes can be removed from its context menu. */
 class MocTargetModal extends MocRelatedsModal {
 	private relations?: ReturnType<typeof relatedsRelations>;
+	private includeIgnored = false;
 
 	constructor(
 		private readonly plugin: MyPalettePlugin,
@@ -284,8 +256,7 @@ class MocTargetModal extends MocRelatedsModal {
 		super(
 			{
 				// Explain the destination because this selector chooses the notes to link into the active MOC.
-				placeholder:
-					"Search notes to insert into the MOC · i old notes includes Excluded files",
+				placeholder: "Search notes to insert into the MOC",
 				contextLabel: `Source: ${activeFile.path}`,
 				actionLabel: "Insert",
 				controls: {
@@ -293,7 +264,7 @@ class MocTargetModal extends MocRelatedsModal {
 					category: "moc-insertion",
 					title: "MOC link insertion",
 					description:
-						"Search notes to link in the active MOC. Excluded files are hidden by default. Prefix i followed by a space includes them.",
+						"Search notes to link in the active MOC. Excluded files are hidden by default; the Ignored switch includes them.",
 					actionLabel: "Insert",
 					shortcuts: [
 						["→", "Preview the note without leaving this selector"],
@@ -302,12 +273,24 @@ class MocTargetModal extends MocRelatedsModal {
 							"Ctrl+Enter",
 							"Insert all checked notes, or selected notes if none are checked",
 						],
+						IGNORED_SHORTCUT,
 						MUTUAL_SHORTCUT,
 					],
 				},
 			},
 			plugin.app,
 		);
+	}
+
+	protected override onSelectionModalOpen(): void {
+		// The Ignored switch comes first, matching its place in the main palette.
+		this.addStatusToggle(
+			ignoredToggleOptions(this.includeIgnored, (value) => {
+				this.includeIgnored = value;
+				this.refreshSuggestions();
+			}),
+		);
+		super.onSelectionModalOpen();
 	}
 
 	protected async searchCandidates(input: string): Promise<MultiSelectCandidate<string>[]> {
@@ -317,17 +300,16 @@ class MocTargetModal extends MocRelatedsModal {
 		const relations = await this.relations;
 		const parsed = parseInput(input, plugin.settings.prefixes);
 		if (parsed.mode !== "file") return [];
-		// Keep MOC insertion on the same explicit-prefix path as the main palette:
-		// `i ` opts into the indexed ignored-note scope even when no query follows.
+		const { includeIgnored } = this;
 		const results = await plugin.fileProvider.search({
 			mode: "file",
 			query: parsed.query,
-			includeIgnored: parsed.includeIgnored,
+			includeIgnored,
 		});
 		return results
 			.filter(
 				(result) =>
-					parsed.includeIgnored ||
+					includeIgnored ||
 					(!result.ignored &&
 						!isUserIgnoredPath(plugin.app, result.vaultPath) &&
 						!isExcludedFolder(

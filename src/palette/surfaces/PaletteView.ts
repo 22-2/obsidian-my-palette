@@ -25,6 +25,8 @@ import {
 	isExternalMarkdownLeaf,
 } from "src/workspace/external-markdown/openExternalMarkdown";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
+import { ignoredToggleOptions, syncIgnoredToggle } from "src/palette/ignoredToggle";
+import type { StatusToggle } from "src/ui/statusToggle";
 import { PaletteTableControls } from "src/palette/table/PaletteTableControls";
 import {
 	normalizePaletteTableState,
@@ -41,6 +43,7 @@ interface PaletteViewState extends Record<string, unknown> {
 	fixedMode?: unknown;
 	sourcePath?: unknown;
 	sourcePinned?: unknown;
+	includeIgnored?: unknown;
 	displayMode?: unknown;
 	sorting?: unknown;
 	columnOrder?: unknown;
@@ -52,6 +55,7 @@ interface NormalizedPaletteViewState extends PaletteTableState {
 	fixedMode?: FixedPaletteMode;
 	sourcePath?: string;
 	sourcePinned: boolean;
+	includeIgnored: boolean;
 }
 
 /** Persistent ItemView shell for searching while the note pane remains usable. */
@@ -62,6 +66,7 @@ export class PaletteView extends ItemView {
 	private session?: PaletteSearchSession;
 	private historyControls?: PaletteHistoryControls;
 	private tableControls?: PaletteTableControls;
+	private ignoredToggle?: StatusToggle;
 	private activeMenu?: Menu;
 	private readonly leafTracker: PaletteLeafTracker;
 	private readonly fileListRefresh = new FileListRefresh(
@@ -77,6 +82,7 @@ export class PaletteView extends ItemView {
 	private pendingState: NormalizedPaletteViewState = {
 		input: "",
 		sourcePinned: false,
+		includeIgnored: false,
 		...normalizePaletteTableState({}),
 	};
 
@@ -126,6 +132,7 @@ export class PaletteView extends ItemView {
 						fixedMode: state.fixedMode,
 						sourcePath: state.sourcePath,
 						sourcePinned: state.sourcePinned,
+						includeIgnored: state.includeIgnored,
 						tableState: state,
 						viewType: this.getViewType(),
 					});
@@ -139,6 +146,7 @@ export class PaletteView extends ItemView {
 			fixedMode: this.session?.fixed ?? this.pendingState.fixedMode,
 			sourcePath: this.sourcePinned ? this.sourcePath : undefined,
 			sourcePinned: this.sourcePinned,
+			includeIgnored: this.ignoredScope,
 			...normalizePaletteTableState(this.tableControls?.getState() ?? this.pendingState),
 		};
 	}
@@ -160,6 +168,8 @@ export class PaletteView extends ItemView {
 		}
 		this.tableControls?.setState(next);
 		this.panel.setInput(next.input, "end");
+		this.session.setIgnoredScope(next.includeIgnored);
+		this.ignoredToggle?.set(next.includeIgnored);
 		this.session.setInput(next.input, { suppressHistory: true });
 	}
 
@@ -171,7 +181,11 @@ export class PaletteView extends ItemView {
 		if (this.session) {
 			// Why: Obsidian may collect the workspace state after onClose has
 			// disposed the session, so keep the last input in the fallback state too.
-			this.pendingState = { ...this.pendingState, input: this.session.input };
+			this.pendingState = {
+				...this.pendingState,
+				input: this.session.input,
+				includeIgnored: this.session.current.ignoredScope,
+			};
 		}
 		this.fileListRefresh.cancel();
 		this.activeMenu?.close();
@@ -180,6 +194,7 @@ export class PaletteView extends ItemView {
 		this.historyControls = undefined;
 		if (this.tableControls) this.removeChild(this.tableControls);
 		this.tableControls = undefined;
+		this.ignoredToggle = undefined;
 		this.session?.dispose();
 		this.session = undefined;
 		if (this.panel) this.removeChild(this.panel);
@@ -216,6 +231,7 @@ export class PaletteView extends ItemView {
 			// Why: unpinned views derive the source from the current center note;
 			// passing the persisted state here would make their first search stale.
 			sourceFile: this.leafTracker.sourceFile(this.sourcePath),
+			includeIgnored: state.includeIgnored,
 			onStateChange: (next) => this.renderState(next),
 		});
 		this.panel = new SuggestionPanel<PaletteResult>(this.contentEl, {
@@ -276,6 +292,9 @@ export class PaletteView extends ItemView {
 			this.tableControls.load();
 		}
 		this.addHistoryControls();
+		this.ignoredToggle = this.panel.addStatusToggle(
+			ignoredToggleOptions(state.includeIgnored, (value) => this.setIgnoredScope(value)),
+		);
 		this.registerTargetLeafTracking();
 		this.fileListRefresh.register();
 		this.renderState(this.session.current);
@@ -295,8 +314,13 @@ export class PaletteView extends ItemView {
 			fixedMode: this.session?.fixed ?? this.pendingState.fixedMode,
 			sourcePath: this.sourcePinned ? this.sourcePath : undefined,
 			sourcePinned: this.sourcePinned,
+			includeIgnored: this.ignoredScope,
 			...normalizePaletteTableState(this.tableControls?.getState() ?? this.pendingState),
 		};
+	}
+
+	private get ignoredScope(): boolean {
+		return this.session?.current.ignoredScope ?? this.pendingState.includeIgnored;
 	}
 
 	private renderState(state: PaletteSearchState): void {
@@ -304,6 +328,7 @@ export class PaletteView extends ItemView {
 		this.panel.updatePlaceholder(palettePlaceholder(state.mode));
 		this.panel.setAttribute("data-mode", state.mode);
 		this.panel.setAttribute("data-everything-scope", state.everythingScope);
+		syncIgnoredToggle(this.ignoredToggle, state.mode);
 		this.renderFooter(this.actionMessage);
 		const results = {
 			items: state.results,
@@ -419,9 +444,19 @@ export class PaletteView extends ItemView {
 		});
 	}
 
+	private setIgnoredScope(value: boolean): void {
+		if (!this.session) return;
+		this.session.setIgnoredScope(value);
+		this.pendingState = { ...this.pendingState, includeIgnored: value };
+		void this.session.search(this.session.input);
+		void this.app.workspace.requestSaveLayout();
+	}
+
 	private applySearchHistory(result: Extract<PaletteResult, { mode: "search-history" }>): void {
 		const input = this.plugin.formatSearchHistoryInput(result);
 		this.historyControls?.close();
+		this.session?.setIgnoredScope(Boolean(result.includeIgnored));
+		this.ignoredToggle?.set(Boolean(result.includeIgnored));
 		this.updateInput(input, "end", { suppressHistory: true, syncPanel: true });
 		this.panel?.focusSearchInput();
 	}
@@ -595,6 +630,7 @@ function normalizeState(state: PaletteViewState): NormalizedPaletteViewState {
 		fixedMode,
 		sourcePath: typeof state.sourcePath === "string" ? state.sourcePath : undefined,
 		sourcePinned: state.sourcePinned === true,
+		includeIgnored: state.includeIgnored === true,
 		...normalizePaletteTableState(state),
 	};
 }

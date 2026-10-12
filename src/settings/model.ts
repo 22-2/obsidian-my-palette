@@ -278,7 +278,7 @@ export interface MyPaletteSettings {
 	paletteDisplay: Record<PaletteSurface, PaletteDisplaySettings>;
 	openExternalMarkdownInObsidian: boolean;
 	searchHistory: SearchHistorySettings;
-	prefixes: { command: string; everything: string; includeIgnored: string };
+	prefixes: { command: string; everything: string };
 	file: {
 		sortPriorities: FileSortPriorities;
 		excludedFolders: string[];
@@ -311,7 +311,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		addDelayMs: SETTING_DEFAULTS.searchHistory.addDelayMs,
 		daysToKeep: SETTING_DEFAULTS.searchHistory.daysToKeep,
 	},
-	prefixes: { command: ">", everything: "e ", includeIgnored: "i " },
+	prefixes: { command: ">", everything: "e " },
 	file: {
 		// Start both states identically so the split adds control without changing
 		// the ordering users already expect from a fresh installation.

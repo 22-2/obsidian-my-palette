@@ -90,6 +90,7 @@ describe("dedicated palette views", () => {
 			fixedMode: "backlink",
 			sourcePath: "Projects/Home.md",
 			sourcePinned: true,
+			includeIgnored: false,
 			tableState: expect.objectContaining({
 				columnOrder: ["prior", "name", "path", "modified"],
 				hiddenColumns: ["path"],

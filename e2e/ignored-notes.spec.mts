@@ -16,23 +16,32 @@ test.beforeEach(async ({ obsidian }) => {
 	await setIgnoreFilters(obsidian, ["hidden-dir"]);
 });
 
-test("the i prefix finds notes hidden by Excluded files", async ({ obsidian }) => {
+const IGNORED_TOGGLE = '.my-palette-status-toggle[data-status-toggle="include-ignored"]';
+
+test("the Ignored switch finds notes hidden by Excluded files", async ({ obsidian }) => {
 	const page = await openPaletteWith(obsidian, "secret");
 	await expect(page.locator(MODAL_ROW)).toHaveCount(0);
 
-	await page.locator(MODAL_INPUT).fill("i secret");
+	await page.locator(IGNORED_TOGGLE).click();
+	await expect(page.locator(IGNORED_TOGGLE)).toHaveAttribute("aria-checked", "true");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Secret plan", {
 		timeout: 15_000,
 	});
+	await expect(page.locator(MODAL_INPUT)).toBeFocused();
+
+	// Other modes keep the switch in place but cannot use it.
+	await page.locator(MODAL_INPUT).fill("> secret");
+	await expect(page.locator(IGNORED_TOGGLE)).toHaveAttribute("aria-disabled", "true");
 });
 
-test("the i prefix searches excluded notes by keywords", async ({ obsidian }) => {
+test("the Ignored switch searches excluded notes by keywords", async ({ obsidian }) => {
 	await writeRaw(
 		obsidian,
 		"hidden-dir/Observations.md",
 		"---\nkeywords:\n  - 宇宙\n  - 星空観察\n---\n# Observations",
 	);
-	const page = await openPaletteWith(obsidian, "i 宇宙 星空");
+	const page = await openPaletteWith(obsidian, "宇宙 星空");
+	await page.keyboard.press("Control+i");
 	await expect(page.locator(MODAL_ROW)).toHaveCount(1, { timeout: 15_000 });
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Observations");
 	await expect(page.locator(`${MODAL_ROW} .my-palette-suggestion__tag`)).toHaveText([
@@ -42,7 +51,8 @@ test("the i prefix searches excluded notes by keywords", async ({ obsidian }) =>
 });
 
 test("Enter opens an ignored Markdown note as an external Markdown view", async ({ obsidian }) => {
-	const page = await openPaletteWith(obsidian, "i secret");
+	const page = await openPaletteWith(obsidian, "secret");
+	await page.keyboard.press("Control+i");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Secret plan", {
 		timeout: 15_000,
 	});

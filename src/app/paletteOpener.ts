@@ -16,6 +16,7 @@ export interface NewPaletteViewOptions {
 	fixedMode?: FixedPaletteMode;
 	sourcePath?: string;
 	sourcePinned?: boolean;
+	includeIgnored?: boolean;
 	tableState?: PaletteTableState;
 	viewType?: PaletteViewType;
 }
@@ -84,6 +85,7 @@ export class PaletteOpener {
 			fixedMode,
 			sourcePath,
 			sourcePinned = false,
+			includeIgnored = false,
 			tableState,
 			viewType = PALETTE_VIEW_TYPE,
 		} = options;
@@ -101,6 +103,7 @@ export class PaletteOpener {
 			// its own sort state independently from the original pane.
 			state: {
 				...this.viewState(input, fixedMode, sourcePath, sourcePinned),
+				includeIgnored,
 				...tableState,
 			},
 		});
@@ -120,7 +123,7 @@ export class PaletteOpener {
 	rememberQuery(mode: PaletteMode, query: string, rawInput?: string): void {
 		if (!this.plugin.settings.rememberLastInput) return;
 		// なぜfileだけrawInputか: fileの再開入力はプレフィックス込みの生入力を
-		// そのまま使うため(i fooなど)。commandは呼び出し側でプレフィックスを
+		// そのまま使うため(es fooなど)。commandは呼び出し側でプレフィックスを
 		// 付与して復元するのでqueryのままにする。
 		this.rememberedQueries[mode] = mode === "file" && rawInput !== undefined ? rawInput : query;
 		if (mode === "everything" && rawInput !== undefined) this.rememberedQueries.file = rawInput;

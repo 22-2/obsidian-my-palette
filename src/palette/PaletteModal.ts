@@ -10,12 +10,15 @@ import { PaletteSearchSession, palettePlaceholder } from "src/palette/PaletteSea
 import { toPaletteSelectionItem } from "src/palette/resultPresentation";
 import { populatePaletteResultMenu } from "src/palette/actions/resultContextMenu";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
+import { ignoredToggleOptions, syncIgnoredToggle } from "src/palette/ignoredToggle";
+import type { StatusToggle } from "src/ui/statusToggle";
 
 export class PaletteModal extends SelectionModal<PaletteResult> {
 	private readonly session: PaletteSearchSession;
 	private suppressHistoryForNextInput = false;
 	private activeMenu?: Menu;
 	private historyControls?: PaletteHistoryControls;
+	private ignoredToggle?: StatusToggle;
 	private mode: PaletteMode = "file";
 	private everythingScope: EverythingScope = "vault";
 
@@ -66,6 +69,13 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			focusInput: () => this.focusSearchInput(),
 			moveToSidebar: () => this.moveToSidebar(),
 		});
+		this.ignoredToggle = this.addStatusToggle(
+			ignoredToggleOptions(this.session.current.ignoredScope, (value) => {
+				this.session.setIgnoredScope(value);
+				this.refreshSuggestions();
+			}),
+		);
+		syncIgnoredToggle(this.ignoredToggle, this.mode);
 	}
 
 	protected override onSelectionModalClose(): void {
@@ -77,6 +87,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.activeMenu = undefined;
 		this.historyControls?.destroy();
 		this.historyControls = undefined;
+		this.ignoredToggle = undefined;
 	}
 
 	protected override getInitialInputSelectionRange(): [number, number] {
@@ -152,15 +163,22 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.updatePlaceholder(palettePlaceholder(this.mode));
 		this.modalEl.setAttribute("data-mode", this.mode);
 		this.modalEl.setAttribute("data-everything-scope", this.everythingScope);
+		syncIgnoredToggle(this.ignoredToggle, this.mode);
 	}
 
 	private moveToSidebar(): void {
-		// Why: copy the live input, including prefixes, and the fixed mode before
-		// closing. A fresh pane preserves this search without replacing another
-		// sidebar palette, and closing first lets the new input retain focus.
+		// Why: copy the live input, including prefixes, the Ignored switch and the
+		// fixed mode before closing. A fresh pane preserves this search without
+		// replacing another sidebar palette, and closing first lets the new input
+		// retain focus.
 		const input = this.inputEl.value;
+		const includeIgnored = this.session.current.ignoredScope;
 		this.close();
-		void this.plugin.paletteOpener.openNewPaletteView({ input, fixedMode: this.fixedMode });
+		void this.plugin.paletteOpener.openNewPaletteView({
+			input,
+			fixedMode: this.fixedMode,
+			includeIgnored,
+		});
 	}
 
 	private async activatePaletteResult(
@@ -187,6 +205,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private applySearchHistory(result: Extract<PaletteResult, { mode: "search-history" }>): void {
 		this.historyControls?.close();
 		this.suppressHistoryForNextInput = true;
+		this.session.setIgnoredScope(Boolean(result.includeIgnored));
+		this.ignoredToggle?.set(Boolean(result.includeIgnored));
 		this.inputEl.value = this.plugin.formatSearchHistoryInput(result);
 		this.refreshSuggestions();
 		this.inputEl.focus({ preventScroll: true });

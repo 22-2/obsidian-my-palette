@@ -2,6 +2,7 @@ import { App, Modal, setIcon } from "obsidian";
 import type { Prefixes } from "src/palette/inputParser";
 import { RELATED_PREFIXES } from "src/palette/inputParser";
 import type { PaletteSurface } from "src/settings/model";
+import { IGNORED_SHORTCUT } from "src/palette/ignoredToggle";
 import { DEFAULT_HOTKEYS, formatHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
 
 /** Shows the small, discoverable syntax guide instead of overloading the input placeholder. */
@@ -38,11 +39,6 @@ export class PaletteHelpModal extends Modal {
 				"Search the whole Everything index",
 			],
 			["esdir ", "Everything directory", "Search the current note's directory"],
-			[
-				`${this.prefixes.includeIgnored.trimEnd()} `,
-				"Excluded files",
-				"Include ignored files in File search",
-			],
 		];
 		for (const [prefix, name, description] of modeRows) {
 			const row = modes.createDiv("my-palette-help-modal__row");
@@ -87,6 +83,7 @@ export class PaletteHelpModal extends Modal {
 					] satisfies Array<[string, string]>)
 				: []),
 			[formatHotkey(this.hotkeys.history), "Open search history"],
+			[IGNORED_SHORTCUT[0], "Include files hidden by Excluded files in File search"],
 			[
 				"Esc",
 				this.surface === "palette"
@@ -104,7 +101,7 @@ export class PaletteHelpModal extends Modal {
 		const icon = note.createSpan("my-palette-help-modal__note-icon");
 		setIcon(icon, "info");
 		note.createSpan({
-			text: `${this.prefixes.includeIgnored.trimEnd()} is for File search only; it cannot be combined with ${RELATED_PREFIXES.link.trimEnd()} or ${RELATED_PREFIXES.backlink.trimEnd()}.`,
+			text: "The Ignored switch in the footer applies to File search only; other modes keep it dimmed.",
 		});
 	}
 }

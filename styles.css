@@ -749,8 +749,8 @@
 	display: none;
 }
 
-/* The modal footer is hidden by default; the MOC selectors keep it for their toggle. */
-.my-palette-panel--modal.my-palette-moc-footer .my-palette-status-bar {
+/* The modal footer is hidden by default; a footer switch keeps it visible. */
+.my-palette-panel--modal.has-status-toggle .my-palette-status-bar {
 	display: flex;
 }
 
@@ -768,6 +768,16 @@
 	color: var(--text-normal);
 }
 
+/* Kept in place in modes it does not apply to, so the footer layout stays put. */
+.my-palette-status-toggle.is-disabled {
+	cursor: default;
+	opacity: 0.5;
+}
+
+.my-palette-status-toggle.is-disabled:hover {
+	color: var(--text-muted);
+}
+
 /* Why: some themes tint --text-faint toward the accent, which makes quiet footer
    text read as a link; dim the muted color instead. */
 .my-palette-status-toggle__hint,
@@ -778,7 +788,7 @@
 
 /* A recessed tray under the list. Its padding matches the rows: the switch starts
    on the check column and the count ends where row text ends. */
-.my-palette-panel--modal.my-palette-moc-footer .my-palette-status-bar {
+.my-palette-panel--modal.has-status-toggle .my-palette-status-bar {
 	box-sizing: border-box;
 	min-height: 32px;
 	padding: 0 20px;

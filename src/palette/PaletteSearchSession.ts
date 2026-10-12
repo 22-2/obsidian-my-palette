@@ -1,5 +1,11 @@
 import type { TFile } from "obsidian";
-import type { EverythingScope, PaletteMode, PaletteResult, ParsedInput } from "src/palette/results";
+import {
+	supportsIncludeIgnored,
+	type EverythingScope,
+	type PaletteMode,
+	type PaletteResult,
+	type ParsedInput,
+} from "src/palette/results";
 import type MyPalettePlugin from "src/main";
 import { getSearchHistoryCategory, parseInput } from "src/palette/inputParser";
 
@@ -19,6 +25,9 @@ export interface PaletteSearchState {
 	query: string;
 	mode: PaletteMode;
 	everythingScope: EverythingScope;
+	/** Switch value; it applies only where the mode supports the ignored scope. */
+	ignoredScope: boolean;
+	/** Whether the current search actually includes ignored notes. */
 	includeIgnored: boolean;
 	results: PaletteResult[];
 	resultCount: number;
@@ -29,6 +38,7 @@ export interface PaletteSearchSessionOptions {
 	initialInput?: string;
 	fixedMode?: FixedPaletteMode;
 	sourceFile?: TFile;
+	includeIgnored?: boolean;
 	onStateChange?: (state: PaletteSearchState) => void;
 }
 
@@ -54,6 +64,7 @@ export class PaletteSearchSession {
 			initialInput = "",
 			fixedMode,
 			sourceFile,
+			includeIgnored = false,
 			onStateChange,
 		}: PaletteSearchSessionOptions = {},
 	) {
@@ -66,7 +77,8 @@ export class PaletteSearchSession {
 			query: parsed.query,
 			mode: parsed.mode,
 			everythingScope: this.scopeOf(parsed),
-			includeIgnored: parsed.includeIgnored,
+			ignoredScope: includeIgnored,
+			includeIgnored: includeIgnored && supportsIncludeIgnored(parsed.mode),
 			results: [],
 			resultCount: 0,
 		};
@@ -82,6 +94,14 @@ export class PaletteSearchSession {
 
 	get fixed(): FixedPaletteMode | undefined {
 		return this.fixedMode;
+	}
+
+	/**
+	 * Switches the ignored-note scope for the next search. Hosts search again
+	 * themselves, since the modal renders results through its own refresh.
+	 */
+	setIgnoredScope(value: boolean): void {
+		this.state = { ...this.state, ignoredScope: value };
 	}
 
 	/** Update the note used by source-dependent modes without replacing the UI shell. */
@@ -107,13 +127,14 @@ export class PaletteSearchSession {
 		const generation = ++this.generation;
 		this.historyCommittedGeneration = -1;
 		const parsed = this.parse(input);
+		const includeIgnored = this.includesIgnored(parsed);
 		this.state = {
 			...this.state,
 			input,
 			query: parsed.query,
 			mode: parsed.mode,
 			everythingScope: this.scopeOf(parsed),
-			includeIgnored: parsed.includeIgnored,
+			includeIgnored,
 			results: [],
 			resultCount: 0,
 			error: undefined,
@@ -135,7 +156,7 @@ export class PaletteSearchSession {
 				query: parsed.query,
 				signal: this.controller.signal,
 				everythingScope: this.scopeOf(parsed),
-				includeIgnored: parsed.includeIgnored,
+				includeIgnored,
 				sourceFile: this.sourceFile,
 			});
 			if (this.disposed || generation !== this.generation) return [];
@@ -173,7 +194,7 @@ export class PaletteSearchSession {
 		return {
 			query: parsed.query,
 			category: getSearchHistoryCategory(parsed),
-			includeIgnored: parsed.includeIgnored,
+			includeIgnored: this.includesIgnored(parsed),
 		};
 	}
 
@@ -199,8 +220,12 @@ export class PaletteSearchSession {
 
 	private parse(input: string): ParsedInput {
 		return this.fixedMode
-			? { raw: input, mode: this.fixedMode, query: input, includeIgnored: false }
+			? { raw: input, mode: this.fixedMode, query: input }
 			: parseInput(input, this.plugin.settings.prefixes);
+	}
+
+	private includesIgnored(parsed: ParsedInput): boolean {
+		return this.state.ignoredScope && supportsIncludeIgnored(parsed.mode);
 	}
 
 	private scopeOf(parsed: ParsedInput): EverythingScope {

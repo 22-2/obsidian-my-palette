@@ -52,10 +52,6 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 	const prefixes = {
 		command: typeof rawPrefixes.command === "string" ? rawPrefixes.command : ">",
 		everything: typeof rawPrefixes.everything === "string" ? rawPrefixes.everything : "e ",
-		includeIgnored:
-			typeof rawPrefixes.includeIgnored === "string"
-				? rawPrefixes.includeIgnored
-				: DEFAULT_SETTINGS.prefixes.includeIgnored,
 	};
 	const rawSearchHistory =
 		source.searchHistory && typeof source.searchHistory === "object"

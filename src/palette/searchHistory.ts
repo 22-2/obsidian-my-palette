@@ -15,6 +15,8 @@ export interface RecordSearchHistoryOptions {
 
 export const SEARCH_HISTORY_MAX_ENTRIES = 256;
 
+const LEGACY_INCLUDE_IGNORED_PREFIX = "i ";
+
 function isSelectorHistoryCategory(value: unknown): value is SelectorHistoryCategory {
 	return value === "tag-insertion" || value === "moc-insertion" || value === "folder-move";
 }
@@ -94,7 +96,14 @@ export function parseStoredSearchHistoryEntries(
 			!Number.isFinite(source.count)
 		)
 			return [];
-		const parsed = parseInput(source.input, prefixes);
+		// Rows from before the Ignored switch kept that scope as an `i ` prefix.
+		const legacyIgnored = source.input
+			.toLocaleLowerCase()
+			.startsWith(LEGACY_INCLUDE_IGNORED_PREFIX);
+		const parsed = parseInput(
+			legacyIgnored ? source.input.slice(LEGACY_INCLUDE_IGNORED_PREFIX.length) : source.input,
+			prefixes,
+		);
 		const category = isSearchHistoryCategory(source.category)
 			? source.category
 			: getSearchHistoryCategory(parsed);
@@ -108,7 +117,7 @@ export function parseStoredSearchHistoryEntries(
 					? undefined
 					: typeof source.includeIgnored === "boolean"
 						? source.includeIgnored || undefined
-						: parsed.includeIgnored || undefined,
+						: legacyIgnored || undefined,
 				lastSearchedAt: source.lastSearchedAt,
 				count: Math.max(1, Math.round(source.count)),
 			},
@@ -215,18 +224,13 @@ export function getSearchHistorySuggestions(
 		.map((entry) => ({ ...entry }));
 }
 
-/** Rebuilds the palette input that would produce the given history entry. */
+/**
+ * Rebuilds the palette input that would produce the given history entry. The
+ * ignored-note scope is not part of the text; hosts restore it on their switch.
+ */
 export function formatSearchHistoryInput(entry: SearchHistoryEntry, prefixes: Prefixes): string {
 	if (isSelectorHistoryCategory(entry.category)) return entry.input;
-	const modeInput = `${historyCategoryPrefix(entry.category, prefixes)}${entry.input}`;
-	// Related searches intentionally do not support the ignored-note scope;
-	// avoid reconstructing an input that the parser would interpret as File mode.
-	return entry.includeIgnored &&
-		entry.category !== "link" &&
-		entry.category !== "backlink" &&
-		entry.category !== "tab"
-		? `${prefixes.includeIgnored.trimEnd()} ${modeInput}`
-		: modeInput;
+	return `${historyCategoryPrefix(entry.category, prefixes)}${entry.input}`;
 }
 
 function historyCategoryPrefix(category: SearchHistoryCategory, prefixes: Prefixes): string {

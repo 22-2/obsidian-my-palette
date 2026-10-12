@@ -2,6 +2,7 @@ import { App, Modal, Notice, type KeymapEventHandler, type Menu } from "obsidian
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 import { SelectorHelpModal, type SelectorControls } from "src/ui/selectorControls";
 import { SuggestionPanel } from "src/ui/suggestionPanel";
+import type { StatusToggle, StatusToggleOptions } from "src/ui/statusToggle";
 import { DEFAULT_HOTKEYS, matchesHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
 
 export interface SuggestModalProps<T> {
@@ -350,6 +351,11 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	protected updateResultCount(total: number): void {
 		this.resultTotal = total;
 		this.panel.updateResultCount(total);
+	}
+
+	/** Call from onSelectionModalOpen: listeners are released when the modal closes. */
+	protected addStatusToggle(options: StatusToggleOptions): StatusToggle {
+		return this.panel.addStatusToggle(options);
 	}
 
 	protected updateFooterText(text: string): void {

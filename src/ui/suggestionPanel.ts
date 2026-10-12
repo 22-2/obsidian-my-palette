@@ -8,6 +8,7 @@ import {
 	type PaletteHotkeys,
 } from "src/ui/hotkeys";
 import { markKeyboardMenuEvent } from "src/ui/menus";
+import { StatusToggle, type StatusToggleOptions } from "src/ui/statusToggle";
 
 export interface SuggestionPanelProps<T> {
 	getHotkeys?: () => PaletteHotkeys;
@@ -342,6 +343,22 @@ export class SuggestionPanel<T> extends Component {
 				event.preventDefault();
 				onFooterTextContextMenu(event);
 			});
+	}
+
+	/**
+	 * Adds a switch to the footer. Its listeners belong to this panel, so add it
+	 * again after each load; one with the same id replaces the earlier switch.
+	 */
+	addStatusToggle(options: StatusToggleOptions): StatusToggle {
+		// Modal footers are hidden by default; a switch opts its panel in.
+		this.rootEl.addClass("has-status-toggle");
+		return new StatusToggle(
+			this.statusBarEl,
+			this.inputEl,
+			(el, type, callback, eventOptions) =>
+				this.registerDomEvent(el, type, callback, eventOptions),
+			options,
+		);
 	}
 
 	updateResultCount(total: number): void {

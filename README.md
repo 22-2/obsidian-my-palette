@@ -30,7 +30,7 @@ Prefixes (`>`, `e `, `bk `, …) exist for switching the search source, not as t
 - **Command, bookmark, link, backlink and Smart Connections search** in the same window.
 - **Multi-select** with the same gestures as a file manager, then copy paths, add tags or insert MOC links to all selected notes at once.
 - **Three surfaces**: a modal, a list view in the right sidebar, and a sortable table view in a center tab.
-- **Excluded files on demand**: notes hidden by Obsidian's excluded folders stay out of the way until you ask for them with `i `.
+- **Excluded files on demand**: notes hidden by Obsidian's excluded folders stay out of the way until you turn on the `Ignored` switch (`Ctrl+I`).
 - Desktop only (Windows is the primary target).
 
 ## Getting started
@@ -70,7 +70,7 @@ The action (`…`) and history (clock) buttons are also available in tag inserti
 | `Ctrl+R`               | Search history                                     |
 | `Esc`                  | Clear the query, then move focus back to the field |
 
-The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current picker. Modals have no footer; keyboard instructions and insertion targets live in Help. Hold `Alt+H` in any search or interaction mode to gently fade out the palette or selector while inspecting a preview; releasing either key fades it back in and returns focus to the search field. This works in modals (including their backdrop), sidebar palettes and table views, preserving the query, selection and workspace layout. `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
+The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current picker. The palette modal's footer shows the `Ignored` switch; other keyboard instructions and insertion targets live in Help. Hold `Alt+H` in any search or interaction mode to gently fade out the palette or selector while inspecting a preview; releasing either key fades it back in and returns focus to the search field. This works in modals (including their backdrop), sidebar palettes and table views, preserving the query, selection and workspace layout. `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
 
 ### Custom shortcuts
 
@@ -86,7 +86,7 @@ palettes remain available in Obsidian's own **Settings → Hotkeys**.
 
 ### Search modes
 
-Type a prefix followed by a space to switch the search source. `>`, `e ` and `i ` can be changed in the settings.
+Type a prefix followed by a space to switch the search source. `>` and `e ` can be changed in the settings.
 
 | Prefix  | Mode                 | Purpose                                                  |
 | ------- | -------------------- | -------------------------------------------------------- |
@@ -98,9 +98,10 @@ Type a prefix followed by a space to switch the search source. `>`, `e ` and `i 
 | `b `    | Backlinks            | Notes linking to the current note                        |
 | `bk `   | Bookmarks            | Search saved bookmarks                                   |
 | `sc `   | Smart Connections    | Notes related to the current note                        |
-| `i `    | Excluded files       | Include excluded files in file search (files only)       |
 
 `es` and `esdir` also work as zero-query shortcuts without a trailing space.
+
+The `Ignored` switch at the left of the footer (`Ctrl+I`) includes files hidden by Obsidian's excluded folders. It applies to file search only and stays dimmed in other modes. Search history remembers whether a search included them, and restoring an entry sets the switch.
 
 ### Search syntax
 
@@ -108,7 +109,7 @@ Outside Everything mode, separate terms with spaces for AND and use `|` for OR. 
 
 File search covers inline tags and frontmatter `tags`. `#project` searches tags directly, and ordinary terms can match tags too. Matching tags appear under the file name (up to three, then `+N`); hover a row to see all of them.
 
-Frontmatter `keywords` is also searchable as a string array (for example, `keywords: [astronomy, stargazing]`), including in excluded notes searched with `i `. Matching keywords appear beside matching tags without a `#`, with up to three chips in total followed by `+N`. Hover the chips to see all matches. Hash-prefixed tag-only queries search tags only.
+Frontmatter `keywords` is also searchable as a string array (for example, `keywords: [astronomy, stargazing]`), including in excluded notes searched with the `Ignored` switch. Matching keywords appear beside matching tags without a `#`, with up to three chips in total followed by `+N`. Hover the chips to see all matches. Hash-prefixed tag-only queries search tags only.
 
 Everything queries are passed through unchanged and use Everything's own syntax. Everything mode needs Everything 1.5a with the official HTTP Server plugin running. See [Everything setup](#everything-setup).
 
