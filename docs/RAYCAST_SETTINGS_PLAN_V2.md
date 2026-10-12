@@ -43,38 +43,66 @@ Raycastの設定は、本体の設定タブ(General、Launcher、Shortcuts…)�
 
 ### Integrations にまとめるのは有用か
 
-外部連携は Everything と VS Code の2つで、どちらも機能は多くない。
+外部連携は Everything、Smart Connections、VS Code の3つで、どれも機能は多くない。
 
-| 連携              | 設定                                                                                               |
-| ----------------- | -------------------------------------------------------------------------------------------------- |
-| Everything        | 接続先URL、ユーザー名、パスワード、接続テスト、最大件数、入力待ち時間、タイムアウト                |
-| VS Code           | Vault外・無視対象のMarkdownを、ObsidianとVS Codeのどちらで開くか(`openExternalMarkdownInObsidian`) |
-| Smart Connections | なし(プラグインが入っているかどうかだけ)                                                           |
+| 連携              | 有効/無効で変わること                                                                                         | 詳しい設定                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Everything        | 「Search Vault Notes」「Search All Files in Vault」の2モードを出すかどうか                                    | 接続先URL、ユーザー名、パスワード、接続テスト、最大件数、入力待ち時間、タイムアウト |
+| Smart Connections | 「Search Related Notes」を出すかどうか                                                                        | なし                                                                                |
+| VS Code           | Vault外・無視対象のMarkdownをVS Codeで開くか(無効ならObsidianで開く。`openExternalMarkdownInObsidian` の反対) | なし                                                                                |
 
-1つのページに並べて、各連携の中身は1つ奥に入れる形は有用だと考える。
+1つのページに並べる形は有用だと考える。
 
-- ふだん触らない接続設定が、ほかの設定の間に長く並ばなくなる。
+- いちばんよく触る「使う/使わない」が一覧の行だけで済み、ふだん触らない接続設定は奥に入る。
 - 連携が増えても、一覧に1行足すだけで済む。
-- 一覧の行に今の状態(接続先、開くアプリ)を出せば、開かなくても確認できる。
+- Smart Connections も「使う/使わない」という設定を持つので、一覧に出す意味がある(v2の初版では設定が無いので外していた)。
 
-Smart Connections は設定が無いため、行を作っても中身が空のページになる。一覧には出さない(設定が増えたら足す)。
+### minimalshot の外部ツール画面に合わせる
 
-### 歯車+編集モーダルか、サブページか
+minimalshot の外部ツール画面は、次の形に変わった(`6a7c10a`)。
 
-minimalshotの外部ツール画面は「名前・要約のチップ・歯車」の行が並び、歯車で編集ダイアログが開く。同じ見た目をObsidianで作る方法は2つある。
+- 1ツール1行で、行には名前と、右端の有効/無効のスイッチだけを置く(歯車と要約のチップはやめた)。
+- 名前を押すと、編集用のモーダルが開く。
+- 無効にしたツールは設定を残したまま、ビューアのメニューから消える。
 
-|                                    | 歯車+モーダル(minimalshot と同じ)                                      | 宣言的APIのサブページ                                              |
-| ---------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| 一覧の見た目                       | 名前、要約、歯車                                                       | 名前、説明、今の値(`displayValue`)、注意の印(`status`)、右端の矢印 |
-| 編集                               | その場でモーダルが開く                                                 | 1つ奥のページへ移り、戻るで一覧へ                                  |
-| 設定の検索(Obsidian全体の設定検索) | モーダルの中身は検索に出ない                                           | 項目が検索に出る                                                   |
-| 別ウィンドウの設定画面             | モーダルを設定ウィンドウ側に出す処理と、フォーカスの戻し先を自前で扱う | Obsidianが扱う                                                     |
-| 保存・入力チェック                 | 自前で実装する                                                         | `control` と `validate` がそのまま使える                           |
-| 実装量                             | 多い(モーダル、要約、戻り先)                                           | 少ない                                                             |
+キャプチャモードの設定は、行を押すとその場で開閉するアコーディオンにした(`7d3b9b3`)。こちらは「使う/使わない」を持たない、詳しい設定だけのまとまりに使っている。
 
-一覧の見た目はほぼ同じにでき、検索・別ウィンドウ・保存をObsidianに任せられるので、**サブページを推奨する**。モーダルの利点は「一覧から離れずに編集できる」ことだけで、項目が7つあるEverythingではページの方が読みやすい。
+Integrations は「使う/使わない」が主で、詳しい設定は時々しか触らないので、外部ツール画面と同じ形にする。
 
-ただし `displayValue` と `status` はObsidian 1.13.1からの機能で、今の `minAppVersion` は1.13.0。使うなら `minAppVersion` を1.13.1に上げる(「決めたいこと」参照)。上げない場合は、一覧に今の値を出さず、説明文だけにする。
+```text
+Integrations
+┌──────────────────────────────────────────────┐
+│ Everything                              [ON] │  名前を押すと編集モーダル
+│ Smart Connections   Not installed       [OFF]│  名前は押せない(詳しい設定なし)
+│ VS Code                                 [ON] │  名前は押せない(詳しい設定なし)
+└──────────────────────────────────────────────┘
+```
+
+Obsidianでの作り:
+
+- 各行は宣言的APIの `render` で、標準の `Setting` に名前とスイッチ(`addToggle`)を置く。詳しい設定がある連携だけ、名前を押せるボタンにしてモーダルを開く。
+- モーダルの中身は標準の `Setting` で組み、変更したらその場で保存する(minimalshot と同じく「自動で保存」)。
+- 設定の検索: モーダルの中身は検索に出ないため、行の `aliases`(検索用の別名)にモーダル内の項目名(`HTTP server URL`、`Request timeout` など)を入れ、検索するとその行が見つかるようにする。
+- 別ウィンドウの設定画面: モーダルは設定ウィンドウの側に出す必要がある。Obsidianの `Modal` がどのウィンドウに開くかを、実装の最初に試して確かめる(実装手順11の最初)。設定ウィンドウに出せない場合は、宣言的APIのサブページに切り替える。
+- Smart Connections が入っていないときは、行の説明に `Not installed` を出し、スイッチは押せるままにする(入れたらすぐ使えるように)。
+
+サブページ(宣言的APIの `page`)との比較:
+
+|                        | minimalshot 方式(名前でモーダル + スイッチ)                 | サブページ                                         |
+| ---------------------- | ----------------------------------------------------------- | -------------------------------------------------- |
+| 一覧の行               | 名前、右端に有効/無効                                       | 名前、説明、今の値、右端の矢印(スイッチは置けない) |
+| 有効/無効の切り替え    | 一覧の行で済む                                              | 1つ奥のページを開く                                |
+| 設定の検索             | 行は見つかる(`aliases`)、モーダルの中の項目そのものは出ない | 項目が出る                                         |
+| 別ウィンドウの設定画面 | モーダルの出る場所を確かめる必要がある                      | Obsidianが扱う                                     |
+| Obsidianの版           | 1.13.0のままでよい                                          | 一覧に今の値を出すなら1.13.1が必要                 |
+
+有効/無効を一覧で切り替えられること、minimalshot と操作をそろえられること、`minAppVersion` を上げずに済むことから、**minimalshot 方式を推奨する**。
+
+### Modes との関係
+
+- Integrations で無効にした連携のモードは、Modes ページでも行を薄くして、スイッチを押せなくする(説明に `Turned off in Integrations`)。
+- 連携を有効にしたあとの各モードの有効/無効は、Modes ページで個別に変えられる(例: Everything は使うが「Search All Files in Vault」だけ消す)。
+- 連携が無効なモードは、Root Searchの行にもエイリアス入力にも出さない。
 
 ## v2の画面構成
 
@@ -92,12 +120,11 @@ My Palette
 │   ├── Ignored note index
 │   └── Result sorting
 ├── Shortcuts            ホットキーの表(9件)
-└── Integrations
-    ├── Everything  [127.0.0.1:51361]   接続、認証、接続テスト、件数、待ち時間、タイムアウト
-    └── VS Code     [Obsidian]          外部Markdownを開くアプリ
+└── Integrations         1連携1行。右端に有効/無効、名前でモーダル
+    ├── Everything         モーダル: 接続、認証、接続テスト、件数、待ち時間、タイムアウト
+    ├── Smart Connections  (詳しい設定なし)
+    └── VS Code            (詳しい設定なし)
 ```
-
-`[...]` は一覧の行に出す今の値(`displayValue`)。
 
 ### Modes
 
@@ -112,16 +139,15 @@ v1の「Shortcuts」から、エイリアスの行を除いたもの。1件1行�
 
 ### Integrations
 
-- Everything と VS Code を、それぞれサブページにする。
-- Everything の一覧の行には接続先(ホストとポート)を出す。接続テストに失敗したら `status: 'warning'` を出す。
-- VS Code の一覧の行には、外部Markdownを開くアプリ(`Obsidian` / `VS Code`)を出す。
+上の「minimalshot の外部ツール画面に合わせる」のとおり。
 
 ### 設定データの扱い
 
 画面の場所が変わるだけの項目は、保存データのキーを変えない。
 
 - 対象拡張子は `everything.vaultExtensions` のまま、File searchページに移す(ファイル一覧とEverythingの両方が使っている)。
-- 外部Markdownの設定は `openExternalMarkdownInObsidian` のまま、Integrations → VS Code に移す。
+- 外部Markdownの設定は `openExternalMarkdownInObsidian` のまま、Integrations の VS Code の行のスイッチにする(スイッチがオン = `false`)。
+- 連携の有効/無効を新しく `integrations.everything.enabled` / `integrations.smartConnections.enabled` として保存する。既定はどちらもオン(今の動作と同じ)。
 
 ## パレットの `…` メニュー
 
@@ -205,13 +231,13 @@ Options(見出し)
 
 パレットとその選択画面が自分で開く7か所を置き換える。
 
-| ファイル | メニュー | `paletteMenu.ts` で7か所すべてを置き換える | `…` メニューだけ置き換え、ほかはObsidianのメニューのまま |
-| --- | --- |
-| `PaletteModal.ts` | 結果の右クリックメニュー |
-| `PaletteView.ts`(2か所) | 結果の右クリックメニュー、出典ノートのメニュー |
-| `PaletteHistoryControls.ts` | `…` メニュー |
-| `PaletteTableControls.ts` | 列のメニュー |
-| `MultiSelectModal.ts`(2か所) | タグ・MOCの選択画面のメニュー |
+| ファイル                     | メニュー                                       |
+| ---------------------------- | ---------------------------------------------- |
+| `PaletteModal.ts`            | 結果の右クリックメニュー                       |
+| `PaletteView.ts`(2か所)      | 結果の右クリックメニュー、出典ノートのメニュー |
+| `PaletteHistoryControls.ts`  | `…` メニュー                                   |
+| `PaletteTableControls.ts`    | 列のメニュー                                   |
+| `MultiSelectModal.ts`(2か所) | タグ・MOCの選択画面のメニュー                  |
 
 - `PaletteView.onPaneMenu`(サイドバーのペイン右上のメニュー)はObsidianが作って渡すメニューなので、Obsidianの `Menu` のまま残す。
 - メニューに項目を足す関数(`populatePaletteResultMenu`、`tabMenu.ts`、`mocInsertion.ts`、`mocRelateds.ts`、`pathClipboard.ts`)は、引数の型を `Menu` から `PaletteMenu` に変える。
@@ -274,9 +300,10 @@ v1の手順1〜4(移行、エイリアスと有効/無効、フッターのス�
 7. `feat`: `…` メニューの並びを変え、その画面の検索履歴を2回押して消す項目を足す。
 8. `feat`: Shortcutsページの表。旧Hotkeysページを置き換える。
 9. `feat`: Modesページ。
-10. `feat!`: General / File search / Integrations に組み直し、画面に無かった設定を出す。旧Palette・Vault file search・Everythingページを置き換え、設定画面から履歴の消去を外す。
-11. `feat!`: `Open palette` の状態復元と Pop to Root Search。`Remember last input` を廃止して移行する。
-12. `docs`: README / README.ja / 詳細仕様を更新する。
+10. `feat!`: General / File search に組み直し、画面に無かった設定を出す。旧Palette・Vault file search ページを置き換え、設定画面から履歴の消去を外す。
+11. `feat`: Integrations ページ(1連携1行のスイッチと、Everything の編集モーダル)。連携の有効/無効を保存し、無効な連携のモードを外す。旧Everythingページを置き換える。最初に、別ウィンドウの設定画面でモーダルが設定ウィンドウ側に開くかを試し、開かなければサブページに切り替える。
+12. `feat!`: `Open palette` の状態復元と Pop to Root Search。`Remember last input` を廃止して移行する。
+13. `docs`: README / README.ja / 詳細仕様を更新する。
 
 手順2以降は、各手順の最後に撮影タスクを実行し、変わった画面を見て確かめる。
 
@@ -284,10 +311,11 @@ v1の手順1〜4(移行、エイリアスと有効/無効、フッターのス�
 
 v1のテストに次を足す。
 
-- 設定ページの構成: General / Modes / File search / Shortcuts / Integrations の順、Integrations の中に Everything と VS Code。
+- 設定ページの構成: General / Modes / File search / Shortcuts / Integrations の順、Integrations の行は Everything / Smart Connections / VS Code。
 - Modes: エイリアスの変更と検査エラー、無効にしたモードがルートの行とエイリアス入力から消えること。
-- Integrations: 一覧の行の今の値が、サブページで変えたあとに更新されること(`update()`)。接続テストに失敗すると注意の印が出ること。
-- 設定の検索で、サブページの中の項目(例: `Request timeout`)が見つかること。
+- Integrations: 行のスイッチで連携を切ると、そのモードがRoot Searchとエイリアス入力から消え、Modes ページの行が押せなくなること。VS Code のスイッチで外部Markdownを開くアプリが変わること。Everything の名前でモーダルが開き、変更がその場で保存されること。
+- 設定の検索で、モーダルの中の項目名(例: `Request timeout`)を入れると Everything の行が見つかること。
+- 別ウィンドウの設定画面で、Everything のモーダルが設定ウィンドウの側に開き、閉じると名前のボタンへフォーカスが戻ること。
 - `…` メニュー: 並び順、1回目で確認待ちの見た目に変わり履歴が残ること、2回目で消えること、確認待ちのまま閉じると次は1回目に戻ること、キーボードで開いたときの選択位置。
 - 履歴の消去はその画面のカテゴリーだけに効くこと(パレットで消してもタグ挿入の履歴は残る)。
 - 自前のメニュー: キー操作(無効の項目を飛ばす、Home / End、Escを消費する)、外側の押下で閉じる(結果の行を含む)、はみ出し時の位置、閉じたあとのフォーカス、別ウィンドウのパレットでそのウィンドウに出ること。
@@ -298,9 +326,9 @@ v1のテストに次を足す。
 | 項目                       | 推奨                                                                      | 代案                                                     |
 | -------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------- |
 | 画面の分け方               | 目的別の5ページ(General / Modes / File search / Shortcuts / Integrations) | Raycastと同じくコマンドグループ別                        |
-| Integrations の各連携      | サブページ(標準の部品、設定検索に出る)                                    | 歯車+編集モーダル(minimalshotと同じ)                     |
-| `minAppVersion`            | 1.13.1に上げて、一覧に今の値と注意の印を出す                              | 1.13.0のままにして、一覧は説明文だけ                     |
-| Smart Connections          | 設定が無いので Integrations に出さない                                    | 状態を見せるためだけの行を出す                           |
+| Integrations の各連携      | minimalshot と同じ(1行に名前とスイッチ、名前でモーダル)                   | 宣言的APIのサブページ(スイッチは1つ奥)                   |
+| 連携の有効/無効            | Integrations のスイッチで連携ごと切り、Modes で各モードを個別に切る       | Modes のスイッチだけにする                               |
+| Smart Connections          | 有効/無効のスイッチを持つので Integrations に出す                         | 出さない                                                 |
 | 履歴を消す範囲             | その画面の履歴だけ                                                        | どの画面からでもすべての履歴                             |
-| メニュー                   | 自前のメニューを作り、7か所すべてを置き換える                             | `…` メニューだけ置き換え、ほかはObsidianのメニューのまま |
+| メニュー                   | `paletteMenu.ts` で7か所すべてを置き換える                                | `…` メニューだけ置き換え、ほかはObsidianのメニューのまま |
 | `Highlight search matches` | メニューに残す(Generalにも出す)                                           | 設定画面だけにする                                       |
