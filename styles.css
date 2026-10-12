@@ -1147,6 +1147,11 @@
 	height: 13px;
 }
 
+/* The chip takes the search icon's place in workspace views. */
+.my-palette-panel--view.has-mode-chip .my-palette-panel__search-icon {
+	display: none;
+}
+
 .my-palette-panel.has-mode-chip .prompt-input {
 	padding-left: 6px;
 }
