@@ -96,9 +96,21 @@ export class PaletteHistoryControls {
 		});
 		// Why: this menu contains actions as well as preferences.
 		setIcon(optionsButton, "ellipsis");
+		// Why: the open menu may already be dismissed by the press itself before the
+		// click arrives, so its state is read at pointerdown, which fires first.
+		let menuWasOpen = false;
+		this.listen(optionsButton, "pointerdown", () => {
+			menuWasOpen = this.activeMenu !== undefined;
+		});
 		this.listen(optionsButton, "mousedown", consumePointerEvent);
 		this.listen(optionsButton, "click", (event) => {
 			consumePointerEvent(event);
+			const shouldClose = menuWasOpen;
+			menuWasOpen = false;
+			if (shouldClose) {
+				this.activeMenu?.close();
+				return;
+			}
 			this.showOptionsMenu(event);
 		});
 
