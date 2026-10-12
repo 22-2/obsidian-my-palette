@@ -1,4 +1,5 @@
 import { ItemView, Menu, TFile, type WorkspaceLeaf } from "obsidian";
+import { showMenuAtEvent } from "src/ui/menus";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
 import { getLeafForAction, revealOpenedLeaf } from "src/workspace/openLeaf";
@@ -356,7 +357,7 @@ export class PaletteView extends ItemView {
 				.onClick(() => this.toggleSourcePin()),
 		);
 		menu.setParentElement(this.contentEl);
-		menu.showAtMouseEvent(event);
+		showMenuAtEvent(menu, event);
 	}
 
 	private toggleSourcePin(): void {
@@ -515,7 +516,7 @@ export class PaletteView extends ItemView {
 			onTabsChanged: () => void this.session?.search(this.session.input),
 		});
 		menu.setParentElement(this.contentEl);
-		menu.showAtMouseEvent(event);
+		showMenuAtEvent(menu, event);
 	}
 
 	private resolveMocInsertionContext(): MocInsertionContext {

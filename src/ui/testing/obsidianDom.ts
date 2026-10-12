@@ -174,6 +174,28 @@ export class Menu {
 	shown = false;
 	closed = false;
 	private hideHandlers: (() => void)[] = [];
+	readonly scope = {
+		keys: [
+			{
+				key: "Escape",
+				modifiers: "",
+				func: (_event: KeyboardEvent): false | undefined => {
+					this.close();
+					return undefined;
+				},
+			},
+		],
+		unregister: (handler: unknown) => {
+			this.scope.keys = this.scope.keys.filter((entry) => entry !== handler);
+		},
+		register: (
+			modifiers: string[],
+			key: string,
+			func: (event: KeyboardEvent) => false | undefined,
+		) => {
+			this.scope.keys.push({ key, modifiers: modifiers.join("+"), func });
+		},
+	};
 	addItem(build: (item: Record<string, unknown>) => unknown): this {
 		const entry: MenuEntry = { title: "", click: () => undefined };
 		const item = {
@@ -206,6 +228,10 @@ export class Menu {
 		this.shown = true;
 		Menu.last = this;
 		Menu.lastShown = this;
+	}
+	hide(): this {
+		this.close();
+		return this;
 	}
 	close(): void {
 		this.closed = true;

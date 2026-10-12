@@ -1,4 +1,5 @@
 import { Menu, Notice, setIcon, type App } from "obsidian";
+import { showMenuAtEvent } from "src/ui/menus";
 import { BaseSuggestModal } from "src/ui/baseSuggestModal";
 import { renderSelectionItem, type SelectionItem } from "src/ui/selectionModal";
 import type { SelectorControls } from "src/ui/selectorControls";
@@ -168,7 +169,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		this.addCheckMenuItems(menu, targets);
 		this.addRemovalMenuItem(menu, targets);
 		menu.setParentElement(this.modalEl);
-		menu.showAtMouseEvent(event);
+		showMenuAtEvent(menu, event);
 	}
 
 	protected override handlesSuggestionRowToggle(): boolean {
@@ -389,7 +390,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 				}),
 		);
 		menu.setParentElement(this.modalEl);
-		menu.showAtMouseEvent(event);
+		showMenuAtEvent(menu, event);
 	}
 
 	private toSelectionItem(candidate: MultiSelectCandidate<V>): SelectionItem {

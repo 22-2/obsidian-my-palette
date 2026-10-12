@@ -1,4 +1,5 @@
 import { Menu, type App } from "obsidian";
+import { showMenuAtEvent } from "src/ui/menus";
 import type MyPalettePlugin from "src/main";
 import type { EverythingScope, PaletteMode, PaletteResult } from "src/palette/results";
 import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
@@ -138,7 +139,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			onTabsChanged: () => this.refreshSuggestions(),
 		});
 		menu.setParentElement(this.modalEl);
-		menu.showAtMouseEvent(event);
+		showMenuAtEvent(menu, event);
 	}
 
 	override async getSuggestions(input: string): Promise<PaletteResult[]> {

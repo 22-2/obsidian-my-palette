@@ -1,4 +1,5 @@
 import { Menu, setIcon } from "obsidian";
+import { showMenuAtEvent } from "src/ui/menus";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
 import type { PaletteSurface, SearchHistoryCategory } from "src/settings/model";
@@ -198,7 +199,7 @@ export class PaletteHistoryControls {
 				.onClick(() => plugin.paletteDisplaySettings.toggleHighlight(surface)),
 		);
 		menu.setParentElement(hostEl);
-		menu.showAtMouseEvent(event);
+		showMenuAtEvent(menu, event);
 	}
 
 	private registerEvents(): void {

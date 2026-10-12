@@ -1,4 +1,5 @@
 import { Component, Menu, TFile, setIcon, type App } from "obsidian";
+import { showMenuAtEvent } from "src/ui/menus";
 import type { PaletteResult } from "src/palette/results";
 import {
 	PALETTE_TABLE_COLUMNS,
@@ -293,7 +294,7 @@ export class PaletteTableControls extends Component {
 					}),
 			);
 		}
-		menu.showAtMouseEvent(event);
+		showMenuAtEvent(menu, event);
 	}
 
 	private headerAtEvent(event: Event): HTMLElement | undefined {

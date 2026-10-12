@@ -15,6 +15,7 @@ vi.mock("src/palette/executePaletteResult", () => ({
 vi.mock("src/palette/backgroundResultActions", () => ({
 	openPaletteResultInBackground: vi.fn().mockResolvedValue(true),
 }));
+vi.mock("src/ui/menus", () => ({ showMenuAtEvent: vi.fn() }));
 vi.mock("obsidian", () => ({
 	App: class {},
 	Component: class {},
