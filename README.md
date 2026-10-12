@@ -21,7 +21,7 @@ So the palette now works like this:
 2. Choose how to handle the result afterwards (click, double-click, middle-click, right-click, or keys).
 3. Advanced operations are shown only once you have a result to apply them to.
 
-Prefixes (`>`, `e `, `bk `, …) exist for switching the search source, not as the main way to operate it.
+Other sources (commands, Everything, bookmarks, …) are modes one step away in Root Search, not the main way to operate the palette.
 
 ## Features
 
@@ -39,8 +39,9 @@ Open the command palette and run one of these, then bind a hotkey if you like:
 
 | Command                                       | What it does                                                |
 | --------------------------------------------- | ----------------------------------------------------------- |
-| `My Palette: Open Recent palette`             | File search, starting from recently used files              |
-| `My Palette: Open command list`               | Command search (starts with the `>` prefix)                 |
+| `My Palette: Open palette`                    | Root Search: modes above recently used files                |
+| `My Palette: Open Recent palette`             | File search only, starting from recently used files         |
+| `My Palette: Open command list`               | Starts in the Run Command mode                              |
 | `My Palette: Open palette in right sidebar`   | A persistent list view                                      |
 | `My Palette: Open palette table in center`    | A persistent table view in a center tab                     |
 | `My Palette: Link search` / `Backlink search` | Notes linked from / to the current note                     |
@@ -68,9 +69,9 @@ The action (`…`) and history (clock) buttons are also available in tag inserti
 | Middle-click           | Open in a new background tab                       |
 | Right-click            | Open the action menu (acts on the whole selection) |
 | `Ctrl+R`               | Search history                                     |
-| `Esc`                  | Clear the query, then move focus back to the field |
+| `Esc`                  | Leave a mode; at Root Search, close or clear       |
 
-The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current picker. The palette modal's footer shows the `Ignored` switch; other keyboard instructions and insertion targets live in Help. Hold `Alt+H` in any search or interaction mode to gently fade out the palette or selector while inspecting a preview; releasing either key fades it back in and returns focus to the search field. This works in modals (including their backdrop), sidebar palettes and table views, preserving the query, selection and workspace layout. `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
+The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current picker. The palette modal's footer shows the `Ignored` switch; other keyboard instructions and insertion targets live in Help. Hold `Alt+H` in any search or interaction mode to gently fade out the palette or selector while inspecting a preview; releasing either key fades it back in and returns focus to the search field. This works in modals (including their backdrop), sidebar palettes and table views, preserving the query, selection and workspace layout. In a mode, `Esc` returns to Root Search. At Root Search, `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
 
 ### Custom shortcuts
 
@@ -86,20 +87,21 @@ palettes remain available in Obsidian's own **Settings → Hotkeys**.
 
 ### Search modes
 
-Type a prefix followed by a space to switch the search source. `>` and `e ` can be changed in the settings.
+`My Palette: Open palette` starts at Root Search, which lists the modes above your files, much like Raycast. Pick a mode with `Enter` or `Tab`, or type its alias followed by a space. The alias then leaves the input and shows as a chip on its left, so the input holds only the query. `Esc` (or `Backspace` in an empty input, or a click on the chip) goes back to Root Search with the alias selected, so `Enter` re-enters the mode. `Esc` at Root Search closes the palette.
 
-| Prefix  | Mode                 | Purpose                                                  |
-| ------- | -------------------- | -------------------------------------------------------- |
-| none    | Files                | Search files in the Vault                                |
-| `>`     | Commands             | Search and run Obsidian commands                         |
-| `e `    | Everything           | Search the whole Everything index                        |
-| `esdir` | Everything directory | Search the directory of the current note with Everything |
-| `o `    | Outlinks             | Notes linked from the current note                       |
-| `b `    | Backlinks            | Notes linking to the current note                        |
-| `bk `   | Bookmarks            | Search saved bookmarks                                   |
-| `sc `   | Smart Connections    | Notes related to the current note                        |
+| Alias   | Mode                      | Purpose                                                  |
+| ------- | ------------------------- | -------------------------------------------------------- |
+| none    | Files                     | Search files in the Vault                                |
+| `>`     | Run Command               | Search and run Obsidian commands                         |
+| `e`     | Search Vault Notes        | Search the Vault's file types with Everything            |
+| `esdir` | Search All Files in Vault | Search every file under the Vault folder with Everything |
+| `o`     | Search Outgoing Links     | Notes linked from the current note                       |
+| `b`     | Search Backlinks          | Notes linking to the current note                        |
+| `bk`    | Search Bookmarks          | Search saved bookmarks                                   |
+| `sc`    | Search Related Notes      | Notes related to the current note (Smart Connections)    |
+| `t`     | Switch Tab                | Switch to an open tab                                    |
 
-`es` and `esdir` also work as zero-query shortcuts without a trailing space.
+`>` and `e` can be changed in the settings, and `es` remains a hidden alias of `e`. `Open Recent palette` and the table view do not list modes but still enter them by alias. Commands that open a mode directly, such as `Open command list` or `Backlink search`, start in that mode; `Esc` returns to Root Search.
 
 The `Ignored` switch at the left of the footer (`Ctrl+I`) includes files hidden by Obsidian's excluded folders. It applies to file search only and stays dimmed in other modes. Search history remembers whether a search included them, and restoring an entry sets the switch.
 
@@ -179,7 +181,7 @@ Notes without a `prior` sort last. Complete contiguous matches on a name, path, 
 
 ## Settings
 
-Settings are split into three pages: the palette itself (prefixes, search history, debug messages), Vault file search (excluded folders, ignored-note index, sort priorities) and Everything.
+Settings are split into three pages: the palette itself (mode aliases, search history, debug messages), Vault file search (excluded folders, ignored-note index, sort priorities) and Everything.
 
 ### Everything setup
 
