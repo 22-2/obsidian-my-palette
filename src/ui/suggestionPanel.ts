@@ -7,6 +7,7 @@ import {
 	type PaletteHotkey,
 	type PaletteHotkeys,
 } from "src/ui/hotkeys";
+import { markKeyboardMenuEvent } from "src/ui/menus";
 
 export interface SuggestionPanelProps<T> {
 	getHotkeys?: () => PaletteHotkeys;
@@ -647,11 +648,13 @@ export class SuggestionPanel<T> extends Component {
 		const rect = row.getBoundingClientRect();
 		// Why: menu hosts position menus from a mouse event, so the keyboard path
 		// anchors a synthetic one just below the active row, like a dropdown.
-		const event = new MouseEvent("contextmenu", {
-			clientX: rect.left,
-			clientY: rect.bottom,
-			view: row.win,
-		});
+		const event = markKeyboardMenuEvent(
+			new MouseEvent("contextmenu", {
+				clientX: rect.left,
+				clientY: rect.bottom,
+				view: row.win,
+			}),
+		);
 		this.showRowContextMenu(index, item, event);
 	}
 

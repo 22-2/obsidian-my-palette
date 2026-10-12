@@ -229,6 +229,10 @@ export class Menu {
 		Menu.last = this;
 		Menu.lastShown = this;
 	}
+	selected = -1;
+	onArrowDown(): void {
+		this.selected = this.items.findIndex(({ disabled }) => !disabled);
+	}
 	hide(): this {
 		this.close();
 		return this;
