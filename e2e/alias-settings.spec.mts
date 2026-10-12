@@ -1,0 +1,70 @@
+import type { Page } from "@playwright/test";
+import { expect, test } from "obsidian-e2e-toolkit";
+import type { ObsidianAPI } from "obsidian-e2e-toolkit";
+import { MODAL_INPUT, MODAL_ROW, pluginVaultOptions, runPaletteCommand } from "./support.mts";
+
+test.use({ vaultOptions: pluginVaultOptions() });
+
+async function openPaletteSettings(obsidian: ObsidianAPI): Promise<Page> {
+	const settingsOpened = obsidian.page.context().waitForEvent("page");
+	await obsidian.evaluateApp(() => {
+		const setting = (
+			app as unknown as { setting: { open(): void; openTabById(id: string): void } }
+		).setting;
+		setting.open();
+		setting.openTabById("my-palette");
+	});
+	const settingsPage = await settingsOpened;
+	const palettePage = settingsPage.locator(".setting-item-name").filter({ hasText: /^Palette$/ });
+	await expect(palettePage).toBeVisible({ timeout: 10_000 });
+	await palettePage.click();
+	return settingsPage;
+}
+
+function storedCommandAlias(obsidian: ObsidianAPI): Promise<string> {
+	return obsidian.evaluateApp(
+		() =>
+			(
+				app as unknown as {
+					plugins: {
+						plugins: Record<string, { settings: { prefixes: { command: string } } }>;
+					};
+				}
+			).plugins.plugins["my-palette"].settings.prefixes.command,
+	);
+}
+
+test("mode aliases can be changed in the settings and are used in Root Search", async ({
+	obsidian,
+}) => {
+	await obsidian.waitReady();
+	const settingsPage = await openPaletteSettings(obsidian);
+	const row = (name: string) =>
+		settingsPage
+			.locator(".setting-item")
+			.filter({ has: settingsPage.getByText(name, { exact: true }) });
+	const commandInput = row("Run Command").getByRole("textbox");
+	await expect(commandInput).toHaveValue(">");
+	// The stored default keeps its old trailing space; the field shows the alias alone.
+	await expect(row("Search Vault Notes").getByRole("textbox")).toHaveValue("e");
+
+	await commandInput.fill("esdir");
+	await expect(row("Run Command")).toContainText("already used by another mode");
+	expect(await storedCommandAlias(obsidian)).toBe(">");
+
+	await commandInput.fill("c");
+	await expect.poll(() => storedCommandAlias(obsidian)).toBe("c");
+	// Close through Obsidian: closing the window alone leaves the settings modal registered.
+	await obsidian.evaluateApp(() =>
+		(app as unknown as { setting: { close(): void } }).setting.close(),
+	);
+
+	await runPaletteCommand(obsidian, "open-root");
+	const page = obsidian.page;
+	const input = page.locator(MODAL_INPUT);
+	await input.pressSequentially("c");
+	await expect(page.locator(MODAL_ROW).first()).toContainText("Run Command");
+	await input.pressSequentially(" link search");
+	await expect(page.locator(".my-palette-suggest-modal .my-palette-mode-chip")).toHaveText("c");
+	await expect(input).toHaveValue("link search");
+});

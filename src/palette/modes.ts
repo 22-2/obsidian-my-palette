@@ -130,6 +130,32 @@ export function paletteModeAlias(id: PaletteModeId, prefixes: Prefixes): string 
 	}
 }
 
+/** Modes whose alias the settings can change. */
+export type ConfigurableModeId = Extract<PaletteModeId, "commands" | "everything">;
+
+/**
+ * Checks an alias typed in the settings. Aliases are matched as `alias + Space`,
+ * so `e` and `esdir` can coexist; only an identical alias would be ambiguous.
+ */
+export function validateModeAlias(
+	id: ConfigurableModeId,
+	value: string,
+	prefixes: Prefixes,
+): string | undefined {
+	const alias = value.trim().toLocaleLowerCase();
+	if (!alias) return "Enter an alias.";
+	if (/\s/.test(alias)) return "Aliases cannot contain spaces.";
+	const taken = [
+		...PALETTE_MODES.filter((mode) => mode.id !== id).map((mode) =>
+			paletteModeAlias(mode.id, prefixes),
+		),
+		// `es` stays a hidden alias of the vault Everything search.
+		...(id === "everything" ? [] : ["es"]),
+	].map((other) => other.toLocaleLowerCase());
+	if (taken.includes(alias)) return `"${value.trim()}" is already used by another mode.`;
+	return undefined;
+}
+
 /**
  * Mode entries for Root Search: an exact alias first, then alias prefixes, then
  * titles whose words start with every typed term. An empty input lists all modes.

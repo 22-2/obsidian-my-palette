@@ -101,7 +101,7 @@ palettes remain available in Obsidian's own **Settings → Hotkeys**.
 | `sc`    | Search Related Notes      | Notes related to the current note (Smart Connections)    |
 | `t`     | Switch Tab                | Switch to an open tab                                    |
 
-`>` and `e` can be changed in the settings, and `es` remains a hidden alias of `e`. `Open Recent palette` and the table view do not list modes but still enter them by alias. Commands that open a mode directly, such as `Open command list` or `Backlink search`, start in that mode; `Esc` returns to Root Search.
+`>` and `e` can be changed in **Settings → My Palette → Palette → Mode aliases**, and `es` remains a hidden alias of `e`. `Open Recent palette` and the table view do not list modes but still enter them by alias. Commands that open a mode directly, such as `Open command list` or `Backlink search`, start in that mode; `Esc` returns to Root Search.
 
 The `Ignored` switch at the left of the footer (`Ctrl+I`) includes files hidden by Obsidian's excluded folders. It applies to file search only and stays dimmed in other modes. Search history remembers whether a search included them, and restoring an entry sets the switch.
 

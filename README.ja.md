@@ -89,7 +89,7 @@ Obsidian のコマンドパレットから次のコマンドを実行します�
 | `sc`       | Search Related Notes      | 現在のノートに関連するノート（Smart Connections）    |
 | `t`        | Switch Tab                | 開いているタブへ切り替え                             |
 
-`>` と `e` は設定から変更できます。`es` も `e` の隠しエイリアスとして使えます。`Open Recent palette` とテーブルビューはモードの一覧を出しませんが、エイリアスでモードに入れます。`Open command list` や `Backlink search` など、モードを直接開くコマンドはそのモードから始まり、`Esc` でルート画面に戻ります。
+`>` と `e` は **設定 → My Palette → Palette → Mode aliases** から変更できます。`es` も `e` の隠しエイリアスとして使えます。`Open Recent palette` とテーブルビューはモードの一覧を出しませんが、エイリアスでモードに入れます。`Open command list` や `Backlink search` など、モードを直接開くコマンドはそのモードから始まり、`Esc` でルート画面に戻ります。
 
 下部左端の `Ignored` スイッチ（`Ctrl+I`）をオンにすると、Obsidian の除外フォルダーにあるファイルも検索します。ファイル検索でだけ有効で、ほかのモードでは薄く表示します。検索履歴は除外ファイルを含めたかどうかも記録し、履歴を選ぶとスイッチも復元します。
 

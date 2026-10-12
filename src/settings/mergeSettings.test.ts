@@ -55,6 +55,13 @@ describe("mergeSettings", () => {
 		expect(mergeSettings(undefined)).toEqual(DEFAULT_SETTINGS);
 	});
 
+	it("falls back to the default alias when a stored one is blank", () => {
+		expect(mergeSettings({ prefixes: { command: " ", everything: "ev" } }).prefixes).toEqual({
+			command: DEFAULT_SETTINGS.prefixes.command,
+			everything: "ev",
+		});
+	});
+
 	it("defaults history retention to unlimited", () => {
 		expect(DEFAULT_SETTINGS.searchHistory.addDelayMs).toBe(0);
 		expect(DEFAULT_SETTINGS.searchHistory.daysToKeep).toBe(UNLIMITED_DAYS);

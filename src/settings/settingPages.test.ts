@@ -51,6 +51,7 @@ describe("settings page layout", () => {
 		expect(palette.desc).toContain("search history");
 		expect(groupsOf(palette).map((group) => group.heading)).toEqual([
 			"Palette behavior",
+			"Mode aliases",
 			"Search history",
 			"Diagnostics",
 		]);

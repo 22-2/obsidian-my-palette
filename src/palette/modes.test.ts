@@ -5,6 +5,7 @@ import {
 	PALETTE_MODES,
 	paletteModeAlias,
 	parseDirectModeEntry,
+	validateModeAlias,
 } from "src/palette/modes";
 
 const prefixes = { command: ">", everything: "e " };
@@ -72,5 +73,25 @@ describe("findPaletteMode", () => {
 		expect(findPaletteMode("everything", "vault")?.id).toBe("everything");
 		expect(findPaletteMode("everything", "directory")?.id).toBe("everything-all");
 		expect(findPaletteMode("link")?.id).toBe("outlinks");
+	});
+});
+
+describe("validateModeAlias", () => {
+	test("accepts an alias that only shares a start with another one", () => {
+		expect(validateModeAlias("everything", "e", prefixes)).toBeUndefined();
+		expect(validateModeAlias("commands", "c", prefixes)).toBeUndefined();
+		expect(validateModeAlias("everything", "es", prefixes)).toBeUndefined();
+	});
+
+	test("rejects empty, spaced and taken aliases", () => {
+		expect(validateModeAlias("commands", " ", prefixes)).toBe("Enter an alias.");
+		expect(validateModeAlias("commands", "c x", prefixes)).toBe(
+			"Aliases cannot contain spaces.",
+		);
+		expect(validateModeAlias("commands", "E", prefixes)).toBe(
+			'"E" is already used by another mode.',
+		);
+		expect(validateModeAlias("commands", "esdir", prefixes)).toBeDefined();
+		expect(validateModeAlias("commands", "es", prefixes)).toBeDefined();
 	});
 });

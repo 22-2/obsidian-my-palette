@@ -12,25 +12,6 @@ export const RELATED_PREFIXES = {
 	backlink: "b ",
 } as const;
 
-export function validatePrefixes(prefixes: Prefixes): string | null {
-	const values = [prefixes.command, prefixes.everything];
-	// eslint-disable-next-line no-control-regex -- \0 check prevents NUL injection into child-process arguments
-	if (values.some((value) => !value || /[\r\n\0]/.test(value)))
-		return "Prefixes cannot be empty or contain a newline or NUL.";
-	const normalized = values.map((value) => value.trimEnd().toLocaleLowerCase());
-	for (let index = 0; index < normalized.length; index += 1) {
-		for (let other = index + 1; other < normalized.length; other += 1) {
-			if (
-				normalized[index] === normalized[other] ||
-				normalized[index].startsWith(normalized[other]) ||
-				normalized[other].startsWith(normalized[index])
-			)
-				return "Prefixes must not overlap.";
-		}
-	}
-	return null;
-}
-
 /**
  * Reads a prefixed input the way the palette did before Root Search. Palettes now
  * enter modes through `src/palette/modes`; this remains for history rows stored

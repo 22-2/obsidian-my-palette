@@ -49,9 +49,12 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 	const rawPrefixes = (source.prefixes ?? {}) as Record<string, unknown>;
 	const rawFile = (source.file ?? {}) as Record<string, unknown>;
 	const rawEverything = (source.everything ?? {}) as Record<string, unknown>;
+	// An empty alias could never be typed; fall back to the default instead.
+	const alias = (value: unknown, fallback: string) =>
+		typeof value === "string" && value.trim() ? value : fallback;
 	const prefixes = {
-		command: typeof rawPrefixes.command === "string" ? rawPrefixes.command : ">",
-		everything: typeof rawPrefixes.everything === "string" ? rawPrefixes.everything : "e ",
+		command: alias(rawPrefixes.command, DEFAULT_SETTINGS.prefixes.command),
+		everything: alias(rawPrefixes.everything, DEFAULT_SETTINGS.prefixes.everything),
 	};
 	const rawSearchHistory =
 		source.searchHistory && typeof source.searchHistory === "object"

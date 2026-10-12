@@ -14,6 +14,7 @@ import { excludedFolders, extensions } from "src/settings/mergeSettings";
 import { renderFileSortPriorityControl } from "src/settings/fileSortPriorityControl";
 import { renderHotkeyControl } from "src/settings/hotkeyControl";
 import { HOTKEY_ACTIONS, type HotkeyAction } from "src/ui/hotkeys";
+import { getPaletteMode, validateModeAlias, type ConfigurableModeId } from "src/palette/modes";
 
 type ControlType = "text" | "toggle" | "slider";
 type ControlItem = Pick<SettingDefinitionControl, "control">;
@@ -164,32 +165,50 @@ function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers)
 }
 
 function createPalettePage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
-	return helpers.page("Palette", "Remembered input, search history, and diagnostics.", [
-		helpers.group("Palette behavior", [
-			{
-				name: "Remember last input",
-				desc: "Restore the last query for each palette mode until Obsidian is closed. Search text is not saved to disk.",
-				...helpers.control("toggle", "rememberLastInput"),
-			},
-		]),
-		helpers.group("Search history", [
-			{
-				name: "Clear search history",
-				desc: "Permanently remove all stored search history.",
-				action: () => {
-					plugin.clearSearchHistory();
-					new Notice("Search history cleared.");
+	const aliasControl = (id: ConfigurableModeId, key: string) => {
+		const mode = getPaletteMode(id);
+		return {
+			name: mode.title,
+			desc: `Type this alias and a space to enter ${mode.title}, or find the mode by it in Root Search.`,
+			...helpers.control("text", key, {
+				validate: (value: string) => validateModeAlias(id, value, plugin.settings.prefixes),
+			}),
+		};
+	};
+	return helpers.page(
+		"Palette",
+		"Mode aliases, remembered input, search history, and diagnostics.",
+		[
+			helpers.group("Palette behavior", [
+				{
+					name: "Remember last input",
+					desc: "Restore the last query for each palette mode until Obsidian is closed. Search text is not saved to disk.",
+					...helpers.control("toggle", "rememberLastInput"),
 				},
-			},
-		]),
-		helpers.group("Diagnostics", [
-			{
-				name: "Show debug messages",
-				desc: "Write debug messages to the developer console.",
-				...helpers.control("toggle", "showLog"),
-			},
-		]),
-	]);
+			]),
+			helpers.group("Mode aliases", [
+				aliasControl("commands", "prefixes.command"),
+				aliasControl("everything", "prefixes.everything"),
+			]),
+			helpers.group("Search history", [
+				{
+					name: "Clear search history",
+					desc: "Permanently remove all stored search history.",
+					action: () => {
+						plugin.clearSearchHistory();
+						new Notice("Search history cleared.");
+					},
+				},
+			]),
+			helpers.group("Diagnostics", [
+				{
+					name: "Show debug messages",
+					desc: "Write debug messages to the developer console.",
+					...helpers.control("toggle", "showLog"),
+				},
+			]),
+		],
+	);
 }
 
 function createEverythingPage(
