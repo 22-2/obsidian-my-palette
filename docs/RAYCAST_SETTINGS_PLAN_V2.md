@@ -170,49 +170,59 @@ Options(見出し)
 
 ## 自前のメニュー
 
-`BaseSuggestModal` をObsidianの `SuggestModal` から抜き出して作ったのと同じく、メニューもObsidianの `Menu` から抜き出して自前の部品にする。
+`BaseSuggestModal` をObsidianの `SuggestModal` から抜き出して作ったのと同じく、メニューもObsidianの `Menu` から抜き出した `src/ui/paletteMenu.ts`(`PaletteMenu` / `PaletteMenuItem`)を使う。
 
 ### 理由
 
 - 今の `src/ui/menus.ts` は、Escがパレットまで届く問題と、キーボードで開いたときに先頭を選ぶために、`Menu` の非公開の中身(`scope.keys`、`onArrowDown`)を書き換えている。Obsidianの更新で壊れうる。
-- Obsidianには、メニューをOSのネイティブメニューで出す設定(外観 → ネイティブメニュー)がある。ネイティブメニューでは、上の書き換えも、色付けや開いたままの確認待ちも効かない(撮影で確かめる)。
-- 結果の行を押してもメニューが閉じなかった不具合(`05b9565`)は、Obsidianのメニューが行の `mousedown` を受け取れないことが原因だった。自前のメニューなら、外側のクリックを捕捉段階(capture)で受けられるので、行の側で閉じる処理が要らない。
-- 開いたまま見た目を変える項目、ボタンと同じ色の項目など、`MenuItem` の公開APIに無いことを素直に書ける。
+- Obsidianには、メニューをOSのネイティブメニューで出す設定(外観 → ネイティブメニュー)がある。ネイティブメニューでは、上の書き換えも、色付けや開いたままの確認待ちも効かない。
+- 結果の行を押してもメニューが閉じなかった不具合(`05b9565`)は、Obsidianのメニューが行の `mousedown` を受け取れないことが原因だった。`PaletteMenu` は外側の押下を捕捉段階(capture)で受けるので、行の側で閉じる処理が要らない。
+- 開いたまま見た目を変える項目(`setKeepOpen`)を素直に書ける。
 
-### 範囲
+### `paletteMenu.ts` がすでに持っているもの
 
-今のメニュー7か所で使っている機能だけを作る。サブメニューは使っていないので作らない。
+- Obsidianのメニューと同じDOMとクラス(`menu`、`menu-scroll`、`menu-group`、`menu-item`、`menu-item-icon`、`menu-item-title`、`menu-separator`、`selected`、`is-disabled`、`is-warning`、`mod-checked`)。見た目はObsidianのCSSとテーマに従う。
+- `addItem`、`addSeparator`(先頭と連続の区切り線を出さない)、`setParentElement`(開いている間 `has-active-menu`)、`onHide`、`showAtMouseEvent`、`showAtPosition`、`hide`。
+- 項目: `setTitle`、`setIcon`、`setChecked`、`setDisabled`(キー操作で飛ばす)、`setWarning`、`setKeepOpen`、`onClick`。開いている間に見た目を変えても反映される。
+- 表示する文書: イベントの `doc` → 親要素の `ownerDocument` → 今の文書の順。別ウィンドウのパレットでもそのウィンドウに出る。
+- 位置: マウスの位置に出し、右端・下端からはみ出すときは左・上に寄せる(`placeMenu`、純粋関数)。
+- キー操作: `↑` / `↓` / `Home` / `End`(無効の項目を飛ばす)、`Enter` / `Space` で実行、`Esc` で閉じる。文書の捕捉段階で受けてキーを消費するので、パレットへ届かない。`selectFirst` で先頭の項目を選んで開ける。
+- 閉じる契機: 項目の実行(`setKeepOpen` の項目を除く)、`Esc`、外側の押下、ウィンドウのリサイズ・フォーカス喪失。閉じたら、ほかの要素がフォーカスを取っていなければ開く前の要素へ戻す。
 
-| 機能                                       | 使っている場所                         |
-| ------------------------------------------ | -------------------------------------- |
-| 項目(タイトル、アイコン、押したときの処理) | 全か所                                 |
-| 無効の項目(見出しとして使う)               | `…` メニュー、結果の右クリックメニュー |
-| チェック付きの項目                         | `…` メニュー、テーブルの列メニュー     |
-| 区切り線                                   | 全か所                                 |
-| 閉じたときの処理(`onHide`)                 | 5か所                                  |
-| 親要素の指定(`setParentElement`)           | 6か所                                  |
-| マウスの位置に表示(`showAtMouseEvent`)     | 全か所                                 |
+### 使う前に足すもの
 
-足すもの:
+置き換えの最初のコミットで、次を `paletteMenu.ts` に足す。
 
-- `setWarning(true)`(赤字)と、`setDestructive()` / `setCta()` に相当する見た目。
-- 押してもメニューを閉じない項目(確認待ちに使う)。
+| 足すもの                                                                               | 理由                                                                                                                                                                         |
+| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `close()`(`hide()` と同じ)                                                             | 今のコードは15か所で `activeMenu?.close()` を呼んでいる。Obsidianの `Menu` と同じ名前を持たせ、呼び出し側の変更を型と生成だけに抑える                                        |
+| `setCta(cta: boolean)`(`mod-cta` クラス)                                               | 履歴消去の確認待ちを、ボタンの `setDestructive().setCta()` と同じ「赤い背景に白い文字」にする。色は `is-warning` と組み合わせたときだけ赤にし、CSSはObsidianの色の変数を使う |
+| ARIA(`role="menu"` / `menuitem` / `menuitemcheckbox`、`aria-disabled`、`aria-checked`) | スクリーンリーダーで項目の種類と状態がわかるようにする                                                                                                                       |
+| 開いているメニューを開き直したときの `onHide` の扱い                                   | 今は `showAtPosition` の先頭の `hide()` が、登録済みの `onHide` を呼んで消してしまう。開き直しでは呼ばずに残す                                                               |
+| 単体テスト                                                                             | `placeMenu` の位置、キー操作で無効の項目を飛ばすこと、`setKeepOpen` の項目で閉じないこと、外側の押下で閉じること                                                             |
 
-### 作り
+### 置き換える場所
 
-- 呼び出し側の書き方は `Menu` と同じ形にする(`addItem((item) => item.setTitle(...).setIcon(...).onClick(...))`、`addSeparator()`)。置き換えは `new Menu()` を `new PaletteMenu()` に変える程度に収める。
-- 見た目はObsidianのメニューと同じクラス(`menu`、`menu-item`、`menu-item-icon`、`menu-item-title`、`menu-separator`、`is-disabled`、`selected`)を使い、テーマの色に従う。
-- 表示する文書は、親要素(パレットやビュー)の `ownerDocument` にする。別ウィンドウのパレットでも、そのウィンドウに出る。
-- 位置: マウスの位置に出し、画面の右端・下端からはみ出すときは左・上に寄せる。
-- キー操作: `↑` / `↓`(無効の項目と区切り線は飛ばす)、`Home` / `End`、`Enter` / `Space` で実行、`Esc` で閉じてキーを消費する(パレットへ届かない)。キーボードで開いたときは先頭の項目を選ぶ。
-- 閉じる契機: 項目の実行、`Esc`、外側の押下(捕捉段階で受ける)、ウィンドウのリサイズ・フォーカス喪失。
-- 閉じたらフォーカスを開く前の要素(パレットの入力欄)へ戻す。
-- アクセシビリティ: `role="menu"` / `menuitem` / `menuitemcheckbox`、`aria-disabled`、`aria-checked`。
-- 置き換え後、`src/ui/menus.ts` の非公開APIの書き換えと、行を押したときにメニューを閉じる処理(`onResultFocus` の `activeMenu?.close()`)を消す。
+パレットとその選択画面が自分で開く7か所を置き換える。
 
-### 消す範囲
+| ファイル | メニュー | `paletteMenu.ts` で7か所すべてを置き換える | `…` メニューだけ置き換え、ほかはObsidianのメニューのまま |
+| --- | --- |
+| `PaletteModal.ts` | 結果の右クリックメニュー |
+| `PaletteView.ts`(2か所) | 結果の右クリックメニュー、出典ノートのメニュー |
+| `PaletteHistoryControls.ts` | `…` メニュー |
+| `PaletteTableControls.ts` | 列のメニュー |
+| `MultiSelectModal.ts`(2か所) | タグ・MOCの選択画面のメニュー |
 
-`…` のメニューは、パレットのほかにタグ挿入・MOC・移動先フォルダーの選択画面にもある。どの画面で押したかに関係なくすべての履歴を消すと、見ていない画面の履歴まで消える。**その画面の履歴だけを消す**ことを推奨する(パレットはパレットの全モード、タグ挿入はタグ挿入だけ)。文言は `Clear search history` のままにし、通知で範囲を示す(例: `Tag insertion history cleared.`)。
+- `PaletteView.onPaneMenu`(サイドバーのペイン右上のメニュー)はObsidianが作って渡すメニューなので、Obsidianの `Menu` のまま残す。
+- メニューに項目を足す関数(`populatePaletteResultMenu`、`tabMenu.ts`、`mocInsertion.ts`、`mocRelateds.ts`、`pathClipboard.ts`)は、引数の型を `Menu` から `PaletteMenu` に変える。
+- `src/ui/menus.ts` は、`markKeyboardMenuEvent` と `showMenuAtEvent`(キーボードで開いたら `selectFirst` を渡すだけ)を残し、非公開APIの書き換え(`consumeEscape`、`selectFirstItem`)を消す。
+- 行を押したときにメニューを閉じる処理(`PaletteModal` と `PaletteView` の `onResultFocus` の `activeMenu?.close()`)を消す。回帰テスト(`history-and-menus.spec.mts` の「pressing a result row closes the open result menu」)はそのまま通ることを確かめる。
+
+### 確かめること
+
+- Escで閉じたとき、モーダルが閉じない・サイドバーの入力が消えないこと(今の `menus.ts` が防いでいる問題)。Obsidianのキー処理が文書の捕捉段階より前に動かないかを、既存のE2E(`38a6857` で足したもの)で確かめる。
+- 撮影タスクで、Obsidianのメニューと並べて見た目が同じであること(チェックの位置、無効の見出し、区切り線)。
+- Obsidianの「ネイティブメニュー」設定をオンにしても、パレットのメニューが同じ見た目と動作になること。
 
 ## UI撮影タスク
 
@@ -256,7 +266,7 @@ scripts/screenshots/capture-screenshots.mjs
 v1の手順1〜4(移行、エイリアスと有効/無効、フッターのスイッチ、新しいホットキー)はそのまま使う。画面の手順を次のように置き換える。撮影タスクは、以降の手順で画面を確かめるために最初に入れる。
 
 1. `chore`: UI撮影タスク(`.vscode/tasks.json`、`pnpm ui:shots`、撮影スクリプト)。まず今ある画面を撮る。
-2. `refactor`: 自前のメニュー(`PaletteMenu`)を作り、7か所のメニューを置き換える。見た目と動作は変えない。`src/ui/menus.ts` の非公開APIの書き換えを消す。
+2. `refactor`: `paletteMenu.ts` に `close()`・`setCta()`・ARIAを足し、7か所のメニューを `PaletteMenu` に置き換える。見た目と動作は変えない。`src/ui/menus.ts` の非公開APIの書き換えと、行を押したときにメニューを閉じる処理を消す。
 3. `refactor`: エイリアスの保存先を `modes.<id>` に移し、スキーマを19に上げて移行する。
 4. `feat`: 全モードのエイリアスと有効/無効を保存・反映できるようにする(画面はModesページで追加)。
 5. `refactor`: フッターのスイッチが任意のホットキーを受け付けるようにし、重複検査に「使える場所」を入れる。
