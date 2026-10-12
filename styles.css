@@ -768,14 +768,9 @@
 	color: var(--text-normal);
 }
 
-/* Kept in place in modes it does not apply to, so the footer layout stays put. */
-.my-palette-status-toggle.is-disabled {
-	cursor: default;
-	opacity: 0.5;
-}
-
-.my-palette-status-toggle.is-disabled:hover {
-	color: var(--text-muted);
+/* Why: the switch sets display itself, which would override the hidden attribute. */
+.my-palette-status-toggle[hidden] {
+	display: none;
 }
 
 /* Why: some themes tint --text-faint toward the accent, which makes quiet footer

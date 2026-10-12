@@ -69,20 +69,20 @@ describe("status toggle", () => {
 		);
 	});
 
-	it("keeps a disabled switch in place and ignores input until re-enabled", () => {
+	it("hides a switch that does not apply and ignores its shortcut until it is shown again", () => {
 		const { add, toggleEl, pressCtrl } = fixture();
-		const { toggle, onChange } = add({ id: "include-ignored", ctrlKey: "I", value: false });
-		toggle.setDisabled(true, "File search only");
+		const { toggle, onChange } = add({ id: "include-ignored", ctrlKey: "I", value: true });
+		toggle.setHidden(true);
 		const el = toggleEl("include-ignored");
-		expect(el?.getAttribute("aria-disabled")).toBe("true");
-		expect(el?.getAttribute("title")).toBe("File search only");
-		el?.click();
+		expect(el?.hasAttribute("hidden")).toBe(true);
 		pressCtrl("i");
 		expect(onChange).not.toHaveBeenCalled();
+		expect(toggle.value).toBe(true);
 
-		toggle.setDisabled(false);
+		toggle.setHidden(false);
+		expect(el?.hasAttribute("hidden")).toBe(false);
 		pressCtrl("i");
-		expect(onChange).toHaveBeenCalledWith(true);
+		expect(onChange).toHaveBeenCalledWith(false);
 	});
 
 	it("orders switches as added and replaces one with the same id in place", () => {

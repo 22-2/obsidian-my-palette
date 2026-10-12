@@ -21,7 +21,7 @@ export function ignoredToggleOptions(
 	};
 }
 
-/** The switch stays in place in every mode, but only File search can use it. */
+/** The switch is shown only where File search can use it; other modes never list ignored notes. */
 export function syncIgnoredToggle(toggle: StatusToggle | undefined, mode: PaletteMode): void {
-	toggle?.setDisabled(!supportsIncludeIgnored(mode), "Ignored files apply to File search only");
+	toggle?.setHidden(!supportsIncludeIgnored(mode));
 }

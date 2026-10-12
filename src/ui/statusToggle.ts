@@ -25,7 +25,7 @@ export class StatusToggle {
 	private readonly switchEl: HTMLElement;
 	private readonly hint: string;
 	private current: boolean;
-	private disabled = false;
+	private hidden = false;
 
 	constructor(
 		statusBarEl: HTMLElement,
@@ -61,7 +61,7 @@ export class StatusToggle {
 			(event) => {
 				if (event.key.toLowerCase() !== options.ctrlKey.toLowerCase() || !event.ctrlKey)
 					return;
-				if (event.altKey || event.shiftKey || event.metaKey) return;
+				if (event.altKey || event.shiftKey || event.metaKey || this.hidden) return;
 				event.preventDefault();
 				event.stopPropagation();
 				this.flip();
@@ -82,18 +82,13 @@ export class StatusToggle {
 		this.render();
 	}
 
-	/** A disabled toggle keeps its value but ignores clicks and the shortcut. */
-	setDisabled(disabled: boolean, reason?: string): void {
-		this.disabled = disabled;
-		this.el.setAttribute(
-			"title",
-			disabled && reason ? reason : `${this.options.description} (${this.hint})`,
-		);
+	/** A hidden toggle leaves the footer and ignores the shortcut; its value is kept. */
+	setHidden(hidden: boolean): void {
+		this.hidden = hidden;
 		this.render();
 	}
 
 	private flip(): void {
-		if (this.disabled) return;
 		this.set(!this.current);
 		this.options.onChange(this.current);
 	}
@@ -101,7 +96,6 @@ export class StatusToggle {
 	private render(): void {
 		this.switchEl.toggleClass("is-enabled", this.current);
 		this.el.setAttribute("aria-checked", String(this.current));
-		this.el.toggleClass("is-disabled", this.disabled);
-		this.el.setAttribute("aria-disabled", String(this.disabled));
+		this.el.toggleAttribute("hidden", this.hidden);
 	}
 }

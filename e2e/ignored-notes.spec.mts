@@ -29,9 +29,9 @@ test("the Ignored switch finds notes hidden by Excluded files", async ({ obsidia
 	});
 	await expect(page.locator(MODAL_INPUT)).toBeFocused();
 
-	// Other modes keep the switch in place but cannot use it.
+	// Other modes never search ignored notes, so the switch is not shown there.
 	await page.locator(MODAL_INPUT).fill("> secret");
-	await expect(page.locator(IGNORED_TOGGLE)).toHaveAttribute("aria-disabled", "true");
+	await expect(page.locator(IGNORED_TOGGLE)).toBeHidden();
 });
 
 test("the Ignored switch searches excluded notes by keywords", async ({ obsidian }) => {
