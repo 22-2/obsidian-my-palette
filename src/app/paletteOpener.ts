@@ -1,6 +1,6 @@
 import type { App, WorkspaceLeaf } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import { PaletteModal } from "src/palette/PaletteModal";
+import { PaletteModal, type PaletteModalOptions } from "src/palette/PaletteModal";
 import type { FixedPaletteMode } from "src/palette/PaletteSearchSession";
 import type { PaletteMode } from "src/palette/results";
 import { PaletteView } from "src/palette/surfaces/PaletteView";
@@ -34,7 +34,11 @@ export class PaletteOpener {
 		private readonly plugin: MyPalettePlugin,
 	) {}
 
-	openPalette(initialInput = "", fixedMode?: FixedPaletteMode): void {
+	openPalette(
+		initialInput = "",
+		fixedMode?: FixedPaletteMode,
+		options: PaletteModalOptions = {},
+	): void {
 		if (this.activeModal) {
 			this.activeModal.focusSearchInput();
 			return;
@@ -46,7 +50,7 @@ export class PaletteOpener {
 			existingInput.focus({ preventScroll: true });
 			return;
 		}
-		const modal = new PaletteModal(this.app, this.plugin, initialInput, fixedMode);
+		const modal = new PaletteModal(this.app, this.plugin, initialInput, fixedMode, options);
 		this.activeModal = modal;
 		modal.open();
 	}

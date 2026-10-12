@@ -9,7 +9,12 @@ import type MyPalettePlugin from "src/main";
  * into the vault index, unlike MOC insertion which needs a link target.
  */
 function resolveTagTarget(app: App, result: PaletteResult): TFile | undefined {
-	if (result.mode === "command" || result.mode === "search-history") return undefined;
+	if (
+		result.mode === "command" ||
+		result.mode === "search-history" ||
+		result.mode === "mode-entry"
+	)
+		return undefined;
 	if (result.mode === "file" && result.ignored) return undefined;
 	const file =
 		result.mode === "file" || result.mode === "everything"

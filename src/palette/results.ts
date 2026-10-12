@@ -1,4 +1,5 @@
 import type { TFile } from "obsidian";
+import type { PaletteModeId } from "src/palette/modes";
 import type { SearchHistoryEntry } from "src/settings/model";
 
 export type PaletteMode =
@@ -85,6 +86,13 @@ export interface SmartConnectionResult extends BaseResult {
 	score: number;
 }
 
+/** A Root Search row that enters a mode instead of opening anything. */
+export interface ModeEntryResult extends Omit<BaseResult, "mode"> {
+	mode: "mode-entry";
+	modeId: PaletteModeId;
+	alias: string;
+}
+
 /** An open main-area tab; choosing it activates the tab instead of opening a file. */
 export interface TabResult extends BaseResult {
 	mode: "tab";
@@ -99,7 +107,8 @@ export type PaletteResult =
 	| RelatedFileResult
 	| BookmarkResult
 	| SmartConnectionResult
-	| TabResult;
+	| TabResult
+	| ModeEntryResult;
 
 /** The vault file a result opens, when it has one; used to record file usage. */
 export function getResultFilePath(result: PaletteResult): string | undefined {
@@ -117,6 +126,7 @@ export function getResultFilePath(result: PaletteResult): string | undefined {
 			return result.file.path;
 		case "command":
 		case "search-history":
+		case "mode-entry":
 			return undefined;
 	}
 }

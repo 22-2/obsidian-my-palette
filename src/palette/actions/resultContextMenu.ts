@@ -89,6 +89,15 @@ export function populatePaletteResultMenu({
 		);
 		return;
 	}
+	if (result.mode === "mode-entry") {
+		menu.addItem((item) =>
+			item
+				.setTitle("Enter mode")
+				.setIcon("corner-down-left")
+				.onClick(() => void activate("primary", result)),
+		);
+		return;
+	}
 	if (result.mode === "command") {
 		menu.addItem((item) =>
 			item

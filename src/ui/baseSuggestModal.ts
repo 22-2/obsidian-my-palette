@@ -101,7 +101,10 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			onContextMenu: this.handlesSuggestionContextMenu()
 				? (item, event) => this.onSuggestionContextMenu(item, event)
 				: undefined,
-			onEscape: () => this.close(),
+			onEscape: () => this.onSuggestionEscape(),
+			onEmptyBackspace: () => this.onEmptyBackspace(),
+			onModeChipClick: () => this.onModeChipClick(),
+			sectionOf: (item) => this.sectionOf(item),
 		});
 		this.panel.selected = defaultValue ?? null;
 		this.inputEl = this.panel.inputEl;
@@ -311,6 +314,26 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		this.historyTimer = undefined;
 	}
 	protected onSelectionModalClose(): void {}
+	protected onSuggestionEscape(): void {
+		this.close();
+	}
+	protected onEmptyBackspace(): boolean {
+		return false;
+	}
+	protected onModeChipClick(): void {}
+	protected sectionOf(_item: T): string | undefined {
+		return undefined;
+	}
+	/**
+	 * Empty the list right away. A slow provider (Everything) would otherwise keep
+	 * the previous screen's rows until it answers, which reads as the wrong screen.
+	 */
+	protected clearSuggestions(text: string): void {
+		this.panel.setResults({ items: [], total: 0, error: text });
+	}
+	protected setModeChip(chip?: { icon: string; label: string; title: string }): void {
+		this.panel.setModeChip(chip);
+	}
 	protected handlesSuggestionMiddleClick(): boolean {
 		return false;
 	}

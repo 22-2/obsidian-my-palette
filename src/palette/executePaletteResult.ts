@@ -30,7 +30,8 @@ export async function executePaletteResult(
 	action: ActionKind,
 	options: PaletteResultExecutionOptions,
 ): Promise<void> {
-	if (result.mode === "search-history") return;
+	// Hosts handle these before execution: they change the palette, not the workspace.
+	if (result.mode === "search-history" || result.mode === "mode-entry") return;
 	if (result.mode === "command") {
 		if (action !== "primary") return;
 		const exists = plugin.commandProvider

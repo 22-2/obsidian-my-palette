@@ -11,6 +11,12 @@ import { insertTags } from "src/tags/insertTags";
  */
 export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	plugin.addCommand({
+		id: "open-root",
+		name: "Open palette",
+		// Root Search starts empty, like a launcher, and lists modes above files.
+		callback: () => plugin.paletteOpener.openPalette("", undefined, { modeEntries: true }),
+	});
+	plugin.addCommand({
 		id: "open",
 		name: "Open Recent palette",
 		callback: () =>

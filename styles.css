@@ -1102,3 +1102,57 @@
 .my-palette-multi-select [data-row-toggle]:hover {
 	color: var(--text-normal);
 }
+
+/*
+ * Mode chip: shows which mode the input searches once its alias has left the
+ * input. It sits inside the input container so the query keeps one text column.
+ */
+.my-palette-mode-chip {
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	gap: 4px;
+	margin-left: 6px;
+	padding: 1px 7px;
+	border-radius: var(--radius-s);
+	background: color-mix(in srgb, var(--interactive-accent) 16%, transparent);
+	color: var(--text-accent);
+	font-size: var(--font-ui-smaller);
+	font-family: var(--font-monospace);
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.my-palette-mode-chip[hidden] {
+	display: none;
+}
+
+.my-palette-mode-chip:hover {
+	background: color-mix(in srgb, var(--interactive-accent) 26%, transparent);
+}
+
+.my-palette-mode-chip__icon {
+	display: inline-flex;
+}
+
+.my-palette-mode-chip__icon svg {
+	width: 13px;
+	height: 13px;
+}
+
+.my-palette-panel.has-mode-chip .prompt-input {
+	padding-left: 6px;
+}
+
+/* Root Search groups mode entries and files under quiet headings. */
+.my-palette-section-heading {
+	padding: 8px 12px 3px;
+	color: var(--text-faint);
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-semibold);
+}
+
+/* Aliases read as keys to type, so they share the monospace font with the chip. */
+.my-palette-suggest-modal[data-route="root"] .my-palette-suggestion__badge {
+	font-family: var(--font-monospace);
+}

@@ -31,7 +31,12 @@ async function resolveMocTarget(
 		const file = plugin.app.vault.getAbstractFileByPath(result.vaultPath);
 		return file instanceof TFile ? file : undefined;
 	}
-	if (result.mode === "command" || result.mode === "search-history") return undefined;
+	if (
+		result.mode === "command" ||
+		result.mode === "search-history" ||
+		result.mode === "mode-entry"
+	)
+		return undefined;
 	return result.file;
 }
 
@@ -60,7 +65,12 @@ export function addMocInsertionMenuItems(
 	getContext?: () => MocInsertionContext,
 ): void {
 	const insertableResults = results.filter((result) => {
-		if (result.mode === "command" || result.mode === "search-history") return false;
+		if (
+			result.mode === "command" ||
+			result.mode === "search-history" ||
+			result.mode === "mode-entry"
+		)
+			return false;
 		if (result.mode === "everything" && (result.kind === "folder" || !result.vaultPath))
 			return false;
 		return !(result.mode === "bookmark" && result.kind === "search");

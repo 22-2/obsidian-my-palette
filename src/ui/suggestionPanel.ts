@@ -37,6 +37,12 @@ export interface SuggestionPanelProps<T> {
 	onSelectionSpace?: (selectedItems: T[], event: KeyboardEvent) => void;
 	onContextMenu?: (item: T, event: MouseEvent, selectedItems: T[]) => void;
 	onEscape?: () => void;
+	/** Backspace in an empty input; returning true consumes the key. */
+	onEmptyBackspace?: () => boolean;
+	/** Click on the mode chip shown left of the input. */
+	onModeChipClick?: () => void;
+	/** Rows with a different section from the previous row get a heading above them. */
+	sectionOf?: (item: T) => string | undefined;
 	/** Left click on the footer's context text, such as the source note's name. */
 	onFooterTextClick?: (event: MouseEvent) => void;
 	onFooterTextContextMenu?: (event: MouseEvent) => void;
@@ -76,6 +82,7 @@ export class SuggestionPanel<T> extends Component {
 	readonly statusBarEl: HTMLElement;
 	readonly statusTextEl: HTMLElement;
 	readonly resultCountEl: HTMLElement;
+	private readonly modeChipEl: HTMLElement;
 	readonly chooser: SuggestionChooser<T> = { values: [], selectedItem: -1 };
 	limit: number;
 	selected: T | null = null;
@@ -113,6 +120,10 @@ export class SuggestionPanel<T> extends Component {
 			const searchIcon = inputContainer.createSpan("my-palette-panel__search-icon");
 			setIcon(searchIcon, "search");
 		}
+		this.modeChipEl = inputContainer.createDiv({
+			cls: "my-palette-mode-chip",
+			attr: { role: "button", hidden: "" },
+		});
 		this.inputEl = inputContainer.createEl("input", {
 			cls: "prompt-input",
 			attr: {
@@ -152,6 +163,10 @@ export class SuggestionPanel<T> extends Component {
 		}
 		this.registerDomEvent(this.inputEl, "input", () => this.props.onInput(this.inputEl.value));
 		this.registerDomEvent(this.inputEl, "keydown", (event) => this.handleInputKeyDown(event));
+		this.registerDomEvent(this.modeChipEl, "click", (event) => {
+			event.preventDefault();
+			this.props.onModeChipClick?.();
+		});
 		this.registerPointerActions();
 		this.registerFooterTextActions();
 		this.props.onReady?.();
@@ -239,7 +254,18 @@ export class SuggestionPanel<T> extends Component {
 			return;
 		}
 		if (this.resultsLayout) return;
+		let section: string | undefined;
 		for (const [index, item] of this.chooser.values.entries()) {
+			const nextSection = this.props.sectionOf?.(item);
+			if (nextSection && nextSection !== section)
+				// Headings are not `.suggestion-item`, so row indexes and keyboard
+				// movement keep counting only selectable results.
+				this.resultContainerEl.createDiv({
+					cls: "my-palette-section-heading",
+					text: nextSection,
+					attr: { role: "presentation" },
+				});
+			section = nextSection;
 			const el = this.resultContainerEl.createDiv("suggestion-item");
 			this.decorateRow(el, index);
 			this.props.renderSuggestion(item, el, this.query);
@@ -285,6 +311,17 @@ export class SuggestionPanel<T> extends Component {
 		this.inputEl.value = input;
 		if (selection === "all") this.inputEl.select();
 		if (selection === "end") this.inputEl.setSelectionRange(input.length, input.length);
+	}
+
+	/** Show which mode the input searches; omit to return to Root Search. */
+	setModeChip(chip?: { icon: string; label: string; title: string }): void {
+		this.modeChipEl.empty();
+		this.modeChipEl.toggleAttribute("hidden", !chip);
+		this.rootEl.toggleClass("has-mode-chip", Boolean(chip));
+		if (!chip) return;
+		setIcon(this.modeChipEl.createSpan("my-palette-mode-chip__icon"), chip.icon);
+		this.modeChipEl.createSpan({ cls: "my-palette-mode-chip__label", text: chip.label });
+		this.modeChipEl.setAttribute("title", `${chip.title} (Esc to go back)`);
 	}
 
 	focusSearchInput(): void {
@@ -431,6 +468,16 @@ export class SuggestionPanel<T> extends Component {
 			event.preventDefault();
 			event.stopPropagation();
 			this.props.onEscape?.();
+			return;
+		}
+		if (
+			event.key === "Backspace" &&
+			this.inputEl.value === "" &&
+			!event.repeat &&
+			this.props.onEmptyBackspace?.()
+		) {
+			event.preventDefault();
+			event.stopPropagation();
 			return;
 		}
 		if (event.key === "ArrowDown" || event.key === "ArrowUp") {

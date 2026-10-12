@@ -12,6 +12,13 @@ import { populatePaletteResultMenu } from "src/palette/actions/resultContextMenu
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 import { ignoredToggleOptions, syncIgnoredToggle } from "src/palette/ignoredToggle";
 import type { StatusToggle } from "src/ui/statusToggle";
+import { getPaletteMode } from "src/palette/modes";
+import type { PaletteSearchState } from "src/palette/PaletteSearchSession";
+
+export interface PaletteModalOptions {
+	/** Root Search lists mode entries above the files; off for the file-only palette. */
+	modeEntries?: boolean;
+}
 
 export class PaletteModal extends SelectionModal<PaletteResult> {
 	private readonly session: PaletteSearchSession;
@@ -21,6 +28,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private ignoredToggle?: StatusToggle;
 	private mode: PaletteMode = "file";
 	private everythingScope: EverythingScope = "vault";
+	private state?: PaletteSearchState;
+	private readonly modeEntries: boolean;
 
 	constructor(
 		app: App,
@@ -30,6 +39,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			PaletteMode,
 			"link" | "backlink" | "bookmark" | "smart" | "tab"
 		>,
+		{ modeEntries = false }: PaletteModalOptions = {},
 	) {
 		super(
 			{
@@ -42,10 +52,15 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			},
 			app,
 		);
+		this.modeEntries = modeEntries;
 		this.session = new PaletteSearchSession(this.plugin, {
 			initialInput,
 			fixedMode,
+			navigation: { modeEntries },
 			onStateChange: (state) => {
+				this.state = state;
+				// `alias + Space` moves into a mode and leaves only the query behind.
+				if (this.inputEl.value !== state.input) this.panelInput(state.input);
 				this.mode = state.mode;
 				this.everythingScope = state.everythingScope;
 				this.updateMatchQuery(state.query);
@@ -108,6 +123,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override onResultFocus(): void {
+		// Entering a mode is navigation; the alias typed to reach it is not a search.
+		if (this.getSelectedItem()?.mode === "mode-entry") return;
 		this.session.commitCurrentSearch();
 	}
 
@@ -160,10 +177,69 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	private updateMode(): void {
-		this.updatePlaceholder(palettePlaceholder(this.mode));
+		const route = this.state?.route;
+		this.modalEl.setAttribute("data-route", route?.kind ?? "root");
+		if (route?.kind === "mode") {
+			const definition = getPaletteMode(route.modeId);
+			this.updatePlaceholder(definition.placeholder);
+			this.setModeChip({
+				icon: definition.icon,
+				label: this.session.modeAlias ?? "",
+				title: definition.title,
+			});
+		} else {
+			this.updatePlaceholder(
+				this.modeEntries ? "Search files, or pick a mode" : palettePlaceholder(this.mode),
+			);
+			this.setModeChip();
+		}
 		this.modalEl.setAttribute("data-mode", this.mode);
 		this.modalEl.setAttribute("data-everything-scope", this.everythingScope);
 		syncIgnoredToggle(this.ignoredToggle, this.mode);
+	}
+
+	protected override sectionOf(result: PaletteResult): string | undefined {
+		if (!this.modeEntries || this.state?.route.kind !== "root") return undefined;
+		// Headings only help when both kinds of rows share the list.
+		if (!this.state.results.some((item) => item.mode === "mode-entry")) return undefined;
+		return result.mode === "mode-entry" ? "Modes" : "Files";
+	}
+
+	protected override onSuggestionEscape(): void {
+		if (this.state?.route.kind === "mode") this.returnToRoot();
+		else this.close();
+	}
+
+	protected override onEmptyBackspace(): boolean {
+		if (this.state?.route.kind !== "mode") return false;
+		this.returnToRoot();
+		return true;
+	}
+
+	protected override onModeChipClick(): void {
+		this.returnToRoot();
+	}
+
+	private enterMode(result: Extract<PaletteResult, { mode: "mode-entry" }>): void {
+		this.session.enterMode(result.modeId);
+		this.panelInput("");
+		this.clearSuggestions("Searching…");
+		this.refreshSuggestions();
+		this.focusSearchInput();
+	}
+
+	/** Back to Root Search with the alias selected, so Enter re-enters the mode. */
+	private returnToRoot(): void {
+		const alias = this.session.returnToRoot();
+		this.panelInput(alias);
+		this.refreshSuggestions();
+		this.focusSearchInput();
+		this.inputEl.select();
+	}
+
+	private panelInput(input: string): void {
+		this.inputEl.value = input;
+		this.inputEl.setSelectionRange(input.length, input.length);
 	}
 
 	private moveToSidebar(): void {
@@ -191,6 +267,10 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			this.applySearchHistory(result);
 			return;
 		}
+		if (result.mode === "mode-entry") {
+			this.enterMode(result);
+			return;
+		}
 		await executePaletteResult(this.plugin, result, action, {
 			closeWhenDone: closePalette,
 			active: true,
@@ -205,6 +285,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private applySearchHistory(result: Extract<PaletteResult, { mode: "search-history" }>): void {
 		this.historyControls?.close();
 		this.suppressHistoryForNextInput = true;
+		// History stores the prefixed form; Root Search turns it back into a mode.
+		this.session.returnToRoot();
 		this.session.setIgnoredScope(Boolean(result.includeIgnored));
 		this.ignoredToggle?.set(Boolean(result.includeIgnored));
 		this.inputEl.value = this.plugin.formatSearchHistoryInput(result);
@@ -233,7 +315,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override async onSuggestionPreview(result: PaletteResult): Promise<void> {
-		if (result.mode === "command") return;
+		if (result.mode === "command" || result.mode === "mode-entry") return;
 		this.session.commitCurrentSearch();
 		await this.activatePaletteResult("primary", result, false);
 	}
