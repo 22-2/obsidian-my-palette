@@ -9,7 +9,7 @@ import {
 	type SettingGroupItem,
 } from "obsidian";
 import type { SettingsHost } from "src/settings/settingsHost";
-import { DEFAULT_SETTINGS } from "src/settings/model";
+import { DEFAULT_SETTINGS, SETTING_LIMITS, type PaletteSurface } from "src/settings/model";
 import { excludedFolders, extensions } from "src/settings/mergeSettings";
 import { renderFileSortPriorityControl } from "src/settings/fileSortPriorityControl";
 import { renderShortcutsTable } from "src/settings/shortcutsTable";
@@ -69,10 +69,10 @@ export function createSettingPages(
 	const helpers = createSettingPageHelpers();
 
 	return [
-		createPalettePage(plugin, helpers),
+		createGeneralPage(plugin, helpers),
 		createModesPage(plugin, helpers),
-		createShortcutsPage(plugin, helpers),
 		createFileSearchPage(plugin, helpers),
+		createShortcutsPage(plugin, helpers),
 		createEverythingPage(plugin, setControlValue, helpers),
 	];
 }
@@ -91,9 +91,28 @@ function createShortcutsPage(plugin: SettingsHost, helpers: SettingPageHelpers):
 
 function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
 	return helpers.page(
-		"Vault file search",
-		"Excluded folders, ignored-note indexing, and result sorting for Vault files.",
+		"File search",
+		"Which files the palette lists, which folders are hidden or ranked lower, and how results are sorted.",
 		[
+			helpers.group("File types", [
+				helpers.render(
+					"Vault search extensions",
+					"Comma-separated extensions used by the file list. esdir searches every file type.",
+					(setting) =>
+						setting.addText((text) =>
+							text
+								.setPlaceholder("md, canvas, base")
+								.setValue(plugin.settings.everything.vaultExtensions.join(", "))
+								.onChange(async (value) => {
+									plugin.settings.everything.vaultExtensions = extensions(
+										value.split(","),
+									);
+									await plugin.saveSettings();
+									plugin.fileProvider.refreshExtensions();
+								}),
+						),
+				),
+			]),
 			helpers.group("Excluded folders", [
 				helpers.render(
 					"Excluded folders",
@@ -154,6 +173,13 @@ function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers)
 					},
 				),
 			]),
+			helpers.group("Opening", [
+				{
+					name: "Open external Markdown in Obsidian",
+					desc: "Open Markdown outside the Vault, or hidden by Excluded files, in Obsidian instead of VS Code.",
+					...helpers.control("toggle", "openExternalMarkdownInObsidian"),
+				},
+			]),
 		],
 	);
 }
@@ -175,9 +201,19 @@ function createModesPage(plugin: SettingsHost, helpers: SettingPageHelpers): Pag
 	);
 }
 
-function createPalettePage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
-	return helpers.page("Palette", "Remembered input, search history, and diagnostics.", [
-		helpers.group("Palette behavior", [
+function createGeneralPage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
+	const highlightRow = (surface: PaletteSurface, name: string, desc: string) =>
+		helpers.render(name, desc, (setting) =>
+			setting.addToggle((toggle) =>
+				toggle
+					.setValue(plugin.settings.paletteDisplay[surface].highlightSearchMatches)
+					.onChange((value) =>
+						plugin.paletteDisplaySettings.setHighlight(surface, value),
+					),
+			),
+		);
+	return helpers.page("General", "Launcher behavior, search history, display, and diagnostics.", [
+		helpers.group("Launcher", [
 			{
 				name: "Remember last input",
 				desc: "Restore the last query for each palette mode until Obsidian is closed. Search text is not saved to disk.",
@@ -186,13 +222,41 @@ function createPalettePage(plugin: SettingsHost, helpers: SettingPageHelpers): P
 		]),
 		helpers.group("Search history", [
 			{
-				name: "Clear search history",
-				desc: "Permanently remove all stored search history.",
-				action: () => {
-					plugin.clearSearchHistory();
-					new Notice("Search history cleared.");
-				},
+				name: "Save searches",
+				desc: "Keep committed searches for the search history button.",
+				...helpers.control("toggle", "searchHistory.enabled"),
 			},
+			{
+				name: "Save after",
+				desc: "Milliseconds a search must stay unchanged before it is saved. 0 saves only searches whose results were used.",
+				...helpers.control("slider", "searchHistory.addDelayMs", {
+					...SETTING_LIMITS.searchHistory.addDelayMs,
+				}),
+			},
+			{
+				name: "Keep for",
+				desc: "Days to keep saved searches. 0 keeps them until they are cleared from a palette's ... menu.",
+				...helpers.control("slider", "searchHistory.daysToKeep", {
+					...SETTING_LIMITS.searchHistory.daysToKeep,
+				}),
+			},
+		]),
+		helpers.group("Display", [
+			highlightRow(
+				"palette",
+				"Highlight in palette",
+				"Mark the typed text in the palette's results.",
+			),
+			highlightRow(
+				"view",
+				"Highlight in sidebar",
+				"Mark the typed text in the sidebar palette's results.",
+			),
+			highlightRow(
+				"table",
+				"Highlight in table",
+				"Mark the typed text in the table's results.",
+			),
 		]),
 		helpers.group("Diagnostics", [
 			{
@@ -211,7 +275,7 @@ function createEverythingPage(
 ): PageItem {
 	return helpers.page(
 		"Everything",
-		"Everything 1.5 connection, credentials, and Vault search extensions.",
+		"Everything 1.5 connection, credentials, and how many results to ask for.",
 		[
 			helpers.group("Connection", [
 				{
@@ -250,24 +314,28 @@ function createEverythingPage(
 					},
 				},
 			]),
-			helpers.group("Vault search", [
-				helpers.render(
-					"Vault search extensions",
-					"Comma-separated extensions used by the file list. esdir searches every file type.",
-					(setting) =>
-						setting.addText((text) =>
-							text
-								.setPlaceholder("md, canvas, base")
-								.setValue(plugin.settings.everything.vaultExtensions.join(", "))
-								.onChange(async (value) => {
-									plugin.settings.everything.vaultExtensions = extensions(
-										value.split(","),
-									);
-									await plugin.saveSettings();
-									plugin.fileProvider.refreshExtensions();
-								}),
-						),
-				),
+			helpers.group("Results and timing", [
+				{
+					name: "Maximum results",
+					desc: "Most results requested from Everything for each search.",
+					...helpers.control("slider", "everything.maxResults", {
+						...SETTING_LIMITS.everything.maxResults,
+					}),
+				},
+				{
+					name: "Input delay",
+					desc: "Milliseconds to wait after typing before asking Everything.",
+					...helpers.control("slider", "everything.debounceMs", {
+						...SETTING_LIMITS.everything.debounceMs,
+					}),
+				},
+				{
+					name: "Request timeout",
+					desc: "Milliseconds to wait for Everything before showing an error.",
+					...helpers.control("slider", "everything.requestTimeoutMs", {
+						...SETTING_LIMITS.everything.requestTimeoutMs,
+					}),
+				},
 			]),
 		],
 	);

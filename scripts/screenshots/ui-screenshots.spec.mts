@@ -138,10 +138,11 @@ test("capture palette screenshots", async ({ obsidian }) => {
 
 // Each settings page opens in a fresh settings window, so the pages are captured one by one.
 for (const [name, file] of [
-	["Palette", "09-settings-palette.png"],
-	["Shortcuts", "10-settings-shortcuts.png"],
-	["Vault file search", "11-settings-file-search.png"],
-	["Everything", "12-settings-everything.png"],
+	["General", "09-settings-general.png"],
+	["Modes", "10-settings-modes.png"],
+	["File search", "11-settings-file-search.png"],
+	["Shortcuts", "12-settings-shortcuts.png"],
+	["Everything", "13-settings-everything.png"],
 ] as const) {
 	test(`capture the ${name} settings page`, async ({ obsidian }) => {
 		await obsidian.waitReady();

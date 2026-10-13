@@ -30,11 +30,12 @@ export class PaletteDisplaySettingsStore {
 	}
 
 	async toggleHighlight(surface: PaletteSurface): Promise<void> {
+		await this.setHighlight(surface, !this.get(surface).highlightSearchMatches);
+	}
+
+	async setHighlight(surface: PaletteSurface, highlightSearchMatches: boolean): Promise<void> {
 		const settings = this.getSettings();
-		const next = {
-			...this.get(surface),
-			highlightSearchMatches: !this.get(surface).highlightSearchMatches,
-		};
+		const next = { ...this.get(surface), highlightSearchMatches };
 		// Why: replace only this surface's branch so defaults and other surface preferences remain independent.
 		settings.paletteDisplay = { ...settings.paletteDisplay, [surface]: next };
 		// Why: notify before saving to keep open surfaces responsive without rerunning searches or resetting selection.

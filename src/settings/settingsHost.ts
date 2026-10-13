@@ -1,11 +1,13 @@
-import type { MyPaletteSettings } from "src/settings/model";
+import type { MyPaletteSettings, PaletteSurface } from "src/settings/model";
 
 /** The slice of the plugin that the settings UI reads and acts on. */
 export interface SettingsHost {
 	settings: MyPaletteSettings;
 	saveSettings(): Promise<void>;
 	initializeLogger(): void;
-	clearSearchHistory(): void;
+	paletteDisplaySettings: {
+		setHighlight(surface: PaletteSurface, value: boolean): Promise<void>;
+	};
 	testEverythingConnection(): Promise<{ ok: boolean; message: string }>;
 	fileProvider: {
 		rebuildIgnoredIndex(): Promise<unknown>;

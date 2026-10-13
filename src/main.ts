@@ -202,10 +202,6 @@ export default class MyPalettePlugin extends Plugin {
 		this.searchHistory?.record(input, category, options);
 	}
 
-	clearSearchHistory(): void {
-		this.searchHistory?.clear();
-	}
-
 	clearSearchHistoryCategories(categories: readonly SearchHistoryCategory[]): void {
 		this.searchHistory?.clearCategories(categories);
 	}
