@@ -14,7 +14,8 @@
 		"dev": "vp dev",
 		"build": "vp build",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
-		"check-types": "pnpm exec tsc --noEmit",
+		"check-types": "pnpm exec tsc6 --noEmit",
+		"lint": "eslint .",
 		"e2e": "node node_modules/electron/install.js && vp build && node e2e/prepare-plugin.mjs && playwright test",
 		"ui:shots": "node scripts/screenshots/capture-screenshots.mjs",
 		"prepare": "vp config"
@@ -26,15 +27,21 @@
 		"idb": "^8.0.3"
 	},
 	"devDependencies": {
+		"@eslint/js": "10.0.1",
 		"@obsidian-typings/obsidian-public-latest": "^6.20.0",
 		"@playwright/test": "^1.63.0",
 		"@types/node": "26.1.0",
 		"electron": "^44.6.0",
+		"eslint": "10.12.0",
+		"eslint-plugin-obsidianmd": "0.4.2",
+		"globals": "17.13.0",
 		"happy-dom": "^20.14.5",
+		"jiti": "2.7.0",
 		"obsidian": "^1.13.1",
 		"obsidian-e2e-toolkit": "https://github.com/22-2/obsidian-e2e-toolkit/releases/download/1.4.0/obsidian-e2e-toolkit-1.4.0.tgz",
 		"playwright": "^1.63.0",
-		"typescript": "7.0.2",
+		"typescript": "npm:@typescript/typescript6@6.0.2",
+		"typescript-eslint": "8.71.1",
 		"vite": "catalog:",
 		"vite-plus": "catalog:",
 		"vitest": "catalog:"
