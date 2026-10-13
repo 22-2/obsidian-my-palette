@@ -21,16 +21,15 @@ interface VaultPropertyInfo {
 
 // Unofficial APIs: the vault-wide keys and each key's assigned type. A missing
 // function leaves the Vault section empty and the rest of the list working.
-interface MetadataInternals {
-	getAllPropertyInfos?: () => Record<string, VaultPropertyInfo>;
-}
-
 interface TypeManagerInternals {
+	getAllProperties?: () => Record<string, VaultPropertyInfo>;
 	getAssignedWidget?: (key: string) => unknown;
 }
 
 function vaultInfos(app: App): Record<string, VaultPropertyInfo> {
-	const infos = (app.metadataCache as unknown as MetadataInternals).getAllPropertyInfos?.();
+	const infos = (
+		app as unknown as { metadataTypeManager?: TypeManagerInternals }
+	).metadataTypeManager?.getAllProperties?.();
 	return infos && typeof infos === "object" ? infos : {};
 }
 

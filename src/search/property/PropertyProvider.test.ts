@@ -1,12 +1,12 @@
 import type { App, TFile } from "obsidian";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { PropertyProvider } from "src/search/property/PropertyProvider";
 
 const note = { path: "note.md", extension: "md" } as unknown as TFile;
 
 function app(options: {
 	frontmatter?: Record<string, unknown>;
-	vault?: Record<string, { type?: string; count?: number }>;
+	vault?: Record<string, { type?: string; widget?: string; count?: number }>;
 	assigned?: Record<string, string>;
 	file?: TFile | null;
 }): App {
@@ -14,15 +14,33 @@ function app(options: {
 		workspace: { getActiveFile: () => options.file ?? null },
 		metadataCache: {
 			getFileCache: () => ({ frontmatter: options.frontmatter }),
-			getAllPropertyInfos: () => options.vault ?? {},
 		},
 		metadataTypeManager: {
+			getAllProperties: () => options.vault ?? {},
 			getAssignedWidget: (key: string) => options.assigned?.[key],
 		},
 	} as unknown as App;
 }
 
 describe("PropertyProvider", () => {
+	it("reads vault properties without calling the deprecated metadata cache API", async () => {
+		const application = app({ vault: { project: { widget: "number" } } });
+		const deprecated = vi.fn(() => {
+			throw new Error("Deprecated API called");
+		});
+		Object.assign(application.metadataCache, { getAllPropertyInfos: deprecated });
+		const results = await new PropertyProvider(application).search({
+			mode: "property",
+			query: "",
+			sourceFile: note,
+		});
+		expect(results.find((result) => result.key === "project")).toMatchObject({
+			section: "Vault",
+			kind: "number",
+		});
+		expect(deprecated).not.toHaveBeenCalled();
+	});
+
 	it("lists This note, then Reserved, then Vault keys by use", async () => {
 		const provider = new PropertyProvider(
 			app({
