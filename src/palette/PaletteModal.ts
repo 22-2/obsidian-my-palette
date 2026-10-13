@@ -209,13 +209,13 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override onSuggestionEscape(): void {
-		if (this.state?.route.kind === "mode") this.returnToRoot();
+		if (this.state?.route.kind === "mode") this.returnToHome();
 		else this.close();
 	}
 
 	protected override onEmptyBackspace(): boolean {
 		if (this.state?.route.kind !== "mode") return false;
-		this.returnToRoot();
+		this.returnToHome();
 		return true;
 	}
 
@@ -226,7 +226,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override onModeChipClick(): void {
-		this.returnToRoot();
+		this.returnToHome();
 	}
 
 	private enterMode(result: Extract<PaletteResult, { mode: "mode-entry" }>): void {
@@ -238,8 +238,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	/** Back to Home with the alias selected, so Enter re-enters the mode. */
-	private returnToRoot(): void {
-		const alias = this.session.returnToRoot();
+	private returnToHome(): void {
+		const alias = this.session.returnToHome();
 		this.panelInput(alias);
 		this.refreshSuggestions();
 		this.focusSearchInput();
@@ -291,7 +291,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.historyControls?.close();
 		this.suppressHistoryForNextInput = true;
 		// History stores the prefixed form; Home turns it back into a mode.
-		this.session.returnToRoot();
+		this.session.returnToHome();
 		this.session.setIgnoredScope(Boolean(result.includeIgnored));
 		this.ignoredToggle?.set(Boolean(result.includeIgnored));
 		this.inputEl.value = this.plugin.formatSearchHistoryInput(result);

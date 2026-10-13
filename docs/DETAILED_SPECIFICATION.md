@@ -526,7 +526,7 @@ interface EverythingResult extends BaseResult {
 interface MyPaletteSettings {
 	schemaVersion: 20;
 	showLog: boolean;
-	launcher: { popToRootAfterSeconds: 0 | 30 | 60 | 90 };
+	home: { returnAfterSeconds: 0 | 30 | 60 | 90 };
 	searchHistory: {
 		enabled: boolean;
 		addDelayMs: number;
@@ -560,7 +560,7 @@ interface MyPaletteSettings {
 - 最近実行コマンドは最大20 ID。存在しない ID は表示時に除外する。
 - 最近実行コマンドのIDは Vault 単位の IndexedDB に保存し、設定の `data.json` にはIDを保存しない。
 - 既存の `data.json` にある最近実行コマンドIDは、初回起動時に IndexedDB へ移行する。IndexedDB が利用できない場合はIDを `data.json` の一時的なフォールバックとして保持する。
-- 閉じたパレットの状態（入力、Obsidian-excluded、選択行、スクロール位置）は Obsidian の実行中だけメモリに保持する。`Open palette` は、閉じてから `launcher.popToRootAfterSeconds` 秒以内なら復元し、それ以外（`0` は常に）はHome の空の状態で開く。data.json には保存しない。
+- 閉じたパレットの状態（入力、Obsidian-excluded、選択行、スクロール位置）は Obsidian の実行中だけメモリに保持する。`Open palette` は、閉じてから `home.returnAfterSeconds` 秒以内なら復元し、それ以外（`0` は常に）はHome の空の状態で開く。data.json には保存しない。
 - 検索履歴は検索モード・Everything の検索範囲ごとに分類し、プレフィックスを除いた検索語、回数、最終検索日時を Vault 単位の IndexedDB へ永続化する。設定の `data.json` には履歴エントリを保存しない。
 - 既存の `data.json` にある履歴エントリは、初回起動時に IndexedDB へ移行する。IndexedDB が利用できない場合は履歴を `data.json` の一時的なフォールバックとして保持し、次回起動時に再試行する。
 - 検索結果リストへフォーカスが移ったときに履歴へ追加する。検索欄のblurや入力停止後の経過時間だけでは追加しない。

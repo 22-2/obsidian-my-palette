@@ -4,7 +4,7 @@ import type {
 	ModeSettingsMap,
 	MyPaletteSettings,
 	PaletteSurface,
-	PopToRootSeconds,
+	ReturnToHomeSeconds,
 } from "src/settings/model";
 import { normalizeHotkeys } from "src/ui/hotkeys";
 import {
@@ -108,7 +108,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 		schemaVersion: SETTINGS_SCHEMA_VERSION,
 		showLog: typeof source.showLog === "boolean" ? source.showLog : false,
 		paletteDisplay: normalizePaletteDisplay(source),
-		launcher: { popToRootAfterSeconds: normalizePopToRoot(source) },
+		home: { returnAfterSeconds: normalizeReturnToHome(source) },
 		openExternalMarkdownInObsidian:
 			typeof source.openExternalMarkdownInObsidian === "boolean"
 				? source.openExternalMarkdownInObsidian
@@ -169,15 +169,19 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 }
 
 // Schema 20 replaced "remember last input" with a timeout: off meant immediately, on meant the default.
-const POP_TO_ROOT_OPTIONS: readonly PopToRootSeconds[] = [0, 30, 60, 90];
+// Schema 21 moved it from launcher.popToRootAfterSeconds to home.returnAfterSeconds.
+const RETURN_TO_HOME_OPTIONS: readonly ReturnToHomeSeconds[] = [0, 30, 60, 90];
 
-function normalizePopToRoot(source: Record<string, unknown>): PopToRootSeconds {
-	const launcher = source.launcher as Record<string, unknown> | undefined;
-	const stored = launcher?.popToRootAfterSeconds;
-	if (POP_TO_ROOT_OPTIONS.includes(stored as PopToRootSeconds)) return stored as PopToRootSeconds;
+function normalizeReturnToHome(source: Record<string, unknown>): ReturnToHomeSeconds {
+	const home = source.home as Record<string, unknown> | undefined;
+	const legacy = source.launcher as Record<string, unknown> | undefined;
+	for (const stored of [home?.returnAfterSeconds, legacy?.popToRootAfterSeconds]) {
+		if (RETURN_TO_HOME_OPTIONS.includes(stored as ReturnToHomeSeconds))
+			return stored as ReturnToHomeSeconds;
+	}
 	if (typeof source.rememberLastInput !== "boolean")
-		return DEFAULT_SETTINGS.launcher.popToRootAfterSeconds;
-	return source.rememberLastInput ? DEFAULT_SETTINGS.launcher.popToRootAfterSeconds : 0;
+		return DEFAULT_SETTINGS.home.returnAfterSeconds;
+	return source.rememberLastInput ? DEFAULT_SETTINGS.home.returnAfterSeconds : 0;
 }
 
 // A missing or non-boolean switch means the integration stays on, as it did before switches existed.

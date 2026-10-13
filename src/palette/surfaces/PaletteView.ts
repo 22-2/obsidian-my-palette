@@ -176,7 +176,7 @@ export class PaletteView extends ItemView {
 		this.session.setIgnoredScope(next.includeIgnored);
 		this.ignoredToggle?.set(next.includeIgnored);
 		// The saved input carries its alias; Home turns it back into a mode.
-		this.session.returnToRoot();
+		this.session.returnToHome();
 		this.session.setInput(next.input, { suppressHistory: true });
 	}
 
@@ -278,15 +278,15 @@ export class PaletteView extends ItemView {
 			onContextMenu: (result, event, selectedItems) =>
 				this.showContextMenu(result, event, selectedItems),
 			onEscape: () => {
-				if (this.session?.current.route.kind === "mode") this.returnToRoot();
+				if (this.session?.current.route.kind === "mode") this.returnToHome();
 				else this.clearOrFocus();
 			},
 			onEmptyBackspace: () => {
 				if (this.session?.current.route.kind !== "mode") return false;
-				this.returnToRoot();
+				this.returnToHome();
 				return true;
 			},
-			onModeChipClick: () => this.returnToRoot(),
+			onModeChipClick: () => this.returnToHome(),
 			onTab: (result) => {
 				if (result.mode !== "mode-entry") return false;
 				this.enterMode(result.modeId);
@@ -496,7 +496,7 @@ export class PaletteView extends ItemView {
 		const input = this.plugin.formatSearchHistoryInput(result);
 		this.historyControls?.close();
 		// History stores the prefixed form; Home turns it back into a mode.
-		this.session?.returnToRoot();
+		this.session?.returnToHome();
 		this.session?.setIgnoredScope(Boolean(result.includeIgnored));
 		this.ignoredToggle?.set(Boolean(result.includeIgnored));
 		this.updateInput(input, "end", { suppressHistory: true, syncPanel: true });
@@ -630,9 +630,9 @@ export class PaletteView extends ItemView {
 	}
 
 	/** Back to Home with the alias selected, so Enter re-enters the mode. */
-	private returnToRoot(): void {
+	private returnToHome(): void {
 		if (!this.session || !this.panel) return;
-		const alias = this.session.returnToRoot();
+		const alias = this.session.returnToHome();
 		this.updateInput(alias, "all", { syncPanel: true });
 		this.panel.focusSearchInput();
 		this.panel.inputEl.select();

@@ -122,7 +122,7 @@ export class PaletteOpener {
 	}
 
 	/** Open palette: resumes the palette closed recently enough, otherwise starts at Home. */
-	openRootPalette(): void {
+	openHomePalette(): void {
 		const state = this.restorableState();
 		this.openPalette(state?.input ?? "", undefined, { modeEntries: true, restore: state });
 	}
@@ -134,12 +134,8 @@ export class PaletteOpener {
 
 	private restorableState(): PaletteRestoreState | undefined {
 		if (!this.lastClosed) return undefined;
-		const { popToRootAfterSeconds } = this.plugin.settings.launcher;
-		const restorable = shouldRestore(
-			this.lastClosed.closedAt,
-			this.now(),
-			popToRootAfterSeconds,
-		);
+		const { returnAfterSeconds } = this.plugin.settings.home;
+		const restorable = shouldRestore(this.lastClosed.closedAt, this.now(), returnAfterSeconds);
 		return restorable ? this.lastClosed.state : undefined;
 	}
 

@@ -60,7 +60,7 @@ test("mode aliases can be changed on the Modes page and are used in Home", async
 		(app as unknown as { setting: { close(): void } }).setting.close(),
 	);
 
-	await runPaletteCommand(obsidian, "open-root");
+	await runPaletteCommand(obsidian, "open-home");
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);
 	await input.pressSequentially("c");
@@ -83,7 +83,7 @@ test("a mode turned off on the Modes page leaves Home and alias entry", async ({
 		(app as unknown as { setting: { close(): void } }).setting.close(),
 	);
 
-	await runPaletteCommand(obsidian, "open-root");
+	await runPaletteCommand(obsidian, "open-home");
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);
 	await input.waitFor();

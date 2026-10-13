@@ -28,7 +28,7 @@ export type FixedPaletteMode = Extract<
  * Where a navigating palette is. Home lists mode entries above the files
  * (unless `modeEntries` is off); a mode shows one provider without a prefix.
  */
-export type PaletteRoute = { kind: "root" } | { kind: "mode"; modeId: PaletteModeId };
+export type PaletteRoute = { kind: "home" } | { kind: "mode"; modeId: PaletteModeId };
 
 export type RecordableSearch = {
 	query: string;
@@ -74,7 +74,7 @@ export class PaletteSearchSession {
 	private historyCommittedGeneration = -1;
 	private disposed = false;
 	private readonly listsModes: boolean;
-	private route: PaletteRoute = { kind: "root" };
+	private route: PaletteRoute = { kind: "home" };
 	private sourceFile?: TFile;
 	private readonly onStateChange?: (state: PaletteSearchState) => void;
 	private state: PaletteSearchState;
@@ -119,12 +119,12 @@ export class PaletteSearchSession {
 	 * Leave a mode for Home and return the alias that should fill the
 	 * input, so the mode stays one Enter away.
 	 */
-	returnToRoot(): string {
+	returnToHome(): string {
 		const alias =
 			this.route.kind === "mode"
 				? paletteModeAlias(this.route.modeId, this.plugin.settings.modes)
 				: "";
-		this.route = { kind: "root" };
+		this.route = { kind: "home" };
 		this.state = { ...this.state, input: alias, route: this.route };
 		return alias;
 	}
@@ -278,14 +278,14 @@ export class PaletteSearchSession {
 	}
 
 	private parse(input: string): ParsedInput {
-		if (this.route.kind === "root") return { raw: input, mode: "file", query: input };
+		if (this.route.kind === "home") return { raw: input, mode: "file", query: input };
 		const { mode, everythingScope } = getPaletteMode(this.route.modeId);
 		return { raw: input, mode, query: input, everythingScope };
 	}
 
 	/** In Home, `alias + Space` (typed or pasted) moves into that mode. */
 	private applyDirectModeEntry(input: string): string {
-		if (this.route.kind !== "root") return input;
+		if (this.route.kind !== "home") return input;
 		const entry = parseDirectModeEntry(input, availableModes(this.plugin.settings));
 		if (!entry) return input;
 		this.route = { kind: "mode", modeId: entry.modeId };
@@ -299,7 +299,7 @@ export class PaletteSearchSession {
 	}
 
 	private modeEntries(input: string): ModeEntryResult[] {
-		if (!this.listsModes || this.route.kind !== "root") return [];
+		if (!this.listsModes || this.route.kind !== "home") return [];
 		const modes = availableModes(this.plugin.settings);
 		return matchPaletteModes(input, modes).map((definition) => ({
 			id: `mode:${definition.id}`,
@@ -353,7 +353,7 @@ export function paletteSectionOf(
 	state: Pick<PaletteSearchState, "route" | "results"> | undefined,
 	result: PaletteResult,
 ): string | undefined {
-	if (state?.route.kind !== "root") return undefined;
+	if (state?.route.kind !== "home") return undefined;
 	if (!state.results.some((item) => item.mode === "mode-entry")) return undefined;
 	return result.mode === "mode-entry" ? "Modes" : "Files";
 }

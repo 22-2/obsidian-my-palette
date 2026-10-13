@@ -39,7 +39,7 @@ test("Open palette resumes the last search, then starts at Home once the time ha
 	await expect(first.locator(MODAL_INPUT)).toHaveValue("alpha");
 	await closePalette(first);
 
-	await runPaletteCommand(obsidian, "open-root");
+	await runPaletteCommand(obsidian, "open-home");
 	const resumed = obsidian.page.locator(MODAL_INPUT);
 	await expect(resumed).toHaveValue("alpha");
 	// The restored query is selected, so typing replaces it.
@@ -54,7 +54,7 @@ test("Open palette resumes the last search, then starts at Home once the time ha
 	await closePalette(obsidian.page);
 
 	await advanceClock(obsidian, 91_000);
-	await runPaletteCommand(obsidian, "open-root");
+	await runPaletteCommand(obsidian, "open-home");
 	await expect(obsidian.page.locator(MODAL_INPUT)).toHaveValue("");
 });
 
@@ -63,18 +63,15 @@ test("Immediately always starts at Home", async ({ obsidian }) => {
 		(
 			app as unknown as {
 				plugins: {
-					plugins: Record<
-						string,
-						{ settings: { launcher: { popToRootAfterSeconds: number } } }
-					>;
+					plugins: Record<string, { settings: { home: { returnAfterSeconds: number } } }>;
 				};
 			}
-		).plugins.plugins[id].settings.launcher.popToRootAfterSeconds = 0;
+		).plugins.plugins[id].settings.home.returnAfterSeconds = 0;
 	}, PLUGIN_ID);
 
 	const first = await openPaletteWith(obsidian, "alpha");
 	await closePalette(first);
-	await runPaletteCommand(obsidian, "open-root");
+	await runPaletteCommand(obsidian, "open-home");
 	await expect(obsidian.page.locator(MODAL_INPUT)).toHaveValue("");
 });
 
@@ -106,11 +103,11 @@ test("General offers Return to Home after, set to 90 seconds by default", async 
 							plugins: {
 								plugins: Record<
 									string,
-									{ settings: { launcher: { popToRootAfterSeconds: number } } }
+									{ settings: { home: { returnAfterSeconds: number } } }
 								>;
 							};
 						}
-					).plugins.plugins[id].settings.launcher.popToRootAfterSeconds,
+					).plugins.plugins[id].settings.home.returnAfterSeconds,
 				PLUGIN_ID,
 			),
 		)

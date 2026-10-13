@@ -59,7 +59,7 @@ test("turning Everything off removes its modes from Home and alias entry", async
 		.toBe(false);
 	await closeSettings(obsidian);
 
-	await runPaletteCommand(obsidian, "open-root");
+	await runPaletteCommand(obsidian, "open-home");
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);
 	await input.waitFor();

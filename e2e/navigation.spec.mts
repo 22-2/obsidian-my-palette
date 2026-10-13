@@ -15,7 +15,7 @@ test.beforeEach(async ({ obsidian }) => {
 });
 
 test("Home enters a mode with Enter and returns with Esc", async ({ obsidian }) => {
-	await runPaletteCommand(obsidian, "open-root");
+	await runPaletteCommand(obsidian, "open-home");
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);
 	await expect(page.locator(`${MODAL} ${HEADING}`)).toHaveText(["Modes", "Files"]);
@@ -41,7 +41,7 @@ test("Home enters a mode with Enter and returns with Esc", async ({ obsidian }) 
 });
 
 test("Tab enters a mode and Backspace in the empty input returns", async ({ obsidian }) => {
-	await runPaletteCommand(obsidian, "open-root");
+	await runPaletteCommand(obsidian, "open-home");
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);
 	await input.pressSequentially("b");
@@ -56,7 +56,7 @@ test("Tab enters a mode and Backspace in the empty input returns", async ({ obsi
 });
 
 test("alias plus Space enters the mode directly", async ({ obsidian }) => {
-	await runPaletteCommand(obsidian, "open-root");
+	await runPaletteCommand(obsidian, "open-home");
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);
 	await input.pressSequentially("> link search");

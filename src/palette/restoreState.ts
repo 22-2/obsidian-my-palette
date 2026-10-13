@@ -1,4 +1,4 @@
-import type { PopToRootSeconds } from "src/settings/model";
+import type { ReturnToHomeSeconds } from "src/settings/model";
 
 /** What a closed palette leaves behind for the next Open palette. Kept in memory only. */
 export interface PaletteRestoreState {
@@ -13,6 +13,10 @@ export interface PaletteRestoreState {
  * Whether a palette closed at `closedAt` may be restored at `now`. A palette closed
  * exactly the allowed number of seconds ago is still restored; 0 never restores.
  */
-export function shouldRestore(closedAt: number, now: number, seconds: PopToRootSeconds): boolean {
+export function shouldRestore(
+	closedAt: number,
+	now: number,
+	seconds: ReturnToHomeSeconds,
+): boolean {
 	return seconds > 0 && now - closedAt <= seconds * 1000;
 }

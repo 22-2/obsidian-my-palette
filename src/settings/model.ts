@@ -29,10 +29,10 @@ export interface SearchHistorySettings {
 	daysToKeep: number;
 }
 
-export const SETTINGS_SCHEMA_VERSION = 20;
+export const SETTINGS_SCHEMA_VERSION = 21;
 
 /** Seconds after closing the palette before Open palette starts from Home again; 0 means immediately. */
-export type PopToRootSeconds = 0 | 30 | 60 | 90;
+export type ReturnToHomeSeconds = 0 | 30 | 60 | 90;
 export const MAX_RECENT_COMMAND_IDS = 20;
 export const MILLISECONDS_PER_SECOND = 1_000;
 export const DISABLED_DELAY_MS = 0;
@@ -292,7 +292,7 @@ export interface MyPaletteSettings {
 	hotkeys: PaletteHotkeys;
 	schemaVersion: typeof SETTINGS_SCHEMA_VERSION;
 	showLog: boolean;
-	launcher: { popToRootAfterSeconds: PopToRootSeconds };
+	home: { returnAfterSeconds: ReturnToHomeSeconds };
 	paletteDisplay: Record<PaletteSurface, PaletteDisplaySettings>;
 	openExternalMarkdownInObsidian: boolean;
 	searchHistory: SearchHistorySettings;
@@ -321,7 +321,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 	hotkeys: DEFAULT_HOTKEYS,
 	schemaVersion: SETTINGS_SCHEMA_VERSION,
 	showLog: false,
-	launcher: { popToRootAfterSeconds: 90 },
+	home: { returnAfterSeconds: 90 },
 	paletteDisplay: {
 		table: { highlightSearchMatches: true },
 		view: { highlightSearchMatches: true },

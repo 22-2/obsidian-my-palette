@@ -9,9 +9,9 @@ import {
 	type SettingGroupItem,
 } from "obsidian";
 import type { SettingsHost } from "src/settings/settingsHost";
-import { SETTING_LIMITS, type PaletteSurface, type PopToRootSeconds } from "src/settings/model";
+import { SETTING_LIMITS, type PaletteSurface, type ReturnToHomeSeconds } from "src/settings/model";
 
-const POP_TO_ROOT_LABELS: Record<string, string> = {
+const RETURN_TO_HOME_LABELS: Record<string, string> = {
 	"0": "Immediately",
 	"30": "After 30 seconds",
 	"60": "After 60 seconds",
@@ -224,12 +224,12 @@ function createGeneralPage(plugin: SettingsHost, helpers: SettingPageHelpers): P
 				(setting) =>
 					setting.addDropdown((dropdown) =>
 						dropdown
-							.addOptions(POP_TO_ROOT_LABELS)
-							.setValue(String(plugin.settings.launcher.popToRootAfterSeconds))
+							.addOptions(RETURN_TO_HOME_LABELS)
+							.setValue(String(plugin.settings.home.returnAfterSeconds))
 							.onChange((value) => {
-								plugin.settings.launcher.popToRootAfterSeconds = Number(
+								plugin.settings.home.returnAfterSeconds = Number(
 									value,
-								) as PopToRootSeconds;
+								) as ReturnToHomeSeconds;
 								void plugin.saveSettings();
 							}),
 					),

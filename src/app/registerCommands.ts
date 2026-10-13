@@ -13,13 +13,13 @@ import { insertTags } from "src/tags/insertTags";
 export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	// Why: Esc from a mode returns to Home, so every path that opens a mode
 	// lists the modes too. The file-only palette ("open") is the exception.
-	const openRoot = (input: string, fixedMode?: FixedPaletteMode) =>
+	const openWithHome = (input: string, fixedMode?: FixedPaletteMode) =>
 		plugin.paletteOpener.openPalette(input, fixedMode, { modeEntries: true });
 	plugin.addCommand({
-		id: "open-root",
+		id: "open-home",
 		name: "Open palette",
 		// Home starts empty and lists modes above files.
-		callback: () => plugin.paletteOpener.openRootPalette(),
+		callback: () => plugin.paletteOpener.openHomePalette(),
 	});
 	plugin.addCommand({
 		id: "open",
@@ -29,7 +29,7 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	plugin.addCommand({
 		id: "open-run-list",
 		name: "Open run list",
-		callback: () => openRoot(plugin.paletteOpener.commandPaletteInitialInput()),
+		callback: () => openWithHome(plugin.paletteOpener.commandPaletteInitialInput()),
 	});
 	plugin.addCommand({
 		id: "open-view",
@@ -57,7 +57,7 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		name: "Link search",
 		checkCallback: (checking) => {
 			if (checking) return Boolean(plugin.app.workspace.getActiveFile());
-			openRoot("", "link");
+			openWithHome("", "link");
 		},
 	});
 	plugin.addCommand({
@@ -65,20 +65,20 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		name: "Backlink search",
 		checkCallback: (checking) => {
 			if (checking) return Boolean(plugin.app.workspace.getActiveFile());
-			openRoot("", "backlink");
+			openWithHome("", "backlink");
 		},
 	});
 	plugin.addCommand({
 		id: "bookmark-search",
 		name: "Bookmark search",
-		callback: () => openRoot("", "bookmark"),
+		callback: () => openWithHome("", "bookmark"),
 	});
 	plugin.addCommand({
 		id: "smart-connections-search",
 		name: "Smart Connections search",
 		checkCallback: (checking) => {
 			if (checking) return Boolean(plugin.app.workspace.getActiveFile());
-			openRoot("", "smart");
+			openWithHome("", "smart");
 		},
 	});
 	plugin.addCommand({
@@ -93,7 +93,7 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	plugin.addCommand({
 		id: "switch-tab",
 		name: "Switch tab",
-		callback: () => openRoot("", "tab"),
+		callback: () => openWithHome("", "tab"),
 	});
 	plugin.addCommand({
 		id: "open-file-path-in-editor",

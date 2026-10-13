@@ -300,21 +300,27 @@ describe("mergeSettings", () => {
 
 describe("Return to Home after", () => {
 	it("turns the old remember-last-input switch into a time, keeping the default for new installs", () => {
-		expect(mergeSettings({ rememberLastInput: false }).launcher).toEqual({
-			popToRootAfterSeconds: 0,
+		expect(mergeSettings({ rememberLastInput: false }).home).toEqual({
+			returnAfterSeconds: 0,
 		});
-		expect(mergeSettings({ rememberLastInput: true }).launcher).toEqual({
-			popToRootAfterSeconds: 90,
+		expect(mergeSettings({ rememberLastInput: true }).home).toEqual({
+			returnAfterSeconds: 90,
 		});
-		expect(mergeSettings(undefined).launcher).toEqual({ popToRootAfterSeconds: 90 });
+		expect(mergeSettings(undefined).home).toEqual({ returnAfterSeconds: 90 });
 	});
 
 	it("keeps a stored time over the old switch, and drops the switch", () => {
 		const settings = mergeSettings({
 			rememberLastInput: false,
-			launcher: { popToRootAfterSeconds: 60 },
+			home: { returnAfterSeconds: 60 },
 		});
-		expect(settings.launcher.popToRootAfterSeconds).toBe(60);
+		expect(settings.home.returnAfterSeconds).toBe(60);
 		expect(settings).not.toHaveProperty("rememberLastInput");
+	});
+
+	it("reads the time stored under the old launcher key and drops that key", () => {
+		const settings = mergeSettings({ launcher: { popToRootAfterSeconds: 30 } });
+		expect(settings.home.returnAfterSeconds).toBe(30);
+		expect(settings).not.toHaveProperty("launcher");
 	});
 });
