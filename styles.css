@@ -1008,9 +1008,10 @@
 	padding-top: 0;
 }
 
-/* Rows with nothing left to apply (registered tags, fully linked notes) stay listed but cannot be selected. */
-.my-palette-multi-select .suggestion-item.is-locked {
-	opacity: 0.5;
+/* An applied row whose check is cleared will be removed when the selector runs. */
+.my-palette-multi-select .suggestion-item.is-pending-removal {
+	text-decoration: line-through;
+	opacity: 0.6;
 }
 
 /*

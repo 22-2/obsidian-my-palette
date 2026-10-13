@@ -64,7 +64,7 @@ function toRelatedCandidate(
 							: undefined,
 			value: path,
 		},
-		locked: mutual && !ignored,
+		applied: mutual && !ignored,
 		removal:
 			file && !ignored && (outgoing.has(path) || incoming.has(path))
 				? { label: "Remove link", run: () => removeLink(file) }
@@ -263,14 +263,14 @@ class MocTargetModal extends MocRelatedsModal {
 					category: "moc-insertion",
 					title: "MOC insert selector",
 					description:
-						"Search notes to link in the active MOC. Obsidian-excluded files are hidden by default; the Obsidian-excluded switch includes them.",
+						"Search notes to link in the active MOC. Checked notes are linked; unchecking a note that is already linked unlinks it. Obsidian-excluded files are hidden by default; the Obsidian-excluded switch includes them.",
 					actionLabel: "Insert",
 					shortcuts: [
 						["→", "Preview the note without leaving this selector"],
 						["Space", "Toggle checks in selection mode"],
 						[
 							"Ctrl+Enter",
-							"Insert all checked notes, or selected notes if none are checked",
+							"Apply the checks: insert checked notes and unlink unchecked linked notes; with no changes, insert the selected notes",
 						],
 						[
 							formatHotkey(plugin.settings.hotkeys.toggleIgnored),
@@ -596,11 +596,15 @@ export async function insertLinkToMocRelateds(plugin: MyPalettePlugin): Promise<
 	const mocLeaf =
 		activeLeaf && (activeLeaf.view as { file?: unknown }).file ? activeLeaf : undefined;
 	const modal = new MocTargetModal(plugin, activeFile);
-	const paths = await modal.openAndWait();
-	if (!paths?.length) return;
-	// Why: each insertion reads and updates the shared MOC, so process targets
+	const changes = await modal.openAndWaitChanges();
+	if (!changes || (changes.add.length === 0 && changes.remove.length === 0)) return;
+	// Why: each change reads and updates the shared MOC, so process targets
 	// serially to keep one selection from overwriting another's changes.
-	for (const path of paths) {
+	for (const path of changes.remove) {
+		const file = plugin.app.vault.getFileByPath(path);
+		if (file) await removeFileFromMocRelateds(plugin, activeFile, file, modal.mutual);
+	}
+	for (const path of changes.add) {
 		// Obsidian-excluded files are imported only now, so cancelling never touches the vault.
 		const target = await resolveInsertTarget(plugin, path);
 		if (target)

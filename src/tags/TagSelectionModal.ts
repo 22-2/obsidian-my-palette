@@ -43,8 +43,8 @@ function toCandidate(
 			description: `${choice.count} ${choice.count === 1 ? "note" : "notes"}`,
 			badge: choiceBadge(choice, targetCount),
 		},
-		// Tags every target already has are listed for reference only.
-		locked: choice.registered,
+		// Tags every target already has start checked; clearing the check removes them.
+		applied: choice.registered,
 		removal: choice.appliedCount
 			? { label: "Remove tag", run: () => removeTag(choice.tag) }
 			: undefined,
@@ -74,14 +74,14 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 					category: "tag-insertion",
 					title: "Tag insert selector",
 					description:
-						"Search existing tags or type a new tag to add to the target notes.",
+						"Search existing tags or type a new tag. Checked tags are added to the target notes; unchecking a tag that all targets have removes it.",
 					actionLabel: "Add",
 					shortcuts: [
 						["→", "Preview the tag in core Search without leaving this selector"],
 						["Space", "Toggle checks in selection mode"],
 						[
 							"Ctrl+Enter",
-							"Add all checked tags, or selected tags if none are checked",
+							"Apply the checks: add checked tags and remove unchecked ones; with no changes, add the selected tags",
 						],
 					],
 				},

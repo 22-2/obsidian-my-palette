@@ -60,7 +60,7 @@ async function open(
 		targetCount,
 		async () => undefined,
 	);
-	const result = modal.openAndWait();
+	const result = modal.openAndWaitChanges();
 	await flush();
 	const rows = () => [...modal.modalEl.querySelectorAll<HTMLElement>(".suggestion-item")];
 	const labels = () => rows().map((row) => row.textContent);
@@ -105,7 +105,7 @@ describe("TagSelectionModal", () => {
 		expect(openGlobalSearch).toHaveBeenCalledExactlyOnceWith("tag:#alpha", false);
 		expect(document.activeElement).toBe(f.modal.inputEl);
 		expect(f.modal.inputEl.readOnly).toBe(true);
-		expect(f.checked()).toEqual([]);
+		expect(f.checked()).toEqual(["#mine"]);
 		expect(f.modal.modalEl.isConnected).toBe(true);
 		f.modal.close();
 	});
@@ -135,17 +135,17 @@ describe("TagSelectionModal", () => {
 			"Help",
 			"Check",
 			"Add 1 now",
-			"Uncheck all",
+			"Clear changes",
 			"Clear search history",
 			"Options",
 			"Highlight search matches",
 		]);
 		clickPaletteMenuItem("Check");
-		expect(f.checked()).toEqual(["#alpha"]);
+		expect(f.checked()).toEqual(["#alpha", "#mine"]);
 		f.mouse(actionButton, "click");
 		expect(paletteMenuTitles()).toContain("Add 1 checked");
 		clickPaletteMenuItem("Add 1 checked");
-		await expect(f.result).resolves.toEqual(["alpha"]);
+		await expect(f.result).resolves.toEqual({ add: ["alpha"], remove: [] });
 	});
 
 	it("restores tag history without discarding checks or inserting tags", async () => {
@@ -162,7 +162,7 @@ describe("TagSelectionModal", () => {
 		expect(f.checked()).toEqual(["#fresh"]);
 		expect(f.modal.modalEl.isConnected).toBe(true);
 		f.key("Enter", { ctrlKey: true });
-		await expect(f.result).resolves.toEqual(["fresh"]);
+		await expect(f.result).resolves.toEqual({ add: ["fresh"], remove: [] });
 	});
 
 	it.each(["ArrowUp", "ArrowDown"])(
@@ -181,7 +181,7 @@ describe("TagSelectionModal", () => {
 			expect(f.rows()[0].classList.contains("is-active")).toBe(true);
 			expect(f.rows()[1].classList.contains("is-selected")).toBe(false);
 			f.key("Enter");
-			await expect(f.result).resolves.toEqual(["alpha"]);
+			await expect(f.result).resolves.toEqual({ add: ["alpha"], remove: [] });
 		},
 	);
 
@@ -221,7 +221,7 @@ describe("TagSelectionModal", () => {
 		expect(f.modal.inputEl.readOnly).toBe(false);
 		f.key("ArrowUp");
 		f.key(" ");
-		expect(f.checked()).toEqual(["#alpha"]);
+		expect(f.checked()).toEqual(["#alpha", "#mine"]);
 		f.modal.close();
 	});
 
@@ -232,20 +232,20 @@ describe("TagSelectionModal", () => {
 		await flush();
 		// There is no confirm row; the cursor stays on the checked tag.
 		expect(f.labels()[0]).toContain("#alpha");
-		expect(f.checked()).toEqual(["#alpha"]);
+		expect(f.checked()).toEqual(["#alpha", "#mine"]);
 		f.key("ArrowDown");
 		f.key(" ");
 		await flush();
-		expect(f.checked()).toEqual(["#alpha", "#beta"]);
+		expect(f.checked()).toEqual(["#alpha", "#beta", "#mine"]);
 		f.key("Enter", { ctrlKey: true });
-		await expect(f.result).resolves.toEqual(["alpha", "beta"]);
+		await expect(f.result).resolves.toEqual({ add: ["alpha", "beta"], remove: [] });
 	});
 
 	it.each(["Enter", "NumpadEnter"])("immediately inserts a new tag with %s", async (code) => {
 		const f = await open();
 		await f.type("#fresh");
 		f.key("Enter", { code });
-		await expect(f.result).resolves.toEqual(["fresh"]);
+		await expect(f.result).resolves.toEqual({ add: ["fresh"], remove: [] });
 	});
 
 	it.each(["Enter", "NumpadEnter"])(
@@ -260,9 +260,9 @@ describe("TagSelectionModal", () => {
 				expect.stringContaining('Enter will only add "#beta". Press Ctrl+Enter'),
 			);
 			expect(f.modal.modalEl.isConnected).toBe(true);
-			expect(f.checked()).toEqual([]);
+			expect(f.checked()).toEqual(["#mine"]);
 			f.key("Enter", { ctrlKey: true });
-			await expect(f.result).resolves.toEqual(["alpha", "beta"]);
+			await expect(f.result).resolves.toEqual({ add: ["alpha", "beta"], remove: [] });
 		},
 	);
 
@@ -285,7 +285,7 @@ describe("TagSelectionModal", () => {
 		expect(f.modal.modalEl.isConnected).toBe(true);
 		expect(f.checked()).toEqual(["#alpha", "#beta"]);
 		f.key("Enter", { ctrlKey: true });
-		await expect(f.result).resolves.toEqual(["alpha", "beta"]);
+		await expect(f.result).resolves.toEqual({ add: ["alpha", "beta"], remove: [] });
 	});
 
 	it("allows a single highlighted row to be inserted after the multi-selection warning", async () => {
@@ -296,16 +296,20 @@ describe("TagSelectionModal", () => {
 		await flush();
 		f.key("ArrowUp");
 		f.key("Enter");
-		await expect(f.result).resolves.toEqual(["alpha"]);
+		await expect(f.result).resolves.toEqual({ add: ["alpha"], remove: [] });
 		expect(Notice).toHaveBeenCalledTimes(1);
 	});
 
-	it("ignores registered tags and runs nothing when nothing is checked", async () => {
+	it("removes a registered tag on Enter and closes, since its check is cleared", async () => {
 		const f = await open();
 		await f.type("mine");
 		f.key("Enter");
-		await flush();
-		expect(f.checked()).toEqual([]);
+		await expect(f.result).resolves.toEqual({ add: [], remove: ["mine"] });
+	});
+
+	it("keeps registered tags checked and runs nothing for them until they are unchecked", async () => {
+		const f = await open();
+		await f.type("mine");
 		f.key("Enter", { ctrlKey: true });
 		f.key("Escape");
 		await expect(f.result).resolves.toBeNull();
@@ -317,10 +321,10 @@ describe("TagSelectionModal", () => {
 		f.key("ArrowDown", { shiftKey: true });
 		f.key(" ");
 		await flush();
-		expect(f.checked()).toEqual(["#alpha", "#beta"]);
+		expect(f.checked()).toEqual(["#alpha", "#beta", "#mine"]);
 		f.key(" ");
 		await flush();
-		expect(f.checked()).toEqual([]);
+		expect(f.checked()).toEqual(["#mine"]);
 		f.key("Escape");
 		await expect(f.result).resolves.toBeNull();
 	});
@@ -331,7 +335,7 @@ describe("TagSelectionModal", () => {
 			button: 0,
 		});
 		await flush();
-		expect(f.checked()).toEqual(["#beta"]);
+		expect(f.checked()).toEqual(["#beta", "#mine"]);
 		f.key("Escape");
 		await expect(f.result).resolves.toBeNull();
 	});
@@ -339,8 +343,8 @@ describe("TagSelectionModal", () => {
 	it("badges partly applied tags yet keeps them selectable", async () => {
 		const f = await open(2);
 		expect(f.labels()[1]).toContain("On 1/2 notes");
-		expect(f.rows()[1].classList.contains("is-locked")).toBe(false);
-		expect(f.rows().at(-1)?.classList.contains("is-locked")).toBe(true);
+		expect(f.rows()[1].classList.contains("is-applied")).toBe(false);
+		expect(f.rows().at(-1)?.classList.contains("is-applied")).toBe(true);
 		f.modal.close();
 	});
 
@@ -355,7 +359,7 @@ describe("TagSelectionModal", () => {
 		expect(paletteMenuTitles()).toContain("Add 2 now");
 		clickPaletteMenuItem("Check 2 selected");
 		await flush();
-		expect(f.checked()).toEqual(["#alpha", "#beta"]);
+		expect(f.checked()).toEqual(["#alpha", "#beta", "#mine"]);
 		f.mouse(f.rows()[1], "contextmenu", { button: 2 });
 		expect(paletteMenuTitles()).toEqual(["Uncheck 2 selected", "Add 2 checked", "Remove tag"]);
 		f.modal.close();
@@ -377,18 +381,18 @@ describe("TagSelectionModal", () => {
 		f.key(" ");
 		await flush();
 		expect(f.button().hidden).toBe(false);
-		expect(f.button().textContent).toBe("1");
+		expect(f.button().textContent).toBe("+1");
 		f.mouse(f.button(), "click");
-		expect(paletteMenuTitles()).toEqual(["Add 1 checked", "#alpha", "Uncheck all"]);
-		clickPaletteMenuItem("Uncheck all");
+		expect(paletteMenuTitles()).toEqual(["Add 1 checked", "#alpha", "Clear changes"]);
+		clickPaletteMenuItem("Clear changes");
 		await flush();
-		expect(f.checked()).toEqual([]);
+		expect(f.checked()).toEqual(["#mine"]);
 		expect(f.button().hidden).toBe(true);
 		f.key(" ");
 		await flush();
 		f.mouse(f.button(), "click");
 		clickPaletteMenuItemAt(0);
-		await expect(f.result).resolves.toEqual(["alpha"]);
+		await expect(f.result).resolves.toEqual({ add: ["alpha"], remove: [] });
 	});
 
 	it("keeps a checked new tag listed after the input changes", async () => {
@@ -399,10 +403,10 @@ describe("TagSelectionModal", () => {
 		await flush();
 		f.key("f");
 		await f.type("");
-		expect(f.checked()).toEqual(["#fresh"]);
+		expect(f.checked()).toEqual(["#fresh", "#mine"]);
 		// The check survives the new list, and the tag can still be run.
 		f.key("Enter", { ctrlKey: true });
-		await expect(f.result).resolves.toEqual(["fresh"]);
+		await expect(f.result).resolves.toEqual({ add: ["fresh"], remove: [] });
 	});
 
 	it("keeps unchecked candidates accessible after fifty tags have been pinned", async () => {
@@ -428,7 +432,10 @@ describe("TagSelectionModal", () => {
 		f.mouse(f.rows()[51].querySelector(".my-palette-suggestion__icon")!, "mousedown");
 		await flush();
 		f.key("Enter", { ctrlKey: true });
-		await expect(f.result).resolves.toEqual([...candidates.map(({ tag }) => tag), "fresh"]);
+		await expect(f.result).resolves.toEqual({
+			add: [...candidates.map(({ tag }) => tag), "fresh"],
+			remove: [],
+		});
 	});
 
 	it("pins checked existing and new tags above matches across queries", async () => {
@@ -457,7 +464,7 @@ describe("TagSelectionModal", () => {
 		await flush();
 		expect(f.labels().join(" ")).not.toContain("#fresh");
 		f.key("Enter", { ctrlKey: true });
-		await expect(f.result).resolves.toEqual(["beta"]);
+		await expect(f.result).resolves.toEqual({ add: ["beta"], remove: [] });
 	});
 
 	it("runs the checked and highlighted tags together from the row menu", async () => {
@@ -469,6 +476,34 @@ describe("TagSelectionModal", () => {
 		f.mouse(f.rows()[1], "mousedown");
 		f.mouse(f.rows()[1], "contextmenu", { button: 2 });
 		clickPaletteMenuItem("Add 2 now");
-		await expect(f.result).resolves.toEqual(["alpha", "beta"]);
+		await expect(f.result).resolves.toEqual({ add: ["alpha", "beta"], remove: [] });
+	});
+
+	it("unchecks a registered tag and runs the removal with Ctrl+Enter", async () => {
+		const f = await open();
+		await f.type("mine");
+		f.key("ArrowUp");
+		f.key(" ");
+		await flush();
+		expect(f.checked()).toEqual([]);
+		expect(f.rows()[0].classList.contains("is-pending-removal")).toBe(true);
+		expect(f.button().textContent).toBe("−1");
+		f.key("Enter", { ctrlKey: true });
+		await expect(f.result).resolves.toEqual({ add: [], remove: ["mine"] });
+	});
+
+	it("runs an addition and a removal together and shows both in the footer", async () => {
+		const f = await open();
+		f.key("ArrowUp");
+		f.key(" ");
+		await flush();
+		f.key("ArrowDown");
+		f.key("ArrowDown");
+		f.key(" ");
+		await flush();
+		expect(f.checked()).toEqual(["#alpha"]);
+		expect(f.button().textContent).toBe("+1 −1");
+		f.key("Enter", { ctrlKey: true });
+		await expect(f.result).resolves.toEqual({ add: ["alpha"], remove: ["mine"] });
 	});
 });

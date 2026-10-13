@@ -3,6 +3,7 @@ import type MyPalettePlugin from "src/main";
 import { mergeFrontmatterTags, removeFrontmatterTags } from "src/shared/frontmatter";
 import { relationPaths } from "src/shared/noteRelations";
 import { buildTagChoices, tagKey, type TagChoice } from "src/tags/tagChoices";
+import type { MultiSelectChanges } from "src/ui/multiSelectChanges";
 import { TagSelectionModal } from "src/tags/TagSelectionModal";
 
 /** Recent-tag history used to rank candidates and updated after insertion. */
@@ -64,7 +65,8 @@ function targetLabel(files: readonly TFile[]): string {
 }
 
 /**
- * Lets the user pick tags and adds them to the frontmatter of every target note.
+ * Lets the user pick tags to add and applied tags to remove, then writes both to the
+ * frontmatter of every target note.
  */
 export async function insertTags(plugin: MyPalettePlugin, files: readonly TFile[]): Promise<void> {
 	const { app, recentTagStore: recentTags } = plugin;
@@ -74,36 +76,65 @@ export async function insertTags(plugin: MyPalettePlugin, files: readonly TFile[
 		return;
 	}
 
-	const selected = await new TagSelectionModal(
+	const changes = await new TagSelectionModal(
 		plugin,
 		buildChoices(app, targets, recentTags),
 		targetLabel(targets),
 		targets.length,
 		(tag) => removeTag(app, targets, tag),
-	).openAndWait();
-	if (!selected || selected.length === 0) return;
+	).openAndWaitChanges();
+	if (!changes || (changes.add.length === 0 && changes.remove.length === 0)) return;
+	await applyTagChanges(app, targets, changes, recentTags);
+}
 
+/** Writes tag changes per note, so one failing note does not block the rest. */
+async function applyTagChanges(
+	app: App,
+	targets: readonly TFile[],
+	changes: MultiSelectChanges<string>,
+	recentTags: RecentTagSource,
+): Promise<void> {
+	let updated = 0;
 	let failed = 0;
-	// Each note is updated on its own so one failing note does not block the rest.
 	for (const file of targets) {
+		const existing = frontmatterTags(app, file);
+		const removals = changes.remove.filter((tag) => hasTag(existing, tag));
+		if (changes.add.length === 0 && removals.length === 0) continue;
 		try {
 			await app.fileManager.processFrontMatter(file, (frontmatter: { tags?: unknown }) => {
-				frontmatter.tags = mergeFrontmatterTags(frontmatter.tags, selected);
+				let tags = frontmatter.tags;
+				if (changes.add.length > 0) tags = mergeFrontmatterTags(tags, changes.add);
+				if (removals.length > 0) tags = removeFrontmatterTags(tags, removals);
+				if (Array.isArray(tags) && tags.length > 0) frontmatter.tags = tags;
+				else delete frontmatter.tags;
 			});
+			updated += 1;
 		} catch (error) {
 			failed += 1;
-			console.error(`Failed to add tags to ${file.path}`, error);
+			console.error(`Failed to update tags of ${file.path}`, error);
 		}
 	}
-	recentTags.record(...selected);
+	if (changes.add.length > 0) recentTags.record(...changes.add);
 
-	const tagText = selected.map((tag) => `#${tag}`).join(" ");
-	const updated = targets.length - failed;
-	if (updated > 0) {
-		const where = targets.length === 1 ? targets[0].basename : `${updated} notes`;
-		new Notice(`Added ${tagText} to ${where}.`);
-	}
-	if (failed > 0) new Notice(`Failed to add tags to ${failed} notes. See the console.`);
+	if (updated > 0)
+		new Notice(
+			tagChangeMessage(
+				changes,
+				targets.length === 1 ? targets[0].basename : `${updated} notes`,
+			),
+		);
+	if (failed > 0) new Notice(`Failed to update tags of ${failed} notes. See the console.`);
+}
+
+function hasTag(tags: readonly string[], tag: string): boolean {
+	return tags.some((existing) => tagKey(existing) === tagKey(tag));
+}
+
+function tagChangeMessage(changes: MultiSelectChanges<string>, where: string): string {
+	const tagsOf = (tags: readonly string[]) => tags.map((tag) => `#${tag}`).join(" ");
+	if (changes.remove.length === 0) return `Added ${tagsOf(changes.add)} to ${where}.`;
+	if (changes.add.length === 0) return `Removed ${tagsOf(changes.remove)} from ${where}.`;
+	return `Added ${tagsOf(changes.add)} and removed ${tagsOf(changes.remove)} on ${where}.`;
 }
 
 /** Result of removing a tag from the targets' frontmatter. */

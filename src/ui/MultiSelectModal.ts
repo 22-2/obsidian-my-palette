@@ -4,6 +4,13 @@ import { showMenuAtEvent } from "src/ui/menus";
 import { BaseSuggestModal } from "src/ui/baseSuggestModal";
 import { renderSelectionItem, type SelectionItem } from "src/ui/selectionModal";
 import type { SelectorControls } from "src/ui/selectorControls";
+import {
+	changeCount,
+	directChanges,
+	isCheckedRow,
+	pendingChanges,
+	type MultiSelectChanges,
+} from "src/ui/multiSelectChanges";
 
 /** One selectable row. `value` is what the modal resolves with when the row is checked. */
 export interface MultiSelectCandidate<V> {
@@ -13,16 +20,15 @@ export interface MultiSelectCandidate<V> {
 	/** Row content; the check icon is supplied by the modal. */
 	item: SelectionItem;
 	/**
-	 * Nothing is left to do for this row (a tag every target already has, a note
-	 * already linked in both directions). It stays listed after the actionable
-	 * rows, marked by the lock icon, and cannot be checked.
+	 * Already applied to every target (a tag all targets have, a note linked in both
+	 * directions). Such a row starts checked, and clearing its check removes it.
 	 */
-	locked?: boolean;
+	applied?: boolean;
 	/** Icon of an unchecked row; defaults to an empty box. */
 	uncheckedIcon?: string;
 	/**
 	 * Undoes what the row would apply, offered in its context menu for rows that
-	 * are already applied, fully (locked) or partly. The host updates its own
+	 * are already applied, fully or partly. The host updates its own
 	 * data in `run`; the list is refreshed afterwards.
 	 */
 	removal?: { label: string; run: () => void | Promise<void> };
@@ -37,6 +43,24 @@ export interface MultiSelectModalProps {
 	controls: SelectorControls;
 }
 
+/** Menu title for a run; pure additions keep the familiar "Add 2 now" wording. */
+function runTitle<V>(
+	changes: MultiSelectChanges<V>,
+	actionLabel: string,
+	state: "now" | "checked",
+): string {
+	if (changes.remove.length > 0) return `Apply ${changeCount(changes)} changes`;
+	return `${actionLabel} ${changes.add.length} ${state}`;
+}
+
+/** Footer text for pending changes, such as "+2 −1". */
+function summarizeChanges<V>(changes: MultiSelectChanges<V>): string {
+	const parts: string[] = [];
+	if (changes.add.length > 0) parts.push(`+${changes.add.length}`);
+	if (changes.remove.length > 0) parts.push(`−${changes.remove.length}`);
+	return parts.join(" ");
+}
+
 /**
  * Multi selector shared by the tag insert, MOC insert and MOC remove selectors so they behave and look alike.
  * Flow: run one row (Enter), or select/check rows (click, Ctrl, Shift, arrows,
@@ -44,9 +68,10 @@ export interface MultiSelectModalProps {
  * or the checked-list button. Checking keeps the modal open; any other close cancels.
  */
 export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCandidate<V>> {
-	private readonly checked = new Map<string, MultiSelectCandidate<V>>();
-	private confirmedValues?: V[];
-	private resolveResult?: (values: V[] | null) => void;
+	/** Rows whose check differs from their starting state; these are the pending changes. */
+	private readonly toggled = new Map<string, MultiSelectCandidate<V>>();
+	private confirmedChanges?: MultiSelectChanges<V>;
+	private resolveResult?: (changes: MultiSelectChanges<V> | null) => void;
 	private activeMenu?: PaletteMenu;
 	private checkedButtonEl?: HTMLElement;
 	private checkedCountEl?: HTMLElement;
@@ -89,51 +114,67 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		_close: () => void,
 	): void {}
 
-	/** Checked rows, for hosts that rebuild the list and must keep them listed. */
-	protected checkedCandidates(): MultiSelectCandidate<V>[] {
-		return [...this.checked.values()];
+	/** Rows with a pending change, kept listed while the host rebuilds the list. */
+	private pendingCandidates(): MultiSelectCandidate<V>[] {
+		return [...this.toggled.values()];
 	}
 
-	/** Opens the modal and resolves with the checked values, or null when cancelled. */
-	openAndWait(): Promise<V[] | null> {
+	/**
+	 * Opens the modal and resolves with the rows to add and the applied rows to
+	 * remove, or null when cancelled. Use this when some rows are already applied.
+	 */
+	openAndWaitChanges(): Promise<MultiSelectChanges<V> | null> {
 		return new Promise((resolve) => {
 			this.resolveResult = resolve;
 			this.open();
 		});
 	}
 
+	/** Resolves with the rows to add; for selectors whose rows are never already applied. */
+	async openAndWait(): Promise<V[] | null> {
+		return (await this.openAndWaitChanges())?.add ?? null;
+	}
+
 	async getSuggestions(query: string): Promise<MultiSelectCandidate<V>[]> {
 		this.updateMatchQuery(this.matchQuery(query));
 		const found = await this.searchCandidates(query);
 		const foundByKey = new Map(found.map((candidate) => [candidate.key, candidate]));
-		// Checks stay visible across queries, even if the host no longer returns them.
-		const checked = this.checkedCandidates().map(
+		// Pending changes stay visible across queries, even if the host no longer returns them.
+		const pending = this.pendingCandidates().map(
 			(candidate) => foundByKey.get(candidate.key) ?? candidate,
 		);
 		// Pinned rows must not use up the space for the next unchecked candidate.
-		this.limit = this.candidateLimit + checked.length;
-		const unchecked = found.filter(({ key }) => !this.checked.has(key));
-		// Stable groups preserve check order and the host's ranking within each group.
+		this.limit = this.candidateLimit + pending.length;
+		const rest = found.filter(({ key }) => !this.toggled.has(key));
+		// Stable groups keep changed rows first, then rows to add, then applied rows.
 		const candidates = [
-			...checked,
-			...unchecked.filter(({ locked }) => !locked),
-			...unchecked.filter(({ locked }) => locked),
+			...pending,
+			...rest.filter(({ applied }) => !applied),
+			...rest.filter(({ applied }) => applied),
 		];
 		this.updateResultCount(candidates.length);
 		return candidates;
 	}
 
 	renderSuggestion(candidate: MultiSelectCandidate<V>, el: HTMLElement): void {
-		const checked = this.checked.has(candidate.key);
+		const checked = this.isChecked(candidate);
 		renderSelectionItem(this.toSelectionItem(candidate), el, this.query);
 		// Rows may be redrawn in place, so classes are set both ways.
-		el.classList.toggle("is-locked", Boolean(candidate.locked));
+		el.classList.toggle("is-applied", Boolean(candidate.applied));
+		el.classList.toggle("is-pending-removal", Boolean(candidate.applied) && !checked);
 		el.classList.toggle("is-checked", checked);
 		el.setAttribute("aria-checked", String(checked));
 		// The check icon toggles its row on a single press, independently of the
 		// keyboard mode, so pointer users can also build a checked list.
-		if (!candidate.locked)
-			el.querySelector(".my-palette-suggestion__icon")?.setAttribute("data-row-toggle", "");
+		el.querySelector(".my-palette-suggestion__icon")?.setAttribute("data-row-toggle", "");
+	}
+
+	private isChecked(candidate: MultiSelectCandidate<V>): boolean {
+		return isCheckedRow(candidate, this.toggledKeys());
+	}
+
+	private toggledKeys(): ReadonlySet<string> {
+		return new Set(this.toggled.keys());
 	}
 
 	protected override handlesSuggestionContextMenu(): boolean {
@@ -147,13 +188,10 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		this.addRemovalMenuItem(menu, targets);
 		menu.addItem((item) =>
 			item
-				.setTitle("Uncheck all")
+				.setTitle("Clear changes")
 				.setIcon("square")
-				.setDisabled(this.checked.size === 0)
-				.onClick(() => {
-					this.checked.clear();
-					this.refreshKeepingSelection();
-				}),
+				.setDisabled(this.toggled.size === 0)
+				.onClick(() => this.clearPendingChanges()),
 		);
 	}
 
@@ -204,7 +242,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 
 	protected override onSelectionModalClose(): void {
 		this.activeMenu?.close();
-		this.resolveResult?.(this.confirmedValues ?? null);
+		this.resolveResult?.(this.confirmedChanges ?? null);
 		this.resolveResult = undefined;
 	}
 
@@ -217,50 +255,60 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 			event.type === "keydown" &&
 			((event as KeyboardEvent).ctrlKey || (event as KeyboardEvent).metaKey);
 		if (runShortcut) {
+			// Pending changes win; without any, the highlighted rows to add are run.
 			this.confirm(
-				this.checked.size > 0
-					? this.checkedCandidates()
-					: this.getSelectedItems().filter(({ locked }) => !locked),
+				this.toggled.size > 0
+					? pendingChanges(this.pendingCandidates(), this.toggledKeys())
+					: directChanges(this.getSelectedItems().filter(({ applied }) => !applied)),
 			);
 			return;
 		}
 		if (event.type !== "keydown") {
 			const rows = [...this.getSelectedItems()];
 			if (!rows.some(({ key }) => key === candidate.key)) rows.push(candidate);
-			this.confirm(rows.filter(({ locked }) => !locked));
+			this.confirm(directChanges(rows));
 			return;
 		}
-		if (candidate.locked) return;
 		// Warn before closing so a multi-selection can still be run with Ctrl+Enter.
-		if (this.checked.size > 1 || this.getSelectedItems().length > 1) {
+		if (this.toggled.size > 1 || this.getSelectedItems().length > 1) {
 			new Notice(
 				`Enter will only ${this.multiSelect.actionLabel.toLowerCase()} "${candidate.item.label}". Press Ctrl+Enter to ${this.multiSelect.actionLabel.toLowerCase()} multiple items, or select a single item and press Enter.`,
 			);
 			return;
 		}
-		this.confirm([candidate]);
+		this.confirm(directChanges([candidate]));
 	}
 
-	/** Resolves with the given rows, or with every checked row by default. */
-	private confirm(rows: readonly MultiSelectCandidate<V>[] = [...this.checked.values()]): void {
-		if (rows.length === 0) return;
+	/** Closes with the given changes; nothing to apply keeps the modal open. */
+	private confirm(changes: MultiSelectChanges<V>): void {
+		if (changeCount(changes) === 0) return;
 		this.commitSearchHistory();
-		this.confirmedValues = rows.map(({ value }) => value);
+		this.confirmedChanges = changes;
 		this.close();
 	}
 
-	/** Unchecks when every given row is checked, otherwise checks the unchecked ones. */
+	/** Checks every given row, or unchecks them all when every one is already checked. */
 	private toggleChecks(candidates: readonly MultiSelectCandidate<V>[]): void {
-		const toggleable = candidates.filter(({ locked }) => !locked);
-		if (toggleable.length === 0) return;
-		const allChecked = toggleable.every(({ key }) => this.checked.has(key));
-		for (const candidate of toggleable) {
-			if (allChecked) this.checked.delete(candidate.key);
-			else this.checked.set(candidate.key, candidate);
+		if (candidates.length === 0) return;
+		const allChecked = candidates.every((candidate) => this.isChecked(candidate));
+		for (const candidate of candidates) {
+			if (this.isChecked(candidate) === allChecked) this.flip(candidate);
 		}
 		// Update icons immediately, then rebuild the pinned group while retaining
 		// the cursor and selection by key rather than by their old row indexes.
 		this.rerenderVisibleSuggestions();
+		this.refreshKeepingSelection();
+	}
+
+	/** Toggles one row; a row back in its starting state leaves the pending changes. */
+	private flip(candidate: MultiSelectCandidate<V>): void {
+		if (this.toggled.has(candidate.key)) this.toggled.delete(candidate.key);
+		else this.toggled.set(candidate.key, candidate);
+	}
+
+	/** Drops every pending change; applied rows show as checked again. */
+	private clearPendingChanges(): void {
+		this.toggled.clear();
 		this.refreshKeepingSelection();
 	}
 
@@ -282,31 +330,35 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		menu: PaletteMenu,
 		targets: readonly MultiSelectCandidate<V>[],
 	): void {
-		const toggleable = targets.filter(({ locked }) => !locked);
-		// Highlighted rows join the checked ones, so checking several and running is one step.
-		const runSet = new Map(this.checked);
-		for (const candidate of toggleable) runSet.set(candidate.key, candidate);
+		// Highlighted rows join the pending ones, so checking several and running is one step.
+		const runSet = new Map(this.toggled);
+		for (const candidate of targets) runSet.set(candidate.key, candidate);
 		if (runSet.size === 0) return;
+		const changes = pendingChanges([...runSet.values()], this.toggledKeys());
 		menu.addSeparator();
-		if (toggleable.length > 0) {
-			const allChecked = toggleable.every(({ key }) => this.checked.has(key));
-			const suffix = toggleable.length > 1 ? ` ${toggleable.length} selected` : "";
+		if (targets.length > 0) {
+			const allChecked = targets.every((candidate) => this.isChecked(candidate));
+			const suffix = targets.length > 1 ? ` ${targets.length} selected` : "";
 			menu.addItem((item) =>
 				item
 					.setTitle(`${allChecked ? "Uncheck" : "Check"}${suffix}`)
 					.setIcon(allChecked ? "square" : "square-check")
-					.onClick(() => this.toggleChecks(toggleable)),
+					.onClick(() => this.toggleChecks(targets)),
 			);
 		}
+		if (changeCount(changes) === 0) return;
+		const addsPending = targets.some((candidate) => !this.isChecked(candidate));
 		menu.addItem((item) =>
 			item
 				.setTitle(
-					toggleable.some(({ key }) => !this.checked.has(key))
-						? `${this.multiSelect.actionLabel} ${runSet.size} now`
-						: `${this.multiSelect.actionLabel} ${runSet.size} checked`,
+					runTitle(
+						changes,
+						this.multiSelect.actionLabel,
+						addsPending ? "now" : "checked",
+					),
 				)
 				.setIcon("corner-down-left")
-				.onClick(() => this.confirm([...runSet.values()])),
+				.onClick(() => this.confirm(changes)),
 		);
 	}
 
@@ -314,21 +366,22 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		menu: PaletteMenu,
 		targets: readonly MultiSelectCandidate<V>[],
 	): void {
-		const removals = targets.flatMap(({ removal }) => (removal ? [removal] : []));
-		if (removals.length === 0) return;
+		const removable = targets.filter((candidate) => candidate.removal);
+		if (removable.length === 0) return;
+		const label = removable[0].removal?.label ?? "";
 		menu.addSeparator();
 		menu.addItem((item) =>
 			item
-				.setTitle(
-					removals.length > 1
-						? `${removals[0].label} (${removals.length} selected)`
-						: removals[0].label,
-				)
+				.setTitle(removable.length > 1 ? `${label} (${removable.length} selected)` : label)
 				.setIcon("trash-2")
 				.onClick(() => {
 					void (async () => {
 						// Why: removals may rewrite the same note, so run them one at a time.
-						for (const removal of removals) await removal.run();
+						for (const candidate of removable) {
+							await candidate.removal?.run();
+							// The removal is now real, so the row must not stay pending.
+							this.toggled.delete(candidate.key);
+						}
 						this.refreshKeepingSelection();
 					})();
 				}),
@@ -363,38 +416,37 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 
 	private updateCheckedButton(): void {
 		if (!this.checkedButtonEl) return;
-		this.checkedButtonEl.hidden = this.checked.size === 0;
-		this.checkedCountEl?.setText(String(this.checked.size));
+		const changes = pendingChanges(this.pendingCandidates(), this.toggledKeys());
+		this.checkedButtonEl.hidden = this.toggled.size === 0;
+		this.checkedCountEl?.setText(summarizeChanges(changes));
 	}
 
 	private showCheckedMenu(event: MouseEvent): void {
-		if (this.checked.size === 0) return;
+		if (this.toggled.size === 0) return;
+		const changes = pendingChanges(this.pendingCandidates(), this.toggledKeys());
 		const menu = this.replaceActiveMenu(new PaletteMenu());
 		menu.addItem((item) =>
 			item
-				.setTitle(`${this.multiSelect.actionLabel} ${this.checked.size} checked`)
+				.setTitle(runTitle(changes, this.multiSelect.actionLabel, "checked"))
 				.setIcon("corner-down-left")
-				.onClick(() => this.confirm()),
+				.onClick(() => this.confirm(changes)),
 		);
 		menu.addSeparator();
-		// Choosing a checked row here unchecks it, so the list doubles as an editor.
-		for (const candidate of this.checked.values()) {
+		// Choosing a pending row here reverts it, so the list doubles as an editor.
+		for (const candidate of this.toggled.values()) {
 			menu.addItem((item) =>
 				item
 					.setTitle(candidate.item.label)
-					.setIcon("square-check")
+					.setIcon(this.isChecked(candidate) ? "square-check" : "square")
 					.onClick(() => this.toggleChecks([candidate])),
 			);
 		}
 		menu.addSeparator();
 		menu.addItem((item) =>
 			item
-				.setTitle("Uncheck all")
+				.setTitle("Clear changes")
 				.setIcon("square")
-				.onClick(() => {
-					this.checked.clear();
-					this.refreshKeepingSelection();
-				}),
+				.onClick(() => this.clearPendingChanges()),
 		);
 		menu.setParentElement(this.modalEl);
 		showMenuAtEvent(menu, event);
@@ -403,11 +455,9 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 	private toSelectionItem(candidate: MultiSelectCandidate<V>): SelectionItem {
 		return {
 			...candidate.item,
-			icon: candidate.locked
-				? "lock"
-				: this.checked.has(candidate.key)
-					? "square-check"
-					: (candidate.uncheckedIcon ?? "square"),
+			icon: this.isChecked(candidate)
+				? "square-check"
+				: (candidate.uncheckedIcon ?? "square"),
 		};
 	}
 }
