@@ -40,12 +40,13 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 
 ### Selector
 
-| 正式名               | 意味                               | 現在の表記              | 識別子(ショートカットの範囲) |
-| -------------------- | ---------------------------------- | ----------------------- | ---------------------------- |
-| Tag insert selector  | 現在のノートにタグを挿入する       | Tag selector            | `tag-insert-selector`        |
-| MOC insert selector  | MOC Relatedsにリンクを挿入する     | MOC selector            | `moc-insert-selector`        |
-| MOC remove selector  | MOC Relatedsからリンクを削除する   | MOC selector            | `moc-remove-selector`        |
-| Folder move selector | ファイルを別のフォルダーへ移動する | Folder picker(コメント) | なし                         |
+| 正式名                  | 意味                                                         | 現在の表記              | 識別子(ショートカットの範囲) |
+| ----------------------- | ------------------------------------------------------------ | ----------------------- | ---------------------------- |
+| Tag insert selector     | 現在のノートにタグを挿入する                                 | Tag selector            | `tag-insert-selector`        |
+| MOC insert selector     | MOC Relatedsにリンクを挿入する                               | MOC selector            | `moc-insert-selector`        |
+| MOC remove selector     | MOC Relatedsからリンクを削除する                             | MOC selector            | `moc-remove-selector`        |
+| Folder move selector    | ファイルを別のフォルダーへ移動する                           | Folder picker(コメント) | なし                         |
+| Property value selector | 現在のノートのList型プロパティの値を付ける・外す・新しく足す | 値のpicker              | `property-value-selector`    |
 
 - MOC insert selectorでも、リンク済みのノートを右クリックメニューから削除できる。主な用途で名付けたものとして、この重なりは許容する。
 - ショートカットの範囲は`moc-insert-selector`と`moc-remove-selector`に分けた。Obsidian-excludedのスイッチはinsertだけにあるため、`toggleIgnored`はinsertだけで有効にした。
@@ -102,11 +103,14 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 | Tabs           | `t`        | Open tab list               |
 | Plugins        | `p`        | なし                        |
 | Snippets       | `sn`       | なし                        |
+| Properties     | `pr`       | なし                        |
 
 - コマンド名には「command」を入れられない(Obsidianのlint)ので、コマンド一覧だけは、モード名「Commands」とコマンド名「Open run list」が対応する。
 - Everythingは1つのモード。Obsidian-excludedがOFFならObsidianで利用できる設定済み拡張子のファイル、ONなら保管庫フォルダー内の全ファイルを検索する。従来のVault notesとAll vault filesを統合し、`esdir`は保存済み履歴の読み取りだけで扱う。
 - `sn`は`sc`と先頭が同じだが、エイリアスは`alias + Space`で照合するので共存できる。
 - Plugins・Snippetsに対応するコマンド(「Open plugin list」など)は、使ってみて要るとわかってから足す。
+- Propertiesは現在のノートのプロパティを検索して編集する。Property value inputは、候補を選ぶSelectorではなく値を打つ入力欄なので、識別子`property-value-input`で範囲を分けず、ショートカットの範囲には入れない(Selectorの名前には`selector`を付けない)。
+- Propertiesに対応するコマンド(「Open property list」)は、使ってみて要るとわかってから足す。
 
 ### 開き方の操作名
 
