@@ -3,6 +3,7 @@ import type MyPalettePlugin from "src/main";
 import type { PropertyResult } from "src/palette/results";
 import { insertTags } from "src/tags/insertTags";
 import { editListProperty } from "src/properties/propertyValueSelector";
+import { editPropertyValue } from "src/properties/propertyInputSelector";
 
 /** Whether the palette should close once the edit has started. */
 export type PropertyEditOutcome = "close" | "stay";
@@ -29,6 +30,12 @@ export async function editPropertyResult(
 			return "stay";
 		case "list":
 			await editListProperty(plugin, file, result.key);
+			return "close";
+		case "text":
+		case "number":
+		case "date":
+		case "datetime":
+			await editPropertyValue(plugin, file, result.key, result.kind);
 			return "close";
 		case "unsupported":
 			new Notice("Edit this property in source mode.");

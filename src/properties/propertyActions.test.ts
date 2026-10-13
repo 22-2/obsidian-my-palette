@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
 import type { PropertyResult } from "src/palette/results";
 import { editPropertyResult } from "src/properties/propertyActions";
+import { editPropertyValue } from "src/properties/propertyInputSelector";
+import { editListProperty } from "src/properties/propertyValueSelector";
 
 const notices = vi.hoisted(() => [] as string[]);
 const insertTagsMock = vi.hoisted(() => vi.fn());
@@ -15,7 +17,11 @@ vi.mock("obsidian", () => ({
 	},
 }));
 vi.mock("src/tags/insertTags", () => ({ insertTags: insertTagsMock }));
-vi.mock("src/properties/propertyValueSelector", () => ({ editListProperty: vi.fn() }));
+vi.mock("src/properties/propertyValueSelector", () => ({
+	editListProperty: vi.fn(),
+	vaultValuesOf: vi.fn(() => []),
+}));
+vi.mock("src/properties/propertyInputSelector", () => ({ editPropertyValue: vi.fn() }));
 
 const file = { path: "note.md", basename: "note" } as unknown as TFile;
 
@@ -85,6 +91,23 @@ describe("editPropertyResult", () => {
 		const outcome = await editPropertyResult(p, row({ key: "tags", kind: "tags" }));
 		expect(outcome).toBe("close");
 		expect(insertTagsMock).toHaveBeenCalledWith(p, [file]);
+	});
+
+	it("opens the value input for text, number, date and date-time rows and closes", async () => {
+		const { plugin: p } = plugin({});
+		for (const kind of ["text", "number", "date", "datetime"] as const) {
+			vi.mocked(editPropertyValue).mockClear();
+			const outcome = await editPropertyResult(p, row({ key: "due", kind }));
+			expect(outcome).toBe("close");
+			expect(editPropertyValue).toHaveBeenCalledWith(p, file, "due", kind);
+		}
+	});
+
+	it("opens the list selector for list rows and closes", async () => {
+		const { plugin: p } = plugin({});
+		const outcome = await editPropertyResult(p, row({ key: "aliases", kind: "list" }));
+		expect(outcome).toBe("close");
+		expect(editListProperty).toHaveBeenCalledWith(p, file, "aliases");
 	});
 
 	it("tells the user that nested values are edited in source mode", async () => {

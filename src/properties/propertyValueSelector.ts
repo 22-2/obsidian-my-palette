@@ -26,7 +26,7 @@ export function readList(value: unknown): string[] {
 	);
 }
 
-function vaultValuesOf(app: App, key: string): string[] {
+export function vaultValuesOf(app: App, key: string): string[] {
 	const values = (
 		app.metadataCache as unknown as MetadataValuesSource
 	).getFrontmatterPropertyValuesForKey?.(key);

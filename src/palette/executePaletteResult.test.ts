@@ -20,6 +20,7 @@ vi.mock("src/platform/externalOpen", () => ({
 
 vi.mock("src/tags/insertTags", () => ({ insertTags: vi.fn() }));
 vi.mock("src/properties/propertyValueSelector", () => ({ editListProperty: vi.fn() }));
+vi.mock("src/properties/propertyInputSelector", () => ({ editPropertyValue: vi.fn() }));
 
 function fixture() {
 	const file = new TFile();
