@@ -3,7 +3,7 @@ import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
-import { getLeafForAction, revealOpenedLeaf } from "src/workspace/openLeaf";
+import { openFileInLeaf, revealOpenedLeaf } from "src/workspace/openLeaf";
 import {
 	executePaletteResult,
 	type PaletteResultExecutionOptions,
@@ -402,9 +402,13 @@ export class PaletteView extends ItemView {
 			return;
 		}
 		// The note is not open in the center: open it where a primary action would.
-		const target = getLeafForAction(this.app, "primary", this.leafTracker.resolveTargetLeaf());
-		await target.openFile(file);
-		await revealOpenedLeaf(this.app, target);
+		await openFileInLeaf(this.app, file, {
+			action: "primary",
+			targetLeaf: this.leafTracker.resolveTargetLeaf(),
+			active: true,
+			autoFocus: true,
+			focusExisting: this.plugin.settings.focusExistingTab,
+		});
 	}
 
 	private showSourceMenu(event: MouseEvent): void {

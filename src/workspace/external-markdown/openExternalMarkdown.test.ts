@@ -19,7 +19,11 @@ function fixture(reuse: boolean) {
 		workspace,
 		vault: { adapter: { path: { resolve: (path: string) => path } } },
 	} as unknown as App;
-	return { leaf, workspace, plugin: { app } as MyPalettePlugin };
+	return {
+		leaf,
+		workspace,
+		plugin: { app, settings: { focusExistingTab: true } } as unknown as MyPalettePlugin,
+	};
 }
 
 it.each([false, true])("reveals and focuses external Markdown (reuse=%s)", async (reuse) => {

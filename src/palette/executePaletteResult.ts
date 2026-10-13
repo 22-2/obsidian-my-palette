@@ -1,5 +1,5 @@
-import { type App, type WorkspaceLeaf } from "obsidian";
-import { getLeafForAction, revealOpenedLeaf } from "src/workspace/openLeaf";
+import type { TFile, WorkspaceLeaf } from "obsidian";
+import { openFileInLeaf } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
@@ -65,7 +65,7 @@ export async function executePaletteResult(
 	}
 
 	if (result.mode === "bookmark") {
-		const opened = await executeBookmark(plugin.app, result, action, options);
+		const opened = await executeBookmark(plugin, result, action, options);
 		if (opened) {
 			plugin.recordResultUsage(result);
 			finish(options);
@@ -85,13 +85,13 @@ export async function executePaletteResult(
 		return;
 	}
 	if (result.mode === "smart") {
-		await openFileResult(plugin.app, result, action, options);
+		await openFileResult(plugin, result.file, action, options);
 		plugin.recordResultUsage(result);
 		finish(options);
 		return;
 	}
 	if (result.mode === "link" || result.mode === "backlink") {
-		const openedLeaf = await openFileResult(plugin.app, result, action, options);
+		const openedLeaf = await openFileResult(plugin, result.file, action, options);
 		plugin.recordResultUsage(result);
 		// A pinned target may resolve to a fallback leaf; place the cursor on the
 		// leaf that actually received the related note, including split actions.
@@ -137,6 +137,7 @@ export async function executePaletteResult(
 			targetLeaf: options.targetLeaf,
 			active: options.active,
 			autoFocus: options.autoFocus,
+			focusExistingTab: plugin.settings.focusExistingTab,
 		},
 	);
 	if (outcome.close) {
@@ -146,32 +147,33 @@ export async function executePaletteResult(
 }
 
 async function executeBookmark(
-	app: App,
+	plugin: MyPalettePlugin,
 	result: Extract<PaletteResult, { mode: "bookmark" }>,
 	action: ActionKind,
 	options: PaletteResultExecutionOptions,
 ): Promise<boolean> {
 	if (result.kind === "search" && result.query) {
-		await app.workspace.openLinkText(result.query, "", true);
+		await plugin.app.workspace.openLinkText(result.query, "", true);
 		return true;
 	}
 	if (!result.file) return false;
-	const leaf = getLeafForAction(app, action, options.targetLeaf);
-	await leaf.openFile(result.file, action === "primary" ? { active: options.active } : undefined);
-	if (options.active) await revealOpenedLeaf(app, leaf, options.autoFocus);
+	await openFileResult(plugin, result.file, action, options);
 	return true;
 }
 
 async function openFileResult(
-	app: App,
-	result: Extract<PaletteResult, { mode: "smart" | "link" | "backlink" }>,
+	plugin: MyPalettePlugin,
+	file: TFile,
 	action: ActionKind,
 	options: PaletteResultExecutionOptions,
 ): Promise<WorkspaceLeaf> {
-	const leaf = getLeafForAction(app, action, options.targetLeaf);
-	await leaf.openFile(result.file, action === "primary" ? { active: options.active } : undefined);
-	if (options.active) await revealOpenedLeaf(app, leaf, options.autoFocus);
-	return leaf;
+	return openFileInLeaf(plugin.app, file, {
+		action,
+		targetLeaf: options.targetLeaf,
+		active: options.active,
+		autoFocus: options.autoFocus ?? true,
+		focusExisting: plugin.settings.focusExistingTab,
+	});
 }
 
 function editorOf(

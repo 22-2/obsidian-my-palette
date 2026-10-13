@@ -1,6 +1,49 @@
-import type { App, WorkspaceLeaf } from "obsidian";
+import type { App, TFile, WorkspaceLeaf } from "obsidian";
 
 export type LeafOpenAction = "primary" | "alternate" | "vertical" | "horizontal";
+
+export interface OpenFileOptions {
+	action: LeafOpenAction;
+	/** The本文 leaf that a primary open replaces; ignored when it is pinned. */
+	targetLeaf?: WorkspaceLeaf;
+	/** Background opens load the file without activating its leaf. */
+	active: boolean;
+	/** Preview opens reveal the leaf but keep keyboard focus where it was. */
+	autoFocus: boolean;
+	/** Reveal the tab that already shows the file instead of opening another one. */
+	focusExisting: boolean;
+}
+
+/**
+ * The single path that opens a vault file from a palette result or a related-note
+ * action. Every file open goes through here so that tab reuse is decided once.
+ */
+export async function openFileInLeaf(
+	app: App,
+	file: TFile,
+	options: OpenFileOptions,
+): Promise<WorkspaceLeaf> {
+	const existing = options.focusExisting ? findLeafShowingFile(app, file) : undefined;
+	if (existing) {
+		// Why: a background open must not switch the user's tab when the note is
+		// already visible somewhere, so only an active open reveals the existing leaf.
+		if (options.active) await revealOpenedLeaf(app, existing, options.autoFocus);
+		return existing;
+	}
+	const leaf = getLeafForAction(app, options.action, options.targetLeaf);
+	await leaf.openFile(file, { active: options.active });
+	if (options.active) await revealOpenedLeaf(app, leaf, options.autoFocus);
+	return leaf;
+}
+
+/** Finds the first leaf whose view is currently showing `file`. */
+export function findLeafShowingFile(app: App, file: TFile): WorkspaceLeaf | undefined {
+	let found: WorkspaceLeaf | undefined;
+	app.workspace.iterateAllLeaves((leaf) => {
+		if (!found && (leaf.view as { file?: TFile | null }).file?.path === file.path) found = leaf;
+	});
+	return found;
+}
 
 /**
  * Resolves the leaf an open action may write to.

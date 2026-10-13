@@ -113,6 +113,8 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 			typeof source.openExternalMarkdownInObsidian === "boolean"
 				? source.openExternalMarkdownInObsidian
 				: true,
+		focusExistingTab:
+			typeof source.focusExistingTab === "boolean" ? source.focusExistingTab : true,
 		searchHistory: {
 			enabled:
 				typeof rawSearchHistory.enabled === "boolean"

@@ -302,6 +302,8 @@ export interface MyPaletteSettings {
 	home: { returnAfterSeconds: ReturnToHomeSeconds };
 	paletteDisplay: Record<PaletteSurface, PaletteDisplaySettings>;
 	openExternalMarkdownInObsidian: boolean;
+	/** Opening a note that is already in a tab focuses that tab instead of opening another. */
+	focusExistingTab: boolean;
 	searchHistory: SearchHistorySettings;
 	modes: ModeSettingsMap;
 	file: {
@@ -335,6 +337,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		palette: { highlightSearchMatches: true },
 	},
 	openExternalMarkdownInObsidian: true,
+	focusExistingTab: true,
 	searchHistory: {
 		enabled: true,
 		addDelayMs: SETTING_DEFAULTS.searchHistory.addDelayMs,

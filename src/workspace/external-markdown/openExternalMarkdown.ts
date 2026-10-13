@@ -39,10 +39,13 @@ export async function openExternalMarkdown(
 		// external note in another window (for example, Open in main window).
 		(leaf) =>
 			reuseExisting &&
+			plugin.settings.focusExistingTab &&
 			(!targetLeaf || leaf.getContainer() === targetLeaf.getContainer()) &&
 			externalPathOf(leaf)?.toLocaleLowerCase() === resolvedPath.toLocaleLowerCase(),
 	);
 	if (existing) {
+		// Why: a background open must not switch the user's tab to a note that is already visible.
+		if (!active) return;
 		// Why: a native Markdown leaf already owns this external path, so reopening
 		// it should navigate to that tab instead of creating a duplicate leaf.
 		await existing.setViewState({

@@ -1,5 +1,5 @@
 import { Notice, TFile, type App, type WorkspaceLeaf } from "obsidian";
-import { getLeafForAction, revealOpenedLeaf, type LeafOpenAction } from "src/workspace/openLeaf";
+import { openFileInLeaf, type LeafOpenAction } from "src/workspace/openLeaf";
 import { getVaultFullPath, isUserIgnoredPath } from "src/ignored-notes/ignoredPaths";
 import { getDesktopAdapter } from "src/platform/desktopAdapter";
 import { resolveExternalOpenTarget, type ExternalOpenTarget } from "src/palette/openTargets";
@@ -36,6 +36,8 @@ export interface ResultActionOptions {
 	active?: boolean;
 	/** Preview actions reveal the destination without focusing the editor. */
 	autoFocus?: boolean;
+	/** Reuse the tab that already shows a file; defaults to on. */
+	focusExistingTab?: boolean;
 }
 
 async function openExternalTarget(
@@ -95,12 +97,7 @@ export async function runResultAction(
 		const current = app.vault.getAbstractFileByPath(result.vaultPath);
 		if (!(current instanceof TFile))
 			return { close: false, message: "The file no longer exists." };
-		const leaf = getLeafForAction(app, action, options.targetLeaf);
-		await leaf.openFile(
-			current,
-			action === "primary" ? { active: options.active ?? true } : undefined,
-		);
-		if (options.active ?? true) await revealOpenedLeaf(app, leaf, options.autoFocus);
+		await openFile(app, current, action, options);
 		return { close: true };
 	}
 	if (result.mode === "command") return { close: true };
@@ -119,12 +116,7 @@ export async function runResultAction(
 	} else if (everythingResult.vaultPath) {
 		const current = app.vault.getAbstractFileByPath(everythingResult.vaultPath);
 		if (current instanceof TFile) {
-			const leaf = getLeafForAction(app, action, options.targetLeaf);
-			await leaf.openFile(
-				current,
-				action === "primary" ? { active: options.active ?? true } : undefined,
-			);
-			if (options.active ?? true) await revealOpenedLeaf(app, leaf, options.autoFocus);
+			await openFile(app, current, action, options);
 			return { close: true };
 		}
 	}
@@ -138,6 +130,21 @@ export async function runResultAction(
 		options.active ?? true,
 		options.targetLeaf,
 	);
+}
+
+async function openFile(
+	app: App,
+	file: TFile,
+	action: ActionKind,
+	options: ResultActionOptions,
+): Promise<void> {
+	await openFileInLeaf(app, file, {
+		action,
+		targetLeaf: options.targetLeaf,
+		active: options.active ?? true,
+		autoFocus: options.autoFocus ?? true,
+		focusExisting: options.focusExistingTab ?? true,
+	});
 }
 
 export function notifyActionError(message: string): void {

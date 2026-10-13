@@ -237,6 +237,13 @@ function createGeneralPage(plugin: SettingsHost, helpers: SettingPageHelpers): P
 					),
 			),
 		]),
+		helpers.group("Tabs", [
+			{
+				name: "Focus open tab",
+				desc: "When a note is already open in a tab, switch to that tab instead of opening it again. Background opens leave it as it is.",
+				...helpers.control("toggle", "focusExistingTab"),
+			},
+		]),
 		helpers.group("Search history", [
 			{
 				name: "Save searches",

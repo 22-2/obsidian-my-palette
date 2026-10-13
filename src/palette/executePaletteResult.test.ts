@@ -32,6 +32,7 @@ function fixture() {
 	};
 	const workspace = {
 		getLeaf: vi.fn().mockReturnValue(leaf),
+		iterateAllLeaves: vi.fn(),
 		revealLeaf: vi.fn().mockResolvedValue(undefined),
 		setActiveLeaf: vi.fn(),
 	};
@@ -45,7 +46,7 @@ function fixture() {
 	} as unknown as App;
 	const plugin = {
 		app,
-		settings: { openExternalMarkdownInObsidian: true },
+		settings: { openExternalMarkdownInObsidian: true, focusExistingTab: true },
 		recordResultUsage: vi.fn(),
 	} as unknown as MyPalettePlugin;
 	const options = { active: true, closeWhenDone: false, close: vi.fn(), showError: vi.fn() };
