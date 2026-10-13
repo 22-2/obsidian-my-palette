@@ -173,16 +173,19 @@ export class PaletteSearchSession {
 	/** Start a new provider search and discard any result from an older input. */
 	async search(
 		input = this.state.input,
-		options: { suppressHistory?: boolean } = {},
+		options: { suppressHistory?: boolean; keepResults?: boolean } = {},
 	): Promise<PaletteResult[]> {
 		if (this.disposed) return [];
-		void options;
 		this.controller?.abort();
 		const generation = ++this.generation;
 		this.historyCommittedGeneration = -1;
 		input = this.applyDirectModeEntry(input);
 		const parsed = this.parse(input);
 		const includeIgnored = this.includesIgnored(parsed);
+		// Why: a background refresh (autosave, metadata change) re-runs the same
+		// input; clearing the list first would flash the whole view empty. Keep the
+		// old rows on screen until the new results replace them in one render.
+		const keepResults = options.keepResults === true && input === this.state.input;
 		this.state = {
 			...this.state,
 			input,
@@ -190,12 +193,11 @@ export class PaletteSearchSession {
 			mode: parsed.mode,
 			everythingScope: this.scopeOf(parsed),
 			includeIgnored,
-			results: [],
-			resultCount: 0,
+			...(keepResults ? {} : { results: [], resultCount: 0 }),
 			error: undefined,
 			route: this.route,
 		};
-		this.emit();
+		if (!keepResults) this.emit();
 
 		this.plugin.paletteOpener.rememberQuery(parsed.mode, parsed.query, this.rawInput(input));
 		// History is committed when the result list receives focus. Keeping it out

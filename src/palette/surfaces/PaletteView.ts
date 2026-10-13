@@ -76,7 +76,7 @@ export class PaletteView extends ItemView {
 		this.app,
 		(ref) => this.registerEvent(ref),
 		() => this.session !== undefined,
-		() => void this.session?.search(this.session.input),
+		() => void this.session?.search(this.session.input, { keepResults: true }),
 	);
 	private sourcePath?: string;
 	private sourcePinned = false;
