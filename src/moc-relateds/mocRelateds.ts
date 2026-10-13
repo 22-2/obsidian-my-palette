@@ -54,7 +54,7 @@ function toRelatedCandidate(
 			// Show matching metadata to explain hits with no query text in the name.
 			...matchedMetadataPresentation(result.matchedTags ?? [], result.matchedKeywords ?? []),
 			badge: ignored
-				? "Ignored · Import"
+				? "Obsidian-excluded · Import"
 				: mutual
 					? "Mutual link exists"
 					: outgoing.has(path)
@@ -263,7 +263,7 @@ class MocTargetModal extends MocRelatedsModal {
 					category: "moc-insertion",
 					title: "MOC insert selector",
 					description:
-						"Search notes to link in the active MOC. Excluded files are hidden by default; the Ignored switch includes them.",
+						"Search notes to link in the active MOC. Obsidian-excluded files are hidden by default; the Obsidian-excluded switch includes them.",
 					actionLabel: "Insert",
 					shortcuts: [
 						["→", "Preview the note without leaving this selector"],
@@ -288,7 +288,7 @@ class MocTargetModal extends MocRelatedsModal {
 	}
 
 	protected override onSelectionModalOpen(): void {
-		// The Ignored switch comes first, matching its place in the main palette.
+		// The Obsidian-excluded switch comes first, matching its place in the main palette.
 		this.addStatusToggle(
 			ignoredToggleOptions(
 				this.includeIgnored,
@@ -401,8 +401,10 @@ async function resolveInsertTarget(
 	try {
 		return await materializeIgnoredNote(plugin.app, path);
 	} catch (error) {
-		console.error("Failed to import ignored note", error);
-		new Notice(error instanceof Error ? error.message : "Failed to import ignored note.");
+		console.error("Failed to import Obsidian-excluded file", error);
+		new Notice(
+			error instanceof Error ? error.message : "Failed to import Obsidian-excluded file.",
+		);
 		return undefined;
 	}
 }
@@ -599,7 +601,7 @@ export async function insertLinkToMocRelateds(plugin: MyPalettePlugin): Promise<
 	// Why: each insertion reads and updates the shared MOC, so process targets
 	// serially to keep one selection from overwriting another's changes.
 	for (const path of paths) {
-		// Ignored notes are imported only now, so cancelling never touches the vault.
+		// Obsidian-excluded files are imported only now, so cancelling never touches the vault.
 		const target = await resolveInsertTarget(plugin, path);
 		if (target)
 			await insertFileToMocRelateds(plugin, activeFile, target, mocLeaf, modal.mutual);

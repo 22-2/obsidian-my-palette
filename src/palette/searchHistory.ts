@@ -110,7 +110,7 @@ export function parseStoredSearchHistoryEntries(
 			!Number.isFinite(source.count)
 		)
 			return [];
-		// Rows from before the Ignored switch kept that scope as an `i ` prefix.
+		// Rows from before the Obsidian-excluded switch kept that scope as an `i ` prefix.
 		const legacyIgnored = source.input
 			.toLocaleLowerCase()
 			.startsWith(LEGACY_INCLUDE_IGNORED_PREFIX);
@@ -240,7 +240,7 @@ export function getSearchHistorySuggestions(
 
 /**
  * Rebuilds the palette input that would produce the given history entry. The
- * ignored-note scope is not part of the text; hosts restore it on their switch.
+ * Obsidian-excluded scope is not part of the text; hosts restore it on their switch.
  */
 export function formatSearchHistoryInput(
 	entry: SearchHistoryEntry,

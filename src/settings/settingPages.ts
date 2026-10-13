@@ -158,16 +158,16 @@ function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers)
 						),
 				),
 			]),
-			helpers.group("Ignored note index", [
+			helpers.group("Obsidian-excluded files index", [
 				{
-					name: "Rebuild ignored note index",
-					desc: "Rescan files hidden by Obsidian's excluded-folder filters so they are available with the Ignored switch.",
+					name: "Rebuild Obsidian-excluded files index",
+					desc: "Rescan files hidden by Obsidian's Excluded files setting so they are available with the Obsidian-excluded switch.",
 					action: () => {
 						// Keep index maintenance with the file-search settings because it
 						// repairs the cache used by the include-ignored search scope.
 						void plugin.fileProvider
 							.rebuildIgnoredIndex()
-							.then(() => new Notice("Ignored note index rebuilt."));
+							.then(() => new Notice("Obsidian-excluded files index rebuilt."));
 					},
 				},
 			]),

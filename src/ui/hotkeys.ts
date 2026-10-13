@@ -51,7 +51,7 @@ export const HOTKEY_ACTIONS = {
 		scopes: ["palette"],
 	},
 	toggleIgnored: {
-		name: "Toggle Ignored",
+		name: "Toggle Obsidian-excluded files",
 		description:
 			"Include files hidden by Obsidian's Excluded files setting in File search and the MOC insert selector.",
 		scopes: ["file-search", "moc-insert-selector"],

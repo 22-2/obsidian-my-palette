@@ -18,7 +18,7 @@ test.beforeEach(async ({ obsidian }) => {
 
 const IGNORED_TOGGLE = '.my-palette-status-toggle[data-status-toggle="include-ignored"]';
 
-test("the Ignored switch finds notes hidden by Excluded files", async ({ obsidian }) => {
+test("the Obsidian-excluded switch finds notes hidden by Excluded files", async ({ obsidian }) => {
 	const page = await openPaletteWith(obsidian, "secret");
 	await expect(page.locator(MODAL_ROW)).toHaveCount(0);
 
@@ -29,12 +29,12 @@ test("the Ignored switch finds notes hidden by Excluded files", async ({ obsidia
 	});
 	await expect(page.locator(MODAL_INPUT)).toBeFocused();
 
-	// Other modes never search ignored notes, so the switch is not shown there.
+	// Other modes never search Obsidian-excluded files, so the switch is not shown there.
 	await page.locator(MODAL_INPUT).fill("> secret");
 	await expect(page.locator(IGNORED_TOGGLE)).toBeHidden();
 });
 
-test("the Ignored switch searches excluded notes by keywords", async ({ obsidian }) => {
+test("the Obsidian-excluded switch searches excluded notes by keywords", async ({ obsidian }) => {
 	await writeRaw(
 		obsidian,
 		"hidden-dir/Observations.md",
@@ -50,7 +50,9 @@ test("the Ignored switch searches excluded notes by keywords", async ({ obsidian
 	]);
 });
 
-test("Enter opens an ignored Markdown note as an external Markdown view", async ({ obsidian }) => {
+test("Enter opens an Obsidian-excluded Markdown file as an external Markdown view", async ({
+	obsidian,
+}) => {
 	const page = await openPaletteWith(obsidian, "secret");
 	await page.keyboard.press("Control+i");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Secret plan", {

@@ -238,7 +238,7 @@ describe("file sorting", () => {
 		expect(sorted.map(({ path }) => path)).toEqual(["a-note.md", "z-note.md"]);
 	});
 
-	it("puts ignored notes first for an empty include-ignored listing", () => {
+	it("puts Obsidian-excluded files first for an empty include-ignored listing", () => {
 		const entries = [file("notes/new.md", 100, [], false), file("archive/old.md", 1, [], true)];
 
 		const sorted = sortFilesWithoutQuery(entries, new Map());

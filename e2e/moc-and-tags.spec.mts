@@ -53,9 +53,9 @@ test("checked MOC notes stay above results from a different query", async ({ obs
 	await obsidian.open("Topic MOC.md");
 	const page = obsidian.page;
 	await runPaletteCommand(obsidian, "insert-link-to-moc-relateds");
-	// The footer holds only the selector's switches, Ignored first as in the palette.
+	// The footer holds only the selector's switches, Obsidian-excluded first as in the palette.
 	await expect(page.locator(".my-palette-suggest-modal .my-palette-status-toggle")).toHaveText([
-		"IgnoredCtrl+I",
+		"Obsidian-excludedCtrl+I",
 		"MutualCtrl+M",
 	]);
 	await page.locator(MODAL_INPUT).fill("alpha");
@@ -79,7 +79,9 @@ test("checked MOC notes stay above results from a different query", async ({ obs
 	expect(await obsidian.read("Beta child.md")).not.toContain("[[Alpha child]]");
 });
 
-test("MOC insertion hides excluded notes unless the Ignored switch is on", async ({ obsidian }) => {
+test("MOC insertion hides excluded notes unless the Obsidian-excluded switch is on", async ({
+	obsidian,
+}) => {
 	await obsidian.createNote("Topic MOC.md", "## MOC\n- Relateds\n");
 	await obsidian.createNote("Visible child.md", "visible");
 	await obsidian.createNote("Hidden child.md", "hidden");
@@ -104,7 +106,9 @@ test.describe("MOC insertion with plugin exclusions", () => {
 		vaultOptions: pluginVaultOptions({ file: { excludedFolders: ["Hidden child.md"] } }),
 	});
 
-	test("includes plugin-excluded notes only with the Ignored switch", async ({ obsidian }) => {
+	test("includes plugin-excluded notes only with the Obsidian-excluded switch", async ({
+		obsidian,
+	}) => {
 		await obsidian.createNote("Topic MOC.md", "## MOC\n- Relateds\n");
 		await obsidian.createNote("Visible child.md", "visible");
 		await obsidian.createNote("Hidden child.md", "hidden");

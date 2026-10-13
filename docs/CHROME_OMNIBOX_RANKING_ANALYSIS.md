@@ -555,7 +555,7 @@ scored_history_match_unittest.cc では次が確認されています。
 | A B と AB                          | contiguous / field score の扱いを分ける       |
 | 同じ note に複数 alias / tag       | 重複 metadata が score を水増ししない         |
 | 新しい note vs古い note            | recency が同じ match 品質の中で効く           |
-| ignored note と通常 note           | include-ignored の明示意図で順位が変わる      |
+| Obsidian-excluded file と通常 note | include-ignored の明示意図で順位が変わる      |
 | 同一 path の複数候補               | 一つに統合し、表示 metadata を失わない        |
 
 ## 7. このリポジトリとの対応

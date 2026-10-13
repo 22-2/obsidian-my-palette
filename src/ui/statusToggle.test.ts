@@ -111,13 +111,13 @@ describe("status toggle", () => {
 		const { root, add } = fixture();
 		add({
 			id: "include-ignored",
-			label: "Ignored",
+			label: "Obsidian-excluded",
 			hotkey: () => ({ key: "I", modifiers: ["Ctrl"] }),
 		});
 		add();
 		add({
 			id: "include-ignored",
-			label: "Ignored",
+			label: "Obsidian-excluded",
 			hotkey: () => ({ key: "I", modifiers: ["Ctrl"] }),
 		});
 		const ids = [...root.querySelectorAll(".my-palette-status-toggle")].map((el) =>

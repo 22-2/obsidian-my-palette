@@ -21,7 +21,9 @@ test.beforeEach(async ({ obsidian }) => {
 
 const IGNORED_TOGGLE = '.my-palette-status-toggle[data-status-toggle="include-ignored"]';
 
-test("a changed Ignored hotkey replaces the footer hint and the shortcut", async ({ obsidian }) => {
+test("a changed Obsidian-excluded hotkey replaces the footer hint and the shortcut", async ({
+	obsidian,
+}) => {
 	const page = await openPaletteWith(obsidian, "secret");
 	await expect(page.locator(`${IGNORED_TOGGLE} .my-palette-status-toggle__hint`)).toHaveText(
 		"Ctrl+J",

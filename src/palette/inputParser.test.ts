@@ -4,7 +4,7 @@ import { getSearchHistoryCategory, parseInput } from "src/palette/inputParser";
 
 const modes = DEFAULT_SETTINGS.modes;
 
-describe("ignored-note scope", () => {
+describe("Obsidian-excluded scope", () => {
 	it("leaves a leading i in the File query now that a switch sets the scope", () => {
 		expect(parseInput("i old meeting", modes)).toEqual({
 			raw: "i old meeting",

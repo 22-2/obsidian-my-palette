@@ -58,7 +58,7 @@ describe("settings page layout", () => {
 			"File types",
 			"Excluded folders",
 			"Lower prior folders",
-			"Ignored note index",
+			"Obsidian-excluded files index",
 			"Result sorting",
 		]);
 		expect(groupsOf(integrations).map((group) => group.heading)).toEqual(["Integrations"]);

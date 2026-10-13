@@ -41,9 +41,9 @@ export interface PaletteSearchState {
 	query: string;
 	mode: PaletteMode;
 	everythingScope: EverythingScope;
-	/** Switch value; it applies only where the mode supports the ignored scope. */
+	/** Switch value; it applies only where the mode supports the Obsidian-excluded scope. */
 	ignoredScope: boolean;
-	/** Whether the current search actually includes ignored notes. */
+	/** Whether the current search actually includes Obsidian-excluded files. */
 	includeIgnored: boolean;
 	results: PaletteResult[];
 	resultCount: number;
@@ -152,7 +152,7 @@ export class PaletteSearchSession {
 	}
 
 	/**
-	 * Switches the ignored-note scope for the next search. Hosts search again
+	 * Switches the Obsidian-excluded scope for the next search. Hosts search again
 	 * themselves, since the modal renders results through its own refresh.
 	 */
 	setIgnoredScope(value: boolean): void {

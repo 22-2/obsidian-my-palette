@@ -52,7 +52,7 @@ export async function writeRaw(obsidian: ObsidianAPI, vaultPath: string, content
 	);
 }
 
-/** Sets Obsidian's "Excluded files" filters, which the ignored-note index reads. */
+/** Sets Obsidian's "Excluded files" filters, which the Obsidian-excluded index reads. */
 export async function setIgnoreFilters(obsidian: ObsidianAPI, filters: string[]) {
 	await obsidian.evaluateApp((filters) => {
 		(app.vault as unknown as { setConfig(key: string, value: unknown): void }).setConfig(

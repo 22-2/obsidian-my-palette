@@ -5,7 +5,7 @@ import { insertTags } from "src/tags/insertTags";
 import type MyPalettePlugin from "src/main";
 
 /**
- * Resolves a palette result to an indexed Markdown note. Ignored notes are
+ * Resolves a palette result to an indexed Markdown note. Obsidian-excluded files are
  * skipped instead of imported: adding a tag is not a reason to move a note
  * into the vault index, unlike MOC insertion which needs a link target.
  */

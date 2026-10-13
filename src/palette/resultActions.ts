@@ -79,7 +79,7 @@ export async function runResultAction(
 			} catch {
 				return { close: false, message: "The selected path no longer exists." };
 			}
-			// Ignored results are an inspection scope. Keep the source untouched;
+			// Obsidian-excluded results are an inspection scope. Keep the source untouched;
 			// The MOC insert selector owns the separate copy/materialize workflow.
 			const target = resolveExternalOpenTarget(absolutePath, {
 				openMarkdownInObsidian: externalMarkdown.openExternalMarkdownInObsidian,

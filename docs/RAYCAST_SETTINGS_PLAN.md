@@ -95,17 +95,17 @@ My Palette
 
 対象にするホットキー:
 
-| 操作                     | 既定     | 使える場所                |
-| ------------------------ | -------- | ------------------------- |
-| Temporarily hide palette | `Alt+H`  | All pickers               |
-| Preview selected result  | `→`      | Palette                   |
-| Search history           | `Ctrl+R` | All pickers               |
-| Show result actions      | `Ctrl+K` | Palette                   |
-| Return to input mode     | `F`      | Tag and MOC selectors     |
-| Toggle selection         | `Space`  | Tag and MOC selectors     |
-| Toggle Ignored(新規)     | `Ctrl+I` | File search、MOC selector |
-| Toggle Mutual(新規)      | `Ctrl+M` | MOC selector              |
-| Enter mode(新規)         | `Tab`    | Palette(ルート)           |
+| 操作                                 | 既定     | 使える場所                |
+| ------------------------------------ | -------- | ------------------------- |
+| Temporarily hide palette             | `Alt+H`  | All pickers               |
+| Preview selected result              | `→`      | Palette                   |
+| Search history                       | `Ctrl+R` | All pickers               |
+| Show result actions                  | `Ctrl+K` | Palette                   |
+| Return to input mode                 | `F`      | Tag and MOC selectors     |
+| Toggle selection                     | `Space`  | Tag and MOC selectors     |
+| Toggle Obsidian-excluded files(新規) | `Ctrl+I` | File search、MOC selector |
+| Toggle Mutual(新規)                  | `Ctrl+M` | MOC selector              |
+| Enter mode(新規)                     | `Tab`    | Palette(ルート)           |
 
 `Enter`、`Esc`、矢印キー、`Home` / `End`、`Backspace`(空入力でルートへ戻る)は、Obsidianと同じく標準の動作として固定する。
 
@@ -182,7 +182,7 @@ interface MyPaletteSettings {
 1. `refactor`: エイリアスの保存先を `modes.<id>` に移し、スキーマを19に上げて移行する。画面は変えない。
 2. `feat`: 全モードのエイリアスと有効/無効を設定できるようにし、無効なモードをRoot Searchとエイリアス入力から外す。
 3. `refactor`: フッターのスイッチが任意のホットキーを受け付けるようにし、重複検査に「使える場所」を入れる(既定値は今と同じ)。
-4. `feat`: `Toggle Ignored`、`Toggle Mutual`、`Enter mode` のホットキーを設定できるようにする。
+4. `feat`: `Toggle Obsidian-excluded files`、`Toggle Mutual`、`Enter mode` のホットキーを設定できるようにする。
 5. `feat`: Shortcutsページの表(ホットキーとエイリアス)。旧Hotkeysページを置き換える。
 6. `feat!`: 設定画面をGeneral / Shortcuts / モードごとのページに組み直す。画面に無かった設定(検索履歴の詳細、Everythingの詳細、強調表示、外部Markdown)も出す。
 7. `feat!`: `Open palette` の状態復元と `Pop to Root Search`。`Remember last input` を廃止して移行する。

@@ -137,7 +137,7 @@ function addImportFrontmatter(content: string, sourcePath: string, importedAt: s
 	);
 }
 
-/** Copies an ignored Markdown note into the configured new-note folder. */
+/** Copies an Obsidian-excluded Markdown file into the configured new-note folder. */
 export async function materializeIgnoredNote(
 	app: App,
 	sourcePath: string,
@@ -169,7 +169,7 @@ export async function materializeIgnoredNote(
 		destinationCandidate.path,
 		addImportFrontmatter(sourceContent, normalizedSourcePath, importedAt),
 	);
-	log("Imported ignored note", {
+	log("Imported Obsidian-excluded file", {
 		sourcePath: normalizedSourcePath,
 		destinationPath: destinationCandidate.path,
 	});

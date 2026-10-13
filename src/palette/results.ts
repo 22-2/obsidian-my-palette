@@ -20,7 +20,7 @@ export interface ParsedInput {
 	everythingScope?: EverythingScope;
 }
 
-/** Only File search reads the ignored-note index; other modes ignore the switch. */
+/** Only File search reads the Obsidian-excluded index; other modes ignore the switch. */
 export function supportsIncludeIgnored(mode: PaletteMode): boolean {
 	return mode === "file";
 }
@@ -43,7 +43,7 @@ export interface FileResult extends BaseResult {
 	matchedTags?: string[];
 	/** Keywords matched by the current query; omitted for empty and tag-only queries. */
 	matchedKeywords?: string[];
-	/** Search snapshots also cover ignored notes that have no Obsidian TFile. */
+	/** Search snapshots also cover Obsidian-excluded files that have no Obsidian TFile. */
 	mtime?: number;
 	prior?: number;
 }

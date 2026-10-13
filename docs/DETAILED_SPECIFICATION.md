@@ -464,7 +464,7 @@ Everythingページには次を設ける。
 
 - 旧 `prefixes.command` と `prefixes.everything` は schema 19 で `modes.commands.alias` と `modes.everything.alias` へ移す（末尾の空白を除く）。
 - 隠しエイリアス `es` は廃止した。`es` は他のモードのエイリアスに使える。
-- 除外ファイルを含める指定はエイリアスではなく、フッター左端の `Ignored` スイッチで切り替える（既定 `Ctrl+I`。Shortcuts で変更できる）。File検索とMOC選択画面でだけ使える。
+- 除外ファイルを含める指定はエイリアスではなく、フッター左端の `Obsidian-excluded` スイッチで切り替える（既定 `Ctrl+I`。Shortcuts で変更できる）。File検索とMOC選択画面でだけ使える。
 - 連携（Integrations）を切ったモードは、Home とエイリアス入力から外れる。Modes ページでは行を薄くし、スイッチを押せなくする。
 - 無効にしたモードは Home の行とエイリアス入力から外れる。エイリアスは他のモードが使えないように予約したままにする。
 
@@ -482,7 +482,7 @@ Everythingページには次を設ける。
 | -------------- | -------------------------------------------------------------------------------------------------------------- |
 | `General`      | Return to Home after、検索履歴（保存、待ち時間、保持日数）、強調表示（パレット・サイドバー・テーブル別）、診断 |
 | `Modes`        | 全モードのエイリアスと有効/無効                                                                                |
-| `File search`  | 対象拡張子、除外フォルダ、優先度を下げるフォルダ、除外ノートのインデックス再構築、並び順                       |
+| `File search`  | 対象拡張子、除外フォルダ、優先度を下げるフォルダ、Obsidian-excluded files のインデックス再構築、並び順         |
 | `Shortcuts`    | パレット・選択画面のホットキーの表（絞り込み、記録、解除、既定値へ戻す）                                       |
 | `Integrations` | Everything（名前から接続・結果の設定を開く）、Smart Connections、VS Code（外部Markdownの開き方）               |
 
@@ -560,7 +560,7 @@ interface MyPaletteSettings {
 - 最近実行コマンドは最大20 ID。存在しない ID は表示時に除外する。
 - 最近実行コマンドのIDは Vault 単位の IndexedDB に保存し、設定の `data.json` にはIDを保存しない。
 - 既存の `data.json` にある最近実行コマンドIDは、初回起動時に IndexedDB へ移行する。IndexedDB が利用できない場合はIDを `data.json` の一時的なフォールバックとして保持する。
-- 閉じたパレットの状態（入力、Ignored、選択行、スクロール位置）は Obsidian の実行中だけメモリに保持する。`Open palette` は、閉じてから `launcher.popToRootAfterSeconds` 秒以内なら復元し、それ以外（`0` は常に）はHome の空の状態で開く。data.json には保存しない。
+- 閉じたパレットの状態（入力、Obsidian-excluded、選択行、スクロール位置）は Obsidian の実行中だけメモリに保持する。`Open palette` は、閉じてから `launcher.popToRootAfterSeconds` 秒以内なら復元し、それ以外（`0` は常に）はHome の空の状態で開く。data.json には保存しない。
 - 検索履歴は検索モード・Everything の検索範囲ごとに分類し、プレフィックスを除いた検索語、回数、最終検索日時を Vault 単位の IndexedDB へ永続化する。設定の `data.json` には履歴エントリを保存しない。
 - 既存の `data.json` にある履歴エントリは、初回起動時に IndexedDB へ移行する。IndexedDB が利用できない場合は履歴を `data.json` の一時的なフォールバックとして保持し、次回起動時に再試行する。
 - 検索結果リストへフォーカスが移ったときに履歴へ追加する。検索欄のblurや入力停止後の経過時間だけでは追加しない。
@@ -711,9 +711,9 @@ src/
 | `PaletteView`                 | 永続パレットのItemView、workspace state、各部品の接続                      |
 | `paletteLeafTracker`          | 永続ビューが操作する本文leafと検索元ノートの解決                           |
 | `fileListRefresh`             | Vault・メタデータ変更時の検索再実行(デバウンス付き)                        |
-| `ignoredNoteEntry`            | ignored noteのパス・frontmatterを検索用エントリへ変換                      |
+| `ignoredNoteEntry`            | Obsidian-excluded fileのパス・frontmatterを検索用エントリへ変換            |
 | `ignoredNoteScanner`          | 除外対象のVault走査と並列処理                                              |
-| `ignoredNoteIndex`            | ignored noteエントリのキャッシュ制御とIndexedDB永続化                      |
+| `ignoredNoteIndex`            | Obsidian-excluded fileエントリのキャッシュ制御とIndexedDB永続化            |
 | `resultPresentation`          | 検索結果の表示形式とパスコピー対象の決定                                   |
 | `inputParser`                 | プレフィックス検出とクエリ抽出。副作用なし                                 |
 | Provider                      | モード別検索。UI 要素を直接操作しない                                      |
@@ -727,7 +727,7 @@ src/
 | `RecentCommandService`        | `RecentCommandStore` と `data.json` へのフォールバックの同期               |
 | `settings/settingTab`         | 設定 UI と入力値の反映                                                     |
 | `settings/settingsHost`       | 設定画面がPluginに求める操作だけを定義したインターフェース                 |
-| `IgnoredNoteIndex`            | 除外ファイルを検索可能にする再構築可能なキャッシュ                         |
+| `IgnoredNoteIndex`            | Obsidian-excluded files を検索可能にする再構築可能なキャッシュ             |
 | `workspace/external-markdown` | 外部Markdownをnative `markdown` viewへ開くworkspace state変換とleaf再利用  |
 
 ### 11.3 非同期検索フロー

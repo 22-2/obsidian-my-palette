@@ -117,7 +117,7 @@ My Palette
 ├── File search
 │   ├── File types       対象拡張子(今は Everything ページにある)
 │   ├── Excluded folders / Lower prior folders
-│   ├── Ignored note index
+│   ├── Obsidian-excluded file index
 │   └── Result sorting
 ├── Shortcuts            ホットキーの表(9件)
 └── Integrations         1連携1行。右端に有効/無効、名前でモーダル
@@ -296,7 +296,7 @@ v1の手順1〜4(移行、エイリアスと有効/無効、フッターのス�
 3. `refactor`: エイリアスの保存先を `modes.<id>` に移し、スキーマを19に上げて移行する。
 4. `feat`: 全モードのエイリアスと有効/無効を保存・反映できるようにする(画面はModesページで追加)。
 5. `refactor`: フッターのスイッチが任意のホットキーを受け付けるようにし、重複検査に「使える場所」を入れる。
-6. `feat`: `Toggle Ignored`、`Toggle Mutual`、`Enter mode` のホットキーを設定できるようにする。
+6. `feat`: `Toggle Obsidian-excluded files`、`Toggle Mutual`、`Enter mode` のホットキーを設定できるようにする。
 7. `feat`: `…` メニューの並びを変え、その画面の検索履歴を2回押して消す項目を足す。
 8. `feat`: Shortcutsページの表。旧Hotkeysページを置き換える。
 9. `feat`: Modesページ。

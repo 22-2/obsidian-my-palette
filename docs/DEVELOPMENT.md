@@ -1,6 +1,6 @@
 # Development
 
-My Palette is written in TypeScript and bundled with esbuild. Source is organized by feature under `src/`, with unit tests colocated next to the pure search, settings and ignored-note logic.
+My Palette is written in TypeScript and bundled with esbuild. Source is organized by feature under `src/`, with unit tests colocated next to the pure search, settings and Obsidian-excluded file logic.
 
 Requirements: Node.js and pnpm.
 

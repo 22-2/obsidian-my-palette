@@ -135,7 +135,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			...(parseFrontMatterTags(metadata?.frontmatter) ?? []),
 		]);
 		const prior = normalizeFrontmatterPrior(metadata?.frontmatter?.prior);
-		// Search metadata stays consistent between visible and ignored notes; H1 is
+		// Search metadata stays consistent between visible and Obsidian-excluded files; H1 is
 		// intentionally excluded because it is not stable note identity metadata. The
 		// numeric `prior` value is kept separately because it controls ordering only.
 		this.setEntry({
@@ -172,7 +172,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		if (includeIgnored) {
 			// The explicit prefix also authorizes an empty-query listing. The
 			// result limit in the palette keeps the UI bounded while the sorter
-			// places ignored notes before the normal Vault entries.
+			// places Obsidian-excluded files before the normal Vault entries.
 			for (const ignored of await this.ignoredIndex.getEntries()) {
 				const entry: FileSearchEntry = {
 					path: ignored.path,
@@ -191,7 +191,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 					mtime: ignored.mtime,
 					ignored: true,
 				};
-				// Keep extension filtering aligned for both indexed Vault files and ignored notes.
+				// Keep extension filtering aligned for both indexed Vault files and Obsidian-excluded files.
 				entries.push(entry);
 			}
 		}
@@ -253,7 +253,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			ignored: entry.ignored,
 			matchedTags: matchedTags?.length ? [...matchedTags] : undefined,
 			matchedKeywords: matchedKeywords?.length ? [...matchedKeywords] : undefined,
-			// Table sorting must use the same metadata for indexed and ignored notes.
+			// Table sorting must use the same metadata for indexed and Obsidian-excluded files.
 			mtime: entry.mtime,
 			prior: entry.prior,
 		};

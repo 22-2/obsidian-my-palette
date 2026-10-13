@@ -134,7 +134,7 @@ describe("materializeIgnoredNote", () => {
 			/^---\nmy-palette-source: "ignored\/note\.md"\nmy-palette-imported-at: ".+"\n---\n# Note$/,
 		);
 		expect(log).toHaveBeenCalledWith(
-			"Imported ignored note",
+			"Imported Obsidian-excluded file",
 			expect.objectContaining({
 				sourcePath: "ignored/note.md",
 				destinationPath: "Imported/note.md",

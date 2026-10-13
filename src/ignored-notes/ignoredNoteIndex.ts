@@ -142,10 +142,10 @@ export class IgnoredNoteIndex {
 		} else {
 			// A changed entry shape, such as adding `prior` or tags, must be rebuilt before
 			// returning ignored results; otherwise the first search would use stale data.
-			this.log("Ignored-note index requires rebuild", { entries: entries.length });
+			this.log("Obsidian-excluded index requires rebuild", { entries: entries.length });
 		}
 		this.loaded = true;
-		this.log("Loaded ignored-note index", { entries: this.current.size });
+		this.log("Loaded Obsidian-excluded index", { entries: this.current.size });
 	}
 
 	private needsScan(): boolean {
@@ -160,7 +160,10 @@ export class IgnoredNoteIndex {
 		const scanRoots = regexCount > 0 ? [...roots, ""] : roots;
 		if (regexCount > 0)
 			this.log("Scanning Vault root to resolve ignored regex filters", { count: regexCount });
-		this.log("Scanning ignored notes", { roots: scanRoots, cachedEntries: this.current.size });
+		this.log("Scanning Obsidian-excluded files", {
+			roots: scanRoots,
+			cachedEntries: this.current.size,
+		});
 		const paths = (await collectVaultPaths(this.app, scanRoots, this.log)).filter((path) =>
 			isUserIgnoredPathWithFilters(filters, path),
 		);
@@ -174,7 +177,7 @@ export class IgnoredNoteIndex {
 				processed % PROGRESS_INTERVAL === 0 ||
 				processed === paths.length
 			)
-				this.log("Scanning ignored notes", { processed, total: paths.length });
+				this.log("Scanning Obsidian-excluded files", { processed, total: paths.length });
 			return entry;
 		});
 		for (const entry of scanned) {
@@ -185,7 +188,7 @@ export class IgnoredNoteIndex {
 		this.current.clear();
 		for (const [path, entry] of next) this.current.set(path, entry);
 		this.lastScannedAt = Date.now();
-		this.log("Finished scanning ignored notes", { entries: next.size });
+		this.log("Finished scanning Obsidian-excluded files", { entries: next.size });
 	}
 
 	private async readEntry(

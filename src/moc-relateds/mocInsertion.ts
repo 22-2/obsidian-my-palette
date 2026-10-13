@@ -19,7 +19,9 @@ async function resolveMocTarget(
 				return await materializeIgnoredNote(plugin.app, result.vaultPath);
 			} catch (error) {
 				new Notice(
-					error instanceof Error ? error.message : "Failed to import ignored note.",
+					error instanceof Error
+						? error.message
+						: "Failed to import Obsidian-excluded file.",
 				);
 				return undefined;
 			}

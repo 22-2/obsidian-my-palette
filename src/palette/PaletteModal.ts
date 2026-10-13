@@ -252,7 +252,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	private moveToSidebar(): void {
-		// Why: copy the live search and the Ignored switch before closing. The
+		// Why: copy the live search and the Obsidian-excluded switch before closing. The
 		// alias-prefixed input carries the mode, so the new pane enters it again.
 		// A fresh pane preserves this search without replacing another sidebar
 		// palette, and closing first lets the new input retain focus.

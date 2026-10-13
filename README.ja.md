@@ -30,7 +30,7 @@ Another Quick Switcher、標準の Quick Switcher、Quick Switcher++、Omnisearc
 - **コマンド・ブックマーク・リンク・バックリンク・Smart Connections の検索**を同じウィンドウで行えます。
 - **複数選択**: ファイルマネージャーと同じ操作で選び、選択したノートへまとめてパスのコピー、タグ追加、MOC リンク挿入ができます。
 - **3つの表示面**: モーダル、右サイドバーのリストビュー、センタータブのソート可能なテーブルビュー。
-- **除外ファイルは必要なときだけ**: Obsidian の除外フォルダーにあるノートは普段は出さず、`Ignored` スイッチ（`Ctrl+I`）をオンにしたときだけ検索対象にできます。
+- **Obsidian-excluded files は必要なときだけ**: Obsidian の「Excluded files」で除外されたファイル（Obsidian-excluded files）は普段は出さず、`Obsidian-excluded` スイッチ（`Ctrl+I`）をオンにしたときだけ検索対象にできます。
 - デスクトップ専用です（主な対象は Windows）。
 
 ## はじめかた
@@ -71,7 +71,7 @@ Tag insert selector、MOC insert selector、MOC remove selector、Folder move se
 | `Ctrl+R`                 | 検索履歴                                 |
 | `Esc`                    | モードから戻る。Homeでは閉じる/クリア    |
 
-アクションメニューには、開く、バックグラウンドタブで開く、左右に分割して開く、下に分割して開く、エクスプローラーで表示（Everything の結果）、ファイル名・Vault 相対パス・絶対パスのコピー、MOC への挿入、タグの追加があります。メニューボタンの `Help` に、その画面で使える操作をまとめています。パレットのモーダル下部には `Ignored` スイッチを表示します。そのほかのキー操作と挿入先の情報はヘルプで確認できます。`Alt+H` を押している間は、モーダルと背後の暗幕を非表示にして、プレビューを確認できます。どちらかのキーを離すと再表示して検索欄にフォーカスを戻します。モードの中では `Esc` でHomeに戻ります。Homeの `Esc` は、モーダルでは閉じる操作、常設ビューでは検索語をクリアしてから入力欄へ戻る操作です。
+アクションメニューには、開く、バックグラウンドタブで開く、左右に分割して開く、下に分割して開く、エクスプローラーで表示（Everything の結果）、ファイル名・Vault 相対パス・絶対パスのコピー、MOC への挿入、タグの追加があります。メニューボタンの `Help` に、その画面で使える操作をまとめています。パレットのモーダル下部には `Obsidian-excluded` スイッチを表示します。そのほかのキー操作と挿入先の情報はヘルプで確認できます。`Alt+H` を押している間は、モーダルと背後の暗幕を非表示にして、プレビューを確認できます。どちらかのキーを離すと再表示して検索欄にフォーカスを戻します。モードの中では `Esc` でHomeに戻ります。Homeの `Esc` は、モーダルでは閉じる操作、常設ビューでは検索語をクリアしてから入力欄へ戻る操作です。
 
 ### 検索モード
 
@@ -91,7 +91,7 @@ Tag insert selector、MOC insert selector、MOC remove selector、Folder move se
 
 すべてのエイリアスは **設定 → My Palette → Modes** で変更でき、モードごとにオフにできます。モードをオフにするか、**Integrations** で連携をオフにすると、そのモードはHomeとエイリアス入力から外れます。`Open recent palette` とテーブルビューはモードの一覧を出しませんが、エイリアスでモードに入れます。`Open run list` や `Backlink search` など、モードを直接開くコマンドはそのモードから始まり、`Esc` でHomeに戻ります。
 
-下部左端の `Ignored` スイッチ（`Ctrl+I`）をオンにすると、Obsidian の除外フォルダーにあるファイルも検索します。ファイル検索でだけ有効で、ほかのモードでは薄く表示します。検索履歴は除外ファイルを含めたかどうかも記録し、履歴を選ぶとスイッチも復元します。
+下部左端の `Obsidian-excluded` スイッチ（`Ctrl+I`）をオンにすると、Obsidian の「Excluded files」で除外されたファイル（Obsidian-excluded files）も検索します。ファイル検索でだけ有効で、ほかのモードでは薄く表示します。検索履歴は除外ファイルを含めたかどうかも記録し、履歴を選ぶとスイッチも復元します。
 
 ### 検索構文
 
@@ -99,7 +99,7 @@ Everything 以外のモードでは、スペース区切りが AND、`|` 区切�
 
 ファイル検索はインラインタグと frontmatter の `tags` の両方を対象にします。`#project` はタグを直接検索し、通常の検索語でもタグに一致します。一致したタグはファイル名の下に最大3件表示され、残りは `+N` にまとまります。行にカーソルを合わせると全件を確認できます。
 
-frontmatter の `keywords` も文字列配列として検索対象になります（例: `keywords: [宇宙, 星空観察]`）。`Ignored` スイッチで検索する除外ノートにも対応します。一致した keywords はタグの隣に `#` なしで表示し、合わせて最大3件、残りは `+N` にまとめます。チップにカーソルを合わせると全件を確認できます。`#` 付きの語だけを入力した場合はタグのみを検索します。
+frontmatter の `keywords` も文字列配列として検索対象になります（例: `keywords: [宇宙, 星空観察]`）。`Obsidian-excluded` スイッチで検索する Obsidian-excluded filesにも対応します。一致した keywords はタグの隣に `#` なしで表示し、合わせて最大3件、残りは `+N` にまとめます。チップにカーソルを合わせると全件を確認できます。`#` 付きの語だけを入力した場合はタグのみを検索します。
 
 Everything のクエリは変換せず、そのまま Everything 独自の構文に渡されます。Everything モードには Everything 1.5a と公式 HTTP Server Plugin の起動が必要です。詳しくは [Everything の設定](#everything-の設定)を参照してください。
 
@@ -169,7 +169,7 @@ MOC insert selector も同じ入力／選択モードと操作です。チェッ
 
 ## 設定
 
-設定は5ページに分かれています。**General**（Home に戻るまでの時間、検索履歴、ハイライト、デバッグメッセージ）、**Modes**（各モードのエイリアスと有効/無効）、**File search**（対象拡張子、除外フォルダー、無視ノートのインデックス、ソート）、**Shortcuts**（ホットキーの表）、**Integrations**（Everything、Smart Connections、VS Code）です。
+設定は5ページに分かれています。**General**（Home に戻るまでの時間、検索履歴、ハイライト、デバッグメッセージ）、**Modes**（各モードのエイリアスと有効/無効）、**File search**（対象拡張子、Excluded folders、Obsidian-excluded files のインデックス、ソート）、**Shortcuts**（ホットキーの表）、**Integrations**（Everything、Smart Connections、VS Code）です。
 
 ### ショートカット
 
@@ -184,7 +184,7 @@ MOC insert selector も同じ入力／選択モードと操作です。チェッ
 
 ### Return to Home after
 
-`My Palette: Open palette` は、閉じたときの入力・Ignored の状態・選択行・スクロール位置を、**設定 → My Palette → General → Return to Home after** で決めた時間（Immediately、30、60、90 秒。既定は 90 秒）以内に開き直すと復元します。それ以外はHomeの空の状態から始まります。復元した検索語は選択された状態になるので、そのまま打ち直せます。この状態はメモリーにだけ保持し、Obsidian を再起動するとHomeから始まります。
+`My Palette: Open palette` は、閉じたときの入力・Obsidian-excluded スイッチの状態・選択行・スクロール位置を、**設定 → My Palette → General → Return to Home after** で決めた時間（Immediately、30、60、90 秒。既定は 90 秒）以内に開き直すと復元します。それ以外はHomeの空の状態から始まります。復元した検索語は選択された状態になるので、そのまま打ち直せます。この状態はメモリーにだけ保持し、Obsidian を再起動するとHomeから始まります。
 
 ### 検索履歴
 

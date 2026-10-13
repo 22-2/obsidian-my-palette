@@ -30,7 +30,7 @@ Other sources (commands, Everything, bookmarks, …) are modes one step away fro
 - **Command, bookmark, link, backlink and Smart Connections search** in the same window.
 - **Multi-select** with the same gestures as a file manager, then copy paths, add tags or insert MOC links to all selected notes at once.
 - **Three surfaces**: a modal, a list view in the right sidebar, and a sortable table view in a center tab.
-- **Excluded files on demand**: notes hidden by Obsidian's excluded folders stay out of the way until you turn on the `Ignored` switch (`Ctrl+I`).
+- **Obsidian-excluded files on demand**: files hidden by Obsidian's Excluded files setting stay out of the way until you turn on the `Obsidian-excluded` switch (`Ctrl+I`).
 - Desktop only (Windows is the primary target).
 
 ## Getting started
@@ -71,7 +71,7 @@ The action (`…`) and history (clock) buttons are also available in the Tag ins
 | `Ctrl+R`               | Search history                                     |
 | `Esc`                  | Leave a mode; at Home, close or clear              |
 
-The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current palette. The palette modal's footer shows the `Ignored` switch; other keyboard instructions and insertion targets live in Help. Hold `Alt+H` in any search or interaction mode to gently fade out the palette or selector while inspecting a preview; releasing either key fades it back in and returns focus to the search field. This works in modals (including their backdrop), sidebar palettes and table views, preserving the query, selection and workspace layout. In a mode, `Esc` returns to Home. At Home, `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
+The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current palette. The palette modal's footer shows the `Obsidian-excluded` switch; other keyboard instructions and insertion targets live in Help. Hold `Alt+H` in any search or interaction mode to gently fade out the palette or selector while inspecting a preview; releasing either key fades it back in and returns focus to the search field. This works in modals (including their backdrop), sidebar palettes and table views, preserving the query, selection and workspace layout. In a mode, `Esc` returns to Home. At Home, `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
 
 ### Custom shortcuts
 
@@ -95,7 +95,7 @@ Open **Settings → My Palette → Shortcuts** to see every palette and selector
 
 Every alias can be changed, and a mode can be turned off, in **Settings → My Palette → Modes**. Turning off a mode, or its integration in **Integrations**, removes it from Home and from alias entry. `Open recent palette` and the table view do not list modes but still enter them by alias. Commands that open a mode directly, such as `Open run list` or `Backlink search`, start in that mode; `Esc` returns to Home.
 
-The `Ignored` switch at the left of the footer (`Ctrl+I`) includes files hidden by Obsidian's excluded folders. It applies to file search only and stays dimmed in other modes. Search history remembers whether a search included them, and restoring an entry sets the switch.
+The `Obsidian-excluded` switch at the left of the footer (`Ctrl+I`) includes Obsidian-excluded files, the ones hidden by Obsidian's Excluded files setting. It applies to file search only and stays dimmed in other modes. Search history remembers whether a search included them, and restoring an entry sets the switch.
 
 ### Search syntax
 
@@ -103,7 +103,7 @@ Outside Everything mode, separate terms with spaces for AND and use `|` for OR. 
 
 File search covers inline tags and frontmatter `tags`. `#project` searches tags directly, and ordinary terms can match tags too. Matching tags appear under the file name (up to three, then `+N`); hover a row to see all of them.
 
-Frontmatter `keywords` is also searchable as a string array (for example, `keywords: [astronomy, stargazing]`), including in excluded notes searched with the `Ignored` switch. Matching keywords appear beside matching tags without a `#`, with up to three chips in total followed by `+N`. Hover the chips to see all matches. Hash-prefixed tag-only queries search tags only.
+Frontmatter `keywords` is also searchable as a string array (for example, `keywords: [astronomy, stargazing]`), including in Obsidian-excluded files searched with the `Obsidian-excluded` switch. Matching keywords appear beside matching tags without a `#`, with up to three chips in total followed by `+N`. Hover the chips to see all matches. Hash-prefixed tag-only queries search tags only.
 
 Everything queries are passed through unchanged and use Everything's own syntax. Everything mode needs Everything 1.5a with the official HTTP Server plugin running. See [Everything setup](#everything-setup).
 
@@ -113,7 +113,7 @@ Selection is shared by the palette, the Tag insert selector and the MOC insert a
 
 ### Adding tags
 
-Run `Insert tags into current note`, or right-click results and choose `Add tags…`. With several results selected, the tags are added to every selected Markdown note. Excluded files are skipped.
+Run `Insert tags into current note`, or right-click results and choose `Add tags…`. With several results selected, the tags are added to every selected Markdown note. Obsidian-excluded files are skipped.
 
 - Candidates are ordered as recently inserted tags, tags used by linked notes (up to 10, marked `Related N`), then usage count.
 - Tags that every target already has appear last as `Registered` and cannot be chosen. Tags only some targets have show `On N/M notes` and stay selectable.
@@ -173,7 +173,7 @@ Notes without a `prior` sort last. Complete contiguous matches on a name, path, 
 
 ## Settings
 
-Settings are split into five pages: **General** (Return to Home after, search history, highlighting and diagnostics), **Modes** (each mode's alias and switch), **File search** (file types, excluded folders, ignored-note index, sort priorities), **Shortcuts** (the table described above) and **Integrations** (Everything, Smart Connections and VS Code).
+Settings are split into five pages: **General** (Return to Home after, search history, highlighting and diagnostics), **Modes** (each mode's alias and switch), **File search** (file types, excluded folders, Obsidian-excluded index, sort priorities), **Shortcuts** (the table described above) and **Integrations** (Everything, Smart Connections and VS Code).
 
 ### Everything setup
 
@@ -184,7 +184,7 @@ Only localhost communication is used; My Palette sends nothing to external servi
 
 ### Return to Home after
 
-`Open palette` resumes the palette you closed last: its query with the mode alias, the Ignored switch, the selected row and the scroll position. It does so only when you come back within the time set by **Settings → My Palette → General → Return to Home after** (Immediately, 30, 60 or 90 seconds; 90 by default), and otherwise starts at Home. The resumed query is selected, so typing replaces it. This state is kept in memory only, so restarting Obsidian starts at Home.
+`Open palette` resumes the palette you closed last: its query with the mode alias, the Obsidian-excluded switch, the selected row and the scroll position. It does so only when you come back within the time set by **Settings → My Palette → General → Return to Home after** (Immediately, 30, 60 or 90 seconds; 90 by default), and otherwise starts at Home. The resumed query is selected, so typing replaces it. This state is kept in memory only, so restarting Obsidian starts at Home.
 
 ### Search history
 

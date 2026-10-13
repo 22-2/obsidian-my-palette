@@ -113,7 +113,7 @@ describe("search history", () => {
 		]);
 	});
 
-	it("keeps ignored-note scope separate from the normal file search", () => {
+	it("keeps Obsidian-excluded scope separate from the normal file search", () => {
 		const entries = recordSearchHistory(
 			recordSearchHistory([], "archive", "file", {
 				now: 1_000,
@@ -191,7 +191,7 @@ describe("formatSearchHistoryInput", () => {
 		expect(formatSearchHistoryInput(entry(category), modes)).toBe(expected);
 	});
 
-	it("leaves the ignored-note scope to the host's switch", () => {
+	it("leaves the Obsidian-excluded scope to the host's switch", () => {
 		expect(formatSearchHistoryInput(entry("file", true), modes)).toBe("foo");
 		expect(formatSearchHistoryInput(entry("command", true), modes)).toBe("> foo");
 	});
