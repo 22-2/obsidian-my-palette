@@ -38,6 +38,7 @@ export function getResultAbsolutePath(app: App, result: PaletteResult): string |
 		case "snippet":
 			return result.absolutePath;
 		case "command":
+		case "property":
 		case "search-history":
 		case "mode-entry":
 		case "settings-entry":

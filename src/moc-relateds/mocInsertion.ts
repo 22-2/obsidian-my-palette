@@ -38,6 +38,7 @@ async function resolveMocTarget(
 		result.mode === "command" ||
 		result.mode === "plugin" ||
 		result.mode === "snippet" ||
+		result.mode === "property" ||
 		result.mode === "search-history" ||
 		result.mode === "mode-entry" ||
 		result.mode === "settings-entry"
@@ -75,6 +76,7 @@ export function addMocInsertionMenuItems(
 			result.mode === "command" ||
 			result.mode === "plugin" ||
 			result.mode === "snippet" ||
+			result.mode === "property" ||
 			result.mode === "search-history" ||
 			result.mode === "mode-entry" ||
 			result.mode === "settings-entry"

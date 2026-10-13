@@ -14,6 +14,7 @@ function resolveTagTarget(app: App, result: PaletteResult): TFile | undefined {
 		result.mode === "command" ||
 		result.mode === "plugin" ||
 		result.mode === "snippet" ||
+		result.mode === "property" ||
 		result.mode === "search-history" ||
 		result.mode === "mode-entry" ||
 		result.mode === "settings-entry"

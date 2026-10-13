@@ -12,7 +12,8 @@ export type PaletteModeId =
 	| "smart"
 	| "tabs"
 	| "plugins"
-	| "snippets";
+	| "snippets"
+	| "properties";
 
 export interface PaletteModeDefinition {
 	id: PaletteModeId;
@@ -104,6 +105,14 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		subtitle: "CSS",
 		icon: "paintbrush",
 		placeholder: "Search CSS snippets",
+	},
+	{
+		id: "properties",
+		mode: "property",
+		title: "Properties",
+		subtitle: "Current note",
+		icon: "list-checks",
+		placeholder: "Search properties in the active note",
 	},
 ];
 

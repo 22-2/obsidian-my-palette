@@ -179,7 +179,8 @@ export class PaletteSearchSession {
 		if (
 			this.state.mode === "link" ||
 			this.state.mode === "backlink" ||
-			this.state.mode === "smart"
+			this.state.mode === "smart" ||
+			this.state.mode === "property"
 		)
 			void this.search(this.state.input, { suppressHistory: true });
 	}
@@ -379,6 +380,7 @@ export function paletteSectionOf(
 	state: Pick<PaletteSearchState, "route" | "results"> | undefined,
 	result: PaletteResult,
 ): string | undefined {
+	if (result.mode === "property") return result.section;
 	if (state?.route.kind !== "home") return undefined;
 	if (!state.results.some((item) => item.mode === "mode-entry" || item.mode === "settings-entry"))
 		return undefined;
@@ -401,5 +403,7 @@ export function palettePlaceholder(mode: PaletteMode): string {
 							? "Search installed plugins"
 							: mode === "snippet"
 								? "Search CSS snippets"
-								: "Search files";
+								: mode === "property"
+									? "Search properties in the active note"
+									: "Search files";
 }

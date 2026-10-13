@@ -266,6 +266,19 @@ function normalizeModes(source: Record<string, unknown>): ModeSettingsMap {
 			alias = suffix === 1 ? "snippets" : `snippets${suffix}`;
 		modes.snippets.alias = alias;
 	}
+	// Properties arrived last; `pr` shares its first letter with `p` (Plugins),
+	// which is fine because aliases match as `alias + Space`.
+	if (!rawModes.properties) {
+		const taken = new Set(
+			modeIds
+				.filter((id) => id !== "properties")
+				.map((id) => modes[id].alias.toLocaleLowerCase()),
+		);
+		let alias = DEFAULT_SETTINGS.modes.properties.alias;
+		for (let suffix = 1; taken.has(alias.toLocaleLowerCase()); suffix++)
+			alias = suffix === 1 ? "properties" : `properties${suffix}`;
+		modes.properties.alias = alias;
+	}
 	return modes;
 }
 

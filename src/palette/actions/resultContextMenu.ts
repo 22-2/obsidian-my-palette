@@ -108,6 +108,8 @@ export function populatePaletteResultMenu({
 		);
 		return;
 	}
+	// Why: property rows have no file or action yet; editing and copy actions come later.
+	if (result.mode === "property") return;
 	if (result.mode === "settings-entry") {
 		menu.addItem((item) =>
 			item

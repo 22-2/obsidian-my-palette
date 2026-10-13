@@ -11,6 +11,7 @@ import { SmartConnectionProvider } from "src/search/smart/SmartConnectionProvide
 import { TabProvider } from "src/search/tab/TabProvider";
 import { PluginProvider } from "src/search/plugin/PluginProvider";
 import { SnippetProvider } from "src/search/snippet/SnippetProvider";
+import { PropertyProvider } from "src/search/property/PropertyProvider";
 import type { PaletteProvider } from "src/search/PaletteProvider";
 import {
 	EMPTY_EXCLUDED_FOLDER_SOURCE,
@@ -95,6 +96,7 @@ export function createPaletteProviders(
 			tab: tabProvider,
 			plugin: pluginProvider,
 			snippet: snippetProvider,
+			property: new PropertyProvider(app),
 		},
 	};
 }

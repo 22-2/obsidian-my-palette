@@ -20,6 +20,7 @@ export type SearchHistoryCategory =
 	| "tab"
 	| "plugin"
 	| "snippet"
+	| "property"
 	| "everything"
 	| "everything-directory"
 	| "link"
@@ -346,6 +347,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		tabs: { alias: "t", enabled: true },
 		plugins: { alias: "p", enabled: true },
 		snippets: { alias: "sn", enabled: true },
+		properties: { alias: "pr", enabled: true },
 	},
 	file: {
 		// Start both states identically so the split adds control without changing

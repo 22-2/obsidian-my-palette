@@ -13,7 +13,8 @@ export type PaletteMode =
 	| "smart"
 	| "tab"
 	| "plugin"
-	| "snippet";
+	| "snippet"
+	| "property";
 export type EverythingScope = "vault" | "directory";
 
 export interface ParsedInput {
@@ -128,6 +129,27 @@ export interface SnippetResult extends BaseResult {
 	enabled: boolean;
 }
 
+/** The value kinds a property row can edit; `unsupported` values are edited in source mode. */
+export type PropertyKind =
+	| "text"
+	| "list"
+	| "number"
+	| "checkbox"
+	| "date"
+	| "datetime"
+	| "tags"
+	| "unsupported";
+
+/** A property key in the current note, or a key from the vault that the note does not have. */
+export interface PropertyResult extends BaseResult {
+	mode: "property";
+	key: string;
+	kind: PropertyKind;
+	section: "This note" | "Reserved" | "Vault";
+	/** Whether the current note has this key; a reserved key may be listed without it. */
+	inNote: boolean;
+}
+
 export type PaletteResult =
 	| FileResult
 	| CommandResult
@@ -139,6 +161,7 @@ export type PaletteResult =
 	| TabResult
 	| PluginResult
 	| SnippetResult
+	| PropertyResult
 	| ModeEntryResult
 	| SettingsEntryResult;
 
@@ -159,6 +182,7 @@ export function getResultFilePath(result: PaletteResult): string | undefined {
 		case "command":
 		case "plugin":
 		case "snippet":
+		case "property":
 		case "search-history":
 		case "mode-entry":
 		case "settings-entry":
