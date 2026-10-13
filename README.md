@@ -73,7 +73,7 @@ The action (`…`) and history (clock) buttons are also available in the Tag ins
 | `Ctrl+R`               | Search history                                     |
 | `Esc`                  | Leave a mode; at Home, close or clear              |
 
-The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current palette. The palette modal's footer shows the `Obsidian-excluded` switch; other keyboard instructions and insertion targets live in Help. Hold `Alt+H` in any search or interaction mode to gently fade out the palette or selector while inspecting a preview; releasing either key fades it back in and returns focus to the search field. This works in modals (including their backdrop), Sidebar palettes and Table palettes, preserving the query, selection and workspace layout. In a mode, `Esc` returns to Home. At Home, `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
+The action menu offers: open, open in a background tab, open side by side, open below, open in external editor, show in system explorer, open in terminal, copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current palette. The palette modal's footer shows the `Obsidian-excluded` switch; other keyboard instructions and insertion targets live in Help. Hold `Alt+H` in any search or interaction mode to gently fade out the palette or selector while inspecting a preview; releasing either key fades it back in and returns focus to the search field. This works in modals (including their backdrop), Sidebar palettes and Table palettes, preserving the query, selection and workspace layout. In a mode, `Esc` returns to Home. At Home, `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
 
 ### Custom shortcuts
 
@@ -96,6 +96,10 @@ Between Modes and Files, Home's **Settings** section lists **General**, **Modes*
 | `bk`  | Bookmarks      | Search saved bookmarks                                                  |
 | `sc`  | Related notes  | Notes related to the current note (Smart Connections)                   |
 | `t`   | Tabs           | Switch to an open tab                                                   |
+| `p`   | Plugins        | Open installed plugin folders in an external editor                     |
+| `sn`  | Snippets       | Open CSS snippets in an external editor                                 |
+
+Plugins lists every installed plugin by name, with disabled ones marked; Snippets lists the snippets folder first, then each snippet with its enabled state. `Enter` opens the folder or file in the external editor (VS Code for now). The menu also offers show in system explorer and open in terminal, plus path copying. Plugin rows with a settings tab offer open plugin settings.
 
 Every alias can be changed, and a mode can be turned off, in **Settings → My Palette → Modes**. Turning off a mode, or its integration in **Integrations**, removes it from Home and from alias entry. `Open recent` and the Table palette do not list modes but still enter them by alias. Commands that open a mode directly, such as `Open run list` or `Open backlink list`, start in that mode; `Esc` returns to Home.
 
