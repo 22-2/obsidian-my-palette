@@ -28,10 +28,10 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 
 ### Paletteの状態
 
-| 正式名 | 意味                                                                                     | 使わない言い方                                     | 識別子                                      |
-| ------ | ---------------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------- |
-| Home   | まだどのモードにも入っていないPalette。モードの入口とファイルが並ぶ。Escで戻ってくる場所 | Root Search、Root Palette、Root mode、Initial mode | `root`(`openRootPalette`、`popToRoot…`など) |
-| Mode   | Paletteの中の検索の種類。エイリアス + Spaceか、Homeから入る                              | —                                                  | `PaletteModeId`                             |
+| 正式名 | 意味                                                                                     | 使わない言い方                                     | 識別子                                                                   |
+| ------ | ---------------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------ |
+| Home   | まだどのモードにも入っていないPalette。モードの入口とファイルが並ぶ。Escで戻ってくる場所 | Root Search、Root Palette、Root mode、Initial mode | `home`(`openHomePalette`、`returnToHome`、`home.returnAfterSeconds`など) |
+| Mode   | Paletteの中の検索の種類。エイリアス + Spaceか、Homeから入る                              | —                                                  | `PaletteModeId`                                                          |
 
 - Homeには「mode」を付けない。Modesページのモードはオン/オフできるが、Homeはオフにできないため、同列に見せない。
 - 初出の説明文では「Home (the palette before a mode is entered)」のように一度定義する。ノートの「ホームノート」と取り違えないため。
@@ -42,13 +42,13 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 
 | 正式名               | 意味                               | 現在の表記              | 識別子(ショートカットの範囲) |
 | -------------------- | ---------------------------------- | ----------------------- | ---------------------------- |
-| Tag insert selector  | 現在のノートにタグを挿入する       | Tag selector            | `tag-selector`               |
-| MOC insert selector  | MOC Relatedsにリンクを挿入する     | MOC selector            | `moc-selector`(分割する)     |
-| MOC remove selector  | MOC Relatedsからリンクを削除する   | MOC selector            | `moc-selector`(分割する)     |
+| Tag insert selector  | 現在のノートにタグを挿入する       | Tag selector            | `tag-insert-selector`        |
+| MOC insert selector  | MOC Relatedsにリンクを挿入する     | MOC selector            | `moc-insert-selector`        |
+| MOC remove selector  | MOC Relatedsからリンクを削除する   | MOC selector            | `moc-remove-selector`        |
 | Folder move selector | ファイルを別のフォルダーへ移動する | Folder picker(コメント) | なし                         |
 
 - MOC insert selectorでも、リンク済みのノートを右クリックメニューから削除できる。主な用途で名付けたものとして、この重なりは許容する。
-- ショートカットの範囲`moc-selector`は、insertとremoveの2つに分ける。今MOC selectorで有効なキーを、それぞれどちらで有効にするかは分割時に決める。
+- ショートカットの範囲は`moc-insert-selector`と`moc-remove-selector`に分けた。Obsidian-excludedのスイッチはinsertだけにあるため、`toggleIgnored`はinsertだけで有効にした。
 
 ### 除外
 
