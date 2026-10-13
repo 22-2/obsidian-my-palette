@@ -29,7 +29,7 @@ Other sources (commands, Everything, bookmarks, …) are modes one step away fro
 - **Everything 1.5a search** for files outside the Vault, opened in Obsidian (Markdown) or in the OS default app.
 - **Command, bookmark, link, backlink and Smart Connections search** in the same window.
 - **Multi-select** with the same gestures as a file manager, then copy paths, add tags or insert MOC links to all selected notes at once.
-- **Three surfaces**: a modal, a list view in the right sidebar, and a sortable table view in a center tab.
+- **Three surfaces**: the modal Palette, the Sidebar palette in the right sidebar, and the sortable Table palette in a center tab.
 - **Obsidian-excluded files on demand**: files hidden by Obsidian's Excluded files setting stay out of the way until you turn on the `Obsidian-excluded` switch (`Ctrl+I`).
 - Desktop only (Windows is the primary target).
 
@@ -42,8 +42,8 @@ Open the command palette and run one of these, then bind a hotkey if you like:
 | `My Palette: Open palette`                    | Home: modes above recently used files                       |
 | `My Palette: Open recent palette`             | File search only, starting from recently used files         |
 | `My Palette: Open run list`                   | Starts in the Run Command mode                              |
-| `My Palette: Open palette in right sidebar`   | A persistent list view                                      |
-| `My Palette: Open palette table in center`    | A persistent table view in a center tab                     |
+| `My Palette: Open palette in right sidebar`   | Sidebar palette: a persistent list view                     |
+| `My Palette: Open table palette in center`    | Table palette: a persistent table in a center tab           |
 | `My Palette: Link search` / `Backlink search` | Notes linked from / to the current note                     |
 | `My Palette: Bookmark search`                 | Saved bookmarks                                             |
 | `My Palette: Smart Connections search`        | Notes related to the current note (needs Smart Connections) |
@@ -71,7 +71,7 @@ The action (`…`) and history (clock) buttons are also available in the Tag ins
 | `Ctrl+R`               | Search history                                     |
 | `Esc`                  | Leave a mode; at Home, close or clear              |
 
-The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current palette. The palette modal's footer shows the `Obsidian-excluded` switch; other keyboard instructions and insertion targets live in Help. Hold `Alt+H` in any search or interaction mode to gently fade out the palette or selector while inspecting a preview; releasing either key fades it back in and returns focus to the search field. This works in modals (including their backdrop), sidebar palettes and table views, preserving the query, selection and workspace layout. In a mode, `Esc` returns to Home. At Home, `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
+The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current palette. The palette modal's footer shows the `Obsidian-excluded` switch; other keyboard instructions and insertion targets live in Help. Hold `Alt+H` in any search or interaction mode to gently fade out the palette or selector while inspecting a preview; releasing either key fades it back in and returns focus to the search field. This works in modals (including their backdrop), Sidebar palettes and Table palettes, preserving the query, selection and workspace layout. In a mode, `Esc` returns to Home. At Home, `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
 
 ### Custom shortcuts
 
@@ -93,7 +93,7 @@ Open **Settings → My Palette → Shortcuts** to see every palette and selector
 | `sc`    | Search Related Notes      | Notes related to the current note (Smart Connections)    |
 | `t`     | Switch Tab                | Switch to an open tab                                    |
 
-Every alias can be changed, and a mode can be turned off, in **Settings → My Palette → Modes**. Turning off a mode, or its integration in **Integrations**, removes it from Home and from alias entry. `Open recent palette` and the table view do not list modes but still enter them by alias. Commands that open a mode directly, such as `Open run list` or `Backlink search`, start in that mode; `Esc` returns to Home.
+Every alias can be changed, and a mode can be turned off, in **Settings → My Palette → Modes**. Turning off a mode, or its integration in **Integrations**, removes it from Home and from alias entry. `Open recent palette` and the Table palette do not list modes but still enter them by alias. Commands that open a mode directly, such as `Open run list` or `Backlink search`, start in that mode; `Esc` returns to Home.
 
 The `Obsidian-excluded` switch at the left of the footer (`Ctrl+I`) includes Obsidian-excluded files, the ones hidden by Obsidian's Excluded files setting. It applies to file search only and stays dimmed in other modes. Search history remembers whether a search included them, and restoring an entry sets the switch.
 
@@ -135,9 +135,9 @@ Notes linked in both directions appear last and cannot be selected. Notes linked
 
 ## Views
 
-`Open palette in right sidebar` gives the regular list view and `Open palette table in center` gives a table in a center tab. Each command reuses its own pane without replacing the other, and each pane can be duplicated from its pane menu.
+`Open palette in right sidebar` opens the Sidebar palette and `Open table palette in center` opens the Table palette in a center tab. Each command reuses its own pane without replacing the other, and each pane can be duplicated from its pane menu.
 
-In the table:
+In the Table palette:
 
 - Click a column header to add it to the sort priorities or cycle its direction and remove it. Other priorities stay active; no modifier key is needed.
 - Drag a header to reorder columns. Right-click a header to show or hide columns (Name is always visible).

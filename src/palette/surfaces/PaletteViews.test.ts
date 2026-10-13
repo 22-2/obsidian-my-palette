@@ -34,7 +34,7 @@ describe("dedicated palette views", () => {
 		expect(list.getViewType()).toBe(PALETTE_VIEW_TYPE);
 		expect(table.getViewType()).toBe(PALETTE_TABLE_VIEW_TYPE);
 		expect(table.getState().displayMode).toBe("table");
-		expect(table.getDisplayText()).toBe("My Palette table");
+		expect(table.getDisplayText()).toBe("Table palette");
 		expect(table.getIcon()).toBe("table");
 	});
 

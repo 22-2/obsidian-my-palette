@@ -264,13 +264,13 @@ function createGeneralPage(plugin: SettingsHost, helpers: SettingPageHelpers): P
 			),
 			highlightRow(
 				"view",
-				"Highlight in sidebar",
+				"Highlight in sidebar palette",
 				"Mark the typed text in the sidebar palette's results.",
 			),
 			highlightRow(
 				"table",
-				"Highlight in table",
-				"Mark the typed text in the table's results.",
+				"Highlight in table palette",
+				"Mark the typed text in the table palette's results.",
 			),
 		]),
 		helpers.group("Diagnostics", [

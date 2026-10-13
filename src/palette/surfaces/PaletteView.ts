@@ -113,7 +113,7 @@ export class PaletteView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return "My Palette";
+		return "Sidebar palette";
 	}
 
 	getIcon(): string {
@@ -126,7 +126,7 @@ export class PaletteView extends ItemView {
 			item
 				.setTitle(
 					this.tableView
-						? "Open new table in center"
+						? "Open new table palette in center"
 						: "Open new palette in right sidebar",
 				)
 				.setIcon("plus")

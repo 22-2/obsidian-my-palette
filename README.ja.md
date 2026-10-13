@@ -29,7 +29,7 @@ Another Quick Switcher、標準の Quick Switcher、Quick Switcher++、Omnisearc
 - **Everything 1.5a 検索**: Vault 外のファイルも検索でき、Markdown は Obsidian で、それ以外は OS の関連付けアプリで開きます。
 - **コマンド・ブックマーク・リンク・バックリンク・Smart Connections の検索**を同じウィンドウで行えます。
 - **複数選択**: ファイルマネージャーと同じ操作で選び、選択したノートへまとめてパスのコピー、タグ追加、MOC リンク挿入ができます。
-- **3つの表示面**: モーダル、右サイドバーのリストビュー、センタータブのソート可能なテーブルビュー。
+- **3つの表示面**: モーダルの Palette、右サイドバーの Sidebar palette、センタータブでソートできる Table palette。
 - **Obsidian-excluded files は必要なときだけ**: Obsidian の「Excluded files」で除外されたファイル（Obsidian-excluded files）は普段は出さず、`Obsidian-excluded` スイッチ（`Ctrl+I`）をオンにしたときだけ検索対象にできます。
 - デスクトップ専用です（主な対象は Windows）。
 
@@ -42,8 +42,8 @@ Obsidian のコマンドパレットから次のコマンドを実行します�
 | `My Palette: Open palette`                    | Home：モードの一覧と最近使ったファイル                   |
 | `My Palette: Open recent palette`             | 最近使ったファイルから始まるファイル検索のみ             |
 | `My Palette: Open run list`                   | Run Command モードから始まる                             |
-| `My Palette: Open palette in right sidebar`   | 右サイドバーに常駐するリストビュー                       |
-| `My Palette: Open palette table in center`    | センターのタブに常駐するテーブルビュー                   |
+| `My Palette: Open palette in right sidebar`   | Sidebar palette：右サイドバーに常駐するリスト            |
+| `My Palette: Open table palette in center`    | Table palette：センターのタブに常駐するテーブル          |
 | `My Palette: Link search` / `Backlink search` | 現在のノートからのリンク先 / 現在のノートへのリンク元    |
 | `My Palette: Bookmark search`                 | 保存したブックマーク                                     |
 | `My Palette: Smart Connections search`        | 現在のノートに関連するノート（Smart Connections が必要） |
@@ -56,7 +56,7 @@ Obsidian のコマンドパレットから次のコマンドを実行します�
 
 ### マウスとキーボード
 
-パレットのリストとテーブルは、入力中も先頭候補を強調したままにします。そのため `Enter` ですぐ実行でき、`↑`／`↓` で候補を移動できます。タグ挿入と MOC 挿入では `Space` で候補をチェックするため、入力モードと選択モードを分けています（後述）。
+Palette、Sidebar palette、Table paletteは、入力中も先頭候補を強調したままにします。そのため `Enter` ですぐ実行でき、`↑`／`↓` で候補を移動できます。タグ挿入と MOC 挿入では `Space` で候補をチェックするため、入力モードと選択モードを分けています（後述）。
 
 Tag insert selector、MOC insert selector、MOC remove selector、Folder move selector にも、アクション（`…`）と履歴（時計）のボタンを表示します。アクションとヘルプはその selector に合わせた内容です。履歴は selector ごとに分かれ、選択しても検索語を復元するだけで、タグ挿入・リンク追加・ファイル移動は実行しません。`Ctrl+R` でも履歴を開けます。履歴の有効／無効・保存待ち時間・保持期間は既存の設定を使い、ハイライト設定はモーダル間で共有します。
 
@@ -89,7 +89,7 @@ Tag insert selector、MOC insert selector、MOC remove selector、Folder move se
 | `sc`       | Search Related Notes      | 現在のノートに関連するノート（Smart Connections）    |
 | `t`        | Switch Tab                | 開いているタブへ切り替え                             |
 
-すべてのエイリアスは **設定 → My Palette → Modes** で変更でき、モードごとにオフにできます。モードをオフにするか、**Integrations** で連携をオフにすると、そのモードはHomeとエイリアス入力から外れます。`Open recent palette` とテーブルビューはモードの一覧を出しませんが、エイリアスでモードに入れます。`Open run list` や `Backlink search` など、モードを直接開くコマンドはそのモードから始まり、`Esc` でHomeに戻ります。
+すべてのエイリアスは **設定 → My Palette → Modes** で変更でき、モードごとにオフにできます。モードをオフにするか、**Integrations** で連携をオフにすると、そのモードはHomeとエイリアス入力から外れます。`Open recent palette` とTable paletteはモードの一覧を出しませんが、エイリアスでモードに入れます。`Open run list` や `Backlink search` など、モードを直接開くコマンドはそのモードから始まり、`Esc` でHomeに戻ります。
 
 下部左端の `Obsidian-excluded` スイッチ（`Ctrl+I`）をオンにすると、Obsidian の「Excluded files」で除外されたファイル（Obsidian-excluded files）も検索します。ファイル検索でだけ有効で、ほかのモードでは薄く表示します。検索履歴は除外ファイルを含めたかどうかも記録し、履歴を選ぶとスイッチも復元します。
 
@@ -131,9 +131,9 @@ MOC insert selector も同じ入力／選択モードと操作です。チェッ
 
 ## ビュー
 
-`Open palette in right sidebar` は通常のリスト表示、`Open palette table in center` はセンタータブのテーブル表示です。それぞれ同じ種類の既存ペインを再利用し、もう一方の検索を置き換えません。ペインメニューから複製もできます。
+`Open palette in right sidebar` は Sidebar palette、`Open table palette in center` は センタータブの Table palette です。それぞれ同じ種類の既存ペインを再利用し、もう一方の検索を置き換えません。ペインメニューから複製もできます。
 
-テーブルでは次の操作ができます。
+Table palette では次の操作ができます。
 
 - 列ヘッダーをクリックすると、ソート条件に追加するか、方向を切り替えて解除できます。他のソート条件は維持され、修飾キーは不要です。
 - ヘッダーをドラッグして列順を変更し、ヘッダーを右クリックして列の表示・非表示を切り替えられます（名前列は常に表示）。
