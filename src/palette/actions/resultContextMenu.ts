@@ -8,6 +8,13 @@ import type { ActionKind } from "src/palette/resultActions";
 import { getCopyablePaths, isCopyablePaletteResult } from "src/palette/resultPresentation";
 import type { PaletteResult } from "src/palette/results";
 import {
+	getResultAbsolutePath,
+	isDesktopApp,
+	isFolderResult,
+	openInExternalEditor,
+	showInSystemExplorer,
+} from "src/platform/externalOpen";
+import {
 	addCopyPathListMenuItems,
 	addCopyPathMenuItems,
 	copyPathListToClipboard,
@@ -153,13 +160,29 @@ export function populatePaletteResultMenu({
 			.setIcon("separator-horizontal")
 			.onClick(() => void activate("horizontal", result)),
 	);
-	if (result.mode === "everything") {
+	const absolutePath = isDesktopApp() ? getResultAbsolutePath(app, result) : undefined;
+	if (absolutePath) {
+		// Why: external-app actions apply to every file result, not only Everything.
+		// "Show in system explorer" unifies the old Everything-only "Show in file explorer",
+		// which was confused with Obsidian's file explorer.
 		menu.addSeparator();
 		menu.addItem((item) =>
 			item
-				.setTitle("Show in file explorer")
+				.setTitle("Open in external editor")
+				.setIcon("code")
+				.onClick(() => {
+					onNoteActionSelected?.();
+					void openInExternalEditor(absolutePath);
+				}),
+		);
+		menu.addItem((item) =>
+			item
+				.setTitle("Show in system explorer")
 				.setIcon("folder-open")
-				.onClick(() => void activate("alternate", result)),
+				.onClick(() => {
+					onNoteActionSelected?.();
+					showInSystemExplorer(absolutePath, isFolderResult(result));
+				}),
 		);
 	}
 	addCopyPathMenuItems(menu, paths, (path) => void copyPathToClipboard(path));

@@ -23,6 +23,24 @@ vi.mock("src/platform/pathClipboard", () => ({
 	copyPathListToClipboard: vi.fn(),
 	copyPathToClipboard: vi.fn(),
 }));
+vi.mock("obsidian", () => ({
+	Platform: { isDesktopApp: true },
+}));
+vi.mock("src/platform/externalOpen", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("src/platform/externalOpen")>();
+	return {
+		...actual,
+		isDesktopApp: vi.fn(() => true),
+		getResultAbsolutePath: vi.fn((_app: App, result: PaletteResult) =>
+			result.mode === "command" || result.mode === "search-history"
+				? undefined
+				: "C:/vault/Note.md",
+		),
+		isFolderResult: vi.fn(() => false),
+		openInExternalEditor: vi.fn().mockResolvedValue(null),
+		showInSystemExplorer: vi.fn(),
+	};
+});
 
 function fixture(popout: boolean) {
 	const actions = new Map<string, () => void>();
@@ -102,4 +120,37 @@ it("does not offer main-window file navigation for commands", () => {
 	populatePaletteResultMenu({ ...f.options, result, selectedItems: [result] });
 	expect(f.actions.has("Open in main window")).toBe(false);
 	expect(f.actions.has("Run command")).toBe(true);
+});
+
+it("offers external open actions for file results on desktop", async () => {
+	const f = fixture(false);
+	populatePaletteResultMenu({
+		...f.options,
+		onNoteActionSelected: vi.fn(),
+	});
+	expect(f.actions.has("Open in external editor")).toBe(true);
+	expect(f.actions.has("Show in system explorer")).toBe(true);
+	expect(f.actions.has("Show in file explorer")).toBe(false);
+
+	const { openInExternalEditor, showInSystemExplorer } =
+		await import("src/platform/externalOpen");
+	f.actions.get("Open in external editor")!();
+	expect(openInExternalEditor).toHaveBeenCalledExactlyOnceWith("C:/vault/Note.md");
+	f.actions.get("Show in system explorer")!();
+	expect(showInSystemExplorer).toHaveBeenCalledExactlyOnceWith("C:/vault/Note.md", false);
+});
+
+it("hides external open actions for commands", () => {
+	const f = fixture(false);
+	const result: PaletteResult = {
+		id: "command",
+		mode: "command",
+		primary: "Command",
+		secondary: "",
+		icon: "play",
+		commandId: "command",
+	};
+	populatePaletteResultMenu({ ...f.options, result, selectedItems: [result] });
+	expect(f.actions.has("Open in external editor")).toBe(false);
+	expect(f.actions.has("Show in system explorer")).toBe(false);
 });
