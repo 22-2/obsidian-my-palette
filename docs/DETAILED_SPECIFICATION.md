@@ -865,9 +865,10 @@ Windows 11、Everything 1.5a 実機、英数字・日本語・空白を含むパ
 Obsidian 上での最終確認手順は次とする。
 
 ```powershell
-vp check
-vp test
-vp build
+pnpm format:check
+pnpm lint
+pnpm test
+pnpm build
 obsidian plugin:reload id=my-palette
 obsidian dev:errors
 obsidian dev:console level=error
@@ -881,7 +882,7 @@ v0.1.0 は以下をすべて満たした時点で完成とする。
 - 本書の3モードが実装されている。
 - 公式 Everything HTTP Server JSON API を通じて検索している。
 - 手動受け入れテストがすべて成功している。
-- `vp check`、`vp test`、`vp build` が成功している。
+- `pnpm format:check`、`pnpm lint`、`pnpm test`、`pnpm build` が成功している。
 - Obsidian の `dev:errors` と error console に本プラグイン由来のエラーがない。
 - ダーク・ライトテーマで視覚確認済みである。
 - `manifest.json`、`README.md`、設定画面が実装内容と一致している。

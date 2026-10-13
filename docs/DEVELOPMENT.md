@@ -1,23 +1,24 @@
 # Development
 
-My Palette is written in TypeScript and built with Vite+. Source is organized by feature under `src/`, with unit tests colocated next to the pure search, settings and ignored-note logic.
+My Palette is written in TypeScript and bundled with esbuild. Source is organized by feature under `src/`, with unit tests colocated next to the pure search, settings and ignored-note logic.
 
-Requirements: Node.js, pnpm, and the global Vite+ CLI (`vp`). Install `vp` by following the [Vite+ guide](https://viteplus.dev/guide/); every `vp` command below fails without it. `vp help` lists what it can do.
+Requirements: Node.js and pnpm.
 
 ## Commands
 
-- `vp install`: install dependencies.
-- `vp dev`: start the watch build.
-- `vp check`: format and lint.
-- `vp test --run`: run unit tests.
+- `pnpm install`: install dependencies. It also points Git at `.githooks/`, whose pre-commit hook formats staged files with oxfmt.
+- `pnpm dev`: start the watch build.
+- `pnpm format`: format with oxfmt. `pnpm format:check` only reports unformatted files.
+- `pnpm lint`: lint with ESLint and the Obsidian plugin rules.
+- `pnpm test`: run unit tests with Vitest.
 - `pnpm check-types`: run the TypeScript check.
-- `vp build`: build a production bundle.
+- `pnpm build`: build a production bundle.
 - `pnpm e2e`: run the end-to-end tests (see below).
 - `pnpm ui:shots`: capture the palette and settings screens into a new `run-*` folder under `UI_SHOT_DIR` (default: the OS temp folder). The VS Code task "My Palette: Capture UI screenshots" runs it and opens the folder.
 
-Formatting and linting run through `vp check`; type checking and tests are separate so they can be run independently while refactoring.
+Formatting, linting, type checking and tests are separate so they can be run independently while refactoring.
 
-The Vite configuration copies the production bundle to `dist/` and to the configured development Vault plugin directory. Enable or reload the plugin in Obsidian after the bundle is copied.
+`esbuild.config.mjs` writes `main.js` and `styles.css` to `dist/`. Copy them with `manifest.json` into a Vault's plugin folder, then enable or reload the plugin in Obsidian.
 
 ## End-to-end tests
 

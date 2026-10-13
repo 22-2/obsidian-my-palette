@@ -196,4 +196,4 @@ The plugin is not in the community plugin list yet. To install it manually, copy
 
 ## Development
 
-Building requires the [Vite+](https://viteplus.dev/guide/) CLI (`vp`). See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for the build, test and release workflow.
+Building requires Node.js and pnpm. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for the build, test and release workflow.

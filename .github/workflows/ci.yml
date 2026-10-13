@@ -33,11 +33,14 @@ jobs:
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
 
+      - name: Format check
+        run: pnpm run format:check
+
       - name: Type check
         run: pnpm run check-types
 
       - name: Unit tests
-        run: pnpm exec vp test
+        run: pnpm test
 
   e2e:
     runs-on: ubuntu-latest

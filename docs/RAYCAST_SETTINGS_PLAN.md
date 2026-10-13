@@ -177,7 +177,7 @@ interface MyPaletteSettings {
 
 ## 実装手順(コミット単位)
 
-各コミットの前に `vp check` と `vp test` を通す。
+各コミットの前に `pnpm format:check`、`pnpm lint`、`pnpm test` を通す。
 
 1. `refactor`: エイリアスの保存先を `modes.<id>` に移し、スキーマを19に上げて移行する。画面は変えない。
 2. `feat`: 全モードのエイリアスと有効/無効を設定できるようにし、無効なモードをRoot Searchとエイリアス入力から外す。

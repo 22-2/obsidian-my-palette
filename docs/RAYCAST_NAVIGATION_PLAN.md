@@ -174,7 +174,7 @@ export interface ModeEntryResult extends BaseResult {
 
 ## 実装手順(コミット単位)
 
-各コミットの前に `vp check` と `vp test` を通す。移動・分割・挙動変更を同じコミットに混ぜない(`REFACTORING_ROADMAP.md` の方針)。
+各コミットの前に `pnpm format:check`、`pnpm lint`、`pnpm test` を通す。移動・分割・挙動変更を同じコミットに混ぜない(`REFACTORING_ROADMAP.md` の方針)。
 
 1. `refactor`: `src/palette/modes.ts` にモード定義を集約し、`inputParser`、ヘルプ、`searchHistory` のプレフィックス組み立てを置き換える。挙動は変えない。単体テストを追加。
 2. `refactor`: `PaletteSearchSession` に `route` を導入する。この段階ではホストから生入力を受け、内部で `parseLegacyInput()` して `route` を作る。挙動は変えない。

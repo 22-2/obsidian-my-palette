@@ -17,7 +17,7 @@
 - 移動、責務分割、挙動変更を同じコミットに混ぜない
 - 共通化は、変更理由と不変条件が同じ処理に限る
 - 抽象化のためだけの Base class は追加しない
-- 各コミットの前に `vp check`、`vp test --run`、`pnpm check-types` を実行する
+- 各コミットの前に `pnpm format:check`、`pnpm lint`、`pnpm test`、`pnpm check-types` を実行する
 - 分割した純粋ロジックには単体テストを付ける
 
 ## 課題

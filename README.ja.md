@@ -196,4 +196,4 @@ MOC の選択画面も同じ入力／選択モードと操作です。チェッ�
 
 ## 開発
 
-ビルドには [Vite+](https://viteplus.dev/guide/) の CLI（`vp`）が必要です。ビルド・テスト・リリースの手順は [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) を参照してください。
+ビルドには Node.js と pnpm が必要です。ビルド・テスト・リリースの手順は [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) を参照してください。
