@@ -50,13 +50,13 @@ describe("matchPaletteModes", () => {
 	});
 
 	test("matches the start of title and subtitle words", () => {
-		expect(ids("switch")).toEqual(["tabs"]);
-		expect(ids("search back")).toEqual(["backlinks"]);
+		expect(ids("tab")).toEqual(["tabs"]);
+		expect(ids("outgoing link")).toEqual(["outlinks"]);
 		expect(ids("smart")).toEqual(["smart"]);
 	});
 
 	test("does not match words in the middle", () => {
-		expect(ids("witch")).toEqual([]);
+		expect(ids("acklinks")).toEqual([]);
 	});
 });
 

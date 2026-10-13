@@ -44,13 +44,13 @@ test("mode aliases can be changed on the Modes page and are used in Home", async
 		settingsPage
 			.locator(".setting-item")
 			.filter({ has: settingsPage.getByText(name, { exact: true }) });
-	const commandInput = row("Run Command").getByRole("textbox");
+	const commandInput = row("Commands").getByRole("textbox");
 	await expect(commandInput).toHaveValue(">");
 	// Aliases are stored without a trailing space, so the field shows the alias alone.
-	await expect(row("Search Vault Notes").getByRole("textbox")).toHaveValue("e");
+	await expect(row("Vault notes").getByRole("textbox")).toHaveValue("e");
 
 	await commandInput.fill("esdir");
-	await expect(row("Run Command")).toContainText("already used by another mode");
+	await expect(row("Commands")).toContainText("already used by another mode");
 	expect(await storedCommandAlias(obsidian)).toBe(">");
 
 	await commandInput.fill("c");
@@ -64,7 +64,7 @@ test("mode aliases can be changed on the Modes page and are used in Home", async
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);
 	await input.pressSequentially("c");
-	await expect(page.locator(MODAL_ROW).first()).toContainText("Run Command");
+	await expect(page.locator(MODAL_ROW).first()).toContainText("Commands");
 	await input.pressSequentially(" link search");
 	await expect(page.locator(".my-palette-suggest-modal .my-palette-mode-chip")).toHaveText("c");
 	await expect(input).toHaveValue("link search");
@@ -75,7 +75,7 @@ test("a mode turned off on the Modes page leaves Home and alias entry", async ({
 	const settingsPage = await openPaletteSettings(obsidian);
 	const bookmarks = settingsPage
 		.locator(".setting-item")
-		.filter({ has: settingsPage.getByText("Search Bookmarks", { exact: true }) });
+		.filter({ has: settingsPage.getByText("Bookmarks", { exact: true }) });
 	// Obsidian switches flip when their label is clicked; the input inside is not clickable.
 	await bookmarks.locator(".checkbox-container").click();
 	await expect.poll(() => storedModeEnabled(obsidian, "bookmarks")).toBe(false);
@@ -87,7 +87,7 @@ test("a mode turned off on the Modes page leaves Home and alias entry", async ({
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);
 	await input.waitFor();
-	await expect(page.locator(".my-palette-suggest-modal")).not.toContainText("Search Bookmarks");
+	await expect(page.locator(".my-palette-suggest-modal")).not.toContainText("Bookmarks");
 	await input.pressSequentially("bk ");
 	await expect(page.locator(".my-palette-suggest-modal .my-palette-mode-chip")).toBeHidden();
 	await expect(input).toHaveValue("bk ");

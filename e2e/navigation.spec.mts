@@ -21,7 +21,7 @@ test("Home enters a mode with Enter and returns with Esc", async ({ obsidian }) 
 	await expect(page.locator(`${MODAL} ${HEADING}`)).toHaveText(["Modes", "Files"]);
 
 	await input.pressSequentially("esdir");
-	await expect(page.locator(MODAL_ROW).first()).toContainText("Search All Files in Vault");
+	await expect(page.locator(MODAL_ROW).first()).toContainText("All vault files");
 	await input.press("Enter");
 	await expect(page.locator(`${MODAL} ${CHIP}`)).toHaveText("esdir");
 	await expect(input).toHaveValue("");
@@ -34,7 +34,7 @@ test("Home enters a mode with Enter and returns with Esc", async ({ obsidian }) 
 	expect(
 		await input.evaluate((el: HTMLInputElement) => [el.selectionStart, el.selectionEnd]),
 	).toEqual([0, 5]);
-	await expect(page.locator(MODAL_ROW).first()).toContainText("Search All Files in Vault");
+	await expect(page.locator(MODAL_ROW).first()).toContainText("All vault files");
 
 	await input.press("Escape");
 	await expect(page.locator(MODAL)).toHaveCount(0);
@@ -45,7 +45,7 @@ test("Tab enters a mode and Backspace in the empty input returns", async ({ obsi
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);
 	await input.pressSequentially("b");
-	await expect(page.locator(MODAL_ROW).first()).toContainText("Search Backlinks");
+	await expect(page.locator(MODAL_ROW).first()).toContainText("Backlinks");
 	await input.press("Tab");
 	await expect(page.locator(`${MODAL} ${CHIP}`)).toHaveText("b");
 	await expect(page.locator(MODAL_ROW)).toHaveText(/Referrer/);
@@ -70,7 +70,7 @@ test("the file-only palette lists no modes", async ({ obsidian }) => {
 	const page = obsidian.page;
 	await expect(page.locator(MODAL_ROW).first()).toBeVisible();
 	await expect(page.locator(`${MODAL} ${HEADING}`)).toHaveCount(0);
-	await expect(page.locator(MODAL_ROW).filter({ hasText: "Run Command" })).toHaveCount(0);
+	await expect(page.locator(MODAL_ROW).filter({ hasText: "Commands" })).toHaveCount(0);
 });
 
 test("a mode opened by its command returns to Home on Esc", async ({ obsidian }) => {
@@ -124,7 +124,7 @@ test("the table lists no modes but still enters one by alias", async ({ obsidian
 	);
 	const input = view.locator(".prompt-input");
 	await input.fill("b");
-	await expect(view.getByText("Search Backlinks")).toHaveCount(0);
+	await expect(view.getByText("Backlinks")).toHaveCount(0);
 	await input.fill("b ");
 	await expect(view.locator(CHIP)).toHaveText("b");
 	await expect(view).toContainText("Referrer");

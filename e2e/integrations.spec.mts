@@ -63,7 +63,7 @@ test("turning Everything off removes its modes from Home and alias entry", async
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);
 	await input.waitFor();
-	await expect(page.locator(".my-palette-suggest-modal")).not.toContainText("Search Vault Notes");
+	await expect(page.locator(".my-palette-suggest-modal")).not.toContainText("Vault notes");
 	await input.pressSequentially("esdir ");
 	await expect(page.locator(".my-palette-suggest-modal .my-palette-mode-chip")).toBeHidden();
 	await expect(input).toHaveValue("esdir ");

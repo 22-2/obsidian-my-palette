@@ -290,16 +290,14 @@ function createIntegrationsPage(plugin: SettingsHost, helpers: SettingPageHelper
 		[
 			helpers.group("Integrations", [
 				{
-					...helpers.render(
-						"Everything",
-						"Search Vault Notes and Search All Files in Vault.",
-						(setting) => renderEverythingIntegration(setting, plugin, plugin.app),
+					...helpers.render("Everything", "Vault notes and All vault files.", (setting) =>
+						renderEverythingIntegration(setting, plugin, plugin.app),
 					),
 					aliases: [...EVERYTHING_MODAL_ITEMS],
 				},
 				helpers.render(
 					"Smart Connections",
-					"Search Related Notes, using the embeddings Smart Connections already has.",
+					"Related notes, using the embeddings Smart Connections already has.",
 					(setting) =>
 						renderSmartConnectionsIntegration(
 							setting,

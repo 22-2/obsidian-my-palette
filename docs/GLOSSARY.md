@@ -87,12 +87,28 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 
 - idを変えると、Obsidianのホットキー設定(`hotkeys.json`)の割り当てが外れる。改名したら、保管庫の`hotkeys.json`のキーも置き換える。
 
+### モード名
+
+モード名は動詞を付けない名詞にし、Sentence caseで書く。Homeの「Modes」見出しの下に並ぶので、動詞は要らない。コマンド名の「Open … list」の`…`と同じ語にそろえる。
+
+| モード名        | エイリアス | 対応するコマンド            |
+| --------------- | ---------- | --------------------------- |
+| Commands        | `>`        | Open run list               |
+| Vault notes     | `e`        | なし                        |
+| All vault files | `esdir`    | なし                        |
+| Outgoing links  | `o`        | Open outgoing link list     |
+| Backlinks       | `b`        | Open backlink list          |
+| Bookmarks       | `bk`       | Open bookmark list          |
+| Related notes   | `sc`       | Open Smart Connections list |
+| Tabs            | `t`        | Open tab list               |
+
+- コマンド名には「command」を入れられない(Obsidianのlint)ので、コマンド一覧だけは、モード名「Commands」とコマンド名「Open run list」が対応する。
+
 ## 未決定
 
 決めたらこの節から「決定済み」へ移す。
 
-- **大文字・小文字**: UI全体をSentence caseに揃えるか(「Search Bookmarks」→「Search bookmarks」、「Switch Tab」→「Switch tab」)。ObsidianのガイドラインはSentence case。揃える場合、Homeは固有名として例外にする。
-- **モード名**: モード名(「Search Bookmarks」「Search Outgoing Links」「Run Command」など)をコマンド名の「Open … list」と対応させるか。表示名だけを変えるなら保存データへの影響はない。
+- **大文字・小文字**: モード名とコマンド名はSentence caseにした。それ以外のUI文言(設定の見出しなど)も揃えるか。ObsidianのガイドラインはSentence case。Homeは固有名として例外にする。
 - **優先度を下げるフォルダー**: 「Lower prior folders」は英語として不自然。識別子`demotedPriorFolders`と意味を揃えた名前(例: 「Lower-ranked folders」)にするか。
 - **ショートカットの範囲「File search」**: Paletteのうちファイルを検索する状態を指す。Palette側の用語として残すか、別の名前にするか。
 

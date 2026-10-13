@@ -26,7 +26,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "commands",
 		mode: "command",
-		title: "Run Command",
+		title: "Commands",
 		subtitle: "Obsidian",
 		icon: "square-terminal",
 		placeholder: "Search commands",
@@ -35,7 +35,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		id: "everything",
 		mode: "everything",
 		everythingScope: "vault",
-		title: "Search Vault Notes",
+		title: "Vault notes",
 		subtitle: "Everything",
 		icon: "search",
 		placeholder: "Search vault notes with Everything",
@@ -44,7 +44,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		id: "everything-all",
 		mode: "everything",
 		everythingScope: "directory",
-		title: "Search All Files in Vault",
+		title: "All vault files",
 		subtitle: "Everything",
 		icon: "folder-search",
 		placeholder: "Search all files in the vault with Everything",
@@ -52,7 +52,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "outlinks",
 		mode: "link",
-		title: "Search Outgoing Links",
+		title: "Outgoing links",
 		subtitle: "Current note",
 		icon: "links-going-out",
 		placeholder: "Search links in the active note",
@@ -60,7 +60,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "backlinks",
 		mode: "backlink",
-		title: "Search Backlinks",
+		title: "Backlinks",
 		subtitle: "Current note",
 		icon: "links-coming-in",
 		placeholder: "Search backlinks to the active note",
@@ -68,7 +68,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "bookmarks",
 		mode: "bookmark",
-		title: "Search Bookmarks",
+		title: "Bookmarks",
 		subtitle: "Obsidian",
 		icon: "bookmark",
 		placeholder: "Search bookmarks",
@@ -76,7 +76,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "smart",
 		mode: "smart",
-		title: "Search Related Notes",
+		title: "Related notes",
 		subtitle: "Smart Connections",
 		icon: "sparkles",
 		placeholder: "Search Smart Connections",
@@ -84,7 +84,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "tabs",
 		mode: "tab",
-		title: "Switch Tab",
+		title: "Tabs",
 		subtitle: "Workspace",
 		icon: "panel-top",
 		placeholder: "Search open tabs",

@@ -41,7 +41,7 @@ Obsidian のコマンドパレットから次のコマンドを実行します�
 | ----------------------------------------- | -------------------------------------------------------- |
 | `My Palette: Open home`                   | Home：モードの一覧と最近使ったファイル                   |
 | `My Palette: Open recent`                 | 最近使ったファイルから始まるファイル検索のみ             |
-| `My Palette: Open run list`               | Run Command モードから始まる                             |
+| `My Palette: Open run list`               | Commands モードから始まる                                |
 | `My Palette: Open sidebar palette`        | Sidebar palette：右サイドバーに常駐するリスト            |
 | `My Palette: Open table palette`          | Table palette：センターのタブに常駐するテーブル          |
 | `My Palette: Open outgoing link list`     | 現在のノートからのリンク先                               |
@@ -80,17 +80,17 @@ Tag insert selector、MOC insert selector、MOC remove selector、Folder move se
 
 `My Palette: Open home` は、Raycast のようにモードの一覧をファイルの上に並べた Home（モードに入る前のパレット）から始まります。モードの行で `Enter` か `Tab` を押すか、エイリアスに続けてスペースを入力すると、そのモードに入ります。エイリアスは入力欄から消えて左側のチップになり、入力欄には検索語だけが残ります。`Esc`（空の入力欄での `Backspace`、チップのクリックでも可）でHomeに戻り、エイリアスが選択された状態になるので、`Enter` でもう一度同じモードに入れます。Homeで `Esc` を押すとパレットを閉じます。
 
-| エイリアス | モード                    | 用途                                                 |
-| ---------- | ------------------------- | ---------------------------------------------------- |
-| なし       | Files                     | Vault 内のファイルを検索                             |
-| `>`        | Run Command               | Obsidian のコマンドを検索・実行                      |
-| `e`        | Search Vault Notes        | Vault の対象拡張子のファイルを Everything で検索     |
-| `esdir`    | Search All Files in Vault | Vault フォルダー配下の全ファイルを Everything で検索 |
-| `o`        | Search Outgoing Links     | 現在のノートからリンクしているノート                 |
-| `b`        | Search Backlinks          | 現在のノートへリンクしているノート                   |
-| `bk`       | Search Bookmarks          | 保存したブックマークを検索                           |
-| `sc`       | Search Related Notes      | 現在のノートに関連するノート（Smart Connections）    |
-| `t`        | Switch Tab                | 開いているタブへ切り替え                             |
+| エイリアス | モード          | 用途                                                 |
+| ---------- | --------------- | ---------------------------------------------------- |
+| なし       | Files           | Vault 内のファイルを検索                             |
+| `>`        | Commands        | Obsidian のコマンドを検索・実行                      |
+| `e`        | Vault notes     | Vault の対象拡張子のファイルを Everything で検索     |
+| `esdir`    | All vault files | Vault フォルダー配下の全ファイルを Everything で検索 |
+| `o`        | Outgoing links  | 現在のノートからリンクしているノート                 |
+| `b`        | Backlinks       | 現在のノートへリンクしているノート                   |
+| `bk`       | Bookmarks       | 保存したブックマークを検索                           |
+| `sc`       | Related notes   | 現在のノートに関連するノート（Smart Connections）    |
+| `t`        | Tabs            | 開いているタブへ切り替え                             |
 
 すべてのエイリアスは **設定 → My Palette → Modes** で変更でき、モードごとにオフにできます。モードをオフにするか、**Integrations** で連携をオフにすると、そのモードはHomeとエイリアス入力から外れます。`Open recent` とTable paletteはモードの一覧を出しませんが、エイリアスでモードに入れます。`Open run list` や `Open backlink list` など、モードを直接開くコマンドはそのモードから始まり、`Esc` でHomeに戻ります。
 

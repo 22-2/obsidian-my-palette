@@ -41,7 +41,7 @@ Open the command palette and run one of these, then bind a hotkey if you like:
 | ----------------------------------------- | ----------------------------------------------------------- |
 | `My Palette: Open home`                   | Home: modes above recently used files                       |
 | `My Palette: Open recent`                 | File search only, starting from recently used files         |
-| `My Palette: Open run list`               | Starts in the Run Command mode                              |
+| `My Palette: Open run list`               | Starts in the Commands mode                                 |
 | `My Palette: Open sidebar palette`        | Sidebar palette: a persistent list view                     |
 | `My Palette: Open table palette`          | Table palette: a persistent table in a center tab           |
 | `My Palette: Open outgoing link list`     | Notes linked from the current note                          |
@@ -84,17 +84,17 @@ Open **Settings → My Palette → Shortcuts** to see every palette and selector
 
 `My Palette: Open home` starts at Home, which lists the modes above your files, much like Raycast. Pick a mode with `Enter` or `Tab`, or type its alias followed by a space. The alias then leaves the input and shows as a chip on its left, so the input holds only the query. `Esc` (or `Backspace` in an empty input, or a click on the chip) goes back to Home with the alias selected, so `Enter` re-enters the mode. `Esc` at Home closes the palette.
 
-| Alias   | Mode                      | Purpose                                                  |
-| ------- | ------------------------- | -------------------------------------------------------- |
-| none    | Files                     | Search files in the Vault                                |
-| `>`     | Run Command               | Search and run Obsidian commands                         |
-| `e`     | Search Vault Notes        | Search the Vault's file types with Everything            |
-| `esdir` | Search All Files in Vault | Search every file under the Vault folder with Everything |
-| `o`     | Search Outgoing Links     | Notes linked from the current note                       |
-| `b`     | Search Backlinks          | Notes linking to the current note                        |
-| `bk`    | Search Bookmarks          | Search saved bookmarks                                   |
-| `sc`    | Search Related Notes      | Notes related to the current note (Smart Connections)    |
-| `t`     | Switch Tab                | Switch to an open tab                                    |
+| Alias   | Mode            | Purpose                                                  |
+| ------- | --------------- | -------------------------------------------------------- |
+| none    | Files           | Search files in the Vault                                |
+| `>`     | Commands        | Search and run Obsidian commands                         |
+| `e`     | Vault notes     | Search the Vault's file types with Everything            |
+| `esdir` | All vault files | Search every file under the Vault folder with Everything |
+| `o`     | Outgoing links  | Notes linked from the current note                       |
+| `b`     | Backlinks       | Notes linking to the current note                        |
+| `bk`    | Bookmarks       | Search saved bookmarks                                   |
+| `sc`    | Related notes   | Notes related to the current note (Smart Connections)    |
+| `t`     | Tabs            | Switch to an open tab                                    |
 
 Every alias can be changed, and a mode can be turned off, in **Settings → My Palette → Modes**. Turning off a mode, or its integration in **Integrations**, removes it from Home and from alias entry. `Open recent` and the Table palette do not list modes but still enter them by alias. Commands that open a mode directly, such as `Open run list` or `Open backlink list`, start in that mode; `Esc` returns to Home.
 

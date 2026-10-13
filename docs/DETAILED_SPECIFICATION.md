@@ -135,17 +135,17 @@ Obsidian 標準の「ホットキー」設定から、利用者がこのコマ�
 
 Raycast の Root Search にならい、パレットは「Home → モード」の2段のナビゲーションスタックで動く。モードの定義（エイリアス、タイトル、アイコン、プレースホルダ）は `src/palette/modes.ts` に集約する。
 
-| エイリアス | モード                    | 内部モード / Everything 範囲 |
-| ---------- | ------------------------- | ---------------------------- |
-| なし       | Files（Home）             | `file`                       |
-| `>`        | Run Command               | `command`                    |
-| `e`        | Search Vault Notes        | `everything` / `vault`       |
-| `esdir`    | Search All Files in Vault | `everything` / `directory`   |
-| `o`        | Search Outgoing Links     | `link`                       |
-| `b`        | Search Backlinks          | `backlink`                   |
-| `bk`       | Search Bookmarks          | `bookmark`                   |
-| `sc`       | Search Related Notes      | `smart`                      |
-| `t`        | Switch Tab                | `tab`                        |
+| エイリアス | モード          | 内部モード / Everything 範囲 |
+| ---------- | --------------- | ---------------------------- |
+| なし       | Files（Home）   | `file`                       |
+| `>`        | Commands        | `command`                    |
+| `e`        | Vault notes     | `everything` / `vault`       |
+| `esdir`    | All vault files | `everything` / `directory`   |
+| `o`        | Outgoing links  | `link`                       |
+| `b`        | Backlinks       | `backlink`                   |
+| `bk`       | Bookmarks       | `bookmark`                   |
+| `sc`       | Related notes   | `smart`                      |
+| `t`        | Tabs            | `tab`                        |
 
 - Home はファイル検索を行う。`Open home` で開いたPalette と Sidebar paletteでは、ファイルの上にモードの行（「Modes」「Files」の見出し付き）を並べる。`Open recent` とテーブルビューはモードの行を出さない。
 - モードの行は、エイリアスの完全一致、エイリアスの前方一致、タイトル・サブタイトルの単語の前方一致の順に並べる。どれにも一致しなければ出さない。
@@ -457,9 +457,9 @@ Everythingページには次を設ける。
 
 | モード                                                | 既定のエイリアス          | 既定値 |
 | ----------------------------------------------------- | ------------------------- | ------ |
-| `commands`（Run Command）                             | `>`                       | 有効   |
-| `everything`（Search Vault Notes）                    | `e`                       | 有効   |
-| `everything-all`（Search All Files in Vault）         | `esdir`                   | 有効   |
+| `commands`（Commands）                                | `>`                       | 有効   |
+| `everything`（Vault notes）                           | `e`                       | 有効   |
+| `everything-all`（All vault files）                   | `esdir`                   | 有効   |
 | `outlinks`、`backlinks`、`bookmarks`、`smart`、`tabs` | `o`、`b`、`bk`、`sc`、`t` | 有効   |
 
 - 旧 `prefixes.command` と `prefixes.everything` は schema 19 で `modes.commands.alias` と `modes.everything.alias` へ移す（末尾の空白を除く）。
@@ -844,7 +844,7 @@ Windows 11、Everything 1.5a 実機、英数字・日本語・空白を含むパ
 1. パレットを開くと100ms程度で入力可能になる。
 2. 空入力で最近開いた Vault ファイルが表示される。
 3. ファイル名・パス・alias・H1 の各条件で目的ファイルを絞り込める。
-4. `> ` で Run Command モードへ即時切り替わり、`Esc` でHome に戻る。
+4. `> ` で Commands モードへ即時切り替わり、`Esc` でHome に戻る。
 5. コマンド実行後に対象コマンドが recent 上位へ移動する。
 6. Home で `e` のモードに入ると、検索語が空でも既定拡張子のVaultファイル一覧が表示される。
 7. `es 日本語`でignore・ドットパスを除くObsidian有効ファイルだけが表示される。
