@@ -65,9 +65,9 @@ test("mode aliases can be changed on the Modes page and are used in Home", async
 	const input = page.locator(MODAL_INPUT);
 	await input.pressSequentially("c");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Commands");
-	await input.pressSequentially(" link search");
+	await input.pressSequentially(" outgoing link list");
 	await expect(page.locator(".my-palette-suggest-modal .my-palette-mode-chip")).toHaveText("c");
-	await expect(input).toHaveValue("link search");
+	await expect(input).toHaveValue("outgoing link list");
 });
 
 test("a mode turned off on the Modes page leaves Home and alias entry", async ({ obsidian }) => {

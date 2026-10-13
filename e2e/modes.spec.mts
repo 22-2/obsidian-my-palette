@@ -14,7 +14,7 @@ test.beforeEach(async ({ obsidian }) => {
 });
 
 test("the > prefix searches commands", async ({ obsidian }) => {
-	const page = await openPaletteWith(obsidian, "> link search");
+	const page = await openPaletteWith(obsidian, "> outgoing link list");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Open outgoing link list");
 });
 

@@ -59,9 +59,9 @@ test("alias plus Space enters the mode directly", async ({ obsidian }) => {
 	await runPaletteCommand(obsidian, "open-home");
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);
-	await input.pressSequentially("> link search");
+	await input.pressSequentially("> outgoing link list");
 	await expect(page.locator(`${MODAL} ${CHIP}`)).toHaveText(">");
-	await expect(input).toHaveValue("link search");
+	await expect(input).toHaveValue("outgoing link list");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Open outgoing link list");
 });
 
