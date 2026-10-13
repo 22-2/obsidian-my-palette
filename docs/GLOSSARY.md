@@ -100,9 +100,24 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 | Bookmarks      | `bk`       | Open bookmark list          |
 | Related notes  | `sc`       | Open Smart Connections list |
 | Tabs           | `t`        | Open tab list               |
+| Plugins        | `p`        | なし                        |
+| Snippets       | `sn`       | なし                        |
 
 - コマンド名には「command」を入れられない(Obsidianのlint)ので、コマンド一覧だけは、モード名「Commands」とコマンド名「Open run list」が対応する。
 - Everythingは1つのモード。Obsidian-excludedがOFFならObsidianで利用できる設定済み拡張子のファイル、ONなら保管庫フォルダー内の全ファイルを検索する。従来のVault notesとAll vault filesを統合し、`esdir`は保存済み履歴の読み取りだけで扱う。
+- `sn`は`sc`と先頭が同じだが、エイリアスは`alias + Space`で照合するので共存できる。
+- Plugins・Snippetsに対応するコマンド(「Open plugin list」など)は、使ってみて要るとわかってから足す。
+
+### 開き方の操作名
+
+| 操作名                  | 意味                                                                        |
+| ----------------------- | --------------------------------------------------------------------------- |
+| Open in external editor | 設定した外部エディターでファイルまたはフォルダーを開く。最初はVS Code固定   |
+| Show in system explorer | OSのファイルマネージャー(Windowsのエクスプローラー)で項目を選んだ状態で開く |
+| Open in terminal        | 項目のフォルダー(ファイルなら親フォルダー)でターミナルを開く                |
+
+- Everythingの結果に今ある「Show in file explorer」は、Obsidianの「File explorer」(左サイドバーのファイル一覧)と紛らわしいため、「Show in system explorer」に揃える。
+- 「Open in VS Code」のようにアプリ名を出すかどうかは、外部エディターの設定を決めてから合わせる。
 
 ### HomeのSettings
 
