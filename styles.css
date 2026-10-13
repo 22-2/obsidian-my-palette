@@ -140,40 +140,6 @@
 	padding: 0;
 }
 
-.my-palette-table-controls {
-	flex: 0 0 auto;
-	min-width: 0;
-	border-bottom: 1px solid var(--background-modifier-border);
-	font-size: var(--font-ui-smaller);
-}
-
-.my-palette-table-toolbar,
-.my-palette-table-pager {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-}
-
-.my-palette-table-toolbar {
-	justify-content: flex-end;
-	padding: 6px 8px;
-}
-
-.my-palette-table-controls .my-palette-table-button {
-	height: 26px;
-	padding: 2px 8px;
-	border: 0;
-	box-shadow: none;
-	background: transparent;
-	color: var(--text-muted);
-	font-size: inherit;
-}
-
-.my-palette-table-pager {
-	color: var(--text-muted);
-	white-space: nowrap;
-}
-
 .my-palette-table-controls .clickable-icon {
 	padding: 3px;
 }

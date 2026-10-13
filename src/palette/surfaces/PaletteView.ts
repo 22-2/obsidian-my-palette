@@ -35,7 +35,6 @@ import type { StatusToggle } from "src/ui/statusToggle";
 import { PaletteTableControls } from "src/palette/table/PaletteTableControls";
 import {
 	normalizePaletteTableState,
-	PALETTE_TABLE_PAGE_SIZE,
 	type PaletteTableState,
 } from "src/palette/table/paletteTableModel";
 
@@ -252,9 +251,6 @@ export class PaletteView extends ItemView {
 		this.panel = new SuggestionPanel<PaletteResult>(this.contentEl, {
 			getHotkeys: () => this.plugin.settings.hotkeys,
 			initialInput,
-			// Why: table pagination and the panel's selectable rows must share the
-			// same 50-row limit even if the generic panel default changes later.
-			limit: this.tableView ? PALETTE_TABLE_PAGE_SIZE : undefined,
 			surface: "view",
 			selectionMode: "extended",
 			placeholder: palettePlaceholder(state.fixedMode ?? "file"),
@@ -306,7 +302,7 @@ export class PaletteView extends ItemView {
 		});
 		this.addChild(this.panel);
 		this.panel.load();
-		// Why: only the dedicated table view adds sorting and pagination controls;
+		// Why: only the dedicated table view adds sorting and column controls;
 		// both views still use the same search session and result actions.
 		if (this.tableView) {
 			this.tableControls = new PaletteTableControls(this.panel, this.app, {

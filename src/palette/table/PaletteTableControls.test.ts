@@ -73,7 +73,7 @@ function mouse(element: HTMLElement, type: string, button = 1) {
 }
 
 describe("table middle-click interactions", () => {
-	it("handles restored popout rows, sorting headers, and pager buttons", () => {
+	it("handles restored popout rows and sorting headers", () => {
 		const mainDocument = document;
 		const mainElement = Element;
 		const mainHTMLElement = HTMLElement;
@@ -101,18 +101,6 @@ describe("table middle-click interactions", () => {
 		expect(f.middle).toHaveBeenCalledExactlyOnceWith(f.expected, expect.any(MouseEvent));
 		mouse(f.root.querySelector<HTMLElement>('th button[data-column="name"]')!, "click", 0);
 		expect(f.panel.getSelectedItem()?.primary).toBe("alpha");
-		f.controls.setResults({
-			items: Array.from({ length: 51 }, (_, index) => ({
-				id: String(index),
-				mode: "file",
-				primary: `note-${index}`,
-				secondary: "",
-				icon: "file",
-				vaultPath: `${index}.md`,
-			})),
-		});
-		mouse(f.root.querySelector<HTMLElement>('button[data-action="next"]')!, "click", 0);
-		expect(f.panel.getSelectedItem()?.primary).toBe("note-50");
 	});
 
 	it.each([

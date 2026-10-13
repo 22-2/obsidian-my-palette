@@ -1,10 +1,9 @@
-import { Component, TFile, setIcon, type App } from "obsidian";
+import { Component, TFile, type App } from "obsidian";
 import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
 import type { PaletteResult } from "src/palette/results";
 import {
 	PALETTE_TABLE_COLUMNS,
-	PALETTE_TABLE_PAGE_SIZE,
 	PaletteTableModel,
 	normalizePaletteTableState,
 	type PaletteTableRow,
@@ -24,13 +23,10 @@ interface PaletteTableControlsOptions {
 /** A per-pane table presentation; search providers continue to own matching. */
 export class PaletteTableControls extends Component {
 	private readonly model: PaletteTableModel;
-	private readonly controlsEl: HTMLElement;
-	private readonly toolbarEl: HTMLElement;
 	private readonly dateFormat = new Intl.DateTimeFormat(undefined, {
 		dateStyle: "short",
 		timeStyle: "short",
 	});
-	private pageIndex = 0;
 	private results: SuggestionPanelResults<PaletteResult> = { items: [] };
 	private rowsByResult = new Map<PaletteResult, PaletteTableRow>();
 	private draggedColumn?: PaletteTableColumnId;
@@ -45,13 +41,9 @@ export class PaletteTableControls extends Component {
 		super();
 		this.model = new PaletteTableModel(options.initialState.sorting);
 		this.model.setColumnLayout(normalizePaletteTableState(options.initialState));
-		this.controlsEl = createDiv({ cls: "my-palette-table-controls" });
-		panel.resultContainerEl.before(this.controlsEl);
-		this.toolbarEl = this.controlsEl.createDiv("my-palette-table-toolbar");
 	}
 
 	onload(): void {
-		this.registerDomEvent(this.controlsEl, "click", (event) => this.handleControlClick(event));
 		this.registerDomEvent(this.panel.resultContainerEl, "click", (event) => {
 			const button = this.buttonAtEvent(event);
 			if (!button || button.dataset.action !== "sort") return;
@@ -63,7 +55,6 @@ export class PaletteTableControls extends Component {
 			const column = PALETTE_TABLE_COLUMNS.find(({ id }) => id === button.dataset.column);
 			if (!column) return;
 			this.model.toggleSorting(column.id);
-			this.pageIndex = 0;
 			this.changed();
 			this.panel.resultContainerEl
 				.querySelector<HTMLButtonElement>(`button[data-column="${column.id}"]`)
@@ -118,7 +109,6 @@ export class PaletteTableControls extends Component {
 	onunload(): void {
 		this.columnMenu?.close();
 		this.endColumnDrag();
-		this.controlsEl.remove();
 	}
 
 	getState(): PaletteTableState {
@@ -133,13 +123,11 @@ export class PaletteTableControls extends Component {
 		const next = normalizePaletteTableState(state);
 		this.model.setSorting(next.sorting);
 		this.model.setColumnLayout(next);
-		this.pageIndex = 0;
 		this.render();
 	}
 
 	setResults(results: SuggestionPanelResults<PaletteResult>): void {
 		if (results.items !== this.results.items) {
-			this.pageIndex = 0;
 			const rows = results.items.map((result) => this.toRow(result));
 			this.rowsByResult = new Map(rows.map((row) => [row.result, row]));
 			this.model.setRows(rows);
@@ -182,35 +170,17 @@ export class PaletteTableControls extends Component {
 		// Why: the presentation belongs exclusively to PaletteTableView, so
 		// persisted legacy state cannot reintroduce a mode toggle.
 		this.panel.setAttribute("data-result-layout", "table");
-		this.renderToolbar();
 		this.panel.setResultsLayout({
 			render: (container, items, query, decorateRow) =>
 				this.renderTable(container, items, query, decorateRow),
 		});
-		const items = this.model
-			.page(this.pageIndex, PALETTE_TABLE_PAGE_SIZE)
-			.map((row) => row.result);
+		// Why: pass every sorted match; the panel applies the same limit and count
+		// label as the list view.
 		this.panel.setResults({
 			...this.results,
-			items,
+			items: this.model.sortedRows().map((row) => row.result),
 			total: this.results.total ?? this.results.items.length,
 		});
-		const start = items.length ? this.pageIndex * PALETTE_TABLE_PAGE_SIZE + 1 : 0;
-		const end = this.pageIndex * PALETTE_TABLE_PAGE_SIZE + items.length;
-		this.panel.resultCountEl.setText(
-			`${start}–${end} / ${this.results.total ?? this.results.items.length}`,
-		);
-	}
-
-	private renderToolbar(): void {
-		this.toolbarEl.empty();
-		const pager = this.toolbarEl.createDiv("my-palette-table-pager");
-		const pages = Math.max(1, Math.ceil(this.results.items.length / PALETTE_TABLE_PAGE_SIZE));
-		this.button(pager, "previous", "Previous page", "chevron-left").disabled =
-			this.pageIndex === 0;
-		pager.createSpan({ text: `${this.pageIndex + 1} / ${pages}` });
-		this.button(pager, "next", "Next page", "chevron-right").disabled =
-			this.pageIndex + 1 >= pages;
 	}
 
 	private renderTable(
@@ -249,7 +219,6 @@ export class PaletteTableControls extends Component {
 				th,
 				"sort",
 				`Sort by ${column.label}. Click to cycle sorting, drag to reorder, right-click for columns`,
-				undefined,
 				column.id,
 			);
 			button.setText(`${column.label}${sort ? ` ${sort.desc ? "↓" : "↑"}${index + 1}` : ""}`);
@@ -330,43 +299,14 @@ export class PaletteTableControls extends Component {
 		}
 	}
 
-	private handleControlClick(event: MouseEvent): void {
-		const button = this.buttonAtEvent(event);
-		if (!button) return;
-		const action = button.dataset.action;
-		if (action !== "previous" && action !== "next") return;
-		const lastPage = Math.max(
-			0,
-			Math.ceil(this.results.items.length / PALETTE_TABLE_PAGE_SIZE) - 1,
-		);
-		this.pageIndex = Math.max(
-			0,
-			Math.min(lastPage, this.pageIndex + (action === "next" ? 1 : -1)),
-		);
-		this.render();
-		this.panel.resultContainerEl.scrollTop = 0;
-		this.restoreControlFocus(action);
-		return;
-	}
-
 	private changed(): void {
 		this.render();
 		this.options.onChange(this.getState());
 	}
 
-	private restoreControlFocus(action: string, id?: string): void {
-		// Rendering replaces pager buttons; restore focus so keyboard users can
-		// continue paging without tabbing back through the toolbar.
-		this.controlsEl
-			.querySelector<HTMLButtonElement>(
-				`button[data-action="${action}"]${id ? `[data-column="${id}"]` : ""}`,
-			)
-			?.focus({ preventScroll: true });
-	}
-
 	private buttonAtEvent(event: MouseEvent): HTMLButtonElement | undefined {
 		const target = event.target as Node | null;
-		// Why: paging and sorting must recognize buttons created in a popout window.
+		// Why: sorting must recognize buttons created in a popout window.
 		return target?.instanceOf(Element)
 			? (target.closest<HTMLButtonElement>("button[data-action]") ?? undefined)
 			: undefined;
@@ -376,16 +316,12 @@ export class PaletteTableControls extends Component {
 		container: HTMLElement,
 		action: string,
 		title: string,
-		icon?: string,
-		column?: string,
+		column: string,
 	): HTMLButtonElement {
-		const button = container.createEl("button", {
-			cls: icon ? "clickable-icon" : "my-palette-table-button",
+		return container.createEl("button", {
+			cls: "my-palette-table-button",
 			// Why: keep operation hints in the tooltip without adding aria-labels.
-			attr: { type: "button", title, "data-action": action },
+			attr: { type: "button", title, "data-action": action, "data-column": column },
 		});
-		if (column) button.dataset.column = column;
-		if (icon) setIcon(button, icon);
-		return button;
 	}
 }

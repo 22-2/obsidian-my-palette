@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
 	PaletteTableModel,
-	PALETTE_TABLE_PAGE_SIZE,
 	normalizePaletteTableState,
 	type PaletteTableRow,
 } from "src/palette/table/paletteTableModel";
@@ -28,20 +27,18 @@ function row(
 	};
 }
 
-function names(model: PaletteTableModel, index = 0, size = PALETTE_TABLE_PAGE_SIZE): string[] {
-	return model.page(index, size).map((item) => item.name);
+function names(model: PaletteTableModel): string[] {
+	return model.sortedRows().map((item) => item.name);
 }
 
 describe("PaletteTableModel", () => {
-	it("sorts all matches before paging, including records past the original display limit", () => {
+	it("returns all matches in sort order, including records past the original display limit", () => {
 		const model = new PaletteTableModel([{ id: "modified", desc: true }]);
 		model.setRows(Array.from({ length: 120 }, (_, index) => row(`Note ${index}`, index)));
-		expect(names(model)).toHaveLength(50);
-		expect(names(model, 1)).toHaveLength(50);
+		expect(names(model)).toHaveLength(120);
 		expect(names(model).at(0)).toBe("Note 119");
-		expect(names(model).at(-1)).toBe("Note 70");
-		expect(names(model, 2)).toHaveLength(20);
-		expect(names(model, 2).at(-1)).toBe("Note 0");
+		expect(names(model).at(49)).toBe("Note 70");
+		expect(names(model).at(-1)).toBe("Note 0");
 	});
 
 	it("uses multiple column priorities", () => {

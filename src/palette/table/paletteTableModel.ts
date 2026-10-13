@@ -10,9 +10,6 @@ import {
 import { storeReactivityBindings } from "@tanstack/table-core/store-reactivity-bindings";
 import type { PaletteResult } from "src/palette/results";
 
-// Why: keep table rendering, page navigation, and row selection at 50 rows.
-export const PALETTE_TABLE_PAGE_SIZE = 50;
-
 export const PALETTE_TABLE_COLUMNS = [
 	{ id: "name", label: "Name", width: 30 },
 	{ id: "path", label: "Path", width: 38 },
@@ -183,12 +180,9 @@ export class PaletteTableModel {
 		this.setColumnLayout({ ...this.columnLayout, hiddenColumns });
 	}
 
-	page(index: number, size: number): PaletteTableRow[] {
-		// Sort every returned match before slicing, otherwise a high-ranked value
-		// beyond the old 50-row display limit could never reach the first page.
-		return this.table
-			.getRowModel()
-			.rows.slice(index * size, (index + 1) * size)
-			.map((row) => row.original);
+	sortedRows(): PaletteTableRow[] {
+		// Why: return every match in sort order; the panel applies the shared result
+		// limit, so a high-ranked value is never cut off before sorting.
+		return this.table.getRowModel().rows.map((row) => row.original);
 	}
 }
