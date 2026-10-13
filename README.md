@@ -98,8 +98,11 @@ Between Modes and Files, Home's **Settings** section lists **General**, **Modes*
 | `t`   | Tabs           | Switch to an open tab                                                   |
 | `p`   | Plugins        | Open installed plugin folders in an external editor                     |
 | `sn`  | Snippets       | Open CSS snippets in an external editor                                 |
+| `pr`  | Properties     | Find and edit the properties of the current note                        |
 
 Plugins lists every installed plugin by name, with disabled ones marked; Snippets lists the snippets folder first, then each snippet with its enabled state. `Enter` opens the folder or file in the external editor (VS Code for now). The menu also offers show in system explorer and open in terminal, plus path copying. Plugin rows with a settings tab offer open plugin settings.
+
+Properties lists the current note's properties under **This note**, the reserved `aliases`, `tags` and `cssclasses` under **Reserved**, and the other keys used in the vault under **Vault**. `Enter` edits a value by its type: tags open the tag insert selector, lists open a selector of their values, checkboxes flip in place, and text, number, date and date-time values are typed into an input. Typing a key that nothing matches offers to add it, after choosing a type. Nested values are edited in source mode. The menu also offers copy value, delete property and copy property name. The type is read from the vault and never changed from here.
 
 Every alias can be changed, and a mode can be turned off, in **Settings → My Palette → Modes**. Turning off a mode, or its integration in **Integrations**, removes it from Home and from alias entry. The Table palette does not list modes but still enters them by alias. Commands that open a mode directly, such as `Open note list` or `Open backlink list`, start in that mode; `Esc` returns to Home.
 

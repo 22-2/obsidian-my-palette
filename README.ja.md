@@ -92,8 +92,11 @@ Tag insert selector、MOC insert selector、MOC remove selector、Folder move se
 | `t`        | Tabs           | 開いているタブへ切り替え                                     |
 | `p`        | Plugins        | インストール済みプラグインのフォルダーを外部エディターで開く |
 | `sn`       | Snippets       | CSS スニペットを外部エディターで開く                         |
+| `pr`       | Properties     | 現在のノートのプロパティを検索して編集する                   |
 
 Plugins はインストール済みのプラグインを名前順に並べ、無効なものには印を付けます。Snippets は先頭に snippets フォルダーの行、その後に各スニペットを有効・無効付きで並べます。`Enter` でフォルダーやファイルを外部エディター（当面は VS Code）で開きます。メニューにはシステムエクスプローラーでの表示、ターミナルで開く、パスのコピーもあり、設定タブのあるプラグインには設定を開く項目が出ます。
+
+Properties は現在のノートのプロパティを **This note**、予約キー（`aliases`、`tags`、`cssclasses`）を **Reserved**、保管庫の他のノートで使われているキーを **Vault** の見出しで並べます。`Enter` は型に合わせて編集します。タグは Tag insert selector を開き、リストは値の selector を開き、チェックボックスはその場で切り替え、テキスト・数値・日付・日時は入力欄に値を打ちます。どのキーにも一致しない名前を入力すると、型を選んでそのキーを追加できます。ネストした値は source mode で編集します。右クリックメニューには値のコピー、プロパティの削除、プロパティ名のコピーもあります。型は保管庫の設定を読むだけで、Palette からは変更しません。
 
 すべてのエイリアスは **設定 → My Palette → Modes** で変更でき、モードごとにオフにできます。モードをオフにするか、**Integrations** で連携をオフにすると、そのモードはHomeとエイリアス入力から外れます。Table paletteはモードの一覧を出しませんが、エイリアスでモードに入れます。`Open note list` や `Open backlink list` など、モードを直接開くコマンドはそのモードから始まり、`Esc` でHomeに戻ります。
 
