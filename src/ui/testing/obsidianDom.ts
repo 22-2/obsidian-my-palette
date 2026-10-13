@@ -8,6 +8,16 @@ interface ElementOptions {
 	attr?: Record<string, string>;
 }
 
+/** Builds a detached element, as Obsidian's createEl does. The helpers below are built on it. */
+export function buildElement(tag: string, options: string | ElementOptions = {}): HTMLElement {
+	const element = document.createElement(tag);
+	const props = typeof options === "string" ? { cls: options } : options;
+	if (props.cls) element.className = props.cls;
+	if (props.text) element.textContent = props.text;
+	for (const [key, value] of Object.entries(props.attr ?? {})) element.setAttribute(key, value);
+	return element;
+}
+
 // Obsidian固有のDOM拡張だけを補い、イベントの伝播と選択は実際のDOMで検証する。
 export function installObsidianDom(): void {
 	const create = function (
@@ -15,15 +25,16 @@ export function installObsidianDom(): void {
 		tag: string,
 		options: string | ElementOptions = {},
 	): HTMLElement {
-		const element = document.createElement(tag);
-		const props = typeof options === "string" ? { cls: options } : options;
-		if (props.cls) element.className = props.cls;
-		if (props.text) element.textContent = props.text;
-		for (const [key, value] of Object.entries(props.attr ?? {}))
-			element.setAttribute(key, value);
+		const element = buildElement(tag, options);
 		this.append(element);
 		return element;
 	};
+	// Obsidian also provides these as global functions, which the plugin code calls.
+	Object.assign(globalThis, {
+		createEl: (tag: string, options?: string | ElementOptions) => buildElement(tag, options),
+		createDiv: (options?: string | ElementOptions) => buildElement("div", options),
+		createSpan: (options?: string | ElementOptions) => buildElement("span", options),
+	});
 	Object.defineProperties(HTMLElement.prototype, {
 		instanceOf: {
 			configurable: true,
@@ -120,10 +131,10 @@ export class Component {
 }
 
 export class Modal {
-	readonly modalEl = document.createElement("div");
+	readonly modalEl = buildElement("div");
 	readonly containerEl = this.modalEl;
-	readonly titleEl = this.modalEl.appendChild(document.createElement("h2"));
-	readonly contentEl = this.modalEl.appendChild(document.createElement("div"));
+	readonly titleEl = this.modalEl.appendChild(buildElement("h2"));
+	readonly contentEl = this.modalEl.appendChild(buildElement("div"));
 	readonly scope = {
 		keys: ["Home", "End", "Escape"].map((key) => ({
 			key,

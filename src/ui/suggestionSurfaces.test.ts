@@ -109,7 +109,7 @@ async function fixture(
 		surface === "modal"
 			? new TestModal({ selectionMode, interactionModes, getHotkeys })
 			: undefined;
-	const root = modal?.modalEl ?? document.body.appendChild(document.createElement("div"));
+	const root = modal?.modalEl ?? document.body.appendChild(createDiv());
 	const choose = modal?.choose ?? vi.fn();
 	const middle = modal?.middle ?? vi.fn();
 	const context = modal?.context ?? vi.fn();
@@ -367,7 +367,7 @@ it("selects and opens sidebar results created in a restored popout window", asyn
 	vi.stubGlobal("Element", class Element extends mainElement {});
 	vi.stubGlobal("HTMLElement", mainHTMLElement);
 
-	expect(f.rows()[1] instanceof Element).toBe(false);
+	expect(f.rows()[1].ownerDocument).not.toBe(mainDocument);
 	mouse(f.rows()[1], "mousedown");
 	mouse(f.rows()[1], "click");
 	expect(f.selection()).toEqual(["beta"]);

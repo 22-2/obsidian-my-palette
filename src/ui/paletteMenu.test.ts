@@ -234,7 +234,7 @@ describe("PaletteMenu keyboard", () => {
 
 	it("closes on Escape and keeps the key from the palette input", () => {
 		const { menu } = sample();
-		const input = document.body.appendChild(document.createElement("input"));
+		const input = document.body.appendChild(createEl("input"));
 		input.focus();
 		const seen = vi.fn();
 		input.addEventListener("keydown", seen);
@@ -309,7 +309,7 @@ describe("PaletteMenu selection", () => {
 describe("PaletteMenu focus and placement", () => {
 	it("gives focus back to the element it had before opening", () => {
 		const { menu } = sample();
-		const input = document.body.appendChild(document.createElement("input"));
+		const input = document.body.appendChild(createEl("input"));
 		input.focus();
 		menu.showAtPosition({ x: 0, y: 0 });
 		(document.activeElement as HTMLElement).blur();
@@ -321,8 +321,8 @@ describe("PaletteMenu focus and placement", () => {
 
 	it("keeps the focus the user moved to another input", () => {
 		const { menu } = sample();
-		const input = document.body.appendChild(document.createElement("input"));
-		const other = document.body.appendChild(document.createElement("input"));
+		const input = document.body.appendChild(createEl("input"));
+		const other = document.body.appendChild(createEl("input"));
 		input.focus();
 		menu.showAtPosition({ x: 0, y: 0 });
 		other.focus();

@@ -20,7 +20,7 @@ afterEach(() => {
 });
 
 function fixture() {
-	const root = document.body.appendChild(document.createElement("div"));
+	const root = document.body.appendChild(createDiv());
 	const panel = new SuggestionPanel<string>(root, {
 		surface: "modal",
 		onInput: vi.fn(),

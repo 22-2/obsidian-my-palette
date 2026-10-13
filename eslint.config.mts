@@ -45,6 +45,39 @@ export default defineConfig(
 	},
 	...obsidianmd.configs.recommended,
 	{
+		rules: {
+			// Names of this plugin and the Obsidian and Smart Connections products keep their own casing.
+			"obsidianmd/ui/sentence-case": [
+				"warn",
+				{
+					brands: [
+						"Obsidian",
+						"Everything",
+						"Smart Connections",
+						"VS Code",
+						"My Palette",
+						"Root Search",
+						"Relateds",
+						"Markdown",
+					],
+					acronyms: ["MOC", "HTTP", "URL"],
+					// Key names are shown as they are on the keyboard.
+					ignoreWords: ["Enter", "Esc", "Tab"],
+				},
+			],
+		},
+	},
+	{
+		// The test DOM helper implements Obsidian's createEl and instanceOf itself, so it
+		// has to create raw elements and use globalThis.
+		files: ["src/ui/testing/**/*.ts"],
+		rules: {
+			"obsidianmd/prefer-create-el": "off",
+			"obsidianmd/prefer-instanceof": "off",
+			"obsidianmd/no-global-this": "off",
+		},
+	},
+	{
 		// テストと設定ファイルは Obsidian の外（Node 上の Vitest）で動く。
 		// window が無いためタイマーや globalThis を直接使い、Obsidian の TFile はモックの実体を型だけ合わせて使う。
 		files: ["src/**/*.test.ts", "test/**/*.ts", "vitest.config.mts"],

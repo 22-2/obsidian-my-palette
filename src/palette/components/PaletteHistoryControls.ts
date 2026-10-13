@@ -281,7 +281,7 @@ export class PaletteHistoryControls {
 				!this.suggest.isOpen ||
 				this.suggest.contains(target) ||
 				target === inputEl ||
-				(target instanceof Element && target.closest(".my-palette-history-button"))
+				(target.instanceOf(Element) && target.closest(".my-palette-history-button"))
 			)
 				return;
 			this.suggest.close();

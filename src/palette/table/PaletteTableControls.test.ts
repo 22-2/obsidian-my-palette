@@ -20,11 +20,6 @@ beforeEach(() => {
 	for (const name of ["document", "Element", "HTMLElement", "MouseEvent"] as const)
 		vi.stubGlobal(name, dom[name]);
 	installObsidianDom();
-	vi.stubGlobal("createDiv", (options: { cls: string }) => {
-		const element = document.createElement("div");
-		element.className = options.cls;
-		return element;
-	});
 });
 
 afterEach(() => {
@@ -33,7 +28,7 @@ afterEach(() => {
 });
 
 function fixture() {
-	const root = document.body.appendChild(document.createElement("div"));
+	const root = document.body.appendChild(createDiv());
 	const middle = vi.fn();
 	const choose = vi.fn();
 	const panel = new SuggestionPanel<PaletteResult>(root, {
@@ -95,7 +90,7 @@ describe("table middle-click interactions", () => {
 		vi.stubGlobal("HTMLElement", mainHTMLElement);
 
 		const cell = f.root.querySelector<HTMLElement>('td[data-column="path"]')!;
-		expect(cell instanceof Element).toBe(false);
+		expect(cell.ownerDocument).not.toBe(mainDocument);
 		mouse(cell, "mousedown", 0);
 		mouse(cell, "click", 0);
 		expect(f.panel.getSelectedItems()).toEqual([f.expected]);

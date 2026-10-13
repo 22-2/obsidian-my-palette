@@ -51,7 +51,7 @@ export class PaletteMenu {
 	private selectionListener: ((item: PaletteMenuItem | undefined) => void) | null = null;
 
 	constructor() {
-		this.dom = document.createElement("div");
+		this.dom = createDiv();
 		this.dom.className = "menu";
 		this.dom.setAttribute("role", "menu");
 		this.scrollEl = this.dom.createDiv("menu-scroll");
@@ -246,7 +246,7 @@ export class PaletteMenuItem {
 
 	constructor(menu: PaletteMenu) {
 		this.menu = menu;
-		this.dom = document.createElement("div");
+		this.dom = createDiv();
 		this.dom.className = "menu-item tappable";
 		this.dom.setAttribute("role", "menuitem");
 		this.iconEl = this.dom.createDiv("menu-item-icon");
