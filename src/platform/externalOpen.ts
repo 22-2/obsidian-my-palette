@@ -35,6 +35,7 @@ export function getResultAbsolutePath(app: App, result: PaletteResult): string |
 		case "tab":
 			return result.file ? (getVaultFullPath(app, result.file.path) ?? undefined) : undefined;
 		case "plugin":
+		case "snippet":
 			return result.absolutePath;
 		case "command":
 		case "search-history":
@@ -47,6 +48,7 @@ export function getResultAbsolutePath(app: App, result: PaletteResult): string |
 /** Whether the absolute path points to a folder, for the system explorer action. */
 export function isFolderResult(result: PaletteResult): boolean {
 	if (result.mode === "plugin") return true;
+	if (result.mode === "snippet") return result.isFolder;
 	return result.mode === "everything" && result.kind === "folder";
 }
 

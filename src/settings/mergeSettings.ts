@@ -253,6 +253,19 @@ function normalizeModes(source: Record<string, unknown>): ModeSettingsMap {
 			alias = suffix === 1 ? "plugins" : `plugins${suffix}`;
 		modes.plugins.alias = alias;
 	}
+	// Snippets arrived with plugins; `sn` shares its first letter with `sc`
+	// but aliases match as `alias + Space`, so only an identical alias collides.
+	if (!rawModes.snippets) {
+		const taken = new Set(
+			modeIds
+				.filter((id) => id !== "snippets")
+				.map((id) => modes[id].alias.toLocaleLowerCase()),
+		);
+		let alias = DEFAULT_SETTINGS.modes.snippets.alias;
+		for (let suffix = 1; taken.has(alias.toLocaleLowerCase()); suffix++)
+			alias = suffix === 1 ? "snippets" : `snippets${suffix}`;
+		modes.snippets.alias = alias;
+	}
 	return modes;
 }
 

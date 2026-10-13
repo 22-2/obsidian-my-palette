@@ -181,4 +181,23 @@ describe("note opening focus", () => {
 		expect(openInExternalEditor).toHaveBeenCalledExactlyOnceWith("C:/vault/cfg/plugins/alpha");
 		expect(f.options.close).not.toHaveBeenCalled();
 	});
+
+	it("opens snippet files in the external editor", async () => {
+		const f = fixture();
+		const { openInExternalEditor } = await import("src/platform/externalOpen");
+		const snippetResult: PaletteResult = {
+			id: "snippet:alpha.css",
+			mode: "snippet",
+			primary: "alpha",
+			secondary: "Enabled",
+			icon: "paintbrush",
+			snippetName: "alpha.css",
+			absolutePath: "C:/vault/cfg/snippets/alpha.css",
+			vaultPath: "cfg/snippets/alpha.css",
+			isFolder: false,
+			enabled: true,
+		};
+		await executePaletteResult(f.plugin, snippetResult, "primary", f.options);
+		expect(openInExternalEditor).toHaveBeenCalledWith("C:/vault/cfg/snippets/alpha.css");
+	});
 });

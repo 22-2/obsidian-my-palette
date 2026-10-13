@@ -63,6 +63,21 @@ describe("getResultAbsolutePath", () => {
 		).toBe("C:/vault/cfg/plugins/alpha");
 	});
 
+	it("returns the path for snippet files and folders", () => {
+		const app = appWithPaths(null);
+		expect(
+			getResultAbsolutePath(app, {
+				...base,
+				mode: "snippet",
+				snippetName: "alpha.css",
+				absolutePath: "C:/vault/cfg/snippets/alpha.css",
+				vaultPath: "cfg/snippets/alpha.css",
+				isFolder: false,
+				enabled: true,
+			}),
+		).toBe("C:/vault/cfg/snippets/alpha.css");
+	});
+
 	it("resolves link and bookmark files through the vault adapter", () => {
 		const app = appWithPaths("C:/vault/Link.md");
 		const file = { path: "Link.md" } as unknown as import("obsidian").TFile;
@@ -127,6 +142,21 @@ describe("isFolderResult", () => {
 				hasSettings: false,
 			}),
 		).toBe(true);
+	});
+
+	it("follows the snippet row for folder detection", () => {
+		const folder = {
+			...base,
+			mode: "snippet",
+			snippetName: "",
+			absolutePath: "C:/vault/cfg/snippets",
+			vaultPath: "cfg/snippets",
+			isFolder: true,
+			enabled: true,
+		} as const;
+		const file = { ...folder, snippetName: "alpha.css", isFolder: false };
+		expect(isFolderResult(folder)).toBe(true);
+		expect(isFolderResult(file)).toBe(false);
 	});
 });
 

@@ -326,6 +326,21 @@ describe("Plugins mode migration", () => {
 	});
 });
 
+describe("Snippets mode migration", () => {
+	it("adds the mode with its default alias for existing settings", () => {
+		const settings = mergeSettings({ modes: { tabs: { alias: "t" } } });
+		expect(settings.modes.snippets).toEqual({ alias: "sn", enabled: true });
+	});
+
+	it("moves the new mode aside when its alias is already taken", () => {
+		const settings = mergeSettings({
+			modes: { smart: { alias: "sn", enabled: true } },
+		});
+		expect(settings.modes.smart.alias).toBe("sn");
+		expect(settings.modes.snippets.alias).toBe("snippets");
+	});
+});
+
 describe("merged Everything mode", () => {
 	it("preserves its alias and keeps the mode enabled if either old scope was enabled", () => {
 		const settings = mergeSettings({

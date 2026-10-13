@@ -74,6 +74,7 @@ export default class MyPalettePlugin extends Plugin {
 	smartConnectionProvider!: PaletteProviderInstances["smartConnectionProvider"];
 	tabProvider!: PaletteProviderInstances["tabProvider"];
 	pluginProvider!: PaletteProviderInstances["pluginProvider"];
+	snippetProvider!: PaletteProviderInstances["snippetProvider"];
 	providers!: PaletteProviderInstances["providers"];
 	private fileUsageHistory?: FileUsageHistory;
 	private searchHistory?: SearchHistoryService;
@@ -117,6 +118,7 @@ export default class MyPalettePlugin extends Plugin {
 		this.smartConnectionProvider = providers.smartConnectionProvider;
 		this.tabProvider = providers.tabProvider;
 		this.pluginProvider = providers.pluginProvider;
+		this.snippetProvider = providers.snippetProvider;
 		this.providers = providers.providers;
 		this.addSettingTab(new MyPaletteSettingTab(this));
 		registerPluginCommands(this);

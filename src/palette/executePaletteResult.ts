@@ -94,9 +94,9 @@ export async function executePaletteResult(
 		finish(options);
 		return;
 	}
-	if (result.mode === "plugin") {
-		// Why: a plugin folder has no Obsidian view; Enter hands it to the
-		// external editor like the quick-open flow did.
+	if (result.mode === "plugin" || result.mode === "snippet") {
+		// Why: plugin folders and snippet files have no Obsidian view; Enter hands
+		// them to the external editor like the quick-open flow did.
 		const error = await openInExternalEditor(result.absolutePath);
 		if (error) {
 			options.showError(error);

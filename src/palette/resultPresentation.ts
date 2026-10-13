@@ -136,6 +136,12 @@ export function getCopyablePaths(
 			relativePath: result.vaultPath,
 			absolutePath: result.absolutePath,
 		};
+	if (result.mode === "snippet")
+		return {
+			fileName: fileNameOf(result.vaultPath),
+			relativePath: result.vaultPath,
+			absolutePath: result.absolutePath,
+		};
 	if (!file) return {};
 	return {
 		fileName: fileNameOf(file.path),

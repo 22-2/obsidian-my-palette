@@ -11,7 +11,8 @@ export type PaletteModeId =
 	| "bookmarks"
 	| "smart"
 	| "tabs"
-	| "plugins";
+	| "plugins"
+	| "snippets";
 
 export interface PaletteModeDefinition {
 	id: PaletteModeId;
@@ -95,6 +96,14 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		subtitle: "Installed",
 		icon: "puzzle",
 		placeholder: "Search installed plugins",
+	},
+	{
+		id: "snippets",
+		mode: "snippet",
+		title: "Snippets",
+		subtitle: "CSS",
+		icon: "paintbrush",
+		placeholder: "Search CSS snippets",
 	},
 ];
 

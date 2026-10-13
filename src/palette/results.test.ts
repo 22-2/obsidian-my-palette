@@ -53,6 +53,19 @@ describe("getResultFilePath", () => {
 			},
 			undefined,
 		],
+		[
+			"snippet",
+			{
+				...base,
+				mode: "snippet",
+				snippetName: "alpha.css",
+				absolutePath: "C:/vault/cfg/snippets/alpha.css",
+				vaultPath: "cfg/snippets/alpha.css",
+				isFolder: false,
+				enabled: true,
+			},
+			undefined,
+		],
 	];
 
 	it.each(cases)("%s", (_name, result, expected) => {

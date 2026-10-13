@@ -191,3 +191,24 @@ it("offers editor, explorer and settings for plugin results without note navigat
 	expect(app.setting.openTabById).toHaveBeenCalledExactlyOnceWith("alpha");
 	expect(onNoteActionSelected).toHaveBeenCalled();
 });
+
+it("offers editor and explorer for snippet results without settings", () => {
+	const f = fixture(false);
+	const result: PaletteResult = {
+		id: "snippet:alpha.css",
+		mode: "snippet",
+		primary: "alpha",
+		secondary: "Enabled",
+		icon: "paintbrush",
+		snippetName: "alpha.css",
+		absolutePath: "C:/vault/cfg/snippets/alpha.css",
+		vaultPath: "cfg/snippets/alpha.css",
+		isFolder: false,
+		enabled: true,
+	};
+	populatePaletteResultMenu({ ...f.options, result, selectedItems: [result] });
+	expect(f.actions.has("Open in external editor")).toBe(true);
+	expect(f.actions.has("Show in system explorer")).toBe(true);
+	expect(f.actions.has("Open plugin settings")).toBe(false);
+	expect(f.actions.has("Open")).toBe(false);
+});

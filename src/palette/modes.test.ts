@@ -28,6 +28,7 @@ describe("paletteModeAlias", () => {
 		expect(paletteModeAlias("commands", modes)).toBe(">");
 		expect(paletteModeAlias("everything", modes)).toBe("e");
 		expect(paletteModeAlias("plugins", modes)).toBe("p");
+		expect(paletteModeAlias("snippets", modes)).toBe("sn");
 	});
 
 	test("a changed alias is the one that enters the mode", () => {
@@ -64,11 +65,17 @@ describe("matchPaletteModes", () => {
 
 	test("lists Plugins after Tabs and enters it by alias", () => {
 		const order = ids("");
-		expect(order.at(-1)).toBe("plugins");
+		expect(order.at(-2)).toBe("plugins");
+		expect(order.at(-1)).toBe("snippets");
 		expect(order.indexOf("tabs")).toBeLessThan(order.indexOf("plugins"));
+		expect(order.indexOf("plugins")).toBeLessThan(order.indexOf("snippets"));
 		expect(parseDirectModeEntry("p alpha", modes)).toEqual({
 			modeId: "plugins",
 			query: "alpha",
+		});
+		expect(parseDirectModeEntry("sn beta", modes)).toEqual({
+			modeId: "snippets",
+			query: "beta",
 		});
 	});
 

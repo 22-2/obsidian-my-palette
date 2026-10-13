@@ -12,7 +12,8 @@ export type PaletteMode =
 	| "bookmark"
 	| "smart"
 	| "tab"
-	| "plugin";
+	| "plugin"
+	| "snippet";
 export type EverythingScope = "vault" | "directory";
 
 export interface ParsedInput {
@@ -117,6 +118,16 @@ export interface PluginResult extends BaseResult {
 	hasSettings: boolean;
 }
 
+/** A CSS snippet file or the snippets folder; choosing it opens the path externally. */
+export interface SnippetResult extends BaseResult {
+	mode: "snippet";
+	snippetName: string;
+	absolutePath: string;
+	vaultPath: string;
+	isFolder: boolean;
+	enabled: boolean;
+}
+
 export type PaletteResult =
 	| FileResult
 	| CommandResult
@@ -127,6 +138,7 @@ export type PaletteResult =
 	| SmartConnectionResult
 	| TabResult
 	| PluginResult
+	| SnippetResult
 	| ModeEntryResult
 	| SettingsEntryResult;
 
@@ -146,6 +158,7 @@ export function getResultFilePath(result: PaletteResult): string | undefined {
 			return result.file.path;
 		case "command":
 		case "plugin":
+		case "snippet":
 		case "search-history":
 		case "mode-entry":
 		case "settings-entry":

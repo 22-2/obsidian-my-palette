@@ -399,5 +399,7 @@ export function palettePlaceholder(mode: PaletteMode): string {
 						? "Search open tabs"
 						: mode === "plugin"
 							? "Search installed plugins"
-							: "Search files";
+							: mode === "snippet"
+								? "Search CSS snippets"
+								: "Search files";
 }

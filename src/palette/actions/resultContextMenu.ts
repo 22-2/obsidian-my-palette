@@ -124,9 +124,10 @@ export function populatePaletteResultMenu({
 		);
 		return;
 	}
-	if (result.mode === "plugin") {
-		// Why: a plugin folder has no Obsidian view, so skip leaf navigation and
-		// note actions (MOC, tags) and offer only external opening and settings.
+	if (result.mode === "plugin" || result.mode === "snippet") {
+		// Why: plugin folders and snippet files have no Obsidian view, so skip leaf
+		// navigation and note actions (MOC, tags) and offer only external opening.
+		// Plugins additionally offer their settings tab when one exists.
 		menu.addItem((item) =>
 			item
 				.setTitle("Open in external editor")
@@ -134,27 +135,28 @@ export function populatePaletteResultMenu({
 				.onClick(() => void activate("primary", result)),
 		);
 		if (isDesktopApp()) {
-			const pluginPath = getResultAbsolutePath(app, result);
-			if (pluginPath) {
+			const externalPath = getResultAbsolutePath(app, result);
+			if (externalPath) {
 				menu.addItem((item) =>
 					item
 						.setTitle("Show in system explorer")
 						.setIcon("folder-open")
 						.onClick(() => {
 							onNoteActionSelected?.();
-							showInSystemExplorer(pluginPath, true);
+							showInSystemExplorer(externalPath, isFolderResult(result));
 						}),
 				);
 			}
 		}
-		if (result.hasSettings) {
+		if (result.mode === "plugin" && result.hasSettings) {
+			const pluginId = result.pluginId;
 			menu.addItem((item) =>
 				item
 					.setTitle("Open plugin settings")
 					.setIcon("settings")
 					.onClick(() => {
 						onNoteActionSelected?.();
-						app.setting.openTabById(result.pluginId);
+						app.setting.openTabById(pluginId);
 					}),
 			);
 		}
