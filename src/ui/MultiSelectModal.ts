@@ -38,7 +38,7 @@ export interface MultiSelectModalProps {
 }
 
 /**
- * Multi selector shared by tag and MOC insertion so both behave and look alike.
+ * Multi selector shared by the tag insert, MOC insert and MOC remove selectors so they behave and look alike.
  * Flow: run one row (Enter), or select/check rows (click, Ctrl, Shift, arrows,
  * Space, the check box or context menu) → run them with Ctrl+Enter
  * or the checked-list button. Checking keeps the modal open; any other close cancels.

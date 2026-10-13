@@ -6,7 +6,7 @@ interface FolderItem extends SelectionItem {
 	path: string;
 }
 
-/** Folder picker for moving the file that was active when the command was invoked. */
+/** Folder move selector for moving the file that was active when the command was invoked. */
 export class MoveFileModal extends SelectionModal<FolderItem> {
 	constructor(
 		plugin: SelectorControls["plugin"],
@@ -19,7 +19,7 @@ export class MoveFileModal extends SelectionModal<FolderItem> {
 				controls: {
 					plugin,
 					category: "folder-move",
-					title: "Move file",
+					title: "Folder move selector",
 					description:
 						"Search destination folders for the current file. Restoring history only changes the folder search.",
 					actionLabel: "Move to",

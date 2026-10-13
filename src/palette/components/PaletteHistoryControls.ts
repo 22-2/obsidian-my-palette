@@ -86,8 +86,8 @@ export class PaletteHistoryControls {
 		this.updateHotkeyHint();
 		if (!this.suggest.isOpen) return;
 		const context = this.options.getContext(input);
-		// Why: the history picker is a separate browsing surface; typing a new
-		// search must not hide or reorder the saved entries shown in that picker.
+		// Why: the search history list is a separate browsing surface; typing a new
+		// search must not hide or reorder the saved entries shown in that list.
 		this.suggest.update(
 			this.options.plugin.getSearchHistorySuggestions(
 				"",

@@ -17,13 +17,15 @@ const SCOPE_NAMES: Record<HotkeyScope, string> = {
 	palette: "Palette",
 	"file-search": "File search",
 	selector: "Selectors",
-	"tag-selector": "Tag selector",
-	"moc-selector": "MOC selector",
+	"tag-insert-selector": "Tag insert selector",
+	"moc-insert-selector": "MOC insert selector",
+	"moc-remove-selector": "MOC remove selector",
 };
 
 /** Names the places a shortcut works, as the When column shows them. */
 export function hotkeyScopeLabel(scopes: readonly HotkeyScope[]): string {
-	if (scopes.includes("palette") && scopes.includes("selector")) return "All pickers";
+	if (scopes.includes("palette") && scopes.includes("selector"))
+		return "All palettes and selectors";
 	return scopes.map((scope) => SCOPE_NAMES[scope]).join(", ");
 }
 

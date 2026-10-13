@@ -51,7 +51,7 @@ function toCandidate(
 	};
 }
 
-/** Multi-tag selector built on the shared toggle selector. */
+/** Tag insert selector built on the shared multi selector. */
 export class TagSelectionModal extends MultiSelectModal<string> {
 	/**
 	 * @param choices Candidates in display order, registered tags last.
@@ -72,7 +72,7 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 				controls: {
 					plugin,
 					category: "tag-insertion",
-					title: "Tag insertion",
+					title: "Tag insert selector",
 					description:
 						"Search existing tags or type a new tag to add to the target notes.",
 					actionLabel: "Add",

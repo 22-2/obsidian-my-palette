@@ -58,7 +58,7 @@ Open the command palette and run one of these, then bind a hotkey if you like:
 
 Palette lists and tables keep the first result highlighted while you type, so `Enter` runs it right away and `↑`/`↓` move through results. Tag and MOC insertion add separate input and selection modes (see below) because `Space` checks candidates there.
 
-The action (`…`) and history (clock) buttons are also available in tag insertion, MOC link insertion and destination-folder selection. Actions and Help describe the current picker. Each picker has its own search history; selecting an entry restores only the query and never inserts tags, adds links or moves a file. `Ctrl+R` opens history, and the history enablement, delay and retention settings apply to these pickers too. Highlighting uses the shared modal display preference.
+The action (`…`) and history (clock) buttons are also available in the Tag insert selector, the MOC insert and remove selectors, and the Folder move selector. Actions and Help describe the current selector. Each selector has its own search history; selecting an entry restores only the query and never inserts tags, adds links or moves a file. `Ctrl+R` opens history, and the history enablement, delay and retention settings apply to these selectors too. Highlighting uses the shared modal display preference.
 
 | Action                 | Result                                             |
 | ---------------------- | -------------------------------------------------- |
@@ -71,7 +71,7 @@ The action (`…`) and history (clock) buttons are also available in tag inserti
 | `Ctrl+R`               | Search history                                     |
 | `Esc`                  | Leave a mode; at Home, close or clear              |
 
-The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current picker. The palette modal's footer shows the `Ignored` switch; other keyboard instructions and insertion targets live in Help. Hold `Alt+H` in any search or interaction mode to gently fade out the palette or selector while inspecting a preview; releasing either key fades it back in and returns focus to the search field. This works in modals (including their backdrop), sidebar palettes and table views, preserving the query, selection and workspace layout. In a mode, `Esc` returns to Home. At Home, `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
+The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current palette. The palette modal's footer shows the `Ignored` switch; other keyboard instructions and insertion targets live in Help. Hold `Alt+H` in any search or interaction mode to gently fade out the palette or selector while inspecting a preview; releasing either key fades it back in and returns focus to the search field. This works in modals (including their backdrop), sidebar palettes and table views, preserving the query, selection and workspace layout. In a mode, `Esc` returns to Home. At Home, `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
 
 ### Custom shortcuts
 
@@ -109,7 +109,7 @@ Everything queries are passed through unchanged and use Everything's own syntax.
 
 ## Working with several notes
 
-Selection is shared by the palette, the tag selector and the MOC selector: click, `Ctrl`/`Shift`+click, arrow keys.
+Selection is shared by the palette, the Tag insert selector and the MOC insert and remove selectors: click, `Ctrl`/`Shift`+click, arrow keys.
 
 ### Adding tags
 
@@ -129,7 +129,7 @@ Recently inserted tags are stored per Vault in local IndexedDB.
 
 ### Inserting into a MOC
 
-The MOC selector uses the same input/selection modes and gestures. Checked notes always appear first regardless of the query. `→` previews the highlighted note while keeping the modal focused. `Enter` inserts highlighted notes immediately; `Space` toggles checks in selection mode, and `Ctrl+Enter` or the checked-list button adds mutual `Relateds` links to the original MOC for every checked note, even after previewing another note. Only links inside a `Relateds` item count, not other links in the body.
+The MOC insert selector uses the same input/selection modes and gestures. Checked notes always appear first regardless of the query. `→` previews the highlighted note while keeping the modal focused. `Enter` inserts highlighted notes immediately; `Space` toggles checks in selection mode, and `Ctrl+Enter` or the checked-list button adds mutual `Relateds` links to the original MOC for every checked note, even after previewing another note. Only links inside a `Relateds` item count, not other links in the body.
 
 Notes linked in both directions appear last and cannot be selected. Notes linked in one direction stay selectable so you can complete the link. Right-click a linked note and choose `Remove link` to remove the Relateds links in both directions.
 

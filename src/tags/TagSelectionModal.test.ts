@@ -115,7 +115,7 @@ describe("TagSelectionModal", () => {
 		f.mouse(f.modal.modalEl.querySelector(".my-palette-options-button")!, "click");
 		clickPaletteMenuItem("Help");
 		const help = document.querySelector(".my-palette-help-modal")!;
-		expect(help.textContent).toContain("Tag insertion help");
+		expect(help.textContent).toContain("Tag insert selector help");
 		expect(help.textContent).toContain("Target: note.md");
 		expect(help.textContent).toContain("Return to input mode");
 		expect(help.textContent).toContain("Preview the tag in core Search");

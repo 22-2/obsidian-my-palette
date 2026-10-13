@@ -82,13 +82,13 @@ describe("custom hotkeys", () => {
 	});
 
 	it("treats a shared key as a collision only where both shortcuts can be used", () => {
-		// The palette and the tag selector are separate places, so they can share a key.
-		expect(scopesOverlap(["palette"], ["tag-selector"])).toBe(false);
-		expect(scopesOverlap(["moc-selector"], ["tag-selector"])).toBe(false);
+		// The palette and the tag insert selector are separate places, so they can share a key.
+		expect(scopesOverlap(["palette"], ["tag-insert-selector"])).toBe(false);
+		expect(scopesOverlap(["moc-insert-selector"], ["tag-insert-selector"])).toBe(false);
 		// File search is part of the palette, and every selector is part of the selector group.
 		expect(scopesOverlap(["palette"], ["file-search"])).toBe(true);
-		expect(scopesOverlap(["selector"], ["moc-selector"])).toBe(true);
-		// The selectors sit inside the "all pickers" scope, so the hide shortcut clashes with them.
+		expect(scopesOverlap(["selector"], ["moc-insert-selector"])).toBe(true);
+		// The selectors sit inside the "all palettes and selectors" scope, so the hide shortcut clashes with them.
 		expect(
 			hotkeyError("toggleSelection", DEFAULT_HOTKEYS.hidePreview, DEFAULT_HOTKEYS),
 		).toContain("Temporarily hide palette");

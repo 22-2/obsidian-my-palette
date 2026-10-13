@@ -6,14 +6,21 @@ export interface PaletteHotkey {
 
 /**
  * A place where a shortcut can be pressed. A place inside another one (file search inside
- * the palette, MOC selector inside selectors) overlaps it, so the two cannot share a key.
+ * the palette, a MOC insert selector inside selectors) overlaps it, so the two cannot share a key.
  */
-export type HotkeyScope = "palette" | "file-search" | "selector" | "tag-selector" | "moc-selector";
+export type HotkeyScope =
+	| "palette"
+	| "file-search"
+	| "selector"
+	| "tag-insert-selector"
+	| "moc-insert-selector"
+	| "moc-remove-selector";
 
 const SCOPE_PARENT: Partial<Record<HotkeyScope, HotkeyScope>> = {
 	"file-search": "palette",
-	"tag-selector": "selector",
-	"moc-selector": "selector",
+	"tag-insert-selector": "selector",
+	"moc-insert-selector": "selector",
+	"moc-remove-selector": "selector",
 };
 
 export const HOTKEY_ACTIONS = {
@@ -26,7 +33,7 @@ export const HOTKEY_ACTIONS = {
 		name: "Preview selected result",
 		description:
 			"Preview in a modal without closing it. Plain Right Arrow requires the cursor at the end of the input.",
-		scopes: ["palette", "tag-selector", "moc-selector"],
+		scopes: ["palette", "tag-insert-selector", "moc-insert-selector", "moc-remove-selector"],
 	},
 	history: {
 		name: "Search history",
@@ -46,25 +53,26 @@ export const HOTKEY_ACTIONS = {
 	toggleIgnored: {
 		name: "Toggle Ignored",
 		description:
-			"Include files hidden by Obsidian's Excluded files setting in File search and MOC selectors.",
-		scopes: ["file-search", "moc-selector"],
+			"Include files hidden by Obsidian's Excluded files setting in File search and the MOC insert selector.",
+		scopes: ["file-search", "moc-insert-selector"],
 	},
 	toggleMutual: {
 		name: "Toggle Mutual",
 		description:
-			"Also update the note's link to the MOC when linking or unlinking in the MOC selector.",
-		scopes: ["moc-selector"],
+			"Also update the note's link to the MOC when linking or unlinking in MOC insert and remove selectors.",
+		scopes: ["moc-insert-selector", "moc-remove-selector"],
 	},
 	focusInput: {
 		name: "Return to input mode",
-		description: "Return from selection mode to typing in tag and MOC selectors.",
-		scopes: ["tag-selector", "moc-selector"],
+		description:
+			"Return from selection mode to typing in tag insert, MOC insert and MOC remove selectors.",
+		scopes: ["tag-insert-selector", "moc-insert-selector", "moc-remove-selector"],
 	},
 	toggleSelection: {
 		name: "Toggle selection",
 		description:
 			"Check or toggle the active row in selection mode. Hold Shift to extend a range where supported.",
-		scopes: ["tag-selector", "moc-selector"],
+		scopes: ["tag-insert-selector", "moc-insert-selector", "moc-remove-selector"],
 	},
 } as const;
 

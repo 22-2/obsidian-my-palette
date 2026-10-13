@@ -218,7 +218,7 @@ async function relatedsRelations(
 }
 
 /**
- * Selector shared by MOC insertion and removal. Its footer switch chooses whether
+ * Selector base shared by the MOC insert and remove selectors. Its footer switch chooses whether
  * the note's own link to the MOC changes too, so both commands read the same way.
  */
 abstract class MocRelatedsModal extends MultiSelectModal<string> {
@@ -243,7 +243,7 @@ abstract class MocRelatedsModal extends MultiSelectModal<string> {
 	}
 }
 
-/** Candidate selector for the active MOC; linked notes can be removed from its context menu. */
+/** MOC insert selector for the active MOC; linked notes can be removed from its context menu. */
 class MocTargetModal extends MocRelatedsModal {
 	private relations?: ReturnType<typeof relatedsRelations>;
 	private includeIgnored = false;
@@ -261,7 +261,7 @@ class MocTargetModal extends MocRelatedsModal {
 				controls: {
 					plugin,
 					category: "moc-insertion",
-					title: "MOC link insertion",
+					title: "MOC insert selector",
 					description:
 						"Search notes to link in the active MOC. Excluded files are hidden by default; the Ignored switch includes them.",
 					actionLabel: "Insert",
@@ -503,7 +503,7 @@ export async function insertFileToMocRelateds(
 	await mocLeaf?.openFile(mocFile);
 }
 
-/** Selector for notes linked with the active MOC; the checked ones are unlinked. */
+/** MOC remove selector for notes linked with the active MOC; the checked ones are unlinked. */
 class MocUnlinkModal extends MocRelatedsModal {
 	constructor(
 		protected readonly plugin: MyPalettePlugin,
@@ -518,7 +518,7 @@ class MocUnlinkModal extends MocRelatedsModal {
 				controls: {
 					plugin,
 					category: "moc-insertion",
-					title: "MOC link removal",
+					title: "MOC remove selector",
 					description: "Search notes linked in the active MOC's Relateds to unlink them.",
 					actionLabel: "Remove",
 					shortcuts: [
