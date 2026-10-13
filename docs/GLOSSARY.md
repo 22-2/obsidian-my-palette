@@ -63,12 +63,36 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 - フッターのスイッチ「Ignored」と、ショートカット「Toggle Ignored」も改める(例: 「Obsidian-excluded」「Toggle Obsidian-excluded files」)。
 - 識別子の`ignored`は、検索履歴に保存されるフィールド(`includeIgnored`)を含むため、改名すると保存済みデータの移行が要る。まずUIの文言だけ改め、識別子の改名は別の作業にする。
 
+### コマンド
+
+コマンド名は「Open + 開くものの名前」にそろえる。`id`は名前を小文字のケバブケースにしたもの(例: 「Open outgoing link list」→ `open-outgoing-link-list`)。ObsidianのガイドラインとLintに従い、名前とidに「command」を入れない(コマンド一覧は「Open run list」)。`pnpm lint`が名前の接頭辞とidの対応を検査する(`eslint-rules/command-naming.mts`)。
+
+| 名前                        | id                            | 開くもの                    |
+| --------------------------- | ----------------------------- | --------------------------- |
+| Open home                   | `open-home`                   | Home                        |
+| Open recent                 | `open-recent`                 | 最近使ったファイルのPalette |
+| Open run list               | `open-run-list`               | Run Commandモード           |
+| Open sidebar palette        | `open-sidebar-palette`        | Sidebar palette             |
+| Open table palette          | `open-table-palette`          | Table palette               |
+| Open outgoing link list     | `open-outgoing-link-list`     | 発リンクのモード            |
+| Open backlink list          | `open-backlink-list`          | 被リンクのモード            |
+| Open bookmark list          | `open-bookmark-list`          | ブックマークのモード        |
+| Open Smart Connections list | `open-smart-connections-list` | 関連ノートのモード          |
+| Open tab list               | `open-tab-list`               | タブのモード                |
+| Open folder move selector   | `open-folder-move-selector`   | Folder move selector        |
+| Open tag insert selector    | `open-tag-insert-selector`    | Tag insert selector         |
+| Open MOC insert selector    | `open-moc-insert-selector`    | MOC insert selector         |
+| Open MOC remove selector    | `open-moc-remove-selector`    | MOC remove selector         |
+| Open file path in editor    | `open-file-path-in-editor`    | パスを入力して開くモーダル  |
+
+- idを変えると、Obsidianのホットキー設定(`hotkeys.json`)の割り当てが外れる。改名したら、保管庫の`hotkeys.json`のキーも置き換える。
+
 ## 未決定
 
 決めたらこの節から「決定済み」へ移す。
 
 - **大文字・小文字**: UI全体をSentence caseに揃えるか(「Search Bookmarks」→「Search bookmarks」、「Switch Tab」→「Switch tab」)。ObsidianのガイドラインはSentence case。揃える場合、Homeは固有名として例外にする。
-- **コマンド名とモード名**: コマンド名をモード名から組み立てるか(現状は「Bookmark search」と「Search Bookmarks」、「Link search」と「Search Outgoing Links」、「Open run list」と「Run Command」が食い違っている)。表示名だけを変えるなら、コマンドの`id`は変わらないため、ユーザーのホットキー割り当ては保たれる。
+- **モード名**: モード名(「Search Bookmarks」「Search Outgoing Links」「Run Command」など)をコマンド名の「Open … list」と対応させるか。表示名だけを変えるなら保存データへの影響はない。
 - **優先度を下げるフォルダー**: 「Lower prior folders」は英語として不自然。識別子`demotedPriorFolders`と意味を揃えた名前(例: 「Lower-ranked folders」)にするか。
 - **ショートカットの範囲「File search」**: Paletteのうちファイルを検索する状態を指す。Palette側の用語として残すか、別の名前にするか。
 

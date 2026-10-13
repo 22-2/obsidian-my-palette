@@ -62,11 +62,11 @@ test("alias plus Space enters the mode directly", async ({ obsidian }) => {
 	await input.pressSequentially("> link search");
 	await expect(page.locator(`${MODAL} ${CHIP}`)).toHaveText(">");
 	await expect(input).toHaveValue("link search");
-	await expect(page.locator(MODAL_ROW).first()).toContainText("Link search");
+	await expect(page.locator(MODAL_ROW).first()).toContainText("Open outgoing link list");
 });
 
 test("the file-only palette lists no modes", async ({ obsidian }) => {
-	await runPaletteCommand(obsidian, "open");
+	await runPaletteCommand(obsidian, "open-recent");
 	const page = obsidian.page;
 	await expect(page.locator(MODAL_ROW).first()).toBeVisible();
 	await expect(page.locator(`${MODAL} ${HEADING}`)).toHaveCount(0);
@@ -74,7 +74,7 @@ test("the file-only palette lists no modes", async ({ obsidian }) => {
 });
 
 test("a mode opened by its command returns to Home on Esc", async ({ obsidian }) => {
-	await runPaletteCommand(obsidian, "backlink-search");
+	await runPaletteCommand(obsidian, "open-backlink-list");
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);
 	await expect(page.locator(`${MODAL} ${CHIP}`)).toHaveText("b");
@@ -96,7 +96,7 @@ test("the command list returns to Home on Esc", async ({ obsidian }) => {
 });
 
 test("the sidebar keeps the mode as an alias in its saved input", async ({ obsidian }) => {
-	await runPaletteCommand(obsidian, "open-view");
+	await runPaletteCommand(obsidian, "open-sidebar-palette");
 	const page = obsidian.page;
 	const view = page.locator(".my-palette-view");
 	const input = view.locator(".prompt-input");
@@ -117,7 +117,7 @@ test("the sidebar keeps the mode as an alias in its saved input", async ({ obsid
 });
 
 test("the table lists no modes but still enters one by alias", async ({ obsidian }) => {
-	await runPaletteCommand(obsidian, "open-table-view");
+	await runPaletteCommand(obsidian, "open-table-palette");
 	const page = obsidian.page;
 	const view = page.locator(
 		'.workspace-leaf-content[data-type="my-palette-table"] .my-palette-view',

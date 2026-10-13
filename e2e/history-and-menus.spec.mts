@@ -25,7 +25,7 @@ test("a committed search shows up in the history and restores its input", async 
 	await page.keyboard.press("Escape");
 	await closePalette(page);
 
-	await runPaletteCommand(obsidian, "open");
+	await runPaletteCommand(obsidian, "open-recent");
 	await page.locator(MODAL_INPUT).waitFor();
 	await page.keyboard.press("Control+r");
 	const history = page.locator(".my-palette-history-suggest");
@@ -57,7 +57,7 @@ test("pressing a result row closes the open result menu", async ({ obsidian }) =
 });
 
 test("moves the current modal search into a fresh sidebar pane", async ({ obsidian }) => {
-	await runPaletteCommand(obsidian, "open-view");
+	await runPaletteCommand(obsidian, "open-sidebar-palette");
 	const page = obsidian.page;
 	const sidebarInputs = page.locator(".my-palette-view .prompt-input");
 	await sidebarInputs.first().fill("beta");
@@ -92,7 +92,7 @@ test("moves the current modal search into a fresh sidebar pane", async ({ obsidi
 test("moving a link search preserves its fixed mode and source note", async ({ obsidian }) => {
 	await obsidian.createNote("Source.md", "[[Alpha plan]]");
 	await obsidian.open("Source.md");
-	await runPaletteCommand(obsidian, "link-search");
+	await runPaletteCommand(obsidian, "open-outgoing-link-list");
 	const page = obsidian.page;
 	await page.locator(MODAL_INPUT).fill("alpha");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Alpha plan");

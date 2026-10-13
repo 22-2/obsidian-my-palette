@@ -37,20 +37,23 @@ Another Quick Switcher、標準の Quick Switcher、Quick Switcher++、Omnisearc
 
 Obsidian のコマンドパレットから次のコマンドを実行します。必要に応じてホットキーを割り当ててください。
 
-| コマンド                                      | 内容                                                     |
-| --------------------------------------------- | -------------------------------------------------------- |
-| `My Palette: Open palette`                    | Home：モードの一覧と最近使ったファイル                   |
-| `My Palette: Open recent palette`             | 最近使ったファイルから始まるファイル検索のみ             |
-| `My Palette: Open run list`                   | Run Command モードから始まる                             |
-| `My Palette: Open palette in right sidebar`   | Sidebar palette：右サイドバーに常駐するリスト            |
-| `My Palette: Open table palette in center`    | Table palette：センターのタブに常駐するテーブル          |
-| `My Palette: Link search` / `Backlink search` | 現在のノートからのリンク先 / 現在のノートへのリンク元    |
-| `My Palette: Bookmark search`                 | 保存したブックマーク                                     |
-| `My Palette: Smart Connections search`        | 現在のノートに関連するノート（Smart Connections が必要） |
-| `My Palette: Move file to another folder`     | 現在のファイルを別フォルダーへ移動                       |
-| `My Palette: Open file path in editor`        | Vault 内パスまたは絶対パスでファイルを開く               |
-| `My Palette: Insert tags into current note`   | 現在のノートにタグを追加                                 |
-| `My Palette: Insert link to MOC Relateds`     | アクティブな MOC に相互 Relateds リンクを追加            |
+| コマンド                                  | 内容                                                     |
+| ----------------------------------------- | -------------------------------------------------------- |
+| `My Palette: Open home`                   | Home：モードの一覧と最近使ったファイル                   |
+| `My Palette: Open recent`                 | 最近使ったファイルから始まるファイル検索のみ             |
+| `My Palette: Open run list`               | Run Command モードから始まる                             |
+| `My Palette: Open sidebar palette`        | Sidebar palette：右サイドバーに常駐するリスト            |
+| `My Palette: Open table palette`          | Table palette：センターのタブに常駐するテーブル          |
+| `My Palette: Open outgoing link list`     | 現在のノートからのリンク先                               |
+| `My Palette: Open backlink list`          | 現在のノートへのリンク元                                 |
+| `My Palette: Open bookmark list`          | 保存したブックマーク                                     |
+| `My Palette: Open Smart Connections list` | 現在のノートに関連するノート（Smart Connections が必要） |
+| `My Palette: Open tab list`               | 開いているタブ                                           |
+| `My Palette: Open folder move selector`   | 現在のファイルを別フォルダーへ移動                       |
+| `My Palette: Open file path in editor`    | Vault 内パスまたは絶対パスでファイルを開く               |
+| `My Palette: Open tag insert selector`    | 現在のノートにタグを追加                                 |
+| `My Palette: Open MOC insert selector`    | アクティブな MOC に相互 Relateds リンクを追加            |
+| `My Palette: Open MOC remove selector`    | アクティブな MOC から Relateds リンクを削除              |
 
 ## パレットの使い方
 
@@ -75,7 +78,7 @@ Tag insert selector、MOC insert selector、MOC remove selector、Folder move se
 
 ### 検索モード
 
-`My Palette: Open palette` は、Raycast のようにモードの一覧をファイルの上に並べた Home（モードに入る前のパレット）から始まります。モードの行で `Enter` か `Tab` を押すか、エイリアスに続けてスペースを入力すると、そのモードに入ります。エイリアスは入力欄から消えて左側のチップになり、入力欄には検索語だけが残ります。`Esc`（空の入力欄での `Backspace`、チップのクリックでも可）でHomeに戻り、エイリアスが選択された状態になるので、`Enter` でもう一度同じモードに入れます。Homeで `Esc` を押すとパレットを閉じます。
+`My Palette: Open home` は、Raycast のようにモードの一覧をファイルの上に並べた Home（モードに入る前のパレット）から始まります。モードの行で `Enter` か `Tab` を押すか、エイリアスに続けてスペースを入力すると、そのモードに入ります。エイリアスは入力欄から消えて左側のチップになり、入力欄には検索語だけが残ります。`Esc`（空の入力欄での `Backspace`、チップのクリックでも可）でHomeに戻り、エイリアスが選択された状態になるので、`Enter` でもう一度同じモードに入れます。Homeで `Esc` を押すとパレットを閉じます。
 
 | エイリアス | モード                    | 用途                                                 |
 | ---------- | ------------------------- | ---------------------------------------------------- |
@@ -89,7 +92,7 @@ Tag insert selector、MOC insert selector、MOC remove selector、Folder move se
 | `sc`       | Search Related Notes      | 現在のノートに関連するノート（Smart Connections）    |
 | `t`        | Switch Tab                | 開いているタブへ切り替え                             |
 
-すべてのエイリアスは **設定 → My Palette → Modes** で変更でき、モードごとにオフにできます。モードをオフにするか、**Integrations** で連携をオフにすると、そのモードはHomeとエイリアス入力から外れます。`Open recent palette` とTable paletteはモードの一覧を出しませんが、エイリアスでモードに入れます。`Open run list` や `Backlink search` など、モードを直接開くコマンドはそのモードから始まり、`Esc` でHomeに戻ります。
+すべてのエイリアスは **設定 → My Palette → Modes** で変更でき、モードごとにオフにできます。モードをオフにするか、**Integrations** で連携をオフにすると、そのモードはHomeとエイリアス入力から外れます。`Open recent` とTable paletteはモードの一覧を出しませんが、エイリアスでモードに入れます。`Open run list` や `Open backlink list` など、モードを直接開くコマンドはそのモードから始まり、`Esc` でHomeに戻ります。
 
 下部左端の `Obsidian-excluded` スイッチ（`Ctrl+I`）をオンにすると、Obsidian の「Excluded files」で除外されたファイル（Obsidian-excluded files）も検索します。ファイル検索でだけ有効で、ほかのモードでは薄く表示します。検索履歴は除外ファイルを含めたかどうかも記録し、履歴を選ぶとスイッチも復元します。
 
@@ -109,7 +112,7 @@ Everything のクエリは変換せず、そのまま Everything 独自の構文
 
 ### タグの追加
 
-`Insert tags into current note` を実行するか、結果を右クリックして `Add tags…` を選びます。複数の結果を選択していると、選択したすべての Markdown ノートに同じタグを追加します。除外ファイルは対象外です。
+`Open tag insert selector` を実行するか、結果を右クリックして `Add tags…` を選びます。複数の結果を選択していると、選択したすべての Markdown ノートに同じタグを追加します。除外ファイルは対象外です。
 
 - 候補は、最近追加したタグ、リンクでつながったノートで使われているタグ（最大10件、`Related N` と表示）、使用回数の順に並びます。
 - 対象すべてに登録済みのタグは `Registered` として末尾に表示され、選択できません。一部だけに付いているタグは `On N/M notes` と表示され、選択できます。
@@ -131,7 +134,7 @@ MOC insert selector も同じ入力／選択モードと操作です。チェッ
 
 ## ビュー
 
-`Open palette in right sidebar` は Sidebar palette、`Open table palette in center` は センタータブの Table palette です。それぞれ同じ種類の既存ペインを再利用し、もう一方の検索を置き換えません。ペインメニューから複製もできます。
+`Open sidebar palette` は Sidebar palette、`Open table palette` は センタータブの Table palette です。それぞれ同じ種類の既存ペインを再利用し、もう一方の検索を置き換えません。ペインメニューから複製もできます。
 
 Table palette では次の操作ができます。
 
@@ -184,7 +187,7 @@ Table palette では次の操作ができます。
 
 ### Return to Home after
 
-`My Palette: Open palette` は、閉じたときの入力・Obsidian-excluded スイッチの状態・選択行・スクロール位置を、**設定 → My Palette → General → Return to Home after** で決めた時間（Immediately、30、60、90 秒。既定は 90 秒）以内に開き直すと復元します。それ以外はHomeの空の状態から始まります。復元した検索語は選択された状態になるので、そのまま打ち直せます。この状態はメモリーにだけ保持し、Obsidian を再起動するとHomeから始まります。
+`My Palette: Open home` は、閉じたときの入力・Obsidian-excluded スイッチの状態・選択行・スクロール位置を、**設定 → My Palette → General → Return to Home after** で決めた時間（Immediately、30、60、90 秒。既定は 90 秒）以内に開き直すと復元します。それ以外はHomeの空の状態から始まります。復元した検索語は選択された状態になるので、そのまま打ち直せます。この状態はメモリーにだけ保持し、Obsidian を再起動するとHomeから始まります。
 
 ### 検索履歴
 

@@ -32,7 +32,7 @@ function advanceClock(obsidian: ObsidianAPI, milliseconds: number): Promise<void
 	);
 }
 
-test("Open palette resumes the last search, then starts at Home once the time has passed", async ({
+test("Open home resumes the last search, then starts at Home once the time has passed", async ({
 	obsidian,
 }) => {
 	const first = await openPaletteWith(obsidian, "alpha");

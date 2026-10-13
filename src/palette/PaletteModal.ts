@@ -107,7 +107,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		syncIgnoredToggle(this.ignoredToggle, this.mode);
 	}
 
-	/** What the next Open palette resumes: the input, the scope switch, and the row and scroll. */
+	/** What the next Open home resumes: the input, the scope switch, and the row and scroll. */
 	private captureRestoreState(): PaletteRestoreState {
 		return {
 			input: this.session.prefixedInput,

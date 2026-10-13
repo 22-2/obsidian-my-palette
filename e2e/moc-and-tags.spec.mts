@@ -52,7 +52,7 @@ test("checked MOC notes stay above results from a different query", async ({ obs
 	await obsidian.createNote("Beta child.md", "beta");
 	await obsidian.open("Topic MOC.md");
 	const page = obsidian.page;
-	await runPaletteCommand(obsidian, "insert-link-to-moc-relateds");
+	await runPaletteCommand(obsidian, "open-moc-insert-selector");
 	// The footer holds only the selector's switches, Obsidian-excluded first as in the palette.
 	await expect(page.locator(".my-palette-suggest-modal .my-palette-status-toggle")).toHaveText([
 		"Obsidian-excludedCtrl+I",
@@ -88,7 +88,7 @@ test("MOC insertion hides excluded notes unless the Obsidian-excluded switch is 
 	await setIgnoreFilters(obsidian, ["Hidden child.md"]);
 	await obsidian.open("Topic MOC.md");
 	const page = obsidian.page;
-	await runPaletteCommand(obsidian, "insert-link-to-moc-relateds");
+	await runPaletteCommand(obsidian, "open-moc-insert-selector");
 	await expect(page.locator(MODAL_ROW)).toHaveCount(1);
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Visible child");
 	await page.locator(MODAL_INPUT).fill("hidden");
@@ -114,7 +114,7 @@ test.describe("MOC insertion with plugin exclusions", () => {
 		await obsidian.createNote("Hidden child.md", "hidden");
 		await obsidian.open("Topic MOC.md");
 		const page = obsidian.page;
-		await runPaletteCommand(obsidian, "insert-link-to-moc-relateds");
+		await runPaletteCommand(obsidian, "open-moc-insert-selector");
 		await expect(page.locator(MODAL_ROW)).toHaveCount(1);
 		await expect(page.locator(MODAL_ROW).first()).toContainText("Visible child");
 		await page.locator(MODAL_INPUT).fill("hidden");
@@ -135,7 +135,7 @@ test("MOC insertion warns on Enter with several selected notes and accepts Ctrl+
 	await obsidian.createNote("Beta child.md", "beta");
 	await obsidian.open("Topic MOC.md");
 	const page = obsidian.page;
-	await runPaletteCommand(obsidian, "insert-link-to-moc-relateds");
+	await runPaletteCommand(obsidian, "open-moc-insert-selector");
 	await expect(page.locator(MODAL_ROW)).toHaveCount(2);
 	await page.keyboard.press("ArrowDown");
 	await page.keyboard.press("Shift+ArrowDown");
@@ -158,7 +158,7 @@ test("tag preview reveals core search while the insertion modal retains focus", 
 	await obsidian.createNote("Tagged.md", "#alpha\n");
 	await obsidian.open("Target.md");
 	const page = obsidian.page;
-	await runPaletteCommand(obsidian, "insert-tags");
+	await runPaletteCommand(obsidian, "open-tag-insert-selector");
 	await expect(page.locator(".my-palette-suggest-modal .my-palette-status-bar")).toBeHidden();
 	await page.locator(MODAL_INPUT).fill("alpha");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("#alpha");
@@ -188,7 +188,7 @@ test("several tags can be checked and inserted into the note together", async ({
 	await obsidian.open("Tagged.md");
 	const page = obsidian.page;
 
-	await runPaletteCommand(obsidian, "insert-tags");
+	await runPaletteCommand(obsidian, "open-tag-insert-selector");
 	await page.locator(MODAL_INPUT).waitFor();
 	await page.locator(MODAL_INPUT).fill("alpha");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("#alpha");

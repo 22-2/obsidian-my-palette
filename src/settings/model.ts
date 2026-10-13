@@ -31,7 +31,7 @@ export interface SearchHistorySettings {
 
 export const SETTINGS_SCHEMA_VERSION = 21;
 
-/** Seconds after closing the palette before Open palette starts from Home again; 0 means immediately. */
+/** Seconds after closing the palette before Open home starts from Home again; 0 means immediately. */
 export type ReturnToHomeSeconds = 0 | 30 | 60 | 90;
 export const MAX_RECENT_COMMAND_IDS = 20;
 export const MILLISECONDS_PER_SECOND = 1_000;

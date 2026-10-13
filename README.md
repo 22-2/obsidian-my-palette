@@ -37,20 +37,23 @@ Other sources (commands, Everything, bookmarks, …) are modes one step away fro
 
 Open the command palette and run one of these, then bind a hotkey if you like:
 
-| Command                                       | What it does                                                |
-| --------------------------------------------- | ----------------------------------------------------------- |
-| `My Palette: Open palette`                    | Home: modes above recently used files                       |
-| `My Palette: Open recent palette`             | File search only, starting from recently used files         |
-| `My Palette: Open run list`                   | Starts in the Run Command mode                              |
-| `My Palette: Open palette in right sidebar`   | Sidebar palette: a persistent list view                     |
-| `My Palette: Open table palette in center`    | Table palette: a persistent table in a center tab           |
-| `My Palette: Link search` / `Backlink search` | Notes linked from / to the current note                     |
-| `My Palette: Bookmark search`                 | Saved bookmarks                                             |
-| `My Palette: Smart Connections search`        | Notes related to the current note (needs Smart Connections) |
-| `My Palette: Move file to another folder`     | Move the current file                                       |
-| `My Palette: Open file path in editor`        | Open a file by Vault path or absolute path                  |
-| `My Palette: Insert tags into current note`   | Add tags to the current note                                |
-| `My Palette: Insert link to MOC Relateds`     | Add mutual Relateds links to the active MOC                 |
+| Command                                   | What it does                                                |
+| ----------------------------------------- | ----------------------------------------------------------- |
+| `My Palette: Open home`                   | Home: modes above recently used files                       |
+| `My Palette: Open recent`                 | File search only, starting from recently used files         |
+| `My Palette: Open run list`               | Starts in the Run Command mode                              |
+| `My Palette: Open sidebar palette`        | Sidebar palette: a persistent list view                     |
+| `My Palette: Open table palette`          | Table palette: a persistent table in a center tab           |
+| `My Palette: Open outgoing link list`     | Notes linked from the current note                          |
+| `My Palette: Open backlink list`          | Notes linking to the current note                           |
+| `My Palette: Open bookmark list`          | Saved bookmarks                                             |
+| `My Palette: Open Smart Connections list` | Notes related to the current note (needs Smart Connections) |
+| `My Palette: Open tab list`               | Open tabs                                                   |
+| `My Palette: Open folder move selector`   | Move the current file                                       |
+| `My Palette: Open file path in editor`    | Open a file by Vault path or absolute path                  |
+| `My Palette: Open tag insert selector`    | Add tags to the current note                                |
+| `My Palette: Open MOC insert selector`    | Add mutual Relateds links to the active MOC                 |
+| `My Palette: Open MOC remove selector`    | Remove Relateds links from the active MOC                   |
 
 ## Using the palette
 
@@ -79,7 +82,7 @@ Open **Settings → My Palette → Shortcuts** to see every palette and selector
 
 ### Search modes
 
-`My Palette: Open palette` starts at Home, which lists the modes above your files, much like Raycast. Pick a mode with `Enter` or `Tab`, or type its alias followed by a space. The alias then leaves the input and shows as a chip on its left, so the input holds only the query. `Esc` (or `Backspace` in an empty input, or a click on the chip) goes back to Home with the alias selected, so `Enter` re-enters the mode. `Esc` at Home closes the palette.
+`My Palette: Open home` starts at Home, which lists the modes above your files, much like Raycast. Pick a mode with `Enter` or `Tab`, or type its alias followed by a space. The alias then leaves the input and shows as a chip on its left, so the input holds only the query. `Esc` (or `Backspace` in an empty input, or a click on the chip) goes back to Home with the alias selected, so `Enter` re-enters the mode. `Esc` at Home closes the palette.
 
 | Alias   | Mode                      | Purpose                                                  |
 | ------- | ------------------------- | -------------------------------------------------------- |
@@ -93,7 +96,7 @@ Open **Settings → My Palette → Shortcuts** to see every palette and selector
 | `sc`    | Search Related Notes      | Notes related to the current note (Smart Connections)    |
 | `t`     | Switch Tab                | Switch to an open tab                                    |
 
-Every alias can be changed, and a mode can be turned off, in **Settings → My Palette → Modes**. Turning off a mode, or its integration in **Integrations**, removes it from Home and from alias entry. `Open recent palette` and the Table palette do not list modes but still enter them by alias. Commands that open a mode directly, such as `Open run list` or `Backlink search`, start in that mode; `Esc` returns to Home.
+Every alias can be changed, and a mode can be turned off, in **Settings → My Palette → Modes**. Turning off a mode, or its integration in **Integrations**, removes it from Home and from alias entry. `Open recent` and the Table palette do not list modes but still enter them by alias. Commands that open a mode directly, such as `Open run list` or `Open backlink list`, start in that mode; `Esc` returns to Home.
 
 The `Obsidian-excluded` switch at the left of the footer (`Ctrl+I`) includes Obsidian-excluded files, the ones hidden by Obsidian's Excluded files setting. It applies to file search only and stays dimmed in other modes. Search history remembers whether a search included them, and restoring an entry sets the switch.
 
@@ -113,7 +116,7 @@ Selection is shared by the palette, the Tag insert selector and the MOC insert a
 
 ### Adding tags
 
-Run `Insert tags into current note`, or right-click results and choose `Add tags…`. With several results selected, the tags are added to every selected Markdown note. Obsidian-excluded files are skipped.
+Run `Open tag insert selector`, or right-click results and choose `Add tags…`. With several results selected, the tags are added to every selected Markdown note. Obsidian-excluded files are skipped.
 
 - Candidates are ordered as recently inserted tags, tags used by linked notes (up to 10, marked `Related N`), then usage count.
 - Tags that every target already has appear last as `Registered` and cannot be chosen. Tags only some targets have show `On N/M notes` and stay selectable.
@@ -135,7 +138,7 @@ Notes linked in both directions appear last and cannot be selected. Notes linked
 
 ## Views
 
-`Open palette in right sidebar` opens the Sidebar palette and `Open table palette in center` opens the Table palette in a center tab. Each command reuses its own pane without replacing the other, and each pane can be duplicated from its pane menu.
+`Open sidebar palette` opens the Sidebar palette and `Open table palette` opens the Table palette in a center tab. Each command reuses its own pane without replacing the other, and each pane can be duplicated from its pane menu.
 
 In the Table palette:
 
@@ -184,7 +187,7 @@ Only localhost communication is used; My Palette sends nothing to external servi
 
 ### Return to Home after
 
-`Open palette` resumes the palette you closed last: its query with the mode alias, the Obsidian-excluded switch, the selected row and the scroll position. It does so only when you come back within the time set by **Settings → My Palette → General → Return to Home after** (Immediately, 30, 60 or 90 seconds; 90 by default), and otherwise starts at Home. The resumed query is selected, so typing replaces it. This state is kept in memory only, so restarting Obsidian starts at Home.
+`Open home` resumes the palette you closed last: its query with the mode alias, the Obsidian-excluded switch, the selected row and the scroll position. It does so only when you come back within the time set by **Settings → My Palette → General → Return to Home after** (Immediately, 30, 60 or 90 seconds; 90 by default), and otherwise starts at Home. The resumed query is selected, so typing replaces it. This state is kept in memory only, so restarting Obsidian starts at Home.
 
 ### Search history
 

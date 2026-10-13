@@ -4,15 +4,15 @@ import { pluginVaultOptions, runPaletteCommand } from "./support.mts";
 test.use({ vaultOptions: pluginVaultOptions() });
 
 for (const [surface, command, selector] of [
-	["modal", "open", ".my-palette-suggest-modal"],
+	["modal", "open-recent", ".my-palette-suggest-modal"],
 	[
 		"sidebar",
-		"open-view",
+		"open-sidebar-palette",
 		'.workspace-leaf-content[data-type="my-palette-search"] .my-palette-view',
 	],
 	[
 		"table",
-		"open-table-view",
+		"open-table-palette",
 		'.workspace-leaf-content[data-type="my-palette-table"] .my-palette-view',
 	],
 ] as const) {

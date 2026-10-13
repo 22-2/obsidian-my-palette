@@ -220,7 +220,7 @@ function createGeneralPage(plugin: SettingsHost, helpers: SettingPageHelpers): P
 		helpers.group("Home", [
 			helpers.render(
 				"Return to Home after",
-				"When Open palette is used again, resume the last search if it was closed this recently. Immediately always starts at Home. Search text is kept in memory only.",
+				"When Open home is used again, resume the last search if it was closed this recently. Immediately always starts at Home. Search text is kept in memory only.",
 				(setting) =>
 					setting.addDropdown((dropdown) =>
 						dropdown

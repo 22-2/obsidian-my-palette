@@ -19,7 +19,7 @@ export async function runPaletteCommand(obsidian: ObsidianAPI, id: string): Prom
 
 /** Opens the modal palette and types the given input, leaving it focused. */
 export async function openPaletteWith(obsidian: ObsidianAPI, input: string): Promise<Page> {
-	await runPaletteCommand(obsidian, "open");
+	await runPaletteCommand(obsidian, "open-recent");
 	const page = obsidian.page;
 	await page.locator(MODAL_INPUT).waitFor();
 	await page.locator(MODAL_INPUT).fill(input);

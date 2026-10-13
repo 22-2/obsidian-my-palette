@@ -1,6 +1,6 @@
 import type { ReturnToHomeSeconds } from "src/settings/model";
 
-/** What a closed palette leaves behind for the next Open palette. Kept in memory only. */
+/** What a closed palette leaves behind for the next Open home. Kept in memory only. */
 export interface PaletteRestoreState {
 	/** The input with its mode alias, so restoring it enters the same mode. */
 	input: string;
