@@ -70,6 +70,7 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 | 名前                        | id                            | 開くもの                    |
 | --------------------------- | ----------------------------- | --------------------------- |
 | Open home                   | `open-home`                   | Home                        |
+| Open note list              | `open-note-list`              | ノートのモード              |
 | Open recent                 | `open-recent`                 | 最近使ったファイルのPalette |
 | Open run list               | `open-run-list`               | Run Commandモード           |
 | Open sidebar palette        | `open-sidebar-palette`        | Sidebar palette             |
@@ -92,7 +93,7 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 
 | モード名       | エイリアス | 対応するコマンド            |
 | -------------- | ---------- | --------------------------- |
-| Notes          | `n`        | なし                        |
+| Notes          | `n`        | Open note list              |
 | Commands       | `>`        | Open run list               |
 | Everything     | `e`        | なし                        |
 | Outgoing links | `o`        | Open outgoing link list     |

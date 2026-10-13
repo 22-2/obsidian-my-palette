@@ -11,6 +11,7 @@ import {
 	PaletteSearchSession,
 	paletteRouteChrome,
 	paletteSectionOf,
+	type FixedPaletteMode,
 	type PaletteSearchState,
 } from "src/palette/PaletteSearchSession";
 import { toPaletteSelectionItem } from "src/palette/resultPresentation";
@@ -44,7 +45,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		app: App,
 		private readonly plugin: MyPalettePlugin,
 		initialInput = "",
-		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart" | "tab">,
+		fixedMode?: FixedPaletteMode,
 		{ modeEntries = false, restore }: PaletteModalOptions = {},
 	) {
 		super(

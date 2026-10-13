@@ -10,6 +10,9 @@ test("the plugin loads and registers its commands", async ({ obsidian }) => {
 		Object.keys(app.commands.commands).filter((id) => id.startsWith("my-palette:")),
 	);
 	expect(commands).toEqual(
-		expect.arrayContaining(["my-palette:open-recent", "my-palette:open-tag-insert-selector"]),
+		expect.arrayContaining([
+			"my-palette:open-note-list",
+			"my-palette:open-tag-insert-selector",
+		]),
 	);
 });

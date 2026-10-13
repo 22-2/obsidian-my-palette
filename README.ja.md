@@ -40,6 +40,7 @@ Obsidian のコマンドパレットから次のコマンドを実行します�
 | コマンド                                  | 内容                                                     |
 | ----------------------------------------- | -------------------------------------------------------- |
 | `My Palette: Open home`                   | Home：モードの一覧と最近使ったファイル                   |
+| `My Palette: Open note list`              | Notes モードから始まる                                   |
 | `My Palette: Open recent`                 | 最近使ったファイルから始まるファイル検索のみ             |
 | `My Palette: Open run list`               | Commands モードから始まる                                |
 | `My Palette: Open sidebar palette`        | Sidebar palette：右サイドバーに常駐するリスト            |

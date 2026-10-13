@@ -100,6 +100,7 @@ tags:
 
 | Command ID                        | 表示名                             | 動作                           |
 | --------------------------------- | ---------------------------------- | ------------------------------ |
+| `my-palette:open-note-list`       | `My Palette: Open note list`       | パレットをNotesモードで開く    |
 | `my-palette:open-recent`          | `My Palette: Open recent`          | パレットをファイルモードで開く |
 | `my-palette:open-sidebar-palette` | `My Palette: Open sidebar palette` | 右サイドバーでパレットを開く   |
 

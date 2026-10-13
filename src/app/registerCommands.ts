@@ -20,6 +20,13 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		callback: () => plugin.paletteOpener.openHomePalette(),
 	});
 	plugin.addCommand({
+		id: "open-note-list",
+		name: "Open note list",
+		// Notes is the built-in Obsidian file search; findPaletteMode("file")
+		// resolves to it because it is the first file mode in PALETTE_MODES.
+		callback: () => openWithHome("", "file"),
+	});
+	plugin.addCommand({
 		id: "open-recent",
 		name: "Open recent",
 		callback: () => plugin.paletteOpener.openPalette(),

@@ -40,6 +40,7 @@ Open the command palette and run one of these, then bind a hotkey if you like:
 | Command                                   | What it does                                                |
 | ----------------------------------------- | ----------------------------------------------------------- |
 | `My Palette: Open home`                   | Home: modes above recently used files                       |
+| `My Palette: Open note list`              | Starts in the Notes mode                                    |
 | `My Palette: Open recent`                 | File search only, starting from recently used files         |
 | `My Palette: Open run list`               | Starts in the Commands mode                                 |
 | `My Palette: Open sidebar palette`        | Sidebar palette: a persistent list view                     |

@@ -22,7 +22,7 @@ import { settingsEntries } from "src/settings/settingsNavigation";
 
 export type FixedPaletteMode = Extract<
 	PaletteMode,
-	"link" | "backlink" | "bookmark" | "smart" | "tab"
+	"file" | "link" | "backlink" | "bookmark" | "smart" | "tab"
 >;
 
 /**
