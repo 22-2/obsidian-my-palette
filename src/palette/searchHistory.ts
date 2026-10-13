@@ -35,7 +35,12 @@ export const PALETTE_HISTORY_CATEGORIES: readonly SearchHistoryCategory[] = [
 const LEGACY_INCLUDE_IGNORED_PREFIX = "i ";
 
 function isSelectorHistoryCategory(value: unknown): value is SelectorHistoryCategory {
-	return value === "tag-insertion" || value === "moc-insertion" || value === "folder-move";
+	return (
+		value === "tag-insertion" ||
+		value === "moc-insertion" ||
+		value === "folder-move" ||
+		value === "property-value"
+	);
 }
 
 function isSearchHistoryCategory(value: unknown): value is SearchHistoryCategory {
@@ -289,6 +294,7 @@ function historyCategoryMode(category: SearchHistoryCategory): PaletteModeId | u
 		case "tag-insertion":
 		case "moc-insertion":
 		case "folder-move":
+		case "property-value":
 			return undefined;
 	}
 }

@@ -9,7 +9,11 @@ export interface SearchHistoryEntry {
 	count: number;
 }
 
-export type SelectorHistoryCategory = "tag-insertion" | "moc-insertion" | "folder-move";
+export type SelectorHistoryCategory =
+	| "tag-insertion"
+	| "moc-insertion"
+	| "folder-move"
+	| "property-value";
 
 export type SearchHistoryCategory =
 	| SelectorHistoryCategory

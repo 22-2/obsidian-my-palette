@@ -15,6 +15,7 @@ vi.mock("obsidian", () => ({
 	},
 }));
 vi.mock("src/tags/insertTags", () => ({ insertTags: insertTagsMock }));
+vi.mock("src/properties/propertyValueSelector", () => ({ editListProperty: vi.fn() }));
 
 const file = { path: "note.md", basename: "note" } as unknown as TFile;
 

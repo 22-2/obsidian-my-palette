@@ -13,7 +13,7 @@ describe("hotkeyScopeLabel", () => {
 			"File search, MOC insert selector",
 		);
 		expect(hotkeyScopeLabel(HOTKEY_ACTIONS.focusInput.scopes)).toBe(
-			"Tag insert selector, MOC insert selector, MOC remove selector",
+			"Tag insert selector, MOC insert selector, MOC remove selector, Property value selector",
 		);
 		expect(hotkeyScopeLabel(HOTKEY_ACTIONS.enterMode.scopes)).toBe("Palette");
 	});

@@ -14,13 +14,15 @@ export type HotkeyScope =
 	| "selector"
 	| "tag-insert-selector"
 	| "moc-insert-selector"
-	| "moc-remove-selector";
+	| "moc-remove-selector"
+	| "property-value-selector";
 
 const SCOPE_PARENT: Partial<Record<HotkeyScope, HotkeyScope>> = {
 	"file-search": "palette",
 	"tag-insert-selector": "selector",
 	"moc-insert-selector": "selector",
 	"moc-remove-selector": "selector",
+	"property-value-selector": "selector",
 };
 
 export const HOTKEY_ACTIONS = {
@@ -65,14 +67,24 @@ export const HOTKEY_ACTIONS = {
 	focusInput: {
 		name: "Return to input mode",
 		description:
-			"Return from selection mode to typing in tag insert, MOC insert and MOC remove selectors.",
-		scopes: ["tag-insert-selector", "moc-insert-selector", "moc-remove-selector"],
+			"Return from selection mode to typing in tag insert, MOC insert, MOC remove and property value selectors.",
+		scopes: [
+			"tag-insert-selector",
+			"moc-insert-selector",
+			"moc-remove-selector",
+			"property-value-selector",
+		],
 	},
 	toggleSelection: {
 		name: "Toggle selection",
 		description:
 			"Check or toggle the active row in selection mode. Hold Shift to extend a range where supported.",
-		scopes: ["tag-insert-selector", "moc-insert-selector", "moc-remove-selector"],
+		scopes: [
+			"tag-insert-selector",
+			"moc-insert-selector",
+			"moc-remove-selector",
+			"property-value-selector",
+		],
 	},
 } as const;
 

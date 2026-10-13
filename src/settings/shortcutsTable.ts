@@ -18,6 +18,7 @@ const SCOPE_NAMES: Record<HotkeyScope, string> = {
 	"tag-insert-selector": "Tag insert selector",
 	"moc-insert-selector": "MOC insert selector",
 	"moc-remove-selector": "MOC remove selector",
+	"property-value-selector": "Property value selector",
 };
 
 /** The order places are listed in a When cell and, by that list, the rows of the table. */
@@ -28,6 +29,7 @@ const SCOPE_ORDER: readonly HotkeyScope[] = [
 	"tag-insert-selector",
 	"moc-insert-selector",
 	"moc-remove-selector",
+	"property-value-selector",
 ];
 
 function orderedScopes(scopes: readonly HotkeyScope[]): HotkeyScope[] {
@@ -74,6 +76,7 @@ const MATRIX_COLUMNS: readonly { scope: HotkeyScope; header: string; name: strin
 	{ scope: "tag-insert-selector", header: "Tag", name: "Tag insert selector" },
 	{ scope: "moc-insert-selector", header: "MOC +", name: "MOC insert selector" },
 	{ scope: "moc-remove-selector", header: "MOC −", name: "MOC remove selector" },
+	{ scope: "property-value-selector", header: "Property", name: "Property value selector" },
 ];
 const FIXED_COLUMNS = 3;
 const TABLE_COLUMNS = FIXED_COLUMNS + MATRIX_COLUMNS.length;

@@ -2,6 +2,7 @@ import { Notice, type App, type TFile } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import type { PropertyResult } from "src/palette/results";
 import { insertTags } from "src/tags/insertTags";
+import { editListProperty } from "src/properties/propertyValueSelector";
 
 /** Whether the palette should close once the edit has started. */
 export type PropertyEditOutcome = "close" | "stay";
@@ -26,6 +27,9 @@ export async function editPropertyResult(
 		case "checkbox":
 			await toggleCheckbox(plugin.app, file, result.key);
 			return "stay";
+		case "list":
+			await editListProperty(plugin, file, result.key);
+			return "close";
 		case "unsupported":
 			new Notice("Edit this property in source mode.");
 			return "stay";

@@ -1,10 +1,16 @@
 import fuzzysort from "fuzzysort";
 import { tagKey, type TagChoice } from "src/tags/tagChoices";
+import { typedNewValue, type NewValueRules } from "src/shared/newValue";
 
 export type TagSuggestion = { type: "tag"; choice: TagChoice } | { type: "new"; tag: string };
 
 // Text containing `#` or whitespace cannot form one tag, so it is not offered as new.
 const VALID_NEW_TAG = /^[^\s#]+$/;
+const TAG_VALUE_RULES: NewValueRules = {
+	normalize: normalizeTagQuery,
+	isValid: (tag) => VALID_NEW_TAG.test(tag),
+	keyOf: tagKey,
+};
 
 /** Removes the optional leading `#` users type out of habit. */
 export function normalizeTagQuery(query: string): string {
@@ -46,12 +52,12 @@ export function buildTagSuggestions(
 		(tag) => !known.has(tagKey(tag)) && (!needle || fuzzysort.single(needle, tag) !== null),
 	);
 	const newTags = [...pendingNew];
-	const typedIsNew =
-		needle &&
-		VALID_NEW_TAG.test(needle) &&
-		!known.has(tagKey(needle)) &&
-		!pendingNew.some((tag) => tagKey(tag) === tagKey(needle));
-	if (typedIsNew) newTags.unshift(needle);
+	const typedNew = typedNewValue(
+		query,
+		[...choices.map((choice) => choice.tag), ...pendingNew],
+		TAG_VALUE_RULES,
+	);
+	if (typedNew) newTags.unshift(typedNew);
 
 	const matched = needle ? filterChoices(choices, needle) : choices;
 	return [
