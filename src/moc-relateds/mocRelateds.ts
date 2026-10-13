@@ -1,5 +1,4 @@
 import { Notice, TFile, type App, type WorkspaceLeaf } from "obsidian";
-import type { PaletteHotkey } from "src/ui/hotkeys";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { getLeafForAction } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
@@ -20,7 +19,8 @@ import {
 	copyPathToClipboard,
 } from "src/platform/pathClipboard";
 import { isMarkdownPath } from "src/shared/externalFiles";
-import { IGNORED_SHORTCUT, ignoredToggleOptions } from "src/palette/ignoredToggle";
+import { ignoredToggleOptions } from "src/palette/ignoredToggle";
+import { formatHotkey } from "src/ui/hotkeys";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
 import { executePaletteResult } from "src/palette/executePaletteResult";
 import { matchedMetadataPresentation } from "src/palette/resultPresentation";
@@ -217,17 +217,14 @@ async function relatedsRelations(
 	return { outgoing, incoming };
 }
 
-const MUTUAL_HOTKEY: PaletteHotkey = { key: "M", modifiers: ["Ctrl"] };
-const MUTUAL_SHORTCUT = [
-	"Ctrl+M",
-	"Toggle updating the note's link to the MOC as well as the MOC's link to the note",
-] as const;
-
 /**
  * Selector shared by MOC insertion and removal. Its footer switch chooses whether
  * the note's own link to the MOC changes too, so both commands read the same way.
  */
 abstract class MocRelatedsModal extends MultiSelectModal<string> {
+	/** Holds the settings, including the Mutual shortcut. */
+	protected abstract readonly plugin: MyPalettePlugin;
+
 	/** Whether the note's link to the MOC is updated along with the MOC's link to the note. */
 	mutual = true;
 
@@ -236,7 +233,7 @@ abstract class MocRelatedsModal extends MultiSelectModal<string> {
 		this.addStatusToggle({
 			id: "mutual",
 			label: "Mutual",
-			hotkey: () => MUTUAL_HOTKEY,
+			hotkey: () => this.plugin.settings.hotkeys.toggleMutual,
 			description: "Also update the note's link to the MOC",
 			value: this.mutual,
 			onChange: (value) => {
@@ -252,7 +249,7 @@ class MocTargetModal extends MocRelatedsModal {
 	private includeIgnored = false;
 
 	constructor(
-		private readonly plugin: MyPalettePlugin,
+		protected readonly plugin: MyPalettePlugin,
 		private readonly activeFile: TFile,
 	) {
 		super(
@@ -275,8 +272,14 @@ class MocTargetModal extends MocRelatedsModal {
 							"Ctrl+Enter",
 							"Insert all checked notes, or selected notes if none are checked",
 						],
-						IGNORED_SHORTCUT,
-						MUTUAL_SHORTCUT,
+						[
+							formatHotkey(plugin.settings.hotkeys.toggleIgnored),
+							"Include files hidden by Excluded files",
+						],
+						[
+							formatHotkey(plugin.settings.hotkeys.toggleMutual),
+							"Also update the note's link to the MOC",
+						],
 					],
 				},
 			},
@@ -287,10 +290,14 @@ class MocTargetModal extends MocRelatedsModal {
 	protected override onSelectionModalOpen(): void {
 		// The Ignored switch comes first, matching its place in the main palette.
 		this.addStatusToggle(
-			ignoredToggleOptions(this.includeIgnored, (value) => {
-				this.includeIgnored = value;
-				this.refreshSuggestions();
-			}),
+			ignoredToggleOptions(
+				this.includeIgnored,
+				(value) => {
+					this.includeIgnored = value;
+					this.refreshSuggestions();
+				},
+				() => this.plugin.settings.hotkeys.toggleIgnored,
+			),
 		);
 		super.onSelectionModalOpen();
 	}
@@ -499,7 +506,7 @@ export async function insertFileToMocRelateds(
 /** Selector for notes linked with the active MOC; the checked ones are unlinked. */
 class MocUnlinkModal extends MocRelatedsModal {
 	constructor(
-		plugin: MyPalettePlugin,
+		protected readonly plugin: MyPalettePlugin,
 		private readonly notes: readonly TFile[],
 		mocFile: TFile,
 	) {
@@ -520,7 +527,10 @@ class MocUnlinkModal extends MocRelatedsModal {
 							"Ctrl+Enter",
 							"Remove all checked notes, or selected notes if none are checked",
 						],
-						MUTUAL_SHORTCUT,
+						[
+							formatHotkey(plugin.settings.hotkeys.toggleMutual),
+							"Also update the note's link to the MOC",
+						],
 					],
 				},
 			},

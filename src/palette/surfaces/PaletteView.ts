@@ -321,7 +321,11 @@ export class PaletteView extends ItemView {
 		}
 		this.addHistoryControls();
 		this.ignoredToggle = this.panel.addStatusToggle(
-			ignoredToggleOptions(state.includeIgnored, (value) => this.setIgnoredScope(value)),
+			ignoredToggleOptions(
+				state.includeIgnored,
+				(value) => this.setIgnoredScope(value),
+				() => this.plugin.settings.hotkeys.toggleIgnored,
+			),
 		);
 		this.registerTargetLeafTracking();
 		this.fileListRefresh.register();

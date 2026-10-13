@@ -38,6 +38,23 @@ export const HOTKEY_ACTIONS = {
 		description: "Open the right-click menu for the active result from the keyboard.",
 		scopes: ["palette", "selector"],
 	},
+	enterMode: {
+		name: "Enter mode",
+		description: "Enter the highlighted mode from Root Search.",
+		scopes: ["palette"],
+	},
+	toggleIgnored: {
+		name: "Toggle Ignored",
+		description:
+			"Include files hidden by Obsidian's Excluded files setting in File search and MOC selectors.",
+		scopes: ["file-search", "moc-selector"],
+	},
+	toggleMutual: {
+		name: "Toggle Mutual",
+		description:
+			"Also update the note's link to the MOC when linking or unlinking in the MOC selector.",
+		scopes: ["moc-selector"],
+	},
 	focusInput: {
 		name: "Return to input mode",
 		description: "Return from selection mode to typing in tag and MOC selectors.",
@@ -74,6 +91,9 @@ export const DEFAULT_HOTKEYS: PaletteHotkeys = {
 	preview: { key: "ArrowRight", modifiers: [] },
 	history: { key: "R", modifiers: ["Ctrl"] },
 	contextMenu: { key: "K", modifiers: ["Ctrl"] },
+	enterMode: { key: "Tab", modifiers: [] },
+	toggleIgnored: { key: "I", modifiers: ["Ctrl"] },
+	toggleMutual: { key: "M", modifiers: ["Ctrl"] },
 	focusInput: { key: "F", modifiers: [] },
 	toggleSelection: { key: "Space", modifiers: [] },
 };
@@ -82,6 +102,7 @@ const MODIFIERS: HotkeyModifier[] = ["Ctrl", "Alt", "Shift", "Meta"];
 
 function normalizeKey(key: string): string | undefined {
 	if (key === " " || key === "Space") return "Space";
+	if (key === "Tab") return "Tab";
 	if (key.length === 1 && !/\s/.test(key)) return key.toUpperCase();
 	if (/^F([1-9]|1\d|2[0-4])$/.test(key) || key === "ArrowRight") return key;
 	return undefined;
@@ -150,18 +171,28 @@ export function hotkeyError(
 	return undefined;
 }
 
+/** Actions whose key would otherwise type text in the palette input. */
+const MODIFIER_ACTIONS: readonly HotkeyAction[] = [
+	"hidePreview",
+	"history",
+	"preview",
+	"contextMenu",
+	"enterMode",
+	"toggleIgnored",
+	"toggleMutual",
+];
+
 function bindingError(action: HotkeyAction, hotkey: PaletteHotkey): string | undefined {
 	if (hotkey.key === "ArrowRight" && action !== "preview")
 		return "Right Arrow is reserved for cursor movement and preview.";
-	const needsModifier =
-		action === "hidePreview" ||
-		action === "history" ||
-		action === "preview" ||
-		action === "contextMenu";
+	// Tab is the standard way into a mode, so it may be bound without a modifier.
+	const typesNothing =
+		hotkey.key === "ArrowRight" ||
+		/^F\d+$/.test(hotkey.key) ||
+		(action === "enterMode" && hotkey.key === "Tab");
 	if (
-		needsModifier &&
-		hotkey.key !== "ArrowRight" &&
-		!/^F\d+$/.test(hotkey.key) &&
+		MODIFIER_ACTIONS.includes(action) &&
+		!typesNothing &&
 		!hotkey.modifiers.some((modifier) => modifier !== "Shift")
 	)
 		return "Use Ctrl, Alt or Meta with this key so typing still works.";

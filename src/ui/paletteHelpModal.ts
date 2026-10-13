@@ -1,7 +1,6 @@
 import { App, Modal, setIcon } from "obsidian";
 import { PALETTE_MODES, paletteModeAlias } from "src/palette/modes";
 import type { ModeSettingsMap, PaletteSurface } from "src/settings/model";
-import { IGNORED_SHORTCUT } from "src/palette/ignoredToggle";
 import { DEFAULT_HOTKEYS, formatHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
 
 /** Shows the small, discoverable syntax guide instead of overloading the input placeholder. */
@@ -20,9 +19,10 @@ export class PaletteHelpModal extends Modal {
 		this.contentEl.empty();
 		this.titleEl.setText("Palette help");
 
+		const enterMode = this.hotkeys.enterMode ? formatHotkey(this.hotkeys.enterMode) : undefined;
 		const intro = this.contentEl.createDiv("my-palette-help-modal__intro");
 		intro.setText(
-			"Pick a mode in Root Search with Enter or Tab, or type its alias followed by a space. Esc goes back.",
+			`Pick a mode in Root Search with Enter, or type its alias followed by a space. Esc goes back.`,
 		);
 
 		const modeSection = this.contentEl.createDiv("my-palette-help-modal__section");
@@ -77,8 +77,11 @@ export class PaletteHelpModal extends Modal {
 					] satisfies Array<[string, string]>)
 				: []),
 			[formatHotkey(this.hotkeys.history), "Open search history"],
-			[IGNORED_SHORTCUT[0], "Include files hidden by Excluded files in File search"],
-			["Enter / Tab on a mode", "Enter that mode"],
+			[
+				formatHotkey(this.hotkeys.toggleIgnored),
+				"Include files hidden by Excluded files in File search",
+			],
+			[`Enter${enterMode ? ` / ${enterMode}` : ""} on a mode`, "Enter that mode"],
 			["Esc / Backspace in an empty field", "Return from a mode to Root Search"],
 			[
 				"Esc",

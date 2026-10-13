@@ -45,6 +45,9 @@ describe("settings page layout", () => {
 			"Preview selected result",
 			"Search history",
 			"Show result actions",
+			"Enter mode",
+			"Toggle Ignored",
+			"Toggle Mutual",
 			"Return to input mode",
 			"Toggle selection",
 		]);

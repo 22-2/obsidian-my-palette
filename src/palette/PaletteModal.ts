@@ -86,10 +86,14 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			moveToSidebar: () => this.moveToSidebar(),
 		});
 		this.ignoredToggle = this.addStatusToggle(
-			ignoredToggleOptions(this.session.current.ignoredScope, (value) => {
-				this.session.setIgnoredScope(value);
-				this.refreshSuggestions();
-			}),
+			ignoredToggleOptions(
+				this.session.current.ignoredScope,
+				(value) => {
+					this.session.setIgnoredScope(value);
+					this.refreshSuggestions();
+				},
+				() => this.plugin.settings.hotkeys.toggleIgnored,
+			),
 		);
 		syncIgnoredToggle(this.ignoredToggle, this.mode);
 	}

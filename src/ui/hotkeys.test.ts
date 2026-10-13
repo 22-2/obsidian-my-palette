@@ -62,8 +62,27 @@ describe("custom hotkeys", () => {
 		expect(hotkeyError("hidePreview", null, DEFAULT_HOTKEYS)).toBeUndefined();
 		expect(normalizeHotkeys({ hidePreview: DEFAULT_HOTKEYS.history })).toEqual(DEFAULT_HOTKEYS);
 	});
+	it("binds Tab to enter a mode alone, and requires a modifier for the switch keys", () => {
+		expect(normalizeHotkeys({ enterMode: { key: "Tab", modifiers: [] } }).enterMode).toEqual({
+			key: "Tab",
+			modifiers: [],
+		});
+		expect(
+			hotkeyError("enterMode", { key: "Tab", modifiers: [] }, DEFAULT_HOTKEYS),
+		).toBeUndefined();
+		expect(hotkeyError("enterMode", { key: "J", modifiers: [] }, DEFAULT_HOTKEYS)).toContain(
+			"Use Ctrl, Alt or Meta",
+		);
+		expect(
+			hotkeyError("toggleIgnored", { key: "I", modifiers: ["Shift"] }, DEFAULT_HOTKEYS),
+		).toContain("Use Ctrl, Alt or Meta");
+		expect(
+			hotkeyError("toggleMutual", { key: "M", modifiers: ["Ctrl"] }, DEFAULT_HOTKEYS),
+		).toBeUndefined();
+	});
+
 	it("treats a shared key as a collision only where both shortcuts can be used", () => {
-		// Mutual lives only in the MOC selector, so it does not clash with the palette preview.
+		// The palette and the tag selector are separate places, so they can share a key.
 		expect(scopesOverlap(["palette"], ["tag-selector"])).toBe(false);
 		expect(scopesOverlap(["moc-selector"], ["tag-selector"])).toBe(false);
 		// File search is part of the palette, and every selector is part of the selector group.
