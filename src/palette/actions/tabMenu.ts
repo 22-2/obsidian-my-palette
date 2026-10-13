@@ -62,7 +62,7 @@ export function populateTabMenu({
 				.onClick(() => {
 					const [leaf] = leavesNow();
 					if (!leaf) return;
-					void app.workspace.duplicateLeaf(leaf).then(onTabsChanged);
+					void app.workspace.duplicateLeaf(leaf, "tab").then(onTabsChanged);
 				}),
 		);
 		menu.addSeparator();

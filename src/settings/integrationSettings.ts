@@ -133,7 +133,7 @@ export class EverythingSettingsModal extends Modal {
 			});
 		new Setting(this.contentEl)
 			.setName("Test connection")
-			.setDesc("Runs a harmless query against the configured HTTP Server.")
+			.setDesc("Runs a harmless query against the configured HTTP server.")
 			.addButton((button) =>
 				button.setButtonText("Test").onClick(async () => {
 					const result = await plugin.testEverythingConnection();
@@ -183,7 +183,6 @@ export class EverythingSettingsModal extends Modal {
 				slider
 					.setLimits(limits.min, limits.max, limits.step)
 					.setValue(value)
-					.setDynamicTooltip()
 					.onChange(async (next) => {
 						store(next);
 						await this.plugin.saveSettings();

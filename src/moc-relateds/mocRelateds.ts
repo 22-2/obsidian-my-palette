@@ -474,7 +474,7 @@ export async function insertFileToActiveMocRelateds(
 	fileToLink: TFile,
 ): Promise<void> {
 	const mocFile = plugin.app.workspace.getActiveFile();
-	const activeLeaf = plugin.app.workspace.activeLeaf;
+	const activeLeaf = plugin.app.workspace.getMostRecentLeaf();
 	// Only reopen a real file leaf; a persistent palette can be the active leaf
 	// while its source note is still available through workspace.getActiveFile().
 	const mocLeaf =
@@ -590,7 +590,7 @@ export async function insertLinkToMocRelateds(plugin: MyPalettePlugin): Promise<
 	}
 
 	// Preview changes the visible note; insertion must keep the original destination.
-	const activeLeaf = plugin.app.workspace.activeLeaf;
+	const activeLeaf = plugin.app.workspace.getMostRecentLeaf();
 	const mocLeaf =
 		activeLeaf && (activeLeaf.view as { file?: unknown }).file ? activeLeaf : undefined;
 	const modal = new MocTargetModal(plugin, activeFile);

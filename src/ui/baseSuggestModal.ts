@@ -413,7 +413,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	protected registerSelectionDomEvent<K extends keyof HTMLElementEventMap>(
 		el: HTMLElement,
 		type: K,
-		callback: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any,
+		callback: (this: HTMLElement, ev: HTMLElementEventMap[K]) => unknown,
 		options?: boolean | AddEventListenerOptions,
 	): void {
 		// モーダル専用のプレビュー操作も、閉じた時点で共通部品と一緒に解除する。

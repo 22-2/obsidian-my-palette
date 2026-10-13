@@ -29,7 +29,7 @@ export class PaletteLeafTracker {
 		// Clicks in the sidebar must always open in the center: never reuse a
 		// sidebar leaf, and never trust a cached leaf that has moved out of
 		// the main area. Prefer the current center leaf over any history.
-		const active = this.app.workspace.activeLeaf;
+		const active = this.app.workspace.getMostRecentLeaf();
 		if (active && this.isCenterLeaf(active)) {
 			this.targetLeaf = active;
 			return active;
@@ -56,7 +56,7 @@ export class PaletteLeafTracker {
 			});
 			if (match) return match;
 		}
-		const active = this.app.workspace.activeLeaf;
+		const active = this.app.workspace.getMostRecentLeaf();
 		if (active && this.isCenterLeaf(active)) return active;
 		// Why: opening or restoring the sidebar can make the palette the active
 		// leaf before tracking is registered. The most recent center leaf preserves
@@ -66,7 +66,7 @@ export class PaletteLeafTracker {
 	}
 
 	currentSourceFile(): TFile | undefined {
-		const activeLeaf = this.app.workspace.activeLeaf;
+		const activeLeaf = this.app.workspace.getMostRecentLeaf();
 		if (activeLeaf && this.isCenterLeaf(activeLeaf)) return this.fileOf(activeLeaf);
 		if (this.targetLeaf && this.isCenterLeaf(this.targetLeaf))
 			return this.fileOf(this.targetLeaf);
@@ -96,6 +96,11 @@ export class PaletteLeafTracker {
 
 	fileOf(leaf: WorkspaceLeaf): TFile | undefined {
 		const file = (leaf.view as { file?: unknown }).file;
-		return file && typeof file === "object" && "path" in file ? (file as TFile) : undefined;
+		return hasPath(file) ? file : undefined;
 	}
+}
+
+/** A view's file has a path; checking for it avoids casting the unknown value to TFile. */
+function hasPath(value: unknown): value is TFile {
+	return typeof value === "object" && value !== null && "path" in value;
 }

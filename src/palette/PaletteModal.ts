@@ -150,11 +150,11 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			this.applySearchHistory(result);
 			return;
 		}
-		const activeLeaf = this.app.workspace.activeLeaf;
+		const activeLeaf = this.app.workspace.getMostRecentLeaf();
 		try {
 			await this.openResultInBackground(result);
 		} finally {
-			if (activeLeaf && this.app.workspace.activeLeaf !== activeLeaf)
+			if (activeLeaf && this.app.workspace.getMostRecentLeaf() !== activeLeaf)
 				this.app.workspace.setActiveLeaf(activeLeaf, { focus: false });
 			this.inputEl.focus({ preventScroll: true });
 		}

@@ -555,7 +555,7 @@ export class PaletteView extends ItemView {
 	}
 
 	private focusPanelAfterAction(existingExternalLeaves: readonly WorkspaceLeaf[]): void {
-		const activeLeaf = this.app.workspace.activeLeaf;
+		const activeLeaf = this.app.workspace.getMostRecentLeaf();
 		// Reusing an external Markdown leaf reveals the requested tab. Focusing the sidebar
 		// input afterward would immediately activate the palette again and undo it.
 		if (
@@ -604,11 +604,9 @@ export class PaletteView extends ItemView {
 		// The sidebar palette keeps focus in its search input, so a cached
 		// sourcePath/targetLeaf can point at the previously active note. Prefer
 		// the currently active center note at click time.
+		const recentLeaf = this.app.workspace.getMostRecentLeaf();
 		const activeLeaf =
-			this.app.workspace.activeLeaf &&
-			this.leafTracker.isCenterLeaf(this.app.workspace.activeLeaf)
-				? this.app.workspace.activeLeaf
-				: undefined;
+			recentLeaf && this.leafTracker.isCenterLeaf(recentLeaf) ? recentLeaf : undefined;
 		const activeFile = activeLeaf ? this.leafTracker.fileOf(activeLeaf) : undefined;
 		if (activeFile) return { mocFile: activeFile, mocLeaf: activeLeaf };
 		const mocLeaf = this.leafTracker.findTargetLeaf(this.sourcePath);

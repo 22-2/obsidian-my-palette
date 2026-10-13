@@ -12,9 +12,8 @@ function fixture() {
 	const created = leaf();
 	const workspace = {
 		rootSplit,
-		activeLeaf: null as WorkspaceLeaf | null,
 		getLeaf: vi.fn().mockReturnValue(created),
-		getMostRecentLeaf: vi.fn().mockReturnValue(null),
+		getMostRecentLeaf: vi.fn().mockReturnValue(null as WorkspaceLeaf | null),
 	};
 	const isPalette = (view: View) => "palette" in view;
 	const tracker = new PaletteLeafTracker({ workspace } as unknown as App, own, isPalette);
@@ -37,10 +36,10 @@ describe("palette leaf tracker", () => {
 		expect(f.tracker.track(tracked)).toBe(true);
 		expect(f.tracker.track(f.leaf({}, {}))).toBe(false);
 
-		f.workspace.activeLeaf = active;
+		f.workspace.getMostRecentLeaf.mockReturnValue(active);
 		expect(f.tracker.resolveTargetLeaf()).toBe(active);
 
-		f.workspace.activeLeaf = f.leaf({}, {});
+		f.workspace.getMostRecentLeaf.mockReturnValue(f.leaf({}, {}));
 		expect(f.tracker.resolveTargetLeaf()).toBe(active);
 	});
 
