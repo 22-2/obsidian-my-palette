@@ -1,4 +1,10 @@
-import { parseFrontMatterTags, type App, type EventRef, type TFile } from "obsidian";
+import {
+	parseFrontMatterTags,
+	type App,
+	type EventRef,
+	type TAbstractFile,
+	type TFile,
+} from "obsidian";
 import { getUserIgnoreFilters, isUserIgnoredPathWithFilters } from "src/ignored-notes/ignoredPaths";
 import { IgnoredNoteIndex, type IgnoredNoteIndexLogger } from "src/ignored-notes/ignoredNoteIndex";
 import type { FileResult } from "src/palette/results";
@@ -20,9 +26,15 @@ import type { FileUsageScoreSource } from "src/search/file/fileUsageHistory";
 import { searchFuzzyQueryWithFieldScores } from "src/search/fuzzyQuery";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 
+/** Vault events also report folders, which have no extension; this tells files apart without a cast. */
+function isTFile(file: TAbstractFile): file is TFile {
+	return "extension" in file;
+}
+
 function aliases(value: unknown): string[] {
 	if (Array.isArray(value)) return value.map(String).filter((alias) => alias.trim().length > 0);
-	return value == null ? [] : [String(value)].filter((alias) => alias.trim().length > 0);
+	const text = typeof value === "string" || typeof value === "number" ? String(value) : "";
+	return text.trim().length > 0 ? [text] : [];
 }
 
 export class FileProvider implements PaletteProvider<FileResult> {
@@ -49,19 +61,19 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		this.ignoredIndex = new IgnoredNoteIndex(app, ignoredLogger);
 		this.refs.push(
 			app.vault.on("create", (file) => {
-				if ("extension" in file) this.update(file as TFile);
+				if (isTFile(file)) this.update(file);
 			}),
 		);
 		this.refs.push(
 			app.vault.on("modify", (file) => {
-				if ("extension" in file) this.update(file as TFile);
+				if (isTFile(file)) this.update(file);
 			}),
 		);
 		this.refs.push(app.vault.on("delete", (file) => this.deleteEntry(file.path)));
 		this.refs.push(
 			app.vault.on("rename", (file, oldPath) => {
 				this.deleteEntry(oldPath);
-				if ("extension" in file) this.update(file as TFile);
+				if (isTFile(file)) this.update(file);
 			}),
 		);
 		this.refs.push(app.metadataCache.on("changed", (file) => this.update(file)));

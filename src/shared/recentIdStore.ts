@@ -113,7 +113,9 @@ export class RecentIdStore {
 		this.current = [];
 		this.writePromise = this.writePromise
 			.then(() => this.clearDatabase())
-			.catch((error) => this.log(`Failed to clear ${this.options.label}`, { error }));
+			.catch((error: unknown) =>
+				this.log(`Failed to clear ${this.options.label}`, { error }),
+			);
 	}
 
 	async dispose(): Promise<void> {
@@ -171,7 +173,9 @@ export class RecentIdStore {
 		// quick successive records that would otherwise update rank independently.
 		this.writePromise = this.writePromise
 			.then(() => this.persistCurrent())
-			.catch((error) => this.log(`Failed to persist ${this.options.label}`, { error }));
+			.catch((error: unknown) =>
+				this.log(`Failed to persist ${this.options.label}`, { error }),
+			);
 	}
 
 	private getDatabase(): Promise<IDBPDatabase<RecentIdDatabase>> {

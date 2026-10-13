@@ -183,9 +183,10 @@ function normalizePopToRoot(source: Record<string, unknown>): PopToRootSeconds {
 // A missing or non-boolean switch means the integration stays on, as it did before switches existed.
 function normalizeIntegrations(source: Record<string, unknown>): IntegrationSettings {
 	const raw = (source.integrations ?? {}) as Record<string, Record<string, unknown> | undefined>;
-	const enabled = (key: keyof IntegrationSettings) => ({
-		enabled: typeof raw[key]?.enabled === "boolean" ? (raw[key]?.enabled as boolean) : true,
-	});
+	const enabled = (key: keyof IntegrationSettings) => {
+		const value = raw[key]?.enabled;
+		return { enabled: typeof value === "boolean" ? value : true };
+	};
 	return { everything: enabled("everything"), smartConnections: enabled("smartConnections") };
 }
 

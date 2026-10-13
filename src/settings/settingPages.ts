@@ -42,7 +42,7 @@ interface SettingPageHelpers {
 	render: (
 		name: string,
 		desc: string,
-		callback: (setting: Setting) => void,
+		callback: (setting: Setting) => unknown,
 	) => SettingDefinitionRender;
 }
 
@@ -67,7 +67,7 @@ const createSettingPageHelpers = (): SettingPageHelpers => ({
 			name,
 			desc,
 			render: (setting: Setting) => callback(setting),
-		}) as SettingDefinitionRender,
+		}) satisfies SettingDefinitionRender,
 });
 
 /**
@@ -113,11 +113,11 @@ function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers)
 							text
 								.setPlaceholder("md, canvas, base")
 								.setValue(plugin.settings.everything.vaultExtensions.join(", "))
-								.onChange(async (value) => {
+								.onChange((value) => {
 									plugin.settings.everything.vaultExtensions = extensions(
 										value.split(","),
 									);
-									await plugin.saveSettings();
+									void plugin.saveSettings();
 									plugin.fileProvider.refreshExtensions();
 								}),
 						),
@@ -132,10 +132,10 @@ function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers)
 							text
 								.setPlaceholder("archive\nprivate/diary")
 								.setValue(plugin.settings.file.excludedFolders.join("\n"))
-								.onChange(async (value) => {
+								.onChange((value) => {
 									// 保存時に正規化して重複を除くことで表示と検索判定のズレを防ぐ。
 									plugin.settings.file.excludedFolders = excludedFolders(value);
-									await plugin.saveSettings();
+									void plugin.saveSettings();
 								}),
 						),
 				),
@@ -149,11 +149,11 @@ function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers)
 							text
 								.setPlaceholder("archive\nreference")
 								.setValue(plugin.settings.file.demotedPriorFolders.join("\n"))
-								.onChange(async (value) => {
+								.onChange((value) => {
 									// Preserve the same path cleanup as exclusions so folder matching stays consistent.
 									plugin.settings.file.demotedPriorFolders =
 										excludedFolders(value);
-									await plugin.saveSettings();
+									void plugin.saveSettings();
 								}),
 						),
 				),
@@ -162,11 +162,12 @@ function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers)
 				{
 					name: "Rebuild ignored note index",
 					desc: "Rescan files hidden by Obsidian's excluded-folder filters so they are available with the Ignored switch.",
-					action: async () => {
+					action: () => {
 						// Keep index maintenance with the file-search settings because it
 						// repairs the cache used by the include-ignored search scope.
-						await plugin.fileProvider.rebuildIgnoredIndex();
-						new Notice("Ignored note index rebuilt.");
+						void plugin.fileProvider
+							.rebuildIgnoredIndex()
+							.then(() => new Notice("Ignored note index rebuilt."));
 					},
 				},
 			]),
@@ -225,11 +226,11 @@ function createGeneralPage(plugin: SettingsHost, helpers: SettingPageHelpers): P
 						dropdown
 							.addOptions(POP_TO_ROOT_LABELS)
 							.setValue(String(plugin.settings.launcher.popToRootAfterSeconds))
-							.onChange(async (value) => {
+							.onChange((value) => {
 								plugin.settings.launcher.popToRootAfterSeconds = Number(
 									value,
 								) as PopToRootSeconds;
-								await plugin.saveSettings();
+								void plugin.saveSettings();
 							}),
 					),
 			),

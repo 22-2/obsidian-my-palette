@@ -18,7 +18,9 @@ function normalizedTag(value: unknown): string | undefined {
  */
 export function normalizeTags(values: readonly unknown[]): string[] {
 	const tags: string[] = [];
-	for (const value of values.flatMap((item) => (Array.isArray(item) ? item : [item]))) {
+	for (const value of values.flatMap((item) =>
+		Array.isArray(item) ? (item as unknown[]) : [item],
+	)) {
 		const tag = normalizedTag(value);
 		if (tag && !tags.includes(tag)) tags.push(tag);
 	}

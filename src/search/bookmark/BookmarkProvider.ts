@@ -9,7 +9,7 @@ import type { PaletteProvider, PaletteSearchRequest } from "src/search/PalettePr
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 
 interface BookmarkItem {
-	type: "file" | "search" | "group" | string;
+	type: string;
 	title?: string;
 	path?: string;
 	query?: string;

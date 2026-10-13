@@ -127,7 +127,7 @@ export class FileUsageHistory implements FileUsageScoreSource {
 				await this.load();
 				await this.persist(path, removedPaths);
 			})
-			.catch((error) => this.log("Failed to persist file usage history", { error }));
+			.catch((error: unknown) => this.log("Failed to persist file usage history", { error }));
 	}
 
 	async dispose(): Promise<void> {

@@ -48,17 +48,17 @@ export function normalizePaletteTableState(state: {
 	// Workspace layouts can outlive column definitions. Ignore malformed or removed
 	// columns so restoring a pane never sends an unknown column to the row model.
 	if (Array.isArray(state.sorting)) {
-		for (const item of state.sorting) {
+		for (const item of state.sorting as Array<{ id?: unknown; desc?: unknown } | null>) {
+			const id = item?.id;
 			if (
-				!item ||
-				typeof item !== "object" ||
-				!PALETTE_TABLE_COLUMNS.some(({ id }) => id === item.id) ||
-				typeof item.desc !== "boolean" ||
-				seen.has(item.id)
+				typeof id !== "string" ||
+				typeof item?.desc !== "boolean" ||
+				!PALETTE_TABLE_COLUMNS.some((column) => column.id === id) ||
+				seen.has(id)
 			)
 				continue;
-			seen.add(item.id);
-			sorting.push({ id: item.id, desc: item.desc });
+			seen.add(id);
+			sorting.push({ id, desc: item.desc });
 		}
 	}
 	const supported = PALETTE_TABLE_COLUMNS.map(({ id }) => id);

@@ -214,7 +214,9 @@ export function normalizeHotkeys(value: unknown): PaletteHotkeys {
 		if (
 			!key ||
 			!Array.isArray(binding.modifiers) ||
-			!binding.modifiers.every((modifier) => MODIFIERS.includes(modifier))
+			!(binding.modifiers as unknown[]).every((modifier) =>
+				(MODIFIERS as readonly unknown[]).includes(modifier),
+			)
 		)
 			continue;
 		const modifiers = binding.modifiers;

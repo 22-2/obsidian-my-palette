@@ -194,7 +194,9 @@ export class PaletteHistoryControls {
 				.setChecked(
 					plugin.paletteDisplaySettings.get(this.options.surface).highlightSearchMatches,
 				)
-				.onClick(() => plugin.paletteDisplaySettings.toggleHighlight(this.options.surface)),
+				.onClick(
+					() => void plugin.paletteDisplaySettings.toggleHighlight(this.options.surface),
+				),
 		);
 		menu.setParentElement(hostEl);
 		showMenuAtEvent(menu, event);

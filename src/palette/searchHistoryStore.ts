@@ -166,7 +166,7 @@ export class SearchHistoryStore {
 		this.current.clear();
 		this.writePromise = this.writePromise
 			.then(() => this.clearDatabase())
-			.catch((error) => this.log("Failed to clear search history", { error }));
+			.catch((error: unknown) => this.log("Failed to clear search history", { error }));
 	}
 
 	async dispose(): Promise<void> {
@@ -194,7 +194,7 @@ export class SearchHistoryStore {
 		if (changed.length === 0 && removed.length === 0) return;
 		this.writePromise = this.writePromise
 			.then(() => this.persistChanges(changed, removed))
-			.catch((error) => this.log("Failed to persist search history", { error }));
+			.catch((error: unknown) => this.log("Failed to persist search history", { error }));
 	}
 
 	private getDatabase(): Promise<IDBPDatabase<SearchHistoryDatabase>> {
