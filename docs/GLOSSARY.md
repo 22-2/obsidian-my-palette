@@ -67,23 +67,22 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 
 コマンド名は「Open + 開くものの名前」にそろえる。`id`は名前を小文字のケバブケースにしたもの(例: 「Open outgoing link list」→ `open-outgoing-link-list`)。ObsidianのガイドラインとLintに従い、名前とidに「command」を入れない(コマンド一覧は「Open run list」)。`pnpm lint`が名前の接頭辞とidの対応を検査する(`eslint-rules/command-naming.mts`)。
 
-| 名前                        | id                            | 開くもの                    |
-| --------------------------- | ----------------------------- | --------------------------- |
-| Open home                   | `open-home`                   | Home                        |
-| Open note list              | `open-note-list`              | ノートのモード              |
-| Open recent                 | `open-recent`                 | 最近使ったファイルのPalette |
-| Open run list               | `open-run-list`               | Run Commandモード           |
-| Open sidebar palette        | `open-sidebar-palette`        | Sidebar palette             |
-| Open table palette          | `open-table-palette`          | Table palette               |
-| Open outgoing link list     | `open-outgoing-link-list`     | 発リンクのモード            |
-| Open backlink list          | `open-backlink-list`          | 被リンクのモード            |
-| Open bookmark list          | `open-bookmark-list`          | ブックマークのモード        |
-| Open Smart Connections list | `open-smart-connections-list` | 関連ノートのモード          |
-| Open tab list               | `open-tab-list`               | タブのモード                |
-| Open folder move selector   | `open-folder-move-selector`   | Folder move selector        |
-| Open tag insert selector    | `open-tag-insert-selector`    | Tag insert selector         |
-| Open MOC insert selector    | `open-moc-insert-selector`    | MOC insert selector         |
-| Open MOC remove selector    | `open-moc-remove-selector`    | MOC remove selector         |
+| 名前                        | id                            | 開くもの             |
+| --------------------------- | ----------------------------- | -------------------- |
+| Open home                   | `open-home`                   | Home                 |
+| Open note list              | `open-note-list`              | ノートのモード       |
+| Open run list               | `open-run-list`               | Run Commandモード    |
+| Open sidebar palette        | `open-sidebar-palette`        | Sidebar palette      |
+| Open table palette          | `open-table-palette`          | Table palette        |
+| Open outgoing link list     | `open-outgoing-link-list`     | 発リンクのモード     |
+| Open backlink list          | `open-backlink-list`          | 被リンクのモード     |
+| Open bookmark list          | `open-bookmark-list`          | ブックマークのモード |
+| Open Smart Connections list | `open-smart-connections-list` | 関連ノートのモード   |
+| Open tab list               | `open-tab-list`               | タブのモード         |
+| Open folder move selector   | `open-folder-move-selector`   | Folder move selector |
+| Open tag insert selector    | `open-tag-insert-selector`    | Tag insert selector  |
+| Open MOC insert selector    | `open-moc-insert-selector`    | MOC insert selector  |
+| Open MOC remove selector    | `open-moc-remove-selector`    | MOC remove selector  |
 
 - idを変えると、Obsidianのホットキー設定(`hotkeys.json`)の割り当てが外れる。改名したら、保管庫の`hotkeys.json`のキーも置き換える。
 

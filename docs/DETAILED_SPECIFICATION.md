@@ -98,11 +98,10 @@ tags:
 
 プラグインは次のパレット起動コマンドを登録する。
 
-| Command ID                        | 表示名                             | 動作                           |
-| --------------------------------- | ---------------------------------- | ------------------------------ |
-| `my-palette:open-note-list`       | `My Palette: Open note list`       | パレットをNotesモードで開く    |
-| `my-palette:open-recent`          | `My Palette: Open recent`          | パレットをファイルモードで開く |
-| `my-palette:open-sidebar-palette` | `My Palette: Open sidebar palette` | 右サイドバーでパレットを開く   |
+| Command ID                        | 表示名                             | 動作                         |
+| --------------------------------- | ---------------------------------- | ---------------------------- |
+| `my-palette:open-note-list`       | `My Palette: Open note list`       | パレットをNotesモードで開く  |
+| `my-palette:open-sidebar-palette` | `My Palette: Open sidebar palette` | 右サイドバーでパレットを開く |
 
 Obsidian 標準の「ホットキー」設定から、利用者がこのコマンドにグローバルホットキーを割り当てる。プラグイン側では衝突を避けるため、グローバルホットキーを既定割り当てしない。
 
@@ -148,7 +147,7 @@ Raycast の Root Search にならい、パレットは「Home → モード」�
 | `sc`       | Related notes   | `smart`                      |
 | `t`        | Tabs            | `tab`                        |
 
-- Home はファイル検索を行う。`Open home` で開いたPalette と Sidebar paletteでは、ファイルの上にモードの行（「Modes」「Files」の見出し付き）を並べる。`Open recent` とテーブルビューはモードの行を出さない。
+- Home はファイル検索を行う。`Open home` で開いたPalette と Sidebar paletteでは、ファイルの上にモードの行（「Modes」「Files」の見出し付き）を並べる。テーブルビューはモードの行を出さない。
 - モードの行は、エイリアスの完全一致、エイリアスの前方一致、タイトル・サブタイトルの単語の前方一致の順に並べる。どれにも一致しなければ出さない。
 - モードの行で `Enter` / `Tab`（右クリックメニューの `Enter mode` でも可）を押すとモードに入る。入力欄は空になり、左にエイリアスのチップを出す。
 - Home で入力が `エイリアス + 空白` で始まった時点で、そのモードに直接入る。残りの文字列（先頭空白を除く）を検索語にする。長いエイリアスから評価し、英字の大文字・小文字は区別しない。`es` はエイリアスではない（隠しエイリアス `es` は廃止した）。

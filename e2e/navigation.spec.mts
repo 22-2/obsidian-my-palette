@@ -66,8 +66,8 @@ test("alias plus Space enters the mode directly", async ({ obsidian }) => {
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Open outgoing link list");
 });
 
-test("the file-only palette lists no modes", async ({ obsidian }) => {
-	await runPaletteCommand(obsidian, "open-recent");
+test("the note list shows no Home rows", async ({ obsidian }) => {
+	await runPaletteCommand(obsidian, "open-note-list");
 	const page = obsidian.page;
 	await expect(page.locator(MODAL_ROW).first()).toBeVisible();
 	await expect(page.locator(`${MODAL} ${HEADING}`)).toHaveCount(0);

@@ -41,7 +41,6 @@ Open the command palette and run one of these, then bind a hotkey if you like:
 | ----------------------------------------- | ----------------------------------------------------------- |
 | `My Palette: Open home`                   | Home: modes above recently used files                       |
 | `My Palette: Open note list`              | Starts in the Notes mode                                    |
-| `My Palette: Open recent`                 | File search only, starting from recently used files         |
 | `My Palette: Open run list`               | Starts in the Commands mode                                 |
 | `My Palette: Open sidebar palette`        | Sidebar palette: a persistent list view                     |
 | `My Palette: Open table palette`          | Table palette: a persistent table in a center tab           |
@@ -102,7 +101,7 @@ Between Modes and Files, Home's **Settings** section lists **General**, **Modes*
 
 Plugins lists every installed plugin by name, with disabled ones marked; Snippets lists the snippets folder first, then each snippet with its enabled state. `Enter` opens the folder or file in the external editor (VS Code for now). The menu also offers show in system explorer and open in terminal, plus path copying. Plugin rows with a settings tab offer open plugin settings.
 
-Every alias can be changed, and a mode can be turned off, in **Settings → My Palette → Modes**. Turning off a mode, or its integration in **Integrations**, removes it from Home and from alias entry. `Open recent` and the Table palette do not list modes but still enter them by alias. Commands that open a mode directly, such as `Open run list` or `Open backlink list`, start in that mode; `Esc` returns to Home.
+Every alias can be changed, and a mode can be turned off, in **Settings → My Palette → Modes**. Turning off a mode, or its integration in **Integrations**, removes it from Home and from alias entry. The Table palette does not list modes but still enters them by alias. Commands that open a mode directly, such as `Open note list` or `Open backlink list`, start in that mode; `Esc` returns to Home.
 
 Integration modes appear only after their setup is ready. Everything checks its HTTP connection in the background; Smart Connections needs an enabled plugin with an initialized source store and vector adapter. Unready integrations are hidden from Home and the Modes settings page. Correct the connection settings or use **Test connection** in Integrations to make Everything available again.
 

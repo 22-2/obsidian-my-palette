@@ -10,7 +10,7 @@ import { insertTags } from "src/tags/insertTags";
  */
 export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	// Why: Esc from a mode returns to Home, so every path that opens a mode
-	// lists the modes too. The file-only palette ("open-recent") is the exception.
+	// lists the modes too.
 	const openWithHome = (input: string, fixedMode?: FixedPaletteMode) =>
 		plugin.paletteOpener.openPalette(input, fixedMode, { modeEntries: true });
 	plugin.addCommand({
@@ -25,11 +25,6 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		// Notes is the built-in Obsidian file search; findPaletteMode("file")
 		// resolves to it because it is the first file mode in PALETTE_MODES.
 		callback: () => openWithHome("", "file"),
-	});
-	plugin.addCommand({
-		id: "open-recent",
-		name: "Open recent",
-		callback: () => plugin.paletteOpener.openPalette(),
 	});
 	plugin.addCommand({
 		id: "open-run-list",

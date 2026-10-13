@@ -4,7 +4,7 @@ import { pluginVaultOptions, runPaletteCommand } from "./support.mts";
 test.use({ vaultOptions: pluginVaultOptions() });
 
 for (const [surface, command, selector] of [
-	["modal", "open-recent", ".my-palette-suggest-modal"],
+	["modal", "open-note-list", ".my-palette-suggest-modal"],
 	[
 		"sidebar",
 		"open-sidebar-palette",

@@ -25,7 +25,7 @@ test("a committed search shows up in the history and restores its input", async 
 	await page.keyboard.press("Escape");
 	await closePalette(page);
 
-	await runPaletteCommand(obsidian, "open-recent");
+	await runPaletteCommand(obsidian, "open-note-list");
 	await page.locator(MODAL_INPUT).waitFor();
 	await page.keyboard.press("Control+r");
 	const history = page.locator(".my-palette-history-suggest");

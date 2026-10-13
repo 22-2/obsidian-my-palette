@@ -41,7 +41,6 @@ Obsidian のコマンドパレットから次のコマンドを実行します�
 | ----------------------------------------- | -------------------------------------------------------- |
 | `My Palette: Open home`                   | Home：モードの一覧と最近使ったファイル                   |
 | `My Palette: Open note list`              | Notes モードから始まる                                   |
-| `My Palette: Open recent`                 | 最近使ったファイルから始まるファイル検索のみ             |
 | `My Palette: Open run list`               | Commands モードから始まる                                |
 | `My Palette: Open sidebar palette`        | Sidebar palette：右サイドバーに常駐するリスト            |
 | `My Palette: Open table palette`          | Table palette：センターのタブに常駐するテーブル          |
@@ -96,7 +95,7 @@ Tag insert selector、MOC insert selector、MOC remove selector、Folder move se
 
 Plugins はインストール済みのプラグインを名前順に並べ、無効なものには印を付けます。Snippets は先頭に snippets フォルダーの行、その後に各スニペットを有効・無効付きで並べます。`Enter` でフォルダーやファイルを外部エディター（当面は VS Code）で開きます。メニューにはシステムエクスプローラーでの表示、ターミナルで開く、パスのコピーもあり、設定タブのあるプラグインには設定を開く項目が出ます。
 
-すべてのエイリアスは **設定 → My Palette → Modes** で変更でき、モードごとにオフにできます。モードをオフにするか、**Integrations** で連携をオフにすると、そのモードはHomeとエイリアス入力から外れます。`Open recent` とTable paletteはモードの一覧を出しませんが、エイリアスでモードに入れます。`Open run list` や `Open backlink list` など、モードを直接開くコマンドはそのモードから始まり、`Esc` でHomeに戻ります。
+すべてのエイリアスは **設定 → My Palette → Modes** で変更でき、モードごとにオフにできます。モードをオフにするか、**Integrations** で連携をオフにすると、そのモードはHomeとエイリアス入力から外れます。Table paletteはモードの一覧を出しませんが、エイリアスでモードに入れます。`Open note list` や `Open backlink list` など、モードを直接開くコマンドはそのモードから始まり、`Esc` でHomeに戻ります。
 
 下部左端の `Obsidian-excluded` スイッチ（`Ctrl+I`）をオンにすると、Obsidian の「Excluded files」で除外されたファイル（Obsidian-excluded files）も検索します。ファイル検索でだけ有効で、ほかのモードでは薄く表示します。検索履歴は除外ファイルを含めたかどうかも記録し、履歴を選ぶとスイッチも復元します。
 
