@@ -110,7 +110,13 @@ export function populatePaletteResultMenu({
 		return;
 	}
 	if (result.mode === "property") {
-		populatePropertyMenu(menu, plugin, result, () => void activate("primary", result));
+		populatePropertyMenu(
+			menu,
+			plugin,
+			result,
+			() => void activate("primary", result),
+			onNoteActionSelected,
+		);
 		return;
 	}
 	if (result.mode === "settings-entry") {

@@ -22,8 +22,15 @@ export function populatePropertyMenu(
 	plugin: MyPalettePlugin,
 	result: PropertyResult,
 	edit: () => void,
+	beforeSearch?: () => void,
 ): void {
 	menu.addItem((item) => item.setTitle("Edit").setIcon("pencil").onClick(edit));
+	menu.addItem((item) =>
+		item
+			.setTitle("Open in search")
+			.setIcon("search")
+			.onClick(() => openPropertySearch(plugin.app, result.key, beforeSearch)),
+	);
 	if (result.inNote) {
 		menu.addItem((item) =>
 			item
@@ -44,6 +51,16 @@ export function populatePropertyMenu(
 			.setIcon("clipboard-copy")
 			.onClick(() => void copyText(result.key, "Property name copied.")),
 	);
+}
+
+function openPropertySearch(app: App, key: string, beforeSearch?: () => void): void {
+	const search = app.internalPlugins.getEnabledPluginById("global-search");
+	if (!search) {
+		new Notice("Enable Obsidian's search core plugin to search properties.");
+		return;
+	}
+	beforeSearch?.();
+	search.openGlobalSearch(`[${JSON.stringify(key)}]`, true);
 }
 
 async function copyValue(app: App, result: PropertyResult): Promise<void> {

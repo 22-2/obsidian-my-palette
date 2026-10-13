@@ -119,6 +119,7 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 | Open in external editor | 設定した外部エディターでファイルまたはフォルダーを開く。最初はVS Code固定   |
 | Show in system explorer | OSのファイルマネージャー(Windowsのエクスプローラー)で項目を選んだ状態で開く |
 | Open in terminal        | 項目のフォルダー(ファイルなら親フォルダー)でターミナルを開く                |
+| Open in search          | ObsidianのSearchで、選択したプロパティを持つノートを検索する                |
 
 - Everythingの結果に今ある「Show in file explorer」は、Obsidianの「File explorer」(左サイドバーのファイル一覧)と紛らわしいため、「Show in system explorer」に揃える。
 - 「Open in VS Code」のようにアプリ名を出すかどうかは、外部エディターの設定を決めてから合わせる。
