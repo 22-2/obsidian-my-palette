@@ -46,7 +46,7 @@ test("o lists outgoing links and b lists backlinks of the active note", async ({
 		.poll(() => rowLabels(page))
 		.toEqual(expect.arrayContaining(["Target one", "Target two"]));
 
-	// Esc leaves the outgoing-link mode for Root Search before entering backlinks.
+	// Esc leaves the outgoing-link mode for Home before entering backlinks.
 	await page.locator(MODAL_INPUT).press("Escape");
 	await page.locator(MODAL_INPUT).fill("b ");
 	await expect.poll(() => rowLabels(page)).toEqual(["Referrer"]);

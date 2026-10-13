@@ -11,14 +11,14 @@ import { insertTags } from "src/tags/insertTags";
  * command availability rules can evolve independently.
  */
 export function registerPluginCommands(plugin: MyPalettePlugin): void {
-	// Why: Esc from a mode returns to Root Search, so every path that opens a mode
+	// Why: Esc from a mode returns to Home, so every path that opens a mode
 	// lists the modes too. The file-only palette ("open") is the exception.
 	const openRoot = (input: string, fixedMode?: FixedPaletteMode) =>
 		plugin.paletteOpener.openPalette(input, fixedMode, { modeEntries: true });
 	plugin.addCommand({
 		id: "open-root",
 		name: "Open palette",
-		// Root Search starts empty, like a launcher, and lists modes above files.
+		// Home starts empty and lists modes above files.
 		callback: () => plugin.paletteOpener.openRootPalette(),
 	});
 	plugin.addCommand({

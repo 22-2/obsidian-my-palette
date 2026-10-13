@@ -47,7 +47,7 @@ export function renderModeSetting(setting: Setting, plugin: SettingsHost, id: Pa
 	setting.addToggle((toggle) => {
 		toggle
 			.setValue(plugin.settings.modes[id].enabled)
-			.setTooltip(`Show ${mode.title} in Root Search`)
+			.setTooltip(`Show ${mode.title} in Home`)
 			.setDisabled(!integrationOn)
 			.onChange(async (value) => {
 				plugin.settings.modes[id].enabled = value;

@@ -21,7 +21,7 @@ export interface PaletteModeDefinition {
 	placeholder: string;
 }
 
-/** Root Search lists the modes in this order when the input is empty. */
+/** Home lists the modes in this order when the input is empty. */
 export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "commands",
@@ -147,7 +147,7 @@ export function isModeIntegrationOn(id: PaletteModeId, settings: MyPaletteSettin
 
 /**
  * The modes the palette may enter. A mode is off when its own switch or its integration
- * is off; Root Search and alias entry read this, while the settings keep each switch as set.
+ * is off; Home and alias entry read this, while the settings keep each switch as set.
  */
 export function availableModes(settings: MyPaletteSettings): ModeSettingsMap {
 	return Object.fromEntries(
@@ -162,7 +162,7 @@ export function availableModes(settings: MyPaletteSettings): ModeSettingsMap {
 }
 
 /**
- * Mode entries for Root Search: an exact alias first, then alias prefixes, then
+ * Mode entries for Home: an exact alias first, then alias prefixes, then
  * titles whose words start with every typed term. An empty input lists all modes.
  */
 export function matchPaletteModes(input: string, modes: ModeSettingsMap): PaletteModeDefinition[] {

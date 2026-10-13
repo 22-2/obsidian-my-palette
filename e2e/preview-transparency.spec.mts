@@ -36,7 +36,7 @@ for (const [surface, command, selector] of [
 			["e alpha", "everything"],
 			["esdir alpha", "everything"],
 		] as const) {
-			// An alias moves into its mode, so go back to Root Search before the next one.
+			// An alias moves into its mode, so go back to Home before the next one.
 			if (await panel.locator(".my-palette-mode-chip").isVisible())
 				await input.press("Escape");
 			await input.fill(query);

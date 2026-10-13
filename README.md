@@ -21,7 +21,7 @@ So the palette now works like this:
 2. Choose how to handle the result afterwards (click, double-click, middle-click, right-click, or keys).
 3. Advanced operations are shown only once you have a result to apply them to.
 
-Other sources (commands, Everything, bookmarks, …) are modes one step away in Root Search, not the main way to operate the palette.
+Other sources (commands, Everything, bookmarks, …) are modes one step away from Home (the palette before a mode is entered), not the main way to operate the palette.
 
 ## Features
 
@@ -39,7 +39,7 @@ Open the command palette and run one of these, then bind a hotkey if you like:
 
 | Command                                       | What it does                                                |
 | --------------------------------------------- | ----------------------------------------------------------- |
-| `My Palette: Open palette`                    | Root Search: modes above recently used files                |
+| `My Palette: Open palette`                    | Home: modes above recently used files                       |
 | `My Palette: Open recent palette`             | File search only, starting from recently used files         |
 | `My Palette: Open run list`                   | Starts in the Run Command mode                              |
 | `My Palette: Open palette in right sidebar`   | A persistent list view                                      |
@@ -69,9 +69,9 @@ The action (`…`) and history (clock) buttons are also available in tag inserti
 | Middle-click           | Open in a new background tab                       |
 | Right-click            | Open the action menu (acts on the whole selection) |
 | `Ctrl+R`               | Search history                                     |
-| `Esc`                  | Leave a mode; at Root Search, close or clear       |
+| `Esc`                  | Leave a mode; at Home, close or clear              |
 
-The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current picker. The palette modal's footer shows the `Ignored` switch; other keyboard instructions and insertion targets live in Help. Hold `Alt+H` in any search or interaction mode to gently fade out the palette or selector while inspecting a preview; releasing either key fades it back in and returns focus to the search field. This works in modals (including their backdrop), sidebar palettes and table views, preserving the query, selection and workspace layout. In a mode, `Esc` returns to Root Search. At Root Search, `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
+The action menu offers: open, open in a background tab, open side by side, open below, show in file explorer (Everything results), copy file names, Vault-relative paths or absolute paths, insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current picker. The palette modal's footer shows the `Ignored` switch; other keyboard instructions and insertion targets live in Help. Hold `Alt+H` in any search or interaction mode to gently fade out the palette or selector while inspecting a preview; releasing either key fades it back in and returns focus to the search field. This works in modals (including their backdrop), sidebar palettes and table views, preserving the query, selection and workspace layout. In a mode, `Esc` returns to Home. At Home, `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
 
 ### Custom shortcuts
 
@@ -79,7 +79,7 @@ Open **Settings → My Palette → Shortcuts** to see every palette and selector
 
 ### Search modes
 
-`My Palette: Open palette` starts at Root Search, which lists the modes above your files, much like Raycast. Pick a mode with `Enter` or `Tab`, or type its alias followed by a space. The alias then leaves the input and shows as a chip on its left, so the input holds only the query. `Esc` (or `Backspace` in an empty input, or a click on the chip) goes back to Root Search with the alias selected, so `Enter` re-enters the mode. `Esc` at Root Search closes the palette.
+`My Palette: Open palette` starts at Home, which lists the modes above your files, much like Raycast. Pick a mode with `Enter` or `Tab`, or type its alias followed by a space. The alias then leaves the input and shows as a chip on its left, so the input holds only the query. `Esc` (or `Backspace` in an empty input, or a click on the chip) goes back to Home with the alias selected, so `Enter` re-enters the mode. `Esc` at Home closes the palette.
 
 | Alias   | Mode                      | Purpose                                                  |
 | ------- | ------------------------- | -------------------------------------------------------- |
@@ -93,7 +93,7 @@ Open **Settings → My Palette → Shortcuts** to see every palette and selector
 | `sc`    | Search Related Notes      | Notes related to the current note (Smart Connections)    |
 | `t`     | Switch Tab                | Switch to an open tab                                    |
 
-Every alias can be changed, and a mode can be turned off, in **Settings → My Palette → Modes**. Turning off a mode, or its integration in **Integrations**, removes it from Root Search and from alias entry. `Open recent palette` and the table view do not list modes but still enter them by alias. Commands that open a mode directly, such as `Open run list` or `Backlink search`, start in that mode; `Esc` returns to Root Search.
+Every alias can be changed, and a mode can be turned off, in **Settings → My Palette → Modes**. Turning off a mode, or its integration in **Integrations**, removes it from Home and from alias entry. `Open recent palette` and the table view do not list modes but still enter them by alias. Commands that open a mode directly, such as `Open run list` or `Backlink search`, start in that mode; `Esc` returns to Home.
 
 The `Ignored` switch at the left of the footer (`Ctrl+I`) includes files hidden by Obsidian's excluded folders. It applies to file search only and stays dimmed in other modes. Search history remembers whether a search included them, and restoring an entry sets the switch.
 
@@ -173,7 +173,7 @@ Notes without a `prior` sort last. Complete contiguous matches on a name, path, 
 
 ## Settings
 
-Settings are split into five pages: **General** (Pop to Root Search, search history, highlighting and diagnostics), **Modes** (each mode's alias and switch), **File search** (file types, excluded folders, ignored-note index, sort priorities), **Shortcuts** (the table described above) and **Integrations** (Everything, Smart Connections and VS Code).
+Settings are split into five pages: **General** (Return to Home after, search history, highlighting and diagnostics), **Modes** (each mode's alias and switch), **File search** (file types, excluded folders, ignored-note index, sort priorities), **Shortcuts** (the table described above) and **Integrations** (Everything, Smart Connections and VS Code).
 
 ### Everything setup
 
@@ -182,9 +182,9 @@ Settings are split into five pages: **General** (Pop to Root Search, search hist
 
 Only localhost communication is used; My Palette sends nothing to external services.
 
-### Pop to Root Search
+### Return to Home after
 
-`Open palette` resumes the palette you closed last: its query with the mode alias, the Ignored switch, the selected row and the scroll position. It does so only when you come back within the time set by **Settings → My Palette → General → Pop to Root Search** (Immediately, 30, 60 or 90 seconds; 90 by default), and otherwise starts at Root Search. The resumed query is selected, so typing replaces it. This state is kept in memory only, so restarting Obsidian starts at Root Search.
+`Open palette` resumes the palette you closed last: its query with the mode alias, the Ignored switch, the selected row and the scroll position. It does so only when you come back within the time set by **Settings → My Palette → General → Return to Home after** (Immediately, 30, 60 or 90 seconds; 90 by default), and otherwise starts at Home. The resumed query is selected, so typing replaces it. This state is kept in memory only, so restarting Obsidian starts at Home.
 
 ### Search history
 

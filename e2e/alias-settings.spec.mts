@@ -37,9 +37,7 @@ function storedCommandAlias(obsidian: ObsidianAPI): Promise<string> {
 	);
 }
 
-test("mode aliases can be changed on the Modes page and are used in Root Search", async ({
-	obsidian,
-}) => {
+test("mode aliases can be changed on the Modes page and are used in Home", async ({ obsidian }) => {
 	await obsidian.waitReady();
 	const settingsPage = await openPaletteSettings(obsidian);
 	const row = (name: string) =>
@@ -72,9 +70,7 @@ test("mode aliases can be changed on the Modes page and are used in Root Search"
 	await expect(input).toHaveValue("link search");
 });
 
-test("a mode turned off on the Modes page leaves Root Search and alias entry", async ({
-	obsidian,
-}) => {
+test("a mode turned off on the Modes page leaves Home and alias entry", async ({ obsidian }) => {
 	await obsidian.waitReady();
 	const settingsPage = await openPaletteSettings(obsidian);
 	const bookmarks = settingsPage

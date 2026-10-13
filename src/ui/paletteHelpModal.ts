@@ -22,7 +22,7 @@ export class PaletteHelpModal extends Modal {
 		const enterMode = this.hotkeys.enterMode ? formatHotkey(this.hotkeys.enterMode) : undefined;
 		const intro = this.contentEl.createDiv("my-palette-help-modal__intro");
 		intro.setText(
-			`Pick a mode in Root Search with Enter, or type its alias followed by a space. Esc goes back.`,
+			`Home lists the modes: pick one with Enter, or type its alias followed by a space. Esc goes back.`,
 		);
 
 		const modeSection = this.contentEl.createDiv("my-palette-help-modal__section");
@@ -82,11 +82,11 @@ export class PaletteHelpModal extends Modal {
 				"Include files hidden by Excluded files in File search",
 			],
 			[`Enter${enterMode ? ` / ${enterMode}` : ""} on a mode`, "Enter that mode"],
-			["Esc / Backspace in an empty field", "Return from a mode to Root Search"],
+			["Esc / Backspace in an empty field", "Return from a mode to Home"],
 			[
 				"Esc",
 				this.surface === "palette"
-					? "Close the palette at Root Search"
+					? "Close the palette at Home"
 					: "Clear the query, then focus the search field",
 			],
 		];

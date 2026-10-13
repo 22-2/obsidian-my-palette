@@ -9,7 +9,7 @@ describe("shouldRestore", () => {
 		expect(shouldRestore(CLOSED_AT, CLOSED_AT + 30_001, 30)).toBe(false);
 	});
 
-	it("never restores when Pop to Root Search is immediate", () => {
+	it("never restores when Return to Home after is immediate", () => {
 		expect(shouldRestore(CLOSED_AT, CLOSED_AT, 0)).toBe(false);
 	});
 });

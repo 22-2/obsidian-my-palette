@@ -31,7 +31,7 @@ export interface SearchHistorySettings {
 
 export const SETTINGS_SCHEMA_VERSION = 20;
 
-/** Seconds after closing the palette before Open palette starts from Root Search again; 0 means immediately. */
+/** Seconds after closing the palette before Open palette starts from Home again; 0 means immediately. */
 export type PopToRootSeconds = 0 | 30 | 60 | 90;
 export const MAX_RECENT_COMMAND_IDS = 20;
 export const MILLISECONDS_PER_SECOND = 1_000;
@@ -276,7 +276,7 @@ export interface PaletteDisplaySettings {
 
 export interface ModeSettings {
 	alias: string;
-	/** A disabled mode is left out of Root Search and cannot be entered by its alias. */
+	/** A disabled mode is left out of Home and cannot be entered by its alias. */
 	enabled: boolean;
 }
 

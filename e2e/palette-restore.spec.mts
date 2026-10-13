@@ -16,7 +16,7 @@ test.beforeEach(async ({ obsidian }) => {
 	await obsidian.createNote("Alpha plan.md", "# Alpha");
 });
 
-/** Moves the palette's clock forward, which is how Pop to Root Search is tested. */
+/** Moves the palette's clock forward, which is how Return to Home after is tested. */
 function advanceClock(obsidian: ObsidianAPI, milliseconds: number): Promise<void> {
 	return obsidian.evaluateApp(
 		({ id, milliseconds }) => {
@@ -32,7 +32,7 @@ function advanceClock(obsidian: ObsidianAPI, milliseconds: number): Promise<void
 	);
 }
 
-test("Open palette resumes the last search, then starts at Root Search once the time has passed", async ({
+test("Open palette resumes the last search, then starts at Home once the time has passed", async ({
 	obsidian,
 }) => {
 	const first = await openPaletteWith(obsidian, "alpha");
@@ -58,7 +58,7 @@ test("Open palette resumes the last search, then starts at Root Search once the 
 	await expect(obsidian.page.locator(MODAL_INPUT)).toHaveValue("");
 });
 
-test("Immediately always starts at Root Search", async ({ obsidian }) => {
+test("Immediately always starts at Home", async ({ obsidian }) => {
 	await obsidian.evaluateApp((id) => {
 		(
 			app as unknown as {
@@ -78,7 +78,7 @@ test("Immediately always starts at Root Search", async ({ obsidian }) => {
 	await expect(obsidian.page.locator(MODAL_INPUT)).toHaveValue("");
 });
 
-test("General offers Pop to Root Search, set to 90 seconds by default", async ({ obsidian }) => {
+test("General offers Return to Home after, set to 90 seconds by default", async ({ obsidian }) => {
 	const settingsOpened = obsidian.page.context().waitForEvent("page");
 	await obsidian.evaluateApp(() => {
 		const setting = (
@@ -93,7 +93,7 @@ test("General offers Pop to Root Search, set to 90 seconds by default", async ({
 	await general.click();
 	const row = settingsPage
 		.locator(".setting-item")
-		.filter({ has: settingsPage.getByText("Pop to Root Search", { exact: true }) });
+		.filter({ has: settingsPage.getByText("Return to Home after", { exact: true }) });
 	const select = row.locator("select").first();
 	await expect(select).toHaveValue("90");
 	await select.selectOption("0");

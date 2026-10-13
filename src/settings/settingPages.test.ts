@@ -49,7 +49,7 @@ describe("settings page layout", () => {
 		]);
 		expect(general.desc).toContain("search history");
 		expect(groupsOf(general).map((group) => group.heading)).toEqual([
-			"Launcher",
+			"Home",
 			"Search history",
 			"Display",
 			"Diagnostics",

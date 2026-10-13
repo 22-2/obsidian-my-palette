@@ -28,9 +28,7 @@ function closeSettings(obsidian: ObsidianAPI): Promise<void> {
 	);
 }
 
-test("turning Everything off removes its modes from Root Search and alias entry", async ({
-	obsidian,
-}) => {
+test("turning Everything off removes its modes from Home and alias entry", async ({ obsidian }) => {
 	await obsidian.waitReady();
 	const settingsPage = await openIntegrations(obsidian);
 	const everything = settingsPage

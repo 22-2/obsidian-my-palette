@@ -40,7 +40,7 @@ export const HOTKEY_ACTIONS = {
 	},
 	enterMode: {
 		name: "Enter mode",
-		description: "Enter the highlighted mode from Root Search.",
+		description: "Enter the highlighted mode from Home.",
 		scopes: ["palette"],
 	},
 	toggleIgnored: {

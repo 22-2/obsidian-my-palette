@@ -24,7 +24,7 @@ export interface NewPaletteViewOptions {
 
 /**
  * Opens the palette modal and persistent views. The modal palette keeps how it was
- * closed, so Open palette can resume it within the Pop to Root Search time.
+ * closed, so Open palette can resume it within the Return to Home after time.
  */
 export class PaletteOpener {
 	private activeModal?: PaletteModal;
@@ -121,7 +121,7 @@ export class PaletteOpener {
 		this.activeModal = undefined;
 	}
 
-	/** Open palette: resumes the palette closed recently enough, otherwise starts at Root Search. */
+	/** Open palette: resumes the palette closed recently enough, otherwise starts at Home. */
 	openRootPalette(): void {
 		const state = this.restorableState();
 		this.openPalette(state?.input ?? "", undefined, { modeEntries: true, restore: state });

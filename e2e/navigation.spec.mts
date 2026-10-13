@@ -14,7 +14,7 @@ test.beforeEach(async ({ obsidian }) => {
 	await obsidian.open("Hub.md");
 });
 
-test("Root Search enters a mode with Enter and returns with Esc", async ({ obsidian }) => {
+test("Home enters a mode with Enter and returns with Esc", async ({ obsidian }) => {
 	await runPaletteCommand(obsidian, "open-root");
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);
@@ -73,7 +73,7 @@ test("the file-only palette lists no modes", async ({ obsidian }) => {
 	await expect(page.locator(MODAL_ROW).filter({ hasText: "Run Command" })).toHaveCount(0);
 });
 
-test("a mode opened by its command returns to Root Search on Esc", async ({ obsidian }) => {
+test("a mode opened by its command returns to Home on Esc", async ({ obsidian }) => {
 	await runPaletteCommand(obsidian, "backlink-search");
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);
@@ -85,7 +85,7 @@ test("a mode opened by its command returns to Root Search on Esc", async ({ obsi
 	await expect(page.locator(`${MODAL} ${HEADING}`).first()).toHaveText("Modes");
 });
 
-test("the command list returns to Root Search on Esc", async ({ obsidian }) => {
+test("the command list returns to Home on Esc", async ({ obsidian }) => {
 	await runPaletteCommand(obsidian, "open-run-list");
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);

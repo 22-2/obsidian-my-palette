@@ -86,7 +86,7 @@ export interface SmartConnectionResult extends BaseResult {
 	score: number;
 }
 
-/** A Root Search row that enters a mode instead of opening anything. */
+/** A Home row that enters a mode instead of opening anything. */
 export interface ModeEntryResult extends Omit<BaseResult, "mode"> {
 	mode: "mode-entry";
 	modeId: PaletteModeId;

@@ -298,7 +298,7 @@ describe("mergeSettings", () => {
 	});
 });
 
-describe("Pop to Root Search", () => {
+describe("Return to Home after", () => {
 	it("turns the old remember-last-input switch into a time, keeping the default for new installs", () => {
 		expect(mergeSettings({ rememberLastInput: false }).launcher).toEqual({
 			popToRootAfterSeconds: 0,

@@ -22,7 +22,7 @@ import { ignoredToggleOptions, syncIgnoredToggle } from "src/palette/ignoredTogg
 import type { StatusToggle } from "src/ui/statusToggle";
 
 export interface PaletteModalOptions {
-	/** Root Search lists mode entries above the files; off for the file-only palette. */
+	/** Home lists mode entries above the files; off for the file-only palette. */
 	modeEntries?: boolean;
 	/** The state of a palette closed recently enough to resume. */
 	restore?: PaletteRestoreState;
@@ -237,7 +237,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.focusSearchInput();
 	}
 
-	/** Back to Root Search with the alias selected, so Enter re-enters the mode. */
+	/** Back to Home with the alias selected, so Enter re-enters the mode. */
 	private returnToRoot(): void {
 		const alias = this.session.returnToRoot();
 		this.panelInput(alias);
@@ -290,7 +290,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private applySearchHistory(result: Extract<PaletteResult, { mode: "search-history" }>): void {
 		this.historyControls?.close();
 		this.suppressHistoryForNextInput = true;
-		// History stores the prefixed form; Root Search turns it back into a mode.
+		// History stores the prefixed form; Home turns it back into a mode.
 		this.session.returnToRoot();
 		this.session.setIgnoredScope(Boolean(result.includeIgnored));
 		this.ignoredToggle?.set(Boolean(result.includeIgnored));

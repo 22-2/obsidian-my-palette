@@ -37,7 +37,7 @@ export interface SuggestionPanelProps<T> {
 	onSelectionSpace?: (selectedItems: T[], event: KeyboardEvent) => void;
 	onContextMenu?: (item: T, event: MouseEvent, selectedItems: T[]) => void;
 	onEscape?: () => void;
-	/** The enter-mode key on the active row; returning true consumes the key (Root Search enters modes). */
+	/** The enter-mode key on the active row; returning true consumes the key (Home enters modes). */
 	onTab?: (item: T) => boolean;
 	/** Backspace in an empty input; returning true consumes the key. */
 	onEmptyBackspace?: () => boolean;
@@ -352,7 +352,7 @@ export class SuggestionPanel<T> extends Component {
 		if (selection === "end") this.inputEl.setSelectionRange(input.length, input.length);
 	}
 
-	/** Show which mode the input searches; omit to return to Root Search. */
+	/** Show which mode the input searches; omit to return to Home. */
 	setModeChip(chip?: { icon: string; label: string; title: string }): void {
 		this.modeChipEl.empty();
 		this.modeChipEl.toggleAttribute("hidden", !chip);

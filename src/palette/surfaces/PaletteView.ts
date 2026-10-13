@@ -175,7 +175,7 @@ export class PaletteView extends ItemView {
 		this.panel.setInput(next.input, "end");
 		this.session.setIgnoredScope(next.includeIgnored);
 		this.ignoredToggle?.set(next.includeIgnored);
-		// The saved input carries its alias; Root Search turns it back into a mode.
+		// The saved input carries its alias; Home turns it back into a mode.
 		this.session.returnToRoot();
 		this.session.setInput(next.input, { suppressHistory: true });
 	}
@@ -495,7 +495,7 @@ export class PaletteView extends ItemView {
 	private applySearchHistory(result: Extract<PaletteResult, { mode: "search-history" }>): void {
 		const input = this.plugin.formatSearchHistoryInput(result);
 		this.historyControls?.close();
-		// History stores the prefixed form; Root Search turns it back into a mode.
+		// History stores the prefixed form; Home turns it back into a mode.
 		this.session?.returnToRoot();
 		this.session?.setIgnoredScope(Boolean(result.includeIgnored));
 		this.ignoredToggle?.set(Boolean(result.includeIgnored));
@@ -623,13 +623,13 @@ export class PaletteView extends ItemView {
 		if (!this.session || !this.panel) return;
 		this.session.enterMode(modeId);
 		this.panel.setInput("", "end");
-		// Empty the list now; a slow provider would otherwise show Root Search rows.
+		// Empty the list now; a slow provider would otherwise show Home rows.
 		this.panel.setResults({ items: [], total: 0, error: "Searching…" });
 		this.updateInput("", "end");
 		this.panel.focusSearchInput();
 	}
 
-	/** Back to Root Search with the alias selected, so Enter re-enters the mode. */
+	/** Back to Home with the alias selected, so Enter re-enters the mode. */
 	private returnToRoot(): void {
 		if (!this.session || !this.panel) return;
 		const alias = this.session.returnToRoot();

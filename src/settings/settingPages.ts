@@ -191,7 +191,7 @@ function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers)
 function createModesPage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
 	return helpers.page(
 		"Modes",
-		"Type an alias and a space to enter a mode directly, or find the mode in Root Search. Turn a mode off to hide it from Root Search and from alias entry.",
+		"Type an alias and a space to enter a mode directly, or find the mode on Home. Turn a mode off to hide it from Home and from alias entry.",
 		[
 			helpers.group(
 				"Search modes",
@@ -216,11 +216,11 @@ function createGeneralPage(plugin: SettingsHost, helpers: SettingPageHelpers): P
 					),
 			),
 		);
-	return helpers.page("General", "Launcher behavior, search history, display, and diagnostics.", [
-		helpers.group("Launcher", [
+	return helpers.page("General", "Home, search history, display, and diagnostics.", [
+		helpers.group("Home", [
 			helpers.render(
-				"Pop to Root Search",
-				"When Open palette is used again, resume the last search if it was closed this recently. Immediately always starts at Root Search. Search text is kept in memory only.",
+				"Return to Home after",
+				"When Open palette is used again, resume the last search if it was closed this recently. Immediately always starts at Home. Search text is kept in memory only.",
 				(setting) =>
 					setting.addDropdown((dropdown) =>
 						dropdown
@@ -286,7 +286,7 @@ function createGeneralPage(plugin: SettingsHost, helpers: SettingPageHelpers): P
 function createIntegrationsPage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
 	return helpers.page(
 		"Integrations",
-		"Turn an integration off to hide its modes from Root Search and alias entry. Everything has its own settings; the others have none.",
+		"Turn an integration off to hide its modes from Home and alias entry. Everything has its own settings; the others have none.",
 		[
 			helpers.group("Integrations", [
 				{

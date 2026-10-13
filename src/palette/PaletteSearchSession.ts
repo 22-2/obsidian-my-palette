@@ -25,7 +25,7 @@ export type FixedPaletteMode = Extract<
 >;
 
 /**
- * Where a navigating palette is. Root Search lists mode entries above the files
+ * Where a navigating palette is. Home lists mode entries above the files
  * (unless `modeEntries` is off); a mode shows one provider without a prefix.
  */
 export type PaletteRoute = { kind: "root" } | { kind: "mode"; modeId: PaletteModeId };
@@ -53,11 +53,11 @@ export interface PaletteSearchState {
 
 export interface PaletteSearchSessionOptions {
 	initialInput?: string;
-	/** The mode to start in. Esc still leaves it for Root Search. */
+	/** The mode to start in. Esc still leaves it for Home. */
 	fixedMode?: FixedPaletteMode;
 	sourceFile?: TFile;
 	includeIgnored?: boolean;
-	/** Root Search lists mode entries above the files; off for file-only palettes and tables. */
+	/** Home lists mode entries above the files; off for file-only palettes and tables. */
 	modeEntries?: boolean;
 	onStateChange?: (state: PaletteSearchState) => void;
 }
@@ -109,14 +109,14 @@ export class PaletteSearchSession {
 		};
 	}
 
-	/** Enter a mode from Root Search; the input then holds only the query. */
+	/** Enter a mode from Home; the input then holds only the query. */
 	enterMode(modeId: PaletteModeId, query = ""): void {
 		this.route = { kind: "mode", modeId };
 		this.state = { ...this.state, input: query, route: this.route };
 	}
 
 	/**
-	 * Leave a mode for Root Search and return the alias that should fill the
+	 * Leave a mode for Home and return the alias that should fill the
 	 * input, so the mode stays one Enter away.
 	 */
 	returnToRoot(): string {
@@ -283,7 +283,7 @@ export class PaletteSearchSession {
 		return { raw: input, mode, query: input, everythingScope };
 	}
 
-	/** In Root Search, `alias + Space` (typed or pasted) moves into that mode. */
+	/** In Home, `alias + Space` (typed or pasted) moves into that mode. */
 	private applyDirectModeEntry(input: string): string {
 		if (this.route.kind !== "root") return input;
 		const entry = parseDirectModeEntry(input, availableModes(this.plugin.settings));
@@ -348,7 +348,7 @@ export function paletteRouteChrome(
 	};
 }
 
-/** Root Search headings, shown only while mode entries and files share the list. */
+/** Home headings, shown only while mode entries and files share the list. */
 export function paletteSectionOf(
 	state: Pick<PaletteSearchState, "route" | "results"> | undefined,
 	result: PaletteResult,

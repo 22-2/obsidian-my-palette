@@ -31,7 +31,7 @@ describe("paletteModeAlias", () => {
 });
 
 describe("matchPaletteModes", () => {
-	test("leaves a disabled mode out of Root Search and of alias entry", () => {
+	test("leaves a disabled mode out of Home and of alias entry", () => {
 		const disabled = { ...modes, commands: { ...modes.commands, enabled: false } };
 		expect(matchPaletteModes("", disabled).map(({ id }) => id)).not.toContain("commands");
 		expect(matchPaletteModes("> ", disabled)).toEqual([]);

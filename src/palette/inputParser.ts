@@ -3,7 +3,7 @@ import type { ModeSettingsMap, SearchHistoryCategory } from "src/settings/model"
 import { paletteModeAlias } from "src/palette/modes";
 
 /**
- * Reads a prefixed input the way the palette did before Root Search. Palettes now
+ * Reads a prefixed input the way the palette did before Home. Palettes now
  * enter modes through `src/palette/modes`; this remains for history rows stored
  * without a category.
  */
