@@ -86,6 +86,7 @@ Open **Settings → My Palette → Shortcuts** to see every palette and selector
 | Alias | Mode           | Purpose                                                                 |
 | ----- | -------------- | ----------------------------------------------------------------------- |
 | none  | Files          | Search files in the Vault                                               |
+| `n`   | Notes          | Enter the built-in Obsidian file search from Home                       |
 | `>`   | Commands       | Search and run Obsidian commands                                        |
 | `e`   | Everything     | Search vault files; turn Obsidian-excluded on to search every file type |
 | `o`   | Outgoing links | Notes linked from the current note                                      |
@@ -96,7 +97,7 @@ Open **Settings → My Palette → Shortcuts** to see every palette and selector
 
 Every alias can be changed, and a mode can be turned off, in **Settings → My Palette → Modes**. Turning off a mode, or its integration in **Integrations**, removes it from Home and from alias entry. `Open recent` and the Table palette do not list modes but still enter them by alias. Commands that open a mode directly, such as `Open run list` or `Open backlink list`, start in that mode; `Esc` returns to Home.
 
-The `Obsidian-excluded` switch at the left of the footer (`Ctrl+I`) includes Obsidian-excluded files, the ones hidden by Obsidian's Excluded files setting. It applies to file search only and stays dimmed in other modes. Search history remembers whether a search included them, and restoring an entry sets the switch.
+The `Obsidian-excluded` switch at the left of the footer (`Ctrl+I`) includes files hidden by Obsidian's Excluded files setting. It applies to Home, Notes, and Everything, and is hidden in other modes. In Everything it also removes the extension filter, searching every file type under the Vault folder. Search history remembers the scope and restoring an entry sets the switch.
 
 ### Search syntax
 

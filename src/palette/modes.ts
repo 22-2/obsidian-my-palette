@@ -2,6 +2,7 @@ import type { IntegrationSettings, ModeSettingsMap, MyPaletteSettings } from "sr
 import type { PaletteMode } from "src/palette/results";
 
 export type PaletteModeId =
+	| "notes"
 	| "commands"
 	| "everything"
 	| "outlinks"
@@ -12,7 +13,7 @@ export type PaletteModeId =
 
 export interface PaletteModeDefinition {
 	id: PaletteModeId;
-	mode: Exclude<PaletteMode, "file">;
+	mode: PaletteMode;
 	title: string;
 	subtitle: string;
 	icon: string;
@@ -21,6 +22,14 @@ export interface PaletteModeDefinition {
 
 /** Home lists the modes in this order when the input is empty. */
 export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
+	{
+		id: "notes",
+		mode: "file",
+		title: "Notes",
+		subtitle: "Obsidian",
+		icon: "files",
+		placeholder: "Search notes",
+	},
 	{
 		id: "commands",
 		mode: "command",

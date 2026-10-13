@@ -298,6 +298,19 @@ describe("mergeSettings", () => {
 	});
 });
 
+describe("Notes mode migration", () => {
+	it("chooses a free alias without changing existing aliases", () => {
+		const settings = mergeSettings({
+			modes: {
+				commands: { alias: "N", enabled: true },
+				tabs: { alias: "notes", enabled: true },
+			},
+		});
+		expect(settings.modes.commands.alias).toBe("N");
+		expect(settings.modes.notes.alias).toBe("notes2");
+	});
+});
+
 describe("merged Everything mode", () => {
 	it("preserves its alias and keeps the mode enabled if either old scope was enabled", () => {
 		const settings = mergeSettings({

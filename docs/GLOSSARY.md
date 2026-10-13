@@ -92,6 +92,7 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 
 | モード名       | エイリアス | 対応するコマンド            |
 | -------------- | ---------- | --------------------------- |
+| Notes          | `n`        | なし                        |
 | Commands       | `>`        | Open run list               |
 | Everything     | `e`        | なし                        |
 | Outgoing links | `o`        | Open outgoing link list     |

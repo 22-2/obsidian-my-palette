@@ -30,6 +30,14 @@ describe("paletteModeAlias", () => {
 });
 
 describe("matchPaletteModes", () => {
+	test("starts Home with Notes and enters its built-in file search", () => {
+		expect(ids("")[0]).toBe("notes");
+		expect(findPaletteMode("file")?.id).toBe("notes");
+		expect(parseDirectModeEntry("n report", modes)).toEqual({
+			modeId: "notes",
+			query: "report",
+		});
+	});
 	test("leaves a disabled mode out of Home and of alias entry", () => {
 		const disabled = { ...modes, commands: { ...modes.commands, enabled: false } };
 		expect(matchPaletteModes("", disabled).map(({ id }) => id)).not.toContain("commands");

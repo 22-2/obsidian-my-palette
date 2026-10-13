@@ -23,9 +23,10 @@ export function parseInput(raw: string, modes: ModeSettingsMap): ParsedInput {
 	}
 	const candidates: Array<{
 		prefix: string;
-		mode: Exclude<PaletteMode, "file">;
+		mode: PaletteMode;
 		everythingScope?: EverythingScope;
 	}> = [
+		{ prefix: `${paletteModeAlias("notes", modes)} `, mode: "file" },
 		{ prefix: `${paletteModeAlias("commands", modes)} `, mode: "command" },
 		{ prefix: `${paletteModeAlias("outlinks", modes)} `, mode: "link" },
 		{ prefix: `${paletteModeAlias("backlinks", modes)} `, mode: "backlink" },

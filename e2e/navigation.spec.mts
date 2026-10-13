@@ -19,22 +19,23 @@ test("Home enters a mode with Enter and returns with Esc", async ({ obsidian }) 
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);
 	await expect(page.locator(`${MODAL} ${HEADING}`)).toHaveText(["Modes", "Files"]);
+	await expect(page.locator(MODAL_ROW).first()).toContainText("Notes");
 
-	await input.pressSequentially("e");
-	await expect(page.locator(MODAL_ROW).first()).toContainText("Everything");
+	await input.pressSequentially("n");
+	await expect(page.locator(MODAL_ROW).first()).toContainText("Notes");
 	await input.press("Enter");
-	await expect(page.locator(`${MODAL} ${CHIP}`)).toHaveText("e");
+	await expect(page.locator(`${MODAL} ${CHIP}`)).toHaveText("n");
 	await expect(input).toHaveValue("");
-	await expect(page.locator(MODAL)).toHaveAttribute("data-everything-scope", "vault");
+	await expect(page.locator(MODAL)).toHaveAttribute("data-mode", "file");
 
 	// Esc goes back with the alias selected, so Enter would re-enter the mode.
 	await input.press("Escape");
 	await expect(page.locator(`${MODAL} ${CHIP}`)).toBeHidden();
-	await expect(input).toHaveValue("e");
+	await expect(input).toHaveValue("n");
 	expect(
 		await input.evaluate((el: HTMLInputElement) => [el.selectionStart, el.selectionEnd]),
 	).toEqual([0, 1]);
-	await expect(page.locator(MODAL_ROW).first()).toContainText("Everything");
+	await expect(page.locator(MODAL_ROW).first()).toContainText("Notes");
 
 	await input.press("Escape");
 	await expect(page.locator(MODAL)).toHaveCount(0);

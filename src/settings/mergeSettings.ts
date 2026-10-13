@@ -205,7 +205,7 @@ function normalizeModes(source: Record<string, unknown>): ModeSettingsMap {
 	const rawModes = (source.modes ?? {}) as Record<string, unknown>;
 	const rawPrefixes = (source.prefixes ?? {}) as Record<string, unknown>;
 	const modeIds = Object.keys(DEFAULT_SETTINGS.modes) as PaletteModeId[];
-	return Object.fromEntries(
+	const modes = Object.fromEntries(
 		modeIds.map((id) => {
 			const legacyEverything = rawModes["everything-all"] as
 				| Record<string, unknown>
@@ -230,6 +230,17 @@ function normalizeModes(source: Record<string, unknown>): ModeSettingsMap {
 			return [id, { alias: (stored ?? DEFAULT_SETTINGS.modes[id].alias).trim(), enabled }];
 		}),
 	) as ModeSettingsMap;
+	// A new mode must not steal an alias the user already assigned to another mode.
+	if (!rawModes.notes) {
+		const taken = new Set(
+			modeIds.filter((id) => id !== "notes").map((id) => modes[id].alias.toLocaleLowerCase()),
+		);
+		let alias = "n";
+		for (let suffix = 1; taken.has(alias); suffix++)
+			alias = suffix === 1 ? "notes" : `notes${suffix}`;
+		modes.notes.alias = alias;
+	}
+	return modes;
 }
 
 function normalizePaletteDisplay(
