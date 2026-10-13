@@ -13,6 +13,7 @@ Requirements: Node.js, pnpm, and the global Vite+ CLI (`vp`). Install `vp` by fo
 - `pnpm check-types`: run the TypeScript check.
 - `vp build`: build a production bundle.
 - `pnpm e2e`: run the end-to-end tests (see below).
+- `pnpm ui:shots`: capture the palette and settings screens into a new `run-*` folder under `UI_SHOT_DIR` (default: the OS temp folder). The VS Code task "My Palette: Capture UI screenshots" runs it and opens the folder.
 
 Formatting and linting run through `vp check`; type checking and tests are separate so they can be run independently while refactoring.
 

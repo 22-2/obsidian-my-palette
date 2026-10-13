@@ -150,7 +150,7 @@ Raycast の Root Search にならい、パレットは「ルート → モード
 - ルートはファイル検索を行う。`Open palette` で開いたモーダルとサイドバーのリストビューでは、ファイルの上にモードの行（「Modes」「Files」の見出し付き）を並べる。`Open Recent palette` とテーブルビューはモードの行を出さない。
 - モードの行は、エイリアスの完全一致、エイリアスの前方一致、タイトル・サブタイトルの単語の前方一致の順に並べる。どれにも一致しなければ出さない。
 - モードの行で `Enter` / `Tab`（右クリックメニューの `Enter mode` でも可）を押すとモードに入る。入力欄は空になり、左にエイリアスのチップを出す。
-- ルートで入力が `エイリアス + 空白` で始まった時点で、そのモードに直接入る。残りの文字列（先頭空白を除く）を検索語にする。長いエイリアスから評価し、英字の大文字・小文字は区別しない。`es` は `e` の隠しエイリアスとして受け付ける。
+- ルートで入力が `エイリアス + 空白` で始まった時点で、そのモードに直接入る。残りの文字列（先頭空白を除く）を検索語にする。長いエイリアスから評価し、英字の大文字・小文字は区別しない。`es` はエイリアスではない（隠しエイリアス `es` は廃止した）。
 - モードの中で `Esc`、空の入力欄での `Backspace`（キーリピートは除く）、チップのクリックのいずれかでルートに戻る。入力欄にエイリアスを入れて全選択する。
 - ルートでの `Esc` は、モーダルでは閉じ、常設ビューでは入力のクリア → フォーカスの順に動く。
 - `Open command list` や `Link search` など、モードを直接開くコマンドはそのモードから始まり、`Esc` でルートに戻れる。
@@ -227,9 +227,9 @@ Obsidian が保持する「最近開いたファイル」を検索候補へ渡�
 
 #### 検索スコープ
 
-- `e`（および隠しエイリアス `es`）はVaultルート配下かつObsidianが`TFile`として認識しているファイルだけを返す。
-- `es`は`userIgnoreFilters`対象と、相対パスのいずれかの区間が`.`で始まるファイルを除外する。
-- `es`は設定した拡張子だけを対象とする。既定値は`md`, `canvas`, `base`。
+- `e` はVaultルート配下かつObsidianが`TFile`として認識しているファイルだけを返す。
+- `e` は `userIgnoreFilters` 対象と、相対パスのいずれかの区間が `.` で始まるファイルを除外する。
+- `e` は設定した拡張子だけを対象とする。既定値は `md`, `canvas`, `base`。
 - `esdir`はVaultの物理ディレクトリ配下にある全ファイルを対象とし、ignore・ドットファイル・拡張子フィルターを適用しない。
 - `metadataCache.getFirstLinkpathDest()`は同名リンクの解決用であるため、検索結果の存在確認には使用しない。絶対パスをVault相対パスへ変換し、`vault.getAbstractFileByPath()`で`TFile`をO(1)参照する。
 
@@ -451,34 +451,40 @@ Everythingページには次を設ける。
 | `searchHistory.enabled`    | boolean | `true` | 検索履歴を有効にする |
 | `searchHistory.daysToKeep` | number  | `0`    | 保持日数。0は無期限  |
 
-### 9.3 Mode aliases
+### 9.3 Modes（モードごとのエイリアスと有効/無効）
 
-| 設定キー              | 既定値 |
-| --------------------- | ------ |
-| `prefixes.command`    | `">"`  |
-| `prefixes.everything` | `"e "` |
+各モードは `modes.<id>` に `alias`（エイリアス）と `enabled`（有効/無効）を持つ。既定のエイリアスは次のとおり。
 
-設定キーは互換のため `prefixes` のまま残す。エイリアスとして使うときは末尾の空白を除く。
-組み込みエイリアスとして `o`（現在ノートから出るリンク）、`b`（現在ノートへ入るリンク）、
-`bk`（ブックマーク）、`sc`（Smart Connections）、`t`（タブ）、`esdir`（Everythingの全ファイル検索）を予約する。
-除外ファイルを含める指定はエイリアスではなく、フッター左端の `Ignored` スイッチ（`Ctrl+I`）で切り替える。
-File検索専用で、ほかのモードでは位置を保ったまま無効表示にする。
+| モード                                                | 既定のエイリアス          | 既定値 |
+| ----------------------------------------------------- | ------------------------- | ------ |
+| `commands`（Run Command）                             | `>`                       | 有効   |
+| `everything`（Search Vault Notes）                    | `e`                       | 有効   |
+| `everything-all`（Search All Files in Vault）         | `esdir`                   | 有効   |
+| `outlinks`、`backlinks`、`bookmarks`、`smart`、`tabs` | `o`、`b`、`bk`、`sc`、`t` | 有効   |
 
-設定画面の「Palette → Mode aliases」で変更する。空、空白を含む値、ほかのモード（隠しエイリアス `es` を含む）と同じ値は保存できない。`e` と `esdir` のように先頭だけが同じ値は、`エイリアス + 空白` で判定するため共存できる。使うときは前後の空白を除く。保存値が空なら、読み込み時に既定値に戻す。
+- 旧 `prefixes.command` と `prefixes.everything` は schema 19 で `modes.commands.alias` と `modes.everything.alias` へ移す（末尾の空白を除く）。
+- 隠しエイリアス `es` は廃止した。`es` は他のモードのエイリアスに使える。
+- 除外ファイルを含める指定はエイリアスではなく、フッター左端の `Ignored` スイッチで切り替える（既定 `Ctrl+I`。Shortcuts で変更できる）。File検索とMOC選択画面でだけ使える。
+- 連携（Integrations）を切ったモードは、Root Search とエイリアス入力から外れる。Modes ページでは行を薄くし、スイッチを押せなくする。
+- 無効にしたモードは Root Search の行とエイリアス入力から外れる。エイリアスは他のモードが使えないように予約したままにする。
 
-### 9.4 Keybindings
+設定画面の Modes ページで変更する。空、空白を含む値、ほかのモードと同じ値は保存できない。`e` と `esdir` のように先頭だけが同じ値は、`エイリアス + 空白` で判定するため共存できる。使うときは前後の空白を除く。
 
-キーバインドはObsidianのコマンド設定へ委譲し、プラグイン独自の設定データとして保存しない。
+### 9.4 Shortcuts（パレット内のホットキー）
+
+パレットと選択画面のホットキーは `hotkeys.<操作>` に保存する（`null` は無効）。Shortcuts ページの表で記録・解除・既定値への復元を行う。各操作は使える場所（`scopes`）を持ち、場所が重なる操作どうしだけを重複として扱う。パレットを開くコマンドのホットキーは Obsidian の設定 → ホットキー で設定する。
 
 ### 9.5 Settings screen layout
 
-設定画面は保存データの階層ではなく、利用目的で3ページに分ける。Obsidianの設定は別ウィンドウで開くため、少数の設定だけを別ページにせず、関連する補助設定を主目的のページへまとめる。各ページの説明には、ページ内で変更できる設定の種類を列挙する。
+設定画面は保存データの階層ではなく、利用目的で5ページに分ける。Obsidianの設定は別ウィンドウで開くため、少数の設定だけを別ページにせず、関連する補助設定を主目的のページへまとめる。
 
-| ページ              | 内容                                                                              |
-| ------------------- | --------------------------------------------------------------------------------- |
-| `Palette`           | プレフィックス、最後の入力の復元、検索履歴、Vault外Markdownの開き方、診断設定     |
-| `Vault file search` | 除外フォルダ、除外ノートのインデックス再構築、Vaultファイルの検索結果の並び順     |
-| `Everything`        | Everything 1.5の接続・認証、結果件数、対象拡張子、検索タイミング、Vault検索の詳細 |
+| ページ         | 内容                                                                                                         |
+| -------------- | ------------------------------------------------------------------------------------------------------------ |
+| `General`      | Pop to Root Search、検索履歴（保存、待ち時間、保持日数）、強調表示（パレット・サイドバー・テーブル別）、診断 |
+| `Modes`        | 全モードのエイリアスと有効/無効                                                                              |
+| `File search`  | 対象拡張子、除外フォルダ、優先度を下げるフォルダ、除外ノートのインデックス再構築、並び順                     |
+| `Shortcuts`    | パレット・選択画面のホットキーの表（絞り込み、記録、解除、既定値へ戻す）                                     |
+| `Integrations` | Everything（名前から接続・結果の設定を開く）、Smart Connections、VS Code（外部Markdownの開き方）             |
 
 ## 10. データモデル
 
@@ -518,17 +524,19 @@ interface EverythingResult extends BaseResult {
 }
 
 interface MyPaletteSettings {
-	schemaVersion: 16;
+	schemaVersion: 20;
 	showLog: boolean;
-	rememberLastInput: boolean;
+	launcher: { popToRootAfterSeconds: 0 | 30 | 60 | 90 };
 	searchHistory: {
 		enabled: boolean;
 		addDelayMs: number;
 		daysToKeep: number;
 	};
-	prefixes: {
-		command: string;
-		everything: string;
+	modes: Record<PaletteModeId, { alias: string; enabled: boolean }>;
+	hotkeys: Record<HotkeyAction, PaletteHotkey | null>;
+	integrations: {
+		everything: { enabled: boolean };
+		smartConnections: { enabled: boolean };
 	};
 	file: {
 		sortPriorities: { blank: string[]; input: string[] };
@@ -552,7 +560,7 @@ interface MyPaletteSettings {
 - 最近実行コマンドは最大20 ID。存在しない ID は表示時に除外する。
 - 最近実行コマンドのIDは Vault 単位の IndexedDB に保存し、設定の `data.json` にはIDを保存しない。
 - 既存の `data.json` にある最近実行コマンドIDは、初回起動時に IndexedDB へ移行する。IndexedDB が利用できない場合はIDを `data.json` の一時的なフォールバックとして保持する。
-- `rememberLastInput` が有効な場合、モードごとの最後の入力を Obsidian の実行中だけ保持する。
+- 閉じたパレットの状態（入力、Ignored、選択行、スクロール位置）は Obsidian の実行中だけメモリに保持する。`Open palette` は、閉じてから `launcher.popToRootAfterSeconds` 秒以内なら復元し、それ以外（`0` は常に）はルートの空の状態で開く。data.json には保存しない。
 - 検索履歴は検索モード・Everything の検索範囲ごとに分類し、プレフィックスを除いた検索語、回数、最終検索日時を Vault 単位の IndexedDB へ永続化する。設定の `data.json` には履歴エントリを保存しない。
 - 既存の `data.json` にある履歴エントリは、初回起動時に IndexedDB へ移行する。IndexedDB が利用できない場合は履歴を `data.json` の一時的なフォールバックとして保持し、次回起動時に再試行する。
 - 検索結果リストへフォーカスが移ったときに履歴へ追加する。検索欄のblurや入力停止後の経過時間だけでは追加しない。

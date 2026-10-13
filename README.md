@@ -75,15 +75,7 @@ The action menu offers: open, open in a background tab, open side by side, open 
 
 ### Custom shortcuts
 
-Open **Settings → My Palette → Hotkeys** to change the held preview-hide shortcut,
-result preview, search history, return to input mode and selection toggle. Click
-**Change**, then press the desired shortcut; **Escape** cancels recording.
-**Reset** restores that action's default. Clear the key field with **Backspace** or
-**Delete** to disable a shortcut; an empty field means it is disabled.
-Changes are saved and apply immediately to open palettes and selectors. The page
-rejects duplicate assignments and plain typing keys for actions used in input mode.
-Arrow keys, Enter and Escape retain their standard behavior. Hotkeys for opening
-palettes remain available in Obsidian's own **Settings → Hotkeys**.
+Open **Settings → My Palette → Shortcuts** to see every palette and selector shortcut in one table: the command, its keybinding, where it works and a Reset button. Filter the table by command, keybinding or place. Click a keybinding and press the new shortcut; **Escape** cancels, and **Backspace** or **Delete** turns the shortcut off. A conflict appears under its row, and **Reset** appears only for a changed binding. Changes are saved and apply immediately to open palettes and selectors. Keys that would type text in the input are rejected unless the shortcut is one that does not type, such as Tab for Enter mode. Arrow keys, Enter and Escape keep their standard behavior. Hotkeys for opening palettes remain available in Obsidian's own **Settings → Hotkeys**.
 
 ### Search modes
 
@@ -101,7 +93,7 @@ palettes remain available in Obsidian's own **Settings → Hotkeys**.
 | `sc`    | Search Related Notes      | Notes related to the current note (Smart Connections)    |
 | `t`     | Switch Tab                | Switch to an open tab                                    |
 
-`>` and `e` can be changed in **Settings → My Palette → Palette → Mode aliases**, and `es` remains a hidden alias of `e`. `Open Recent palette` and the table view do not list modes but still enter them by alias. Commands that open a mode directly, such as `Open command list` or `Backlink search`, start in that mode; `Esc` returns to Root Search.
+Every alias can be changed, and a mode can be turned off, in **Settings → My Palette → Modes**. Turning off a mode, or its integration in **Integrations**, removes it from Root Search and from alias entry. `Open Recent palette` and the table view do not list modes but still enter them by alias. Commands that open a mode directly, such as `Open command list` or `Backlink search`, start in that mode; `Esc` returns to Root Search.
 
 The `Ignored` switch at the left of the footer (`Ctrl+I`) includes files hidden by Obsidian's excluded folders. It applies to file search only and stays dimmed in other modes. Search history remembers whether a search included them, and restoring an entry sets the switch.
 
@@ -181,14 +173,18 @@ Notes without a `prior` sort last. Complete contiguous matches on a name, path, 
 
 ## Settings
 
-Settings are split into three pages: the palette itself (mode aliases, search history, debug messages), Vault file search (excluded folders, ignored-note index, sort priorities) and Everything.
+Settings are split into five pages: **General** (Pop to Root Search, search history, highlighting and diagnostics), **Modes** (each mode's alias and switch), **File search** (file types, excluded folders, ignored-note index, sort priorities), **Shortcuts** (the table described above) and **Integrations** (Everything, Smart Connections and VS Code).
 
 ### Everything setup
 
 1. Install Everything 1.5a and the official HTTP Server plugin, and start both.
-2. Under `Settings → My Palette → Everything`, set the HTTP server URL (and username / password if you set them) and press `Test connection`.
+2. Under `Settings → My Palette → Integrations`, click **Everything** to open its settings, then set the HTTP server URL (and username / password if you set them) and press `Test connection`.
 
 Only localhost communication is used; My Palette sends nothing to external services.
+
+### Pop to Root Search
+
+`Open palette` resumes the palette you closed last: its query with the mode alias, the Ignored switch, the selected row and the scroll position. It does so only when you come back within the time set by **Settings → My Palette → General → Pop to Root Search** (Immediately, 30, 60 or 90 seconds; 90 by default), and otherwise starts at Root Search. The resumed query is selected, so typing replaces it. This state is kept in memory only, so restarting Obsidian starts at Root Search.
 
 ### Search history
 

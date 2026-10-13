@@ -89,7 +89,7 @@ Obsidian のコマンドパレットから次のコマンドを実行します�
 | `sc`       | Search Related Notes      | 現在のノートに関連するノート（Smart Connections）    |
 | `t`        | Switch Tab                | 開いているタブへ切り替え                             |
 
-`>` と `e` は **設定 → My Palette → Palette → Mode aliases** から変更できます。`es` も `e` の隠しエイリアスとして使えます。`Open Recent palette` とテーブルビューはモードの一覧を出しませんが、エイリアスでモードに入れます。`Open command list` や `Backlink search` など、モードを直接開くコマンドはそのモードから始まり、`Esc` でルート画面に戻ります。
+すべてのエイリアスは **設定 → My Palette → Modes** で変更でき、モードごとにオフにできます。モードをオフにするか、**Integrations** で連携をオフにすると、そのモードはルート画面とエイリアス入力から外れます。`Open Recent palette` とテーブルビューはモードの一覧を出しませんが、エイリアスでモードに入れます。`Open command list` や `Backlink search` など、モードを直接開くコマンドはそのモードから始まり、`Esc` でルート画面に戻ります。
 
 下部左端の `Ignored` スイッチ（`Ctrl+I`）をオンにすると、Obsidian の除外フォルダーにあるファイルも検索します。ファイル検索でだけ有効で、ほかのモードでは薄く表示します。検索履歴は除外ファイルを含めたかどうかも記録し、履歴を選ぶとスイッチも復元します。
 
@@ -144,7 +144,7 @@ MOC の選択画面も同じ入力／選択モードと操作です。チェッ�
 
 ## ファイルのソート
 
-並び順は `Settings → My Palette → Vault file search → Sort priorities` で、空入力と入力ありのそれぞれについて設定します。有効な項目を上から順に比較し、差がついた最初の項目が採用されます。すべて同点なら Vault 内の相対パスで決まります。
+並び順は `Settings → My Palette → File search → Sort priorities` で、空入力と入力ありのそれぞれについて設定します。有効な項目を上から順に比較し、差がついた最初の項目が採用されます。すべて同点なら Vault 内の相対パスで決まります。
 
 | ソートキー                              | 先に置かれる候補                                                               |
 | --------------------------------------- | ------------------------------------------------------------------------------ |
@@ -169,14 +169,22 @@ MOC の選択画面も同じ入力／選択モードと操作です。チェッ�
 
 ## 設定
 
-設定は3ページに分かれています。パレット本体（プレフィックス、検索履歴、デバッグメッセージ）、Vault file search（除外フォルダー、無視ノートのインデックス、ソート）、Everything です。
+設定は5ページに分かれています。**General**（ルート画面への戻り時間、検索履歴、ハイライト、デバッグメッセージ）、**Modes**（各モードのエイリアスと有効/無効）、**File search**（対象拡張子、除外フォルダー、無視ノートのインデックス、ソート）、**Shortcuts**（ホットキーの表）、**Integrations**（Everything、Smart Connections、VS Code）です。
+
+### ショートカット
+
+**設定 → My Palette → Shortcuts** で、パレットと選択画面のホットキーを1つの表で見られます。操作名、キー、使える場所、既定値への戻しを並べ、操作名・キー・使える場所で絞り込めます。キーをクリックして新しいキーを押すと記録され、`Esc` で取り消し、`Backspace` か `Delete` で無効にできます。重複はその行の下に表示されます。変更はすぐに開いているパレットへ反映されます。
 
 ### Everything の設定
 
 1. Everything 1.5a と公式 HTTP Server Plugin をインストールして起動する。
-2. `Settings → My Palette → Everything` で HTTP server URL（ユーザー名・パスワードを設定した場合はそれも）を入力し、`Test connection` を押す。
+2. `Settings → My Palette → Integrations` で **Everything** を押して設定を開き、HTTP server URL（ユーザー名・パスワードを設定した場合はそれも）を入力し、`Test connection` を押す。
 
 通信は localhost のみで、外部サービスには何も送信しません。
+
+### Pop to Root Search
+
+`My Palette: Open palette` は、閉じたときの入力・Ignored の状態・選択行・スクロール位置を、**設定 → My Palette → General → Pop to Root Search** で決めた時間（Immediately、30、60、90 秒。既定は 90 秒）以内に開き直すと復元します。それ以外はルート画面の空の状態から始まります。復元した検索語は選択された状態になるので、そのまま打ち直せます。この状態はメモリーにだけ保持し、Obsidian を再起動するとルート画面から始まります。
 
 ### 検索履歴
 
