@@ -29,7 +29,7 @@ test("the Shortcuts table records changes, rejects conflicts and restores defaul
 		settingsPage.locator("tr.my-palette-shortcuts__row").filter({
 			has: settingsPage.getByText(name, { exact: true }),
 		});
-	const hidePreview = row("Temporarily hide palette");
+	const hidePreview = row("Hide palette or selector");
 	const key = hidePreview.locator(".my-palette-shortcuts__key");
 	await expect(key).toHaveText("Alt+H");
 	await expect(hidePreview.getByRole("button", { name: "Reset" })).toBeHidden();

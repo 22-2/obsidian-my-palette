@@ -91,7 +91,7 @@ describe("custom hotkeys", () => {
 		// The selectors sit inside the "all palettes and selectors" scope, so the hide shortcut clashes with them.
 		expect(
 			hotkeyError("toggleSelection", DEFAULT_HOTKEYS.hidePreview, DEFAULT_HOTKEYS),
-		).toContain("Temporarily hide palette");
+		).toContain("Hide palette or selector");
 	});
 
 	it("matches exact modifiers and allows range Shift only for selection", () => {

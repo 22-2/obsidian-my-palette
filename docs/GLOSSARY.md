@@ -103,6 +103,12 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 
 - コマンド名には「command」を入れられない(Obsidianのlint)ので、コマンド一覧だけは、モード名「Commands」とコマンド名「Open run list」が対応する。
 
+### ショートカット表の並び
+
+- When列は、場所を「Palette、File search、Tag insert selector、MOC insert selector、MOC remove selector」の順に並べる。PaletteとSelectorの両方で使えるものは「All palettes and selectors」とだけ書く。
+- 行はWhenの順に並べる。「All palettes and selectors」を先頭にし、あとは上の場所の順で比べ、同じ書き出しなら短い方を先にする。同じWhenの行は、`HOTKEY_ACTIONS`の定義順。
+- 並び順は`src/settings/shortcutsTable.ts`の`SCOPE_ORDER`と`compareScopes`が決める。
+
 ## 未決定
 
 決めたらこの節から「決定済み」へ移す。

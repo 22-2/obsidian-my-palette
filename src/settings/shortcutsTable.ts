@@ -11,8 +11,6 @@ import {
 	type PaletteHotkey,
 } from "src/ui/hotkeys";
 
-const HOTKEY_ACTION_LIST = Object.keys(HOTKEY_ACTIONS) as HotkeyAction[];
-
 const SCOPE_NAMES: Record<HotkeyScope, string> = {
 	palette: "Palette",
 	"file-search": "File search",
@@ -22,12 +20,52 @@ const SCOPE_NAMES: Record<HotkeyScope, string> = {
 	"moc-remove-selector": "MOC remove selector",
 };
 
+/** The order places are listed in a When cell and, by that list, the rows of the table. */
+const SCOPE_ORDER: readonly HotkeyScope[] = [
+	"palette",
+	"file-search",
+	"selector",
+	"tag-insert-selector",
+	"moc-insert-selector",
+	"moc-remove-selector",
+];
+
+function orderedScopes(scopes: readonly HotkeyScope[]): HotkeyScope[] {
+	return SCOPE_ORDER.filter((scope) => scopes.includes(scope));
+}
+
+/** Palettes and selectors together read as one place, which comes before any narrower one. */
+function coversPalettesAndSelectors(scopes: readonly HotkeyScope[]): boolean {
+	return scopes.includes("palette") && scopes.includes("selector");
+}
+
 /** Names the places a shortcut works, as the When column shows them. */
 export function hotkeyScopeLabel(scopes: readonly HotkeyScope[]): string {
-	if (scopes.includes("palette") && scopes.includes("selector"))
-		return "All palettes and selectors";
-	return scopes.map((scope) => SCOPE_NAMES[scope]).join(", ");
+	if (coversPalettesAndSelectors(scopes)) return "All palettes and selectors";
+	return orderedScopes(scopes)
+		.map((scope) => SCOPE_NAMES[scope])
+		.join(", ");
 }
+
+/**
+ * Sorts shortcuts by their When cell: everywhere first, then the places in
+ * SCOPE_ORDER, a shorter list before a longer one that starts the same way.
+ */
+export function compareScopes(a: readonly HotkeyScope[], b: readonly HotkeyScope[]): number {
+	const keyOf = (scopes: readonly HotkeyScope[]) =>
+		coversPalettesAndSelectors(scopes)
+			? [-1]
+			: orderedScopes(scopes).map((scope) => SCOPE_ORDER.indexOf(scope));
+	const [first, second] = [keyOf(a), keyOf(b)];
+	for (let index = 0; index < Math.min(first.length, second.length); index++) {
+		if (first[index] !== second[index]) return first[index] - second[index];
+	}
+	return first.length - second.length;
+}
+
+const HOTKEY_ACTION_LIST = (Object.keys(HOTKEY_ACTIONS) as HotkeyAction[]).sort((a, b) =>
+	compareScopes(HOTKEY_ACTIONS[a].scopes, HOTKEY_ACTIONS[b].scopes),
+);
 
 interface ShortcutRow {
 	row: HTMLTableRowElement;

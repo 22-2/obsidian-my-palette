@@ -25,7 +25,7 @@ const SCOPE_PARENT: Partial<Record<HotkeyScope, HotkeyScope>> = {
 
 export const HOTKEY_ACTIONS = {
 	hidePreview: {
-		name: "Temporarily hide palette",
+		name: "Hide palette or selector",
 		description: "Hold to fade out any palette or selector. Release either key to restore it.",
 		scopes: ["palette", "selector"],
 	},
