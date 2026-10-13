@@ -18,6 +18,8 @@ vi.mock("src/platform/externalOpen", () => ({
 	openInExternalEditor: vi.fn().mockResolvedValue(null),
 }));
 
+vi.mock("src/tags/insertTags", () => ({ insertTags: vi.fn() }));
+
 function fixture() {
 	const file = new TFile();
 	const leaf = {

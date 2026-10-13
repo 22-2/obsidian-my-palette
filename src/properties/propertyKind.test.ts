@@ -25,6 +25,10 @@ describe("propertyKindOf", () => {
 		expect(propertyKindOf("empty", undefined)).toBe("text");
 	});
 
+	it("treats a declared tags type on another key as a list", () => {
+		expect(propertyKindOf("topics", ["a"], "tags")).toBe("list");
+	});
+
 	it("marks nested objects as not editable here", () => {
 		expect(propertyKindOf("meta", { a: 1 })).toBe("unsupported");
 		expect(propertyKindOf("meta", { a: 1 }, "text")).toBe("unsupported");

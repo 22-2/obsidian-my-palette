@@ -148,6 +148,8 @@ export interface PropertyResult extends BaseResult {
 	section: "This note" | "Reserved" | "Vault";
 	/** Whether the current note has this key; a reserved key may be listed without it. */
 	inNote: boolean;
+	/** The note the list was built from; edits go to this note, not the active one. */
+	sourcePath: string;
 }
 
 export type PaletteResult =

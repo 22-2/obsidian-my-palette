@@ -59,13 +59,23 @@ function countLabel(count: number): string {
 	return `${count} ${count === 1 ? "note" : "notes"}`;
 }
 
-function propertyRow(
-	key: string,
-	section: PropertyResult["section"],
-	kind: PropertyKind,
-	secondary: string,
-	inNote: boolean,
-): PropertyResult {
+interface PropertyRowInit {
+	key: string;
+	section: PropertyResult["section"];
+	kind: PropertyKind;
+	secondary: string;
+	inNote: boolean;
+	sourcePath: string;
+}
+
+function propertyRow({
+	key,
+	section,
+	kind,
+	secondary,
+	inNote,
+	sourcePath,
+}: PropertyRowInit): PropertyResult {
 	return {
 		id: `property:${key}`,
 		mode: "property",
@@ -76,6 +86,7 @@ function propertyRow(
 		kind,
 		section,
 		inNote,
+		sourcePath,
 	};
 }
 
@@ -103,13 +114,14 @@ export class PropertyProvider implements PaletteProvider<PropertyResult> {
 		const noteKeys = Object.keys(frontmatter).filter((key) => !HIDDEN_KEYS.has(key));
 		const infos = vaultInfos(this.app);
 		return [
-			this.thisNoteRows(frontmatter, noteKeys, infos),
-			this.reservedRows(frontmatter, infos),
-			this.vaultRows(noteKeys, infos),
+			this.thisNoteRows(file.path, frontmatter, noteKeys, infos),
+			this.reservedRows(file.path, frontmatter, infos),
+			this.vaultRows(file.path, noteKeys, infos),
 		];
 	}
 
 	private thisNoteRows(
+		sourcePath: string,
 		frontmatter: Record<string, unknown>,
 		noteKeys: string[],
 		infos: Record<string, VaultPropertyInfo>,
@@ -119,28 +131,38 @@ export class PropertyProvider implements PaletteProvider<PropertyResult> {
 			.map((key) => {
 				const value = frontmatter[key];
 				const kind = propertyKindOf(key, value, declaredType(this.app, key, infos[key]));
-				return propertyRow(key, "This note", kind, formatPropertyValue(kind, value), true);
+				return propertyRow({
+					key,
+					section: "This note",
+					kind,
+					secondary: formatPropertyValue(kind, value),
+					inNote: true,
+					sourcePath,
+				});
 			});
 	}
 
 	private reservedRows(
+		sourcePath: string,
 		frontmatter: Record<string, unknown>,
 		infos: Record<string, VaultPropertyInfo>,
 	): PropertyResult[] {
 		return RESERVED_KEYS.map((key) => {
 			const value = frontmatter[key];
 			const kind = propertyKindOf(key, value, declaredType(this.app, key, infos[key]));
-			return propertyRow(
+			return propertyRow({
 				key,
-				"Reserved",
+				section: "Reserved",
 				kind,
-				formatPropertyValue(kind, value),
-				key in frontmatter,
-			);
+				secondary: formatPropertyValue(kind, value),
+				inNote: key in frontmatter,
+				sourcePath,
+			});
 		});
 	}
 
 	private vaultRows(
+		sourcePath: string,
 		noteKeys: string[],
 		infos: Record<string, VaultPropertyInfo>,
 	): PropertyResult[] {
@@ -155,7 +177,14 @@ export class PropertyProvider implements PaletteProvider<PropertyResult> {
 					undefined,
 					declaredType(this.app, key, infos[key]),
 				);
-				return propertyRow(key, "Vault", kind, countLabel(count), false);
+				return propertyRow({
+					key,
+					section: "Vault",
+					kind,
+					secondary: countLabel(count),
+					inNote: false,
+					sourcePath,
+				});
 			});
 	}
 }

@@ -15,7 +15,8 @@ const DECLARED_KINDS: Readonly<Record<string, PropertyKind>> = {
 	checkbox: "checkbox",
 	date: "date",
 	datetime: "datetime",
-	tags: "tags",
+	// A declared `tags` type on another key is a plain list: Tag insertion writes only `tags`.
+	tags: "list",
 	aliases: "list",
 	cssclasses: "list",
 };

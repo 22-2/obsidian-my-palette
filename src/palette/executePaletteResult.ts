@@ -4,6 +4,7 @@ import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
 import { openInExternalEditor } from "src/platform/externalOpen";
+import { editPropertyResult } from "src/properties/propertyActions";
 
 export interface PaletteResultExecutionOptions {
 	/** Keep the persistent panel alive after a successful action. */
@@ -33,8 +34,11 @@ export async function executePaletteResult(
 ): Promise<void> {
 	// Hosts handle these before execution: they change the palette, not the workspace.
 	if (result.mode === "search-history" || result.mode === "mode-entry") return;
-	// Why: property rows only list keys for now; editing them is added separately.
-	if (result.mode === "property") return;
+	if (result.mode === "property") {
+		if (action !== "primary") return;
+		if ((await editPropertyResult(plugin, result)) === "close") finish(options);
+		return;
+	}
 	if (result.mode === "settings-entry") {
 		if (action !== "primary") return;
 		if (options.closeWhenDone) options.close();
