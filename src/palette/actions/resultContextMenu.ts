@@ -1,4 +1,5 @@
 import type { App } from "obsidian";
+import { Notice } from "obsidian";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import type MyPalettePlugin from "src/main";
 import type { MocInsertionContext } from "src/moc-relateds/mocInsertion";
@@ -14,6 +15,7 @@ import {
 	openInExternalEditor,
 	showInSystemExplorer,
 } from "src/platform/externalOpen";
+import { getTerminalDirectory, openDirectoryInTerminal } from "src/platform/terminal";
 import {
 	addCopyPathListMenuItems,
 	addCopyPathMenuItems,
@@ -124,6 +126,15 @@ export function populatePaletteResultMenu({
 		);
 		return;
 	}
+
+	/** Opens the terminal and reports failures without leaving the palette behind. */
+	const openTerminal = (absolutePath: string, isFolder: boolean): void => {
+		onNoteActionSelected?.();
+		void openDirectoryInTerminal(getTerminalDirectory(absolutePath, isFolder)).then((error) => {
+			if (error) new Notice(error);
+		});
+	};
+
 	if (result.mode === "plugin" || result.mode === "snippet") {
 		// Why: plugin folders and snippet files have no Obsidian view, so skip leaf
 		// navigation and note actions (MOC, tags) and offer only external opening.
@@ -137,14 +148,21 @@ export function populatePaletteResultMenu({
 		if (isDesktopApp()) {
 			const externalPath = getResultAbsolutePath(app, result);
 			if (externalPath) {
+				const externalFolder = isFolderResult(result);
 				menu.addItem((item) =>
 					item
 						.setTitle("Show in system explorer")
 						.setIcon("folder-open")
 						.onClick(() => {
 							onNoteActionSelected?.();
-							showInSystemExplorer(externalPath, isFolderResult(result));
+							showInSystemExplorer(externalPath, externalFolder);
 						}),
+				);
+				menu.addItem((item) =>
+					item
+						.setTitle("Open in terminal")
+						.setIcon("terminal")
+						.onClick(() => openTerminal(externalPath, externalFolder)),
 				);
 			}
 		}
@@ -226,6 +244,12 @@ export function populatePaletteResultMenu({
 					onNoteActionSelected?.();
 					showInSystemExplorer(absolutePath, isFolderResult(result));
 				}),
+		);
+		menu.addItem((item) =>
+			item
+				.setTitle("Open in terminal")
+				.setIcon("terminal")
+				.onClick(() => openTerminal(absolutePath, isFolderResult(result))),
 		);
 	}
 	addCopyPathMenuItems(menu, paths, (path) => void copyPathToClipboard(path));

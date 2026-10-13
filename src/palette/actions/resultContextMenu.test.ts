@@ -25,6 +25,11 @@ vi.mock("src/platform/pathClipboard", () => ({
 }));
 vi.mock("obsidian", () => ({
 	Platform: { isDesktopApp: true },
+	Notice: class {},
+}));
+vi.mock("src/platform/terminal", () => ({
+	getTerminalDirectory: vi.fn(() => "C:/vault"),
+	openDirectoryInTerminal: vi.fn().mockResolvedValue(null),
 }));
 vi.mock("src/platform/externalOpen", async (importOriginal) => {
 	const actual = await importOriginal<typeof import("src/platform/externalOpen")>();
@@ -130,14 +135,19 @@ it("offers external open actions for file results on desktop", async () => {
 	});
 	expect(f.actions.has("Open in external editor")).toBe(true);
 	expect(f.actions.has("Show in system explorer")).toBe(true);
+	expect(f.actions.has("Open in terminal")).toBe(true);
 	expect(f.actions.has("Show in file explorer")).toBe(false);
 
 	const { openInExternalEditor, showInSystemExplorer } =
 		await import("src/platform/externalOpen");
+	const { getTerminalDirectory, openDirectoryInTerminal } = await import("src/platform/terminal");
 	f.actions.get("Open in external editor")!();
 	expect(openInExternalEditor).toHaveBeenCalledExactlyOnceWith("C:/vault/Note.md");
 	f.actions.get("Show in system explorer")!();
 	expect(showInSystemExplorer).toHaveBeenCalledExactlyOnceWith("C:/vault/Note.md", false);
+	f.actions.get("Open in terminal")!();
+	expect(getTerminalDirectory).toHaveBeenCalledWith("C:/vault/Note.md", false);
+	expect(openDirectoryInTerminal).toHaveBeenCalledWith("C:/vault");
 });
 
 it("hides external open actions for commands", () => {
@@ -153,6 +163,7 @@ it("hides external open actions for commands", () => {
 	populatePaletteResultMenu({ ...f.options, result, selectedItems: [result] });
 	expect(f.actions.has("Open in external editor")).toBe(false);
 	expect(f.actions.has("Show in system explorer")).toBe(false);
+	expect(f.actions.has("Open in terminal")).toBe(false);
 });
 
 it("offers editor, explorer and settings for plugin results without note navigation", () => {
@@ -182,6 +193,7 @@ it("offers editor, explorer and settings for plugin results without note navigat
 	});
 	expect(f.actions.has("Open in external editor")).toBe(true);
 	expect(f.actions.has("Show in system explorer")).toBe(true);
+	expect(f.actions.has("Open in terminal")).toBe(true);
 	expect(f.actions.has("Open plugin settings")).toBe(true);
 	expect(f.actions.has("Open")).toBe(false);
 
@@ -209,6 +221,7 @@ it("offers editor and explorer for snippet results without settings", () => {
 	populatePaletteResultMenu({ ...f.options, result, selectedItems: [result] });
 	expect(f.actions.has("Open in external editor")).toBe(true);
 	expect(f.actions.has("Show in system explorer")).toBe(true);
+	expect(f.actions.has("Open in terminal")).toBe(true);
 	expect(f.actions.has("Open plugin settings")).toBe(false);
 	expect(f.actions.has("Open")).toBe(false);
 });
