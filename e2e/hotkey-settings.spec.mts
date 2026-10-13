@@ -3,7 +3,7 @@ import { MODAL_INPUT, openPaletteWith, pluginVaultOptions } from "./support.mts"
 
 test.use({ vaultOptions: pluginVaultOptions() });
 
-test("hotkey settings record changes, reject conflicts and restore defaults", async ({
+test("the Shortcuts table records changes, rejects conflicts and restores defaults", async ({
 	obsidian,
 }, testInfo) => {
 	await obsidian.waitReady();
@@ -18,60 +18,61 @@ test("hotkey settings record changes, reject conflicts and restore defaults", as
 	});
 	const settingsPage = await settingsOpened;
 	await expect(
-		settingsPage.locator(".setting-item-name").filter({ hasText: /^Hotkeys$/ }),
+		settingsPage.locator(".setting-item-name").filter({ hasText: /^Shortcuts$/ }),
 	).toBeVisible({ timeout: 10_000 });
 	await settingsPage
 		.locator(".setting-item-name")
-		.filter({ hasText: /^Hotkeys$/ })
+		.filter({ hasText: /^Shortcuts$/ })
 		.click();
-	const row = settingsPage
-		.locator(".setting-item")
-		.filter({ has: settingsPage.getByText("Temporarily hide palette", { exact: true }) });
-	const input = row.getByRole("textbox");
-	for (const width of [900, 640, 480]) {
-		await settingsPage.setViewportSize({ width, height: 800 });
-		const layout = await row.evaluate((element) => {
-			const info = element.querySelector(".setting-item-info")!.getBoundingClientRect();
-			const control = element.querySelector(".setting-item-control")!.getBoundingClientRect();
-			const bounds = element.getBoundingClientRect();
-			return {
-				infoWidth: info.width,
-				rowWidth: bounds.width,
-				infoBottom: info.bottom,
-				controlTop: control.top,
-				overflow: element.scrollWidth > element.clientWidth,
-			};
+
+	const row = (name: string) =>
+		settingsPage.locator("tr.my-palette-shortcuts__row").filter({
+			has: settingsPage.getByText(name, { exact: true }),
 		});
-		expect(layout.infoWidth).toBeGreaterThan(layout.rowWidth * 0.8);
-		expect(layout.controlTop).toBeGreaterThanOrEqual(layout.infoBottom);
-		expect(layout.overflow).toBe(false);
-	}
-	await settingsPage.setViewportSize({ width: 640, height: 800 });
-	await expect(input).toHaveValue("Alt+H");
-	await row.getByRole("button", { name: "Change", exact: true }).click();
+	const hidePreview = row("Temporarily hide palette");
+	const key = hidePreview.locator(".my-palette-shortcuts__key");
+	await expect(key).toHaveText("Alt+H");
+	await expect(hidePreview.getByRole("button", { name: "Reset" })).toBeHidden();
+
+	// Recording starts on click; Escape cancels and keeps the binding.
+	await key.click();
+	await expect(key).toHaveText("Press a shortcut…");
 	await settingsPage.keyboard.press("Escape");
-	await expect(input).toHaveValue("Alt+H");
-	await expect(row).toBeVisible();
-	await row.getByRole("button", { name: "Change", exact: true }).click();
+	await expect(key).toHaveText("Alt+H");
+
+	await key.click();
 	await settingsPage.keyboard.press("Control+r");
-	await expect(row).toContainText("Already assigned to Search history");
+	await expect(hidePreview.locator("+ tr")).toContainText("Already assigned to Search history");
+	await settingsPage.keyboard.press("Escape");
+	await expect(key).toHaveText("Alt+H");
+
+	await key.click();
 	await settingsPage.keyboard.press("Alt+n");
-	await expect(input).toHaveValue("Alt+N");
-	await expect(settingsPage.getByRole("button", { name: "Disable", exact: true })).toHaveCount(0);
-	await input.focus();
+	await expect(key).toHaveText("Alt+N");
+	await expect(hidePreview.locator("+ tr")).toBeHidden();
+	await settingsPage.keyboard.press("Escape");
+
+	// Backspace turns a shortcut off, and Reset brings the default back.
+	await key.click();
 	await settingsPage.keyboard.press("Backspace");
-	await expect(input).toHaveValue("");
-	await row.getByRole("button", { name: "Reset", exact: true }).click();
-	await expect(input).toHaveValue("Alt+H");
-	await row.getByRole("button", { name: "Change", exact: true }).click();
-	await settingsPage.keyboard.press("Delete");
-	await expect(input).toHaveValue("");
-	await row.getByRole("button", { name: "Reset", exact: true }).click();
-	await expect(input).toHaveValue("Alt+H");
-	await row.getByRole("button", { name: "Change", exact: true }).click();
+	await expect(key).toHaveText("Disabled");
+	await hidePreview.getByRole("button", { name: "Reset" }).click();
+	await expect(key).toHaveText("Alt+H");
+	await expect(hidePreview.getByRole("button", { name: "Reset" })).toBeHidden();
+
+	// The filter narrows the table by command, keybinding or place.
+	const filter = settingsPage.getByRole("searchbox", { name: "Filter shortcuts" });
+	await filter.fill("mutual");
+	await expect(settingsPage.locator("tr.my-palette-shortcuts__row:visible")).toHaveCount(1);
+	await expect(row("Toggle Mutual")).toBeVisible();
+	await filter.fill("");
+	await expect(settingsPage.locator("tr.my-palette-shortcuts__row:visible")).toHaveCount(9);
+
+	// Only the changed binding is kept after a reload, and it works in the palette.
+	await key.click();
 	await settingsPage.keyboard.press("Alt+n");
-	await expect(input).toHaveValue("Alt+N");
-	await settingsPage.screenshot({ path: testInfo.outputPath("hotkeys.png") });
+	await expect(key).toHaveText("Alt+N");
+	await settingsPage.screenshot({ path: testInfo.outputPath("shortcuts.png") });
 	await settingsPage.close();
 	await page.bringToFront();
 	await expect.poll(() => page.evaluate(() => document.hasFocus())).toBe(true);

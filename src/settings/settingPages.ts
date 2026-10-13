@@ -12,8 +12,7 @@ import type { SettingsHost } from "src/settings/settingsHost";
 import { DEFAULT_SETTINGS } from "src/settings/model";
 import { excludedFolders, extensions } from "src/settings/mergeSettings";
 import { renderFileSortPriorityControl } from "src/settings/fileSortPriorityControl";
-import { renderHotkeyControl } from "src/settings/hotkeyControl";
-import { HOTKEY_ACTIONS, type HotkeyAction } from "src/ui/hotkeys";
+import { renderShortcutsTable } from "src/settings/shortcutsTable";
 import { getPaletteMode, validateModeAlias, type ConfigurableModeId } from "src/palette/modes";
 
 type ControlType = "text" | "toggle" | "slider";
@@ -70,27 +69,20 @@ export function createSettingPages(
 
 	return [
 		createPalettePage(plugin, helpers),
-		createHotkeysPage(plugin, helpers),
+		createShortcutsPage(plugin, helpers),
 		createFileSearchPage(plugin, helpers),
 		createEverythingPage(plugin, setControlValue, helpers),
 	];
 }
 
-function createHotkeysPage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
+function createShortcutsPage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
 	return helpers.page(
-		"Hotkeys",
-		"Use Change to record a shortcut. Clear the key field with Backspace or Delete to disable it; an empty field means disabled. Arrow keys, Enter and Escape keep their standard behavior.",
+		"Shortcuts",
+		"Click a keybinding to record a new one. Backspace or Delete turns it off, and Escape cancels. Arrow keys, Enter and Tab keep their standard behavior.",
 		[
-			helpers.group(
-				"Palette and selector shortcuts",
-				(Object.keys(HOTKEY_ACTIONS) as HotkeyAction[]).map((action) =>
-					helpers.render(
-						HOTKEY_ACTIONS[action].name,
-						HOTKEY_ACTIONS[action].description,
-						(setting) => renderHotkeyControl(setting, plugin, action),
-					),
-				),
-			),
+			helpers.group("Palette and selector shortcuts", [
+				helpers.render("", "", (setting) => renderShortcutsTable(setting, plugin)),
+			]),
 		],
 	);
 }

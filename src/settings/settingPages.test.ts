@@ -30,26 +30,15 @@ describe("settings page layout", () => {
 
 		expect(pages.filter(isPage).map((page) => page.name)).toEqual([
 			"Palette",
-			"Hotkeys",
+			"Shortcuts",
 			"Vault file search",
 			"Everything",
 		]);
 
 		const [palette, hotkeys, fileSearch, everything] = pages.filter(isPage);
-		expect(
-			groupsOf(hotkeys)
-				.flatMap((group) => group.items ?? [])
-				.map((item) => ("name" in item ? item.name : undefined)),
-		).toEqual([
-			"Temporarily hide palette",
-			"Preview selected result",
-			"Search history",
-			"Show result actions",
-			"Enter mode",
-			"Toggle Ignored",
-			"Toggle Mutual",
-			"Return to input mode",
-			"Toggle selection",
+		// The table is one row item; its contents are drawn by renderShortcutsTable.
+		expect(groupsOf(hotkeys).map((group) => group.heading)).toEqual([
+			"Palette and selector shortcuts",
 		]);
 		expect(palette.desc).toContain("search history");
 		expect(groupsOf(palette).map((group) => group.heading)).toEqual([

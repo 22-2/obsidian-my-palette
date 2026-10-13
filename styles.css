@@ -1,33 +1,3 @@
-/* Keep descriptions readable when themes enlarge controls or settings windows narrow. */
-.setting-item.my-palette-hotkey-setting {
-	flex-direction: column;
-	align-items: stretch;
-	gap: 12px;
-}
-
-.my-palette-hotkey-setting .setting-item-info {
-	flex: 0 1 auto;
-	width: 100%;
-	min-width: 0;
-	margin-right: 0;
-}
-
-.my-palette-hotkey-setting .setting-item-control {
-	flex: 0 1 auto;
-	flex-wrap: wrap;
-	justify-content: flex-start;
-	gap: 8px;
-	width: 100%;
-	min-width: 0;
-}
-
-.my-palette-hotkey-setting .setting-item-control input {
-	flex: 1 1 12rem;
-	width: 12rem;
-	min-width: 0;
-	max-width: 100%;
-}
-
 .my-palette-suggest-modal {
 	max-height: min(60vh, 480px);
 }
@@ -1168,4 +1138,92 @@
 .menu-item.is-warning.mod-cta {
 	background-color: var(--text-error);
 	color: var(--text-on-accent);
+}
+
+/* The Shortcuts table is one list, so its own header and rows replace the usual name and description. */
+.setting-item.my-palette-shortcuts {
+	flex-direction: column;
+	align-items: stretch;
+}
+
+/* Theme button and table rules would otherwise show the rows and Reset buttons the hidden attribute removes. */
+.my-palette-shortcuts [hidden] {
+	display: none !important;
+}
+
+.my-palette-shortcuts > .setting-item-info {
+	display: none;
+}
+
+.my-palette-shortcuts > .setting-item-control {
+	width: 100%;
+	min-width: 0;
+}
+
+.my-palette-shortcuts__body {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	width: 100%;
+}
+
+.my-palette-shortcuts__filter {
+	width: 100%;
+}
+
+.my-palette-shortcuts__table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: var(--font-ui-small);
+}
+
+.my-palette-shortcuts__table th {
+	padding: 4px 8px;
+	text-align: left;
+	color: var(--text-muted);
+	font-weight: var(--font-medium);
+}
+
+/* One line per shortcut keeps the table short; only an error line below a row is taller. */
+.my-palette-shortcuts__table td {
+	height: 30px;
+	padding: 0 8px;
+	vertical-align: middle;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.my-palette-shortcuts__name {
+	white-space: nowrap;
+}
+
+.my-palette-shortcuts__key {
+	display: inline-block;
+	min-width: 9rem;
+	padding: 2px 8px;
+	font-family: var(--font-monospace);
+	border-radius: var(--radius-s);
+	background: var(--background-modifier-form-field);
+	cursor: pointer;
+}
+
+.my-palette-shortcuts__key.is-disabled {
+	color: var(--text-faint);
+	font-family: inherit;
+}
+
+.my-palette-shortcuts__key.is-recording {
+	box-shadow: 0 0 0 2px var(--interactive-accent);
+}
+
+.my-palette-shortcuts__when {
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
+
+.my-palette-shortcuts__error-row td {
+	height: auto;
+	padding: 0 8px 6px;
+	border-top: none;
+	color: var(--text-error);
+	font-size: var(--font-ui-smaller);
 }
