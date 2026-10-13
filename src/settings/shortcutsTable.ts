@@ -125,7 +125,14 @@ export function renderShortcutsTable(setting: Setting, plugin: SettingsHost): vo
 			"aria-label": "Filter shortcuts",
 		},
 	});
-	const table = root.createEl("table", { cls: "my-palette-shortcuts__table" });
+	const scroller = root.createDiv("my-palette-shortcuts__scroller");
+	const table = scroller.createEl("table", { cls: "my-palette-shortcuts__table" });
+	const columns = table.createEl("colgroup");
+	columns.createEl("col");
+	columns.createEl("col", { cls: "my-palette-shortcuts__key-column" });
+	for (let index = 0; index < MATRIX_COLUMNS.length; index++)
+		columns.createEl("col", { cls: "my-palette-shortcuts__when-column" });
+	columns.createEl("col", { cls: "my-palette-shortcuts__reset-column" });
 	const head = table.createEl("thead").createEl("tr");
 	for (const label of ["Command", "Keybinding"]) head.createEl("th", { text: label });
 	for (const { header, name } of MATRIX_COLUMNS) {

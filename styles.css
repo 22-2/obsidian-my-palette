@@ -1165,40 +1165,68 @@
 	flex-direction: column;
 	gap: 8px;
 	width: 100%;
+	min-width: 0;
 }
 
 .my-palette-shortcuts__filter {
 	width: 100%;
 }
 
+/* Keep very narrow settings windows scrollable without pushing the page sideways. */
+.my-palette-shortcuts__scroller {
+	max-width: 100%;
+	overflow-x: auto;
+}
+
 .my-palette-shortcuts__table {
 	width: 100%;
+	min-width: 32rem;
+	table-layout: fixed;
 	border-collapse: collapse;
 	font-size: var(--font-ui-small);
 }
 
+.my-palette-shortcuts__key-column {
+	width: 20%;
+}
+
+.my-palette-shortcuts__when-column {
+	width: 9%;
+}
+
+.my-palette-shortcuts__reset-column {
+	width: 3.5rem;
+}
+
 .my-palette-shortcuts__table th {
-	padding: 4px 8px;
+	padding: 4px;
 	text-align: left;
 	color: var(--text-muted);
 	font-weight: var(--font-medium);
 }
 
-/* One line per shortcut keeps the table short; only an error line below a row is taller. */
+/* Long commands and recorded bindings wrap inside their columns instead of widening the table. */
 .my-palette-shortcuts__table td {
 	height: 30px;
-	padding: 0 8px;
+	padding: 4px;
 	vertical-align: middle;
 	border-top: 1px solid var(--background-modifier-border);
 }
 
+.my-palette-shortcuts__table th + th,
+.my-palette-shortcuts__table td + td {
+	border-inline-start: 1px solid var(--background-modifier-border);
+}
+
 .my-palette-shortcuts__name {
-	white-space: nowrap;
+	overflow-wrap: anywhere;
 }
 
 .my-palette-shortcuts__key {
 	display: inline-block;
-	min-width: 7rem;
+	max-width: 100%;
+	box-sizing: border-box;
+	overflow-wrap: anywhere;
 	padding: 2px 8px;
 	font-family: var(--font-monospace);
 	border-radius: var(--radius-s);
@@ -1215,18 +1243,21 @@
 	box-shadow: 0 0 0 2px var(--interactive-accent);
 }
 
-/* The When columns hold a dot each, so they stay narrow and centered. */
+/* Scope headings can wrap while their dots stay aligned in fixed columns. */
 .my-palette-shortcuts__table .my-palette-shortcuts__when {
-	width: 1%;
+	padding-inline: 2px;
 	text-align: center;
-	white-space: nowrap;
 	color: var(--text-muted);
 	font-size: var(--font-ui-smaller);
 }
 
 .my-palette-shortcuts__table td.my-palette-shortcuts__when.is-everywhere {
-	width: auto;
 	color: var(--text-faint);
+}
+
+.my-palette-shortcuts__reset {
+	max-width: 100%;
+	padding-inline: 4px;
 }
 
 .my-palette-shortcuts__dot {

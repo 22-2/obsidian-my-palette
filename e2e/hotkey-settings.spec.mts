@@ -40,10 +40,64 @@ test("the Shortcuts table records changes, rejects conflicts and restores defaul
 	await expect(key).toHaveText("Alt+H");
 	await expect(hidePreview.getByRole("button", { name: "Reset" })).toBeHidden();
 
+	const body = settingsPage.locator(".my-palette-shortcuts__body");
+	const scroller = settingsPage.locator(".my-palette-shortcuts__scroller");
+	await settingsPage.setViewportSize({ width: 1100, height: 800 });
+	const resizeTable = async (width: number) => {
+		await settingsPage
+			.locator(".setting-item.my-palette-shortcuts")
+			.evaluate((element, width) => {
+				const style = getComputedStyle(element);
+				element.style.maxWidth = `${width + parseFloat(style.paddingLeft) + parseFloat(style.paddingRight)}px`;
+			}, width);
+		await expect.poll(() => body.evaluate((element) => element.clientWidth)).toBe(width);
+	};
+	const expectContained = async () => {
+		const widths = await body.evaluate((element) => ({
+			width: element.clientWidth,
+			content: element.scrollWidth,
+		}));
+		expect(widths.content).toBeLessThanOrEqual(widths.width + 1);
+	};
+	// Test the content width independently of Obsidian's settings navigation sidebar.
+	for (const width of [570, 640]) {
+		await resizeTable(width);
+		await expectContained();
+		const widths = await scroller.evaluate((element) => ({
+			width: element.clientWidth,
+			content: element.scrollWidth,
+		}));
+		expect(widths.content).toBeLessThanOrEqual(widths.width + 1);
+		await body.screenshot({ path: testInfo.outputPath(`shortcuts-${width}.png`) });
+	}
+	// At smaller widths, only the table scrolls, including its last scope and Reset column.
+	await resizeTable(320);
+	await expectContained();
+	await scroller.evaluate((element) => {
+		element.scrollLeft = element.scrollWidth;
+	});
+	await expect(preview.getByRole("img", { name: "MOC remove selector" })).toBeInViewport();
+	await body.screenshot({ path: testInfo.outputPath("shortcuts-narrow.png") });
+	await resizeTable(570);
+	await scroller.evaluate((element) => {
+		element.scrollLeft = 0;
+	});
+
 	// Recording starts on click; Escape cancels and keeps the binding.
 	await key.click();
 	await expect(key).toHaveText("Press a shortcut…");
+	await expectContained();
 	await settingsPage.keyboard.press("Escape");
+	await expect(key).toHaveText("Alt+H");
+
+	// A long binding and its Reset button must fit in the same default-size table.
+	await key.click();
+	await settingsPage.keyboard.press("Control+Alt+Shift+n");
+	await expect(key).toHaveText("Ctrl+Alt+Shift+N");
+	await expectContained();
+	await expect(hidePreview.getByRole("button", { name: "Reset" })).toBeInViewport();
+	await body.screenshot({ path: testInfo.outputPath("shortcuts-long-binding.png") });
+	await hidePreview.getByRole("button", { name: "Reset" }).click();
 	await expect(key).toHaveText("Alt+H");
 
 	await key.click();
