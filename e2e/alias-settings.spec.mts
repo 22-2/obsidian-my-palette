@@ -27,10 +27,13 @@ function storedCommandAlias(obsidian: ObsidianAPI): Promise<string> {
 			(
 				app as unknown as {
 					plugins: {
-						plugins: Record<string, { settings: { prefixes: { command: string } } }>;
+						plugins: Record<
+							string,
+							{ settings: { modes: { commands: { alias: string } } } }
+						>;
 					};
 				}
-			).plugins.plugins["my-palette"].settings.prefixes.command,
+			).plugins.plugins["my-palette"].settings.modes.commands.alias,
 	);
 }
 
@@ -45,7 +48,7 @@ test("mode aliases can be changed in the settings and are used in Root Search", 
 			.filter({ has: settingsPage.getByText(name, { exact: true }) });
 	const commandInput = row("Run Command").getByRole("textbox");
 	await expect(commandInput).toHaveValue(">");
-	// The stored default keeps its old trailing space; the field shows the alias alone.
+	// Aliases are stored without a trailing space, so the field shows the alias alone.
 	await expect(row("Search Vault Notes").getByRole("textbox")).toHaveValue("e");
 
 	await commandInput.fill("esdir");

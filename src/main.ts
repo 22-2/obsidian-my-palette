@@ -187,7 +187,7 @@ export default class MyPalettePlugin extends Plugin {
 	}
 
 	formatSearchHistoryInput(entry: SearchHistoryEntry): string {
-		return formatSearchHistoryInput(entry, this.settings.prefixes);
+		return formatSearchHistoryInput(entry, this.settings.modes);
 	}
 
 	recordSearch(input: string, category: SearchHistoryCategory, includeIgnored = false): void {

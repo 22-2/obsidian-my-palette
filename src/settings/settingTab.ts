@@ -20,9 +20,8 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 			"searchHistory.enabled": this.plugin.settings.searchHistory.enabled,
 			"searchHistory.addDelayMs": this.plugin.settings.searchHistory.addDelayMs,
 			"searchHistory.daysToKeep": this.plugin.settings.searchHistory.daysToKeep,
-			// Older settings stored prefixes with a trailing space; aliases show without it.
-			"prefixes.command": this.plugin.settings.prefixes.command.trim(),
-			"prefixes.everything": this.plugin.settings.prefixes.everything.trim(),
+			"modes.commands.alias": this.plugin.settings.modes.commands.alias,
+			"modes.everything.alias": this.plugin.settings.modes.everything.alias,
 			"file.excludedFolders": this.plugin.settings.file.excludedFolders.join("\n"),
 			openExternalMarkdownInObsidian: this.plugin.settings.openExternalMarkdownInObsidian,
 			rememberLastInput: this.plugin.settings.rememberLastInput,
@@ -87,11 +86,11 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 					SETTING_LIMITS.searchHistory.daysToKeep.max,
 				);
 				break;
-			case "prefixes.command":
-				settings.prefixes.command = String(value).trim();
+			case "modes.commands.alias":
+				settings.modes.commands.alias = String(value).trim();
 				break;
-			case "prefixes.everything":
-				settings.prefixes.everything = String(value).trim();
+			case "modes.everything.alias":
+				settings.modes.everything.alias = String(value).trim();
 				break;
 			case "file.excludedFolders":
 				settings.file.excludedFolders = excludedFolders(String(value));

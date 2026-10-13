@@ -1,4 +1,4 @@
-import type { Prefixes } from "src/palette/inputParser";
+import type { ModeSettingsMap } from "src/settings/model";
 import type { EverythingScope, PaletteMode } from "src/palette/results";
 
 export type PaletteModeId =
@@ -108,26 +108,9 @@ export function findPaletteMode(
 	);
 }
 
-/** Aliases are the old prefixes without their trailing space. */
-export function paletteModeAlias(id: PaletteModeId, prefixes: Prefixes): string {
-	switch (id) {
-		case "commands":
-			return prefixes.command.trim();
-		case "everything":
-			return prefixes.everything.trim();
-		case "everything-all":
-			return "esdir";
-		case "outlinks":
-			return "o";
-		case "backlinks":
-			return "b";
-		case "bookmarks":
-			return "bk";
-		case "smart":
-			return "sc";
-		case "tabs":
-			return "t";
-	}
+/** The alias typed to enter a mode, as stored in the settings. */
+export function paletteModeAlias(id: PaletteModeId, modes: ModeSettingsMap): string {
+	return modes[id].alias;
 }
 
 /** Modes whose alias the settings can change. */
@@ -140,14 +123,14 @@ export type ConfigurableModeId = Extract<PaletteModeId, "commands" | "everything
 export function validateModeAlias(
 	id: ConfigurableModeId,
 	value: string,
-	prefixes: Prefixes,
+	modes: ModeSettingsMap,
 ): string | undefined {
 	const alias = value.trim().toLocaleLowerCase();
 	if (!alias) return "Enter an alias.";
 	if (/\s/.test(alias)) return "Aliases cannot contain spaces.";
 	const taken = [
 		...PALETTE_MODES.filter((mode) => mode.id !== id).map((mode) =>
-			paletteModeAlias(mode.id, prefixes),
+			paletteModeAlias(mode.id, modes),
 		),
 		// `es` stays a hidden alias of the vault Everything search.
 		...(id === "everything" ? [] : ["es"]),
@@ -160,11 +143,11 @@ export function validateModeAlias(
  * Mode entries for Root Search: an exact alias first, then alias prefixes, then
  * titles whose words start with every typed term. An empty input lists all modes.
  */
-export function matchPaletteModes(input: string, prefixes: Prefixes): PaletteModeDefinition[] {
+export function matchPaletteModes(input: string, modes: ModeSettingsMap): PaletteModeDefinition[] {
 	const query = input.trim().toLocaleLowerCase();
 	if (!query) return [...PALETTE_MODES];
 	const rank = (definition: PaletteModeDefinition): number => {
-		const alias = paletteModeAlias(definition.id, prefixes).toLocaleLowerCase();
+		const alias = paletteModeAlias(definition.id, modes).toLocaleLowerCase();
 		if (alias === query) return 0;
 		if (alias.startsWith(query)) return 1;
 		return matchesTitleWords(definition, query) ? 2 : -1;
@@ -186,11 +169,11 @@ function matchesTitleWords(definition: PaletteModeDefinition, query: string): bo
  */
 export function parseDirectModeEntry(
 	input: string,
-	prefixes: Prefixes,
+	modes: ModeSettingsMap,
 ): { modeId: PaletteModeId; query: string } | undefined {
 	const lower = input.toLocaleLowerCase();
 	const candidates = [
-		...PALETTE_MODES.map(({ id }) => ({ id, alias: paletteModeAlias(id, prefixes) })),
+		...PALETTE_MODES.map(({ id }) => ({ id, alias: paletteModeAlias(id, modes) })),
 		// `es` stays a hidden alias of the vault Everything search.
 		{ id: "everything" as const, alias: "es" },
 	].sort((a, b) => b.alias.length - a.alias.length);

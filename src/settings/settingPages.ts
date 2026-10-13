@@ -171,7 +171,7 @@ function createPalettePage(plugin: SettingsHost, helpers: SettingPageHelpers): P
 			name: mode.title,
 			desc: `Type this alias and a space to enter ${mode.title}, or find the mode by it in Root Search.`,
 			...helpers.control("text", key, {
-				validate: (value: string) => validateModeAlias(id, value, plugin.settings.prefixes),
+				validate: (value: string) => validateModeAlias(id, value, plugin.settings.modes),
 			}),
 		};
 	};
@@ -187,8 +187,8 @@ function createPalettePage(plugin: SettingsHost, helpers: SettingPageHelpers): P
 				},
 			]),
 			helpers.group("Mode aliases", [
-				aliasControl("commands", "prefixes.command"),
-				aliasControl("everything", "prefixes.everything"),
+				aliasControl("commands", "modes.commands.alias"),
+				aliasControl("everything", "modes.everything.alias"),
 			]),
 			helpers.group("Search history", [
 				{

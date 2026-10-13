@@ -1,4 +1,5 @@
-import type { MyPaletteSettings, PaletteSurface } from "src/settings/model";
+import type { PaletteModeId } from "src/palette/modes";
+import type { ModeSettingsMap, MyPaletteSettings, PaletteSurface } from "src/settings/model";
 import { normalizeHotkeys } from "src/ui/hotkeys";
 import {
 	DEFAULT_BLANK_FILE_SORT_PRIORITIES,
@@ -46,16 +47,8 @@ export function excludedFolders(value: unknown): string[] {
 
 export function mergeSettings(data: unknown): MyPaletteSettings {
 	const source = (data && typeof data === "object" ? data : {}) as Record<string, unknown>;
-	const rawPrefixes = (source.prefixes ?? {}) as Record<string, unknown>;
 	const rawFile = (source.file ?? {}) as Record<string, unknown>;
 	const rawEverything = (source.everything ?? {}) as Record<string, unknown>;
-	// An empty alias could never be typed; fall back to the default instead.
-	const alias = (value: unknown, fallback: string) =>
-		typeof value === "string" && value.trim() ? value : fallback;
-	const prefixes = {
-		command: alias(rawPrefixes.command, DEFAULT_SETTINGS.prefixes.command),
-		everything: alias(rawPrefixes.everything, DEFAULT_SETTINGS.prefixes.everything),
-	};
 	const rawSearchHistory =
 		source.searchHistory && typeof source.searchHistory === "object"
 			? (source.searchHistory as Record<string, unknown>)
@@ -133,7 +126,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 				SETTING_LIMITS.searchHistory.daysToKeep.max,
 			),
 		},
-		prefixes,
+		modes: normalizeModes(source),
 		file: {
 			sortPriorities,
 			excludedFolders: excludedFolders(rawFile.excludedFolders),
@@ -167,6 +160,31 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 			vaultExtensions: extensions(rawEverything.vaultExtensions),
 		},
 	};
+}
+
+// Before schema 19 the two configurable aliases were stored as `prefixes` with a trailing space.
+// Read them as the fallback for a mode that has no alias of its own yet.
+const LEGACY_PREFIX_KEYS: Partial<Record<PaletteModeId, "command" | "everything">> = {
+	commands: "command",
+	everything: "everything",
+};
+
+function normalizeModes(source: Record<string, unknown>): ModeSettingsMap {
+	const rawModes = (source.modes ?? {}) as Record<string, unknown>;
+	const rawPrefixes = (source.prefixes ?? {}) as Record<string, unknown>;
+	const modeIds = Object.keys(DEFAULT_SETTINGS.modes) as PaletteModeId[];
+	return Object.fromEntries(
+		modeIds.map((id) => {
+			const rawMode = (rawModes[id] ?? {}) as Record<string, unknown>;
+			const legacyKey = LEGACY_PREFIX_KEYS[id];
+			const legacyAlias = legacyKey ? rawPrefixes[legacyKey] : undefined;
+			const stored = [rawMode.alias, legacyAlias].find(
+				(value): value is string => typeof value === "string" && value.trim() !== "",
+			);
+			// An empty alias could never be typed; fall back to the default instead.
+			return [id, { alias: (stored ?? DEFAULT_SETTINGS.modes[id].alias).trim() }];
+		}),
+	) as ModeSettingsMap;
 }
 
 function normalizePaletteDisplay(

@@ -1,3 +1,4 @@
+import type { PaletteModeId } from "src/palette/modes";
 import { DEFAULT_HOTKEYS, type PaletteHotkeys } from "src/ui/hotkeys";
 
 export interface SearchHistoryEntry {
@@ -28,7 +29,7 @@ export interface SearchHistorySettings {
 	daysToKeep: number;
 }
 
-export const SETTINGS_SCHEMA_VERSION = 18;
+export const SETTINGS_SCHEMA_VERSION = 19;
 export const MAX_RECENT_COMMAND_IDS = 20;
 export const MILLISECONDS_PER_SECOND = 1_000;
 export const DISABLED_DELAY_MS = 0;
@@ -270,6 +271,12 @@ export interface PaletteDisplaySettings {
 	highlightSearchMatches: boolean;
 }
 
+export interface ModeSettings {
+	alias: string;
+}
+
+export type ModeSettingsMap = Record<PaletteModeId, ModeSettings>;
+
 export interface MyPaletteSettings {
 	hotkeys: PaletteHotkeys;
 	schemaVersion: typeof SETTINGS_SCHEMA_VERSION;
@@ -278,7 +285,7 @@ export interface MyPaletteSettings {
 	paletteDisplay: Record<PaletteSurface, PaletteDisplaySettings>;
 	openExternalMarkdownInObsidian: boolean;
 	searchHistory: SearchHistorySettings;
-	prefixes: { command: string; everything: string };
+	modes: ModeSettingsMap;
 	file: {
 		sortPriorities: FileSortPriorities;
 		excludedFolders: string[];
@@ -311,7 +318,16 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		addDelayMs: SETTING_DEFAULTS.searchHistory.addDelayMs,
 		daysToKeep: SETTING_DEFAULTS.searchHistory.daysToKeep,
 	},
-	prefixes: { command: ">", everything: "e " },
+	modes: {
+		commands: { alias: ">" },
+		everything: { alias: "e" },
+		"everything-all": { alias: "esdir" },
+		outlinks: { alias: "o" },
+		backlinks: { alias: "b" },
+		bookmarks: { alias: "bk" },
+		smart: { alias: "sc" },
+		tabs: { alias: "t" },
+	},
 	file: {
 		// Start both states identically so the split adds control without changing
 		// the ordering users already expect from a fresh installation.

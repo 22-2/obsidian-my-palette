@@ -184,7 +184,7 @@ export class PaletteHistoryControls {
 					else
 						new PaletteHelpModal(
 							plugin.app,
-							plugin.settings.prefixes,
+							plugin.settings.modes,
 							surface,
 							plugin.settings.hotkeys,
 						).open();

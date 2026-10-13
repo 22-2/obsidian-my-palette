@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { SearchHistoryCategory, SearchHistoryEntry } from "src/settings/model";
+import {
+	DEFAULT_SETTINGS,
+	type SearchHistoryCategory,
+	type SearchHistoryEntry,
+} from "src/settings/model";
 import {
 	formatSearchHistoryInput,
 	getSearchHistorySuggestions,
@@ -13,17 +17,9 @@ describe("search history", () => {
 		"preserves %s entries through storage normalization",
 		(category) => {
 			const entry = { input: "i example", category, lastSearchedAt: 1_000, count: 1 };
-			const normalized = parseStoredSearchHistoryEntries([entry], {
-				command: ">",
-				everything: "e ",
-			});
+			const normalized = parseStoredSearchHistoryEntries([entry], DEFAULT_SETTINGS.modes);
 			expect(normalized).toEqual([{ ...entry, includeIgnored: undefined }]);
-			expect(
-				formatSearchHistoryInput(entry, {
-					command: ">",
-					everything: "e ",
-				}),
-			).toBe("i example");
+			expect(formatSearchHistoryInput(entry, DEFAULT_SETTINGS.modes)).toBe("i example");
 			expect(getSearchHistorySuggestions(normalized, "", "file")).toEqual([]);
 			expect(getSearchHistorySuggestions(normalized, "", category)).toEqual(normalized);
 		},
@@ -143,7 +139,7 @@ describe("search history", () => {
 					{ input: "report", category: "unknown", lastSearchedAt: 30, count: 1 },
 					{ input: 42, lastSearchedAt: 40, count: 1 },
 				],
-				{ command: ">", everything: "e " },
+				DEFAULT_SETTINGS.modes,
 			),
 		).toEqual([
 			{
@@ -170,7 +166,7 @@ describe("search history", () => {
 });
 
 describe("formatSearchHistoryInput", () => {
-	const prefixes = { command: ">", everything: "es" };
+	const modes = { ...DEFAULT_SETTINGS.modes, everything: { alias: "es" } };
 	const entry = (
 		category: SearchHistoryCategory,
 		includeIgnored?: boolean,
@@ -192,11 +188,11 @@ describe("formatSearchHistoryInput", () => {
 		["link", "o foo"],
 		["backlink", "b foo"],
 	] as const)("restores the %s prefix", (category, expected) => {
-		expect(formatSearchHistoryInput(entry(category), prefixes)).toBe(expected);
+		expect(formatSearchHistoryInput(entry(category), modes)).toBe(expected);
 	});
 
 	it("leaves the ignored-note scope to the host's switch", () => {
-		expect(formatSearchHistoryInput(entry("file", true), prefixes)).toBe("foo");
-		expect(formatSearchHistoryInput(entry("command", true), prefixes)).toBe("> foo");
+		expect(formatSearchHistoryInput(entry("file", true), modes)).toBe("foo");
+		expect(formatSearchHistoryInput(entry("command", true), modes)).toBe("> foo");
 	});
 });

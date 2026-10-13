@@ -1,25 +1,16 @@
 import type { EverythingScope, ParsedInput, PaletteMode } from "src/palette/results";
-import type { SearchHistoryCategory } from "src/settings/model";
-
-export interface Prefixes {
-	command: string;
-	everything: string;
-}
-
-/** Built-in related prefixes stay short; `b ` is reserved for backlinks. */
-export const RELATED_PREFIXES = {
-	link: "o ",
-	backlink: "b ",
-} as const;
+import type { ModeSettingsMap, SearchHistoryCategory } from "src/settings/model";
+import { paletteModeAlias } from "src/palette/modes";
 
 /**
  * Reads a prefixed input the way the palette did before Root Search. Palettes now
  * enter modes through `src/palette/modes`; this remains for history rows stored
  * without a category.
  */
-export function parseInput(raw: string, prefixes: Prefixes): ParsedInput {
+export function parseInput(raw: string, modes: ModeSettingsMap): ParsedInput {
 	const lower = raw.toLocaleLowerCase();
-	if (lower === "esdir" || lower === "es") {
+	const directoryAlias = paletteModeAlias("everything-all", modes);
+	if (lower === directoryAlias.toLocaleLowerCase() || lower === "es") {
 		// Why: these two built-in commands are useful as zero-query searches;
 		// requiring a trailing space makes the documented `es`/`esdir` shortcuts
 		// look like ordinary file queries until the user types another character.
@@ -27,7 +18,7 @@ export function parseInput(raw: string, prefixes: Prefixes): ParsedInput {
 			raw,
 			mode: "everything",
 			query: "",
-			everythingScope: lower === "esdir" ? "directory" : "vault",
+			everythingScope: lower === directoryAlias.toLocaleLowerCase() ? "directory" : "vault",
 		};
 	}
 	const candidates: Array<{
@@ -35,15 +26,19 @@ export function parseInput(raw: string, prefixes: Prefixes): ParsedInput {
 		mode: Exclude<PaletteMode, "file">;
 		everythingScope?: EverythingScope;
 	}> = [
-		{ prefix: `${prefixes.command.trimEnd()} `, mode: "command" },
-		{ prefix: RELATED_PREFIXES.link, mode: "link" },
-		{ prefix: RELATED_PREFIXES.backlink, mode: "backlink" },
-		{ prefix: "bk ", mode: "bookmark" },
-		{ prefix: "sc ", mode: "smart" },
-		{ prefix: "t ", mode: "tab" },
-		{ prefix: "esdir ", mode: "everything", everythingScope: "directory" },
+		{ prefix: `${paletteModeAlias("commands", modes)} `, mode: "command" },
+		{ prefix: `${paletteModeAlias("outlinks", modes)} `, mode: "link" },
+		{ prefix: `${paletteModeAlias("backlinks", modes)} `, mode: "backlink" },
+		{ prefix: `${paletteModeAlias("bookmarks", modes)} `, mode: "bookmark" },
+		{ prefix: `${paletteModeAlias("smart", modes)} `, mode: "smart" },
+		{ prefix: `${paletteModeAlias("tabs", modes)} `, mode: "tab" },
 		{
-			prefix: `${prefixes.everything.trimEnd()} `,
+			prefix: `${paletteModeAlias("everything-all", modes)} `,
+			mode: "everything",
+			everythingScope: "directory",
+		},
+		{
+			prefix: `${paletteModeAlias("everything", modes)} `,
 			mode: "everything",
 			everythingScope: "vault",
 		},

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { DEFAULT_SETTINGS } from "src/settings/model";
 import {
 	findPaletteMode,
 	matchPaletteModes,
@@ -8,14 +9,24 @@ import {
 	validateModeAlias,
 } from "src/palette/modes";
 
-const prefixes = { command: ">", everything: "e " };
-const ids = (input: string) => matchPaletteModes(input, prefixes).map(({ id }) => id);
+const modes = DEFAULT_SETTINGS.modes;
+const ids = (input: string) => matchPaletteModes(input, modes).map(({ id }) => id);
 
 describe("paletteModeAlias", () => {
-	test("uses the configured prefixes without their trailing space", () => {
-		expect(paletteModeAlias("commands", prefixes)).toBe(">");
-		expect(paletteModeAlias("everything", prefixes)).toBe("e");
-		expect(paletteModeAlias("everything-all", prefixes)).toBe("esdir");
+	test("uses the aliases in the settings", () => {
+		expect(paletteModeAlias("commands", modes)).toBe(">");
+		expect(paletteModeAlias("everything", modes)).toBe("e");
+		expect(paletteModeAlias("everything-all", modes)).toBe("esdir");
+	});
+
+	test("a changed alias is the one that enters the mode", () => {
+		const changed = { ...modes, commands: { alias: "c" } };
+		expect(paletteModeAlias("commands", changed)).toBe("c");
+		expect(parseDirectModeEntry("c link", changed)).toEqual({
+			modeId: "commands",
+			query: "link",
+		});
+		expect(parseDirectModeEntry("> link", changed)).toBeUndefined();
 	});
 });
 
@@ -43,28 +54,28 @@ describe("matchPaletteModes", () => {
 
 describe("parseDirectModeEntry", () => {
 	test("enters a mode with the rest of the input as its query", () => {
-		expect(parseDirectModeEntry("esdir report", prefixes)).toEqual({
+		expect(parseDirectModeEntry("esdir report", modes)).toEqual({
 			modeId: "everything-all",
 			query: "report",
 		});
-		expect(parseDirectModeEntry("> link", prefixes)).toEqual({
+		expect(parseDirectModeEntry("> link", modes)).toEqual({
 			modeId: "commands",
 			query: "link",
 		});
-		expect(parseDirectModeEntry("bk ", prefixes)).toEqual({ modeId: "bookmarks", query: "" });
+		expect(parseDirectModeEntry("bk ", modes)).toEqual({ modeId: "bookmarks", query: "" });
 	});
 
 	test("keeps es as a hidden alias of the vault Everything search", () => {
-		expect(parseDirectModeEntry("es notes", prefixes)).toEqual({
+		expect(parseDirectModeEntry("es notes", modes)).toEqual({
 			modeId: "everything",
 			query: "notes",
 		});
 	});
 
 	test("needs the space after the alias", () => {
-		expect(parseDirectModeEntry("esdir", prefixes)).toBeUndefined();
-		expect(parseDirectModeEntry("books", prefixes)).toBeUndefined();
-		expect(parseDirectModeEntry("estate", prefixes)).toBeUndefined();
+		expect(parseDirectModeEntry("esdir", modes)).toBeUndefined();
+		expect(parseDirectModeEntry("books", modes)).toBeUndefined();
+		expect(parseDirectModeEntry("estate", modes)).toBeUndefined();
 	});
 });
 
@@ -78,20 +89,18 @@ describe("findPaletteMode", () => {
 
 describe("validateModeAlias", () => {
 	test("accepts an alias that only shares a start with another one", () => {
-		expect(validateModeAlias("everything", "e", prefixes)).toBeUndefined();
-		expect(validateModeAlias("commands", "c", prefixes)).toBeUndefined();
-		expect(validateModeAlias("everything", "es", prefixes)).toBeUndefined();
+		expect(validateModeAlias("everything", "e", modes)).toBeUndefined();
+		expect(validateModeAlias("commands", "c", modes)).toBeUndefined();
+		expect(validateModeAlias("everything", "es", modes)).toBeUndefined();
 	});
 
 	test("rejects empty, spaced and taken aliases", () => {
-		expect(validateModeAlias("commands", " ", prefixes)).toBe("Enter an alias.");
-		expect(validateModeAlias("commands", "c x", prefixes)).toBe(
-			"Aliases cannot contain spaces.",
-		);
-		expect(validateModeAlias("commands", "E", prefixes)).toBe(
+		expect(validateModeAlias("commands", " ", modes)).toBe("Enter an alias.");
+		expect(validateModeAlias("commands", "c x", modes)).toBe("Aliases cannot contain spaces.");
+		expect(validateModeAlias("commands", "E", modes)).toBe(
 			'"E" is already used by another mode.',
 		);
-		expect(validateModeAlias("commands", "esdir", prefixes)).toBeDefined();
-		expect(validateModeAlias("commands", "es", prefixes)).toBeDefined();
+		expect(validateModeAlias("commands", "esdir", modes)).toBeDefined();
+		expect(validateModeAlias("commands", "es", modes)).toBeDefined();
 	});
 });

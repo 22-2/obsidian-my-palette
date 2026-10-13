@@ -26,7 +26,7 @@ export async function loadPluginSettings(plugin: MyPalettePlugin): Promise<Loade
 			? (source.searchHistory as Record<string, unknown>)
 			: {};
 	const legacySearchHistoryEntries = pruneStoredSearchHistory(
-		parseStoredSearchHistoryEntries(rawSearchHistory.entries, plugin.settings.prefixes),
+		parseStoredSearchHistoryEntries(rawSearchHistory.entries, plugin.settings.modes),
 		Date.now(),
 		plugin.settings.searchHistory.daysToKeep,
 	);

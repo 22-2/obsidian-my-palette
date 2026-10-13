@@ -1,7 +1,7 @@
-import type { Prefixes } from "src/palette/inputParser";
 import { getSearchHistoryCategory, parseInput } from "src/palette/inputParser";
 import { paletteModeAlias, type PaletteModeId } from "src/palette/modes";
 import type {
+	ModeSettingsMap,
 	SearchHistoryCategory,
 	SearchHistoryEntry,
 	SelectorHistoryCategory,
@@ -83,7 +83,7 @@ export function normalizeSearchHistoryEntry(value: unknown): SearchHistoryEntry 
  */
 export function parseStoredSearchHistoryEntries(
 	value: unknown,
-	prefixes: Prefixes,
+	modes: ModeSettingsMap,
 ): SearchHistoryEntry[] {
 	if (!Array.isArray(value)) return [];
 	return value.flatMap((item): SearchHistoryEntry[] => {
@@ -103,7 +103,7 @@ export function parseStoredSearchHistoryEntries(
 			.startsWith(LEGACY_INCLUDE_IGNORED_PREFIX);
 		const parsed = parseInput(
 			legacyIgnored ? source.input.slice(LEGACY_INCLUDE_IGNORED_PREFIX.length) : source.input,
-			prefixes,
+			modes,
 		);
 		const category = isSearchHistoryCategory(source.category)
 			? source.category
@@ -229,14 +229,17 @@ export function getSearchHistorySuggestions(
  * Rebuilds the palette input that would produce the given history entry. The
  * ignored-note scope is not part of the text; hosts restore it on their switch.
  */
-export function formatSearchHistoryInput(entry: SearchHistoryEntry, prefixes: Prefixes): string {
+export function formatSearchHistoryInput(
+	entry: SearchHistoryEntry,
+	modes: ModeSettingsMap,
+): string {
 	if (isSelectorHistoryCategory(entry.category)) return entry.input;
-	return `${historyCategoryPrefix(entry.category, prefixes)}${entry.input}`;
+	return `${historyCategoryPrefix(entry.category, modes)}${entry.input}`;
 }
 
-function historyCategoryPrefix(category: SearchHistoryCategory, prefixes: Prefixes): string {
+function historyCategoryPrefix(category: SearchHistoryCategory, modes: ModeSettingsMap): string {
 	const modeId = historyCategoryMode(category);
-	return modeId ? `${paletteModeAlias(modeId, prefixes)} ` : "";
+	return modeId ? `${paletteModeAlias(modeId, modes)} ` : "";
 }
 
 function historyCategoryMode(category: SearchHistoryCategory): PaletteModeId | undefined {

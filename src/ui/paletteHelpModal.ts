@@ -1,7 +1,6 @@
 import { App, Modal, setIcon } from "obsidian";
-import type { Prefixes } from "src/palette/inputParser";
 import { PALETTE_MODES, paletteModeAlias } from "src/palette/modes";
-import type { PaletteSurface } from "src/settings/model";
+import type { ModeSettingsMap, PaletteSurface } from "src/settings/model";
 import { IGNORED_SHORTCUT } from "src/palette/ignoredToggle";
 import { DEFAULT_HOTKEYS, formatHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
 
@@ -9,7 +8,7 @@ import { DEFAULT_HOTKEYS, formatHotkey, type PaletteHotkeys } from "src/ui/hotke
 export class PaletteHelpModal extends Modal {
 	constructor(
 		app: App,
-		private readonly prefixes: Prefixes,
+		private readonly modes: ModeSettingsMap,
 		private readonly surface: PaletteSurface = "palette",
 		private readonly hotkeys: PaletteHotkeys = DEFAULT_HOTKEYS,
 	) {
@@ -26,15 +25,15 @@ export class PaletteHelpModal extends Modal {
 			"Pick a mode in Root Search with Enter or Tab, or type its alias followed by a space. Esc goes back.",
 		);
 
-		const modes = this.contentEl.createDiv("my-palette-help-modal__section");
-		modes.createEl("h3", { text: "Search modes" });
+		const modeSection = this.contentEl.createDiv("my-palette-help-modal__section");
+		modeSection.createEl("h3", { text: "Search modes" });
 		const modeRows = PALETTE_MODES.map((mode): [string, string, string] => [
-			paletteModeAlias(mode.id, this.prefixes),
+			paletteModeAlias(mode.id, this.modes),
 			mode.title,
 			mode.subtitle,
 		]);
 		for (const [prefix, name, description] of modeRows) {
-			const row = modes.createDiv("my-palette-help-modal__row");
+			const row = modeSection.createDiv("my-palette-help-modal__row");
 			row.createEl("code", { text: prefix });
 			row.createSpan({ cls: "my-palette-help-modal__name", text: name });
 			row.createSpan({ cls: "my-palette-help-modal__description", text: description });

@@ -56,10 +56,30 @@ describe("mergeSettings", () => {
 	});
 
 	it("falls back to the default alias when a stored one is blank", () => {
-		expect(mergeSettings({ prefixes: { command: " ", everything: "ev" } }).prefixes).toEqual({
-			command: DEFAULT_SETTINGS.prefixes.command,
-			everything: "ev",
+		expect(
+			mergeSettings({ modes: { commands: { alias: " " }, everything: { alias: "ev" } } })
+				.modes,
+		).toEqual({ ...DEFAULT_SETTINGS.modes, everything: { alias: "ev" } });
+	});
+
+	it("moves the schema 18 prefixes into the mode aliases without their trailing space", () => {
+		const settings = mergeSettings({
+			schemaVersion: 18,
+			prefixes: { command: "c ", everything: "ev " },
 		});
+		expect(settings.modes.commands).toEqual({ alias: "c" });
+		expect(settings.modes.everything).toEqual({ alias: "ev" });
+		expect(settings).not.toHaveProperty("prefixes");
+	});
+
+	it("prefers a mode alias that is already stored over a leftover prefix", () => {
+		expect(
+			mergeSettings({
+				schemaVersion: 19,
+				modes: { commands: { alias: "c" } },
+				prefixes: { command: "old " },
+			}).modes.commands,
+		).toEqual({ alias: "c" });
 	});
 
 	it("defaults history retention to unlimited", () => {

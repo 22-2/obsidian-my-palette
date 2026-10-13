@@ -1,6 +1,7 @@
 import type { App, WorkspaceLeaf } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import { PaletteModal, type PaletteModalOptions } from "src/palette/PaletteModal";
+import { paletteModeAlias } from "src/palette/modes";
 import type { FixedPaletteMode } from "src/palette/PaletteSearchSession";
 import type { PaletteMode } from "src/palette/results";
 import { PaletteView } from "src/palette/surfaces/PaletteView";
@@ -143,8 +144,8 @@ export class PaletteOpener {
 	}
 
 	commandPaletteInitialInput(): string {
-		const prefix = this.plugin.settings.prefixes.command.trimEnd();
-		return `${prefix} ${this.getRememberedQuery("command")}`;
+		const alias = paletteModeAlias("commands", this.plugin.settings.modes);
+		return `${alias} ${this.getRememberedQuery("command")}`;
 	}
 
 	private async openSidebarPaletteView(

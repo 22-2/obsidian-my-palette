@@ -121,7 +121,7 @@ export class PaletteSearchSession {
 	returnToRoot(): string {
 		const alias =
 			this.route.kind === "mode"
-				? paletteModeAlias(this.route.modeId, this.plugin.settings.prefixes)
+				? paletteModeAlias(this.route.modeId, this.plugin.settings.modes)
 				: "";
 		this.route = { kind: "root" };
 		this.state = { ...this.state, input: alias, route: this.route };
@@ -138,7 +138,7 @@ export class PaletteSearchSession {
 
 	get modeAlias(): string | undefined {
 		return this.route.kind === "mode"
-			? paletteModeAlias(this.route.modeId, this.plugin.settings.prefixes)
+			? paletteModeAlias(this.route.modeId, this.plugin.settings.modes)
 			: undefined;
 	}
 
@@ -286,7 +286,7 @@ export class PaletteSearchSession {
 	/** In Root Search, `alias + Space` (typed or pasted) moves into that mode. */
 	private applyDirectModeEntry(input: string): string {
 		if (this.route.kind !== "root") return input;
-		const entry = parseDirectModeEntry(input, this.plugin.settings.prefixes);
+		const entry = parseDirectModeEntry(input, this.plugin.settings.modes);
 		if (!entry) return input;
 		this.route = { kind: "mode", modeId: entry.modeId };
 		return entry.query;
@@ -300,12 +300,12 @@ export class PaletteSearchSession {
 
 	private modeEntries(input: string): ModeEntryResult[] {
 		if (!this.listsModes || this.route.kind !== "root") return [];
-		const { prefixes } = this.plugin.settings;
-		return matchPaletteModes(input, prefixes).map((definition) => ({
+		const { modes } = this.plugin.settings;
+		return matchPaletteModes(input, modes).map((definition) => ({
 			id: `mode:${definition.id}`,
 			mode: "mode-entry",
 			modeId: definition.id,
-			alias: paletteModeAlias(definition.id, prefixes),
+			alias: paletteModeAlias(definition.id, modes),
 			primary: definition.title,
 			secondary: definition.subtitle,
 			icon: definition.icon,
