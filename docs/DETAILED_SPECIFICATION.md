@@ -597,7 +597,6 @@ src/
 │   ├── executePaletteResult.ts
 │   ├── inputParser.ts
 │   ├── MoveFileModal.ts
-│   ├── OpenFilePathModal.ts
 │   ├── openTargets.ts
 │   ├── PaletteModal.ts
 │   ├── PaletteSearchSession.ts

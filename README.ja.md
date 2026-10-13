@@ -50,7 +50,6 @@ Obsidian のコマンドパレットから次のコマンドを実行します�
 | `My Palette: Open Smart Connections list` | 現在のノートに関連するノート（Smart Connections が必要） |
 | `My Palette: Open tab list`               | 開いているタブ                                           |
 | `My Palette: Open folder move selector`   | 現在のファイルを別フォルダーへ移動                       |
-| `My Palette: Open file path in editor`    | Vault 内パスまたは絶対パスでファイルを開く               |
 | `My Palette: Open tag insert selector`    | 現在のノートにタグを追加                                 |
 | `My Palette: Open MOC insert selector`    | アクティブな MOC に相互 Relateds リンクを追加            |
 | `My Palette: Open MOC remove selector`    | アクティブな MOC から Relateds リンクを削除              |

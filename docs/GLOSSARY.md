@@ -83,7 +83,6 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 | Open tag insert selector    | `open-tag-insert-selector`    | Tag insert selector         |
 | Open MOC insert selector    | `open-moc-insert-selector`    | MOC insert selector         |
 | Open MOC remove selector    | `open-moc-remove-selector`    | MOC remove selector         |
-| Open file path in editor    | `open-file-path-in-editor`    | パスを入力して開くモーダル  |
 
 - idを変えると、Obsidianのホットキー設定(`hotkeys.json`)の割り当てが外れる。改名したら、保管庫の`hotkeys.json`のキーも置き換える。
 

@@ -1,7 +1,6 @@
 import type MyPalettePlugin from "src/main";
 import { insertLinkToMocRelateds, removeLinkInMocRelateds } from "src/moc-relateds/mocRelateds";
 import { MoveFileModal } from "src/palette/MoveFileModal";
-import { OpenFilePathModal } from "src/palette/OpenFilePathModal";
 import type { FixedPaletteMode } from "src/palette/PaletteSearchSession";
 import { insertTags } from "src/tags/insertTags";
 
@@ -84,11 +83,6 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		id: "open-tab-list",
 		name: "Open tab list",
 		callback: () => openWithHome("", "tab"),
-	});
-	plugin.addCommand({
-		id: "open-file-path-in-editor",
-		name: "Open file path in editor",
-		callback: () => new OpenFilePathModal(plugin).open(),
 	});
 	plugin.addCommand({
 		id: "open-tag-insert-selector",

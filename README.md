@@ -50,7 +50,6 @@ Open the command palette and run one of these, then bind a hotkey if you like:
 | `My Palette: Open Smart Connections list` | Notes related to the current note (needs Smart Connections) |
 | `My Palette: Open tab list`               | Open tabs                                                   |
 | `My Palette: Open folder move selector`   | Move the current file                                       |
-| `My Palette: Open file path in editor`    | Open a file by Vault path or absolute path                  |
 | `My Palette: Open tag insert selector`    | Add tags to the current note                                |
 | `My Palette: Open MOC insert selector`    | Add mutual Relateds links to the active MOC                 |
 | `My Palette: Open MOC remove selector`    | Remove Relateds links from the active MOC                   |
