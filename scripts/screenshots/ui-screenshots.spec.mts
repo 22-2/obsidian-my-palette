@@ -142,7 +142,7 @@ for (const [name, file] of [
 	["Modes", "10-settings-modes.png"],
 	["File search", "11-settings-file-search.png"],
 	["Shortcuts", "12-settings-shortcuts.png"],
-	["Everything", "13-settings-everything.png"],
+	["Integrations", "13-settings-integrations.png"],
 ] as const) {
 	test(`capture the ${name} settings page`, async ({ obsidian }) => {
 		await obsidian.waitReady();
