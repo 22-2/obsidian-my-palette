@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import type { Page } from "@playwright/test";
 import { expect, test } from "obsidian-e2e-toolkit";
+import type { ObsidianAPI } from "obsidian-e2e-toolkit";
 import {
 	MODAL_INPUT,
 	MODAL_ROW,
@@ -10,9 +11,9 @@ import {
 	runPaletteCommand,
 } from "../../e2e/support.mts";
 
-// Captures the Raycast-style navigation: Root Search, entering a mode, and Esc back to Root Search.
-// Run with `pnpm readme:shots`. Set README_SHOT_DIR to choose the output folder (default: the OS temp directory).
-const outDir = process.env.README_SHOT_DIR ?? path.join(os.tmpdir(), "my-palette-screenshots");
+// Captures every screen of the palette and its settings. Run with `pnpm ui:shots`,
+// which sets UI_SHOT_DIR to a fresh run folder for each capture.
+const outDir = process.env.UI_SHOT_DIR ?? path.join(os.tmpdir(), "my-palette-ui-screenshots");
 
 test.use({ vaultOptions: pluginVaultOptions() });
 
@@ -25,7 +26,30 @@ async function settle(page: Page): Promise<void> {
 	await page.waitForTimeout(400);
 }
 
-test("capture navigation screenshots", async ({ obsidian }) => {
+/** Opens the plugin's settings tab in its own window, then clicks the named page. */
+async function openSettingsPage(obsidian: ObsidianAPI, name: string): Promise<Page> {
+	const settingsOpened = obsidian.page.context().waitForEvent("page");
+	await obsidian.evaluateApp(() => {
+		const setting = (
+			app as unknown as { setting: { open(): void; openTabById(id: string): void } }
+		).setting;
+		setting.open();
+		setting.openTabById("my-palette");
+	});
+	const settingsPage = await settingsOpened;
+	const item = settingsPage.locator(".setting-item-name").getByText(name, { exact: true });
+	await expect(item).toBeVisible({ timeout: 10_000 });
+	await item.click();
+	return settingsPage;
+}
+
+function closeSettings(obsidian: ObsidianAPI): Promise<void> {
+	return obsidian.evaluateApp(() =>
+		(app as unknown as { setting: { close(): void } }).setting.close(),
+	);
+}
+
+test("capture palette screenshots", async ({ obsidian }) => {
 	await obsidian.waitReady();
 	await mkdir(outDir, { recursive: true });
 
@@ -53,13 +77,13 @@ test("capture navigation screenshots", async ({ obsidian }) => {
 	await input.waitFor();
 	await expect(page.locator(".my-palette-section-heading").first()).toHaveText("Modes");
 	await settle(page);
-	await capture(page, "01-root.png");
+	await capture(page, "01-palette-root.png");
 
 	// 2. Typing an alias puts its mode first, with matching files below.
 	await input.pressSequentially("esdir");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Search All Files in Vault");
 	await settle(page);
-	await capture(page, "02-root-alias.png");
+	await capture(page, "02-palette-root-alias.png");
 
 	// 3. Enter moves into the mode: the alias becomes a chip and the input is empty.
 	await input.press("Enter");
@@ -71,32 +95,32 @@ test("capture navigation screenshots", async ({ obsidian }) => {
 		{ timeout: 15_000 },
 	);
 	await settle(page);
-	await capture(page, "03-mode-esdir.png");
+	await capture(page, "03-palette-mode-esdir.png");
 
 	// 4. Esc returns to Root Search with the alias selected, one Enter from the mode.
 	await input.press("Escape");
 	await expect(page.locator(".my-palette-mode-chip")).toBeHidden();
 	await expect(input).toHaveValue("esdir");
 	await settle(page);
-	await capture(page, "04-back-to-root.png");
+	await capture(page, "04-palette-back-to-root.png");
 
 	// 5. `alias + Space` still enters a mode directly; here, commands.
 	await input.fill("");
 	await input.pressSequentially("> link");
 	await expect(input).toHaveValue("link");
 	await settle(page);
-	await capture(page, "05-direct-command.png");
+	await capture(page, "05-palette-direct-command.png");
 
 	// 6. A mode with results: backlinks of the active note.
 	await input.press("Escape");
 	await input.fill("");
 	await input.pressSequentially("b");
 	await settle(page);
-	await capture(page, "06-root-b.png");
+	await capture(page, "06-palette-root-b.png");
 	await input.fill("b ");
 	await expect(page.locator(".my-palette-mode-chip")).toBeVisible();
 	await settle(page);
-	await capture(page, "07-mode-backlinks.png");
+	await capture(page, "07-palette-mode-backlinks.png");
 
 	// 7. Backspace in the empty input behaves like Esc.
 	await input.press("Backspace");
@@ -109,5 +133,22 @@ test("capture navigation screenshots", async ({ obsidian }) => {
 	await input.waitFor();
 	await expect(page.locator(".my-palette-section-heading")).toHaveCount(0);
 	await settle(page);
-	await capture(page, "08-file-only.png");
+	await capture(page, "08-palette-file-only.png");
 });
+
+// Each settings page opens in a fresh settings window, so the pages are captured one by one.
+for (const [name, file] of [
+	["Palette", "09-settings-palette.png"],
+	["Hotkeys", "10-settings-hotkeys.png"],
+	["Vault file search", "11-settings-file-search.png"],
+	["Everything", "12-settings-everything.png"],
+] as const) {
+	test(`capture the ${name} settings page`, async ({ obsidian }) => {
+		await obsidian.waitReady();
+		await mkdir(outDir, { recursive: true });
+		const settingsPage = await openSettingsPage(obsidian, name);
+		await settle(settingsPage);
+		await capture(settingsPage, file);
+		await closeSettings(obsidian);
+	});
+}

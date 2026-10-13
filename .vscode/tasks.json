@@ -1,0 +1,22 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "My Palette: Capture UI screenshots",
+			"detail": "パレットと設定画面を一括で撮影し、成功したらPNGの出力フォルダを開く",
+			"type": "process",
+			"command": "pwsh.exe",
+			"args": [
+				"-NoLogo",
+				"-NoProfile",
+				"-Command",
+				"pnpm ui:shots --open; exit $LASTEXITCODE"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"presentation": { "clear": true, "panel": "dedicated", "reveal": "always" },
+			"problemMatcher": []
+		}
+	]
+}
