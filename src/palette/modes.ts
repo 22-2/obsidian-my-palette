@@ -43,7 +43,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		id: "everything",
 		mode: "everything",
 		title: "Everything",
-		subtitle: "Vault files",
+		subtitle: "All files",
 		icon: "search",
 		placeholder: "Search vault files with Everything",
 	},
