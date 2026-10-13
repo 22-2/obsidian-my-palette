@@ -172,6 +172,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			this.selectorHistoryControls = new PaletteHistoryControls({
 				plugin: controls.plugin,
 				surface: "palette",
+				historyCategories: [controls.category],
 				inputEl: this.inputEl,
 				containerEl: this.inputEl.parentElement ?? this.modalEl,
 				hostEl: this.modalEl,

@@ -49,6 +49,11 @@ export class SearchHistoryService {
 		this.syncLegacy();
 	}
 
+	clearCategories(categories: readonly SearchHistoryCategory[]): void {
+		this.store.clearCategories(categories);
+		this.syncLegacy();
+	}
+
 	clear(): void {
 		this.store.clear();
 		this.syncLegacy();

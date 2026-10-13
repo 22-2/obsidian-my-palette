@@ -138,9 +138,9 @@ describe("selector controls", () => {
 		expect(f.modal.modalEl.querySelectorAll(selector)).toHaveLength(2);
 		f.click(".my-palette-options-button");
 		expect(paletteMenuTitles()).toEqual([
-			"Actions",
-			"Move to selected",
 			"Help",
+			"Move to selected",
+			"Clear search history",
 			"Options",
 			"Highlight search matches",
 		]);

@@ -1,5 +1,5 @@
-import { setIcon } from "obsidian";
-import { PaletteMenu } from "src/ui/paletteMenu";
+import { Notice, setIcon } from "obsidian";
+import { PaletteMenu, type PaletteMenuItem } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
@@ -16,12 +16,18 @@ interface PaletteHistoryContext {
 
 export type PaletteControlsPlugin = Pick<
 	MyPalettePlugin,
-	"app" | "settings" | "paletteDisplaySettings" | "getSearchHistorySuggestions"
+	| "app"
+	| "settings"
+	| "paletteDisplaySettings"
+	| "getSearchHistorySuggestions"
+	| "clearSearchHistoryCategories"
 >;
 
 interface PaletteHistoryControlsOptions {
 	plugin: PaletteControlsPlugin;
 	surface: PaletteSurface;
+	/** The categories "Clear search history" removes: the palette's own, or a selector's single one. */
+	historyCategories: readonly SearchHistoryCategory[];
 	inputEl: HTMLInputElement;
 	containerEl: HTMLElement;
 	hostEl: HTMLElement;
@@ -153,54 +159,94 @@ export class PaletteHistoryControls {
 	}
 
 	private showOptionsMenu(event: MouseEvent): void {
-		const { plugin, hostEl, surface } = this.options;
+		const { plugin, hostEl, moveToSidebar } = this.options;
 		this.close();
 		const menu = new PaletteMenu();
 		this.activeMenu = menu;
 		menu.onHide(() => {
 			if (this.activeMenu === menu) this.activeMenu = undefined;
 		});
-		// Why: disabled headings and a separator match the pane-menu pattern,
-		// keeping one-off actions before persistent display preferences.
-		menu.addItem((item) => item.setTitle("Actions").setIcon("zap").setDisabled(true));
-		this.options.populateActions?.(menu, event);
-		const { moveToSidebar } = this.options;
-		if (moveToSidebar) {
-			// Why: the shared controls also serve persistent views, which already
-			// live in the workspace and must not offer the modal's move action.
+		menu.addItem((item) =>
+			item
+				.setTitle("Help")
+				.setIcon("help-circle")
+				.onClick(() => this.showHelp()),
+		);
+		// Why: the shared controls also serve persistent views, which already
+		// live in the workspace and must not offer the modal's move action.
+		if (moveToSidebar)
 			menu.addItem((item) =>
 				item
 					.setTitle("Move to right sidebar")
 					.setIcon("panel-right")
 					.onClick(moveToSidebar),
 			);
-		}
-		menu.addItem((item) =>
-			item
-				.setTitle("Help")
-				.setIcon("help-circle")
-				.onClick(() => {
-					if (this.options.showHelp) this.options.showHelp();
-					else
-						new PaletteHelpModal(
-							plugin.app,
-							plugin.settings.modes,
-							surface,
-							plugin.settings.hotkeys,
-						).open();
-				}),
-		);
+		this.options.populateActions?.(menu, event);
+		// Why: the destructive clear comes after the screen's own actions, so it is not the first thing a press reaches.
+		this.addClearHistoryItem(menu);
 		menu.addSeparator();
 		menu.addItem((item) => item.setTitle("Options").setIcon("settings").setDisabled(true));
 		menu.addItem((item) =>
 			item
 				.setTitle("Highlight search matches")
 				.setIcon("highlighter")
-				.setChecked(plugin.paletteDisplaySettings.get(surface).highlightSearchMatches)
-				.onClick(() => plugin.paletteDisplaySettings.toggleHighlight(surface)),
+				.setChecked(
+					plugin.paletteDisplaySettings.get(this.options.surface).highlightSearchMatches,
+				)
+				.onClick(() => plugin.paletteDisplaySettings.toggleHighlight(this.options.surface)),
 		);
 		menu.setParentElement(hostEl);
 		showMenuAtEvent(menu, event);
+	}
+
+	private showHelp(): void {
+		const { plugin, surface, showHelp } = this.options;
+		if (showHelp) showHelp();
+		else
+			new PaletteHelpModal(
+				plugin.app,
+				plugin.settings.modes,
+				surface,
+				plugin.settings.hotkeys,
+			).open();
+	}
+
+	/**
+	 * Clears only this screen's categories. The first press turns the item into a
+	 * confirmation that keeps the menu open; the second press clears and closes.
+	 */
+	private addClearHistoryItem(menu: PaletteMenu): void {
+		const { plugin, historyCategories } = this.options;
+		let confirming = false;
+		let clearItem: PaletteMenuItem | undefined;
+		const render = (item: PaletteMenuItem) => {
+			item.setTitle(confirming ? "Click again to clear" : "Clear search history")
+				.setIcon(confirming ? "trash-2" : "trash")
+				.setCta(confirming)
+				.setKeepOpen(confirming);
+		};
+		menu.addItem((item) => {
+			clearItem = item;
+			item.setWarning(true);
+			render(item);
+			item.onClick(() => {
+				if (!confirming) {
+					confirming = true;
+					render(item);
+					return;
+				}
+				plugin.clearSearchHistoryCategories(historyCategories);
+				new Notice("Search history cleared.");
+				menu.close();
+				this.update();
+			});
+		});
+		// Why: moving to another item cancels the confirmation, so a later press starts over.
+		menu.onSelectionChange((selected) => {
+			if (!confirming || !clearItem || selected === clearItem) return;
+			confirming = false;
+			render(clearItem);
+		});
 	}
 
 	private registerEvents(): void {

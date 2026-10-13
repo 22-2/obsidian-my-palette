@@ -48,6 +48,7 @@ export class PaletteMenu {
 	private openDoc: Document | null = null;
 	private restoreFocusTo: HTMLElement | null = null;
 	private hideCallback: (() => void) | null = null;
+	private selectionListener: ((item: PaletteMenuItem | undefined) => void) | null = null;
 
 	constructor() {
 		this.dom = document.createElement("div");
@@ -85,6 +86,12 @@ export class PaletteMenu {
 
 	onHide(callback: () => void): void {
 		this.hideCallback = callback;
+	}
+
+	/** Calls back whenever the selection moves, with the newly selected item or undefined. */
+	onSelectionChange(listener: (item: PaletteMenuItem | undefined) => void): this {
+		this.selectionListener = listener;
+		return this;
 	}
 
 	showAtMouseEvent(event: MouseEvent, options: Omit<PaletteMenuShowOptions, "doc"> = {}): void {
@@ -218,9 +225,11 @@ export class PaletteMenu {
 		this.items[this.selected]?.dom.removeClass("selected");
 		this.selected = index;
 		const item = this.items[index];
-		if (!item) return;
-		item.dom.addClass("selected");
-		item.dom.scrollIntoView({ block: "nearest" });
+		if (item) {
+			item.dom.addClass("selected");
+			item.dom.scrollIntoView({ block: "nearest" });
+		}
+		this.selectionListener?.(item);
 	}
 }
 

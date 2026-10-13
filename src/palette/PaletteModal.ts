@@ -16,6 +16,7 @@ import {
 import { toPaletteSelectionItem } from "src/palette/resultPresentation";
 import { populatePaletteResultMenu } from "src/palette/actions/resultContextMenu";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
+import { PALETTE_HISTORY_CATEGORIES } from "src/palette/searchHistory";
 import { ignoredToggleOptions, syncIgnoredToggle } from "src/palette/ignoredToggle";
 import type { StatusToggle } from "src/ui/statusToggle";
 
@@ -77,6 +78,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.historyControls = new PaletteHistoryControls({
 			plugin: this.plugin,
 			surface: "palette",
+			historyCategories: PALETTE_HISTORY_CATEGORIES,
 			inputEl: this.inputEl,
 			containerEl: this.inputEl.parentElement ?? this.modalEl,
 			hostEl: this.modalEl,

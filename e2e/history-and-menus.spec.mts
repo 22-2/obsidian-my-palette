@@ -70,9 +70,9 @@ test("moves the current modal search into a fresh sidebar pane", async ({ obsidi
 	).toHaveClass(/lucide-clock/);
 	await page.locator(".my-palette-suggest-modal .my-palette-options-button").click();
 	await expect(menuItems(page)).toHaveText([
-		"Actions",
-		"Move to right sidebar",
 		"Help",
+		"Move to right sidebar",
+		"Clear search history",
 		"Options",
 		"Highlight search matches",
 	]);

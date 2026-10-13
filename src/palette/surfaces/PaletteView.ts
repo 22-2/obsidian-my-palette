@@ -29,6 +29,7 @@ import {
 	isExternalMarkdownLeaf,
 } from "src/workspace/external-markdown/openExternalMarkdown";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
+import { PALETTE_HISTORY_CATEGORIES } from "src/palette/searchHistory";
 import { ignoredToggleOptions, syncIgnoredToggle } from "src/palette/ignoredToggle";
 import type { StatusToggle } from "src/ui/statusToggle";
 import { PaletteTableControls } from "src/palette/table/PaletteTableControls";
@@ -468,6 +469,7 @@ export class PaletteView extends ItemView {
 		this.historyControls = new PaletteHistoryControls({
 			plugin: this.plugin,
 			surface: this.tableView ? "table" : "view",
+			historyCategories: PALETTE_HISTORY_CATEGORIES,
 			inputEl: this.panel.inputEl,
 			containerEl: container,
 			hostEl: this.contentEl,

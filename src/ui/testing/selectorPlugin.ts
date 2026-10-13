@@ -15,6 +15,9 @@ export function createSelectorPlugin(app = {} as App): SelectorControls["plugin"
 			() => settings,
 			async () => {},
 		),
+		clearSearchHistoryCategories: (categories) => {
+			entries = entries.filter((entry) => !categories.includes(entry.category));
+		},
 		getSearchHistorySuggestions: (input, category, includeIgnored = false) =>
 			getSearchHistorySuggestions(entries, input, category, 30, includeIgnored).map(
 				(entry) => ({

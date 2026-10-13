@@ -206,6 +206,10 @@ export default class MyPalettePlugin extends Plugin {
 		this.searchHistory?.clear();
 	}
 
+	clearSearchHistoryCategories(categories: readonly SearchHistoryCategory[]): void {
+		this.searchHistory?.clearCategories(categories);
+	}
+
 	openSettings(): void {
 		const setting = (
 			this.app as unknown as {

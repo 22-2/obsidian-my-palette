@@ -16,6 +16,19 @@ export interface RecordSearchHistoryOptions {
 
 export const SEARCH_HISTORY_MAX_ENTRIES = 256;
 
+/** Categories of the palette's own searches. Selectors each keep one category of their own. */
+export const PALETTE_HISTORY_CATEGORIES: readonly SearchHistoryCategory[] = [
+	"file",
+	"command",
+	"bookmark",
+	"smart",
+	"tab",
+	"everything",
+	"everything-directory",
+	"link",
+	"backlink",
+];
+
 const LEGACY_INCLUDE_IGNORED_PREFIX = "i ";
 
 function isSelectorHistoryCategory(value: unknown): value is SelectorHistoryCategory {

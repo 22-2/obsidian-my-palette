@@ -151,6 +151,16 @@ export class SearchHistoryStore {
 		this.queueWrite(changed, removed);
 	}
 
+	/** Removes the entries of the given categories only, so other screens keep their history. */
+	clearCategories(categories: readonly SearchHistoryCategory[]): void {
+		if (this.disposed) return;
+		const removed = [...this.current.entries()]
+			.filter(([, entry]) => categories.includes(entry.category))
+			.map(([key]) => key);
+		for (const key of removed) this.current.delete(key);
+		this.queueWrite([], removed);
+	}
+
 	clear(): void {
 		if (this.disposed) return;
 		this.current.clear();

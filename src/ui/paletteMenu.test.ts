@@ -1,6 +1,6 @@
 import { Window } from "happy-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PaletteMenu, placeMenu } from "src/ui/paletteMenu";
+import { PaletteMenu, placeMenu, type PaletteMenuItem } from "src/ui/paletteMenu";
 import { installObsidianDom } from "src/ui/testing/obsidianDom";
 
 vi.mock("obsidian", () => import("src/ui/testing/obsidianDom"));
@@ -45,6 +45,10 @@ function itemNamed(title: string): HTMLElement {
 	);
 	if (!item) throw new Error(`no menu item: ${title}`);
 	return item;
+}
+
+function titleOfItem(item: PaletteMenuItem): string {
+	return titleOf(item.dom) ?? "";
 }
 
 function selectedTitle(): string | null {
@@ -285,6 +289,20 @@ describe("PaletteMenu hiding", () => {
 		expect(onHide).toHaveBeenCalledTimes(1);
 		menu.close();
 		expect(onHide).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe("PaletteMenu selection", () => {
+	it("reports the item that becomes selected, and none when the menu closes", () => {
+		const { menu } = sample();
+		const selected: Array<string | undefined> = [];
+		menu.onSelectionChange((item) => selected.push(item ? titleOfItem(item) : undefined));
+		menu.showAtPosition({ x: 0, y: 0 });
+		press("ArrowDown");
+		press("ArrowDown");
+		menu.close();
+
+		expect(selected).toEqual(["Open", "Help", undefined]);
 	});
 });
 
