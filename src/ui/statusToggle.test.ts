@@ -1,6 +1,7 @@
 import { Window } from "happy-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SuggestionPanel } from "src/ui/suggestionPanel";
+import type { PaletteHotkey } from "src/ui/hotkeys";
 import type { StatusToggleOptions } from "src/ui/statusToggle";
 import { installObsidianDom } from "src/ui/testing/obsidianDom";
 
@@ -32,7 +33,7 @@ function fixture() {
 		const toggle = panel.addStatusToggle({
 			id: "mutual",
 			label: "Mutual",
-			ctrlKey: "M",
+			hotkey: () => ({ key: "M", modifiers: ["Ctrl"] }),
 			description: "Also update the note",
 			value: true,
 			onChange,
@@ -69,9 +70,30 @@ describe("status toggle", () => {
 		);
 	});
 
+	it("drops the shortcut hint when the binding is cleared, and the click still works", () => {
+		const hotkey = {
+			current: { key: "M", modifiers: ["Ctrl" as const] } as PaletteHotkey | null,
+		};
+		const { add, toggleEl, pressCtrl } = fixture();
+		add({ hotkey: () => hotkey.current });
+		const el = toggleEl("mutual");
+		expect(el?.textContent).toBe("MutualCtrl+M");
+
+		hotkey.current = null;
+		pressCtrl("m");
+		el?.click();
+		expect(el?.textContent).toBe("Mutual");
+		expect(el?.getAttribute("title")).toBe("Also update the note");
+		expect(el?.getAttribute("aria-checked")).toBe("false");
+	});
+
 	it("hides a switch that does not apply and ignores its shortcut until it is shown again", () => {
 		const { add, toggleEl, pressCtrl } = fixture();
-		const { toggle, onChange } = add({ id: "include-ignored", ctrlKey: "I", value: true });
+		const { toggle, onChange } = add({
+			id: "include-ignored",
+			hotkey: () => ({ key: "I", modifiers: ["Ctrl"] }),
+			value: true,
+		});
 		toggle.setHidden(true);
 		const el = toggleEl("include-ignored");
 		expect(el?.hasAttribute("hidden")).toBe(true);
@@ -87,9 +109,17 @@ describe("status toggle", () => {
 
 	it("orders switches as added and replaces one with the same id in place", () => {
 		const { root, add } = fixture();
-		add({ id: "include-ignored", label: "Ignored", ctrlKey: "I" });
+		add({
+			id: "include-ignored",
+			label: "Ignored",
+			hotkey: () => ({ key: "I", modifiers: ["Ctrl"] }),
+		});
 		add();
-		add({ id: "include-ignored", label: "Ignored", ctrlKey: "I" });
+		add({
+			id: "include-ignored",
+			label: "Ignored",
+			hotkey: () => ({ key: "I", modifiers: ["Ctrl"] }),
+		});
 		const ids = [...root.querySelectorAll(".my-palette-status-toggle")].map((el) =>
 			el.getAttribute("data-status-toggle"),
 		);

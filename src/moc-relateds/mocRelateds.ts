@@ -1,4 +1,5 @@
 import { Notice, TFile, type App, type WorkspaceLeaf } from "obsidian";
+import type { PaletteHotkey } from "src/ui/hotkeys";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { getLeafForAction } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
@@ -216,6 +217,7 @@ async function relatedsRelations(
 	return { outgoing, incoming };
 }
 
+const MUTUAL_HOTKEY: PaletteHotkey = { key: "M", modifiers: ["Ctrl"] };
 const MUTUAL_SHORTCUT = [
 	"Ctrl+M",
 	"Toggle updating the note's link to the MOC as well as the MOC's link to the note",
@@ -234,7 +236,7 @@ abstract class MocRelatedsModal extends MultiSelectModal<string> {
 		this.addStatusToggle({
 			id: "mutual",
 			label: "Mutual",
-			ctrlKey: "M",
+			hotkey: () => MUTUAL_HOTKEY,
 			description: "Also update the note's link to the MOC",
 			value: this.mutual,
 			onChange: (value) => {

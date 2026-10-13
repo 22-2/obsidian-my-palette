@@ -6,6 +6,7 @@ import {
 	hotkeyFromEvent,
 	matchesHotkey,
 	normalizeHotkeys,
+	scopesOverlap,
 } from "src/ui/hotkeys";
 
 const event = (key: string, extra: Partial<KeyboardEvent> = {}) =>
@@ -61,6 +62,19 @@ describe("custom hotkeys", () => {
 		expect(hotkeyError("hidePreview", null, DEFAULT_HOTKEYS)).toBeUndefined();
 		expect(normalizeHotkeys({ hidePreview: DEFAULT_HOTKEYS.history })).toEqual(DEFAULT_HOTKEYS);
 	});
+	it("treats a shared key as a collision only where both shortcuts can be used", () => {
+		// Mutual lives only in the MOC selector, so it does not clash with the palette preview.
+		expect(scopesOverlap(["palette"], ["tag-selector"])).toBe(false);
+		expect(scopesOverlap(["moc-selector"], ["tag-selector"])).toBe(false);
+		// File search is part of the palette, and every selector is part of the selector group.
+		expect(scopesOverlap(["palette"], ["file-search"])).toBe(true);
+		expect(scopesOverlap(["selector"], ["moc-selector"])).toBe(true);
+		// The selectors sit inside the "all pickers" scope, so the hide shortcut clashes with them.
+		expect(
+			hotkeyError("toggleSelection", DEFAULT_HOTKEYS.hidePreview, DEFAULT_HOTKEYS),
+		).toContain("Temporarily hide palette");
+	});
+
 	it("matches exact modifiers and allows range Shift only for selection", () => {
 		expect(matchesHotkey(event("h", { altKey: true }), DEFAULT_HOTKEYS.hidePreview)).toBe(true);
 		expect(

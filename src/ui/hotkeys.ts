@@ -4,36 +4,69 @@ export interface PaletteHotkey {
 	modifiers: HotkeyModifier[];
 }
 
+/**
+ * A place where a shortcut can be pressed. A place inside another one (file search inside
+ * the palette, MOC selector inside selectors) overlaps it, so the two cannot share a key.
+ */
+export type HotkeyScope = "palette" | "file-search" | "selector" | "tag-selector" | "moc-selector";
+
+const SCOPE_PARENT: Partial<Record<HotkeyScope, HotkeyScope>> = {
+	"file-search": "palette",
+	"tag-selector": "selector",
+	"moc-selector": "selector",
+};
+
 export const HOTKEY_ACTIONS = {
 	hidePreview: {
 		name: "Temporarily hide palette",
 		description: "Hold to fade out any palette or selector. Release either key to restore it.",
+		scopes: ["palette", "selector"],
 	},
 	preview: {
 		name: "Preview selected result",
 		description:
 			"Preview in a modal without closing it. Plain Right Arrow requires the cursor at the end of the input.",
+		scopes: ["palette", "tag-selector", "moc-selector"],
 	},
 	history: {
 		name: "Search history",
 		description: "Open saved searches in any palette or selector.",
+		scopes: ["palette", "selector"],
 	},
 	contextMenu: {
 		name: "Show result actions",
 		description: "Open the right-click menu for the active result from the keyboard.",
+		scopes: ["palette", "selector"],
 	},
 	focusInput: {
 		name: "Return to input mode",
 		description: "Return from selection mode to typing in tag and MOC selectors.",
+		scopes: ["tag-selector", "moc-selector"],
 	},
 	toggleSelection: {
 		name: "Toggle selection",
 		description:
 			"Check or toggle the active row in selection mode. Hold Shift to extend a range where supported.",
+		scopes: ["tag-selector", "moc-selector"],
 	},
 } as const;
 
 export type HotkeyAction = keyof typeof HOTKEY_ACTIONS;
+
+/** Two scopes overlap when one is the other or sits inside it. */
+export function scopesOverlap(a: readonly HotkeyScope[], b: readonly HotkeyScope[]): boolean {
+	return a.some((first) =>
+		b.some((second) => scopeWithin(first, second) || scopeWithin(second, first)),
+	);
+}
+
+/** Whether `scope` is `outer` or sits inside it. */
+function scopeWithin(scope: HotkeyScope, outer: HotkeyScope): boolean {
+	for (let current: HotkeyScope | undefined = scope; current; current = SCOPE_PARENT[current]) {
+		if (current === outer) return true;
+	}
+	return false;
+}
 export type PaletteHotkeys = Record<HotkeyAction, PaletteHotkey | null>;
 
 export const DEFAULT_HOTKEYS: PaletteHotkeys = {
@@ -106,6 +139,7 @@ export function hotkeyError(
 	for (const other of Object.keys(HOTKEY_ACTIONS) as HotkeyAction[]) {
 		const assigned = settings[other];
 		if (other === action || !assigned || assigned.key !== hotkey.key) continue;
+		if (!scopesOverlap(HOTKEY_ACTIONS[action].scopes, HOTKEY_ACTIONS[other].scopes)) continue;
 		// Shift is also a range extension for the selection shortcut.
 		const range = action === "toggleSelection" || other === "toggleSelection";
 		const modifiers = (binding: PaletteHotkey) =>

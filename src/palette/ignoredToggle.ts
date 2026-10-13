@@ -1,5 +1,9 @@
 import { supportsIncludeIgnored, type PaletteMode } from "src/palette/results";
+import type { PaletteHotkey } from "src/ui/hotkeys";
 import type { StatusToggle, StatusToggleOptions } from "src/ui/statusToggle";
+
+/** Ctrl+I flips the Ignored switch in every file search surface. */
+export const IGNORED_HOTKEY: PaletteHotkey = { key: "I", modifiers: ["Ctrl"] };
 
 export const IGNORED_SHORTCUT = [
 	"Ctrl+I",
@@ -14,7 +18,7 @@ export function ignoredToggleOptions(
 	return {
 		id: "include-ignored",
 		label: "Ignored",
-		ctrlKey: "I",
+		hotkey: () => IGNORED_HOTKEY,
 		description: "Include files hidden by Obsidian's Excluded files setting",
 		value,
 		onChange,

@@ -1,9 +1,14 @@
+import { formatHotkey, matchesHotkey, type PaletteHotkey } from "src/ui/hotkeys";
+
 export interface StatusToggleOptions {
 	/** Identifies the toggle so a reopened modal replaces it instead of adding another. */
 	id: string;
 	label: string;
-	/** Letter pressed with Ctrl in the search input, such as "M" for Ctrl+M. */
-	ctrlKey: string;
+	/**
+	 * Read on each key press and each render, so a changed binding applies at once.
+	 * `null` leaves the switch clickable without a shortcut or hint.
+	 */
+	hotkey: () => PaletteHotkey | null;
 	description: string;
 	value: boolean;
 	onChange: (value: boolean) => void;
@@ -18,12 +23,12 @@ type RegisterDomEvent = <K extends keyof HTMLElementEventMap>(
 
 /**
  * Small switch with a label and its shortcut, shown at the left end of a
- * palette footer. Both a click and Ctrl+key in the input flip it.
+ * palette footer. Both a click and the shortcut in the input flip it.
  */
 export class StatusToggle {
 	private readonly el: HTMLElement;
 	private readonly switchEl: HTMLElement;
-	private readonly hint: string;
+	private readonly hintEl: HTMLElement;
 	private current: boolean;
 	private hidden = false;
 
@@ -33,8 +38,6 @@ export class StatusToggle {
 		register: RegisterDomEvent,
 		private readonly options: StatusToggleOptions,
 	) {
-		const hint = `Ctrl+${options.ctrlKey.toUpperCase()}`;
-		this.hint = hint;
 		const previous = statusBarEl.querySelector(`[data-status-toggle="${options.id}"]`);
 		const toggles = statusBarEl.querySelectorAll(".my-palette-status-toggle");
 		const last = toggles[toggles.length - 1];
@@ -50,8 +53,7 @@ export class StatusToggle {
 		else statusBarEl.prepend(this.el);
 		this.switchEl = this.el.createDiv({ cls: "checkbox-container" });
 		this.el.createSpan({ text: options.label });
-		this.el.createSpan({ cls: "my-palette-status-toggle__hint", text: hint });
-		this.el.setAttribute("title", `${options.description} (${hint})`);
+		this.hintEl = this.el.createSpan({ cls: "my-palette-status-toggle__hint" });
 		// Why: a press on the footer must not pull focus out of the input.
 		register(this.el, "mousedown", (event) => event.preventDefault());
 		register(this.el, "click", () => this.flip());
@@ -59,9 +61,7 @@ export class StatusToggle {
 			inputEl,
 			"keydown",
 			(event) => {
-				if (event.key.toLowerCase() !== options.ctrlKey.toLowerCase() || !event.ctrlKey)
-					return;
-				if (event.altKey || event.shiftKey || event.metaKey || this.hidden) return;
+				if (this.hidden || !matchesHotkey(event, options.hotkey())) return;
 				event.preventDefault();
 				event.stopPropagation();
 				this.flip();
@@ -97,5 +97,17 @@ export class StatusToggle {
 		this.switchEl.toggleClass("is-enabled", this.current);
 		this.el.setAttribute("aria-checked", String(this.current));
 		this.el.toggleAttribute("hidden", this.hidden);
+		this.renderHint();
+	}
+
+	private renderHint(): void {
+		const hotkey = this.options.hotkey();
+		const hint = hotkey ? formatHotkey(hotkey) : undefined;
+		this.hintEl.textContent = hint ?? "";
+		this.hintEl.toggleAttribute("hidden", hint === undefined);
+		this.el.setAttribute(
+			"title",
+			hint ? `${this.options.description} (${hint})` : this.options.description,
+		);
 	}
 }
