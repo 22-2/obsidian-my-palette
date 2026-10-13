@@ -4,6 +4,7 @@ import type {
 	ModeSettingsMap,
 	MyPaletteSettings,
 	PaletteSurface,
+	PopToRootSeconds,
 } from "src/settings/model";
 import { normalizeHotkeys } from "src/ui/hotkeys";
 import {
@@ -107,8 +108,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 		schemaVersion: SETTINGS_SCHEMA_VERSION,
 		showLog: typeof source.showLog === "boolean" ? source.showLog : false,
 		paletteDisplay: normalizePaletteDisplay(source),
-		rememberLastInput:
-			typeof source.rememberLastInput === "boolean" ? source.rememberLastInput : false,
+		launcher: { popToRootAfterSeconds: normalizePopToRoot(source) },
 		openExternalMarkdownInObsidian:
 			typeof source.openExternalMarkdownInObsidian === "boolean"
 				? source.openExternalMarkdownInObsidian
@@ -166,6 +166,18 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 			vaultExtensions: extensions(rawEverything.vaultExtensions),
 		},
 	};
+}
+
+// Schema 20 replaced "remember last input" with a timeout: off meant immediately, on meant the default.
+const POP_TO_ROOT_OPTIONS: readonly PopToRootSeconds[] = [0, 30, 60, 90];
+
+function normalizePopToRoot(source: Record<string, unknown>): PopToRootSeconds {
+	const launcher = source.launcher as Record<string, unknown> | undefined;
+	const stored = launcher?.popToRootAfterSeconds;
+	if (POP_TO_ROOT_OPTIONS.includes(stored as PopToRootSeconds)) return stored as PopToRootSeconds;
+	if (typeof source.rememberLastInput !== "boolean")
+		return DEFAULT_SETTINGS.launcher.popToRootAfterSeconds;
+	return source.rememberLastInput ? DEFAULT_SETTINGS.launcher.popToRootAfterSeconds : 0;
 }
 
 // A missing or non-boolean switch means the integration stays on, as it did before switches existed.

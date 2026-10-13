@@ -21,8 +21,6 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 			"searchHistory.addDelayMs": this.plugin.settings.searchHistory.addDelayMs,
 			"searchHistory.daysToKeep": this.plugin.settings.searchHistory.daysToKeep,
 			"file.excludedFolders": this.plugin.settings.file.excludedFolders.join("\n"),
-			openExternalMarkdownInObsidian: this.plugin.settings.openExternalMarkdownInObsidian,
-			rememberLastInput: this.plugin.settings.rememberLastInput,
 			showLog: this.plugin.settings.showLog,
 		};
 		return values[key];
@@ -86,13 +84,6 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 				break;
 			case "file.excludedFolders":
 				settings.file.excludedFolders = excludedFolders(String(value));
-				break;
-			case "openExternalMarkdownInObsidian":
-				settings.openExternalMarkdownInObsidian = Boolean(value);
-				break;
-			case "rememberLastInput":
-				settings.rememberLastInput = Boolean(value);
-				if (!settings.rememberLastInput) this.plugin.paletteOpener.clearRememberedQueries();
 				break;
 			case "showLog":
 				settings.showLog = Boolean(value);

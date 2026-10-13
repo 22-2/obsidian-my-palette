@@ -297,3 +297,24 @@ describe("mergeSettings", () => {
 		});
 	});
 });
+
+describe("Pop to Root Search", () => {
+	it("turns the old remember-last-input switch into a time, keeping the default for new installs", () => {
+		expect(mergeSettings({ rememberLastInput: false }).launcher).toEqual({
+			popToRootAfterSeconds: 0,
+		});
+		expect(mergeSettings({ rememberLastInput: true }).launcher).toEqual({
+			popToRootAfterSeconds: 90,
+		});
+		expect(mergeSettings(undefined).launcher).toEqual({ popToRootAfterSeconds: 90 });
+	});
+
+	it("keeps a stored time over the old switch, and drops the switch", () => {
+		const settings = mergeSettings({
+			rememberLastInput: false,
+			launcher: { popToRootAfterSeconds: 60 },
+		});
+		expect(settings.launcher.popToRootAfterSeconds).toBe(60);
+		expect(settings).not.toHaveProperty("rememberLastInput");
+	});
+});

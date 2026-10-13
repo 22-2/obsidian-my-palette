@@ -2,7 +2,7 @@ import { App, Modal, Notice, type KeymapEventHandler } from "obsidian";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 import { SelectorHelpModal, type SelectorControls } from "src/ui/selectorControls";
-import { SuggestionPanel } from "src/ui/suggestionPanel";
+import { SuggestionPanel, type SuggestionPanelView } from "src/ui/suggestionPanel";
 import type { StatusToggle, StatusToggleOptions } from "src/ui/statusToggle";
 import { DEFAULT_HOTKEYS, matchesHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
 
@@ -317,6 +317,16 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		this.historyTimer = undefined;
 	}
 	protected onSelectionModalClose(): void {}
+
+	/** Lands the next results on a row and scroll position, for a palette that is being resumed. */
+	protected restoreResultView(view: SuggestionPanelView): void {
+		this.panel.restoreView(view);
+	}
+
+	/** The selected row and scroll position, read while the modal is still open. */
+	protected currentResultView(): SuggestionPanelView {
+		return this.panel.currentView;
+	}
 	protected onSuggestionEscape(): void {
 		this.close();
 	}

@@ -1,0 +1,79 @@
+import { expect, test } from "obsidian-e2e-toolkit";
+import type { ObsidianAPI } from "obsidian-e2e-toolkit";
+import {
+	closePalette,
+	MODAL_INPUT,
+	openPaletteWith,
+	PLUGIN_ID,
+	pluginVaultOptions,
+	runPaletteCommand,
+} from "./support.mts";
+
+test.use({ vaultOptions: pluginVaultOptions() });
+
+test.beforeEach(async ({ obsidian }) => {
+	await obsidian.waitReady();
+	await obsidian.createNote("Alpha plan.md", "# Alpha");
+});
+
+/** Moves the palette's clock forward, which is how Pop to Root Search is tested. */
+function advanceClock(obsidian: ObsidianAPI, milliseconds: number): Promise<void> {
+	return obsidian.evaluateApp(
+		({ id, milliseconds }) => {
+			const plugin = (
+				app as unknown as {
+					plugins: { plugins: Record<string, { paletteOpener: { now: () => number } }> };
+				}
+			).plugins.plugins[id];
+			const real = plugin.paletteOpener.now;
+			plugin.paletteOpener.now = () => real() + milliseconds;
+		},
+		{ id: PLUGIN_ID, milliseconds },
+	);
+}
+
+test("Open palette resumes the last search, then starts at Root Search once the time has passed", async ({
+	obsidian,
+}) => {
+	const first = await openPaletteWith(obsidian, "alpha");
+	await expect(first.locator(MODAL_INPUT)).toHaveValue("alpha");
+	await closePalette(first);
+
+	await runPaletteCommand(obsidian, "open-root");
+	const resumed = obsidian.page.locator(MODAL_INPUT);
+	await expect(resumed).toHaveValue("alpha");
+	// The restored query is selected, so typing replaces it.
+	await expect
+		.poll(() =>
+			resumed.evaluate(
+				(input: HTMLInputElement) =>
+					(input.selectionEnd ?? 0) - (input.selectionStart ?? 0),
+			),
+		)
+		.toBe(5);
+	await closePalette(obsidian.page);
+
+	await advanceClock(obsidian, 91_000);
+	await runPaletteCommand(obsidian, "open-root");
+	await expect(obsidian.page.locator(MODAL_INPUT)).toHaveValue("");
+});
+
+test("Immediately always starts at Root Search", async ({ obsidian }) => {
+	await obsidian.evaluateApp((id) => {
+		(
+			app as unknown as {
+				plugins: {
+					plugins: Record<
+						string,
+						{ settings: { launcher: { popToRootAfterSeconds: number } } }
+					>;
+				};
+			}
+		).plugins.plugins[id].settings.launcher.popToRootAfterSeconds = 0;
+	}, PLUGIN_ID);
+
+	const first = await openPaletteWith(obsidian, "alpha");
+	await closePalette(first);
+	await runPaletteCommand(obsidian, "open-root");
+	await expect(obsidian.page.locator(MODAL_INPUT)).toHaveValue("");
+});

@@ -68,6 +68,11 @@ export interface SuggestionPanelResultsLayout<T> {
 	) => void;
 }
 
+export interface SuggestionPanelView {
+	activeIndex: number;
+	scrollTop: number;
+}
+
 interface SuggestionChooser<T> {
 	values: T[];
 	selectedItem: number;
@@ -86,6 +91,7 @@ export class SuggestionPanel<T> extends Component {
 	readonly resultCountEl: HTMLElement;
 	private readonly modeChipEl: HTMLElement;
 	readonly chooser: SuggestionChooser<T> = { values: [], selectedItem: -1 };
+	private pendingView?: SuggestionPanelView;
 	limit: number;
 	selected: T | null = null;
 	query = "";
@@ -228,7 +234,38 @@ export class SuggestionPanel<T> extends Component {
 		this.registerDomEvent(ownerWindow, "blur", () => restore());
 	}
 
-	setResults({ items, total = items.length, error, query }: SuggestionPanelResults<T>): void {
+	setResults(results: SuggestionPanelResults<T>): void {
+		const view = this.pendingView;
+		this.pendingView = undefined;
+		this.renderResults(results);
+		if (view) this.applyView(view);
+	}
+
+	/** Applies a view to the next results, so a reopened palette lands on the same row and scroll. */
+	restoreView(view: SuggestionPanelView): void {
+		this.pendingView = view;
+	}
+
+	/** The selected row and scroll position, for a palette that may be reopened. */
+	get currentView(): SuggestionPanelView {
+		return {
+			activeIndex: this.chooser.selectedItem,
+			scrollTop: this.resultContainerEl.scrollTop,
+		};
+	}
+
+	private applyView({ activeIndex, scrollTop }: SuggestionPanelView): void {
+		const count = this.chooser.values.length;
+		if (count > 0) this.setSelectedIndex(Math.min(Math.max(activeIndex, 0), count - 1), true);
+		this.resultContainerEl.scrollTop = scrollTop;
+	}
+
+	private renderResults({
+		items,
+		total = items.length,
+		error,
+		query,
+	}: SuggestionPanelResults<T>): void {
 		this.emptyStateText = error ?? "No suggestions";
 		// Hosts may parse prefixes; highlighting must use the same text as matching.
 		this.query = query ?? this.inputEl.value;

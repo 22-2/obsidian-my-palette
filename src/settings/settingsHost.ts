@@ -15,5 +15,4 @@ export interface SettingsHost {
 		rebuildIgnoredIndex(): Promise<unknown>;
 		refreshExtensions(): void;
 	};
-	paletteOpener: { clearRememberedQueries(): void };
 }

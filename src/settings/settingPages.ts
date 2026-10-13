@@ -9,7 +9,19 @@ import {
 	type SettingGroupItem,
 } from "obsidian";
 import type { SettingsHost } from "src/settings/settingsHost";
-import { DEFAULT_SETTINGS, SETTING_LIMITS, type PaletteSurface } from "src/settings/model";
+import {
+	DEFAULT_SETTINGS,
+	SETTING_LIMITS,
+	type PaletteSurface,
+	type PopToRootSeconds,
+} from "src/settings/model";
+
+const POP_TO_ROOT_LABELS: Record<string, string> = {
+	"0": "Immediately",
+	"30": "After 30 seconds",
+	"60": "After 60 seconds",
+	"90": "After 90 seconds",
+};
 import { excludedFolders, extensions } from "src/settings/mergeSettings";
 import { renderFileSortPriorityControl } from "src/settings/fileSortPriorityControl";
 import { renderShortcutsTable } from "src/settings/shortcutsTable";

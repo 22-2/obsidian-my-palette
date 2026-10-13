@@ -16,6 +16,7 @@ import {
 import { toPaletteSelectionItem } from "src/palette/resultPresentation";
 import { populatePaletteResultMenu } from "src/palette/actions/resultContextMenu";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
+import type { PaletteRestoreState } from "src/palette/restoreState";
 import { PALETTE_HISTORY_CATEGORIES } from "src/palette/searchHistory";
 import { ignoredToggleOptions, syncIgnoredToggle } from "src/palette/ignoredToggle";
 import type { StatusToggle } from "src/ui/statusToggle";
@@ -23,6 +24,8 @@ import type { StatusToggle } from "src/ui/statusToggle";
 export interface PaletteModalOptions {
 	/** Root Search lists mode entries above the files; off for the file-only palette. */
 	modeEntries?: boolean;
+	/** The state of a palette closed recently enough to resume. */
+	restore?: PaletteRestoreState;
 }
 
 export class PaletteModal extends SelectionModal<PaletteResult> {
@@ -35,13 +38,14 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private everythingScope: EverythingScope = "vault";
 	private state?: PaletteSearchState;
 	private readonly modeEntries: boolean;
+	private readonly restore?: PaletteRestoreState;
 
 	constructor(
 		app: App,
 		private readonly plugin: MyPalettePlugin,
 		initialInput = "",
 		fixedMode?: Extract<PaletteMode, "link" | "backlink" | "bookmark" | "smart" | "tab">,
-		{ modeEntries = false }: PaletteModalOptions = {},
+		{ modeEntries = false, restore }: PaletteModalOptions = {},
 	) {
 		super(
 			{
@@ -55,10 +59,12 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			app,
 		);
 		this.modeEntries = modeEntries;
+		this.restore = restore;
 		this.session = new PaletteSearchSession(this.plugin, {
 			initialInput,
 			fixedMode,
 			modeEntries,
+			includeIgnored: restore?.includeIgnored ?? false,
 			onStateChange: (state) => {
 				this.state = state;
 				// `alias + Space` moves into a mode and leaves only the query behind.
@@ -75,6 +81,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 
 	protected override onSelectionModalOpen(): void {
 		// SelectionModal applies and refreshes the initial input.
+		if (this.restore) this.restoreResultView(this.restore);
 		this.historyControls = new PaletteHistoryControls({
 			plugin: this.plugin,
 			surface: "palette",
@@ -100,8 +107,18 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		syncIgnoredToggle(this.ignoredToggle, this.mode);
 	}
 
+	/** What the next Open palette resumes: the input, the scope switch, and the row and scroll. */
+	private captureRestoreState(): PaletteRestoreState {
+		return {
+			input: this.session.prefixedInput,
+			includeIgnored: this.session.current.ignoredScope,
+			...this.currentResultView(),
+		};
+	}
+
 	protected override onSelectionModalClose(): void {
 		this.plugin.paletteOpener.releaseModal(this);
+		this.plugin.paletteOpener.rememberClosedPalette(this.captureRestoreState());
 		// This session owns the request signal; canceling the shared client here
 		// would also interrupt searches in still-open sidebar views.
 		this.session.dispose();

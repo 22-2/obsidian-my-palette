@@ -1,9 +1,9 @@
 import type { App, WorkspaceLeaf } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import { PaletteModal, type PaletteModalOptions } from "src/palette/PaletteModal";
+import { shouldRestore, type PaletteRestoreState } from "src/palette/restoreState";
 import { paletteModeAlias } from "src/palette/modes";
 import type { FixedPaletteMode } from "src/palette/PaletteSearchSession";
-import type { PaletteMode } from "src/palette/results";
 import { PaletteView } from "src/palette/surfaces/PaletteView";
 import {
 	PALETTE_TABLE_VIEW_TYPE,
@@ -23,12 +23,14 @@ export interface NewPaletteViewOptions {
 }
 
 /**
- * Opens the palette modal and persistent views, and remembers the last query
- * per mode so a reopened palette can resume where the user left off.
+ * Opens the palette modal and persistent views. The modal palette keeps how it was
+ * closed, so Open palette can resume it within the Pop to Root Search time.
  */
 export class PaletteOpener {
-	private rememberedQueries: Partial<Record<PaletteMode, string>> = {};
 	private activeModal?: PaletteModal;
+	private lastClosed?: { closedAt: number; state: PaletteRestoreState };
+	/** Read for restore timing; tests replace it to move the clock. */
+	now: () => number = () => Date.now();
 
 	constructor(
 		private readonly app: App,
@@ -56,17 +58,11 @@ export class PaletteOpener {
 		modal.open();
 	}
 
-	async openPaletteView(
-		initialInput = this.getRememberedQuery("file"),
-		fixedMode?: FixedPaletteMode,
-	): Promise<void> {
+	async openPaletteView(initialInput = "", fixedMode?: FixedPaletteMode): Promise<void> {
 		await this.openSidebarPaletteView(PALETTE_VIEW_TYPE, initialInput, fixedMode);
 	}
 
-	async openPaletteTableView(
-		initialInput = this.getRememberedQuery("file"),
-		fixedMode?: FixedPaletteMode,
-	): Promise<void> {
+	async openPaletteTableView(initialInput = "", fixedMode?: FixedPaletteMode): Promise<void> {
 		// Why: reuse a center table without overwriting its query. A new tab keeps
 		// the current note intact and avoids reopening a restored sidebar table.
 		const existing = this.app.workspace
@@ -86,7 +82,7 @@ export class PaletteOpener {
 
 	async openNewPaletteView(options: NewPaletteViewOptions = {}): Promise<void> {
 		const {
-			input = this.getRememberedQuery("file"),
+			input = "",
 			fixedMode,
 			sourcePath,
 			sourcePinned = false,
@@ -125,27 +121,31 @@ export class PaletteOpener {
 		this.activeModal = undefined;
 	}
 
-	rememberQuery(mode: PaletteMode, query: string, rawInput?: string): void {
-		if (!this.plugin.settings.rememberLastInput) return;
-		// なぜfileだけrawInputか: fileの再開入力はプレフィックス込みの生入力を
-		// そのまま使うため(es fooなど)。commandは呼び出し側でプレフィックスを
-		// 付与して復元するのでqueryのままにする。
-		this.rememberedQueries[mode] = mode === "file" && rawInput !== undefined ? rawInput : query;
-		if (mode === "everything" && rawInput !== undefined) this.rememberedQueries.file = rawInput;
+	/** Open palette: resumes the palette closed recently enough, otherwise starts at Root Search. */
+	openRootPalette(): void {
+		const state = this.restorableState();
+		this.openPalette(state?.input ?? "", undefined, { modeEntries: true, restore: state });
 	}
 
-	getRememberedQuery(mode: PaletteMode): string {
-		if (!this.plugin.settings.rememberLastInput) return "";
-		return this.rememberedQueries[mode] ?? "";
+	/** Called whenever a palette modal closes, so the next Open palette can resume it. */
+	rememberClosedPalette(state: PaletteRestoreState): void {
+		this.lastClosed = { closedAt: this.now(), state };
 	}
 
-	clearRememberedQueries(): void {
-		this.rememberedQueries = {};
+	private restorableState(): PaletteRestoreState | undefined {
+		if (!this.lastClosed) return undefined;
+		const { popToRootAfterSeconds } = this.plugin.settings.launcher;
+		const restorable = shouldRestore(
+			this.lastClosed.closedAt,
+			this.now(),
+			popToRootAfterSeconds,
+		);
+		return restorable ? this.lastClosed.state : undefined;
 	}
 
+	/** The command list opens at its alias, with nothing typed after it. */
 	commandPaletteInitialInput(): string {
-		const alias = paletteModeAlias("commands", this.plugin.settings.modes);
-		return `${alias} ${this.getRememberedQuery("command")}`;
+		return `${paletteModeAlias("commands", this.plugin.settings.modes)} `;
 	}
 
 	private async openSidebarPaletteView(

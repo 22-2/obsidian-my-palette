@@ -19,13 +19,12 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		id: "open-root",
 		name: "Open palette",
 		// Root Search starts empty, like a launcher, and lists modes above files.
-		callback: () => openRoot(""),
+		callback: () => plugin.paletteOpener.openRootPalette(),
 	});
 	plugin.addCommand({
 		id: "open",
 		name: "Open Recent palette",
-		callback: () =>
-			plugin.paletteOpener.openPalette(plugin.paletteOpener.getRememberedQuery("file")),
+		callback: () => plugin.paletteOpener.openPalette(),
 	});
 	plugin.addCommand({
 		id: "open-command-list",
