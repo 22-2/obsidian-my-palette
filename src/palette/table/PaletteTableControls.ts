@@ -1,4 +1,5 @@
-import { Component, Menu, TFile, setIcon, type App } from "obsidian";
+import { Component, TFile, setIcon, type App } from "obsidian";
+import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
 import type { PaletteResult } from "src/palette/results";
 import {
@@ -34,7 +35,7 @@ export class PaletteTableControls extends Component {
 	private rowsByResult = new Map<PaletteResult, PaletteTableRow>();
 	private draggedColumn?: PaletteTableColumnId;
 	private dragEndedAt = 0;
-	private columnMenu?: Menu;
+	private columnMenu?: PaletteMenu;
 
 	constructor(
 		private readonly panel: SuggestionPanel<PaletteResult>,
@@ -279,7 +280,7 @@ export class PaletteTableControls extends Component {
 
 	private showColumnMenu(event: MouseEvent): void {
 		this.columnMenu?.close();
-		const menu = new Menu();
+		const menu = new PaletteMenu();
 		this.columnMenu = menu;
 		const { hiddenColumns } = this.model.columnLayout;
 		for (const column of PALETTE_TABLE_COLUMNS) {

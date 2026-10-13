@@ -1,4 +1,5 @@
-import type { App, Menu } from "obsidian";
+import type { App } from "obsidian";
+import type { PaletteMenu } from "src/ui/paletteMenu";
 import { expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
 import { populatePaletteResultMenu } from "src/palette/actions/resultContextMenu";
@@ -42,7 +43,7 @@ function fixture(popout: boolean) {
 			configure(item);
 		},
 		addSeparator: vi.fn(),
-	} as unknown as Menu;
+	} as unknown as PaletteMenu;
 	const result: PaletteResult = {
 		id: "note",
 		mode: "file",

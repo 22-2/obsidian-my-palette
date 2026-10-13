@@ -1,4 +1,5 @@
-import { Menu, Notice } from "obsidian";
+import { Notice } from "obsidian";
+import type { PaletteMenu } from "src/ui/paletteMenu";
 
 export interface CopyablePaths {
 	fileName?: string;
@@ -8,7 +9,7 @@ export interface CopyablePaths {
 
 /** Keeps path-copy menu labels and clipboard error handling identical across file lists. */
 export function addCopyPathMenuItems(
-	menu: Menu,
+	menu: PaletteMenu,
 	paths: CopyablePaths,
 	onCopy: (path: string) => void,
 ): void {
@@ -42,7 +43,7 @@ export function addCopyPathMenuItems(
 
 /** Adds newline-delimited copy actions for the current visible selection. */
 export function addCopyPathListMenuItems(
-	menu: Menu,
+	menu: PaletteMenu,
 	pathsList: readonly CopyablePaths[],
 	onCopy: (values: string[]) => void,
 ): void {
@@ -75,7 +76,7 @@ export async function copyPathToClipboard(value: string): Promise<void> {
 }
 
 function addListItem(
-	menu: Menu,
+	menu: PaletteMenu,
 	title: string,
 	icon: string,
 	values: string[],

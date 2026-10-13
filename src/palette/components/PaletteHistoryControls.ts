@@ -1,4 +1,5 @@
-import { Menu, setIcon } from "obsidian";
+import { setIcon } from "obsidian";
+import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
@@ -29,7 +30,7 @@ interface PaletteHistoryControlsOptions {
 	/** Only modal hosts can move their current search into a sidebar pane. */
 	moveToSidebar?: () => void;
 	/** Selector hosts supply only actions that apply to their own candidates. */
-	populateActions?: (menu: Menu, event: MouseEvent) => void;
+	populateActions?: (menu: PaletteMenu, event: MouseEvent) => void;
 	showHelp?: () => void;
 	focusInput?: () => void;
 }
@@ -40,7 +41,7 @@ export class PaletteHistoryControls {
 	private readonly suggest: SearchHistorySuggest;
 	private readonly eventController = new AbortController();
 	private readonly buttons: HTMLElement[] = [];
-	private activeMenu?: Menu;
+	private activeMenu?: PaletteMenu;
 	private historyButton?: HTMLButtonElement;
 
 	constructor(private readonly options: PaletteHistoryControlsOptions) {
@@ -154,7 +155,7 @@ export class PaletteHistoryControls {
 	private showOptionsMenu(event: MouseEvent): void {
 		const { plugin, hostEl, surface } = this.options;
 		this.close();
-		const menu = new Menu();
+		const menu = new PaletteMenu();
 		this.activeMenu = menu;
 		menu.onHide(() => {
 			if (this.activeMenu === menu) this.activeMenu = undefined;

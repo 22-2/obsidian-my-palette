@@ -1,4 +1,5 @@
-import type { App, Menu } from "obsidian";
+import type { App } from "obsidian";
+import type { PaletteMenu } from "src/ui/paletteMenu";
 import type MyPalettePlugin from "src/main";
 import { TFile } from "obsidian";
 import { expect, it, vi } from "vitest";
@@ -44,7 +45,7 @@ function menu() {
 			};
 			configure(item);
 		},
-	} as unknown as Menu;
+	} as unknown as PaletteMenu;
 	return { instance, titles, click: () => click() };
 }
 

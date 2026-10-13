@@ -1,4 +1,5 @@
-import { Menu, Notice, setIcon, type App } from "obsidian";
+import { Notice, setIcon, type App } from "obsidian";
+import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
 import { BaseSuggestModal } from "src/ui/baseSuggestModal";
 import { renderSelectionItem, type SelectionItem } from "src/ui/selectionModal";
@@ -46,7 +47,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 	private readonly checked = new Map<string, MultiSelectCandidate<V>>();
 	private confirmedValues?: V[];
 	private resolveResult?: (values: V[] | null) => void;
-	private activeMenu?: Menu;
+	private activeMenu?: PaletteMenu;
 	private checkedButtonEl?: HTMLElement;
 	private checkedCountEl?: HTMLElement;
 	private readonly candidateLimit = this.limit;
@@ -83,7 +84,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 
 	/** Lets hosts add their own items, such as open and copy actions, for the selected rows. */
 	protected populateSelectionMenu(
-		_menu: Menu,
+		_menu: PaletteMenu,
 		_selected: readonly MultiSelectCandidate<V>[],
 		_close: () => void,
 	): void {}
@@ -139,7 +140,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		return true;
 	}
 
-	protected override populateSelectorActions(menu: Menu): void {
+	protected override populateSelectorActions(menu: PaletteMenu): void {
 		const targets = this.getSelectedItems();
 		this.populateSelectionMenu(menu, targets, () => this.close());
 		this.addCheckMenuItems(menu, targets);
@@ -164,7 +165,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		// inside it, so the menu acts on the selected rows like the palette's own menu.
 		const selected = this.getSelectedItems();
 		const targets = selected.length > 0 ? selected : [candidate];
-		const menu = this.replaceActiveMenu(new Menu());
+		const menu = this.replaceActiveMenu(new PaletteMenu());
 		this.populateSelectionMenu(menu, targets, () => this.close());
 		this.addCheckMenuItems(menu, targets);
 		this.addRemovalMenuItem(menu, targets);
@@ -268,7 +269,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		this.refreshSuggestionsKeepingSelection((a, b) => a.key === b.key);
 	}
 
-	private replaceActiveMenu(menu: Menu): Menu {
+	private replaceActiveMenu(menu: PaletteMenu): PaletteMenu {
 		this.activeMenu?.close();
 		this.activeMenu = menu;
 		menu.onHide(() => {
@@ -277,7 +278,10 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		return menu;
 	}
 
-	private addCheckMenuItems(menu: Menu, targets: readonly MultiSelectCandidate<V>[]): void {
+	private addCheckMenuItems(
+		menu: PaletteMenu,
+		targets: readonly MultiSelectCandidate<V>[],
+	): void {
 		const toggleable = targets.filter(({ locked }) => !locked);
 		// Highlighted rows join the checked ones, so checking several and running is one step.
 		const runSet = new Map(this.checked);
@@ -306,7 +310,10 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		);
 	}
 
-	private addRemovalMenuItem(menu: Menu, targets: readonly MultiSelectCandidate<V>[]): void {
+	private addRemovalMenuItem(
+		menu: PaletteMenu,
+		targets: readonly MultiSelectCandidate<V>[],
+	): void {
 		const removals = targets.flatMap(({ removal }) => (removal ? [removal] : []));
 		if (removals.length === 0) return;
 		menu.addSeparator();
@@ -362,7 +369,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 
 	private showCheckedMenu(event: MouseEvent): void {
 		if (this.checked.size === 0) return;
-		const menu = this.replaceActiveMenu(new Menu());
+		const menu = this.replaceActiveMenu(new PaletteMenu());
 		menu.addItem((item) =>
 			item
 				.setTitle(`${this.multiSelect.actionLabel} ${this.checked.size} checked`)

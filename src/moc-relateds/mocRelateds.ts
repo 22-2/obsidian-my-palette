@@ -1,4 +1,5 @@
-import { Notice, TFile, type App, type Menu, type WorkspaceLeaf } from "obsidian";
+import { Notice, TFile, type App, type WorkspaceLeaf } from "obsidian";
+import type { PaletteMenu } from "src/ui/paletteMenu";
 import { getLeafForAction } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
 import type { FileResult } from "src/palette/results";
@@ -131,7 +132,7 @@ async function openCandidateInBackground(
 function populateCandidateMenu(
 	plugin: MyPalettePlugin,
 	item: SelectionItem,
-	menu: Menu,
+	menu: PaletteMenu,
 	close: () => void,
 ): void {
 	const result = toCandidateResult(plugin, item);
@@ -331,7 +332,7 @@ class MocTargetModal extends MocRelatedsModal {
 	}
 
 	protected override populateSelectionMenu(
-		menu: Menu,
+		menu: PaletteMenu,
 		selected: readonly MultiSelectCandidate<string>[],
 		close: () => void,
 	): void {

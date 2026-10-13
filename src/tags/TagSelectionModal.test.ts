@@ -3,7 +3,13 @@ import { Window } from "happy-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { TagChoice } from "src/tags/tagChoices";
 import { TagSelectionModal } from "src/tags/TagSelectionModal";
-import { installObsidianDom, Menu } from "src/ui/testing/obsidianDom";
+import { installObsidianDom } from "src/ui/testing/obsidianDom";
+import {
+	clickPaletteMenuItem,
+	clickPaletteMenuItemAt,
+	isPaletteMenuOpen,
+	paletteMenuTitles,
+} from "src/ui/testing/paletteMenuDom";
 import { createSelectorPlugin } from "src/ui/testing/selectorPlugin";
 
 vi.mock("obsidian", async () => ({
@@ -31,7 +37,6 @@ beforeEach(() => {
 		vi.stubGlobal(name, dom[name]);
 	vi.stubGlobal("window", dom);
 	installObsidianDom();
-	Menu.last = undefined;
 	vi.mocked(Notice).mockClear();
 });
 afterEach(() => {
@@ -108,7 +113,7 @@ describe("TagSelectionModal", () => {
 	it("keeps insertion shortcuts and target context in its own help", async () => {
 		const f = await open();
 		f.mouse(f.modal.modalEl.querySelector(".my-palette-options-button")!, "click");
-		Menu.last?.items.find(({ title }) => title === "Help")?.click();
+		clickPaletteMenuItem("Help");
 		const help = document.querySelector(".my-palette-help-modal")!;
 		expect(help.textContent).toContain("Tag insertion help");
 		expect(help.textContent).toContain("Target: note.md");
@@ -126,7 +131,7 @@ describe("TagSelectionModal", () => {
 			".my-palette-options-button",
 		)!;
 		f.mouse(actionButton, "click");
-		expect(Menu.last?.titles()).toEqual([
+		expect(paletteMenuTitles()).toEqual([
 			"Actions",
 			"Check",
 			"Add 1 now",
@@ -135,11 +140,11 @@ describe("TagSelectionModal", () => {
 			"Options",
 			"Highlight search matches",
 		]);
-		Menu.last?.items.find(({ title }) => title === "Check")?.click();
+		clickPaletteMenuItem("Check");
 		expect(f.checked()).toEqual(["#alpha"]);
 		f.mouse(actionButton, "click");
-		expect(Menu.last?.titles()).toContain("Add 1 checked");
-		Menu.last?.items.find(({ title }) => title === "Add 1 checked")?.click();
+		expect(paletteMenuTitles()).toContain("Add 1 checked");
+		clickPaletteMenuItem("Add 1 checked");
 		await expect(f.result).resolves.toEqual(["alpha"]);
 	});
 
@@ -342,27 +347,26 @@ describe("TagSelectionModal", () => {
 	it("shows a check menu for one row and a bulk one for a multi-selection", async () => {
 		const f = await open();
 		f.mouse(f.rows()[0], "contextmenu", { button: 2 });
-		expect(Menu.last?.titles()).toEqual(["Check", "Add 1 now"]);
+		expect(paletteMenuTitles()).toEqual(["Check", "Add 1 now"]);
 		f.mouse(f.rows()[0], "mousedown");
 		f.mouse(f.rows()[1], "mousedown", { shiftKey: true });
 		f.mouse(f.rows()[1], "contextmenu", { button: 2 });
-		expect(Menu.last?.titles()).toContain("Check 2 selected");
-		expect(Menu.last?.titles()).toContain("Add 2 now");
-		Menu.last?.items.find(({ title }) => title === "Check 2 selected")?.click();
+		expect(paletteMenuTitles()).toContain("Check 2 selected");
+		expect(paletteMenuTitles()).toContain("Add 2 now");
+		clickPaletteMenuItem("Check 2 selected");
 		await flush();
 		expect(f.checked()).toEqual(["#alpha", "#beta"]);
 		f.mouse(f.rows()[1], "contextmenu", { button: 2 });
-		expect(Menu.last?.titles()).toEqual(["Uncheck 2 selected", "Add 2 checked", "Remove tag"]);
+		expect(paletteMenuTitles()).toEqual(["Uncheck 2 selected", "Add 2 checked", "Remove tag"]);
 		f.modal.close();
 	});
 
 	it("closes an open menu when a row is pressed", async () => {
 		const f = await open();
 		f.mouse(f.rows()[0], "contextmenu", { button: 2 });
-		const menu = Menu.last!;
-		expect(menu.closed).toBe(false);
+		expect(isPaletteMenuOpen()).toBe(true);
 		f.mouse(f.rows()[1], "mousedown");
-		expect(menu.closed).toBe(true);
+		expect(isPaletteMenuOpen()).toBe(false);
 		f.modal.close();
 	});
 
@@ -375,15 +379,15 @@ describe("TagSelectionModal", () => {
 		expect(f.button().hidden).toBe(false);
 		expect(f.button().textContent).toBe("1");
 		f.mouse(f.button(), "click");
-		expect(Menu.last?.titles()).toEqual(["Add 1 checked", "#alpha", "Uncheck all"]);
-		Menu.last?.items.find(({ title }) => title === "Uncheck all")?.click();
+		expect(paletteMenuTitles()).toEqual(["Add 1 checked", "#alpha", "Uncheck all"]);
+		clickPaletteMenuItem("Uncheck all");
 		await flush();
 		expect(f.checked()).toEqual([]);
 		expect(f.button().hidden).toBe(true);
 		f.key(" ");
 		await flush();
 		f.mouse(f.button(), "click");
-		Menu.last?.items[0].click();
+		clickPaletteMenuItemAt(0);
 		await expect(f.result).resolves.toEqual(["alpha"]);
 	});
 
@@ -464,7 +468,7 @@ describe("TagSelectionModal", () => {
 		await flush();
 		f.mouse(f.rows()[1], "mousedown");
 		f.mouse(f.rows()[1], "contextmenu", { button: 2 });
-		Menu.last?.items.find(({ title }) => title === "Add 2 now")?.click();
+		clickPaletteMenuItem("Add 2 now");
 		await expect(f.result).resolves.toEqual(["alpha", "beta"]);
 	});
 });

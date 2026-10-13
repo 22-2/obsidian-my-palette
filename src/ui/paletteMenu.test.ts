@@ -89,6 +89,33 @@ describe("PaletteMenu markup", () => {
 		expect(itemNamed("On").querySelector(".mod-checked")).not.toBeNull();
 		expect(itemNamed("Remove").classList.contains("is-warning")).toBe(true);
 	});
+
+	it("exposes menu roles and the checked and disabled states to assistive tech", () => {
+		const menu = new PaletteMenu();
+		menu.addItem((item) => item.setTitle("Plain"));
+		menu.addItem((item) => item.setTitle("Checked").setChecked(false).setDisabled(true));
+		menu.addSeparator();
+		menu.addItem((item) => item.setTitle("Last"));
+		menu.showAtPosition({ x: 0, y: 0 });
+
+		expect(document.querySelector(".menu")?.getAttribute("role")).toBe("menu");
+		expect(itemNamed("Plain").getAttribute("role")).toBe("menuitem");
+		expect(itemNamed("Checked").getAttribute("role")).toBe("menuitemcheckbox");
+		expect(itemNamed("Checked").getAttribute("aria-checked")).toBe("false");
+		expect(itemNamed("Checked").getAttribute("aria-disabled")).toBe("true");
+		expect(document.querySelector(".menu-separator")?.getAttribute("role")).toBe("separator");
+	});
+
+	it("marks an item as a call to action only while asked to", () => {
+		const menu = new PaletteMenu();
+		menu.addItem((item) => item.setTitle("Clear").setWarning(true).setCta());
+		menu.showAtPosition({ x: 0, y: 0 });
+		expect(itemNamed("Clear").classList.contains("mod-cta")).toBe(true);
+
+		menu.close();
+		menu.showAtPosition({ x: 0, y: 0 });
+		expect(itemNamed("Clear").classList.contains("mod-cta")).toBe(true);
+	});
 });
 
 describe("PaletteMenu clicks", () => {
@@ -234,6 +261,30 @@ describe("PaletteMenu keyboard", () => {
 		expect(selectedTitle()).toBeNull();
 		itemNamed("Help").dispatchEvent(new Event("pointerover", { bubbles: true }));
 		expect(selectedTitle()).toBe("Help");
+	});
+});
+
+describe("PaletteMenu hiding", () => {
+	it("close() hides the menu the same way hide() does", () => {
+		const { menu } = sample();
+		menu.showAtPosition({ x: 0, y: 0 });
+		menu.close();
+		expect(document.querySelector(".menu")).toBeNull();
+	});
+
+	it("calls onHide once when closed, and not when reopened", () => {
+		const { menu } = sample();
+		const onHide = vi.fn();
+		menu.onHide(onHide);
+		menu.showAtPosition({ x: 0, y: 0 });
+		menu.showAtPosition({ x: 5, y: 5 });
+		expect(onHide).not.toHaveBeenCalled();
+		expect(document.querySelectorAll(".menu")).toHaveLength(1);
+
+		menu.close();
+		expect(onHide).toHaveBeenCalledTimes(1);
+		menu.close();
+		expect(onHide).toHaveBeenCalledTimes(1);
 	});
 });
 

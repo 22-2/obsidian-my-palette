@@ -1,4 +1,5 @@
 import { ItemView, Menu, TFile, type WorkspaceLeaf } from "obsidian";
+import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
@@ -70,7 +71,7 @@ export class PaletteView extends ItemView {
 	private historyControls?: PaletteHistoryControls;
 	private tableControls?: PaletteTableControls;
 	private ignoredToggle?: StatusToggle;
-	private activeMenu?: Menu;
+	private activeMenu?: PaletteMenu;
 	private readonly leafTracker: PaletteLeafTracker;
 	private readonly fileListRefresh = new FileListRefresh(
 		this.app,
@@ -258,9 +259,6 @@ export class PaletteView extends ItemView {
 			placeholder: palettePlaceholder(state.fixedMode ?? "file"),
 			onInput: (input) => this.updateInput(input),
 			onResultFocus: () => {
-				// Why: table row handlers stop mousedown propagation before Obsidian can
-				// dismiss the result menu when a different result is clicked.
-				this.activeMenu?.close();
 				// Entering a mode is navigation; the alias typed to reach it is not a search.
 				if (this.panel?.getSelectedItem()?.mode === "mode-entry") return;
 				this.session?.commitCurrentSearch();
@@ -404,7 +402,7 @@ export class PaletteView extends ItemView {
 
 	private showSourceMenu(event: MouseEvent): void {
 		this.activeMenu?.close();
-		const menu = new Menu();
+		const menu = new PaletteMenu();
 		this.activeMenu = menu;
 		menu.onHide(() => {
 			if (this.activeMenu === menu) this.activeMenu = undefined;
@@ -569,7 +567,7 @@ export class PaletteView extends ItemView {
 		selectedItems: PaletteResult[],
 	): void {
 		this.activeMenu?.close();
-		const menu = new Menu();
+		const menu = new PaletteMenu();
 		this.activeMenu = menu;
 		menu.onHide(() => {
 			if (this.activeMenu === menu) this.activeMenu = undefined;

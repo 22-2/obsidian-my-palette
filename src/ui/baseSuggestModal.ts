@@ -1,4 +1,5 @@
-import { App, Modal, Notice, type KeymapEventHandler, type Menu } from "obsidian";
+import { App, Modal, Notice, type KeymapEventHandler } from "obsidian";
+import type { PaletteMenu } from "src/ui/paletteMenu";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 import { SelectorHelpModal, type SelectorControls } from "src/ui/selectorControls";
 import { SuggestionPanel } from "src/ui/suggestionPanel";
@@ -281,7 +282,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		}
 	}
 
-	protected populateSelectorActions(menu: Menu, event: MouseEvent): void {
+	protected populateSelectorActions(menu: PaletteMenu, event: MouseEvent): void {
 		const candidate = this.getSelectedItem();
 		const controls = this.controls;
 		if (!controls) return;

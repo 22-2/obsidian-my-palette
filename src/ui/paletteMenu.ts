@@ -52,6 +52,7 @@ export class PaletteMenu {
 	constructor() {
 		this.dom = document.createElement("div");
 		this.dom.className = "menu";
+		this.dom.setAttribute("role", "menu");
 		this.scrollEl = this.dom.createDiv("menu-scroll");
 		// Why: a press on the menu must not move focus away from the palette input.
 		this.dom.addEventListener("mousedown", (event) => {
@@ -72,7 +73,7 @@ export class PaletteMenu {
 	addSeparator(): this {
 		// Why: a separator with no item before it, or right after another one, would show as a stray line.
 		if (!this.group) return this;
-		this.scrollEl.createDiv("menu-separator");
+		this.scrollEl.createDiv("menu-separator").setAttribute("role", "separator");
 		this.group = null;
 		return this;
 	}
@@ -91,7 +92,8 @@ export class PaletteMenu {
 	}
 
 	showAtPosition(position: PaletteMenuPosition, options: PaletteMenuShowOptions = {}): void {
-		this.hide();
+		// Why: reopening replaces the open menu without a hide, so onHide stays registered for the next close.
+		this.teardown();
 		if (this.items.length === 0) return;
 
 		const doc = options.doc ?? this.parentEl?.ownerDocument ?? document;
@@ -120,6 +122,20 @@ export class PaletteMenu {
 	}
 
 	hide(): void {
+		if (!this.openDoc) return;
+		this.teardown();
+		const callback = this.hideCallback;
+		this.hideCallback = null;
+		callback?.();
+	}
+
+	/** Same as `hide()`, under the name Obsidian's Menu uses. */
+	close(): void {
+		this.hide();
+	}
+
+	/** Removes the open menu and its listeners. It does not call `onHide`, so a reopen can reuse this. */
+	private teardown(): void {
 		const doc = this.openDoc;
 		if (!doc) return;
 		const win = doc.defaultView ?? window;
@@ -137,10 +153,6 @@ export class PaletteMenu {
 		// Why: focus goes back only when nothing else took it, so a click on another input keeps its focus.
 		if (restore?.isConnected && (doc.activeElement === null || doc.activeElement === doc.body))
 			restore.focus();
-
-		const callback = this.hideCallback;
-		this.hideCallback = null;
-		callback?.();
 	}
 
 	private readonly onOutsidePress = (event: MouseEvent): void => {
@@ -227,6 +239,7 @@ export class PaletteMenuItem {
 		this.menu = menu;
 		this.dom = document.createElement("div");
 		this.dom.className = "menu-item tappable";
+		this.dom.setAttribute("role", "menuitem");
 		this.iconEl = this.dom.createDiv("menu-item-icon");
 		this.titleEl = this.dom.createDiv("menu-item-title");
 		this.dom.addEventListener("click", (event) => this.activate(event));
@@ -256,17 +269,26 @@ export class PaletteMenuItem {
 			this.checkIconEl = null;
 		}
 		this.dom.toggleClass("mod-checked", checked);
+		this.dom.setAttribute("role", "menuitemcheckbox");
+		this.dom.setAttribute("aria-checked", String(checked));
 		return this;
 	}
 
 	setDisabled(disabled: boolean): this {
 		this.disabled = disabled;
 		this.dom.toggleClass("is-disabled", disabled);
+		this.dom.setAttribute("aria-disabled", String(disabled));
 		return this;
 	}
 
 	setWarning(warning: boolean): this {
 		this.dom.toggleClass("is-warning", warning);
+		return this;
+	}
+
+	/** Marks the item as the main action of a confirmation. With setWarning, it shows as a red call to action. */
+	setCta(cta = true): this {
+		this.dom.toggleClass("mod-cta", cta);
 		return this;
 	}
 

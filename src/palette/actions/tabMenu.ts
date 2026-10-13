@@ -1,4 +1,5 @@
-import type { App, Menu, WorkspaceLeaf } from "obsidian";
+import type { App, WorkspaceLeaf } from "obsidian";
+import type { PaletteMenu } from "src/ui/paletteMenu";
 import type MyPalettePlugin from "src/main";
 import type { ActionKind } from "src/palette/resultActions";
 import { getCopyablePaths } from "src/palette/resultPresentation";
@@ -18,7 +19,7 @@ export function isTabResult(result: PaletteResult): result is TabResult {
 interface TabMenuOptions {
 	app: App;
 	plugin: MyPalettePlugin;
-	menu: Menu;
+	menu: PaletteMenu;
 	/** Every targeted tab: the one clicked, or the whole selection for a bulk menu. */
 	tabs: readonly TabResult[];
 	activate: (action: ActionKind, result: PaletteResult) => void | Promise<void>;

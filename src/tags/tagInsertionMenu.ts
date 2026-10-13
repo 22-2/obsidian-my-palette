@@ -1,4 +1,5 @@
-import { TFile, type App, type Menu } from "obsidian";
+import { TFile, type App } from "obsidian";
+import type { PaletteMenu } from "src/ui/paletteMenu";
 import type { PaletteResult } from "src/palette/results";
 import { insertTags } from "src/tags/insertTags";
 import type MyPalettePlugin from "src/main";
@@ -27,7 +28,7 @@ function resolveTagTarget(app: App, result: PaletteResult): TFile | undefined {
 
 /** Adds one action that inserts the chosen tags into every selected note. */
 export function addTagInsertionMenuItems(
-	menu: Menu,
+	menu: PaletteMenu,
 	plugin: MyPalettePlugin,
 	results: readonly PaletteResult[],
 	onSelected?: () => void,

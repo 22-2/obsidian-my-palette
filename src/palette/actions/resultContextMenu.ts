@@ -1,4 +1,5 @@
-import type { App, Menu } from "obsidian";
+import type { App } from "obsidian";
+import type { PaletteMenu } from "src/ui/paletteMenu";
 import type MyPalettePlugin from "src/main";
 import type { MocInsertionContext } from "src/moc-relateds/mocInsertion";
 import { addMocInsertionMenuItem, addMocInsertionMenuItems } from "src/moc-relateds/mocInsertion";
@@ -17,7 +18,7 @@ import { addTagInsertionMenuItems } from "src/tags/tagInsertionMenu";
 interface PaletteResultMenuOptions {
 	app: App;
 	plugin: MyPalettePlugin;
-	menu: Menu;
+	menu: PaletteMenu;
 	result: PaletteResult;
 	selectedItems: PaletteResult[];
 	activate: (action: ActionKind, result: PaletteResult) => void | Promise<void>;

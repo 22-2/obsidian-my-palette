@@ -16,17 +16,19 @@ vi.mock("src/palette/backgroundResultActions", () => ({
 	openPaletteResultInBackground: vi.fn().mockResolvedValue(true),
 }));
 vi.mock("src/ui/menus", () => ({ showMenuAtEvent: vi.fn() }));
+// The menu is only handed to the mocked populate function, so a bare stand-in is enough.
+vi.mock("src/ui/paletteMenu", () => ({
+	PaletteMenu: class {
+		onHide() {}
+		close() {}
+		setParentElement() {}
+	},
+}));
 vi.mock("obsidian", () => ({
 	App: class {},
 	Component: class {},
 	Modal: class {},
 	TFile: class {},
-	Menu: class {
-		onHide() {}
-		close() {}
-		setParentElement() {}
-		showAtMouseEvent() {}
-	},
 	ItemView: class {
 		app: App;
 		constructor(leaf: { app: App }) {

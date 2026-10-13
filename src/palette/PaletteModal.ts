@@ -1,4 +1,5 @@
-import { Menu, type App } from "obsidian";
+import type { App } from "obsidian";
+import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
 import type MyPalettePlugin from "src/main";
 import type { EverythingScope, PaletteMode, PaletteResult } from "src/palette/results";
@@ -26,7 +27,7 @@ export interface PaletteModalOptions {
 export class PaletteModal extends SelectionModal<PaletteResult> {
 	private readonly session: PaletteSearchSession;
 	private suppressHistoryForNextInput = false;
-	private activeMenu?: Menu;
+	private activeMenu?: PaletteMenu;
 	private historyControls?: PaletteHistoryControls;
 	private ignoredToggle?: StatusToggle;
 	private mode: PaletteMode = "file";
@@ -116,9 +117,6 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override onResultFocus(): void {
-		// Why: row presses stop propagation before Obsidian can dismiss an open
-		// result menu as an outside click, so a press on any row closes it here.
-		this.activeMenu?.close();
 		// Entering a mode is navigation; the alias typed to reach it is not a search.
 		if (this.getSelectedItem()?.mode === "mode-entry") return;
 		this.session.commitCurrentSearch();
@@ -149,7 +147,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 
 	protected override onSuggestionContextMenu(result: PaletteResult, event: MouseEvent): void {
 		this.selected = result;
-		const menu = this.replaceActiveMenu(new Menu());
+		const menu = this.replaceActiveMenu(new PaletteMenu());
 		populatePaletteResultMenu({
 			app: this.app,
 			plugin: this.plugin,
@@ -279,7 +277,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.inputEl.setSelectionRange(this.inputEl.value.length, this.inputEl.value.length);
 	}
 
-	private replaceActiveMenu(menu: Menu): Menu {
+	private replaceActiveMenu(menu: PaletteMenu): PaletteMenu {
 		this.activeMenu?.close();
 		this.activeMenu = menu;
 		menu.onHide(() => {

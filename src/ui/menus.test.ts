@@ -1,33 +1,53 @@
-import type { Menu as ObsidianMenu } from "obsidian";
-import { describe, expect, it } from "vitest";
-import { Menu } from "src/ui/testing/obsidianDom";
+import { Window } from "happy-dom";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { markKeyboardMenuEvent, showMenuAtEvent } from "src/ui/menus";
+import { PaletteMenu } from "src/ui/paletteMenu";
+import { installObsidianDom } from "src/ui/testing/obsidianDom";
+
+vi.mock("obsidian", () => import("src/ui/testing/obsidianDom"));
+
+beforeEach(() => {
+	const dom = new Window();
+	for (const name of [
+		"document",
+		"Element",
+		"HTMLElement",
+		"Event",
+		"KeyboardEvent",
+		"MouseEvent",
+	] as const)
+		vi.stubGlobal(name, dom[name]);
+	vi.stubGlobal("window", dom);
+	installObsidianDom();
+});
+afterEach(() => {
+	document.body.replaceChildren();
+	vi.unstubAllGlobals();
+});
+
+function menuWithDisabledFirst(): PaletteMenu {
+	const menu = new PaletteMenu();
+	menu.addItem((item) =>
+		item
+			.setTitle("Actions")
+			.setDisabled(true)
+			.onClick(() => undefined),
+	);
+	menu.addItem((item) => item.setTitle("Open").onClick(() => undefined));
+	return menu;
+}
+
+function selectedTitle(): string | null {
+	return document.querySelector(".menu-item.selected .menu-item-title")?.textContent ?? null;
+}
 
 describe("showMenuAtEvent", () => {
-	it("closes only the menu on Escape and stops the key there", () => {
-		const menu = new Menu();
-		showMenuAtEvent(menu as unknown as ObsidianMenu, {} as MouseEvent);
-		const escapes = menu.scope.keys.filter(({ key }) => key === "Escape");
-		expect(escapes).toHaveLength(1);
-		expect(escapes[0].func({} as KeyboardEvent)).toBe(false);
-		expect(menu.closed).toBe(true);
-	});
-	it("selects the first enabled item only for keyboard menus", () => {
-		const entries = () => [
-			{ title: "Actions", disabled: true, click: () => undefined },
-			{ title: "Open", click: () => undefined },
-		];
-		const pointerMenu = new Menu();
-		pointerMenu.items.push(...entries());
-		showMenuAtEvent(pointerMenu as unknown as ObsidianMenu, {} as MouseEvent);
-		expect(pointerMenu.selected).toBe(-1);
+	it("selects the first enabled item only for menus opened from the keyboard", () => {
+		showMenuAtEvent(menuWithDisabledFirst(), new MouseEvent("contextmenu"));
+		expect(selectedTitle()).toBeNull();
+		document.body.replaceChildren();
 
-		const keyboardMenu = new Menu();
-		keyboardMenu.items.push(...entries());
-		showMenuAtEvent(
-			keyboardMenu as unknown as ObsidianMenu,
-			markKeyboardMenuEvent({} as MouseEvent),
-		);
-		expect(keyboardMenu.selected).toBe(1);
+		showMenuAtEvent(menuWithDisabledFirst(), markKeyboardMenuEvent(new MouseEvent("click")));
+		expect(selectedTitle()).toBe("Open");
 	});
 });

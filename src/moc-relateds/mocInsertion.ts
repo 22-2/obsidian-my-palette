@@ -1,4 +1,5 @@
-import { Notice, TFile, type Menu, type WorkspaceLeaf } from "obsidian";
+import { Notice, TFile, type WorkspaceLeaf } from "obsidian";
+import type { PaletteMenu } from "src/ui/paletteMenu";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
 import {
@@ -47,7 +48,7 @@ export interface MocInsertionContext {
 
 /** Adds the same MOC insertion action to both the modal and persistent palette menus. */
 export function addMocInsertionMenuItem(
-	menu: Menu,
+	menu: PaletteMenu,
 	plugin: MyPalettePlugin,
 	result: PaletteResult,
 	onSelected?: () => void,
@@ -58,7 +59,7 @@ export function addMocInsertionMenuItem(
 
 /** Adds one action for eligible notes so a multi-selection shares one MOC destination. */
 export function addMocInsertionMenuItems(
-	menu: Menu,
+	menu: PaletteMenu,
 	plugin: MyPalettePlugin,
 	results: readonly PaletteResult[],
 	onSelected?: () => void,

@@ -4,7 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { SelectorHistoryCategory } from "src/settings/model";
 import { SelectionModal } from "src/ui/selectionModal";
 import { createSelectorPlugin } from "src/ui/testing/selectorPlugin";
-import { installObsidianDom, Menu } from "src/ui/testing/obsidianDom";
+import { installObsidianDom } from "src/ui/testing/obsidianDom";
+import { clickPaletteMenuItem, paletteMenuTitles } from "src/ui/testing/paletteMenuDom";
 
 vi.mock("obsidian", () => import("src/ui/testing/obsidianDom"));
 
@@ -136,25 +137,25 @@ describe("selector controls", () => {
 		await flush();
 		expect(f.modal.modalEl.querySelectorAll(selector)).toHaveLength(2);
 		f.click(".my-palette-options-button");
-		expect(Menu.last?.titles()).toEqual([
+		expect(paletteMenuTitles()).toEqual([
 			"Actions",
 			"Move to selected",
 			"Help",
 			"Options",
 			"Highlight search matches",
 		]);
-		expect(Menu.last?.titles()).not.toContain("Move to right sidebar");
-		Menu.last?.items.find(({ title }) => title === "Move to selected")?.click();
+		expect(paletteMenuTitles()).not.toContain("Move to right sidebar");
+		clickPaletteMenuItem("Move to selected");
 		expect(f.modal.choose).toHaveBeenCalledExactlyOnceWith("one");
 	});
 
 	it("uses selector help and shares the modal highlight preference", async () => {
 		const f = await fixture();
 		f.click(".my-palette-options-button");
-		Menu.last?.items.find(({ title }) => title === "Highlight search matches")?.click();
+		clickPaletteMenuItem("Highlight search matches");
 		expect(f.modal.modalEl.classList.contains("my-palette-highlight-disabled")).toBe(true);
 		f.click(".my-palette-options-button");
-		Menu.last?.items.find(({ title }) => title === "Help")?.click();
+		clickPaletteMenuItem("Help");
 		const help = document.querySelector(".my-palette-help-modal")!;
 		expect(help.textContent).toContain("Folder selection help");
 		expect(help.textContent).toContain("Restore a saved search without running an action");
@@ -206,7 +207,7 @@ describe("selector controls", () => {
 		f.key("y", { altKey: true });
 		expect(history.classList.contains("is-hidden")).toBe(false);
 		f.click(".my-palette-options-button");
-		Menu.last?.items.find(({ title }) => title === "Help")?.click();
+		clickPaletteMenuItem("Help");
 		expect(document.querySelector(".my-palette-help-modal")?.textContent).toContain(
 			"Alt+Y / history button",
 		);
