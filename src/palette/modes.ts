@@ -145,14 +145,16 @@ export function validateModeAlias(
  */
 export function matchPaletteModes(input: string, modes: ModeSettingsMap): PaletteModeDefinition[] {
 	const query = input.trim().toLocaleLowerCase();
-	if (!query) return [...PALETTE_MODES];
+	const enabledModes = PALETTE_MODES.filter(({ id }) => modes[id].enabled);
+	if (!query) return enabledModes;
 	const rank = (definition: PaletteModeDefinition): number => {
 		const alias = paletteModeAlias(definition.id, modes).toLocaleLowerCase();
 		if (alias === query) return 0;
 		if (alias.startsWith(query)) return 1;
 		return matchesTitleWords(definition, query) ? 2 : -1;
 	};
-	return PALETTE_MODES.map((definition) => ({ definition, rank: rank(definition) }))
+	return enabledModes
+		.map((definition) => ({ definition, rank: rank(definition) }))
 		.filter(({ rank }) => rank >= 0)
 		.sort((a, b) => a.rank - b.rank)
 		.map(({ definition }) => definition);
@@ -173,7 +175,10 @@ export function parseDirectModeEntry(
 ): { modeId: PaletteModeId; query: string } | undefined {
 	const lower = input.toLocaleLowerCase();
 	const candidates = [
-		...PALETTE_MODES.map(({ id }) => ({ id, alias: paletteModeAlias(id, modes) })),
+		...PALETTE_MODES.filter(({ id }) => modes[id].enabled).map(({ id }) => ({
+			id,
+			alias: paletteModeAlias(id, modes),
+		})),
 		// `es` stays a hidden alias of the vault Everything search.
 		{ id: "everything" as const, alias: "es" },
 	].sort((a, b) => b.alias.length - a.alias.length);

@@ -27,11 +27,13 @@ export class PaletteHelpModal extends Modal {
 
 		const modeSection = this.contentEl.createDiv("my-palette-help-modal__section");
 		modeSection.createEl("h3", { text: "Search modes" });
-		const modeRows = PALETTE_MODES.map((mode): [string, string, string] => [
-			paletteModeAlias(mode.id, this.modes),
-			mode.title,
-			mode.subtitle,
-		]);
+		const modeRows = PALETTE_MODES.filter(({ id }) => this.modes[id].enabled).map(
+			(mode): [string, string, string] => [
+				paletteModeAlias(mode.id, this.modes),
+				mode.title,
+				mode.subtitle,
+			],
+		);
 		for (const [prefix, name, description] of modeRows) {
 			const row = modeSection.createDiv("my-palette-help-modal__row");
 			row.createEl("code", { text: prefix });

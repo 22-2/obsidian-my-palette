@@ -273,6 +273,8 @@ export interface PaletteDisplaySettings {
 
 export interface ModeSettings {
 	alias: string;
+	/** A disabled mode is left out of Root Search and cannot be entered by its alias. */
+	enabled: boolean;
 }
 
 export type ModeSettingsMap = Record<PaletteModeId, ModeSettings>;
@@ -319,14 +321,14 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		daysToKeep: SETTING_DEFAULTS.searchHistory.daysToKeep,
 	},
 	modes: {
-		commands: { alias: ">" },
-		everything: { alias: "e" },
-		"everything-all": { alias: "esdir" },
-		outlinks: { alias: "o" },
-		backlinks: { alias: "b" },
-		bookmarks: { alias: "bk" },
-		smart: { alias: "sc" },
-		tabs: { alias: "t" },
+		commands: { alias: ">", enabled: true },
+		everything: { alias: "e", enabled: true },
+		"everything-all": { alias: "esdir", enabled: true },
+		outlinks: { alias: "o", enabled: true },
+		backlinks: { alias: "b", enabled: true },
+		bookmarks: { alias: "bk", enabled: true },
+		smart: { alias: "sc", enabled: true },
+		tabs: { alias: "t", enabled: true },
 	},
 	file: {
 		// Start both states identically so the split adds control without changing

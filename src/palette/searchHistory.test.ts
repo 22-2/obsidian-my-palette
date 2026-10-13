@@ -166,7 +166,7 @@ describe("search history", () => {
 });
 
 describe("formatSearchHistoryInput", () => {
-	const modes = { ...DEFAULT_SETTINGS.modes, everything: { alias: "es" } };
+	const modes = { ...DEFAULT_SETTINGS.modes, everything: { alias: "es", enabled: true } };
 	const entry = (
 		category: SearchHistoryCategory,
 		includeIgnored?: boolean,

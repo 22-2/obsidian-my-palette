@@ -59,7 +59,20 @@ describe("mergeSettings", () => {
 		expect(
 			mergeSettings({ modes: { commands: { alias: " " }, everything: { alias: "ev" } } })
 				.modes,
-		).toEqual({ ...DEFAULT_SETTINGS.modes, everything: { alias: "ev" } });
+		).toEqual({
+			...DEFAULT_SETTINGS.modes,
+			everything: { alias: "ev", enabled: true },
+		});
+	});
+
+	it("keeps a mode enabled unless its stored settings turn it off", () => {
+		expect(mergeSettings({ modes: { tabs: { alias: "t" } } }).modes.tabs).toEqual({
+			alias: "t",
+			enabled: true,
+		});
+		expect(
+			mergeSettings({ modes: { tabs: { alias: "t", enabled: false } } }).modes.tabs.enabled,
+		).toBe(false);
 	});
 
 	it("moves the schema 18 prefixes into the mode aliases without their trailing space", () => {
@@ -67,8 +80,8 @@ describe("mergeSettings", () => {
 			schemaVersion: 18,
 			prefixes: { command: "c ", everything: "ev " },
 		});
-		expect(settings.modes.commands).toEqual({ alias: "c" });
-		expect(settings.modes.everything).toEqual({ alias: "ev" });
+		expect(settings.modes.commands).toEqual({ alias: "c", enabled: true });
+		expect(settings.modes.everything).toEqual({ alias: "ev", enabled: true });
 		expect(settings).not.toHaveProperty("prefixes");
 	});
 
@@ -79,7 +92,7 @@ describe("mergeSettings", () => {
 				modes: { commands: { alias: "c" } },
 				prefixes: { command: "old " },
 			}).modes.commands,
-		).toEqual({ alias: "c" });
+		).toEqual({ alias: "c", enabled: true });
 	});
 
 	it("defaults history retention to unlimited", () => {

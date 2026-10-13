@@ -182,7 +182,8 @@ function normalizeModes(source: Record<string, unknown>): ModeSettingsMap {
 				(value): value is string => typeof value === "string" && value.trim() !== "",
 			);
 			// An empty alias could never be typed; fall back to the default instead.
-			return [id, { alias: (stored ?? DEFAULT_SETTINGS.modes[id].alias).trim() }];
+			const enabled = typeof rawMode.enabled === "boolean" ? rawMode.enabled : true;
+			return [id, { alias: (stored ?? DEFAULT_SETTINGS.modes[id].alias).trim(), enabled }];
 		}),
 	) as ModeSettingsMap;
 }

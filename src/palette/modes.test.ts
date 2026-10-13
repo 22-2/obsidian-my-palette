@@ -20,7 +20,7 @@ describe("paletteModeAlias", () => {
 	});
 
 	test("a changed alias is the one that enters the mode", () => {
-		const changed = { ...modes, commands: { alias: "c" } };
+		const changed = { ...modes, commands: { alias: "c", enabled: true } };
 		expect(paletteModeAlias("commands", changed)).toBe("c");
 		expect(parseDirectModeEntry("c link", changed)).toEqual({
 			modeId: "commands",
@@ -31,6 +31,14 @@ describe("paletteModeAlias", () => {
 });
 
 describe("matchPaletteModes", () => {
+	test("leaves a disabled mode out of Root Search and of alias entry", () => {
+		const disabled = { ...modes, commands: { ...modes.commands, enabled: false } };
+		expect(matchPaletteModes("", disabled).map(({ id }) => id)).not.toContain("commands");
+		expect(matchPaletteModes("> ", disabled)).toEqual([]);
+		expect(parseDirectModeEntry("> link", disabled)).toBeUndefined();
+		expect(paletteModeAlias("commands", disabled)).toBe(">");
+	});
+
 	test("lists every mode for an empty input", () => {
 		expect(ids("  ")).toEqual(PALETTE_MODES.map(({ id }) => id));
 	});
