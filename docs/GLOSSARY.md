@@ -103,11 +103,17 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 
 - コマンド名には「command」を入れられない(Obsidianのlint)ので、コマンド一覧だけは、モード名「Commands」とコマンド名「Open run list」が対応する。
 
-### ショートカット表の並び
+### ショートカット表
 
-- When列は、場所を「Palette、File search、Tag insert selector、MOC insert selector、MOC remove selector」の順に並べる。PaletteとSelectorの両方で使えるものは「All palettes and selectors」とだけ書く。
-- 行はWhenの順に並べる。「All palettes and selectors」を先頭にし、あとは上の場所の順で比べ、同じ書き出しなら短い方を先にする。同じWhenの行は、`HOTKEY_ACTIONS`の定義順。
-- 並び順は`src/settings/shortcutsTable.ts`の`SCOPE_ORDER`と`compareScopes`が決める。
+- When列は、場所ごとの列に分けて、使える場所に●を付ける。列は「Palette、File search、Tag、MOC +、MOC −」の順。見出しの短い名前は、Tagが「Tag insert selector」、MOC +が「MOC insert selector」、MOC −が「MOC remove selector」で、ツールチップとアクセシブルネームには正式名を使う。
+- PaletteとSelectorの両方で使えるものは、列をまたぐ1つのセルに「All palettes and selectors」と書く(Folder move selectorには専用の列がないため)。
+- 行はWhenの順に並べる。「All palettes and selectors」を先頭にし、あとは上の列の順で比べ、同じ書き出しなら短い方を先にする。同じWhenの行は、`HOTKEY_ACTIONS`の定義順。
+- 並び順と列は`src/settings/shortcutsTable.ts`の`SCOPE_ORDER`、`MATRIX_COLUMNS`、`compareScopes`が決める。
+
+### ツールチップ
+
+- 1つの要素に出すツールチップは1つにする。Obsidianは`aria-label`をツールチップとして出すので、`aria-label`のある要素に`title`を付けない(2つ出る)。
+- ホットキーを添えたいときは、`aria-label`の文言に含める(例: 「Search history (Ctrl+R)」)。名前を別に持たせたい要素は、`aria-labelledby`で名前を付け、説明は`title`だけに置く。
 
 ## 未決定
 

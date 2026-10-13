@@ -291,7 +291,7 @@ function createIntegrationsPage(plugin: SettingsHost, helpers: SettingPageHelper
 			helpers.group("Integrations", [
 				{
 					...helpers.render("Everything", "Vault notes and All vault files.", (setting) =>
-						renderEverythingIntegration(setting, plugin, plugin.app),
+						renderEverythingIntegration(setting, plugin),
 					),
 					aliases: [...EVERYTHING_MODAL_ITEMS],
 				},

@@ -175,12 +175,12 @@ Table palette では次の操作ができます。
 
 ### ショートカット
 
-**設定 → My Palette → Shortcuts** で、パレットと選択画面のホットキーを1つの表で見られます。操作名、キー、使える場所、既定値への戻しを並べ、操作名・キー・使える場所で絞り込めます。キーをクリックして新しいキーを押すと記録され、`Esc` で取り消し、`Backspace` か `Delete` で無効にできます。重複はその行の下に表示されます。変更はすぐに開いているパレットへ反映されます。
+**設定 → My Palette → Shortcuts** で、パレットと選択画面のホットキーを1つの表で見られます。操作名、キー、使える場所（Palette、File search、Tag、MOC +、MOC −ごとの●。すべてのパレットと選択画面で使えるものは1つのセルにまとめます）、既定値への戻しを並べ、操作名・キー・使える場所で絞り込めます。キーをクリックして新しいキーを押すと記録され、`Esc` で取り消し、`Backspace` か `Delete` で無効にできます。重複はその行の下に表示されます。変更はすぐに開いているパレットへ反映されます。
 
 ### Everything の設定
 
 1. Everything 1.5a と公式 HTTP Server Plugin をインストールして起動する。
-2. `Settings → My Palette → Integrations` で **Everything** を押して設定を開き、HTTP server URL（ユーザー名・パスワードを設定した場合はそれも）を入力し、`Test connection` を押す。
+2. `Settings → My Palette → Integrations` で **Everything** を押して設定を展開し、HTTP server URL（ユーザー名・パスワードを設定した場合はそれも）を入力し、`Test connection` を押す。
 
 通信は localhost のみで、外部サービスには何も送信しません。
 

@@ -69,14 +69,17 @@ test("turning Everything off removes its modes from Home and alias entry", async
 	await expect(input).toHaveValue("esdir ");
 });
 
-test("the Everything name opens its settings over the settings window", async ({ obsidian }) => {
+test("the Everything name opens its settings in a panel below it", async ({ obsidian }) => {
 	await obsidian.waitReady();
 	const settingsPage = await openIntegrations(obsidian);
-	await settingsPage.getByRole("button", { name: "Everything", exact: true }).click();
-	const modal = settingsPage.locator(".modal-container.mod-dim .modal");
-	await expect(modal).toBeVisible();
-	await expect(modal.getByText("Results and timing", { exact: true })).toBeVisible();
-	await expect(modal.getByText("Request timeout", { exact: true })).toBeVisible();
-	await settingsPage.keyboard.press("Escape");
-	await expect(modal).toBeHidden();
+	const header = settingsPage.getByRole("button", { name: "Everything", exact: true });
+	const panel = settingsPage.locator("#my-palette-everything-panel");
+	await expect(header).toHaveAttribute("aria-expanded", "false");
+	await expect(panel).toBeHidden();
+	await header.click();
+	await expect(header).toHaveAttribute("aria-expanded", "true");
+	await expect(panel.getByText("Results and timing", { exact: true })).toBeVisible();
+	await expect(panel.getByText("Request timeout", { exact: true })).toBeVisible();
+	await header.click();
+	await expect(panel).toBeHidden();
 });

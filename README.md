@@ -77,7 +77,7 @@ The action menu offers: open, open in a background tab, open side by side, open 
 
 ### Custom shortcuts
 
-Open **Settings → My Palette → Shortcuts** to see every palette and selector shortcut in one table, sorted by where each one works: the command, its keybinding, where it works and a Reset button. Filter the table by command, keybinding or place. Click a keybinding and press the new shortcut; **Escape** cancels, and **Backspace** or **Delete** turns the shortcut off. A conflict appears under its row, and **Reset** appears only for a changed binding. Changes are saved and apply immediately to open palettes and selectors. Keys that would type text in the input are rejected unless the shortcut is one that does not type, such as Tab for Enter mode. Arrow keys, Enter and Escape keep their standard behavior. Hotkeys for opening palettes remain available in Obsidian's own **Settings → Hotkeys**.
+Open **Settings → My Palette → Shortcuts** to see every palette and selector shortcut in one table, sorted by where each one works: the command, its keybinding, a dot for each place it works (Palette, File search, Tag, MOC +, MOC −) and a Reset button. A shortcut that works in every palette and selector says so in one cell. Filter the table by command, keybinding or place. Click a keybinding and press the new shortcut; **Escape** cancels, and **Backspace** or **Delete** turns the shortcut off. A conflict appears under its row, and **Reset** appears only for a changed binding. Changes are saved and apply immediately to open palettes and selectors. Keys that would type text in the input are rejected unless the shortcut is one that does not type, such as Tab for Enter mode. Arrow keys, Enter and Escape keep their standard behavior. Hotkeys for opening palettes remain available in Obsidian's own **Settings → Hotkeys**.
 
 ### Search modes
 
@@ -180,7 +180,7 @@ Settings are split into five pages: **General** (Return to Home after, search hi
 ### Everything setup
 
 1. Install Everything 1.5a and the official HTTP Server plugin, and start both.
-2. Under `Settings → My Palette → Integrations`, click **Everything** to open its settings, then set the HTTP server URL (and username / password if you set them) and press `Test connection`.
+2. Under `Settings → My Palette → Integrations`, click **Everything** to expand its settings, then set the HTTP server URL (and username / password if you set them) and press `Test connection`.
 
 Only localhost communication is used; My Palette sends nothing to external services.
 

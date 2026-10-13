@@ -1245,6 +1245,50 @@
 	font-size: var(--font-ui-smaller);
 }
 
+/* An integration with its own settings opens them in a panel below its header row. */
+.setting-item.my-palette-accordion {
+	flex-wrap: wrap;
+}
+
+/* The name is a plain label with a chevron, not a boxed button. */
+.my-palette-accordion__header {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--size-2-2);
+	height: auto;
+	padding: 0;
+	border: none;
+	background: none;
+	box-shadow: none;
+	color: inherit;
+	font: inherit;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.my-palette-accordion__header:hover {
+	color: var(--text-accent-hover);
+}
+
+.my-palette-accordion__chevron {
+	display: inline-flex;
+	color: var(--text-muted);
+	transition: transform 0.15s ease;
+}
+
+.my-palette-accordion__header[aria-expanded="true"] .my-palette-accordion__chevron {
+	transform: rotate(90deg);
+}
+
+.my-palette-accordion__panel {
+	flex: 0 0 100%;
+	margin-top: var(--size-4-2);
+}
+
+.my-palette-accordion__panel[hidden] {
+	display: none;
+}
+
 /* A mode whose integration is off stays listed, but dimmed and without a working switch. */
 .setting-item.is-unavailable .setting-item-name,
 .setting-item.is-unavailable .setting-item-description {
