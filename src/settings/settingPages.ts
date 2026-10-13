@@ -13,7 +13,8 @@ import { DEFAULT_SETTINGS } from "src/settings/model";
 import { excludedFolders, extensions } from "src/settings/mergeSettings";
 import { renderFileSortPriorityControl } from "src/settings/fileSortPriorityControl";
 import { renderShortcutsTable } from "src/settings/shortcutsTable";
-import { getPaletteMode, validateModeAlias, type ConfigurableModeId } from "src/palette/modes";
+import { PALETTE_MODES } from "src/palette/modes";
+import { renderModeSetting } from "src/settings/modeSettingControl";
 
 type ControlType = "text" | "toggle" | "slider";
 type ControlItem = Pick<SettingDefinitionControl, "control">;
@@ -69,6 +70,7 @@ export function createSettingPages(
 
 	return [
 		createPalettePage(plugin, helpers),
+		createModesPage(plugin, helpers),
 		createShortcutsPage(plugin, helpers),
 		createFileSearchPage(plugin, helpers),
 		createEverythingPage(plugin, setControlValue, helpers),
@@ -156,51 +158,50 @@ function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers)
 	);
 }
 
-function createPalettePage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
-	const aliasControl = (id: ConfigurableModeId, key: string) => {
-		const mode = getPaletteMode(id);
-		return {
-			name: mode.title,
-			desc: `Type this alias and a space to enter ${mode.title}, or find the mode by it in Root Search.`,
-			...helpers.control("text", key, {
-				validate: (value: string) => validateModeAlias(id, value, plugin.settings.modes),
-			}),
-		};
-	};
+function createModesPage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
 	return helpers.page(
-		"Palette",
-		"Mode aliases, remembered input, search history, and diagnostics.",
+		"Modes",
+		"Type an alias and a space to enter a mode directly, or find the mode in Root Search. Turn a mode off to hide it from Root Search and from alias entry.",
 		[
-			helpers.group("Palette behavior", [
-				{
-					name: "Remember last input",
-					desc: "Restore the last query for each palette mode until Obsidian is closed. Search text is not saved to disk.",
-					...helpers.control("toggle", "rememberLastInput"),
-				},
-			]),
-			helpers.group("Mode aliases", [
-				aliasControl("commands", "modes.commands.alias"),
-				aliasControl("everything", "modes.everything.alias"),
-			]),
-			helpers.group("Search history", [
-				{
-					name: "Clear search history",
-					desc: "Permanently remove all stored search history.",
-					action: () => {
-						plugin.clearSearchHistory();
-						new Notice("Search history cleared.");
-					},
-				},
-			]),
-			helpers.group("Diagnostics", [
-				{
-					name: "Show debug messages",
-					desc: "Write debug messages to the developer console.",
-					...helpers.control("toggle", "showLog"),
-				},
-			]),
+			helpers.group(
+				"Search modes",
+				PALETTE_MODES.map((mode) =>
+					helpers.render(mode.title, mode.subtitle, (setting) =>
+						renderModeSetting(setting, plugin, mode.id),
+					),
+				),
+			),
 		],
 	);
+}
+
+function createPalettePage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
+	return helpers.page("Palette", "Remembered input, search history, and diagnostics.", [
+		helpers.group("Palette behavior", [
+			{
+				name: "Remember last input",
+				desc: "Restore the last query for each palette mode until Obsidian is closed. Search text is not saved to disk.",
+				...helpers.control("toggle", "rememberLastInput"),
+			},
+		]),
+		helpers.group("Search history", [
+			{
+				name: "Clear search history",
+				desc: "Permanently remove all stored search history.",
+				action: () => {
+					plugin.clearSearchHistory();
+					new Notice("Search history cleared.");
+				},
+			},
+		]),
+		helpers.group("Diagnostics", [
+			{
+				name: "Show debug messages",
+				desc: "Write debug messages to the developer console.",
+				...helpers.control("toggle", "showLog"),
+			},
+		]),
+	]);
 }
 
 function createEverythingPage(

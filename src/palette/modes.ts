@@ -113,28 +113,21 @@ export function paletteModeAlias(id: PaletteModeId, modes: ModeSettingsMap): str
 	return modes[id].alias;
 }
 
-/** Modes whose alias the settings can change. */
-export type ConfigurableModeId = Extract<PaletteModeId, "commands" | "everything">;
-
 /**
  * Checks an alias typed in the settings. Aliases are matched as `alias + Space`,
  * so `e` and `esdir` can coexist; only an identical alias would be ambiguous.
  */
 export function validateModeAlias(
-	id: ConfigurableModeId,
+	id: PaletteModeId,
 	value: string,
 	modes: ModeSettingsMap,
 ): string | undefined {
 	const alias = value.trim().toLocaleLowerCase();
 	if (!alias) return "Enter an alias.";
 	if (/\s/.test(alias)) return "Aliases cannot contain spaces.";
-	const taken = [
-		...PALETTE_MODES.filter((mode) => mode.id !== id).map((mode) =>
-			paletteModeAlias(mode.id, modes),
-		),
-		// `es` stays a hidden alias of the vault Everything search.
-		...(id === "everything" ? [] : ["es"]),
-	].map((other) => other.toLocaleLowerCase());
+	const taken = PALETTE_MODES.filter((mode) => mode.id !== id)
+		.map((mode) => paletteModeAlias(mode.id, modes))
+		.map((other) => other.toLocaleLowerCase());
 	if (taken.includes(alias)) return `"${value.trim()}" is already used by another mode.`;
 	return undefined;
 }
@@ -174,14 +167,9 @@ export function parseDirectModeEntry(
 	modes: ModeSettingsMap,
 ): { modeId: PaletteModeId; query: string } | undefined {
 	const lower = input.toLocaleLowerCase();
-	const candidates = [
-		...PALETTE_MODES.filter(({ id }) => modes[id].enabled).map(({ id }) => ({
-			id,
-			alias: paletteModeAlias(id, modes),
-		})),
-		// `es` stays a hidden alias of the vault Everything search.
-		{ id: "everything" as const, alias: "es" },
-	].sort((a, b) => b.alias.length - a.alias.length);
+	const candidates = PALETTE_MODES.filter(({ id }) => modes[id].enabled)
+		.map(({ id }) => ({ id, alias: paletteModeAlias(id, modes) }))
+		.sort((a, b) => b.alias.length - a.alias.length);
 	for (const { id, alias } of candidates) {
 		const prefix = `${alias.toLocaleLowerCase()} `;
 		if (alias && lower.startsWith(prefix))

@@ -15,9 +15,9 @@ async function openPaletteSettings(obsidian: ObsidianAPI): Promise<Page> {
 		setting.openTabById("my-palette");
 	});
 	const settingsPage = await settingsOpened;
-	const palettePage = settingsPage.locator(".setting-item-name").filter({ hasText: /^Palette$/ });
-	await expect(palettePage).toBeVisible({ timeout: 10_000 });
-	await palettePage.click();
+	const modesPage = settingsPage.locator(".setting-item-name").filter({ hasText: /^Modes$/ });
+	await expect(modesPage).toBeVisible({ timeout: 10_000 });
+	await modesPage.click();
 	return settingsPage;
 }
 
@@ -37,7 +37,7 @@ function storedCommandAlias(obsidian: ObsidianAPI): Promise<string> {
 	);
 }
 
-test("mode aliases can be changed in the settings and are used in Root Search", async ({
+test("mode aliases can be changed on the Modes page and are used in Root Search", async ({
 	obsidian,
 }) => {
 	await obsidian.waitReady();
@@ -71,3 +71,45 @@ test("mode aliases can be changed in the settings and are used in Root Search", 
 	await expect(page.locator(".my-palette-suggest-modal .my-palette-mode-chip")).toHaveText("c");
 	await expect(input).toHaveValue("link search");
 });
+
+test("a mode turned off on the Modes page leaves Root Search and alias entry", async ({
+	obsidian,
+}) => {
+	await obsidian.waitReady();
+	const settingsPage = await openPaletteSettings(obsidian);
+	const bookmarks = settingsPage
+		.locator(".setting-item")
+		.filter({ has: settingsPage.getByText("Search Bookmarks", { exact: true }) });
+	// Obsidian switches flip when their label is clicked; the input inside is not clickable.
+	await bookmarks.locator(".checkbox-container").click();
+	await expect.poll(() => storedModeEnabled(obsidian, "bookmarks")).toBe(false);
+	await obsidian.evaluateApp(() =>
+		(app as unknown as { setting: { close(): void } }).setting.close(),
+	);
+
+	await runPaletteCommand(obsidian, "open-root");
+	const page = obsidian.page;
+	const input = page.locator(MODAL_INPUT);
+	await input.waitFor();
+	await expect(page.locator(".my-palette-suggest-modal")).not.toContainText("Search Bookmarks");
+	await input.pressSequentially("bk ");
+	await expect(page.locator(".my-palette-suggest-modal .my-palette-mode-chip")).toBeHidden();
+	await expect(input).toHaveValue("bk ");
+});
+
+function storedModeEnabled(obsidian: ObsidianAPI, id: string): Promise<boolean> {
+	return obsidian.evaluateApp(
+		(modeId) =>
+			(
+				app as unknown as {
+					plugins: {
+						plugins: Record<
+							string,
+							{ settings: { modes: Record<string, { enabled: boolean }> } }
+						>;
+					};
+				}
+			).plugins.plugins["my-palette"].settings.modes[modeId].enabled,
+		id,
+	);
+}

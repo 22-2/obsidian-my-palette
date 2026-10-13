@@ -15,21 +15,14 @@ describe("ignored-note scope", () => {
 });
 
 describe("parseInput Everything scopes", () => {
-	it("supports the bare Everything shortcut and its spaced form", () => {
-		expect(parseInput("es", modes)).toMatchObject({
-			mode: "everything",
-			query: "",
-			everythingScope: "vault",
-		});
-		expect(parseInput("es ", modes)).toMatchObject({
-			mode: "everything",
-			query: "",
-			everythingScope: "vault",
-		});
+	it("no longer gives es a special meaning", () => {
+		expect(parseInput("es", modes)).toMatchObject({ mode: "file", query: "es" });
+		expect(parseInput("es ", modes)).toMatchObject({ mode: "file" });
 	});
 
-	it("preserves native Everything syntax after es", () => {
-		expect(parseInput('es content:"e"', modes)).toMatchObject({
+	it("keeps the Everything alias and its native syntax", () => {
+		expect(parseInput('e content:"e"', modes)).toMatchObject({
+			mode: "everything",
 			query: 'content:"e"',
 			everythingScope: "vault",
 		});

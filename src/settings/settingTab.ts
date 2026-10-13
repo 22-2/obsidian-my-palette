@@ -20,8 +20,6 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 			"searchHistory.enabled": this.plugin.settings.searchHistory.enabled,
 			"searchHistory.addDelayMs": this.plugin.settings.searchHistory.addDelayMs,
 			"searchHistory.daysToKeep": this.plugin.settings.searchHistory.daysToKeep,
-			"modes.commands.alias": this.plugin.settings.modes.commands.alias,
-			"modes.everything.alias": this.plugin.settings.modes.everything.alias,
 			"file.excludedFolders": this.plugin.settings.file.excludedFolders.join("\n"),
 			openExternalMarkdownInObsidian: this.plugin.settings.openExternalMarkdownInObsidian,
 			rememberLastInput: this.plugin.settings.rememberLastInput,
@@ -85,12 +83,6 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 					SETTING_LIMITS.searchHistory.daysToKeep.min,
 					SETTING_LIMITS.searchHistory.daysToKeep.max,
 				);
-				break;
-			case "modes.commands.alias":
-				settings.modes.commands.alias = String(value).trim();
-				break;
-			case "modes.everything.alias":
-				settings.modes.everything.alias = String(value).trim();
 				break;
 			case "file.excludedFolders":
 				settings.file.excludedFolders = excludedFolders(String(value));

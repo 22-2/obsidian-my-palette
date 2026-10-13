@@ -73,11 +73,8 @@ describe("parseDirectModeEntry", () => {
 		expect(parseDirectModeEntry("bk ", modes)).toEqual({ modeId: "bookmarks", query: "" });
 	});
 
-	test("keeps es as a hidden alias of the vault Everything search", () => {
-		expect(parseDirectModeEntry("es notes", modes)).toEqual({
-			modeId: "everything",
-			query: "notes",
-		});
+	test("the old es alias is no longer an entry point", () => {
+		expect(parseDirectModeEntry("es notes", modes)).toBeUndefined();
 	});
 
 	test("needs the space after the alias", () => {
@@ -109,6 +106,7 @@ describe("validateModeAlias", () => {
 			'"E" is already used by another mode.',
 		);
 		expect(validateModeAlias("commands", "esdir", modes)).toBeDefined();
-		expect(validateModeAlias("commands", "es", modes)).toBeDefined();
+		// es is free again, since it is no longer a hidden alias.
+		expect(validateModeAlias("commands", "es", modes)).toBeUndefined();
 	});
 });

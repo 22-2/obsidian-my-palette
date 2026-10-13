@@ -5,6 +5,7 @@ import type {
 	SettingDefinitionPage,
 } from "obsidian";
 import type { SettingsHost } from "src/settings/settingsHost";
+import { PALETTE_MODES } from "src/palette/modes";
 import { createSettingPages } from "src/settings/settingPages";
 
 vi.mock("obsidian", () => ({
@@ -30,12 +31,17 @@ describe("settings page layout", () => {
 
 		expect(pages.filter(isPage).map((page) => page.name)).toEqual([
 			"Palette",
+			"Modes",
 			"Shortcuts",
 			"Vault file search",
 			"Everything",
 		]);
 
-		const [palette, hotkeys, fileSearch, everything] = pages.filter(isPage);
+		const [palette, modes, hotkeys, fileSearch, everything] = pages.filter(isPage);
+		expect(groupsOf(modes).map((group) => group.heading)).toEqual(["Search modes"]);
+		expect(
+			groupsOf(modes)[0].items?.map((item) => ("name" in item ? item.name : undefined)),
+		).toEqual(PALETTE_MODES.map((mode) => mode.title));
 		// The table is one row item; its contents are drawn by renderShortcutsTable.
 		expect(groupsOf(hotkeys).map((group) => group.heading)).toEqual([
 			"Palette and selector shortcuts",
@@ -43,7 +49,6 @@ describe("settings page layout", () => {
 		expect(palette.desc).toContain("search history");
 		expect(groupsOf(palette).map((group) => group.heading)).toEqual([
 			"Palette behavior",
-			"Mode aliases",
 			"Search history",
 			"Diagnostics",
 		]);

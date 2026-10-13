@@ -10,15 +10,14 @@ import { paletteModeAlias } from "src/palette/modes";
 export function parseInput(raw: string, modes: ModeSettingsMap): ParsedInput {
 	const lower = raw.toLocaleLowerCase();
 	const directoryAlias = paletteModeAlias("everything-all", modes);
-	if (lower === directoryAlias.toLocaleLowerCase() || lower === "es") {
-		// Why: these two built-in commands are useful as zero-query searches;
-		// requiring a trailing space makes the documented `es`/`esdir` shortcuts
-		// look like ordinary file queries until the user types another character.
+	if (lower === directoryAlias.toLocaleLowerCase()) {
+		// Why: the folder-wide alias is useful as a zero-query search; requiring a
+		// trailing space would make it look like an ordinary file query until the user types more.
 		return {
 			raw,
 			mode: "everything",
 			query: "",
-			everythingScope: lower === directoryAlias.toLocaleLowerCase() ? "directory" : "vault",
+			everythingScope: "directory",
 		};
 	}
 	const candidates: Array<{
@@ -42,7 +41,6 @@ export function parseInput(raw: string, modes: ModeSettingsMap): ParsedInput {
 			mode: "everything",
 			everythingScope: "vault",
 		},
-		{ prefix: "es ", mode: "everything", everythingScope: "vault" },
 	];
 	candidates.sort((a, b) => b.prefix.length - a.prefix.length);
 	for (const candidate of candidates) {
