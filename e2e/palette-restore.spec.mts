@@ -77,3 +77,42 @@ test("Immediately always starts at Root Search", async ({ obsidian }) => {
 	await runPaletteCommand(obsidian, "open-root");
 	await expect(obsidian.page.locator(MODAL_INPUT)).toHaveValue("");
 });
+
+test("General offers Pop to Root Search, set to 90 seconds by default", async ({ obsidian }) => {
+	const settingsOpened = obsidian.page.context().waitForEvent("page");
+	await obsidian.evaluateApp(() => {
+		const setting = (
+			app as unknown as { setting: { open(): void; openTabById(id: string): void } }
+		).setting;
+		setting.open();
+		setting.openTabById("my-palette");
+	});
+	const settingsPage = await settingsOpened;
+	const general = settingsPage.locator(".setting-item-name").filter({ hasText: /^General$/ });
+	await expect(general).toBeVisible({ timeout: 10_000 });
+	await general.click();
+	const row = settingsPage
+		.locator(".setting-item")
+		.filter({ has: settingsPage.getByText("Pop to Root Search", { exact: true }) });
+	const select = row.locator("select").first();
+	await expect(select).toHaveValue("90");
+	await select.selectOption("0");
+	await expect
+		.poll(() =>
+			obsidian.evaluateApp(
+				(id) =>
+					(
+						app as unknown as {
+							plugins: {
+								plugins: Record<
+									string,
+									{ settings: { launcher: { popToRootAfterSeconds: number } } }
+								>;
+							};
+						}
+					).plugins.plugins[id].settings.launcher.popToRootAfterSeconds,
+				PLUGIN_ID,
+			),
+		)
+		.toBe(0);
+});

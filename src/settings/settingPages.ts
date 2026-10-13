@@ -9,12 +9,7 @@ import {
 	type SettingGroupItem,
 } from "obsidian";
 import type { SettingsHost } from "src/settings/settingsHost";
-import {
-	DEFAULT_SETTINGS,
-	SETTING_LIMITS,
-	type PaletteSurface,
-	type PopToRootSeconds,
-} from "src/settings/model";
+import { SETTING_LIMITS, type PaletteSurface, type PopToRootSeconds } from "src/settings/model";
 
 const POP_TO_ROOT_LABELS: Record<string, string> = {
 	"0": "Immediately",
@@ -222,11 +217,22 @@ function createGeneralPage(plugin: SettingsHost, helpers: SettingPageHelpers): P
 		);
 	return helpers.page("General", "Launcher behavior, search history, display, and diagnostics.", [
 		helpers.group("Launcher", [
-			{
-				name: "Remember last input",
-				desc: "Restore the last query for each palette mode until Obsidian is closed. Search text is not saved to disk.",
-				...helpers.control("toggle", "rememberLastInput"),
-			},
+			helpers.render(
+				"Pop to Root Search",
+				"When Open palette is used again, resume the last search if it was closed this recently. Immediately always starts at Root Search. Search text is kept in memory only.",
+				(setting) =>
+					setting.addDropdown((dropdown) =>
+						dropdown
+							.addOptions(POP_TO_ROOT_LABELS)
+							.setValue(String(plugin.settings.launcher.popToRootAfterSeconds))
+							.onChange(async (value) => {
+								plugin.settings.launcher.popToRootAfterSeconds = Number(
+									value,
+								) as PopToRootSeconds;
+								await plugin.saveSettings();
+							}),
+					),
+			),
 		]),
 		helpers.group("Search history", [
 			{
