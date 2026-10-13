@@ -1198,7 +1198,7 @@
 
 .my-palette-shortcuts__key {
 	display: inline-block;
-	min-width: 9rem;
+	min-width: 7rem;
 	padding: 2px 8px;
 	font-family: var(--font-monospace);
 	border-radius: var(--radius-s);
@@ -1215,9 +1215,26 @@
 	box-shadow: 0 0 0 2px var(--interactive-accent);
 }
 
-.my-palette-shortcuts__when {
+/* The When columns hold a dot each, so they stay narrow and centered. */
+.my-palette-shortcuts__table .my-palette-shortcuts__when {
+	width: 1%;
+	text-align: center;
+	white-space: nowrap;
 	color: var(--text-muted);
 	font-size: var(--font-ui-smaller);
+}
+
+.my-palette-shortcuts__table td.my-palette-shortcuts__when.is-everywhere {
+	width: auto;
+	color: var(--text-faint);
+}
+
+.my-palette-shortcuts__dot {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--interactive-accent);
 }
 
 .my-palette-shortcuts__error-row td {

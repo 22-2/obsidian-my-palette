@@ -145,9 +145,11 @@ export class PaletteHistoryControls {
 	private updateHotkeyHint(): void {
 		const hotkey = (this.options.plugin.settings.hotkeys ?? DEFAULT_HOTKEYS).history;
 		if (!this.historyButton) return;
-		this.historyButton.title = hotkey
-			? `Search history (${formatHotkey(hotkey)})`
-			: "Search history";
+		// Why: Obsidian shows aria-label as the tooltip, so a title as well would show two.
+		this.historyButton.setAttribute(
+			"aria-label",
+			hotkey ? `Search history (${formatHotkey(hotkey)})` : "Search history",
+		);
 		if (!hotkey) {
 			this.historyButton.removeAttribute("aria-keyshortcuts");
 			return;

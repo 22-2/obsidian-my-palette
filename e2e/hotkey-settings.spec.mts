@@ -31,6 +31,12 @@ test("the Shortcuts table records changes, rejects conflicts and restores defaul
 		});
 	const hidePreview = row("Hide palette or selector");
 	const key = hidePreview.locator(".my-palette-shortcuts__key");
+	// Everywhere reads as one cell; a narrower shortcut marks each place with a dot.
+	await expect(hidePreview).toContainText("All palettes and selectors");
+	await expect(hidePreview.locator(".my-palette-shortcuts__dot")).toHaveCount(0);
+	const preview = row("Preview selected result");
+	await expect(preview.locator(".my-palette-shortcuts__dot")).toHaveCount(4);
+	await expect(preview.getByRole("img", { name: "MOC remove selector" })).toBeVisible();
 	await expect(key).toHaveText("Alt+H");
 	await expect(hidePreview.getByRole("button", { name: "Reset" })).toBeHidden();
 

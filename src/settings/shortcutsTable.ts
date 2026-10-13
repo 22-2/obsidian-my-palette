@@ -63,9 +63,44 @@ export function compareScopes(a: readonly HotkeyScope[], b: readonly HotkeyScope
 	return first.length - second.length;
 }
 
+/**
+ * The When columns. A dot marks where a shortcut works; the header is short, and its full
+ * name is the tooltip and the accessible name. Shortcuts that work in every palette and
+ * selector span these columns instead, because the folder move selector has none of its own.
+ */
+const MATRIX_COLUMNS: readonly { scope: HotkeyScope; header: string; name: string }[] = [
+	{ scope: "palette", header: "Palette", name: "Palette" },
+	{ scope: "file-search", header: "File search", name: "File search" },
+	{ scope: "tag-insert-selector", header: "Tag", name: "Tag insert selector" },
+	{ scope: "moc-insert-selector", header: "MOC +", name: "MOC insert selector" },
+	{ scope: "moc-remove-selector", header: "MOC −", name: "MOC remove selector" },
+];
+const FIXED_COLUMNS = 3;
+const TABLE_COLUMNS = FIXED_COLUMNS + MATRIX_COLUMNS.length;
+
 const HOTKEY_ACTION_LIST = (Object.keys(HOTKEY_ACTIONS) as HotkeyAction[]).sort((a, b) =>
 	compareScopes(HOTKEY_ACTIONS[a].scopes, HOTKEY_ACTIONS[b].scopes),
 );
+
+/** One dot per place the shortcut works, or a single cell when it works everywhere. */
+function renderWhenCells(row: HTMLTableRowElement, scopes: readonly HotkeyScope[]): void {
+	if (coversPalettesAndSelectors(scopes)) {
+		row.createEl("td", {
+			text: hotkeyScopeLabel(scopes),
+			cls: "my-palette-shortcuts__when is-everywhere",
+			attr: { colspan: String(MATRIX_COLUMNS.length) },
+		});
+		return;
+	}
+	for (const { scope, name } of MATRIX_COLUMNS) {
+		const cell = row.createEl("td", { cls: "my-palette-shortcuts__when" });
+		if (scopes.includes(scope))
+			cell.createSpan({
+				cls: "my-palette-shortcuts__dot",
+				attr: { role: "img", "aria-label": name },
+			});
+	}
+}
 
 interface ShortcutRow {
 	row: HTMLTableRowElement;
@@ -92,7 +127,15 @@ export function renderShortcutsTable(setting: Setting, plugin: SettingsHost): vo
 	});
 	const table = root.createEl("table", { cls: "my-palette-shortcuts__table" });
 	const head = table.createEl("thead").createEl("tr");
-	for (const label of ["Command", "Keybinding", "When", ""]) head.createEl("th", { text: label });
+	for (const label of ["Command", "Keybinding"]) head.createEl("th", { text: label });
+	for (const { header, name } of MATRIX_COLUMNS) {
+		head.createEl("th", {
+			text: header,
+			cls: "my-palette-shortcuts__when",
+			attr: name === header ? {} : { "aria-label": name },
+		});
+	}
+	head.createEl("th", { attr: { "aria-label": "Reset" } });
 	const tbody = table.createEl("tbody");
 
 	const rows = new Map<HotkeyAction, ShortcutRow>();
@@ -103,21 +146,27 @@ export function renderShortcutsTable(setting: Setting, plugin: SettingsHost): vo
 	for (const action of HOTKEY_ACTION_LIST) {
 		const definition = HOTKEY_ACTIONS[action];
 		const row = tbody.createEl("tr", { cls: "my-palette-shortcuts__row" });
+		const nameId = `my-palette-shortcut-${action}-name`;
+		const keyId = `my-palette-shortcut-${action}-key`;
 		const name = row.createEl("td", {
 			text: definition.name,
 			cls: "my-palette-shortcuts__name",
+			attr: { id: nameId },
 		});
 		name.title = definition.description;
 
 		const keyCell = row.createEl("td");
 		const key = keyCell.createDiv({
 			cls: "my-palette-shortcuts__key",
-			attr: { role: "button", tabindex: "0" },
+			// Named by its row and its own text, so only the description's tooltip shows.
+			attr: {
+				id: keyId,
+				role: "button",
+				tabindex: "0",
+				"aria-labelledby": `${nameId} ${keyId}`,
+			},
 		});
-		row.createEl("td", {
-			text: hotkeyScopeLabel(definition.scopes),
-			cls: "my-palette-shortcuts__when",
-		});
+		renderWhenCells(row, definition.scopes);
 		const resetCell = row.createEl("td");
 		const reset = resetCell.createEl("button", {
 			text: "Reset",
@@ -127,7 +176,9 @@ export function renderShortcutsTable(setting: Setting, plugin: SettingsHost): vo
 
 		const errorRow = tbody.createEl("tr", { cls: "my-palette-shortcuts__error-row" });
 		errorRow.hidden = true;
-		const errorCell = errorRow.createEl("td", { attr: { colspan: "4", role: "alert" } });
+		const errorCell = errorRow.createEl("td", {
+			attr: { colspan: String(TABLE_COLUMNS), role: "alert" },
+		});
 
 		const editor = createRowEditor(action, plugin, {
 			key,
@@ -204,7 +255,6 @@ function createRowEditor(action: HotkeyAction, plugin: SettingsHost, parts: RowP
 		parts.key.textContent = label;
 		parts.key.toggleClass("is-recording", recording);
 		parts.key.toggleClass("is-disabled", !recording && !hotkey);
-		parts.key.setAttribute("aria-label", `${definition.name} keybinding: ${label}`);
 		parts.key.title = definition.description;
 		// Only a changed binding offers Reset.
 		parts.reset.toggleAttribute("hidden", sameHotkey(hotkey, DEFAULT_HOTKEYS[action]));
