@@ -29,6 +29,8 @@ export interface SuggestionPanelProps<T> {
 	onInput: (input: string) => void;
 	renderSuggestion: (item: T, el: HTMLElement, query: string) => void;
 	onChoose: (item: T, event: MouseEvent | KeyboardEvent) => void | Promise<void>;
+	/** Navigation entries activate on a single click, even in an extended-selection list. */
+	activateOnClick?: (item: T) => boolean;
 	onResultFocus?: () => void;
 	onMiddleClick?: (item: T, event: MouseEvent) => void | Promise<void>;
 	/** Left press on an element marked `data-row-toggle` inside a row. */
@@ -606,6 +608,18 @@ export class SuggestionPanel<T> extends Component {
 					event.stopImmediatePropagation();
 					this.leftClickRows.add(row);
 					this.props.onRowToggle?.(item, event);
+				} else if (
+					event.button === 0 &&
+					this.props.activateOnClick?.(item) &&
+					!event.ctrlKey &&
+					!event.metaKey &&
+					!event.shiftKey
+				) {
+					event.preventDefault();
+					event.stopImmediatePropagation();
+					this.leftClickRows.add(row);
+					this.setSelectedIndex(index, false);
+					void this.props.onChoose(item, event);
 				} else if (event.button === 0 && this.selectionMode === "extended") {
 					// Why: the sidebar can lose its click to Obsidian after mousedown;
 					// select now and leave opening exclusively to double-click/Enter.
@@ -659,6 +673,7 @@ export class SuggestionPanel<T> extends Component {
 				const row = this.suggestionRowAtEvent(event);
 				const item = row ? this.itemAtRow(row) : undefined;
 				if (!row || item === undefined) return;
+				if (this.props.activateOnClick?.(item)) return;
 				event.preventDefault();
 				event.stopImmediatePropagation();
 				this.setSelectedIndex(Number(row.getAttribute("data-index")), false);

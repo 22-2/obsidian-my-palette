@@ -15,6 +15,7 @@ export interface SuggestModalProps<T> {
 	initialInput?: string;
 	footerText?: string;
 	selectionMode?: "single" | "extended";
+	activateOnClick?: (item: T) => boolean;
 	/** Input/selection modes; see SuggestionPanelProps.interactionModes. */
 	interactionModes?: boolean;
 	controls?: SelectorControls;
@@ -50,6 +51,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			initialInput = "",
 			footerText,
 			selectionMode = "single",
+			activateOnClick,
 			interactionModes,
 			controls,
 			getHotkeys,
@@ -77,6 +79,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			initialInput,
 			footerText,
 			selectionMode,
+			activateOnClick,
 			interactionModes,
 			onInput: () => {
 				this.historyCommitted = false;

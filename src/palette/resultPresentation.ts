@@ -48,7 +48,7 @@ export function toPaletteSelectionItem(
 			badge: result.alias,
 		};
 	}
-	if (result.mode === "search-history") {
+	if (result.mode === "search-history" || result.mode === "settings-entry") {
 		return {
 			label: result.primary,
 			description: result.secondary,
@@ -108,7 +108,10 @@ export function toPaletteSelectionItem(
  */
 export function getCopyablePaths(
 	app: App,
-	result: Exclude<PaletteResult, { mode: "command" | "search-history" | "mode-entry" }>,
+	result: Exclude<
+		PaletteResult,
+		{ mode: "command" | "search-history" | "mode-entry" | "settings-entry" }
+	>,
 ): CopyablePaths {
 	// Everything folders are navigable results, but only file results should expose file-path actions.
 	if (result.mode === "everything") {
@@ -137,11 +140,15 @@ export function getCopyablePaths(
 
 export function isCopyablePaletteResult(
 	result: PaletteResult,
-): result is Exclude<PaletteResult, { mode: "command" | "search-history" | "mode-entry" }> {
+): result is Exclude<
+	PaletteResult,
+	{ mode: "command" | "search-history" | "mode-entry" | "settings-entry" }
+> {
 	return (
 		result.mode !== "command" &&
 		result.mode !== "search-history" &&
-		result.mode !== "mode-entry"
+		result.mode !== "mode-entry" &&
+		result.mode !== "settings-entry"
 	);
 }
 

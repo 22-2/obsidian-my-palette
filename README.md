@@ -83,6 +83,8 @@ Open **Settings → My Palette → Shortcuts** to see every palette and selector
 
 `My Palette: Open home` starts at Home, which lists the modes above your files, much like Raycast. Pick a mode with `Enter` or `Tab`, or type its alias followed by a space. The alias then leaves the input and shows as a chip on its left, so the input holds only the query. `Esc` (or `Backspace` in an empty input, or a click on the chip) goes back to Home with the alias selected, so `Enter` re-enters the mode. `Esc` at Home closes the palette.
 
+Between Modes and Files, Home's **Settings** section lists **General**, **Modes**, **File search**, **Shortcuts**, and **Integration**. Click a row or choose it with Enter or Tab to open that settings page directly. Typing a page name or `settings` filters these entries.
+
 | Alias | Mode           | Purpose                                                                 |
 | ----- | -------------- | ----------------------------------------------------------------------- |
 | none  | Files          | Search files in the Vault                                               |

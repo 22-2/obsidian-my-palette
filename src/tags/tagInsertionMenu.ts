@@ -13,7 +13,8 @@ function resolveTagTarget(app: App, result: PaletteResult): TFile | undefined {
 	if (
 		result.mode === "command" ||
 		result.mode === "search-history" ||
-		result.mode === "mode-entry"
+		result.mode === "mode-entry" ||
+		result.mode === "settings-entry"
 	)
 		return undefined;
 	if (result.mode === "file" && result.ignored) return undefined;

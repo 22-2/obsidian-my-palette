@@ -18,7 +18,7 @@ test("Home enters a mode with Enter and returns with Esc", async ({ obsidian }) 
 	await runPaletteCommand(obsidian, "open-home");
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);
-	await expect(page.locator(`${MODAL} ${HEADING}`)).toHaveText(["Modes", "Files"]);
+	await expect(page.locator(`${MODAL} ${HEADING}`)).toHaveText(["Modes", "Settings", "Files"]);
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Notes");
 
 	await input.pressSequentially("n");

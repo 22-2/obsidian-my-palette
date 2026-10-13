@@ -32,6 +32,12 @@ export async function executePaletteResult(
 ): Promise<void> {
 	// Hosts handle these before execution: they change the palette, not the workspace.
 	if (result.mode === "search-history" || result.mode === "mode-entry") return;
+	if (result.mode === "settings-entry") {
+		if (action !== "primary") return;
+		if (options.closeWhenDone) options.close();
+		plugin.openSettings(result.pageName);
+		return;
+	}
 	if (result.mode === "command") {
 		if (action !== "primary") return;
 		const exists = plugin.commandProvider

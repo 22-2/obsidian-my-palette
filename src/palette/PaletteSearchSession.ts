@@ -18,6 +18,7 @@ import {
 	type PaletteModeId,
 } from "src/palette/modes";
 import type { ModeEntryResult } from "src/palette/results";
+import { settingsEntries } from "src/settings/settingsNavigation";
 
 export type FixedPaletteMode = Extract<
 	PaletteMode,
@@ -229,7 +230,9 @@ export class PaletteSearchSession {
 				includeIgnored,
 				sourceFile: this.sourceFile,
 			});
-			const results = [...this.modeEntries(input), ...providerResults];
+			const settings =
+				this.listsModes && this.route.kind === "home" ? settingsEntries(input) : [];
+			const results = [...this.modeEntries(input), ...settings, ...providerResults];
 			if (this.disposed || generation !== this.generation) return [];
 			this.state = { ...this.state, results, resultCount: results.length, error: undefined };
 			this.emit();
@@ -377,7 +380,9 @@ export function paletteSectionOf(
 	result: PaletteResult,
 ): string | undefined {
 	if (state?.route.kind !== "home") return undefined;
-	if (!state.results.some((item) => item.mode === "mode-entry")) return undefined;
+	if (!state.results.some((item) => item.mode === "mode-entry" || item.mode === "settings-entry"))
+		return undefined;
+	if (result.mode === "settings-entry") return "Settings";
 	return result.mode === "mode-entry" ? "Modes" : "Files";
 }
 

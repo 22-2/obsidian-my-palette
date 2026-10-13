@@ -99,6 +99,15 @@ export function populatePaletteResultMenu({
 		);
 		return;
 	}
+	if (result.mode === "settings-entry") {
+		menu.addItem((item) =>
+			item
+				.setTitle("Open settings")
+				.setIcon("settings")
+				.onClick(() => void activate("primary", result)),
+		);
+		return;
+	}
 	if (result.mode === "command") {
 		menu.addItem((item) =>
 			item

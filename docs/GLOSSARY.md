@@ -104,6 +104,12 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 - コマンド名には「command」を入れられない(Obsidianのlint)ので、コマンド一覧だけは、モード名「Commands」とコマンド名「Open run list」が対応する。
 - Everythingは1つのモード。Obsidian-excludedがOFFならObsidianで利用できる設定済み拡張子のファイル、ONなら保管庫フォルダー内の全ファイルを検索する。従来のVault notesとAll vault filesを統合し、`esdir`は保存済み履歴の読み取りだけで扱う。
 
+### HomeのSettings
+
+- HomeにはModes、Settings、Filesの順でセクションを並べる。
+- Settingsの項目はGeneral、Modes、File search、Shortcuts、Integrationの順。Integrationは既存のIntegrations設定ページへの入口。
+- Settings項目は設定ページを開く操作で、ファイルや検索履歴として扱わない。
+
 ### ショートカット表
 
 - When列は、場所ごとの列に分けて、使える場所に●を付ける。列は「Palette、File search、Tag、MOC +、MOC −」の順。見出しの短い名前は、Tagが「Tag insert selector」、MOC +が「MOC insert selector」、MOC −が「MOC remove selector」で、ツールチップとアクセシブルネームには正式名を使う。

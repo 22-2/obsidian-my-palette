@@ -54,6 +54,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				placeholder: "Search files",
 				initialInput,
 				selectionMode: "extended",
+				activateOnClick: (result) => result.mode === "settings-entry",
 				footerText: `Source: ${app.workspace.getActiveFile()?.path ?? "No active note"}`,
 			},
 			app,
@@ -142,7 +143,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 
 	protected override onResultFocus(): void {
 		// Entering a mode is navigation; the alias typed to reach it is not a search.
-		if (this.getSelectedItem()?.mode === "mode-entry") return;
+		const mode = this.getSelectedItem()?.mode;
+		if (mode === "mode-entry" || mode === "settings-entry") return;
 		this.session.commitCurrentSearch();
 	}
 
@@ -221,6 +223,10 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override onSuggestionTab(result: PaletteResult): boolean {
+		if (result.mode === "settings-entry") {
+			void this.activatePaletteResult("primary", result);
+			return true;
+		}
 		if (result.mode !== "mode-entry") return false;
 		this.enterMode(result);
 		return true;
@@ -321,7 +327,12 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override async onSuggestionPreview(result: PaletteResult): Promise<void> {
-		if (result.mode === "command" || result.mode === "mode-entry") return;
+		if (
+			result.mode === "command" ||
+			result.mode === "mode-entry" ||
+			result.mode === "settings-entry"
+		)
+			return;
 		this.session.commitCurrentSearch();
 		await this.activatePaletteResult("primary", result, false);
 	}

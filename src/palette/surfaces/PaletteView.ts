@@ -261,7 +261,8 @@ export class PaletteView extends ItemView {
 			onInput: (input) => this.updateInput(input),
 			onResultFocus: () => {
 				// Entering a mode is navigation; the alias typed to reach it is not a search.
-				if (this.panel?.getSelectedItem()?.mode === "mode-entry") return;
+				const mode = this.panel?.getSelectedItem()?.mode;
+				if (mode === "mode-entry" || mode === "settings-entry") return;
 				this.session?.commitCurrentSearch();
 			},
 			renderSuggestion: (result, el, query) =>
@@ -274,6 +275,7 @@ export class PaletteView extends ItemView {
 					query,
 				),
 			onChoose: (result) => this.execute(result, "primary"),
+			activateOnClick: (result) => result.mode === "settings-entry",
 			onMiddleClick: (result) => this.openInBackground(result),
 			onContextMenu: (result, event, selectedItems) =>
 				this.showContextMenu(result, event, selectedItems),
@@ -288,6 +290,10 @@ export class PaletteView extends ItemView {
 			},
 			onModeChipClick: () => this.returnToHome(),
 			onTab: (result) => {
+				if (result.mode === "settings-entry") {
+					void this.execute(result, "primary");
+					return true;
+				}
 				if (result.mode !== "mode-entry") return false;
 				this.enterMode(result.modeId);
 				return true;

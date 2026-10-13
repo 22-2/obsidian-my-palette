@@ -31,6 +31,7 @@ import { RecentTagStore } from "src/tags/recentTagStore";
 import { PaletteDisplaySettingsStore } from "src/settings/paletteDisplaySettingsStore";
 import { IntegrationAvailability } from "src/app/integrationAvailability";
 import { getVaultRootPath } from "src/ignored-notes/ignoredPaths";
+import type { SettingsPageName } from "src/settings/settingsNavigation";
 import "../styles.css";
 
 const logger = log.withTag("MyPalette");
@@ -223,13 +224,19 @@ export default class MyPalettePlugin extends Plugin {
 		this.searchHistory?.clearCategories(categories);
 	}
 
-	openSettings(): void {
+	openSettings(pageName?: SettingsPageName): void {
 		const setting = (
 			this.app as unknown as {
-				setting: { open: () => void; openTabById: (id: string) => void };
+				setting: {
+					open: () => void;
+					openTabById: (id: string) => void;
+					openPagePath: (id: string, path: string[]) => void;
+				};
 			}
 		).setting;
 		setting.open();
-		setting.openTabById(this.manifest.id);
+		// Obsidian's declarative page paths use the page name when no explicit id is set.
+		if (pageName) setting.openPagePath(this.manifest.id, [pageName]);
+		else setting.openTabById(this.manifest.id);
 	}
 }
