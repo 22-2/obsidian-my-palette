@@ -12,6 +12,7 @@ import type MyPalettePlugin from "src/main";
 function resolveTagTarget(app: App, result: PaletteResult): TFile | undefined {
 	if (
 		result.mode === "command" ||
+		result.mode === "plugin" ||
 		result.mode === "search-history" ||
 		result.mode === "mode-entry" ||
 		result.mode === "settings-entry"

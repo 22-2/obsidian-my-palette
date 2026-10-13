@@ -11,7 +11,8 @@ export type PaletteMode =
 	| "backlink"
 	| "bookmark"
 	| "smart"
-	| "tab";
+	| "tab"
+	| "plugin";
 export type EverythingScope = "vault" | "directory";
 
 export interface ParsedInput {
@@ -106,6 +107,16 @@ export interface TabResult extends BaseResult {
 	file?: TFile;
 }
 
+/** An installed community plugin; choosing it opens its folder in an external editor. */
+export interface PluginResult extends BaseResult {
+	mode: "plugin";
+	pluginId: string;
+	absolutePath: string;
+	vaultPath: string;
+	enabled: boolean;
+	hasSettings: boolean;
+}
+
 export type PaletteResult =
 	| FileResult
 	| CommandResult
@@ -115,6 +126,7 @@ export type PaletteResult =
 	| BookmarkResult
 	| SmartConnectionResult
 	| TabResult
+	| PluginResult
 	| ModeEntryResult
 	| SettingsEntryResult;
 
@@ -133,6 +145,7 @@ export function getResultFilePath(result: PaletteResult): string | undefined {
 		case "smart":
 			return result.file.path;
 		case "command":
+		case "plugin":
 		case "search-history":
 		case "mode-entry":
 		case "settings-entry":

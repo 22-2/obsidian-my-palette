@@ -40,6 +40,19 @@ describe("getResultFilePath", () => {
 		["backlink", { ...base, mode: "backlink", file, line: 1 }, "notes/a.md"],
 		["smart", { ...base, mode: "smart", file, score: 1 }, "notes/a.md"],
 		["command", { ...base, mode: "command", commandId: "c" }, undefined],
+		[
+			"plugin",
+			{
+				...base,
+				mode: "plugin",
+				pluginId: "alpha",
+				absolutePath: "C:/vault/cfg/plugins/alpha",
+				vaultPath: "cfg/plugins/alpha",
+				enabled: true,
+				hasSettings: true,
+			},
+			undefined,
+		],
 	];
 
 	it.each(cases)("%s", (_name, result, expected) => {

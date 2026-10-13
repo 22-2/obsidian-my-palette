@@ -397,5 +397,7 @@ export function palettePlaceholder(mode: PaletteMode): string {
 					? "Search Smart Connections"
 					: mode === "tab"
 						? "Search open tabs"
-						: "Search files";
+						: mode === "plugin"
+							? "Search installed plugins"
+							: "Search files";
 }

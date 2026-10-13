@@ -154,3 +154,40 @@ it("hides external open actions for commands", () => {
 	expect(f.actions.has("Open in external editor")).toBe(false);
 	expect(f.actions.has("Show in system explorer")).toBe(false);
 });
+
+it("offers editor, explorer and settings for plugin results without note navigation", () => {
+	const f = fixture(false);
+	const app = {
+		setting: { openTabById: vi.fn() },
+	} as unknown as App;
+	const result: PaletteResult = {
+		id: "plugin:alpha",
+		mode: "plugin",
+		primary: "Alpha Plugin",
+		secondary: "alpha 1.0.0",
+		icon: "puzzle",
+		pluginId: "alpha",
+		absolutePath: "C:/vault/cfg/plugins/alpha",
+		vaultPath: "cfg/plugins/alpha",
+		enabled: true,
+		hasSettings: true,
+	};
+	const onNoteActionSelected = vi.fn();
+	populatePaletteResultMenu({
+		...f.options,
+		app,
+		result,
+		selectedItems: [result],
+		onNoteActionSelected,
+	});
+	expect(f.actions.has("Open in external editor")).toBe(true);
+	expect(f.actions.has("Show in system explorer")).toBe(true);
+	expect(f.actions.has("Open plugin settings")).toBe(true);
+	expect(f.actions.has("Open")).toBe(false);
+
+	f.actions.get("Open in external editor")!();
+	expect(f.options.activate).toHaveBeenCalledExactlyOnceWith("primary", result);
+	f.actions.get("Open plugin settings")!();
+	expect(app.setting.openTabById).toHaveBeenCalledExactlyOnceWith("alpha");
+	expect(onNoteActionSelected).toHaveBeenCalled();
+});

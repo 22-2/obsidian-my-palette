@@ -18,6 +18,7 @@ export type SearchHistoryCategory =
 	| "bookmark"
 	| "smart"
 	| "tab"
+	| "plugin"
 	| "everything"
 	| "everything-directory"
 	| "link"
@@ -342,6 +343,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		bookmarks: { alias: "bk", enabled: true },
 		smart: { alias: "sc", enabled: true },
 		tabs: { alias: "t", enabled: true },
+		plugins: { alias: "p", enabled: true },
 	},
 	file: {
 		// Start both states identically so the split adds control without changing

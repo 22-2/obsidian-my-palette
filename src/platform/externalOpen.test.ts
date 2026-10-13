@@ -48,6 +48,21 @@ describe("getResultAbsolutePath", () => {
 		expect(getResultAbsolutePath(app, result)).toBe("C:/vault/image.png");
 	});
 
+	it("returns the folder path for plugin results", () => {
+		const app = appWithPaths(null);
+		expect(
+			getResultAbsolutePath(app, {
+				...base,
+				mode: "plugin",
+				pluginId: "alpha",
+				absolutePath: "C:/vault/cfg/plugins/alpha",
+				vaultPath: "cfg/plugins/alpha",
+				enabled: true,
+				hasSettings: false,
+			}),
+		).toBe("C:/vault/cfg/plugins/alpha");
+	});
+
 	it("resolves link and bookmark files through the vault adapter", () => {
 		const app = appWithPaths("C:/vault/Link.md");
 		const file = { path: "Link.md" } as unknown as import("obsidian").TFile;
@@ -98,6 +113,20 @@ describe("isFolderResult", () => {
 			}),
 		).toBe(false);
 		expect(isFolderResult({ ...base, mode: "file", vaultPath: "a.md" })).toBe(false);
+	});
+
+	it("treats plugin folders as folders", () => {
+		expect(
+			isFolderResult({
+				...base,
+				mode: "plugin",
+				pluginId: "alpha",
+				absolutePath: "C:/vault/cfg/plugins/alpha",
+				vaultPath: "cfg/plugins/alpha",
+				enabled: true,
+				hasSettings: false,
+			}),
+		).toBe(true);
 	});
 });
 

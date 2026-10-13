@@ -10,7 +10,8 @@ export type PaletteModeId =
 	| "backlinks"
 	| "bookmarks"
 	| "smart"
-	| "tabs";
+	| "tabs"
+	| "plugins";
 
 export interface PaletteModeDefinition {
 	id: PaletteModeId;
@@ -86,6 +87,14 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		subtitle: "Workspace",
 		icon: "panel-top",
 		placeholder: "Search open tabs",
+	},
+	{
+		id: "plugins",
+		mode: "plugin",
+		title: "Plugins",
+		subtitle: "Installed",
+		icon: "puzzle",
+		placeholder: "Search installed plugins",
 	},
 ];
 

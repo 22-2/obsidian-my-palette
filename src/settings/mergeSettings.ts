@@ -240,6 +240,19 @@ function normalizeModes(source: Record<string, unknown>): ModeSettingsMap {
 			alias = suffix === 1 ? "notes" : `notes${suffix}`;
 		modes.notes.alias = alias;
 	}
+	// Plugins arrived after the other modes; keep a stored custom alias that
+	// collides with it by moving the new mode to a free fallback.
+	if (!rawModes.plugins) {
+		const taken = new Set(
+			modeIds
+				.filter((id) => id !== "plugins")
+				.map((id) => modes[id].alias.toLocaleLowerCase()),
+		);
+		let alias = DEFAULT_SETTINGS.modes.plugins.alias;
+		for (let suffix = 1; taken.has(alias.toLocaleLowerCase()); suffix++)
+			alias = suffix === 1 ? "plugins" : `plugins${suffix}`;
+		modes.plugins.alias = alias;
+	}
 	return modes;
 }
 

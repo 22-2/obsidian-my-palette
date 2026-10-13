@@ -311,6 +311,21 @@ describe("Notes mode migration", () => {
 	});
 });
 
+describe("Plugins mode migration", () => {
+	it("adds the mode with its default alias for existing settings", () => {
+		const settings = mergeSettings({ modes: { tabs: { alias: "t" } } });
+		expect(settings.modes.plugins).toEqual({ alias: "p", enabled: true });
+	});
+
+	it("moves the new mode aside when its alias is already taken", () => {
+		const settings = mergeSettings({
+			modes: { commands: { alias: "p", enabled: true } },
+		});
+		expect(settings.modes.commands.alias).toBe("p");
+		expect(settings.modes.plugins.alias).toBe("plugins");
+	});
+});
+
 describe("merged Everything mode", () => {
 	it("preserves its alias and keeps the mode enabled if either old scope was enabled", () => {
 		const settings = mergeSettings({

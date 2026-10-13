@@ -11,6 +11,11 @@ vi.mock("obsidian", () => ({
 	},
 	Notice: class {},
 	normalizePath: (path: string) => path,
+	Platform: { isDesktopApp: true },
+}));
+
+vi.mock("src/platform/externalOpen", () => ({
+	openInExternalEditor: vi.fn().mockResolvedValue(null),
 }));
 
 function fixture() {
@@ -155,5 +160,25 @@ describe("note opening focus", () => {
 		).rejects.toThrow("open failed");
 		expect(f.workspace.revealLeaf).not.toHaveBeenCalled();
 		expect(f.workspace.setActiveLeaf).not.toHaveBeenCalled();
+	});
+
+	it("opens plugin folders in the external editor", async () => {
+		const f = fixture();
+		const { openInExternalEditor } = await import("src/platform/externalOpen");
+		const pluginResult: PaletteResult = {
+			id: "plugin:alpha",
+			mode: "plugin",
+			primary: "Alpha Plugin",
+			secondary: "alpha 1.0.0",
+			icon: "puzzle",
+			pluginId: "alpha",
+			absolutePath: "C:/vault/cfg/plugins/alpha",
+			vaultPath: "cfg/plugins/alpha",
+			enabled: true,
+			hasSettings: true,
+		};
+		await executePaletteResult(f.plugin, pluginResult, "primary", f.options);
+		expect(openInExternalEditor).toHaveBeenCalledExactlyOnceWith("C:/vault/cfg/plugins/alpha");
+		expect(f.options.close).not.toHaveBeenCalled();
 	});
 });

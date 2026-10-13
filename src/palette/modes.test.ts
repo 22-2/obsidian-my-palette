@@ -27,6 +27,7 @@ describe("paletteModeAlias", () => {
 	test("uses the aliases in the settings", () => {
 		expect(paletteModeAlias("commands", modes)).toBe(">");
 		expect(paletteModeAlias("everything", modes)).toBe("e");
+		expect(paletteModeAlias("plugins", modes)).toBe("p");
 	});
 
 	test("a changed alias is the one that enters the mode", () => {
@@ -59,6 +60,16 @@ describe("matchPaletteModes", () => {
 
 	test("lists every mode for an empty input", () => {
 		expect(ids("  ")).toEqual(PALETTE_MODES.map(({ id }) => id));
+	});
+
+	test("lists Plugins after Tabs and enters it by alias", () => {
+		const order = ids("");
+		expect(order.at(-1)).toBe("plugins");
+		expect(order.indexOf("tabs")).toBeLessThan(order.indexOf("plugins"));
+		expect(parseDirectModeEntry("p alpha", modes)).toEqual({
+			modeId: "plugins",
+			query: "alpha",
+		});
 	});
 
 	test("puts an exact alias before alias prefixes", () => {

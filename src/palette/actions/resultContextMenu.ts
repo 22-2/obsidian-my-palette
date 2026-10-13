@@ -124,6 +124,47 @@ export function populatePaletteResultMenu({
 		);
 		return;
 	}
+	if (result.mode === "plugin") {
+		// Why: a plugin folder has no Obsidian view, so skip leaf navigation and
+		// note actions (MOC, tags) and offer only external opening and settings.
+		menu.addItem((item) =>
+			item
+				.setTitle("Open in external editor")
+				.setIcon("code")
+				.onClick(() => void activate("primary", result)),
+		);
+		if (isDesktopApp()) {
+			const pluginPath = getResultAbsolutePath(app, result);
+			if (pluginPath) {
+				menu.addItem((item) =>
+					item
+						.setTitle("Show in system explorer")
+						.setIcon("folder-open")
+						.onClick(() => {
+							onNoteActionSelected?.();
+							showInSystemExplorer(pluginPath, true);
+						}),
+				);
+			}
+		}
+		if (result.hasSettings) {
+			menu.addItem((item) =>
+				item
+					.setTitle("Open plugin settings")
+					.setIcon("settings")
+					.onClick(() => {
+						onNoteActionSelected?.();
+						app.setting.openTabById(result.pluginId);
+					}),
+			);
+		}
+		addCopyPathMenuItems(
+			menu,
+			getCopyablePaths(app, result),
+			(path) => void copyPathToClipboard(path),
+		);
+		return;
+	}
 
 	const paths = getCopyablePaths(app, result);
 	menu.addItem((item) =>

@@ -3,6 +3,7 @@ import { getLeafForAction, revealOpenedLeaf } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
+import { openInExternalEditor } from "src/platform/externalOpen";
 
 export interface PaletteResultExecutionOptions {
 	/** Keep the persistent panel alive after a successful action. */
@@ -90,6 +91,17 @@ export async function executePaletteResult(
 		// leaf that actually received the related note, including split actions.
 		const editor = editorOf(openedLeaf);
 		if (editor) editor.setCursor({ line: result.line, ch: 0 });
+		finish(options);
+		return;
+	}
+	if (result.mode === "plugin") {
+		// Why: a plugin folder has no Obsidian view; Enter hands it to the
+		// external editor like the quick-open flow did.
+		const error = await openInExternalEditor(result.absolutePath);
+		if (error) {
+			options.showError(error);
+			return;
+		}
 		finish(options);
 		return;
 	}

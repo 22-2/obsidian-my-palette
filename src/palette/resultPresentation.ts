@@ -130,6 +130,12 @@ export function getCopyablePaths(
 			relativePath: result.vaultPath,
 			absolutePath: getVaultFullPath(app, result.vaultPath) ?? undefined,
 		};
+	if (result.mode === "plugin")
+		return {
+			fileName: fileNameOf(result.vaultPath),
+			relativePath: result.vaultPath,
+			absolutePath: result.absolutePath,
+		};
 	if (!file) return {};
 	return {
 		fileName: fileNameOf(file.path),
