@@ -69,17 +69,28 @@ test("turning Everything off removes its modes from Home and alias entry", async
 	await expect(input).toHaveValue("esdir ");
 });
 
-test("the Everything name opens its settings in a panel below it", async ({ obsidian }) => {
+test("the Everything card opens its settings without interfering with its controls", async ({
+	obsidian,
+}) => {
 	await obsidian.waitReady();
 	const settingsPage = await openIntegrations(obsidian);
 	const header = settingsPage.getByRole("button", { name: "Everything", exact: true });
 	const panel = settingsPage.locator("#my-palette-everything-panel");
 	await expect(header).toHaveAttribute("aria-expanded", "false");
 	await expect(panel).toBeHidden();
-	await header.click();
+	await header.locator(".setting-item-description").click();
 	await expect(header).toHaveAttribute("aria-expanded", "true");
 	await expect(panel.getByText("Results and timing", { exact: true })).toBeVisible();
 	await expect(panel.getByText("Request timeout", { exact: true })).toBeVisible();
-	await header.click();
+	await settingsPage.locator(".my-palette-accordion__header .checkbox-container").click();
+	await expect(header).toHaveAttribute("aria-expanded", "true");
+	await panel.getByRole("textbox").first().fill("http://127.0.0.1:51361/");
+	await expect(panel).toBeVisible();
+	await header.focus();
+	await header.press("Space");
+	await expect(panel).toBeHidden();
+	await header.press("Enter");
+	await expect(panel).toBeVisible();
+	await settingsPage.locator(".my-palette-accordion__header").click({ position: { x: 5, y: 5 } });
 	await expect(panel).toBeHidden();
 });

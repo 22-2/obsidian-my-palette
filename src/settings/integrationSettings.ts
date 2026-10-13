@@ -29,29 +29,41 @@ function addSwitch(
 }
 
 /**
- * The Everything row: its name and a chevron open a panel below it with the connection
- * and result settings, and the switch stays at the right end of the header.
+ * The Everything card opens its settings from anywhere in the header, except its switch.
  */
 export function renderEverythingIntegration(setting: Setting, plugin: SettingsHost): void {
 	const panelId = "my-palette-everything-panel";
 	setting.settingEl.addClass("my-palette-accordion");
-	setting.nameEl.empty();
-	const header = setting.nameEl.createEl("button", {
-		cls: "my-palette-accordion__header",
-		attr: { type: "button", "aria-expanded": "false", "aria-controls": panelId },
+	const header = setting.settingEl.createDiv("my-palette-accordion__header");
+	header.append(setting.infoEl, setting.controlEl);
+	setting.nameEl.id = "my-palette-everything-name";
+	setting.infoEl.setAttrs({
+		role: "button",
+		tabindex: "0",
+		"aria-labelledby": setting.nameEl.id,
+		"aria-expanded": "false",
+		"aria-controls": panelId,
 	});
-	header.createSpan({ text: "Everything" });
-	setIcon(header.createSpan("my-palette-accordion__chevron"), "chevron-right");
+	setIcon(setting.nameEl.createSpan("my-palette-accordion__chevron"), "chevron-right");
 	const panel = setting.settingEl.createDiv({
 		cls: "my-palette-accordion__panel",
 		attr: { id: panelId },
 	});
 	panel.hidden = true;
 	renderEverythingFields(panel, plugin);
-	header.addEventListener("click", () => {
-		const expanded = header.getAttribute("aria-expanded") === "true";
-		header.setAttribute("aria-expanded", String(!expanded));
+	const togglePanel = () => {
+		const expanded = setting.infoEl.getAttribute("aria-expanded") === "true";
+		setting.infoEl.setAttribute("aria-expanded", String(!expanded));
 		panel.hidden = expanded;
+	};
+	header.addEventListener("click", (event) => {
+		if (event.composedPath().includes(setting.controlEl)) return;
+		togglePanel();
+	});
+	setting.infoEl.addEventListener("keydown", (event) => {
+		if (event.key !== "Enter" && event.key !== " ") return;
+		event.preventDefault();
+		togglePanel();
 	});
 	addSwitch(setting, plugin.settings.integrations.everything.enabled, async (value) => {
 		plugin.settings.integrations.everything.enabled = value;

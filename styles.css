@@ -1281,23 +1281,31 @@
 	flex-wrap: wrap;
 }
 
-/* The name is a plain label with a chevron, not a boxed button. */
 .my-palette-accordion__header {
-	display: inline-flex;
+	display: flex;
 	align-items: center;
-	gap: var(--size-2-2);
-	height: auto;
-	padding: 0;
-	border: none;
-	background: none;
-	box-shadow: none;
-	color: inherit;
-	font: inherit;
-	text-decoration: none;
+	gap: var(--size-4-4);
+	width: 100%;
 	cursor: pointer;
 }
 
-.my-palette-accordion__header:hover {
+.my-palette-accordion__header .setting-item-info {
+	flex: 1;
+	min-width: 0;
+}
+
+.my-palette-accordion__header .setting-item-info:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 4px;
+}
+
+.my-palette-accordion__header .setting-item-name {
+	display: flex;
+	align-items: center;
+	gap: var(--size-2-2);
+}
+
+.my-palette-accordion__header:hover .setting-item-name {
 	color: var(--text-accent-hover);
 }
 
@@ -1307,7 +1315,7 @@
 	transition: transform 0.15s ease;
 }
 
-.my-palette-accordion__header[aria-expanded="true"] .my-palette-accordion__chevron {
+.my-palette-accordion__header [aria-expanded="true"] .my-palette-accordion__chevron {
 	transform: rotate(90deg);
 }
 
