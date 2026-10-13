@@ -1,5 +1,10 @@
 import type { PaletteModeId } from "src/palette/modes";
-import type { ModeSettingsMap, MyPaletteSettings, PaletteSurface } from "src/settings/model";
+import type {
+	IntegrationSettings,
+	ModeSettingsMap,
+	MyPaletteSettings,
+	PaletteSurface,
+} from "src/settings/model";
 import { normalizeHotkeys } from "src/ui/hotkeys";
 import {
 	DEFAULT_BLANK_FILE_SORT_PRIORITIES,
@@ -127,6 +132,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 			),
 		},
 		modes: normalizeModes(source),
+		integrations: normalizeIntegrations(source),
 		file: {
 			sortPriorities,
 			excludedFolders: excludedFolders(rawFile.excludedFolders),
@@ -160,6 +166,15 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 			vaultExtensions: extensions(rawEverything.vaultExtensions),
 		},
 	};
+}
+
+// A missing or non-boolean switch means the integration stays on, as it did before switches existed.
+function normalizeIntegrations(source: Record<string, unknown>): IntegrationSettings {
+	const raw = (source.integrations ?? {}) as Record<string, Record<string, unknown> | undefined>;
+	const enabled = (key: keyof IntegrationSettings) => ({
+		enabled: typeof raw[key]?.enabled === "boolean" ? (raw[key]?.enabled as boolean) : true,
+	});
+	return { everything: enabled("everything"), smartConnections: enabled("smartConnections") };
 }
 
 // Before schema 19 the two configurable aliases were stored as `prefixes` with a trailing space.

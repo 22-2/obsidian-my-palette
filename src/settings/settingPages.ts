@@ -13,6 +13,13 @@ import { DEFAULT_SETTINGS, SETTING_LIMITS, type PaletteSurface } from "src/setti
 import { excludedFolders, extensions } from "src/settings/mergeSettings";
 import { renderFileSortPriorityControl } from "src/settings/fileSortPriorityControl";
 import { renderShortcutsTable } from "src/settings/shortcutsTable";
+import {
+	EVERYTHING_MODAL_ITEMS,
+	isSmartConnectionsInstalled,
+	renderEverythingIntegration,
+	renderSmartConnectionsIntegration,
+	renderVscodeIntegration,
+} from "src/settings/integrationSettings";
 import { PALETTE_MODES } from "src/palette/modes";
 import { renderModeSetting } from "src/settings/modeSettingControl";
 
@@ -20,7 +27,6 @@ type ControlType = "text" | "toggle" | "slider";
 type ControlItem = Pick<SettingDefinitionControl, "control">;
 type PageItem = SettingDefinitionPage;
 type GroupItem = SettingDefinitionGroup;
-type SetControlValue = (key: string, value: unknown) => Promise<void>;
 
 interface SettingPageHelpers {
 	control: (type: ControlType, key: string, extra?: Record<string, unknown>) => ControlItem;
@@ -62,10 +68,7 @@ const createSettingPageHelpers = (): SettingPageHelpers => ({
  * settings in a separate window, so a page for every small setting group makes
  * users hunt through links before they can see the controls they need.
  */
-export function createSettingPages(
-	plugin: SettingsHost,
-	setControlValue: SetControlValue,
-): SettingDefinitionItem[] {
+export function createSettingPages(plugin: SettingsHost): SettingDefinitionItem[] {
 	const helpers = createSettingPageHelpers();
 
 	return [
@@ -73,7 +76,7 @@ export function createSettingPages(
 		createModesPage(plugin, helpers),
 		createFileSearchPage(plugin, helpers),
 		createShortcutsPage(plugin, helpers),
-		createEverythingPage(plugin, setControlValue, helpers),
+		createIntegrationsPage(plugin, helpers),
 	];
 }
 
@@ -173,13 +176,6 @@ function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers)
 					},
 				),
 			]),
-			helpers.group("Opening", [
-				{
-					name: "Open external Markdown in Obsidian",
-					desc: "Open Markdown outside the Vault, or hidden by Excluded files, in Obsidian instead of VS Code.",
-					...helpers.control("toggle", "openExternalMarkdownInObsidian"),
-				},
-			]),
 		],
 	);
 }
@@ -268,74 +264,35 @@ function createGeneralPage(plugin: SettingsHost, helpers: SettingPageHelpers): P
 	]);
 }
 
-function createEverythingPage(
-	plugin: SettingsHost,
-	setControlValue: SetControlValue,
-	helpers: SettingPageHelpers,
-): PageItem {
+function createIntegrationsPage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
 	return helpers.page(
-		"Everything",
-		"Everything 1.5 connection, credentials, and how many results to ask for.",
+		"Integrations",
+		"Turn an integration off to hide its modes from Root Search and alias entry. Everything has its own settings; the others have none.",
 		[
-			helpers.group("Connection", [
+			helpers.group("Integrations", [
 				{
-					name: "HTTP server URL",
-					desc: "URL configured in the official Everything 1.5 HTTP Server plugin.",
-					...helpers.control("text", "everything.httpUrl", {
-						placeholder: DEFAULT_SETTINGS.everything.httpUrl,
-						validate: (value: string) => {
-							try {
-								new URL(value);
-							} catch {
-								return "Enter a valid URL.";
-							}
-						},
-					}),
+					...helpers.render(
+						"Everything",
+						"Search Vault Notes and Search All Files in Vault.",
+						(setting) => renderEverythingIntegration(setting, plugin, plugin.app),
+					),
+					aliases: [...EVERYTHING_MODAL_ITEMS],
 				},
-				{
-					name: "Username",
-					desc: "Optional username configured in Everything.",
-					...helpers.control("text", "everything.username"),
-				},
-				helpers.render("Password", "Stored in this plugin's local data.json.", (setting) =>
-					setting.addText((text) => {
-						text.inputEl.type = "password";
-						text.setValue(plugin.settings.everything.password).onChange(
-							(value) => void setControlValue("everything.password", value),
-						);
-					}),
+				helpers.render(
+					"Smart Connections",
+					"Search Related Notes, using the embeddings Smart Connections already has.",
+					(setting) =>
+						renderSmartConnectionsIntegration(
+							setting,
+							plugin,
+							isSmartConnectionsInstalled(plugin.app),
+						),
 				),
-				{
-					name: "Test connection",
-					desc: "Runs a harmless query against the configured HTTP Server.",
-					action: async () => {
-						const result = await plugin.testEverythingConnection();
-						new Notice(result.ok ? result.message : `Everything: ${result.message}`);
-					},
-				},
-			]),
-			helpers.group("Results and timing", [
-				{
-					name: "Maximum results",
-					desc: "Most results requested from Everything for each search.",
-					...helpers.control("slider", "everything.maxResults", {
-						...SETTING_LIMITS.everything.maxResults,
-					}),
-				},
-				{
-					name: "Input delay",
-					desc: "Milliseconds to wait after typing before asking Everything.",
-					...helpers.control("slider", "everything.debounceMs", {
-						...SETTING_LIMITS.everything.debounceMs,
-					}),
-				},
-				{
-					name: "Request timeout",
-					desc: "Milliseconds to wait for Everything before showing an error.",
-					...helpers.control("slider", "everything.requestTimeoutMs", {
-						...SETTING_LIMITS.everything.requestTimeoutMs,
-					}),
-				},
+				helpers.render(
+					"VS Code",
+					"Open Markdown outside the Vault, or hidden by Excluded files, in VS Code instead of Obsidian.",
+					(setting) => renderVscodeIntegration(setting, plugin),
+				),
 			]),
 		],
 	);

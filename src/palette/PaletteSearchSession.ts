@@ -9,6 +9,7 @@ import {
 import type MyPalettePlugin from "src/main";
 import { getSearchHistoryCategory } from "src/palette/inputParser";
 import {
+	availableModes,
 	findPaletteMode,
 	getPaletteMode,
 	matchPaletteModes,
@@ -286,7 +287,7 @@ export class PaletteSearchSession {
 	/** In Root Search, `alias + Space` (typed or pasted) moves into that mode. */
 	private applyDirectModeEntry(input: string): string {
 		if (this.route.kind !== "root") return input;
-		const entry = parseDirectModeEntry(input, this.plugin.settings.modes);
+		const entry = parseDirectModeEntry(input, availableModes(this.plugin.settings));
 		if (!entry) return input;
 		this.route = { kind: "mode", modeId: entry.modeId };
 		return entry.query;
@@ -300,7 +301,7 @@ export class PaletteSearchSession {
 
 	private modeEntries(input: string): ModeEntryResult[] {
 		if (!this.listsModes || this.route.kind !== "root") return [];
-		const { modes } = this.plugin.settings;
+		const modes = availableModes(this.plugin.settings);
 		return matchPaletteModes(input, modes).map((definition) => ({
 			id: `mode:${definition.id}`,
 			mode: "mode-entry",

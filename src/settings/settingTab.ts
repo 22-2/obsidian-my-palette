@@ -106,6 +106,6 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 	}
 
 	getSettingDefinitions(): SettingDefinitionItem[] {
-		return createSettingPages(this.plugin, (key, value) => this.setControlValue(key, value));
+		return createSettingPages(this.plugin);
 	}
 }

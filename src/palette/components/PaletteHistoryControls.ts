@@ -5,6 +5,7 @@ import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
 import type { PaletteSurface, SearchHistoryCategory } from "src/settings/model";
 import { PaletteHelpModal } from "src/ui/paletteHelpModal";
+import { availableModes } from "src/palette/modes";
 import { SearchHistorySuggest } from "src/ui/searchHistorySuggest";
 import { DEFAULT_HOTKEYS, formatHotkey, matchesHotkey } from "src/ui/hotkeys";
 
@@ -205,7 +206,7 @@ export class PaletteHistoryControls {
 		else
 			new PaletteHelpModal(
 				plugin.app,
-				plugin.settings.modes,
+				availableModes(plugin.settings),
 				surface,
 				plugin.settings.hotkeys,
 			).open();

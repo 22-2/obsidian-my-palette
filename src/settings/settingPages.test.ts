@@ -10,7 +10,9 @@ import { createSettingPages } from "src/settings/settingPages";
 
 vi.mock("obsidian", () => ({
 	DropdownComponent: class {},
+	Modal: class {},
 	Notice: class {},
+	Setting: class {},
 }));
 
 function isPage(item: SettingDefinitionItem): item is SettingDefinitionPage {
@@ -26,17 +28,17 @@ function groupsOf(page: SettingDefinitionPage): SettingDefinitionGroup[] {
 }
 describe("settings page layout", () => {
 	it("keeps related controls discoverable in task-oriented pages", () => {
-		const pages = createSettingPages({} as SettingsHost, async () => {});
+		const pages = createSettingPages({} as SettingsHost);
 
 		expect(pages.filter(isPage).map((page) => page.name)).toEqual([
 			"General",
 			"Modes",
 			"File search",
 			"Shortcuts",
-			"Everything",
+			"Integrations",
 		]);
 
-		const [general, modes, fileSearch, hotkeys, everything] = pages.filter(isPage);
+		const [general, modes, fileSearch, hotkeys, integrations] = pages.filter(isPage);
 		expect(groupsOf(modes).map((group) => group.heading)).toEqual(["Search modes"]);
 		expect(
 			groupsOf(modes)[0].items?.map((item) => ("name" in item ? item.name : undefined)),
@@ -58,11 +60,12 @@ describe("settings page layout", () => {
 			"Lower prior folders",
 			"Ignored note index",
 			"Result sorting",
-			"Opening",
 		]);
-		expect(groupsOf(everything).map((group) => group.heading)).toEqual([
-			"Connection",
-			"Results and timing",
-		]);
+		expect(groupsOf(integrations).map((group) => group.heading)).toEqual(["Integrations"]);
+		expect(
+			groupsOf(integrations)[0].items?.map((item) =>
+				"name" in item ? item.name : undefined,
+			),
+		).toEqual(["Everything", "Smart Connections", "VS Code"]);
 	});
 });

@@ -1,6 +1,11 @@
 import type { Setting } from "obsidian";
 import type { SettingsHost } from "src/settings/settingsHost";
-import { getPaletteMode, validateModeAlias, type PaletteModeId } from "src/palette/modes";
+import {
+	getPaletteMode,
+	isModeIntegrationOn,
+	validateModeAlias,
+	type PaletteModeId,
+} from "src/palette/modes";
 
 /**
  * One mode on the Modes page: its alias and an on/off switch, in a standard row so
@@ -18,6 +23,14 @@ export function renderModeSetting(setting: Setting, plugin: SettingsHost, id: Pa
 		errorEl.toggleAttribute("hidden", message === undefined);
 	};
 	showError(undefined);
+	const integrationOn = isModeIntegrationOn(id, plugin.settings);
+	if (!integrationOn) {
+		setting.settingEl.addClass("is-unavailable");
+		setting.infoEl.createDiv({
+			cls: "my-palette-mode-note",
+			text: "Turned off in Integrations",
+		});
+	}
 
 	setting.addText((text) => {
 		text.setValue(plugin.settings.modes[id].alias);
@@ -35,6 +48,7 @@ export function renderModeSetting(setting: Setting, plugin: SettingsHost, id: Pa
 		toggle
 			.setValue(plugin.settings.modes[id].enabled)
 			.setTooltip(`Show ${mode.title} in Root Search`)
+			.setDisabled(!integrationOn)
 			.onChange(async (value) => {
 				plugin.settings.modes[id].enabled = value;
 				await plugin.saveSettings();

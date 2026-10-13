@@ -1,4 +1,4 @@
-import type { ModeSettingsMap } from "src/settings/model";
+import type { IntegrationSettings, ModeSettingsMap, MyPaletteSettings } from "src/settings/model";
 import type { EverythingScope, PaletteMode } from "src/palette/results";
 
 export type PaletteModeId =
@@ -130,6 +130,35 @@ export function validateModeAlias(
 		.map((other) => other.toLocaleLowerCase());
 	if (taken.includes(alias)) return `"${value.trim()}" is already used by another mode.`;
 	return undefined;
+}
+
+/** The integration that provides a mode. Modes without one are built in. */
+const INTEGRATION_OF_MODE: Partial<Record<PaletteModeId, keyof IntegrationSettings>> = {
+	everything: "everything",
+	"everything-all": "everything",
+	smart: "smartConnections",
+};
+
+/** Whether the integration that provides a mode is switched on. */
+export function isModeIntegrationOn(id: PaletteModeId, settings: MyPaletteSettings): boolean {
+	const integration = INTEGRATION_OF_MODE[id];
+	return integration ? settings.integrations[integration].enabled : true;
+}
+
+/**
+ * The modes the palette may enter. A mode is off when its own switch or its integration
+ * is off; Root Search and alias entry read this, while the settings keep each switch as set.
+ */
+export function availableModes(settings: MyPaletteSettings): ModeSettingsMap {
+	return Object.fromEntries(
+		PALETTE_MODES.map(({ id }) => [
+			id,
+			{
+				...settings.modes[id],
+				enabled: settings.modes[id].enabled && isModeIntegrationOn(id, settings),
+			},
+		]),
+	) as ModeSettingsMap;
 }
 
 /**

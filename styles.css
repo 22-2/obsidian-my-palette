@@ -1227,3 +1227,14 @@
 	color: var(--text-error);
 	font-size: var(--font-ui-smaller);
 }
+
+/* A mode whose integration is off stays listed, but dimmed and without a working switch. */
+.setting-item.is-unavailable .setting-item-name,
+.setting-item.is-unavailable .setting-item-description {
+	opacity: 0.6;
+}
+
+.my-palette-mode-note {
+	color: var(--text-faint);
+	font-size: var(--font-ui-smaller);
+}

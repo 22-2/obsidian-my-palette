@@ -279,7 +279,13 @@ export interface ModeSettings {
 
 export type ModeSettingsMap = Record<PaletteModeId, ModeSettings>;
 
+export interface IntegrationSettings {
+	everything: { enabled: boolean };
+	smartConnections: { enabled: boolean };
+}
+
 export interface MyPaletteSettings {
+	integrations: IntegrationSettings;
 	hotkeys: PaletteHotkeys;
 	schemaVersion: typeof SETTINGS_SCHEMA_VERSION;
 	showLog: boolean;
@@ -305,6 +311,10 @@ export interface MyPaletteSettings {
 }
 
 export const DEFAULT_SETTINGS: MyPaletteSettings = {
+	integrations: {
+		everything: { enabled: true },
+		smartConnections: { enabled: true },
+	},
 	hotkeys: DEFAULT_HOTKEYS,
 	schemaVersion: SETTINGS_SCHEMA_VERSION,
 	showLog: false,

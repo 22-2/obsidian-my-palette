@@ -1,7 +1,9 @@
+import type { App } from "obsidian";
 import type { MyPaletteSettings, PaletteSurface } from "src/settings/model";
 
 /** The slice of the plugin that the settings UI reads and acts on. */
 export interface SettingsHost {
+	app: App;
 	settings: MyPaletteSettings;
 	saveSettings(): Promise<void>;
 	initializeLogger(): void;
