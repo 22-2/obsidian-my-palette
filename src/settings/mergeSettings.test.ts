@@ -298,6 +298,34 @@ describe("mergeSettings", () => {
 	});
 });
 
+describe("merged Everything mode", () => {
+	it("preserves its alias and keeps the mode enabled if either old scope was enabled", () => {
+		const settings = mergeSettings({
+			schemaVersion: 21,
+			modes: {
+				everything: { alias: "ev", enabled: false },
+				"everything-all": { alias: "all", enabled: true },
+			},
+		});
+		expect(settings.modes.everything).toEqual({ alias: "ev", enabled: true });
+		expect(settings.modes).not.toHaveProperty("everything-all");
+	});
+
+	it("preserves a disabled merged mode after migration and uses the old all-files alias if needed", () => {
+		expect(
+			mergeSettings({
+				schemaVersion: SETTINGS_SCHEMA_VERSION,
+				modes: { everything: { alias: "ev", enabled: false } },
+			}).modes.everything.enabled,
+		).toBe(false);
+		expect(
+			mergeSettings({
+				modes: { "everything-all": { alias: "all", enabled: true } },
+			}).modes.everything.alias,
+		).toBe("all");
+	});
+});
+
 describe("Return to Home after", () => {
 	it("turns the old remember-last-input switch into a time, keeping the default for new installs", () => {
 		expect(mergeSettings({ rememberLastInput: false }).home).toEqual({

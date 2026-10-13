@@ -7,12 +7,25 @@ import {
 import {
 	formatSearchHistoryInput,
 	getSearchHistorySuggestions,
+	normalizeSearchHistoryEntry,
 	parseStoredSearchHistoryEntries,
 	pruneStoredSearchHistory,
 	recordSearchHistory,
 } from "src/palette/searchHistory";
 
 describe("search history", () => {
+	it("restores the retired all-files scope on the unified Everything switch", () => {
+		const stored = {
+			input: "report",
+			category: "everything-directory",
+			lastSearchedAt: 1_000,
+			count: 1,
+		};
+		expect(normalizeSearchHistoryEntry(stored)?.includeIgnored).toBe(true);
+		expect(
+			parseStoredSearchHistoryEntries([stored], DEFAULT_SETTINGS.modes)[0]?.includeIgnored,
+		).toBe(true);
+	});
 	it.each(["tag-insertion", "moc-insertion", "folder-move"] as const)(
 		"preserves %s entries through storage normalization",
 		(category) => {
@@ -184,7 +197,7 @@ describe("formatSearchHistoryInput", () => {
 		["bookmark", "bk foo"],
 		["smart", "sc foo"],
 		["everything", "es foo"],
-		["everything-directory", "esdir foo"],
+		["everything-directory", "es foo"],
 		["link", "o foo"],
 		["backlink", "b foo"],
 	] as const)("restores the %s prefix", (category, expected) => {

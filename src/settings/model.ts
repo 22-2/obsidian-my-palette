@@ -29,7 +29,7 @@ export interface SearchHistorySettings {
 	daysToKeep: number;
 }
 
-export const SETTINGS_SCHEMA_VERSION = 21;
+export const SETTINGS_SCHEMA_VERSION = 22;
 
 /** Seconds after closing the palette before Open home starts from Home again; 0 means immediately. */
 export type ReturnToHomeSeconds = 0 | 30 | 60 | 90;
@@ -336,7 +336,6 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 	modes: {
 		commands: { alias: ">", enabled: true },
 		everything: { alias: "e", enabled: true },
-		"everything-all": { alias: "esdir", enabled: true },
 		outlinks: { alias: "o", enabled: true },
 		backlinks: { alias: "b", enabled: true },
 		bookmarks: { alias: "bk", enabled: true },

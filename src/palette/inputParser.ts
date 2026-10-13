@@ -9,7 +9,8 @@ import { paletteModeAlias } from "src/palette/modes";
  */
 export function parseInput(raw: string, modes: ModeSettingsMap): ParsedInput {
 	const lower = raw.toLocaleLowerCase();
-	const directoryAlias = paletteModeAlias("everything-all", modes);
+	// Read the retired alias only for legacy stored history, not live mode entry.
+	const directoryAlias = "esdir";
 	if (lower === directoryAlias.toLocaleLowerCase()) {
 		// Why: the folder-wide alias is useful as a zero-query search; requiring a
 		// trailing space would make it look like an ordinary file query until the user types more.
@@ -32,7 +33,7 @@ export function parseInput(raw: string, modes: ModeSettingsMap): ParsedInput {
 		{ prefix: `${paletteModeAlias("smart", modes)} `, mode: "smart" },
 		{ prefix: `${paletteModeAlias("tabs", modes)} `, mode: "tab" },
 		{
-			prefix: `${paletteModeAlias("everything-all", modes)} `,
+			prefix: `${directoryAlias} `,
 			mode: "everything",
 			everythingScope: "directory",
 		},

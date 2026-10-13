@@ -207,14 +207,26 @@ function normalizeModes(source: Record<string, unknown>): ModeSettingsMap {
 	const modeIds = Object.keys(DEFAULT_SETTINGS.modes) as PaletteModeId[];
 	return Object.fromEntries(
 		modeIds.map((id) => {
-			const rawMode = (rawModes[id] ?? {}) as Record<string, unknown>;
+			const legacyEverything = rawModes["everything-all"] as
+				| Record<string, unknown>
+				| undefined;
+			const rawMode = (rawModes[id] ??
+				(id === "everything" ? legacyEverything : undefined) ??
+				{}) as Record<string, unknown>;
 			const legacyKey = LEGACY_PREFIX_KEYS[id];
 			const legacyAlias = legacyKey ? rawPrefixes[legacyKey] : undefined;
 			const stored = [rawMode.alias, legacyAlias].find(
 				(value): value is string => typeof value === "string" && value.trim() !== "",
 			);
 			// An empty alias could never be typed; fall back to the default instead.
-			const enabled = typeof rawMode.enabled === "boolean" ? rawMode.enabled : true;
+			let enabled = typeof rawMode.enabled === "boolean" ? rawMode.enabled : true;
+			// Either old Everything entry being enabled keeps the merged mode enabled on upgrade.
+			if (
+				id === "everything" &&
+				(Number(source.schemaVersion) || 0) < 22 &&
+				legacyEverything?.enabled === true
+			)
+				enabled = true;
 			return [id, { alias: (stored ?? DEFAULT_SETTINGS.modes[id].alias).trim(), enabled }];
 		}),
 	) as ModeSettingsMap;

@@ -16,7 +16,6 @@ describe("paletteModeAlias", () => {
 	test("uses the aliases in the settings", () => {
 		expect(paletteModeAlias("commands", modes)).toBe(">");
 		expect(paletteModeAlias("everything", modes)).toBe("e");
-		expect(paletteModeAlias("everything-all", modes)).toBe("esdir");
 	});
 
 	test("a changed alias is the one that enters the mode", () => {
@@ -46,7 +45,7 @@ describe("matchPaletteModes", () => {
 	test("puts an exact alias before alias prefixes", () => {
 		expect(ids("b")).toEqual(["backlinks", "bookmarks"]);
 		expect(ids("e")[0]).toBe("everything");
-		expect(ids("esdir")).toEqual(["everything-all"]);
+		expect(ids("esdir")).toEqual([]);
 	});
 
 	test("matches the start of title and subtitle words", () => {
@@ -62,8 +61,8 @@ describe("matchPaletteModes", () => {
 
 describe("parseDirectModeEntry", () => {
 	test("enters a mode with the rest of the input as its query", () => {
-		expect(parseDirectModeEntry("esdir report", modes)).toEqual({
-			modeId: "everything-all",
+		expect(parseDirectModeEntry("e report", modes)).toEqual({
+			modeId: "everything",
 			query: "report",
 		});
 		expect(parseDirectModeEntry("> link", modes)).toEqual({
@@ -85,9 +84,8 @@ describe("parseDirectModeEntry", () => {
 });
 
 describe("findPaletteMode", () => {
-	test("tells the two Everything scopes apart", () => {
-		expect(findPaletteMode("everything", "vault")?.id).toBe("everything");
-		expect(findPaletteMode("everything", "directory")?.id).toBe("everything-all");
+	test("uses one Everything mode for both search scopes", () => {
+		expect(findPaletteMode("everything")?.id).toBe("everything");
 		expect(findPaletteMode("link")?.id).toBe("outlinks");
 	});
 });
@@ -105,7 +103,7 @@ describe("validateModeAlias", () => {
 		expect(validateModeAlias("commands", "E", modes)).toBe(
 			'"E" is already used by another mode.',
 		);
-		expect(validateModeAlias("commands", "esdir", modes)).toBeDefined();
+		expect(validateModeAlias("commands", "esdir", modes)).toBeUndefined();
 		// es is free again, since it is no longer a hidden alias.
 		expect(validateModeAlias("commands", "es", modes)).toBeUndefined();
 	});

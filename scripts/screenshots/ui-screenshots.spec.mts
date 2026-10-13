@@ -80,8 +80,8 @@ test("capture palette screenshots", async ({ obsidian }) => {
 	await capture(page, "01-palette-root.png");
 
 	// 2. Typing an alias puts its mode first, with matching files below.
-	await input.pressSequentially("esdir");
-	await expect(page.locator(MODAL_ROW).first()).toContainText("Search All Files in Vault");
+	await input.pressSequentially("e");
+	await expect(page.locator(MODAL_ROW).first()).toContainText("Everything");
 	await settle(page);
 	await capture(page, "02-palette-root-alias.png");
 
@@ -95,12 +95,12 @@ test("capture palette screenshots", async ({ obsidian }) => {
 		{ timeout: 15_000 },
 	);
 	await settle(page);
-	await capture(page, "03-palette-mode-esdir.png");
+	await capture(page, "03-palette-mode-e.png");
 
 	// 4. Esc returns to Root Search with the alias selected, one Enter from the mode.
 	await input.press("Escape");
 	await expect(page.locator(".my-palette-mode-chip")).toBeHidden();
-	await expect(input).toHaveValue("esdir");
+	await expect(input).toHaveValue("e");
 	await settle(page);
 	await capture(page, "04-palette-back-to-root.png");
 

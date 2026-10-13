@@ -90,18 +90,18 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 
 モード名は動詞を付けない名詞にし、Sentence caseで書く。Homeの「Modes」見出しの下に並ぶので、動詞は要らない。コマンド名の「Open … list」の`…`と同じ語にそろえる。
 
-| モード名        | エイリアス | 対応するコマンド            |
-| --------------- | ---------- | --------------------------- |
-| Commands        | `>`        | Open run list               |
-| Vault notes     | `e`        | なし                        |
-| All vault files | `esdir`    | なし                        |
-| Outgoing links  | `o`        | Open outgoing link list     |
-| Backlinks       | `b`        | Open backlink list          |
-| Bookmarks       | `bk`       | Open bookmark list          |
-| Related notes   | `sc`       | Open Smart Connections list |
-| Tabs            | `t`        | Open tab list               |
+| モード名       | エイリアス | 対応するコマンド            |
+| -------------- | ---------- | --------------------------- |
+| Commands       | `>`        | Open run list               |
+| Everything     | `e`        | なし                        |
+| Outgoing links | `o`        | Open outgoing link list     |
+| Backlinks      | `b`        | Open backlink list          |
+| Bookmarks      | `bk`       | Open bookmark list          |
+| Related notes  | `sc`       | Open Smart Connections list |
+| Tabs           | `t`        | Open tab list               |
 
 - コマンド名には「command」を入れられない(Obsidianのlint)ので、コマンド一覧だけは、モード名「Commands」とコマンド名「Open run list」が対応する。
+- Everythingは1つのモード。Obsidian-excludedがOFFならObsidianで利用できる設定済み拡張子のファイル、ONなら保管庫フォルダー内の全ファイルを検索する。従来のVault notesとAll vault filesを統合し、`esdir`は保存済み履歴の読み取りだけで扱う。
 
 ### ショートカット表
 

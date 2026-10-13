@@ -279,7 +279,9 @@ export class PaletteSearchSession {
 
 	private parse(input: string): ParsedInput {
 		if (this.route.kind === "home") return { raw: input, mode: "file", query: input };
-		const { mode, everythingScope } = getPaletteMode(this.route.modeId);
+		const { mode } = getPaletteMode(this.route.modeId);
+		const everythingScope =
+			mode === "everything" && this.state.ignoredScope ? "directory" : "vault";
 		return { raw: input, mode, query: input, everythingScope };
 	}
 

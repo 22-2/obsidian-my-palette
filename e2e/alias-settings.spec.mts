@@ -47,9 +47,9 @@ test("mode aliases can be changed on the Modes page and are used in Home", async
 	const commandInput = row("Commands").getByRole("textbox");
 	await expect(commandInput).toHaveValue(">");
 	// Aliases are stored without a trailing space, so the field shows the alias alone.
-	await expect(row("Vault notes").getByRole("textbox")).toHaveValue("e");
+	await expect(row("Everything").getByRole("textbox")).toHaveValue("e");
 
-	await commandInput.fill("esdir");
+	await commandInput.fill("e");
 	await expect(row("Commands")).toContainText("already used by another mode");
 	expect(await storedCommandAlias(obsidian)).toBe(">");
 

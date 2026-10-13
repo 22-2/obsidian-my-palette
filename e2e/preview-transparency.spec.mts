@@ -34,7 +34,6 @@ for (const [surface, command, selector] of [
 			["bk alpha", "bookmark"],
 			["sc alpha", "smart"],
 			["e alpha", "everything"],
-			["esdir alpha", "everything"],
 		] as const) {
 			// An alias moves into its mode, so go back to Home before the next one.
 			if (await panel.locator(".my-palette-mode-chip").isVisible())

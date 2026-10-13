@@ -20,21 +20,21 @@ test("Home enters a mode with Enter and returns with Esc", async ({ obsidian }) 
 	const input = page.locator(MODAL_INPUT);
 	await expect(page.locator(`${MODAL} ${HEADING}`)).toHaveText(["Modes", "Files"]);
 
-	await input.pressSequentially("esdir");
-	await expect(page.locator(MODAL_ROW).first()).toContainText("All vault files");
+	await input.pressSequentially("e");
+	await expect(page.locator(MODAL_ROW).first()).toContainText("Everything");
 	await input.press("Enter");
-	await expect(page.locator(`${MODAL} ${CHIP}`)).toHaveText("esdir");
+	await expect(page.locator(`${MODAL} ${CHIP}`)).toHaveText("e");
 	await expect(input).toHaveValue("");
-	await expect(page.locator(MODAL)).toHaveAttribute("data-everything-scope", "directory");
+	await expect(page.locator(MODAL)).toHaveAttribute("data-everything-scope", "vault");
 
 	// Esc goes back with the alias selected, so Enter would re-enter the mode.
 	await input.press("Escape");
 	await expect(page.locator(`${MODAL} ${CHIP}`)).toBeHidden();
-	await expect(input).toHaveValue("esdir");
+	await expect(input).toHaveValue("e");
 	expect(
 		await input.evaluate((el: HTMLInputElement) => [el.selectionStart, el.selectionEnd]),
-	).toEqual([0, 5]);
-	await expect(page.locator(MODAL_ROW).first()).toContainText("All vault files");
+	).toEqual([0, 1]);
+	await expect(page.locator(MODAL_ROW).first()).toContainText("Everything");
 
 	await input.press("Escape");
 	await expect(page.locator(MODAL)).toHaveCount(0);

@@ -20,9 +20,9 @@ export interface ParsedInput {
 	everythingScope?: EverythingScope;
 }
 
-/** Only File search reads the Obsidian-excluded index; other modes ignore the switch. */
+/** File search and Everything can include files hidden by Obsidian. */
 export function supportsIncludeIgnored(mode: PaletteMode): boolean {
-	return mode === "file";
+	return mode === "file" || mode === "everything";
 }
 
 export interface BaseResult {

@@ -49,10 +49,25 @@ test("the e prefix sends a vault-scoped query to the Everything HTTP server", as
 	await expect(page.locator(".my-palette-suggest-modal")).toContainText("No suggestions");
 });
 
-test("the esdir prefix drops the extension filter for folder-wide searches", async ({
+test("the Obsidian-excluded switch changes the single Everything mode's scope", async ({
 	obsidian,
 }) => {
-	await openPaletteWith(obsidian, "esdir report");
+	const page = await openPaletteWith(obsidian, "e report");
 	await expect.poll(() => requests.length).toBeGreaterThan(0);
+	expect(requests.at(-1)!.searchParams.get("search")).toContain("ext:");
+	const before = requests.length;
+	await page
+		.locator(".my-palette-status-toggle")
+		.filter({ hasText: "Obsidian-excluded" })
+		.click();
+	await expect.poll(() => requests.length).toBeGreaterThan(before);
 	expect(requests.at(-1)!.searchParams.get("search")).not.toContain("ext:");
+	await expect(page.locator(".my-palette-mode-chip")).toHaveText("e");
+	const after = requests.length;
+	await page
+		.locator(".my-palette-status-toggle")
+		.filter({ hasText: "Obsidian-excluded" })
+		.click();
+	await expect.poll(() => requests.length).toBeGreaterThan(after);
+	expect(requests.at(-1)!.searchParams.get("search")).toContain("ext:");
 });

@@ -18,7 +18,7 @@ export function ignoredToggleOptions(
 	};
 }
 
-/** The switch is shown only where File search can use it; other modes never list Obsidian-excluded files. */
+/** The switch is shown in File search and Everything, where it changes the search scope. */
 export function syncIgnoredToggle(toggle: StatusToggle | undefined, mode: PaletteMode): void {
 	toggle?.setHidden(!supportsIncludeIgnored(mode));
 }

@@ -81,7 +81,8 @@ export function normalizeSearchHistoryEntry(value: unknown): SearchHistoryEntry 
 		input: source.input,
 		category: source.category,
 		includeIgnored:
-			!isSelectorHistoryCategory(source.category) && source.includeIgnored === true
+			!isSelectorHistoryCategory(source.category) &&
+			(source.includeIgnored === true || source.category === "everything-directory")
 				? true
 				: undefined,
 		lastSearchedAt: source.lastSearchedAt,
@@ -130,8 +131,8 @@ export function parseStoredSearchHistoryEntries(
 				includeIgnored: isSelectorHistoryCategory(category)
 					? undefined
 					: typeof source.includeIgnored === "boolean"
-						? source.includeIgnored || undefined
-						: legacyIgnored || undefined,
+						? source.includeIgnored || category === "everything-directory" || undefined
+						: legacyIgnored || category === "everything-directory" || undefined,
 				lastSearchedAt: source.lastSearchedAt,
 				count: Math.max(1, Math.round(source.count)),
 			},
@@ -266,9 +267,8 @@ function historyCategoryMode(category: SearchHistoryCategory): PaletteModeId | u
 		case "tab":
 			return "tabs";
 		case "everything":
-			return "everything";
 		case "everything-directory":
-			return "everything-all";
+			return "everything";
 		case "link":
 			return "outlinks";
 		case "backlink":

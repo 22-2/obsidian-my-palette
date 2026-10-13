@@ -107,7 +107,7 @@ function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers)
 			helpers.group("File types", [
 				helpers.render(
 					"Vault search extensions",
-					"Comma-separated extensions used by the file list. esdir searches every file type.",
+					"Comma-separated extensions used by the file list. Everything searches every file type when Obsidian-excluded is on.",
 					(setting) =>
 						setting.addText((text) =>
 							text
@@ -290,8 +290,10 @@ function createIntegrationsPage(plugin: SettingsHost, helpers: SettingPageHelper
 		[
 			helpers.group("Integrations", [
 				{
-					...helpers.render("Everything", "Vault notes and All vault files.", (setting) =>
-						renderEverythingIntegration(setting, plugin),
+					...helpers.render(
+						"Everything",
+						"Search vault files, including Obsidian-excluded files when the switch is on.",
+						(setting) => renderEverythingIntegration(setting, plugin),
 					),
 					aliases: [...EVERYTHING_MODAL_ITEMS],
 				},

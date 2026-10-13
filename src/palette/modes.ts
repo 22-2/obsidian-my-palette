@@ -1,10 +1,9 @@
 import type { IntegrationSettings, ModeSettingsMap, MyPaletteSettings } from "src/settings/model";
-import type { EverythingScope, PaletteMode } from "src/palette/results";
+import type { PaletteMode } from "src/palette/results";
 
 export type PaletteModeId =
 	| "commands"
 	| "everything"
-	| "everything-all"
 	| "outlinks"
 	| "backlinks"
 	| "bookmarks"
@@ -14,7 +13,6 @@ export type PaletteModeId =
 export interface PaletteModeDefinition {
 	id: PaletteModeId;
 	mode: Exclude<PaletteMode, "file">;
-	everythingScope?: EverythingScope;
 	title: string;
 	subtitle: string;
 	icon: string;
@@ -34,20 +32,10 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "everything",
 		mode: "everything",
-		everythingScope: "vault",
-		title: "Vault notes",
-		subtitle: "Everything",
+		title: "Everything",
+		subtitle: "Vault files",
 		icon: "search",
-		placeholder: "Search vault notes with Everything",
-	},
-	{
-		id: "everything-all",
-		mode: "everything",
-		everythingScope: "directory",
-		title: "All vault files",
-		subtitle: "Everything",
-		icon: "folder-search",
-		placeholder: "Search all files in the vault with Everything",
+		placeholder: "Search vault files with Everything",
 	},
 	{
 		id: "outlinks",
@@ -97,15 +85,8 @@ export function getPaletteMode(id: PaletteModeId): PaletteModeDefinition {
 	return definition;
 }
 
-export function findPaletteMode(
-	mode: PaletteMode,
-	everythingScope: EverythingScope = "vault",
-): PaletteModeDefinition | undefined {
-	return PALETTE_MODES.find(
-		(definition) =>
-			definition.mode === mode &&
-			(definition.mode !== "everything" || definition.everythingScope === everythingScope),
-	);
+export function findPaletteMode(mode: PaletteMode): PaletteModeDefinition | undefined {
+	return PALETTE_MODES.find((definition) => definition.mode === mode);
 }
 
 /** The alias typed to enter a mode, as stored in the settings. */
@@ -115,7 +96,7 @@ export function paletteModeAlias(id: PaletteModeId, modes: ModeSettingsMap): str
 
 /**
  * Checks an alias typed in the settings. Aliases are matched as `alias + Space`,
- * so `e` and `esdir` can coexist; only an identical alias would be ambiguous.
+ * so aliases sharing a prefix can coexist; only an identical alias would be ambiguous.
  */
 export function validateModeAlias(
 	id: PaletteModeId,
@@ -135,7 +116,6 @@ export function validateModeAlias(
 /** The integration that provides a mode. Modes without one are built in. */
 const INTEGRATION_OF_MODE: Partial<Record<PaletteModeId, keyof IntegrationSettings>> = {
 	everything: "everything",
-	"everything-all": "everything",
 	smart: "smartConnections",
 };
 
@@ -189,7 +169,7 @@ function matchesTitleWords(definition: PaletteModeDefinition, query: string): bo
 
 /**
  * `alias + Space` enters a mode directly, as the prefixes did. Longer aliases are
- * tried first so `esdir ` is not read as `e` followed by a query.
+ * tried first so a longer alias is not read as a shorter one followed by a query.
  */
 export function parseDirectModeEntry(
 	input: string,
