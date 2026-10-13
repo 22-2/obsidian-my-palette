@@ -8,6 +8,24 @@ import { editListProperty } from "src/properties/propertyValueSelector";
 
 const notices = vi.hoisted(() => [] as string[]);
 const insertTagsMock = vi.hoisted(() => vi.fn());
+const selectedKinds = vi.hoisted(() => [] as Array<string | null>);
+
+vi.mock("src/ui/selectionModal", () => ({
+	SelectionModal: class {
+		constructor(private readonly props: { items: Array<{ kind: string }> }) {}
+		open(): void {
+			const kind = selectedKinds.shift();
+			const item = this.props.items.find((item) => item.kind === kind);
+			if (item) void this.onItemActivated(item);
+			else this.close();
+		}
+		close(): void {
+			this.onSelectionModalClose();
+		}
+		protected async onItemActivated(_item: { kind: string }): Promise<void> {}
+		protected onSelectionModalClose(): void {}
+	},
+}));
 
 vi.mock("obsidian", async () => ({
 	...(await import("src/ui/testing/obsidianDom")),
@@ -59,7 +77,10 @@ function row(overrides: Partial<PropertyResult>): PropertyResult {
 
 beforeEach(() => {
 	notices.length = 0;
+	selectedKinds.length = 0;
 	insertTagsMock.mockReset();
+	vi.mocked(editPropertyValue).mockReset().mockResolvedValue("done");
+	vi.mocked(editListProperty).mockReset().mockResolvedValue("done");
 });
 
 describe("editPropertyResult", () => {
@@ -115,6 +136,42 @@ describe("editPropertyResult", () => {
 		const { plugin: p } = plugin({});
 		await editPropertyResult(p, row({ kind: "unsupported" }));
 		expect(notices).toEqual(["Edit this property in source mode."]);
+	});
+
+	it.each(["text", "number", "date", "datetime", "list"] as const)(
+		"returns to the property list when the %s editor is dismissed",
+		async (kind) => {
+			const { plugin: p, written } = plugin({});
+			vi.mocked(editPropertyValue).mockResolvedValue("dismissed");
+			vi.mocked(editListProperty).mockResolvedValue("dismissed");
+			const outcome = await editPropertyResult(p, row({ key: "due", kind }));
+			expect(outcome).toBe("stay");
+			expect(written).toEqual({});
+		},
+	);
+
+	it.each(["text", "list"] as const)(
+		"returns to type selection when a new %s editor is dismissed",
+		async (kind) => {
+			const { plugin: p, written } = plugin({});
+			selectedKinds.push(kind, "number");
+			if (kind === "list") vi.mocked(editListProperty).mockResolvedValueOnce("dismissed");
+			else vi.mocked(editPropertyValue).mockResolvedValueOnce("dismissed");
+			const outcome = await editPropertyResult(p, row({ key: "due", kind: "new" }));
+			expect(outcome).toBe("close");
+			expect(editPropertyValue).toHaveBeenLastCalledWith(p, file, "due", "number");
+			expect(selectedKinds).toEqual([]);
+			expect(written).toEqual({});
+		},
+	);
+
+	it("returns to the property list when type selection is dismissed after an editor", async () => {
+		const { plugin: p, written } = plugin({});
+		selectedKinds.push("text", null);
+		vi.mocked(editPropertyValue).mockResolvedValueOnce("dismissed");
+		expect(await editPropertyResult(p, row({ key: "due", kind: "new" }))).toBe("stay");
+		expect(selectedKinds).toEqual([]);
+		expect(written).toEqual({});
 	});
 
 	it("reports a missing source note", async () => {

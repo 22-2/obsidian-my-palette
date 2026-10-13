@@ -2,6 +2,7 @@ import { Notice, type App, type TFile } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 import { readList } from "src/properties/propertyList";
+import type { EditResult } from "src/properties/propertyInputSelector";
 import { typedNewValue, type NewValueRules } from "src/shared/newValue";
 import { MultiSelectModal, type MultiSelectCandidate } from "src/ui/MultiSelectModal";
 import { changeCount, type MultiSelectChanges } from "src/ui/multiSelectChanges";
@@ -60,7 +61,7 @@ export async function editListProperty(
 	plugin: MyPalettePlugin,
 	file: TFile,
 	key: string,
-): Promise<void> {
+): Promise<EditResult> {
 	const frontmatter: Record<string, unknown> | undefined =
 		plugin.app.metadataCache.getFileCache(file)?.frontmatter;
 	const modal = new PropertyValueModal(
@@ -71,9 +72,10 @@ export async function editListProperty(
 		vaultValuesOf(plugin.app, key),
 	);
 	const changes = await modal.openAndWaitChanges();
-	if (!changes || changeCount(changes) === 0) return;
+	if (!changes || changeCount(changes) === 0) return "dismissed";
 	if (await applyListChanges(plugin.app, file, key, changes))
 		new Notice(`Updated ${key} on ${file.basename}.`);
+	return "done";
 }
 
 /** Selector for the values of one list property; applied values are checked and can be removed. */

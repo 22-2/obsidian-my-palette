@@ -30,14 +30,14 @@ export async function editPropertyResult(
 			await toggleCheckbox(plugin.app, file, result.key);
 			return "stay";
 		case "list":
-			await editListProperty(plugin, file, result.key);
-			return "close";
+			return (await editListProperty(plugin, file, result.key)) === "done" ? "close" : "stay";
 		case "text":
 		case "number":
 		case "date":
 		case "datetime":
-			await editPropertyValue(plugin, file, result.key, result.kind);
-			return "close";
+			return (await editPropertyValue(plugin, file, result.key, result.kind)) === "done"
+				? "close"
+				: "stay";
 		case "new":
 			return addNewProperty(plugin, file, result.key);
 		case "unsupported":
@@ -116,20 +116,35 @@ async function addNewProperty(
 	file: TFile,
 	key: string,
 ): Promise<PropertyEditOutcome> {
-	const kind = await chooseNewKind(plugin.app, key);
-	if (!kind) return "stay";
+	// Why: Esc in an editor goes back to the type picker, so a type can be changed
+	// before anything is written; the palette stays open underneath throughout.
+	for (;;) {
+		const kind = await chooseNewKind(plugin.app, key);
+		if (!kind) return "stay";
+		const outcome = await editNewKind(plugin, file, key, kind);
+		if (outcome !== "dismissed") return outcome;
+	}
+}
+
+/** Runs the editor for a new key's type; a dismissed editor returns "dismissed". */
+async function editNewKind(
+	plugin: MyPalettePlugin,
+	file: TFile,
+	key: string,
+	kind: NewKind,
+): Promise<PropertyEditOutcome | "dismissed"> {
 	switch (kind) {
 		case "checkbox":
 			await toggleCheckbox(plugin.app, file, key);
 			return "stay";
 		case "list":
-			await editListProperty(plugin, file, key);
-			return "close";
+			return (await editListProperty(plugin, file, key)) === "done" ? "close" : "dismissed";
 		case "text":
 		case "number":
 		case "date":
 		case "datetime":
-			await editPropertyValue(plugin, file, key, kind);
-			return "close";
+			return (await editPropertyValue(plugin, file, key, kind)) === "done"
+				? "close"
+				: "dismissed";
 	}
 }

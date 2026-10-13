@@ -55,6 +55,9 @@ function chooseValue(app: App, options: PropertyInputOptions): Promise<string | 
 	});
 }
 
+/** Whether the editor was left with Esc (dismissed) or ended with a value (done). */
+export type EditResult = "dismissed" | "done";
+
 function initialText(value: unknown): string {
 	return typeof value === "string" || typeof value === "number" ? String(value) : "";
 }
@@ -65,7 +68,7 @@ export async function editPropertyValue(
 	file: TFile,
 	key: string,
 	kind: InputPropertyKind,
-): Promise<void> {
+): Promise<EditResult> {
 	const frontmatter: Record<string, unknown> | undefined =
 		plugin.app.metadataCache.getFileCache(file)?.frontmatter;
 	const current: unknown = frontmatter?.[key];
@@ -75,9 +78,10 @@ export async function editPropertyValue(
 		initialInput: initialText(current),
 		rows: (query) => propertyInputRows({ kind, query, current, vaultValues }),
 	});
-	if (value === null) return;
+	if (value === null) return "dismissed";
 	if (await writeValue(plugin.app, file, key, value))
 		new Notice(`Updated ${key} on ${file.basename}.`);
+	return "done";
 }
 
 async function writeValue(
