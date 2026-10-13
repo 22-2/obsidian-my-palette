@@ -65,6 +65,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			fixedMode,
 			modeEntries,
 			includeIgnored: restore?.includeIgnored ?? false,
+			onModesChange: () => this.refreshSuggestions(),
 			onStateChange: (state) => {
 				this.state = state;
 				// `alias + Space` moves into a mode and leaves only the query behind.

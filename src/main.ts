@@ -29,6 +29,8 @@ import { RecentCommandService } from "src/search/command/recentCommandService";
 import { SearchHistoryService } from "src/palette/searchHistoryService";
 import { RecentTagStore } from "src/tags/recentTagStore";
 import { PaletteDisplaySettingsStore } from "src/settings/paletteDisplaySettingsStore";
+import { IntegrationAvailability } from "src/app/integrationAvailability";
+import { getVaultRootPath } from "src/ignored-notes/ignoredPaths";
 import "../styles.css";
 
 const logger = log.withTag("MyPalette");
@@ -41,6 +43,28 @@ export default class MyPalettePlugin extends Plugin {
 		() => this.saveSettings(),
 	);
 	readonly everythingClient = new EverythingHttpClient(debugLog);
+	readonly integrationAvailability = new IntegrationAvailability(
+		() => this.settings,
+		async (settings, signal) => {
+			try {
+				if (!getVaultRootPath(this.app))
+					throw new Error("This vault adapter cannot resolve the Vault folder.");
+				await this.everythingClient.search(
+					"__my_palette_connection_test__",
+					settings,
+					signal,
+					1,
+				);
+				return { ok: true, message: "Everything connection succeeded." };
+			} catch (error) {
+				return {
+					ok: false,
+					message: error instanceof Error ? error.message : String(error),
+				};
+			}
+		},
+		() => this.smartConnectionProvider?.isReady() ?? false,
+	);
 	fileProvider!: PaletteProviderInstances["fileProvider"];
 	commandProvider!: PaletteProviderInstances["commandProvider"];
 	everythingProvider!: PaletteProviderInstances["everythingProvider"];
@@ -93,6 +117,7 @@ export default class MyPalettePlugin extends Plugin {
 		this.providers = providers.providers;
 		this.addSettingTab(new MyPaletteSettingTab(this));
 		registerPluginCommands(this);
+		void this.integrationAvailability.refresh();
 	}
 
 	async openExternalMarkdown(
@@ -118,6 +143,7 @@ export default class MyPalettePlugin extends Plugin {
 	onunload(): void {
 		this.paletteOpener.closeModal();
 		this.everythingClient.cancel();
+		this.integrationAvailability.dispose();
 		this.paletteDisplaySettings.dispose();
 		this.fileProvider?.dispose();
 		void this.searchHistory?.dispose();
@@ -141,20 +167,11 @@ export default class MyPalettePlugin extends Plugin {
 			this.searchHistory?.getLegacyEntries(),
 			this.recentCommands?.getLegacyIds(),
 		);
+		void this.integrationAvailability.refresh();
 	}
 
 	async testEverythingConnection(): Promise<{ ok: boolean; message: string }> {
-		try {
-			await this.everythingClient.search(
-				"__my_palette_connection_test__",
-				this.settings.everything,
-				undefined,
-				1,
-			);
-			return { ok: true, message: "Everything connection succeeded." };
-		} catch (error) {
-			return { ok: false, message: error instanceof Error ? error.message : String(error) };
-		}
+		return this.integrationAvailability.refresh(true);
 	}
 
 	recordCommand(id: string): void {

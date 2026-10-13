@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { DEFAULT_SETTINGS } from "src/settings/model";
 import {
 	findPaletteMode,
+	availableModes,
 	matchPaletteModes,
 	PALETTE_MODES,
 	paletteModeAlias,
@@ -11,6 +12,16 @@ import {
 
 const modes = DEFAULT_SETTINGS.modes;
 const ids = (input: string) => matchPaletteModes(input, modes).map(({ id }) => id);
+
+test("only initialized integrations can be listed or entered by alias", () => {
+	const available = availableModes(DEFAULT_SETTINGS, {
+		everything: false,
+		smartConnections: false,
+	});
+	expect(matchPaletteModes("", available).map(({ id }) => id)).not.toContain("everything");
+	expect(parseDirectModeEntry("sc report", available)).toBeUndefined();
+	expect(available.notes.enabled).toBe(true);
+});
 
 describe("paletteModeAlias", () => {
 	test("uses the aliases in the settings", () => {

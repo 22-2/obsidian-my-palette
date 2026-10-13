@@ -19,6 +19,7 @@ export type PaletteControlsPlugin = Pick<
 	MyPalettePlugin,
 	| "app"
 	| "settings"
+	| "integrationAvailability"
 	| "paletteDisplaySettings"
 	| "getSearchHistorySuggestions"
 	| "clearSearchHistoryCategories"
@@ -210,7 +211,7 @@ export class PaletteHistoryControls {
 		else
 			new PaletteHelpModal(
 				plugin.app,
-				availableModes(plugin.settings),
+				availableModes(plugin.settings, plugin.integrationAvailability.current),
 				surface,
 				plugin.settings.hotkeys,
 			).open();

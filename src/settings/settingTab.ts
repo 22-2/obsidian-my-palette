@@ -7,6 +7,7 @@ import { createSettingPages } from "src/settings/settingPages";
 export class MyPaletteSettingTab extends PluginSettingTab {
 	constructor(public plugin: MyPalettePlugin) {
 		super(plugin.app, plugin);
+		plugin.register(plugin.integrationAvailability.subscribe(() => this.refreshDomState()));
 	}
 
 	getControlValue(key: string): unknown {

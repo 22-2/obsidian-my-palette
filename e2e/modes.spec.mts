@@ -5,12 +5,47 @@ import {
 	openPaletteWith,
 	pluginVaultOptions,
 	rowLabels,
+	runPaletteCommand,
 } from "./support.mts";
 
 test.use({ vaultOptions: pluginVaultOptions() });
 
 test.beforeEach(async ({ obsidian }) => {
 	await obsidian.waitReady();
+});
+
+test("an installed but uninitialized Smart Connections mode stays hidden until its adapter is ready", async ({
+	obsidian,
+}) => {
+	await obsidian.createNote("Origin.md", "# Origin");
+	await obsidian.open("Origin.md");
+	await obsidian.evaluateApp(() => {
+		const plugins = (app as unknown as { plugins: { plugins: Record<string, unknown> } })
+			.plugins.plugins;
+		plugins["smart-connections"] = { env: { smart_sources: {} } };
+	});
+	await runPaletteCommand(obsidian, "open-home");
+	const page = obsidian.page;
+	await expect(page.locator(MODAL_ROW).filter({ hasText: "Related notes" })).toHaveCount(0);
+	await obsidian.evaluateApp(async () => {
+		const plugins = (app as unknown as { plugins: { plugins: Record<string, unknown> } })
+			.plugins.plugins;
+		plugins["smart-connections"] = {
+			env: {
+				smart_sources: {
+					get: () => ({ vec: [1] }),
+					entities_vector_adapter: { nearest: async () => [] },
+				},
+			},
+		};
+		await (
+			plugins["my-palette"] as { integrationAvailability: { refresh(): Promise<unknown> } }
+		).integrationAvailability.refresh();
+	});
+	await expect(page.locator(MODAL_ROW).filter({ hasText: "Related notes" })).toHaveCount(1);
+	await page.locator(MODAL_INPUT).fill("sc ");
+	await expect(page.locator(".my-palette-mode-chip")).toHaveText("sc");
+	await expect(page.locator(".suggestion-empty")).toContainText("No suggestions");
 });
 
 test("the > prefix searches commands", async ({ obsidian }) => {
@@ -52,11 +87,13 @@ test("o lists outgoing links and b lists backlinks of the active note", async ({
 	await expect.poll(() => rowLabels(page)).toEqual(["Referrer"]);
 });
 
-test("sc reports clearly when Smart Connections is unavailable", async ({ obsidian }) => {
+test("an unavailable Smart Connections mode is absent and its alias does not enter a mode", async ({
+	obsidian,
+}) => {
 	await obsidian.createNote("Solo.md", "alone");
 	await obsidian.open("Solo.md");
 	const page = await openPaletteWith(obsidian, "sc ");
-	await expect(page.locator(".my-palette-suggest-modal")).toContainText(
-		"Smart Connections is not enabled",
-	);
+	await expect(page.locator(".my-palette-mode-chip")).toBeHidden();
+	await expect(page.locator(MODAL_INPUT)).toHaveValue("sc ");
+	await expect(page.locator(MODAL_ROW).filter({ hasText: "Related notes" })).toHaveCount(0);
 });

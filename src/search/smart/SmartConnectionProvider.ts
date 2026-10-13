@@ -33,11 +33,20 @@ export class SmartConnectionProvider implements PaletteProvider<SmartConnectionR
 		private readonly excludedFolders: ExcludedFolderSource = EMPTY_EXCLUDED_FOLDER_SOURCE,
 	) {}
 
+	/** A loaded plugin is usable only after its source store and vector adapter are initialized. */
+	isReady(): boolean {
+		const sources = this.environment()?.smart_sources;
+		return (
+			typeof sources?.get === "function" &&
+			typeof sources.entities_vector_adapter?.nearest === "function"
+		);
+	}
+
 	async search({ query, sourceFile }: PaletteSearchRequest): Promise<SmartConnectionResult[]> {
 		const origin = sourceFile ?? this.app.workspace.getActiveFile();
 		if (!origin) throw new Error("Open a note before searching Smart Connections.");
 		const environment = this.environment();
-		if (!environment) throw new Error("Smart Connections is not enabled.");
+		if (!environment || !this.isReady()) throw new Error("Smart Connections is not ready.");
 		const source = environment.smart_sources.get(origin.path);
 		if (!source?.vec)
 			throw new Error("The active note has no Smart Connections embedding yet.");

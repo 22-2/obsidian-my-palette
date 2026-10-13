@@ -27,6 +27,27 @@ function groupsOf(page: SettingDefinitionPage): SettingDefinitionGroup[] {
 	return (page.items ?? []).filter(isGroup);
 }
 describe("settings page layout", () => {
+	it("hides unready integrations from Modes while leaving built-in modes available", () => {
+		const readiness = { everything: false, smartConnections: false };
+		const pages = createSettingPages({
+			integrationAvailability: { current: readiness },
+		} as SettingsHost);
+		const modes = pages.filter(isPage)[1];
+		const visibleNames = () =>
+			groupsOf(modes)[0]
+				.items?.filter(
+					(item) =>
+						!("visible" in item) ||
+						typeof item.visible !== "function" ||
+						item.visible(),
+				)
+				.map((item) => ("name" in item ? item.name : undefined));
+		expect(visibleNames()).not.toContain("Everything");
+		expect(visibleNames()).not.toContain("Related notes");
+		expect(visibleNames()).toContain("Notes");
+		readiness.everything = true;
+		expect(visibleNames()).toContain("Everything");
+	});
 	it("keeps related controls discoverable in task-oriented pages", () => {
 		const pages = createSettingPages({} as SettingsHost);
 

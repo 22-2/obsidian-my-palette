@@ -1,5 +1,6 @@
 import type { IntegrationSettings, ModeSettingsMap, MyPaletteSettings } from "src/settings/model";
 import type { PaletteMode } from "src/palette/results";
+import type { IntegrationReadiness } from "src/app/integrationAvailability";
 
 export type PaletteModeId =
 	| "notes"
@@ -138,13 +139,27 @@ export function isModeIntegrationOn(id: PaletteModeId, settings: MyPaletteSettin
  * The modes the palette may enter. A mode is off when its own switch or its integration
  * is off; Home and alias entry read this, while the settings keep each switch as set.
  */
-export function availableModes(settings: MyPaletteSettings): ModeSettingsMap {
+export function isModeIntegrationReady(
+	id: PaletteModeId,
+	readiness: IntegrationReadiness,
+): boolean {
+	const integration = INTEGRATION_OF_MODE[id];
+	return integration ? readiness[integration] : true;
+}
+
+export function availableModes(
+	settings: MyPaletteSettings,
+	readiness: IntegrationReadiness,
+): ModeSettingsMap {
 	return Object.fromEntries(
 		PALETTE_MODES.map(({ id }) => [
 			id,
 			{
 				...settings.modes[id],
-				enabled: settings.modes[id].enabled && isModeIntegrationOn(id, settings),
+				enabled:
+					settings.modes[id].enabled &&
+					isModeIntegrationOn(id, settings) &&
+					isModeIntegrationReady(id, readiness),
 			},
 		]),
 	) as ModeSettingsMap;

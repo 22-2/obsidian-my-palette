@@ -60,6 +60,8 @@ export interface PaletteSearchSessionOptions {
 	/** Home lists mode entries above the files; off for file-only palettes and tables. */
 	modeEntries?: boolean;
 	onStateChange?: (state: PaletteSearchState) => void;
+	/** Modal hosts refresh their own suggestion list when integration setup changes. */
+	onModesChange?: () => void;
 }
 
 /**
@@ -78,6 +80,7 @@ export class PaletteSearchSession {
 	private sourceFile?: TFile;
 	private readonly onStateChange?: (state: PaletteSearchState) => void;
 	private state: PaletteSearchState;
+	private readonly stopReadinessUpdates: () => void;
 
 	constructor(
 		private readonly plugin: MyPalettePlugin,
@@ -88,6 +91,7 @@ export class PaletteSearchSession {
 			includeIgnored = false,
 			modeEntries = false,
 			onStateChange,
+			onModesChange,
 		}: PaletteSearchSessionOptions = {},
 	) {
 		this.listsModes = modeEntries;
@@ -107,6 +111,14 @@ export class PaletteSearchSession {
 			resultCount: 0,
 			route: this.route,
 		};
+		this.stopReadinessUpdates = plugin.integrationAvailability.subscribe(() => {
+			queueMicrotask(() => {
+				if (this.disposed || this.route.kind !== "home") return;
+				if (onModesChange) onModesChange();
+				else void this.search(this.state.input, { keepResults: true });
+			});
+		});
+		void plugin.integrationAvailability.refresh();
 	}
 
 	/** Enter a mode from Home; the input then holds only the query. */
@@ -229,6 +241,8 @@ export class PaletteSearchSession {
 				(error instanceof DOMException && error.name === "AbortError")
 			)
 				return [];
+			if (parsed.mode === "everything")
+				this.plugin.integrationAvailability.markEverythingUnavailable();
 			this.state = {
 				...this.state,
 				results: [],
@@ -275,6 +289,7 @@ export class PaletteSearchSession {
 		this.disposed = true;
 		this.generation += 1;
 		this.controller?.abort();
+		this.stopReadinessUpdates();
 	}
 
 	private parse(input: string): ParsedInput {
@@ -288,7 +303,10 @@ export class PaletteSearchSession {
 	/** In Home, `alias + Space` (typed or pasted) moves into that mode. */
 	private applyDirectModeEntry(input: string): string {
 		if (this.route.kind !== "home") return input;
-		const entry = parseDirectModeEntry(input, availableModes(this.plugin.settings));
+		const entry = parseDirectModeEntry(
+			input,
+			availableModes(this.plugin.settings, this.plugin.integrationAvailability.current),
+		);
 		if (!entry) return input;
 		this.route = { kind: "mode", modeId: entry.modeId };
 		return entry.query;
@@ -302,7 +320,10 @@ export class PaletteSearchSession {
 
 	private modeEntries(input: string): ModeEntryResult[] {
 		if (!this.listsModes || this.route.kind !== "home") return [];
-		const modes = availableModes(this.plugin.settings);
+		const modes = availableModes(
+			this.plugin.settings,
+			this.plugin.integrationAvailability.current,
+		);
 		return matchPaletteModes(input, modes).map((definition) => ({
 			id: `mode:${definition.id}`,
 			mode: "mode-entry",

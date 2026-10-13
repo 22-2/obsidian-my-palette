@@ -27,7 +27,7 @@ import {
 	renderSmartConnectionsIntegration,
 	renderVscodeIntegration,
 } from "src/settings/integrationSettings";
-import { PALETTE_MODES } from "src/palette/modes";
+import { PALETTE_MODES, isModeIntegrationReady } from "src/palette/modes";
 import { renderModeSetting } from "src/settings/modeSettingControl";
 
 type ControlType = "text" | "toggle" | "slider";
@@ -195,11 +195,13 @@ function createModesPage(plugin: SettingsHost, helpers: SettingPageHelpers): Pag
 		[
 			helpers.group(
 				"Search modes",
-				PALETTE_MODES.map((mode) =>
-					helpers.render(mode.title, mode.subtitle, (setting) =>
+				PALETTE_MODES.map((mode) => ({
+					...helpers.render(mode.title, mode.subtitle, (setting) =>
 						renderModeSetting(setting, plugin, mode.id),
 					),
-				),
+					visible: () =>
+						isModeIntegrationReady(mode.id, plugin.integrationAvailability.current),
+				})),
 			),
 		],
 	);

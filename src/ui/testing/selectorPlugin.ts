@@ -1,4 +1,5 @@
 import type { App } from "obsidian";
+import { IntegrationAvailability } from "src/app/integrationAvailability";
 import { DEFAULT_SETTINGS, type SearchHistoryEntry } from "src/settings/model";
 import { PaletteDisplaySettingsStore } from "src/settings/paletteDisplaySettingsStore";
 import { getSearchHistorySuggestions, recordSearchHistory } from "src/palette/searchHistory";
@@ -11,6 +12,11 @@ export function createSelectorPlugin(app = {} as App): SelectorControls["plugin"
 	return {
 		app,
 		settings,
+		integrationAvailability: new IntegrationAvailability(
+			() => settings,
+			async () => ({ ok: false, message: "Not configured" }),
+			() => false,
+		),
 		paletteDisplaySettings: new PaletteDisplaySettingsStore(
 			() => settings,
 			async () => {},
