@@ -6,15 +6,17 @@ Obsidian本体のProperties viewはキーの一覧だけで、値を見たり付
 
 ## 決めたこと
 
-| 項目         | 内容                                                                                         |
-| ------------ | -------------------------------------------------------------------------------------------- |
-| 置き場所     | Paletteのモード(Plugins・Snippetsと同じ作り)                                                 |
-| モード名     | Properties                                                                                   |
-| エイリアス   | `pr`(`p`はPlugins。エイリアスは`alias + Space`で照合するので共存できる)                      |
-| 対象         | 現在のノート(リンクのモードと同じ`sourceFile`)                                               |
-| `tags`       | 既存のTag insert selectorに回す                                                              |
-| List型の編集 | 新しいSelector(Property value selector)。Tag insert selectorと同じ共通の複数選択の部品を使う |
-| 型           | 読むだけ。Paletteから型を設定・変更しない                                                    |
+| 項目             | 内容                                                                                                                                                                                |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 置き場所         | Paletteのモード(Plugins・Snippetsと同じ作り)                                                                                                                                        |
+| モード名         | Properties                                                                                                                                                                          |
+| エイリアス       | `pr`(`p`はPlugins。エイリアスは`alias + Space`で照合するので共存できる)                                                                                                             |
+| 対象             | 現在のノート(リンクのモードと同じ`sourceFile`)                                                                                                                                      |
+| `tags`           | 既存のTag insert selectorに回す                                                                                                                                                     |
+| List型の編集     | 新しいSelector(Property value selector)。Tag insert selectorと同じ共通の複数選択の部品を使う                                                                                        |
+| 型               | 読むだけ。Paletteから型を設定・変更しない                                                                                                                                           |
+| 付け外しの確定   | Tag insert・MOC insert・Property valueの3つのSelectorで揃える。チェックは付けるのも外すのも保留にして`Ctrl+Enter`でまとめて実行し、1行に対する操作(Enter、右クリック)はすぐ実行する |
+| 閉じるときの確認 | 出さない。Escで閉じると、保留の変更は今と同じく捨てる(手間を増やさないため)                                                                                                         |
 
 ## 用語(実装の最初にGLOSSARYへ足す)
 
@@ -98,15 +100,49 @@ Outgoing links・Backlinksと同じく、空の一覧と案内を出す。Markdo
 - ここで選んだ型も保存しない。保管庫に型が無いキーとして書かれ、Obsidian本体が値から推測する。
 - 最初の段階では入れなくてもよい(下記の進め方)。
 
+## Selectorの付け外しを揃える
+
+Property value selectorは、同じ画面で値を付けたり外したりを何度も行う。今の`MultiSelectModal`は「付けるのはチェックして保留、外すのは右クリックですぐ実行」が混ざっていて、どこまで実行済みかがわかりにくい。Property value selectorを作る前に、`MultiSelectModal`の動きを次のように揃え、Tag insert selectorとMOC insert selectorも同じ動きにする。MOC remove selectorは、外すことが主な操作で、すでに「チェックして`Ctrl+Enter`」の形なので変えない。
+
+### 決まり
+
+**チェックは保留、1行に対する操作はすぐ実行する。**
+
+| 操作                                                         | 付いていない行                                     | 付いている行                         |
+| ------------------------------------------------------------ | -------------------------------------------------- | ------------------------------------ |
+| チェックの切り替え(クリック、Space、`Ctrl`・`Shift`での選択) | 付ける変更として保留                               | 外す変更として保留                   |
+| `Ctrl+Enter`、チェック済みの一覧のボタン                     | 保留の変更(付ける・外す)をまとめて実行し、閉じる   | ←                                    |
+| Enter                                                        | その行をすぐ付けて閉じる(今と同じ)                 | その行をすぐ外して閉じる             |
+| 右クリックの「Remove …」                                     | —                                                  | その行をすぐ外す(今と同じ。閉じない) |
+| Esc、外側のクリック                                          | 保留の変更を捨てて閉じる。確認は出さない(今と同じ) | ←                                    |
+
+- 付いている行は、今の`locked`(鍵のアイコンでチェックできない)をやめ、チェックの状態として「付いている」を見せる。チェックを外すと、外す変更として保留になったことがわかる見た目にする(取り消し線など)。
+- 一部のノートにだけ付いている行(Tag insert selectorで複数のノートが対象のとき)は、チェックすると残りのノートに付ける変更になる。外すのは今と同じく右クリックで行う。
+- フッターのチェック済みの数は、保留の変更の数として「+2 −1」のように出す。
+- 実行後の通知は1回にまとめる(例: 「Added #a #b and removed #c on <note>.」)。
+- MOC insert selectorの「付いている行」は、今`locked`にしている相互リンク済みの行。外す変更はリンクを外す処理(今の`removal`)を使う。
+
+### 変わるところ
+
+| ファイル                                                              | 変更                                                                                                                                                           |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/ui/MultiSelectModal.ts`                                          | 行に「付いているか」を持たせ、チェックを付ける・外すの保留として扱う。`openAndWait()`の結果を、付ける値と外す値の組にする。Enterが付いている行で外す動きを足す |
+| `src/tags/TagSelectionModal.ts`、`src/tags/insertTags.ts`             | 新しい結果を受け取り、付ける・外すをまとめて書き込む                                                                                                           |
+| `src/moc-relateds/mocRelateds.ts`、`src/moc-relateds/mocInsertion.ts` | 同上                                                                                                                                                           |
+| `src/ui/selectorControls.ts`                                          | ヘルプのショートカットの説明                                                                                                                                   |
+
+- 変える前に、Tag insert selectorとMOC insert selectorの今の動きを、単体テストとE2Eで押さえておく。変えたあとで、付ける側の動きが変わっていないことを確かめる。
+- READMEのSelectorの説明も合わせて直す。
+
 ## Property value selector(List)
 
-`src/ui/MultiSelectModal.ts`の上に作る。`src/tags/TagSelectionModal.ts`とほぼ同じ形になる。
+`src/ui/MultiSelectModal.ts`の上に作る。`src/tags/TagSelectionModal.ts`とほぼ同じ形になり、付け外しは上の決まりに従う。
 
-| 行           | 内容                                                                          | 操作                                             |
-| ------------ | ----------------------------------------------------------------------------- | ------------------------------------------------ |
-| 付いている値 | 現在のノートの値。鍵のアイコン(`locked`)                                      | 右クリックの「Remove value」で外す(`removal`)    |
-| 候補の値     | `getFrontmatterPropertyValuesForKey(key)`の値から、付いているものを除いたもの | チェックして`Ctrl+Enter`、または1つをEnterで足す |
-| 新しい値     | 入力がどの候補とも一致しないとき、入力そのもの                                | Enterで足す                                      |
+| 行           | 内容                                                                          | 操作                                                                          |
+| ------------ | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| 付いている値 | 現在のノートの値。チェックが付いた状態で出す                                  | チェックを外して`Ctrl+Enter`、Enter、または右クリックの「Remove value」で外す |
+| 候補の値     | `getFrontmatterPropertyValuesForKey(key)`の値から、付いているものを除いたもの | チェックして`Ctrl+Enter`、またはEnterで足す                                   |
+| 新しい値     | 入力がどの候補とも一致しないとき、入力そのもの                                | チェックして`Ctrl+Enter`、またはEnterで足す                                   |
 
 - 並びは、付いている値をあとにする(Tag insert selectorで登録済みのタグをあとにするのと同じ)。
 - `cssclasses`の候補は、ほかのListと同じく保管庫で使われている値だけにする。スニペットに書かれたクラス名は、スニペットの中身を読む必要があって重いので出さない。
@@ -122,6 +158,7 @@ Outgoing links・Backlinksと同じく、空の一覧と案内を出す。Markdo
 
 入力欄に値を打ち、Enterで書き込む。既存の`SelectionModal`の上に作り、入力欄を値の入力として使う。
 
+- Enterで確定、Escで破棄する。破棄の確認は出さない。失うのは打ちかけの値1つだけで、確認を挟むほうが手間になるため。元の値はヘルプと確定の行の2行目(「Current: …」)に出し、破棄すると何が残るかがわかるようにする。
 - 開いたときは、今の値を入力欄に入れて全選択しておく。
 - 候補には`getFrontmatterPropertyValuesForKey(key)`の値を出す(Textで同じ値を使い回すことが多いため)。候補を選ぶとその値で書き込む。
 - 入力をそのまま確定する行(「Set to "…"」)を先頭に出す。
@@ -159,31 +196,33 @@ Outgoing links・Backlinksと同じく、空の一覧と案内を出す。Markdo
 
 ## 触る場所
 
-| ファイル                                               | 変更                                                                                                         |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| `src/palette/modes.ts`                                 | `properties`を足す。Homeでの並びはSnippetsのあと                                                             |
-| `src/palette/results.ts`                               | `PropertyResult`(`mode: "property"`、キー、型、値、見出し、ノートにあるか)と、新しいプロパティの行の型を足す |
-| `src/search/property/PropertyProvider.ts`              | 新規。一覧を作る。非公式APIを読む関数もここに置く                                                            |
-| `src/properties/`                                      | 新規。型の判定、書き込み、Property value selector、Property value input                                      |
-| `src/palette/executePaletteResult.ts`                  | Enterで型ごとの編集を始める分岐                                                                              |
-| `src/palette/actions/resultContextMenu.ts`             | 右クリックの操作                                                                                             |
-| `src/tags/tagSuggestions.ts`、`src/tags/insertTags.ts` | 共通にする部分を切り出す                                                                                     |
-| `src/settings/model.ts`                                | `modes`の既定値に`properties`(`pr`)を足す                                                                    |
-| `src/ui/hotkeys.ts`                                    | Property value selectorのショートカットの範囲を足す                                                          |
-| `docs/GLOSSARY.md`、`README.md`、`README.ja.md`        | 用語と説明                                                                                                   |
+| ファイル                                                      | 変更                                                                                                         |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `src/palette/modes.ts`                                        | `properties`を足す。Homeでの並びはSnippetsのあと                                                             |
+| `src/palette/results.ts`                                      | `PropertyResult`(`mode: "property"`、キー、型、値、見出し、ノートにあるか)と、新しいプロパティの行の型を足す |
+| `src/search/property/PropertyProvider.ts`                     | 新規。一覧を作る。非公式APIを読む関数もここに置く                                                            |
+| `src/properties/`                                             | 新規。型の判定、書き込み、Property value selector、Property value input                                      |
+| `src/palette/executePaletteResult.ts`                         | Enterで型ごとの編集を始める分岐                                                                              |
+| `src/palette/actions/resultContextMenu.ts`                    | 右クリックの操作                                                                                             |
+| `src/ui/MultiSelectModal.ts`、Tag insert・MOC insert selector | 付け外しを揃える(「Selectorの付け外しを揃える」の表)                                                         |
+| `src/tags/tagSuggestions.ts`、`src/tags/insertTags.ts`        | 共通にする部分を切り出す                                                                                     |
+| `src/settings/model.ts`                                       | `modes`の既定値に`properties`(`pr`)を足す                                                                    |
+| `src/ui/hotkeys.ts`                                           | Property value selectorのショートカットの範囲を足す                                                          |
+| `docs/GLOSSARY.md`、`README.md`、`README.ja.md`               | 用語と説明                                                                                                   |
 
 ## 進め方
 
 1. GLOSSARYにモード名、エイリアス、Selectorの名前を足す。
 2. 一覧: `PropertyProvider`と見出し(This note、Reserved、Vault)。型の判定を単体テストにする。この段階ではEnterで何もしない。
 3. `tags`をTag insert selectorに回す。Checkboxの切り替え。
-4. Property value selector。Tag insert selectorから共通の部分を切り出し、Tag insert selectorの動きが変わらないことをテストで確かめる。
-5. Property value input。
-6. 右クリックの操作(Delete property、Copy value、Copy property name)。
-7. 新しいプロパティの行。
-8. README、README.ja。
+4. Selectorの付け外しを揃える(`MultiSelectModal`、Tag insert selector、MOC insert selector)。Propertiesとは別のコミットにする。
+5. Property value selector。Tag insert selectorから共通の部分を切り出し、Tag insert selectorの動きが変わらないことをテストで確かめる。
+6. Property value input。
+7. 右クリックの操作(Delete property、Copy value、Copy property name)。
+8. 新しいプロパティの行。
+9. README、README.ja。
 
-2〜5で、単体テスト(Vitest)とE2Eを足す。E2Eでは、書き込み後のノートのフロントマターを読んで確かめる。リンクの値と、型が決まっていないキーの例を用意する。
+2〜6で、単体テスト(Vitest)とE2Eを足す。E2Eでは、書き込み後のノートのフロントマターを読んで確かめる。リンクの値と、型が決まっていないキーの例を用意する。
 
 ## 後で考えること
 
