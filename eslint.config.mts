@@ -1,6 +1,7 @@
 import obsidianmd from "eslint-plugin-obsidianmd";
 import globals from "globals";
 import { globalIgnores, defineConfig } from "eslint/config";
+import myPalette from "./eslint-rules/command-naming.mts";
 
 export default defineConfig(
 	globalIgnores([
@@ -11,6 +12,7 @@ export default defineConfig(
 		"versions.json",
 		"main.js",
 		"e2e",
+		"eslint-rules",
 		"playwright.config.ts",
 		"playwright.config.mts",
 		"playwright.screenshots.config.mts",
@@ -56,7 +58,6 @@ export default defineConfig(
 						"Smart Connections",
 						"VS Code",
 						"My Palette",
-						"Root Search",
 						"Relateds",
 						"Markdown",
 					],
@@ -66,6 +67,12 @@ export default defineConfig(
 				},
 			],
 		},
+	},
+	{
+		// Commands are all "Open <thing>" with a matching kebab-case id.
+		files: ["src/app/registerCommands.ts"],
+		plugins: { "my-palette": myPalette },
+		rules: { "my-palette/command-naming": "error" },
 	},
 	{
 		// The test DOM helper implements Obsidian's createEl and instanceOf itself, so it
