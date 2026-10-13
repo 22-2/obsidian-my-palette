@@ -6,7 +6,8 @@ const note = { path: "note.md", extension: "md" } as unknown as TFile;
 
 function app(options: {
 	frontmatter?: Record<string, unknown>;
-	vault?: Record<string, { type?: string; widget?: string; count?: number }>;
+	vault?: Record<string, { type?: string; widget?: string }>;
+	counts?: Record<string, number>;
 	assigned?: Record<string, string>;
 	file?: TFile | null;
 }): App {
@@ -17,6 +18,7 @@ function app(options: {
 		},
 		metadataTypeManager: {
 			getAllProperties: () => options.vault ?? {},
+			getPropertyOccurrences: () => options.counts ?? {},
 			getAssignedWidget: (key: string) => options.assigned?.[key],
 		},
 	} as unknown as App;
@@ -46,11 +48,12 @@ describe("PropertyProvider", () => {
 			app({
 				frontmatter: { status: "done", position: {}, tags: ["a"] },
 				vault: {
-					status: { count: 3 },
-					project: { count: 9 },
-					area: { count: 2 },
-					rare: { count: 1 },
+					status: {},
+					project: {},
+					area: {},
+					rare: {},
 				},
+				counts: { status: 3, project: 9, area: 2, rare: 1 },
 			}),
 		);
 		const results = await provider.search({ mode: "property", query: "", sourceFile: note });
@@ -67,13 +70,37 @@ describe("PropertyProvider", () => {
 
 	it("shows reserved keys that the note lacks as Not set, and vault counts", async () => {
 		const provider = new PropertyProvider(
-			app({ frontmatter: {}, vault: { project: { count: 1 }, area: { count: 4 } } }),
+			app({
+				frontmatter: {},
+				vault: { project: {}, area: {} },
+				counts: { project: 1, area: 4 },
+			}),
 		);
 		const results = await provider.search({ mode: "property", query: "", sourceFile: note });
 		const byKey = Object.fromEntries(results.map((r) => [r.primary, r]));
 		expect(byKey.aliases).toMatchObject({ inNote: false, secondary: "Not set" });
 		expect(byKey.area.secondary).toBe("4 notes");
 		expect(byKey.project.secondary).toBe("1 note");
+	});
+
+	it("uses lowercase occurrence keys and counts each search only once", async () => {
+		const application = app({ vault: { Project: {}, unused: {} } });
+		const getPropertyOccurrences = vi.fn(() => ({ project: 12 }));
+		Object.assign(application.metadataTypeManager, { getPropertyOccurrences });
+		const results = await new PropertyProvider(application).search({
+			mode: "property",
+			query: "",
+			sourceFile: note,
+		});
+		expect(
+			results
+				.filter((result) => result.section === "Vault")
+				.map((result) => [result.key, result.secondary]),
+		).toEqual([
+			["Project", "12 notes"],
+			["unused", "0 notes"],
+		]);
+		expect(getPropertyOccurrences).toHaveBeenCalledExactlyOnceWith();
 	});
 
 	it("uses the vault's assigned type and keeps the declared kind for note values", async () => {
@@ -95,7 +122,8 @@ describe("PropertyProvider", () => {
 		const provider = new PropertyProvider(
 			app({
 				frontmatter: { status: "done", statement: "x" },
-				vault: { status: { count: 2 }, stage: { count: 1 } },
+				vault: { status: {}, stage: {} },
+				counts: { status: 2, stage: 1 },
 			}),
 		);
 		const results = await provider.search({ mode: "property", query: "sta", sourceFile: note });
@@ -117,7 +145,11 @@ describe("PropertyProvider", () => {
 
 	it("offers a new-key row last when nothing matches the typed key", async () => {
 		const provider = new PropertyProvider(
-			app({ frontmatter: { status: "done" }, vault: { project: { count: 2 } } }),
+			app({
+				frontmatter: { status: "done" },
+				vault: { project: {} },
+				counts: { project: 2 },
+			}),
 		);
 		const results = await provider.search({
 			mode: "property",

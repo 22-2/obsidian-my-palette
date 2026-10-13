@@ -16,13 +16,13 @@ const HIDDEN_KEYS = new Set(["position"]);
 interface VaultPropertyInfo {
 	type?: unknown;
 	widget?: unknown;
-	count?: unknown;
 }
 
 // Unofficial APIs: the vault-wide keys and each key's assigned type. A missing
 // function leaves the Vault section empty and the rest of the list working.
 interface TypeManagerInternals {
 	getAllProperties?: () => Record<string, VaultPropertyInfo>;
+	getPropertyOccurrences?: () => Record<string, number>;
 	getAssignedWidget?: (key: string) => unknown;
 }
 
@@ -48,10 +48,6 @@ function declaredType(
 
 function isReserved(key: string): boolean {
 	return (RESERVED_KEYS as readonly string[]).includes(key);
-}
-
-function countOf(info: VaultPropertyInfo | undefined): number {
-	return typeof info?.count === "number" ? info.count : 0;
 }
 
 function countLabel(count: number): string {
@@ -184,9 +180,14 @@ export class PropertyProvider implements PaletteProvider<PropertyResult> {
 		infos: Record<string, VaultPropertyInfo>,
 	): PropertyResult[] {
 		const inNote = new Set(noteKeys);
+		// Obsidian returns usage counts separately, keyed by lowercase property name.
+		const counts =
+			(
+				this.app as unknown as { metadataTypeManager?: TypeManagerInternals }
+			).metadataTypeManager?.getPropertyOccurrences?.() ?? {};
 		return Object.keys(infos)
 			.filter((key) => !inNote.has(key) && !isReserved(key) && !HIDDEN_KEYS.has(key))
-			.map((key) => ({ key, count: countOf(infos[key]) }))
+			.map((key) => ({ key, count: counts[key.toLowerCase()] ?? 0 }))
 			.sort((a, b) => b.count - a.count || a.key.localeCompare(b.key))
 			.map(({ key, count }) => {
 				const kind = propertyKindOf(
