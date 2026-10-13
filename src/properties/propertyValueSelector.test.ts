@@ -2,11 +2,7 @@ import { Notice, type App, type TFile } from "obsidian";
 import { Window } from "happy-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
-import {
-	applyListChanges,
-	PropertyValueModal,
-	readList,
-} from "src/properties/propertyValueSelector";
+import { applyListChanges, PropertyValueModal } from "src/properties/propertyValueSelector";
 import { installObsidianDom } from "src/ui/testing/obsidianDom";
 import { createSelectorPlugin } from "src/ui/testing/selectorPlugin";
 
@@ -29,15 +25,6 @@ function fakeApp(frontmatter: Record<string, unknown>, options: { fail?: boolean
 	} as unknown as App;
 	return { app, written };
 }
-
-describe("readList", () => {
-	it("reads arrays and single strings, and skips other values", () => {
-		expect(readList(["a", 2, null, { b: 1 }])).toEqual(["a", "2"]);
-		expect(readList("solo")).toEqual(["solo"]);
-		expect(readList("")).toEqual([]);
-		expect(readList(undefined)).toEqual([]);
-	});
-});
 
 describe("applyListChanges", () => {
 	it("appends added values after the kept ones", async () => {

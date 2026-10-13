@@ -1,6 +1,7 @@
 import { Notice, type App, type TFile } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { readList } from "src/properties/propertyList";
 import { typedNewValue, type NewValueRules } from "src/shared/newValue";
 import { MultiSelectModal, type MultiSelectCandidate } from "src/ui/MultiSelectModal";
 import { changeCount, type MultiSelectChanges } from "src/ui/multiSelectChanges";
@@ -16,15 +17,6 @@ const VALUE_RULES: NewValueRules = {
 	isValid: (value) => !value.includes("\n"),
 	keyOf: (value) => value,
 };
-
-/** The strings in a list-type property; a single string counts as a one-item list. */
-export function readList(value: unknown): string[] {
-	if (typeof value === "string") return value ? [value] : [];
-	if (!Array.isArray(value)) return [];
-	return value.flatMap((item: unknown) =>
-		typeof item === "string" || typeof item === "number" ? [String(item)] : [],
-	);
-}
 
 export function vaultValuesOf(app: App, key: string): string[] {
 	const values = (
