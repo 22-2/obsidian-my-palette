@@ -9,7 +9,8 @@ import { editListProperty } from "src/properties/propertyValueSelector";
 const notices = vi.hoisted(() => [] as string[]);
 const insertTagsMock = vi.hoisted(() => vi.fn());
 
-vi.mock("obsidian", () => ({
+vi.mock("obsidian", async () => ({
+	...(await import("src/ui/testing/obsidianDom")),
 	Notice: class {
 		constructor(message: string) {
 			notices.push(message);

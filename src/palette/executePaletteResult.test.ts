@@ -5,7 +5,8 @@ import type { PaletteResult } from "src/palette/results";
 import { executePaletteResult } from "src/palette/executePaletteResult";
 import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
 
-vi.mock("obsidian", () => ({
+vi.mock("obsidian", async () => ({
+	...(await import("src/ui/testing/obsidianDom")),
 	TFile: class {
 		path = "Note.md";
 	},

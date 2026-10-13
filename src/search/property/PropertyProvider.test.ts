@@ -96,4 +96,38 @@ describe("PropertyProvider", () => {
 		);
 		expect(await provider.search({ mode: "property", query: "" })).toEqual([]);
 	});
+
+	it("offers a new-key row last when nothing matches the typed key", async () => {
+		const provider = new PropertyProvider(
+			app({ frontmatter: { status: "done" }, vault: { project: { count: 2 } } }),
+		);
+		const results = await provider.search({
+			mode: "property",
+			query: "budget",
+			sourceFile: note,
+		});
+		expect(results).toHaveLength(1);
+		expect(results[0]).toMatchObject({
+			kind: "new",
+			section: "New",
+			key: "budget",
+			inNote: false,
+		});
+	});
+
+	it("does not offer a new key while an existing key matches", async () => {
+		const provider = new PropertyProvider(app({ frontmatter: { status: "done" } }));
+		const results = await provider.search({
+			mode: "property",
+			query: "stat",
+			sourceFile: note,
+		});
+		expect(results.some((result) => result.kind === "new")).toBe(false);
+	});
+
+	it("does not offer a new key for an empty input", async () => {
+		const provider = new PropertyProvider(app({ frontmatter: {} }));
+		const results = await provider.search({ mode: "property", query: "  ", sourceFile: note });
+		expect(results.some((result) => result.kind === "new")).toBe(false);
+	});
 });

@@ -90,6 +90,21 @@ function propertyRow({
 	};
 }
 
+function newKeyRow(key: string, sourcePath: string): PropertyResult {
+	return {
+		id: `property:new:${key}`,
+		mode: "property",
+		primary: `Add property "${key}"`,
+		secondary: "Choose a type",
+		icon: "plus",
+		key,
+		kind: "new",
+		section: "New",
+		inNote: false,
+		sourcePath,
+	};
+}
+
 /**
  * Lists the properties of the current note under This note and Reserved, then the
  * keys used elsewhere in the vault under Vault. Typed input filters each section
@@ -103,9 +118,12 @@ export class PropertyProvider implements PaletteProvider<PropertyResult> {
 		if (file?.extension !== "md") return [];
 		const sections = this.sectionsOf(file);
 		if (!query.trim()) return sections.flat();
-		return sections.flatMap((section) =>
+		const matched = sections.flatMap((section) =>
 			searchFuzzyQuery(query, section, [(result) => result.primary]).map(({ obj }) => obj),
 		);
+		// Nothing matches, so the typed text can only be a key the note does not have yet.
+		if (matched.length === 0) return [newKeyRow(query.trim(), file.path)];
+		return matched;
 	}
 
 	private sectionsOf(file: TFile): PropertyResult[][] {

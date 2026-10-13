@@ -144,8 +144,9 @@ export type PropertyKind =
 export interface PropertyResult extends BaseResult {
 	mode: "property";
 	key: string;
-	kind: PropertyKind;
-	section: "This note" | "Reserved" | "Vault";
+	/** `new` is the row that adds a key nothing matches; choosing it picks a type first. */
+	kind: PropertyKind | "new";
+	section: "This note" | "Reserved" | "Vault" | "New";
 	/** Whether the current note has this key; a reserved key may be listed without it. */
 	inNote: boolean;
 	/** The note the list was built from; edits go to this note, not the active one. */
