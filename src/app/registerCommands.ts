@@ -23,12 +23,12 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	});
 	plugin.addCommand({
 		id: "open",
-		name: "Open Recent palette",
+		name: "Open recent palette",
 		callback: () => plugin.paletteOpener.openPalette(),
 	});
 	plugin.addCommand({
-		id: "open-command-list",
-		name: "Open command list",
+		id: "open-run-list",
+		name: "Open run list",
 		callback: () => openRoot(plugin.paletteOpener.commandPaletteInitialInput()),
 	});
 	plugin.addCommand({

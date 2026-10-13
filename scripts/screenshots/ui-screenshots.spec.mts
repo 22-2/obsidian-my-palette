@@ -128,7 +128,7 @@ test("capture palette screenshots", async ({ obsidian }) => {
 	await input.press("Escape");
 	await page.locator(".my-palette-suggest-modal").waitFor({ state: "detached" });
 
-	// 8. The file-only palette (`Open Recent palette`) has no mode rows.
+	// 8. The file-only palette (`Open recent palette`) has no mode rows.
 	await runPaletteCommand(obsidian, "open");
 	await input.waitFor();
 	await expect(page.locator(".my-palette-section-heading")).toHaveCount(0);

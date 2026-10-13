@@ -40,8 +40,8 @@ Obsidian のコマンドパレットから次のコマンドを実行します�
 | コマンド                                      | 内容                                                     |
 | --------------------------------------------- | -------------------------------------------------------- |
 | `My Palette: Open palette`                    | ルート画面：モードの一覧と最近使ったファイル             |
-| `My Palette: Open Recent palette`             | 最近使ったファイルから始まるファイル検索のみ             |
-| `My Palette: Open command list`               | Run Command モードから始まる                             |
+| `My Palette: Open recent palette`             | 最近使ったファイルから始まるファイル検索のみ             |
+| `My Palette: Open run list`                   | Run Command モードから始まる                             |
 | `My Palette: Open palette in right sidebar`   | 右サイドバーに常駐するリストビュー                       |
 | `My Palette: Open palette table in center`    | センターのタブに常駐するテーブルビュー                   |
 | `My Palette: Link search` / `Backlink search` | 現在のノートからのリンク先 / 現在のノートへのリンク元    |
@@ -89,7 +89,7 @@ Obsidian のコマンドパレットから次のコマンドを実行します�
 | `sc`       | Search Related Notes      | 現在のノートに関連するノート（Smart Connections）    |
 | `t`        | Switch Tab                | 開いているタブへ切り替え                             |
 
-すべてのエイリアスは **設定 → My Palette → Modes** で変更でき、モードごとにオフにできます。モードをオフにするか、**Integrations** で連携をオフにすると、そのモードはルート画面とエイリアス入力から外れます。`Open Recent palette` とテーブルビューはモードの一覧を出しませんが、エイリアスでモードに入れます。`Open command list` や `Backlink search` など、モードを直接開くコマンドはそのモードから始まり、`Esc` でルート画面に戻ります。
+すべてのエイリアスは **設定 → My Palette → Modes** で変更でき、モードごとにオフにできます。モードをオフにするか、**Integrations** で連携をオフにすると、そのモードはルート画面とエイリアス入力から外れます。`Open recent palette` とテーブルビューはモードの一覧を出しませんが、エイリアスでモードに入れます。`Open run list` や `Backlink search` など、モードを直接開くコマンドはそのモードから始まり、`Esc` でルート画面に戻ります。
 
 下部左端の `Ignored` スイッチ（`Ctrl+I`）をオンにすると、Obsidian の除外フォルダーにあるファイルも検索します。ファイル検索でだけ有効で、ほかのモードでは薄く表示します。検索履歴は除外ファイルを含めたかどうかも記録し、履歴を選ぶとスイッチも復元します。
 

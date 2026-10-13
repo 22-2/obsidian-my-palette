@@ -26,7 +26,7 @@ export function addCopyPathMenuItems(
 	if (paths.relativePath) {
 		menu.addItem((item) =>
 			item
-				.setTitle("Copy path relative to Vault")
+				.setTitle("Copy path relative to vault")
 				.setIcon("copy")
 				.onClick(() => onCopy(paths.relativePath!)),
 		);

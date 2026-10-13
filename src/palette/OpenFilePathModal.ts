@@ -50,7 +50,7 @@ export class OpenFilePathModal extends Modal {
 	private async openInputPath(): Promise<void> {
 		const input = normalizeFilePathInput(this.inputEl.value);
 		if (!input) {
-			new Notice("Enter a Vault path or an absolute path.");
+			new Notice("Enter a vault path or an absolute path.");
 			return;
 		}
 		// なぜVault優先か: Vault相対パスはTFileとして開くことでリンク・履歴と
@@ -68,7 +68,7 @@ export class OpenFilePathModal extends Modal {
 		}
 		const absolutePath = this.toAbsolutePath(input);
 		if (!absolutePath || !isMarkdownPath(absolutePath)) {
-			new Notice("Only Vault files or Markdown paths can be opened in the editor.");
+			new Notice("Only vault files or Markdown paths can be opened in the editor.");
 			return;
 		}
 		try {

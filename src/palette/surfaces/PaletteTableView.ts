@@ -12,7 +12,7 @@ export class PaletteTableView extends PaletteView {
 	}
 
 	override getDisplayText(): string {
-		return "My Palette Table";
+		return "My Palette table";
 	}
 
 	override getIcon(): string {

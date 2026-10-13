@@ -86,7 +86,7 @@ test("a mode opened by its command returns to Root Search on Esc", async ({ obsi
 });
 
 test("the command list returns to Root Search on Esc", async ({ obsidian }) => {
-	await runPaletteCommand(obsidian, "open-command-list");
+	await runPaletteCommand(obsidian, "open-run-list");
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);
 	await expect(page.locator(`${MODAL} ${CHIP}`)).toHaveText(">");

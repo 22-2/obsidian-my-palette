@@ -111,7 +111,7 @@ function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers)
 					(setting) =>
 						setting.addText((text) =>
 							text
-								.setPlaceholder("md, canvas, base")
+								.setPlaceholder("Example: md, canvas, base")
 								.setValue(plugin.settings.everything.vaultExtensions.join(", "))
 								.onChange((value) => {
 									plugin.settings.everything.vaultExtensions = extensions(
@@ -130,7 +130,7 @@ function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers)
 					(setting) =>
 						setting.addTextArea((text) =>
 							text
-								.setPlaceholder("archive\nprivate/diary")
+								.setPlaceholder("Archive\nprivate/diary")
 								.setValue(plugin.settings.file.excludedFolders.join("\n"))
 								.onChange((value) => {
 									// 保存時に正規化して重複を除くことで表示と検索判定のズレを防ぐ。
@@ -147,7 +147,7 @@ function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers)
 					(setting) =>
 						setting.addTextArea((text) =>
 							text
-								.setPlaceholder("archive\nreference")
+								.setPlaceholder("Archive\nreference")
 								.setValue(plugin.settings.file.demotedPriorFolders.join("\n"))
 								.onChange((value) => {
 									// Preserve the same path cleanup as exclusions so folder matching stays consistent.

@@ -113,7 +113,7 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 			}
 		).internalPlugins.getEnabledPluginById("global-search");
 		if (!search) {
-			new Notice("Enable Obsidian's Search core plugin to preview tags.");
+			new Notice("Enable Obsidian's search core plugin to preview tags.");
 			return;
 		}
 		// The core API's second argument reveals search without activating its leaf.

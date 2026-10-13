@@ -40,8 +40,8 @@ Open the command palette and run one of these, then bind a hotkey if you like:
 | Command                                       | What it does                                                |
 | --------------------------------------------- | ----------------------------------------------------------- |
 | `My Palette: Open palette`                    | Root Search: modes above recently used files                |
-| `My Palette: Open Recent palette`             | File search only, starting from recently used files         |
-| `My Palette: Open command list`               | Starts in the Run Command mode                              |
+| `My Palette: Open recent palette`             | File search only, starting from recently used files         |
+| `My Palette: Open run list`                   | Starts in the Run Command mode                              |
 | `My Palette: Open palette in right sidebar`   | A persistent list view                                      |
 | `My Palette: Open palette table in center`    | A persistent table view in a center tab                     |
 | `My Palette: Link search` / `Backlink search` | Notes linked from / to the current note                     |
@@ -93,7 +93,7 @@ Open **Settings → My Palette → Shortcuts** to see every palette and selector
 | `sc`    | Search Related Notes      | Notes related to the current note (Smart Connections)    |
 | `t`     | Switch Tab                | Switch to an open tab                                    |
 
-Every alias can be changed, and a mode can be turned off, in **Settings → My Palette → Modes**. Turning off a mode, or its integration in **Integrations**, removes it from Root Search and from alias entry. `Open Recent palette` and the table view do not list modes but still enter them by alias. Commands that open a mode directly, such as `Open command list` or `Backlink search`, start in that mode; `Esc` returns to Root Search.
+Every alias can be changed, and a mode can be turned off, in **Settings → My Palette → Modes**. Turning off a mode, or its integration in **Integrations**, removes it from Root Search and from alias entry. `Open recent palette` and the table view do not list modes but still enter them by alias. Commands that open a mode directly, such as `Open run list` or `Backlink search`, start in that mode; `Esc` returns to Root Search.
 
 The `Ignored` switch at the left of the footer (`Ctrl+I`) includes files hidden by Obsidian's excluded folders. It applies to file search only and stays dimmed in other modes. Search history remembers whether a search included them, and restoring an entry sets the switch.
 
