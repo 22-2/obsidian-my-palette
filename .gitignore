@@ -40,3 +40,4 @@ repomix-output.md
 .e2e
 test-results
 playwright-report
+coverage
