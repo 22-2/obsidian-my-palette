@@ -18,6 +18,83 @@ afterEach(() => {
 });
 
 describe("EverythingHttpClient", () => {
+	it("builds a bounded JSON request and parses files and folders", async () => {
+		const requestUrl = vi.fn().mockResolvedValue({
+			status: 200,
+			arrayBuffer: new ArrayBuffer(4),
+			text: JSON.stringify({
+				results: [
+					{ name: "note.md", path: "C:\\Vault", type: "file" },
+					{ name: "C:\\Vault\\folder", type: "folder" },
+					{ name: "bad-relative" },
+					{ name: 42, path: "C:\\Vault" },
+				],
+			}),
+		});
+		vi.stubGlobal("window", { requestUrl, setTimeout, clearTimeout });
+		const client = new EverythingHttpClient();
+		const results = await client.search(
+			"a b",
+			{ ...settings, username: "u", password: "p" },
+			undefined,
+			900,
+		);
+		const request = requestUrl.mock.calls[0]?.[0];
+		expect(new URL(request.url).searchParams.get("count")).toBe("500");
+		expect(request.headers.Authorization).toBe(`Basic ${btoa("u:p")}`);
+		expect(results.map(({ absolutePath, kind }) => [absolutePath, kind])).toEqual([
+			["C:\\Vault\\note.md", "file"],
+			["C:\\Vault\\folder", "folder"],
+		]);
+	});
+
+	it("rejects invalid settings, failed responses, and oversized or malformed bodies", async () => {
+		const client = new EverythingHttpClient();
+		await expect(client.search("x", { ...settings, httpUrl: "bad url" })).rejects.toThrow(
+			"valid",
+		);
+		await expect(client.search("x", { ...settings, httpUrl: "file:///tmp" })).rejects.toThrow(
+			"http or https",
+		);
+		for (const [status, text, size, message] of [
+			[401, "", 0, "authentication failed"],
+			[503, "", 0, "returned 503"],
+			[200, "", 2 * 1024 * 1024 + 1, "exceeded 2 MiB"],
+			[200, "{", 1, "invalid JSON"],
+			[200, "{}", 2, "unsupported JSON"],
+		] as const) {
+			vi.stubGlobal("window", {
+				requestUrl: vi
+					.fn()
+					.mockResolvedValue({ status, text, arrayBuffer: new ArrayBuffer(size) }),
+				setTimeout,
+				clearTimeout,
+			});
+			await expect(client.search("x", settings)).rejects.toThrow(message);
+		}
+	});
+
+	it("propagates aborts and cancels all active requests", async () => {
+		const resolvers = new Map<string, (value: EverythingResponse) => void>();
+		const requestUrl = vi.fn(
+			({ url }: { url: string }) =>
+				new Promise<EverythingResponse>((resolve) => {
+					resolvers.set(new URL(url).searchParams.get("search")!, resolve);
+				}),
+		);
+		vi.stubGlobal("window", { requestUrl, setTimeout, clearTimeout });
+		const client = new EverythingHttpClient();
+		const controller = new AbortController();
+		const pending = client.search("x", settings, controller.signal);
+		controller.abort();
+		resolvers.get("x")?.(responseFor("x.md"));
+		await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+		const second = client.search("y", settings);
+		client.cancel();
+		resolvers.get("y")?.(responseFor("late.md"));
+		await expect(second).rejects.toMatchObject({ name: "AbortError" });
+	});
+
 	it("keeps concurrent requests from separate palette views independent", async () => {
 		const pending = new Map<string, (response: EverythingResponse) => void>();
 		const requestUrl = vi.fn(({ url }: { url: string }) => {
