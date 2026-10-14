@@ -11,31 +11,21 @@ import {
 
 test.use({ vaultOptions: pluginVaultOptions() });
 
+type HistoryHost = {
+	getSearchHistorySuggestions(input: string, category: string): unknown[];
+	recordSearch(input: string, category: string): void;
+};
+
 test.beforeEach(async ({ obsidian }) => {
-	await obsidian.waitReady();
 	await obsidian.createNote("Alpha plan.md", "# Alpha");
 });
 
 /** Counts the stored history entries of one category through the plugin. */
 function storedCount(obsidian: ObsidianAPI, category: string): Promise<number> {
-	return obsidian.evaluateApp(
-		({ id, category }) =>
-			(
-				app as unknown as {
-					plugins: {
-						plugins: Record<
-							string,
-							{
-								getSearchHistorySuggestions(
-									input: string,
-									category: string,
-								): unknown[];
-							}
-						>;
-					};
-				}
-			).plugins.plugins[id].getSearchHistorySuggestions("", category).length,
-		{ id: PLUGIN_ID, category },
+	return obsidian.evaluatePlugin<number, HistoryHost, string>(
+		PLUGIN_ID,
+		(plugin, kind) => plugin.getSearchHistorySuggestions("", kind).length,
+		category,
 	);
 }
 
@@ -43,19 +33,8 @@ test("Clear search history takes two presses and clears only the palette's own h
 	obsidian,
 }) => {
 	// A selector's history lives in its own category and must survive the palette's clear.
-	await obsidian.evaluateApp(
-		(id) =>
-			(
-				app as unknown as {
-					plugins: {
-						plugins: Record<
-							string,
-							{ recordSearch(input: string, category: string): void }
-						>;
-					};
-				}
-			).plugins.plugins[id].recordSearch("tagged", "tag-insertion"),
-		PLUGIN_ID,
+	await obsidian.evaluatePlugin<void, HistoryHost>(PLUGIN_ID, (plugin) =>
+		plugin.recordSearch("tagged", "tag-insertion"),
 	);
 
 	// Commit a palette search: history is recorded once the result list takes focus.

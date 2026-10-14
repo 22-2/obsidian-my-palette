@@ -1,5 +1,6 @@
 import { expect, test } from "obsidian-e2e-toolkit";
 import {
+	IGNORED_TOGGLE,
 	MODAL_INPUT,
 	MODAL_ROW,
 	openPaletteWith,
@@ -11,12 +12,9 @@ import {
 test.use({ vaultOptions: pluginVaultOptions() });
 
 test.beforeEach(async ({ obsidian }) => {
-	await obsidian.waitReady();
 	await writeRaw(obsidian, "hidden-dir/Secret plan.md", "# Secret");
 	await setIgnoreFilters(obsidian, ["hidden-dir"]);
 });
-
-const IGNORED_TOGGLE = '.my-palette-status-toggle[data-status-toggle="include-ignored"]';
 
 test("the Obsidian-excluded switch finds notes hidden by Excluded files", async ({ obsidian }) => {
 	const page = await openPaletteWith(obsidian, "secret");
@@ -30,7 +28,10 @@ test("the Obsidian-excluded switch finds notes hidden by Excluded files", async 
 	await expect(page.locator(MODAL_INPUT)).toBeFocused();
 
 	// Other modes never search Obsidian-excluded files, so the switch is not shown there.
+	await page.locator(MODAL_INPUT).press("Escape");
+	await expect(page.locator(".my-palette-suggest-modal")).toHaveAttribute("data-route", "home");
 	await page.locator(MODAL_INPUT).fill("> secret");
+	await expect(page.locator(".my-palette-mode-chip")).toHaveText(">");
 	await expect(page.locator(IGNORED_TOGGLE)).toBeHidden();
 });
 

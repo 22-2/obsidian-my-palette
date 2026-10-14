@@ -20,6 +20,12 @@
 		"types": ["@obsidian-typings/obsidian-public-latest", "node"],
 		"lib": ["DOM", "ESNext"]
 	},
-	"include": ["src/**/*.ts", "src/**/*.tsx", "e2e/**/*.mts", "playwright.config.mts"],
+	"include": [
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"e2e/**/*.mts",
+		"scripts/screenshots/**/*.mts",
+		"playwright*.mts"
+	],
 	"exclude": ["node_modules"]
 }

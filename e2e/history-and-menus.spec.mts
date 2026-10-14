@@ -12,7 +12,6 @@ import {
 test.use({ vaultOptions: pluginVaultOptions() });
 
 test.beforeEach(async ({ obsidian }) => {
-	await obsidian.waitReady();
 	await obsidian.createNote("Alpha plan.md", "# Alpha");
 	await obsidian.createNote("Beta notes.md", "# Beta");
 });

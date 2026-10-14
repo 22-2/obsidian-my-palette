@@ -17,7 +17,6 @@ for (const [surface, command, selector] of [
 	],
 ] as const) {
 	test(`Alt+H fades the ${surface} in every search mode`, async ({ obsidian }, testInfo) => {
-		await obsidian.waitReady();
 		await obsidian.createNote("Alpha.md", "# Alpha");
 		await obsidian.open("Alpha.md");
 		await runPaletteCommand(obsidian, command);

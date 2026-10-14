@@ -11,24 +11,22 @@ import {
 
 test.use({ vaultOptions: pluginVaultOptions() });
 
+type PaletteOpenerHost = { paletteOpener: { now: () => number } };
+type HomeSettings = { home: { returnAfterSeconds: number } };
+
 test.beforeEach(async ({ obsidian }) => {
-	await obsidian.waitReady();
 	await obsidian.createNote("Alpha plan.md", "# Alpha");
 });
 
 /** Moves the palette's clock forward, which is how Return to Home after is tested. */
 function advanceClock(obsidian: ObsidianAPI, milliseconds: number): Promise<void> {
-	return obsidian.evaluateApp(
-		({ id, milliseconds }) => {
-			const plugin = (
-				app as unknown as {
-					plugins: { plugins: Record<string, { paletteOpener: { now: () => number } }> };
-				}
-			).plugins.plugins[id];
+	return obsidian.evaluatePlugin<void, PaletteOpenerHost, number>(
+		PLUGIN_ID,
+		(plugin, offset) => {
 			const real = plugin.paletteOpener.now;
-			plugin.paletteOpener.now = () => real() + milliseconds;
+			plugin.paletteOpener.now = () => real() + offset;
 		},
-		{ id: PLUGIN_ID, milliseconds },
+		milliseconds,
 	);
 }
 
@@ -59,15 +57,10 @@ test("Open home resumes the last search, then starts at Home once the time has p
 });
 
 test("Immediately always starts at Home", async ({ obsidian }) => {
-	await obsidian.evaluateApp((id) => {
-		(
-			app as unknown as {
-				plugins: {
-					plugins: Record<string, { settings: { home: { returnAfterSeconds: number } } }>;
-				};
-			}
-		).plugins.plugins[id].settings.home.returnAfterSeconds = 0;
-	}, PLUGIN_ID);
+	// Changes only the live setting, without saving data.json, as this test did before the migration.
+	await obsidian.evaluatePlugin<void, { settings: HomeSettings }>(PLUGIN_ID, (plugin) => {
+		plugin.settings.home.returnAfterSeconds = 0;
+	});
 
 	const first = await openPaletteWith(obsidian, "alpha");
 	await closePalette(first);
@@ -76,18 +69,7 @@ test("Immediately always starts at Home", async ({ obsidian }) => {
 });
 
 test("General offers Return to Home after, set to 90 seconds by default", async ({ obsidian }) => {
-	const settingsOpened = obsidian.page.context().waitForEvent("page");
-	await obsidian.evaluateApp(() => {
-		const setting = (
-			app as unknown as { setting: { open(): void; openTabById(id: string): void } }
-		).setting;
-		setting.open();
-		setting.openTabById("my-palette");
-	});
-	const settingsPage = await settingsOpened;
-	const general = settingsPage.locator(".setting-item-name").filter({ hasText: /^General$/ });
-	await expect(general).toBeVisible({ timeout: 10_000 });
-	await general.click();
+	const settingsPage = await obsidian.openSettings(PLUGIN_ID, { subPage: "General" });
 	const row = settingsPage
 		.locator(".setting-item")
 		.filter({ has: settingsPage.getByText("Return to Home after", { exact: true }) });
@@ -95,21 +77,9 @@ test("General offers Return to Home after, set to 90 seconds by default", async 
 	await expect(select).toHaveValue("90");
 	await select.selectOption("0");
 	await expect
-		.poll(() =>
-			obsidian.evaluateApp(
-				(id) =>
-					(
-						app as unknown as {
-							plugins: {
-								plugins: Record<
-									string,
-									{ settings: { home: { returnAfterSeconds: number } } }
-								>;
-							};
-						}
-					).plugins.plugins[id].settings.home.returnAfterSeconds,
-				PLUGIN_ID,
-			),
-		)
+		.poll(async () => {
+			const settings = await obsidian.pluginSettings<HomeSettings>(PLUGIN_ID);
+			return settings.home.returnAfterSeconds;
+		})
 		.toBe(0);
 });

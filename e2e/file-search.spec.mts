@@ -4,7 +4,6 @@ import { MODAL_ROW, openPaletteWith, pluginVaultOptions, rowLabels } from "./sup
 test.use({ vaultOptions: pluginVaultOptions() });
 
 test.beforeEach(async ({ obsidian }) => {
-	await obsidian.waitReady();
 	await obsidian.createNote("Projects/Alpha plan.md", "# Alpha");
 	await obsidian.createNote("Projects/Beta notes.md", "# Beta");
 });

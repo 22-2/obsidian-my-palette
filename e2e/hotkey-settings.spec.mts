@@ -1,29 +1,13 @@
 import { expect, test } from "obsidian-e2e-toolkit";
-import { MODAL_INPUT, openPaletteWith, pluginVaultOptions } from "./support.mts";
+import { MODAL_INPUT, openPaletteWith, PLUGIN_ID, pluginVaultOptions } from "./support.mts";
 
 test.use({ vaultOptions: pluginVaultOptions() });
 
 test("the Shortcuts table records changes, rejects conflicts and restores defaults", async ({
 	obsidian,
 }, testInfo) => {
-	await obsidian.waitReady();
 	const page = obsidian.page;
-	const settingsOpened = page.context().waitForEvent("page");
-	await obsidian.evaluateApp(() => {
-		const setting = (
-			app as unknown as { setting: { open(): void; openTabById(id: string): void } }
-		).setting;
-		setting.open();
-		setting.openTabById("my-palette");
-	});
-	const settingsPage = await settingsOpened;
-	await expect(
-		settingsPage.locator(".setting-item-name").filter({ hasText: /^Shortcuts$/ }),
-	).toBeVisible({ timeout: 10_000 });
-	await settingsPage
-		.locator(".setting-item-name")
-		.filter({ hasText: /^Shortcuts$/ })
-		.click();
+	const settingsPage = await obsidian.openSettings(PLUGIN_ID, { subPage: "Shortcuts" });
 
 	const row = (name: string) =>
 		settingsPage.locator("tr.my-palette-shortcuts__row").filter({

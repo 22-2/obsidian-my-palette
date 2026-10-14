@@ -2,7 +2,8 @@ import { expect, test } from "obsidian-e2e-toolkit";
 import {
 	MODAL_INPUT,
 	MODAL_ROW,
-	openPaletteWith,
+	openHomeWith,
+	PLUGIN_ID,
 	pluginVaultOptions,
 	rowLabels,
 	runPaletteCommand,
@@ -10,9 +11,9 @@ import {
 
 test.use({ vaultOptions: pluginVaultOptions() });
 
-test.beforeEach(async ({ obsidian }) => {
-	await obsidian.waitReady();
-});
+type SmartConnectionsHost = {
+	integrationAvailability: { refresh(): Promise<unknown> };
+};
 
 test("an installed but uninitialized Smart Connections mode stays hidden until its adapter is ready", async ({
 	obsidian,
@@ -27,7 +28,7 @@ test("an installed but uninitialized Smart Connections mode stays hidden until i
 	await runPaletteCommand(obsidian, "open-home");
 	const page = obsidian.page;
 	await expect(page.locator(MODAL_ROW).filter({ hasText: "Related notes" })).toHaveCount(0);
-	await obsidian.evaluateApp(async () => {
+	await obsidian.evaluateApp(() => {
 		const plugins = (app as unknown as { plugins: { plugins: Record<string, unknown> } })
 			.plugins.plugins;
 		plugins["smart-connections"] = {
@@ -38,10 +39,10 @@ test("an installed but uninitialized Smart Connections mode stays hidden until i
 				},
 			},
 		};
-		await (
-			plugins["my-palette"] as { integrationAvailability: { refresh(): Promise<unknown> } }
-		).integrationAvailability.refresh();
 	});
+	await obsidian.evaluatePlugin<unknown, SmartConnectionsHost>(PLUGIN_ID, (plugin) =>
+		plugin.integrationAvailability.refresh(),
+	);
 	await expect(page.locator(MODAL_ROW).filter({ hasText: "Related notes" })).toHaveCount(1);
 	await page.locator(MODAL_INPUT).fill("sc ");
 	await expect(page.locator(".my-palette-mode-chip")).toHaveText("sc");
@@ -49,7 +50,7 @@ test("an installed but uninitialized Smart Connections mode stays hidden until i
 });
 
 test("the > prefix searches commands", async ({ obsidian }) => {
-	const page = await openPaletteWith(obsidian, "> outgoing link list");
+	const page = await openHomeWith(obsidian, "> outgoing link list");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Open outgoing link list");
 });
 
@@ -65,7 +66,7 @@ test("bk searches core bookmarks", async ({ obsidian }) => {
 		).internalPlugins.getEnabledPluginById("bookmarks");
 		bookmarks.addItem({ type: "file", path: "Pinned topic.md", title: "Pinned topic" });
 	});
-	const page = await openPaletteWith(obsidian, "bk pinned");
+	const page = await openHomeWith(obsidian, "bk pinned");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Pinned topic");
 });
 
@@ -76,7 +77,7 @@ test("o lists outgoing links and b lists backlinks of the active note", async ({
 	await obsidian.createNote("Referrer.md", "points to [[Hub]]");
 	await obsidian.open("Hub.md");
 
-	const page = await openPaletteWith(obsidian, "o ");
+	const page = await openHomeWith(obsidian, "o ");
 	await expect
 		.poll(() => rowLabels(page))
 		.toEqual(expect.arrayContaining(["Target one", "Target two"]));
@@ -92,7 +93,7 @@ test("an unavailable Smart Connections mode is absent and its alias does not ent
 }) => {
 	await obsidian.createNote("Solo.md", "alone");
 	await obsidian.open("Solo.md");
-	const page = await openPaletteWith(obsidian, "sc ");
+	const page = await openHomeWith(obsidian, "sc ");
 	await expect(page.locator(".my-palette-mode-chip")).toBeHidden();
 	await expect(page.locator(MODAL_INPUT)).toHaveValue("sc ");
 	await expect(page.locator(MODAL_ROW).filter({ hasText: "Related notes" })).toHaveCount(0);

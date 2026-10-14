@@ -1,63 +1,24 @@
-import type { Page } from "@playwright/test";
 import { expect, test } from "obsidian-e2e-toolkit";
-import type { ObsidianAPI } from "obsidian-e2e-toolkit";
-import { MODAL_INPUT, pluginVaultOptions, runPaletteCommand } from "./support.mts";
+import { MODAL_INPUT, PLUGIN_ID, pluginVaultOptions, runPaletteCommand } from "./support.mts";
 
 test.use({ vaultOptions: pluginVaultOptions() });
 
-/** Opens the Integrations page of the settings window, which is a separate page. */
-async function openIntegrations(obsidian: ObsidianAPI): Promise<Page> {
-	const settingsOpened = obsidian.page.context().waitForEvent("page");
-	await obsidian.evaluateApp(() => {
-		const setting = (
-			app as unknown as { setting: { open(): void; openTabById(id: string): void } }
-		).setting;
-		setting.open();
-		setting.openTabById("my-palette");
-	});
-	const settingsPage = await settingsOpened;
-	const item = settingsPage.locator(".setting-item-name").filter({ hasText: /^Integrations$/ });
-	await expect(item).toBeVisible({ timeout: 10_000 });
-	await item.click();
-	return settingsPage;
-}
-
-function closeSettings(obsidian: ObsidianAPI): Promise<void> {
-	return obsidian.evaluateApp(() =>
-		(app as unknown as { setting: { close(): void } }).setting.close(),
-	);
-}
+type IntegrationSettings = { integrations: { everything: { enabled: boolean } } };
 
 test("turning Everything off removes its modes from Home and alias entry", async ({ obsidian }) => {
-	await obsidian.waitReady();
-	const settingsPage = await openIntegrations(obsidian);
+	const settingsPage = await obsidian.openSettings(PLUGIN_ID, { subPage: "Integrations" });
 	const everything = settingsPage
 		.locator(".setting-item")
 		.filter({ has: settingsPage.getByText("Everything", { exact: true }) })
 		.first();
 	await everything.locator(".checkbox-container").click();
 	await expect
-		.poll(() =>
-			obsidian.evaluateApp(
-				() =>
-					(
-						app as unknown as {
-							plugins: {
-								plugins: Record<
-									string,
-									{
-										settings: {
-											integrations: { everything: { enabled: boolean } };
-										};
-									}
-								>;
-							};
-						}
-					).plugins.plugins["my-palette"].settings.integrations.everything.enabled,
-			),
-		)
+		.poll(async () => {
+			const settings = await obsidian.pluginSettings<IntegrationSettings>(PLUGIN_ID);
+			return settings.integrations.everything.enabled;
+		})
 		.toBe(false);
-	await closeSettings(obsidian);
+	await obsidian.closeSettings();
 
 	await runPaletteCommand(obsidian, "open-home");
 	const page = obsidian.page;
@@ -72,8 +33,7 @@ test("turning Everything off removes its modes from Home and alias entry", async
 test("the Everything card opens its settings without interfering with its controls", async ({
 	obsidian,
 }) => {
-	await obsidian.waitReady();
-	const settingsPage = await openIntegrations(obsidian);
+	const settingsPage = await obsidian.openSettings(PLUGIN_ID, { subPage: "Integrations" });
 	const header = settingsPage.getByRole("button", { name: "Everything", exact: true });
 	const panel = settingsPage.locator("#my-palette-everything-panel");
 	await expect(header).toHaveAttribute("aria-expanded", "false");

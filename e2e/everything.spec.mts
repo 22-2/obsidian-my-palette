@@ -4,7 +4,8 @@ import { expect, test } from "obsidian-e2e-toolkit";
 import {
 	MODAL_INPUT,
 	MODAL_ROW,
-	openPaletteWith,
+	openHomeWith,
+	PLUGIN_ID,
 	pluginVaultOptions,
 	runPaletteCommand,
 } from "./support.mts";
@@ -28,18 +29,13 @@ test.use({
 	}),
 });
 
+type EverythingHost = { testEverythingConnection(): Promise<{ ok: boolean }> };
+
 test.beforeEach(async ({ obsidian }) => {
 	serverStatus = 200;
-	await obsidian.waitReady();
-	await obsidian.evaluateApp(async () => {
-		await (
-			app as unknown as {
-				plugins: {
-					plugins: Record<string, { testEverythingConnection(): Promise<unknown> }>;
-				};
-			}
-		).plugins.plugins["my-palette"].testEverythingConnection();
-	});
+	await obsidian.evaluatePlugin<{ ok: boolean }, EverythingHost>(PLUGIN_ID, (plugin) =>
+		plugin.testEverythingConnection(),
+	);
 	requests.length = 0;
 });
 
@@ -47,17 +43,8 @@ test("failed integrations leave Home and Modes and successful setup restores Eve
 	obsidian,
 }) => {
 	const testConnection = () =>
-		obsidian.evaluateApp(async () =>
-			(
-				app as unknown as {
-					plugins: {
-						plugins: Record<
-							string,
-							{ testEverythingConnection(): Promise<{ ok: boolean }> }
-						>;
-					};
-				}
-			).plugins.plugins["my-palette"].testEverythingConnection(),
+		obsidian.evaluatePlugin<{ ok: boolean }, EverythingHost>(PLUGIN_ID, (plugin) =>
+			plugin.testEverythingConnection(),
 		);
 	await runPaletteCommand(obsidian, "open-home");
 	const page = obsidian.page;
@@ -67,13 +54,15 @@ test("failed integrations leave Home and Modes and successful setup restores Eve
 	expect((await testConnection()).ok).toBe(false);
 	await expect(page.locator(MODAL_ROW).filter({ hasText: "Everything" })).toHaveCount(0);
 	await page.locator(MODAL_INPUT).press("Escape");
-	const opened = page.context().waitForEvent("page");
-	await obsidian.evaluateApp(() =>
-		(
-			app as unknown as { plugins: { plugins: Record<string, { openSettings(): void }> } }
-		).plugins.plugins["my-palette"].openSettings(),
+	// The plugin's own settings entry is what this test checks, so it is invoked directly.
+	await obsidian.evaluatePlugin<void, { openSettings(): void }>(PLUGIN_ID, (plugin) =>
+		plugin.openSettings(),
 	);
-	const settings = await opened;
+	// Only the window lookup uses findPage, so an already open settings window is found too.
+	const settings = await obsidian.findPage(
+		(candidate) => candidate.locator(".setting-item-name").filter({ hasText: /^Modes$/ }),
+		{ description: "my-palette settings window" },
+	);
 	await settings
 		.locator(".setting-item-name")
 		.filter({ hasText: /^Modes$/ })
@@ -96,10 +85,8 @@ test.afterAll(() => {
 test("the e prefix sends a vault-scoped query to the Everything HTTP server", async ({
 	obsidian,
 }) => {
-	const vaultRoot = await obsidian.evaluateApp(() =>
-		(app.vault.adapter as unknown as { getBasePath(): string }).getBasePath(),
-	);
-	const page = await openPaletteWith(obsidian, "e report");
+	const vaultRoot = await obsidian.vaultPath();
+	const page = await openHomeWith(obsidian, "e report");
 	await expect.poll(() => requests.length).toBeGreaterThan(0);
 
 	const params = requests.at(-1)!.searchParams;
@@ -113,7 +100,7 @@ test("the e prefix sends a vault-scoped query to the Everything HTTP server", as
 test("the Obsidian-excluded switch changes the single Everything mode's scope", async ({
 	obsidian,
 }) => {
-	const page = await openPaletteWith(obsidian, "e report");
+	const page = await openHomeWith(obsidian, "e report");
 	await expect.poll(() => requests.length).toBeGreaterThan(0);
 	expect(requests.at(-1)!.searchParams.get("search")).toContain("ext:");
 	const before = requests.length;

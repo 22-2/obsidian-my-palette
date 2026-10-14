@@ -1,6 +1,7 @@
 import { expect, test } from "obsidian-e2e-toolkit";
 import type { Page } from "@playwright/test";
 import {
+	IGNORED_TOGGLE,
 	menuItems,
 	MODAL_INPUT,
 	MODAL_ROW,
@@ -11,10 +12,6 @@ import {
 } from "./support.mts";
 
 test.use({ vaultOptions: pluginVaultOptions() });
-
-test.beforeEach(async ({ obsidian }) => {
-	await obsidian.waitReady();
-});
 
 async function inspectPreviewThroughModal(page: Page): Promise<void> {
 	const container = page.locator(".my-palette-modal-container");
@@ -119,9 +116,7 @@ test.describe("MOC insertion with plugin exclusions", () => {
 		await expect(page.locator(MODAL_ROW).first()).toContainText("Visible child");
 		await page.locator(MODAL_INPUT).fill("hidden");
 		await expect(page.locator(MODAL_ROW)).toHaveCount(0);
-		await page
-			.locator('.my-palette-status-toggle[data-status-toggle="include-ignored"]')
-			.click();
+		await page.locator(IGNORED_TOGGLE).click();
 		await expect(page.locator(MODAL_ROW).first()).toContainText("Hidden child");
 		await page.keyboard.press("Escape");
 	});

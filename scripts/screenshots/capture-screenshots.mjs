@@ -29,7 +29,7 @@ function run(command, commandArgs, options = {}) {
 
 run(process.execPath, [join(root, "node_modules/electron/install.js")]);
 run("pnpm build", [], { shell: true });
-run(process.execPath, ["e2e/prepare-plugin.mjs"]);
+run(process.execPath, [join(root, "e2e/prepare-plugin.mjs")]);
 run(process.execPath, [
 	fileURLToPath(import.meta.resolve("@playwright/test/cli")),
 	"test",

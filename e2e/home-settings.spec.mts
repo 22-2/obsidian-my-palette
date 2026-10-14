@@ -7,15 +7,11 @@ test.use({ vaultOptions: pluginVaultOptions() });
 test("Home opens each Settings entry directly by click, Enter or Tab", async ({
 	obsidian,
 }, testInfo) => {
-	await obsidian.waitReady();
 	await obsidian.createNote("Example.md", "# Example");
 	const page = obsidian.page;
 	let settingsWindow: Page | undefined;
 	await page.setViewportSize({ width: 900, height: 900 });
-	await page.evaluate(() => {
-		document.body.classList.remove("theme-light");
-		document.body.classList.add("theme-dark");
-	});
+	await obsidian.setTheme("dark", page);
 	for (const [name, target, heading, action] of [
 		["General", "General", "Return to Home after", "click"],
 		["Modes", "Modes", "Search modes", "Enter"],
@@ -39,6 +35,7 @@ test("Home opens each Settings entry directly by click, Enter or Tab", async ({
 		await input.fill(name);
 		const row = page.locator(MODAL_ROW).filter({ has: page.getByText(name, { exact: true }) });
 		await expect(row).toHaveCount(1);
+		// The entry itself is what this test checks, so the settings window is awaited directly.
 		const opened =
 			settingsWindow && !settingsWindow.isClosed()
 				? Promise.resolve(settingsWindow)
@@ -58,9 +55,7 @@ test("Home opens each Settings entry directly by click, Enter or Tab", async ({
 			await expect(settings.locator("#my-palette-everything-panel")).toBeVisible();
 			await settings.screenshot({ path: testInfo.outputPath("everything-card.png") });
 		}
-		await obsidian.evaluateApp(() =>
-			(app as unknown as { setting: { close(): void } }).setting.close(),
-		);
+		await obsidian.closeSettings();
 		await page.bringToFront();
 	}
 });

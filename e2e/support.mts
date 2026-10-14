@@ -1,16 +1,22 @@
-import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Locator, Page } from "@playwright/test";
 import type { ObsidianAPI, VaultOptions } from "obsidian-e2e-toolkit";
 
 export const PLUGIN_ID = "my-palette";
 
+// Resolved from this file, so the path does not depend on the directory the tests start in.
+const PREPARED_PLUGIN_DIR = fileURLToPath(new URL("../.e2e/plugin", import.meta.url));
+
 /** Installs the built plugin (see prepare-plugin.mjs), optionally with initial data.json. */
 export function pluginVaultOptions(data?: Record<string, unknown>): Partial<VaultOptions> {
-	return { plugins: [{ path: path.resolve(".e2e/plugin"), data }] };
+	return { plugins: [{ path: PREPARED_PLUGIN_DIR, data }] };
 }
 
 export const MODAL_INPUT = ".my-palette-suggest-modal .prompt-input";
 export const MODAL_ROW = ".my-palette-suggest-modal .suggestion-item";
+
+/** The Obsidian-excluded switch in the palette footer. */
+export const IGNORED_TOGGLE = '.my-palette-status-toggle[data-status-toggle="include-ignored"]';
 
 /** Runs one of the plugin's registered commands through Obsidian's command registry. */
 export async function runPaletteCommand(obsidian: ObsidianAPI, id: string): Promise<void> {
@@ -26,8 +32,22 @@ export async function openPaletteWith(obsidian: ObsidianAPI, input: string): Pro
 	return page;
 }
 
+/** Opens Home, where aliases can select a search mode. */
+export async function openHomeWith(obsidian: ObsidianAPI, input: string): Promise<Page> {
+	await runPaletteCommand(obsidian, "open-home");
+	const page = obsidian.page;
+	await page.locator(MODAL_INPUT).waitFor();
+	await page.locator(MODAL_INPUT).fill(input);
+	return page;
+}
+
 export async function closePalette(page: Page): Promise<void> {
-	await page.keyboard.press("Escape");
+	// Escape returns to Home and changes the remembered query. Dismiss outside
+	// the modal instead, so restore tests retain the search they just performed.
+	const container = page.locator(".modal-container").filter({
+		has: page.locator(".my-palette-suggest-modal"),
+	});
+	await container.locator(".modal-bg").click({ position: { x: 5, y: 5 } });
 	await page.locator(".my-palette-suggest-modal").waitFor({ state: "detached" });
 }
 

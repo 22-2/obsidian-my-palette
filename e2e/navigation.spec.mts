@@ -8,7 +8,6 @@ const CHIP = ".my-palette-mode-chip";
 const HEADING = ".my-palette-section-heading";
 
 test.beforeEach(async ({ obsidian }) => {
-	await obsidian.waitReady();
 	await obsidian.createNote("Hub.md", "# Hub");
 	await obsidian.createNote("Referrer.md", "points to [[Hub]]");
 	await obsidian.open("Hub.md");

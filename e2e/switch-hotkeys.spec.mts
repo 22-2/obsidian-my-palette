@@ -1,5 +1,6 @@
 import { expect, test } from "obsidian-e2e-toolkit";
 import {
+	IGNORED_TOGGLE,
 	MODAL_INPUT,
 	openPaletteWith,
 	pluginVaultOptions,
@@ -14,12 +15,9 @@ test.use({
 });
 
 test.beforeEach(async ({ obsidian }) => {
-	await obsidian.waitReady();
 	await writeRaw(obsidian, "hidden-dir/Secret plan.md", "# Secret");
 	await setIgnoreFilters(obsidian, ["hidden-dir"]);
 });
-
-const IGNORED_TOGGLE = '.my-palette-status-toggle[data-status-toggle="include-ignored"]';
 
 test("a changed Obsidian-excluded hotkey replaces the footer hint and the shortcut", async ({
 	obsidian,

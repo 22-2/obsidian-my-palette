@@ -1,6 +1,6 @@
-import { defineConfig } from "@playwright/test";
+import { defineObsidianConfig } from "obsidian-e2e-toolkit";
 
-export default defineConfig({
+export default defineObsidianConfig({
 	testDir: "e2e",
 	testMatch: "**/*.spec.mts",
 	// One Obsidian instance per test file; keep the suite serial and readable.
