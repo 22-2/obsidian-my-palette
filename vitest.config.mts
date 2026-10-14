@@ -8,5 +8,12 @@ export default defineConfig({
 	test: {
 		// Playwright owns e2e/; run it with `pnpm e2e`.
 		include: ["src/**/*.test.ts"],
+		coverage: {
+			provider: "v8",
+			include: ["src/**/*.ts"],
+			exclude: ["src/**/*.test.ts", "src/**/*.d.ts"],
+			reportsDirectory: "coverage/unit",
+			reporter: ["text", "html", "lcov", "json"],
+		},
 	},
 });

@@ -1,4 +1,4 @@
-import { expect, test } from "obsidian-e2e-toolkit";
+import { expect, test } from "./fixtures.mts";
 import type { Page } from "@playwright/test";
 import {
 	IGNORED_TOGGLE,

@@ -19,6 +19,9 @@
 		"format": "oxfmt",
 		"format:check": "oxfmt --check",
 		"test": "vitest run",
+		"test:coverage": "vitest run --coverage",
+		"test:coverage:e2e": "node scripts/e2e-coverage.mjs",
+		"test:coverage:combined": "pnpm test:coverage && pnpm test:coverage:e2e && node scripts/merge-coverage.mjs",
 		"e2e": "node node_modules/electron/install.js && pnpm build && node e2e/prepare-plugin.mjs && playwright test",
 		"ui:shots": "node scripts/screenshots/capture-screenshots.mjs",
 		"prepare": "git config core.hooksPath .githooks"
@@ -34,6 +37,7 @@
 		"@obsidian-typings/obsidian-public-latest": "^6.20.0",
 		"@playwright/test": "^1.63.0",
 		"@types/node": "26.1.0",
+		"@vitest/coverage-v8": "5.0.3",
 		"electron": "^44.6.0",
 		"esbuild": "^0.28.2",
 		"eslint": "10.12.0",

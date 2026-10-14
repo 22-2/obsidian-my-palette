@@ -3,6 +3,7 @@ import { renameSync } from "node:fs";
 import esbuild from "esbuild";
 
 const isWatch = process.argv.includes("--watch");
+const isCoverage = process.env.E2E_COVERAGE === "1";
 
 /**
  * Obsidian loads the plugin from main.js and styles.css. esbuild names the CSS
@@ -27,7 +28,7 @@ const context = await esbuild.context({
 	platform: "browser",
 	target: "es2022",
 	minify: !isWatch,
-	sourcemap: isWatch ? "inline" : false,
+	sourcemap: isCoverage ? "external" : isWatch ? "inline" : false,
 	logLevel: "info",
 	external: [
 		"obsidian",

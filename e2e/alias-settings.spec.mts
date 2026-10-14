@@ -1,5 +1,5 @@
-import { expect, test } from "obsidian-e2e-toolkit";
-import type { ObsidianAPI } from "obsidian-e2e-toolkit";
+import { expect, test } from "./fixtures.mts";
+import type { ObsidianAPI } from "./fixtures.mts";
 import {
 	MODAL_INPUT,
 	MODAL_ROW,

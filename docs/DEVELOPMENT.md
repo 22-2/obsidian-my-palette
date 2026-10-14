@@ -11,6 +11,9 @@ Requirements: Node.js and pnpm.
 - `pnpm format`: format with oxfmt. `pnpm format:check` only reports unformatted files.
 - `pnpm lint`: lint with ESLint and the Obsidian plugin rules.
 - `pnpm test`: run unit tests with Vitest.
+- `pnpm test:coverage`: run unit tests and write the report to `coverage/unit/`.
+- `pnpm test:coverage:e2e`: build with source maps, collect Playwright coverage in `coverage/e2e/`, then restore the regular build.
+- `pnpm test:coverage:combined`: run both coverage suites and merge them into `coverage/combined/`.
 - `pnpm check-types`: run the TypeScript check.
 - `pnpm build`: build a production bundle.
 - `pnpm e2e`: run the end-to-end tests (see below).
