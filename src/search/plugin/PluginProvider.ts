@@ -3,6 +3,7 @@ import { getVaultFullPath } from "src/ignored-notes/ignoredPaths";
 import type { PluginResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { hasPluginSettingsTab } from "src/search/plugin/pluginSettings";
 
 interface PluginManifest {
 	id: string;
@@ -21,12 +22,6 @@ function getManifests(app: App): PluginManifest[] {
 function isEnabled(app: App, pluginId: string): boolean {
 	const plugins = (app.plugins as unknown as { plugins?: Record<string, unknown> }).plugins;
 	return Boolean(plugins?.[pluginId]);
-}
-
-function hasSettingsTab(app: App, pluginId: string): boolean {
-	const settingTabs = (app as unknown as { setting?: { settingTabs?: Record<string, unknown> } })
-		.setting?.settingTabs;
-	return Boolean(settingTabs?.[pluginId]);
 }
 
 /**
@@ -54,7 +49,7 @@ export class PluginProvider implements PaletteProvider<PluginResult> {
 				absolutePath,
 				vaultPath: manifest.dir,
 				enabled,
-				hasSettings: hasSettingsTab(this.app, manifest.id),
+				hasSettings: hasPluginSettingsTab(this.app, manifest.id),
 			});
 		}
 		const ordered = results.sort((a, b) => a.primary.localeCompare(b.primary));

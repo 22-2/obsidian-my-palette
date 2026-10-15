@@ -41,7 +41,6 @@ export function getResultAbsolutePath(app: App, result: PaletteResult): string |
 		case "property":
 		case "search-history":
 		case "mode-entry":
-		case "settings-entry":
 			return undefined;
 	}
 }

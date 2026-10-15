@@ -182,7 +182,7 @@ it("hides external open actions for commands", () => {
 it("offers editor, explorer and settings for plugin results without note navigation", () => {
 	const f = fixture(false);
 	const app = {
-		setting: { openTabById: vi.fn() },
+		setting: { open: vi.fn(), openTabById: vi.fn() },
 	} as unknown as App;
 	const result: PaletteResult = {
 		id: "plugin:alpha",
@@ -213,6 +213,7 @@ it("offers editor, explorer and settings for plugin results without note navigat
 	f.actions.get("Open in external editor")!();
 	expect(f.options.activate).toHaveBeenCalledExactlyOnceWith("primary", result);
 	f.actions.get("Open plugin settings")!();
+	expect(app.setting.open).toHaveBeenCalledOnce();
 	expect(app.setting.openTabById).toHaveBeenCalledExactlyOnceWith("alpha");
 	expect(onNoteActionSelected).toHaveBeenCalled();
 });

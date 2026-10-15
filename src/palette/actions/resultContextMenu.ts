@@ -28,6 +28,7 @@ import {
 } from "src/platform/pathClipboard";
 import { addTagInsertionMenuItems } from "src/tags/tagInsertionMenu";
 import { populatePropertyMenu } from "src/properties/propertyMenu";
+import { openPluginSettings } from "src/search/plugin/pluginSettings";
 
 interface PaletteResultMenuOptions {
 	app: App;
@@ -135,15 +136,6 @@ export function populatePaletteResultMenu({
 		);
 		return;
 	}
-	if (result.mode === "settings-entry") {
-		menu.addItem((item) =>
-			item
-				.setTitle("Open settings")
-				.setIcon("settings")
-				.onClick(() => void activate("primary", result)),
-		);
-		return;
-	}
 	if (result.mode === "command") {
 		menu.addItem((item) =>
 			item
@@ -201,7 +193,7 @@ export function populatePaletteResultMenu({
 					.setIcon("settings")
 					.onClick(() => {
 						onNoteActionSelected?.();
-						app.setting.openTabById(pluginId);
+						openPluginSettings(app, pluginId);
 					}),
 			);
 		}

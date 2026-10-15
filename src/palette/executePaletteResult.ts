@@ -39,12 +39,6 @@ export async function executePaletteResult(
 		if ((await editPropertyResult(plugin, result)) === "close") finish(options);
 		return;
 	}
-	if (result.mode === "settings-entry") {
-		if (action !== "primary") return;
-		if (options.closeWhenDone) options.close();
-		plugin.openSettings(result.pageName);
-		return;
-	}
 	if (result.mode === "command") {
 		if (action !== "primary") return;
 		const exists = plugin.commandProvider

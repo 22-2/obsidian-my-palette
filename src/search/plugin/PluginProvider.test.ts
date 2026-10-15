@@ -24,9 +24,8 @@ function app(): App {
 			},
 		},
 		setting: {
-			settingTabs: {
-				alpha: {},
-			},
+			settingTabs: [{ id: "editor" }],
+			pluginTabs: [{ id: "alpha" }],
 		},
 		vault: {
 			adapter: {

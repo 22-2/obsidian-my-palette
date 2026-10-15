@@ -49,7 +49,7 @@ My Commandsの`quickOpen`(`obsidian-my-commands/src/commands/categories/open-ope
 - Notes、Everything、Outgoing links(解決済みのもの)、Backlinks、Bookmarks(ファイル・フォルダー)、Related notes、Tabs(ファイルを開いているもの)
 - 新しいPlugins・Snippetsの結果
 
-Home のモードの入口とSettingsの入口、Commandsの結果には付けない。
+Home のモードの入口とCommandsの結果には付けない。
 
 ### 置き場所
 
@@ -87,13 +87,13 @@ Home のモードの入口とSettingsの入口、Commandsの結果には付け�
 
 ### 操作
 
-| 操作                    | 動き                                                                                                |
-| ----------------------- | --------------------------------------------------------------------------------------------------- |
-| Enter                   | フォルダーを外部エディターで開く                                                                    |
-| Show in system explorer | フォルダーを開く                                                                                    |
-| Open in terminal        | フォルダーでターミナルを開く                                                                        |
-| Open plugin settings    | そのプラグインの設定タブを開く(`app.setting.openTabById(id)`)。設定タブのないプラグインでは出さない |
-| パスのコピー            | 既存の`addCopyPathMenuItems`を使う                                                                  |
+| 操作                    | 動き                                                                                                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Enter                   | フォルダーを外部エディターで開く                                                                                                                                    |
+| Show in system explorer | フォルダーを開く                                                                                                                                                    |
+| Open in terminal        | フォルダーでターミナルを開く                                                                                                                                        |
+| Open plugin settings    | そのプラグインの設定タブを開く(`app.setting.open()`のあと`app.setting.openTabById(id)`。有無は`app.setting.pluginTabs`で判定)。設定タブのないプラグインでは出さない |
+| パスのコピー            | 既存の`addCopyPathMenuItems`を使う                                                                                                                                  |
 
 - プラグインの有効・無効の切り替えやリロードは、今回は入れない(My Commandsの`reload-chosen-plugin`などに残す)。
 

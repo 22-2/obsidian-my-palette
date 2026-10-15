@@ -1,7 +1,6 @@
 import type { TFile } from "obsidian";
 import type { PaletteModeId } from "src/palette/modes";
 import type { SearchHistoryEntry } from "src/settings/model";
-import type { SettingsPageName } from "src/settings/settingsNavigation";
 
 export type PaletteMode =
 	| "file"
@@ -97,12 +96,6 @@ export interface ModeEntryResult extends Omit<BaseResult, "mode"> {
 	alias: string;
 }
 
-/** A Home row that opens one settings page without searching or opening a file. */
-export interface SettingsEntryResult extends Omit<BaseResult, "mode"> {
-	mode: "settings-entry";
-	pageName: SettingsPageName;
-}
-
 /** An open main-area tab; choosing it activates the tab instead of opening a file. */
 export interface TabResult extends BaseResult {
 	mode: "tab";
@@ -172,8 +165,7 @@ export type PaletteResult =
 	| PluginResult
 	| SnippetResult
 	| PropertyResult
-	| ModeEntryResult
-	| SettingsEntryResult;
+	| ModeEntryResult;
 
 /** The vault file a result opens, when it has one; used to record file usage. */
 export function getResultFilePath(result: PaletteResult): string | undefined {
@@ -195,7 +187,6 @@ export function getResultFilePath(result: PaletteResult): string | undefined {
 		case "property":
 		case "search-history":
 		case "mode-entry":
-		case "settings-entry":
 			return undefined;
 	}
 }
