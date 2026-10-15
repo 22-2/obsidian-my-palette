@@ -211,18 +211,18 @@ export class PaletteHistoryControls {
 		const switches = (this.options.getSwitches?.() ?? []).filter(({ isHidden }) => !isHidden);
 		const offersHighlight = this.options.showHighlightOption !== false;
 		// Why: a heading with nothing under it would only be noise.
-		if (switches.length > 0 || offersHighlight)
-			menu.addItem((item) => item.setTitle("Options").setIcon("settings").setDisabled(true));
+		if (switches.length > 0 || offersHighlight) menu.addHeading("Options");
 		for (const toggle of switches) {
 			menu.addItem((item) =>
 				item
 					.setTitle(toggle.label)
 					.setIcon(toggle.icon ?? null)
-					.setChecked(toggle.value)
+					.setTooltip(toggle.description)
+					.setSwitch(toggle.value)
 					.setKeepOpen()
 					.onClick(() => {
 						toggle.flip();
-						item.setChecked(toggle.value);
+						item.setSwitch(toggle.value);
 					}),
 			);
 		}
@@ -231,7 +231,7 @@ export class PaletteHistoryControls {
 				item
 					.setTitle("Highlight search matches")
 					.setIcon("highlighter")
-					.setChecked(
+					.setSwitch(
 						plugin.paletteDisplaySettings.get(this.options.surface)
 							.highlightSearchMatches,
 					)
@@ -240,20 +240,16 @@ export class PaletteHistoryControls {
 						void plugin.paletteDisplaySettings
 							.toggleHighlight(this.options.surface)
 							.then(() =>
-								item.setChecked(
+								item.setSwitch(
 									plugin.paletteDisplaySettings.get(this.options.surface)
 										.highlightSearchMatches,
 								),
 							);
 					}),
 			);
+		// Why: each kind of item gets its own group, so options, this screen's actions,
+		// help and the destructive clear never read as one list.
 		menu.addSeparator();
-		menu.addItem((item) =>
-			item
-				.setTitle("Help")
-				.setIcon("help-circle")
-				.onClick(() => this.showHelp()),
-		);
 		// Why: the shared controls also serve persistent views, which already
 		// live in the workspace and must not offer the modal's move action.
 		if (moveToSidebar)
@@ -264,7 +260,15 @@ export class PaletteHistoryControls {
 					.onClick(moveToSidebar),
 			);
 		this.options.populateActions?.(menu, event);
-		// Why: the destructive clear comes after the screen's own actions, so it is not the first thing a press reaches.
+		menu.addSeparator();
+		menu.addItem((item) =>
+			item
+				.setTitle("Help")
+				.setIcon("help-circle")
+				.onClick(() => this.showHelp()),
+		);
+		menu.addSeparator();
+		// Why: the destructive clear comes last, so it is not the first thing a press reaches.
 		this.addClearHistoryItem(menu);
 		menu.setParentElement(hostEl);
 		showMenuAtEvent(menu, event);

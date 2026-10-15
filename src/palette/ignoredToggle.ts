@@ -8,7 +8,7 @@ export function ignoredToggleOptions(
 ): PanelSwitchOptions {
 	return {
 		id: "include-ignored",
-		label: "Obsidian-excluded",
+		label: "Include Obsidian-excluded files",
 		icon: "eye",
 		description: "Include files hidden by Obsidian's Excluded files setting",
 		value,

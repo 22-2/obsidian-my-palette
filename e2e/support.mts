@@ -43,7 +43,7 @@ const OPTIONS_BUTTON = ".my-palette-suggest-modal .my-palette-options-button";
 const MENU_ITEM = ".menu .menu-item";
 
 /** The palette's option switches, such as Obsidian-excluded, live in the options menu. */
-export const IGNORED_OPTION = "Obsidian-excluded";
+export const IGNORED_OPTION = "Include Obsidian-excluded files";
 
 /** Opens the options menu, runs `inspect`, and closes the menu again. */
 async function inOptionsMenu<T>(page: Page, inspect: () => Promise<T>): Promise<T> {

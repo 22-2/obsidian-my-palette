@@ -53,9 +53,8 @@ test("checked MOC notes stay above results from a different query", async ({ obs
 	const page = obsidian.page;
 	await runPaletteCommand(obsidian, "open-moc-insert-selector");
 	// The options menu lists the selector's switches, Obsidian-excluded first as in the palette.
-	expect((await optionMenuTitles(page)).slice(0, 4)).toEqual([
-		"Options",
-		"Obsidian-excluded",
+	expect((await optionMenuTitles(page)).slice(0, 3)).toEqual([
+		"Include Obsidian-excluded files",
 		"Mutual",
 		"Highlight search matches",
 	]);

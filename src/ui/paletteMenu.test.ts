@@ -95,6 +95,23 @@ describe("PaletteMenu markup", () => {
 		expect(itemNamed("Remove").classList.contains("is-warning")).toBe(true);
 	});
 
+	it("draws a switch in both states and keeps headings out of keyboard selection", () => {
+		const menu = new PaletteMenu();
+		menu.addHeading("Options");
+		menu.addItem((item) => item.setTitle("Off").setSwitch(false));
+		menu.addItem((item) => item.setTitle("On").setSwitch(true).setTooltip("Explains it"));
+		menu.showAtPosition({ x: 0, y: 0 }, { selectFirst: true });
+
+		expect(document.querySelector(".my-palette-menu-heading")?.textContent).toBe("Options");
+		expect(document.querySelector(".menu-item.selected")).toBe(itemNamed("Off"));
+		expect(itemNamed("Off").querySelector(".my-palette-menu-switch")).not.toBeNull();
+		expect(itemNamed("Off").querySelector(".is-enabled")).toBeNull();
+		expect(itemNamed("Off").getAttribute("aria-checked")).toBe("false");
+		expect(itemNamed("On").querySelector(".my-palette-menu-switch.is-enabled")).not.toBeNull();
+		expect(itemNamed("On").getAttribute("role")).toBe("menuitemcheckbox");
+		expect(itemNamed("On").getAttribute("title")).toBe("Explains it");
+	});
+
 	it("exposes menu roles and the checked and disabled states to assistive tech", () => {
 		const menu = new PaletteMenu();
 		menu.addItem((item) => item.setTitle("Plain"));

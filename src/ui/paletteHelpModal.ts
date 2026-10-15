@@ -104,7 +104,7 @@ export class PaletteHelpModal extends Modal {
 		const icon = note.createSpan("my-palette-help-modal__note-icon");
 		setIcon(icon, "info");
 		note.createSpan({
-			text: "The Obsidian-excluded switch in the footer appears only in File search.",
+			text: "Include Obsidian-excluded files appears in the options menu only in File search and Everything.",
 		});
 	}
 }
