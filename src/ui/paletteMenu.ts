@@ -73,6 +73,16 @@ export class PaletteMenu {
 		return this;
 	}
 
+	/**
+	 * Adds a quiet label that names the items after it. It is not an item, so the keyboard and
+	 * the filter pass over it, and it never reads as a command that is turned off.
+	 */
+	addHeading(title: string): this {
+		if (!this.group) this.group = this.scrollEl.createDiv("menu-group");
+		this.group.createDiv({ cls: "my-palette-menu-heading", text: title });
+		return this;
+	}
+
 	addSeparator(): this {
 		// Why: a separator with no item before it, or right after another one, would show as a stray line.
 		if (!this.group) return this;
@@ -324,6 +334,7 @@ export class PaletteMenuItem {
 	private readonly iconEl: HTMLElement;
 	private readonly titleEl: HTMLElement;
 	private checkIconEl: HTMLElement | null = null;
+	private switchEl: HTMLElement | null = null;
 	private disabled = false;
 	private filtered = false;
 	private keepOpen = false;
@@ -379,6 +390,27 @@ export class PaletteMenuItem {
 		this.dom.toggleClass("mod-checked", checked);
 		this.dom.setAttribute("role", "menuitemcheckbox");
 		this.dom.setAttribute("aria-checked", String(checked));
+		return this;
+	}
+
+	/**
+	 * Shows the item as an on/off switch. Unlike setChecked, the switch is drawn in both states,
+	 * so an option that is off still reads as something that can be turned on.
+	 */
+	setSwitch(on: boolean): this {
+		if (!this.switchEl) {
+			this.switchEl = this.dom.createDiv("checkbox-container my-palette-menu-switch");
+			this.switchEl.setAttribute("aria-hidden", "true");
+		}
+		this.switchEl.toggleClass("is-enabled", on);
+		this.dom.setAttribute("role", "menuitemcheckbox");
+		this.dom.setAttribute("aria-checked", String(on));
+		return this;
+	}
+
+	/** Explains the item in a tooltip, for labels that cannot say everything. */
+	setTooltip(text: string): this {
+		this.dom.setAttribute("title", text);
 		return this;
 	}
 

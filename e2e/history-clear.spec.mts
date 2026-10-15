@@ -48,10 +48,9 @@ test("Clear search history takes two presses and clears only the palette's own h
 	const page = await openPaletteWith(obsidian, "");
 	await page.locator(".my-palette-suggest-modal .my-palette-options-button").click();
 	expect(await menuItems(page).allTextContents()).toEqual([
-		"Options",
-		"Obsidian-excluded",
-		"Help",
+		"Include Obsidian-excluded files",
 		"Move to right sidebar",
+		"Help",
 		"Clear search history",
 	]);
 

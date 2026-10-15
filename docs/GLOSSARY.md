@@ -62,7 +62,7 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 | Excluded folders        | このプラグインの設定で、すべてのファイル一覧から隠すフォルダー | —                                               | `file.excludedFolders`                            |
 
 - このプラグインの設定画面の中では、自分の設定に「Plugin」を付けない。Obsidian側と区別が要る説明文でだけ「this plugin's Excluded folders」と書く。
-- オプションメニューの「Ignored」も改める(例: 「Obsidian-excluded」)。
+- オプションメニューの項目名は「Include Obsidian-excluded files」(何をするかが名前だけで分かるよう、動詞から始める)。
 - 識別子の`ignored`は、検索履歴に保存されるフィールド(`includeIgnored`)を含むため、改名すると保存済みデータの移行が要る。まずUIの文言だけ改め、識別子の改名は別の作業にする。
 
 ### コマンド

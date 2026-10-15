@@ -141,11 +141,11 @@ describe("selector controls", () => {
 		await flush();
 		expect(f.modal.modalEl.querySelectorAll(selector)).toHaveLength(2);
 		f.click(".my-palette-options-button");
+		expect(document.querySelector(".my-palette-menu-heading")?.textContent).toBe("Options");
 		expect(paletteMenuTitles()).toEqual([
-			"Options",
 			"Highlight search matches",
-			"Help",
 			"Move to selected",
+			"Help",
 			"Clear search history",
 		]);
 		expect(paletteMenuTitles()).not.toContain("Move to right sidebar");
@@ -156,7 +156,7 @@ describe("selector controls", () => {
 	it("opens the options menu from the keyboard with its first switch selected, and closes it again", async () => {
 		const f = await fixture();
 		expect(f.key("o", { ctrlKey: true }).defaultPrevented).toBe(true);
-		expect(paletteMenuTitles()[0]).toBe("Options");
+		expect(paletteMenuTitles()[0]).toBe("Highlight search matches");
 		expect(document.querySelector(".menu-item.selected")?.textContent).toBe(
 			"Highlight search matches",
 		);
@@ -262,11 +262,7 @@ describe("options menu switches", () => {
 		modal.modalEl
 			.querySelector<HTMLElement>(".my-palette-options-button")!
 			.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
-		expect(paletteMenuTitles().slice(0, 3)).toEqual([
-			"Options",
-			"Regex",
-			"Highlight search matches",
-		]);
+		expect(paletteMenuTitles().slice(0, 2)).toEqual(["Regex", "Highlight search matches"]);
 
 		clickPaletteMenuItem("Regex");
 		expect(modal.onChange).toHaveBeenCalledExactlyOnceWith(true);

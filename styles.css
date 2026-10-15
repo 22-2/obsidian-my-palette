@@ -1077,6 +1077,24 @@
 	display: block;
 }
 
+/* A label naming the options under it, quieter than the items so it never reads as a turned-off command. */
+.my-palette-menu-heading {
+	padding: var(--size-2-2) var(--size-4-2) var(--size-2-1);
+	color: var(--text-faint);
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-semibold);
+}
+
+/* Options show a small switch in both states, so one that is off still reads as an option. */
+.menu-item .my-palette-menu-switch {
+	--toggle-width: 28px;
+	--toggle-thumb-height: 12px;
+	--toggle-thumb-width: 12px;
+	flex-shrink: 0;
+	margin-inline-start: var(--size-4-3);
+	pointer-events: none;
+}
+
 /* A confirmation that is also a warning reads as a destructive call to action, like a red button. */
 .menu-item.is-warning.mod-cta {
 	background-color: var(--text-error);
