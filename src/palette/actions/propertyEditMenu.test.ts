@@ -66,9 +66,24 @@ it("opens Properties for the selected note after closing the palette", () => {
 	});
 });
 
-it("offers nothing for several results or a non-Markdown file", () => {
+it("opens Properties for all the selected notes, skipping other files and repeats", () => {
 	const m = menu();
-	addPropertyEditMenuItem(m.instance, plugin, [note, note]);
+	files.set("b.md", file("b.md"));
+	const second: PaletteResult = { ...base, mode: "file", vaultPath: "b.md" };
+	const image: PaletteResult = { ...base, mode: "file", vaultPath: "image.png" };
+	openPalette.mockClear();
+	addPropertyEditMenuItem(m.instance, plugin, [note, second, image, note]);
+	expect(m.titles).toEqual(["Edit properties…"]);
+
+	m.click();
+	expect(openPalette).toHaveBeenCalledWith("pr ", undefined, {
+		modeEntries: true,
+		sourceFiles: [files.get("a.md"), files.get("b.md")],
+	});
+});
+
+it("offers nothing for a non-Markdown file", () => {
+	const m = menu();
 	addPropertyEditMenuItem(m.instance, plugin, [
 		{ ...base, mode: "file", vaultPath: "image.png" },
 	]);

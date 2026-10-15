@@ -101,6 +101,7 @@ export function populatePaletteResultMenu({
 		);
 		addFileMoveMenuItem(menu, plugin, selectedItems, onNoteActionDone);
 		addBulkRenameMenuItem(menu, plugin, selectedItems, onNoteActionDone);
+		addPropertyEditMenuItem(menu, plugin, selectedItems, onNoteActionSelected);
 		addMocInsertionMenuItems(menu, plugin, selectedItems, onNoteActionSelected, getMocContext);
 		addTagInsertionMenuItems(menu, plugin, selectedItems, onNoteActionDone);
 		return;

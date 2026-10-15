@@ -1,13 +1,15 @@
+import type { TFile } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import { resolveVaultFile } from "src/palette/actions/resultFile";
 import type { PaletteResult } from "src/palette/results";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 
 /**
- * Adds an action that opens the Properties mode for the one selected note, so its properties
- * can be edited without opening the note first. Properties list a single note, so a
- * multi-selection and non-Markdown files get no item. `onSelected` closes a modal palette
- * before the new one opens.
+ * Adds an action that opens the Properties mode for the selected Markdown notes, so their
+ * properties can be edited without opening them first. One note lists its own properties;
+ * several list the keys of all of them and edit every note together. Other files are skipped,
+ * and a selection with no note gets no item. `onSelected` closes a modal palette before the
+ * new one opens.
  */
 export function addPropertyEditMenuItem(
 	menu: PaletteMenu,
@@ -15,9 +17,13 @@ export function addPropertyEditMenuItem(
 	results: readonly PaletteResult[],
 	onSelected?: () => void,
 ): void {
-	if (results.length !== 1) return;
-	const file = resolveVaultFile(plugin.app, results[0]);
-	if (file?.extension !== "md") return;
+	const notes = new Map<string, TFile>();
+	for (const result of results) {
+		const file = resolveVaultFile(plugin.app, result);
+		if (file?.extension === "md") notes.set(file.path, file);
+	}
+	if (notes.size === 0) return;
+	const files = [...notes.values()];
 	menu.addItem((item) =>
 		item
 			.setTitle("Edit properties…")
@@ -27,10 +33,9 @@ export function addPropertyEditMenuItem(
 				plugin.paletteOpener.openPalette(
 					`${plugin.settings.modes.properties.alias} `,
 					undefined,
-					{
-						modeEntries: true,
-						sourceFile: file,
-					},
+					files.length === 1
+						? { modeEntries: true, sourceFile: files[0] }
+						: { modeEntries: true, sourceFiles: files },
 				);
 			}),
 	);
