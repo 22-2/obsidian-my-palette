@@ -82,11 +82,19 @@ jobs:
   e2e:
     # Pinned because ubuntu-latest moves to Ubuntu 26, where Electron has not been tried yet.
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 15
     # obsidian-e2e-toolkit documents that Electron can fail to launch on GitHub's
     # Ubuntu runners (microsoft/playwright#11932). Report the result without
     # blocking merges until the job has proven stable.
     continue-on-error: true
+    strategy:
+      # Let every shard finish so one failure does not hide the others.
+      fail-fast: false
+      matrix:
+        # Split the suite across runners. Playwright assigns whole files to one shard.
+        shard: [1, 2]
+    env:
+      CI: true
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v4
@@ -96,13 +104,23 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
+      # @electron/get keeps the downloaded Electron zip here, so `pnpm e2e` skips the download.
+      - name: Cache Electron
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/electron
+          key: ${{ runner.os }}-electron-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-
       - run: pnpm install --frozen-lockfile
       - name: End-to-end tests
-        run: xvfb-run -a pnpm e2e
+        # Pass the shard straight after the script name: `pnpm e2e -- --shard` would hand
+        # Playwright a literal "--" and every shard would run the whole suite.
+        run: xvfb-run -a pnpm e2e --shard=${{ matrix.shard }}/2
       - name: Upload failure artifacts
         if: failure()
         uses: actions/upload-artifact@v6
         with:
-          name: e2e-test-results
+          name: e2e-test-results-${{ matrix.shard }}
           path: test-results/
           if-no-files-found: ignore

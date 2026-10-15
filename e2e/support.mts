@@ -1,11 +1,35 @@
 import { fileURLToPath } from "node:url";
 import type { Locator, Page } from "@playwright/test";
-import type { ObsidianAPI, VaultOptions } from "obsidian-e2e-toolkit";
+import { expect, type ObsidianAPI, type VaultOptions } from "obsidian-e2e-toolkit";
 
 export const PLUGIN_ID = "my-palette";
 
 // Resolved from this file, so the path does not depend on the directory the tests start in.
 const PREPARED_PLUGIN_DIR = fileURLToPath(new URL("../.e2e/plugin", import.meta.url));
+
+/**
+ * Waits until the metadata cache has resolved each source note's links to the given targets.
+ * Link and backlink modes read the resolved links, which fill in a moment after a note is created,
+ * and later still while other workers keep the machine busy.
+ */
+export async function waitForResolvedLinks(
+	obsidian: ObsidianAPI,
+	links: Record<string, string[]>,
+): Promise<void> {
+	await expect
+		.poll(() =>
+			obsidian.evaluateApp(
+				(links) =>
+					Object.entries(links).every(([source, targets]) =>
+						targets.every(
+							(target) => app.metadataCache.resolvedLinks[source]?.[target],
+						),
+					),
+				links,
+			),
+		)
+		.toBe(true);
+}
 
 /** Installs the built plugin (see prepare-plugin.mjs), optionally with initial data.json. */
 export function pluginVaultOptions(data?: Record<string, unknown>): Partial<VaultOptions> {
