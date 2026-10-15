@@ -30,7 +30,7 @@ Another Quick Switcher、標準の Quick Switcher、Quick Switcher++、Omnisearc
 - **コマンド・ブックマーク・リンク・バックリンク・Smart Connections の検索**を同じウィンドウで行えます。
 - **複数選択**: ファイルマネージャーと同じ操作で選び、選択したノートへまとめてパスのコピー、タグ追加、MOC リンク挿入ができます。
 - **3つの表示面**: モーダルの Palette、右サイドバーの Sidebar palette、センタータブでソートできる Table palette。
-- **Obsidian-excluded files は必要なときだけ**: Obsidian の「Excluded files」で除外されたファイル（Obsidian-excluded files）は普段は出さず、`Obsidian-excluded` スイッチ（`Ctrl+I`）をオンにしたときだけ検索対象にできます。
+- **Obsidian-excluded files は必要なときだけ**: Obsidian の「Excluded files」で除外されたファイル（Obsidian-excluded files）は普段は出さず、`Obsidian-excluded` オプション（オプションメニュー、`Ctrl+O`）をオンにしたときだけ検索対象にできます。
 - デスクトップ専用です（主な対象は Windows）。
 
 ## はじめかた
@@ -102,7 +102,7 @@ Properties は現在のノートのプロパティを **This note**、予約キ�
 
 すべてのエイリアスは **設定 → My Palette → Modes** で変更でき、モードごとにオフにできます。モードをオフにするか、**Integrations** で連携をオフにすると、そのモードはHomeとエイリアス入力から外れます。Table paletteはモードの一覧を出しませんが、エイリアスでモードに入れます。`Open note list` や `Open backlink list` など、モードを直接開くコマンドはそのモードから始まり、`Esc` でHomeに戻ります。
 
-フッターのスイッチはすべて、オプションメニュー（`…` ボタンまたは `Ctrl+O`）の先頭の `Options` 見出しの下にもあります。`↑` / `↓` で移動し、`Enter` で切り替えてもメニューは閉じず、`Esc` で閉じるので、スイッチごとのショートカットを覚える必要はありません。下部左端の `Obsidian-excluded` スイッチ（`Ctrl+I`）をオンにすると、Obsidian の「Excluded files」で除外されたファイル（Obsidian-excluded files）も検索します。ファイル検索でだけ有効で、ほかのモードでは薄く表示します。検索履歴は除外ファイルを含めたかどうかも記録し、履歴を選ぶとスイッチも復元します。
+フッターのスイッチはすべて、オプションメニュー（`…` ボタンまたは `Ctrl+O`）の先頭の `Options` 見出しの下にもあります。`↑` / `↓` で移動し、`Enter` で切り替えてもメニューは閉じず、`Esc` で閉じるので、スイッチごとのショートカットを覚える必要はありません。下部左端の `Obsidian-excluded` オプション（オプションメニュー、`Ctrl+O`）をオンにすると、Obsidian の「Excluded files」で除外されたファイル（Obsidian-excluded files）も検索します。ファイル検索でだけ有効で、ほかのモードでは薄く表示します。検索履歴は除外ファイルを含めたかどうかも記録し、履歴を選ぶとスイッチも復元します。
 
 ### 検索構文
 
@@ -110,7 +110,7 @@ Everything 以外のモードでは、スペース区切りが AND、`|` 区切�
 
 ファイル検索はインラインタグと frontmatter の `tags` の両方を対象にします。`#project` はタグを直接検索し、通常の検索語でもタグに一致します。一致したタグはファイル名の下に最大3件表示され、残りは `+N` にまとまります。行にカーソルを合わせると全件を確認できます。
 
-frontmatter の `keywords` も文字列配列として検索対象になります（例: `keywords: [宇宙, 星空観察]`）。`Obsidian-excluded` スイッチで検索する Obsidian-excluded filesにも対応します。一致した keywords はタグの隣に `#` なしで表示し、合わせて最大3件、残りは `+N` にまとめます。チップにカーソルを合わせると全件を確認できます。`#` 付きの語だけを入力した場合はタグのみを検索します。
+frontmatter の `keywords` も文字列配列として検索対象になります（例: `keywords: [宇宙, 星空観察]`）。`Obsidian-excluded` オプションで検索する Obsidian-excluded filesにも対応します。一致した keywords はタグの隣に `#` なしで表示し、合わせて最大3件、残りは `+N` にまとめます。チップにカーソルを合わせると全件を確認できます。`#` 付きの語だけを入力した場合はタグのみを検索します。
 
 Everything のクエリは変換せず、そのまま Everything 独自の構文に渡されます。Everything モードには Everything 1.5a と公式 HTTP Server Plugin の起動が必要です。詳しくは [Everything の設定](#everything-の設定)を参照してください。
 
@@ -203,7 +203,7 @@ Table palette では次の操作ができます。
 
 ### Return to Home after
 
-`My Palette: Open home` は、閉じたときの入力・Obsidian-excluded スイッチの状態・選択行・スクロール位置を、**設定 → My Palette → General → Return to Home after** で決めた時間（Immediately、30、60、90 秒。既定は 90 秒）以内に開き直すと復元します。それ以外はHomeの空の状態から始まります。復元した検索語は選択された状態になるので、そのまま打ち直せます。この状態はメモリーにだけ保持し、Obsidian を再起動するとHomeから始まります。
+`My Palette: Open home` は、閉じたときの入力・Obsidian-excluded オプションの状態・選択行・スクロール位置を、**設定 → My Palette → General → Return to Home after** で決めた時間（Immediately、30、60、90 秒。既定は 90 秒）以内に開き直すと復元します。それ以外はHomeの空の状態から始まります。復元した検索語は選択された状態になるので、そのまま打ち直せます。この状態はメモリーにだけ保持し、Obsidian を再起動するとHomeから始まります。
 
 ### 検索履歴
 

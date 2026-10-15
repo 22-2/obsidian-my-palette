@@ -93,12 +93,10 @@ export class BulkRenameModal extends SelectionModal<RenameItem> {
 			icon: string,
 			description: string,
 		) =>
-			this.addStatusToggle({
+			this.addSwitch({
 				id,
 				label,
 				icon,
-				// Why: these switches have no shortcut yet, so a click is the only way to flip them.
-				hotkey: () => null,
 				description,
 				value: this.options[id],
 				onChange: (value) => {

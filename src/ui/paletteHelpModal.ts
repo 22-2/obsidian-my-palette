@@ -85,10 +85,6 @@ export class PaletteHelpModal extends Modal {
 					] satisfies Array<[string, string]>)
 				: []),
 			[formatHotkey(this.hotkeys.history), "Open search history"],
-			[
-				formatHotkey(this.hotkeys.toggleIgnored),
-				"Include files hidden by Excluded files in File search",
-			],
 			[`Enter${enterMode ? ` / ${enterMode}` : ""} on a mode`, "Enter that mode"],
 			["Esc / Backspace in an empty field", "Return from a mode to Home"],
 			[

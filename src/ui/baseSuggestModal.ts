@@ -3,7 +3,7 @@ import type { PaletteMenu } from "src/ui/paletteMenu";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 import { SelectorHelpModal, type SelectorControls } from "src/ui/selectorControls";
 import { SuggestionPanel, type SuggestionPanelView } from "src/ui/suggestionPanel";
-import type { StatusToggle, StatusToggleOptions } from "src/ui/statusToggle";
+import type { PanelSwitch, PanelSwitchOptions } from "src/ui/panelSwitch";
 import { DEFAULT_HOTKEYS, matchesHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
 
 export interface SuggestModalProps<T> {
@@ -196,7 +196,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 				},
 				populateActions: (menu, event) => this.populateSelectorActions(menu, event),
 				showHelp: () => new SelectorHelpModal(this.app, controls).open(),
-				getToggles: () => this.statusToggles,
+				getSwitches: () => this.switches,
 				focusInput: () => this.focusSearchInput(),
 			});
 		}
@@ -397,13 +397,13 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	}
 
 	/** Call from onSelectionModalOpen: listeners are released when the modal closes. */
-	protected addStatusToggle(options: StatusToggleOptions): StatusToggle {
-		return this.panel.addStatusToggle(options);
+	protected addSwitch(options: PanelSwitchOptions): PanelSwitch {
+		return this.panel.addSwitch(options);
 	}
 
 	/** The footer switches added so far, in order. */
-	protected get statusToggles(): StatusToggle[] {
-		return this.panel.statusToggles;
+	protected get switches(): PanelSwitch[] {
+		return this.panel.switchList;
 	}
 
 	protected updateFooterText(text: string): void {

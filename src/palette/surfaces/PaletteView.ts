@@ -31,7 +31,7 @@ import {
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 import { PALETTE_HISTORY_CATEGORIES } from "src/palette/searchHistory";
 import { ignoredToggleOptions, syncIgnoredToggle } from "src/palette/ignoredToggle";
-import type { StatusToggle } from "src/ui/statusToggle";
+import type { PanelSwitch } from "src/ui/panelSwitch";
 import { PaletteTableControls } from "src/palette/table/PaletteTableControls";
 import {
 	normalizePaletteTableState,
@@ -70,7 +70,7 @@ export class PaletteView extends ItemView {
 	private session?: PaletteSearchSession;
 	private historyControls?: PaletteHistoryControls;
 	private tableControls?: PaletteTableControls;
-	private ignoredToggle?: StatusToggle;
+	private ignoredToggle?: PanelSwitch;
 	private activeMenu?: PaletteMenu;
 	private readonly leafTracker: PaletteLeafTracker;
 	private readonly fileListRefresh = new FileListRefresh(
@@ -327,12 +327,8 @@ export class PaletteView extends ItemView {
 			this.tableControls.load();
 		}
 		this.addHistoryControls();
-		this.ignoredToggle = this.panel.addStatusToggle(
-			ignoredToggleOptions(
-				state.includeIgnored,
-				(value) => this.setIgnoredScope(value),
-				() => this.plugin.settings.hotkeys.toggleIgnored,
-			),
+		this.ignoredToggle = this.panel.addSwitch(
+			ignoredToggleOptions(state.includeIgnored, (value) => this.setIgnoredScope(value)),
 		);
 		this.registerTargetLeafTracking();
 		this.fileListRefresh.register();
@@ -478,7 +474,7 @@ export class PaletteView extends ItemView {
 				},
 			apply: (result) => this.applySearchHistory(result),
 			focusInput: () => this.panel?.focusSearchInput(),
-			getToggles: () => this.panel?.statusToggles ?? [],
+			getSwitches: () => this.panel?.switchList ?? [],
 		});
 	}
 

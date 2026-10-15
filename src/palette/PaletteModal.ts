@@ -20,7 +20,7 @@ import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryCon
 import type { PaletteRestoreState } from "src/palette/restoreState";
 import { PALETTE_HISTORY_CATEGORIES } from "src/palette/searchHistory";
 import { ignoredToggleOptions, syncIgnoredToggle } from "src/palette/ignoredToggle";
-import type { StatusToggle } from "src/ui/statusToggle";
+import type { PanelSwitch } from "src/ui/panelSwitch";
 
 export interface PaletteModalOptions {
 	/** Home lists mode entries above the files; off for the file-only palette. */
@@ -36,7 +36,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private suppressHistoryForNextInput = false;
 	private activeMenu?: PaletteMenu;
 	private historyControls?: PaletteHistoryControls;
-	private ignoredToggle?: StatusToggle;
+	private ignoredToggle?: PanelSwitch;
 	private mode: PaletteMode = "file";
 	private everythingScope: EverythingScope = "vault";
 	private state?: PaletteSearchState;
@@ -99,22 +99,18 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			apply: (result) => this.applySearchHistory(result),
 			focusInput: () => this.focusSearchInput(),
 			moveToSidebar: () => this.moveToSidebar(),
-			getToggles: () => this.statusToggles,
+			getSwitches: () => this.switches,
 		});
-		this.ignoredToggle = this.addStatusToggle(
-			ignoredToggleOptions(
-				this.session.current.ignoredScope,
-				(value) => {
-					this.session.setIgnoredScope(value);
-					this.refreshSuggestions();
-				},
-				() => this.plugin.settings.hotkeys.toggleIgnored,
-			),
+		this.ignoredToggle = this.addSwitch(
+			ignoredToggleOptions(this.session.current.ignoredScope, (value) => {
+				this.session.setIgnoredScope(value);
+				this.refreshSuggestions();
+			}),
 		);
 		syncIgnoredToggle(this.ignoredToggle, this.mode);
 	}
 
-	/** What the next Open home resumes: the input, the scope switch, and the row and scroll. */
+	/** What the next Open home resumes: the input, the scope option, and the row and scroll. */
 	private captureRestoreState(): PaletteRestoreState {
 		return {
 			input: this.session.prefixedInput,
@@ -265,7 +261,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	private moveToSidebar(): void {
-		// Why: copy the live search and the Obsidian-excluded switch before closing. The
+		// Why: copy the live search and the Obsidian-excluded option before closing. The
 		// alias-prefixed input carries the mode, so the new pane enters it again.
 		// A fresh pane preserves this search without replacing another sidebar
 		// palette, and closing first lets the new input retain focus.

@@ -2,6 +2,8 @@ import http from "node:http";
 import type { AddressInfo } from "node:net";
 import { expect, test } from "./fixtures.mts";
 import {
+	flipOption,
+	IGNORED_OPTION,
 	MODAL_INPUT,
 	MODAL_ROW,
 	openHomeWith,
@@ -97,25 +99,19 @@ test("the e prefix sends a vault-scoped query to the Everything HTTP server", as
 	await expect(page.locator(".my-palette-suggest-modal")).toContainText("No suggestions");
 });
 
-test("the Obsidian-excluded switch changes the single Everything mode's scope", async ({
+test("the Obsidian-excluded option changes the single Everything mode's scope", async ({
 	obsidian,
 }) => {
 	const page = await openHomeWith(obsidian, "e report");
 	await expect.poll(() => requests.length).toBeGreaterThan(0);
 	expect(requests.at(-1)!.searchParams.get("search")).toContain("ext:");
 	const before = requests.length;
-	await page
-		.locator(".my-palette-status-toggle")
-		.filter({ hasText: "Obsidian-excluded" })
-		.click();
+	await flipOption(page, IGNORED_OPTION);
 	await expect.poll(() => requests.length).toBeGreaterThan(before);
 	expect(requests.at(-1)!.searchParams.get("search")).not.toContain("ext:");
 	await expect(page.locator(".my-palette-mode-chip")).toHaveText("e");
 	const after = requests.length;
-	await page
-		.locator(".my-palette-status-toggle")
-		.filter({ hasText: "Obsidian-excluded" })
-		.click();
+	await flipOption(page, IGNORED_OPTION);
 	await expect.poll(() => requests.length).toBeGreaterThan(after);
 	expect(requests.at(-1)!.searchParams.get("search")).toContain("ext:");
 });

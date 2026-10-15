@@ -18,7 +18,6 @@ import {
 	copyPathToClipboard,
 } from "src/platform/pathClipboard";
 import { ignoredToggleOptions } from "src/palette/ignoredToggle";
-import { formatHotkey } from "src/ui/hotkeys";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
 import { executePaletteResult } from "src/palette/executePaletteResult";
 import { matchedMetadataPresentation } from "src/palette/resultPresentation";
@@ -198,7 +197,7 @@ async function relatedsRelations(
 }
 
 /**
- * Selector base shared by the MOC insert and remove selectors. Its footer switch chooses whether
+ * Selector base shared by the MOC insert and remove selectors. Its Mutual option chooses whether
  * the note's own link to the MOC changes too, so both commands read the same way.
  */
 abstract class MocRelatedsModal extends MultiSelectModal<string> {
@@ -210,11 +209,10 @@ abstract class MocRelatedsModal extends MultiSelectModal<string> {
 
 	protected override onSelectionModalOpen(): void {
 		super.onSelectionModalOpen();
-		this.addStatusToggle({
+		this.addSwitch({
 			id: "mutual",
 			label: "Mutual",
 			icon: "arrow-left-right",
-			hotkey: () => this.plugin.settings.hotkeys.toggleMutual,
 			description: "Also update the note's link to the MOC",
 			value: this.mutual,
 			onChange: (value) => {
@@ -244,7 +242,7 @@ class MocTargetModal extends MocRelatedsModal {
 					category: "moc-insertion",
 					title: "MOC insert selector",
 					description:
-						"Search notes to link in the active MOC. Checked notes are linked; unchecking a note that is already linked unlinks it. Obsidian-excluded files are hidden by default; the Obsidian-excluded switch includes them.",
+						"Search notes to link in the active MOC. Checked notes are linked; unchecking a note that is already linked unlinks it. Obsidian-excluded files are hidden by default; the Obsidian-excluded option includes them.",
 					actionLabel: "Insert",
 					shortcuts: [
 						["→", "Preview the note without leaving this selector"],
@@ -252,14 +250,6 @@ class MocTargetModal extends MocRelatedsModal {
 						[
 							"Ctrl+Enter",
 							"Apply the checks: insert checked notes and unlink unchecked linked notes; with no changes, insert the selected notes",
-						],
-						[
-							formatHotkey(plugin.settings.hotkeys.toggleIgnored),
-							"Include files hidden by Excluded files",
-						],
-						[
-							formatHotkey(plugin.settings.hotkeys.toggleMutual),
-							"Also update the note's link to the MOC",
 						],
 					],
 				},
@@ -269,16 +259,12 @@ class MocTargetModal extends MocRelatedsModal {
 	}
 
 	protected override onSelectionModalOpen(): void {
-		// The Obsidian-excluded switch comes first, matching its place in the main palette.
-		this.addStatusToggle(
-			ignoredToggleOptions(
-				this.includeIgnored,
-				(value) => {
-					this.includeIgnored = value;
-					this.refreshSuggestions();
-				},
-				() => this.plugin.settings.hotkeys.toggleIgnored,
-			),
+		// The Obsidian-excluded option comes first, matching its place in the main palette.
+		this.addSwitch(
+			ignoredToggleOptions(this.includeIgnored, (value) => {
+				this.includeIgnored = value;
+				this.refreshSuggestions();
+			}),
 		);
 		super.onSelectionModalOpen();
 	}
@@ -509,10 +495,6 @@ class MocUnlinkModal extends MocRelatedsModal {
 						[
 							"Ctrl+Enter",
 							"Remove all checked notes, or selected notes if none are checked",
-						],
-						[
-							formatHotkey(plugin.settings.hotkeys.toggleMutual),
-							"Also update the note's link to the MOC",
 						],
 					],
 				},

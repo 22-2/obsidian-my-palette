@@ -30,7 +30,7 @@ Other sources (commands, Everything, bookmarks, …) are modes one step away fro
 - **Command, bookmark, link, backlink and Smart Connections search** in the same window.
 - **Multi-select** with the same gestures as a file manager, then copy paths, add tags or insert MOC links to all selected notes at once.
 - **Three surfaces**: the modal Palette, the Sidebar palette in the right sidebar, and the sortable Table palette in a center tab.
-- **Obsidian-excluded files on demand**: files hidden by Obsidian's Excluded files setting stay out of the way until you turn on the `Obsidian-excluded` switch (`Ctrl+I`).
+- **Obsidian-excluded files on demand**: files hidden by Obsidian's Excluded files setting stay out of the way until you turn on the `Obsidian-excluded` option in the options menu (`Ctrl+O`).
 - Desktop only (Windows is the primary target).
 
 ## Getting started
@@ -110,7 +110,7 @@ Every alias can be changed, and a mode can be turned off, in **Settings → My P
 
 Integration modes appear only after their setup is ready. Everything checks its HTTP connection in the background; Smart Connections needs an enabled plugin with an initialized source store and vector adapter. Unready integrations are hidden from Home and the Modes settings page. Correct the connection settings or use **Test connection** in Integrations to make Everything available again.
 
-Every footer switch is also in the options menu (the `…` button, or `Ctrl+O`), under an `Options` heading at its top: `↑`/`↓` to move, `Enter` to flip one while the menu stays open, `Esc` to close, so no switch shortcut has to be remembered. The `Obsidian-excluded` switch at the left of the footer (`Ctrl+I`) includes files hidden by Obsidian's Excluded files setting. It applies to Home, Notes, and Everything, and is hidden in other modes. In Everything it also removes the extension filter, searching every file type under the Vault folder. Search history remembers the scope and restoring an entry sets the switch.
+Palette and selector options, such as `Obsidian-excluded`, `Mutual` and the rename switches, live in the options menu (the `…` button, or `Ctrl+O`) under an `Options` heading at its top: `↑`/`↓` to move, `Enter` to flip one while the menu stays open, `Esc` to close. No per-option shortcut has to be remembered. The `Obsidian-excluded` option includes files hidden by Obsidian's Excluded files setting. It applies to Home, Notes, and Everything, and is hidden in other modes. In Everything it also removes the extension filter, searching every file type under the Vault folder. Search history remembers the scope and restoring an entry sets the option.
 
 ### Search syntax
 
@@ -118,7 +118,7 @@ Outside Everything mode, separate terms with spaces for AND and use `|` for OR. 
 
 File search covers inline tags and frontmatter `tags`. `#project` searches tags directly, and ordinary terms can match tags too. Matching tags appear under the file name (up to three, then `+N`); hover a row to see all of them.
 
-Frontmatter `keywords` is also searchable as a string array (for example, `keywords: [astronomy, stargazing]`), including in Obsidian-excluded files searched with the `Obsidian-excluded` switch. Matching keywords appear beside matching tags without a `#`, with up to three chips in total followed by `+N`. Hover the chips to see all matches. Hash-prefixed tag-only queries search tags only.
+Frontmatter `keywords` is also searchable as a string array (for example, `keywords: [astronomy, stargazing]`), including in Obsidian-excluded files searched with the `Obsidian-excluded` option. Matching keywords appear beside matching tags without a `#`, with up to three chips in total followed by `+N`. Hover the chips to see all matches. Hash-prefixed tag-only queries search tags only.
 
 Everything queries are passed through unchanged and use Everything's own syntax. Everything mode needs Everything 1.5a with the official HTTP Server plugin running. See [Everything setup](#everything-setup).
 
@@ -207,7 +207,7 @@ Only localhost communication is used; My Palette sends nothing to external servi
 
 ### Return to Home after
 
-`Open home` resumes the palette you closed last: its query with the mode alias, the Obsidian-excluded switch, the selected row and the scroll position. It does so only when you come back within the time set by **Settings → My Palette → General → Return to Home after** (Immediately, 30, 60 or 90 seconds; 90 by default), and otherwise starts at Home. The resumed query is selected, so typing replaces it. This state is kept in memory only, so restarting Obsidian starts at Home.
+`Open home` resumes the palette you closed last: its query with the mode alias, the Obsidian-excluded option, the selected row and the scroll position. It does so only when you come back within the time set by **Settings → My Palette → General → Return to Home after** (Immediately, 30, 60 or 90 seconds; 90 by default), and otherwise starts at Home. The resumed query is selected, so typing replaces it. This state is kept in memory only, so restarting Obsidian starts at Home.
 
 ### Search history
 

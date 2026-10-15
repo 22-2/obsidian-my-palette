@@ -8,7 +8,7 @@ import {
 	type PaletteHotkeys,
 } from "src/ui/hotkeys";
 import { markKeyboardMenuEvent } from "src/ui/menus";
-import { StatusToggle, type StatusToggleOptions } from "src/ui/statusToggle";
+import { PanelSwitch, type PanelSwitchOptions } from "src/ui/panelSwitch";
 
 export interface SuggestionPanelProps<T> {
 	getHotkeys?: () => PaletteHotkeys;
@@ -110,7 +110,7 @@ export class SuggestionPanel<T> extends Component {
 	private readonly rightClickRows = new WeakSet<Element>();
 	private resultsLayout?: SuggestionPanelResultsLayout<T>;
 	private readonly modes?: InteractionModes;
-	private readonly toggles = new Map<string, StatusToggle>();
+	private readonly switches = new Map<string, PanelSwitch>();
 
 	constructor(rootEl: HTMLElement, props: SuggestionPanelProps<T>) {
 		super();
@@ -184,7 +184,7 @@ export class SuggestionPanel<T> extends Component {
 	}
 
 	onunload(): void {
-		this.toggles.clear();
+		this.switches.clear();
 		this.previewContainerEl.removeClass("my-palette-preview-surface", "is-preview-hidden");
 	}
 
@@ -426,26 +426,21 @@ export class SuggestionPanel<T> extends Component {
 	}
 
 	/**
-	 * Adds a switch to the footer. Its listeners belong to this panel, so add it
-	 * again after each load; one with the same id replaces the earlier switch.
+	 * Adds an option the options menu lists and flips. Add it again after each load; one with
+	 * the same id replaces the earlier switch.
 	 */
-	addStatusToggle(options: StatusToggleOptions): StatusToggle {
-		// Modal footers are hidden by default; a switch opts its panel in.
-		this.rootEl.addClass("has-status-toggle");
-		const toggle = new StatusToggle(
-			this.statusBarEl,
-			this.inputEl,
-			(el, type, callback, eventOptions) =>
-				this.registerDomEvent(el, type, callback, eventOptions),
-			options,
-		);
-		this.toggles.set(options.id, toggle);
-		return toggle;
+	addSwitch(options: PanelSwitchOptions): PanelSwitch {
+		// Modal footers are hidden by default; a panel with switches keeps its footer, which
+		// holds the source text and the result count.
+		this.rootEl.addClass("has-status-bar");
+		const panelSwitch = new PanelSwitch(options);
+		this.switches.set(options.id, panelSwitch);
+		return panelSwitch;
 	}
 
-	/** The footer switches in the order they were added, for menus that mirror them. */
-	get statusToggles(): StatusToggle[] {
-		return [...this.toggles.values()];
+	/** The switches in the order they were added, for the options menu. */
+	get switchList(): PanelSwitch[] {
+		return [...this.switches.values()];
 	}
 
 	updateResultCount(total: number): void {

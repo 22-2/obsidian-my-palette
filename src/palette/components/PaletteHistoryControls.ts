@@ -8,7 +8,7 @@ import { PaletteHelpModal } from "src/ui/paletteHelpModal";
 import { availableModes } from "src/palette/modes";
 import { SearchHistorySuggest } from "src/ui/searchHistorySuggest";
 import { DEFAULT_HOTKEYS, formatHotkey, matchesHotkey } from "src/ui/hotkeys";
-import type { StatusToggle } from "src/ui/statusToggle";
+import type { PanelSwitch } from "src/ui/panelSwitch";
 
 interface PaletteHistoryContext {
 	query: string;
@@ -43,7 +43,7 @@ interface PaletteHistoryControlsOptions {
 	showHelp?: () => void;
 	focusInput?: () => void;
 	/** The host's footer switches, read each time the menu opens, so the menu can flip them too. */
-	getToggles?: () => readonly StatusToggle[];
+	getSwitches?: () => readonly PanelSwitch[];
 }
 
 /** Shared search-history and options controls for both palette surfaces. */
@@ -204,7 +204,7 @@ export class PaletteHistoryControls {
 		// Why: the switches come first so they can be flipped with Enter, without remembering
 		// each one's shortcut. Each stays open so several can be flipped in a row.
 		menu.addItem((item) => item.setTitle("Options").setIcon("settings").setDisabled(true));
-		for (const toggle of this.options.getToggles?.() ?? []) {
+		for (const toggle of this.options.getSwitches?.() ?? []) {
 			if (toggle.isHidden) continue;
 			menu.addItem((item) =>
 				item

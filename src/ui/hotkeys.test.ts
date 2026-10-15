@@ -74,10 +74,10 @@ describe("custom hotkeys", () => {
 			"Use Ctrl, Alt or Meta",
 		);
 		expect(
-			hotkeyError("toggleIgnored", { key: "I", modifiers: ["Shift"] }, DEFAULT_HOTKEYS),
+			hotkeyError("optionsMenu", { key: "O", modifiers: ["Shift"] }, DEFAULT_HOTKEYS),
 		).toContain("Use Ctrl, Alt or Meta");
 		expect(
-			hotkeyError("toggleMutual", { key: "M", modifiers: ["Ctrl"] }, DEFAULT_HOTKEYS),
+			hotkeyError("optionsMenu", { key: "P", modifiers: ["Ctrl"] }, DEFAULT_HOTKEYS),
 		).toBeUndefined();
 	});
 

@@ -1,7 +1,9 @@
 import { expect, test } from "./fixtures.mts";
 import type { Page } from "@playwright/test";
 import {
-	IGNORED_TOGGLE,
+	IGNORED_OPTION,
+	flipOption,
+	optionMenuTitles,
 	menuItems,
 	MODAL_INPUT,
 	MODAL_ROW,
@@ -50,10 +52,12 @@ test("checked MOC notes stay above results from a different query", async ({ obs
 	await obsidian.open("Topic MOC.md");
 	const page = obsidian.page;
 	await runPaletteCommand(obsidian, "open-moc-insert-selector");
-	// The footer holds only the selector's switches, Obsidian-excluded first as in the palette.
-	await expect(page.locator(".my-palette-suggest-modal .my-palette-status-toggle")).toHaveText([
-		"Obsidian-excludedCtrl+I",
-		"MutualCtrl+M",
+	// The options menu lists the selector's switches, Obsidian-excluded first as in the palette.
+	expect((await optionMenuTitles(page)).slice(0, 4)).toEqual([
+		"Options",
+		"Obsidian-excluded",
+		"Mutual",
+		"Highlight search matches",
 	]);
 	await page.locator(MODAL_INPUT).fill("alpha");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Alpha child");
@@ -90,7 +94,7 @@ test("MOC insertion hides excluded notes unless the Obsidian-excluded switch is 
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Visible child");
 	await page.locator(MODAL_INPUT).fill("hidden");
 	await expect(page.locator(MODAL_ROW)).toHaveCount(0);
-	await page.keyboard.press("Control+i");
+	await flipOption(page, IGNORED_OPTION);
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Hidden child", {
 		timeout: 15_000,
 	});
@@ -116,7 +120,7 @@ test.describe("MOC insertion with plugin exclusions", () => {
 		await expect(page.locator(MODAL_ROW).first()).toContainText("Visible child");
 		await page.locator(MODAL_INPUT).fill("hidden");
 		await expect(page.locator(MODAL_ROW)).toHaveCount(0);
-		await page.locator(IGNORED_TOGGLE).click();
+		await flipOption(page, IGNORED_OPTION);
 		await expect(page.locator(MODAL_ROW).first()).toContainText("Hidden child");
 		await page.keyboard.press("Escape");
 	});

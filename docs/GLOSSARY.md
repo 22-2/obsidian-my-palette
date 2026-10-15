@@ -50,7 +50,7 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 | Property value selector | 現在のノートのList型プロパティの値を付ける・外す・新しく足す | 値のpicker                    | `property-value-selector`    |
 
 - MOC insert selectorでも、リンク済みのノートを右クリックメニューから削除できる。主な用途で名付けたものとして、この重なりは許容する。
-- ショートカットの範囲は`moc-insert-selector`と`moc-remove-selector`に分けた。Obsidian-excludedのスイッチはinsertだけにあるため、`toggleIgnored`はinsertだけで有効にした。
+- ショートカットの範囲は`moc-insert-selector`と`moc-remove-selector`に分けた。Obsidian-excludedのオプションはinsertだけにある。
 
 ### 除外
 
@@ -62,7 +62,7 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 | Excluded folders        | このプラグインの設定で、すべてのファイル一覧から隠すフォルダー | —                                               | `file.excludedFolders`                            |
 
 - このプラグインの設定画面の中では、自分の設定に「Plugin」を付けない。Obsidian側と区別が要る説明文でだけ「this plugin's Excluded folders」と書く。
-- フッターのスイッチ「Ignored」と、ショートカット「Toggle Ignored」も改める(例: 「Obsidian-excluded」「Toggle Obsidian-excluded files」)。
+- オプションメニューの「Ignored」も改める(例: 「Obsidian-excluded」)。
 - 識別子の`ignored`は、検索履歴に保存されるフィールド(`includeIgnored`)を含むため、改名すると保存済みデータの移行が要る。まずUIの文言だけ改め、識別子の改名は別の作業にする。
 
 ### コマンド
@@ -160,5 +160,5 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 - ショートカット表: `src/settings/shortcutsTable.ts`(`SCOPE_NAMES`、`hotkeyScopeLabel`)、`src/ui/hotkeys.ts`(`HOTKEY_ACTIONS`)
 - モード名: `src/palette/modes.ts`(`PALETTE_MODES`)
 - コマンド名: `src/app/registerCommands.ts`
-- フッターのスイッチ: `src/palette/ignoredToggle.ts`
+- オプションメニューのスイッチ: `src/ui/panelSwitch.ts`、`src/palette/ignoredToggle.ts`
 - 利用者向けの説明: `README.md`、`README.ja.md`

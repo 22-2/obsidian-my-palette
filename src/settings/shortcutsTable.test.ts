@@ -9,8 +9,8 @@ describe("hotkeyScopeLabel", () => {
 		expect(hotkeyScopeLabel(HOTKEY_ACTIONS.hidePreview.scopes)).toBe(
 			"All palettes and selectors",
 		);
-		expect(hotkeyScopeLabel(HOTKEY_ACTIONS.toggleIgnored.scopes)).toBe(
-			"File search, MOC insert selector",
+		expect(hotkeyScopeLabel(HOTKEY_ACTIONS.preview.scopes)).toBe(
+			"Palette, Tag insert selector, MOC insert selector, MOC remove selector",
 		);
 		expect(hotkeyScopeLabel(HOTKEY_ACTIONS.focusInput.scopes)).toBe(
 			"Tag insert selector, MOC insert selector, MOC remove selector, Property value selector",
@@ -40,10 +40,8 @@ describe("compareScopes", () => {
 			"Show result actions",
 			"Enter mode",
 			"Preview selected result",
-			"Toggle Obsidian-excluded files",
 			"Return to input mode",
 			"Toggle selection",
-			"Toggle Mutual",
 		]);
 	});
 });

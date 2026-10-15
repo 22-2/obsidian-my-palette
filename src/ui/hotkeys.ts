@@ -58,18 +58,6 @@ export const HOTKEY_ACTIONS = {
 		description: "Enter the highlighted mode from Home.",
 		scopes: ["palette"],
 	},
-	toggleIgnored: {
-		name: "Toggle Obsidian-excluded files",
-		description:
-			"Include files hidden by Obsidian's Excluded files setting in File search and the MOC insert selector.",
-		scopes: ["file-search", "moc-insert-selector"],
-	},
-	toggleMutual: {
-		name: "Toggle Mutual",
-		description:
-			"Also update the note's link to the MOC when linking or unlinking in MOC insert and remove selectors.",
-		scopes: ["moc-insert-selector", "moc-remove-selector"],
-	},
 	focusInput: {
 		name: "Return to input mode",
 		description:
@@ -119,8 +107,6 @@ export const DEFAULT_HOTKEYS: PaletteHotkeys = {
 	optionsMenu: { key: "O", modifiers: ["Ctrl"] },
 	contextMenu: { key: "K", modifiers: ["Ctrl"] },
 	enterMode: { key: "Tab", modifiers: [] },
-	toggleIgnored: { key: "I", modifiers: ["Ctrl"] },
-	toggleMutual: { key: "M", modifiers: ["Ctrl"] },
 	focusInput: { key: "F", modifiers: [] },
 	toggleSelection: { key: "Space", modifiers: [] },
 };
@@ -206,8 +192,6 @@ const MODIFIER_ACTIONS: readonly HotkeyAction[] = [
 	"preview",
 	"contextMenu",
 	"enterMode",
-	"toggleIgnored",
-	"toggleMutual",
 ];
 
 function bindingError(action: HotkeyAction, hotkey: PaletteHotkey): string | undefined {

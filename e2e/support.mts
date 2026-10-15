@@ -15,8 +15,46 @@ export function pluginVaultOptions(data?: Record<string, unknown>): Partial<Vaul
 export const MODAL_INPUT = ".my-palette-suggest-modal .prompt-input";
 export const MODAL_ROW = ".my-palette-suggest-modal .suggestion-item";
 
-/** The Obsidian-excluded switch in the palette footer. */
-export const IGNORED_TOGGLE = '.my-palette-status-toggle[data-status-toggle="include-ignored"]';
+const OPTIONS_BUTTON = ".my-palette-suggest-modal .my-palette-options-button";
+const MENU_ITEM = ".menu .menu-item";
+
+/** The palette's option switches, such as Obsidian-excluded, live in the options menu. */
+export const IGNORED_OPTION = "Obsidian-excluded";
+
+/** Opens the options menu, runs `inspect`, and closes the menu again. */
+async function inOptionsMenu<T>(page: Page, inspect: () => Promise<T>): Promise<T> {
+	await page.locator(OPTIONS_BUTTON).click();
+	await page.locator(".menu").waitFor();
+	try {
+		return await inspect();
+	} finally {
+		await page.keyboard.press("Escape");
+		await page.locator(".menu").waitFor({ state: "detached" });
+	}
+}
+
+/** Flips an option switch through the options menu, which stays open after the click. */
+export async function flipOption(page: Page, label: string): Promise<void> {
+	await inOptionsMenu(page, () =>
+		page.locator(MENU_ITEM).filter({ hasText: label }).first().click(),
+	);
+}
+
+/** The option's state in the options menu: "hidden" when the screen does not offer it. */
+export async function optionState(page: Page, label: string): Promise<"on" | "off" | "hidden"> {
+	return inOptionsMenu(page, async () => {
+		const item = page.locator(MENU_ITEM).filter({ hasText: label });
+		if ((await item.count()) === 0) return "hidden";
+		return (await item.first().getAttribute("aria-checked")) === "true" ? "on" : "off";
+	});
+}
+
+/** The titles of the options menu's items, in order. */
+export async function optionMenuTitles(page: Page): Promise<string[]> {
+	return inOptionsMenu(page, () =>
+		page.locator(`${MENU_ITEM} .menu-item-title`).allTextContents(),
+	);
+}
 
 /** Runs one of the plugin's registered commands through Obsidian's command registry. */
 export async function runPaletteCommand(obsidian: ObsidianAPI, id: string): Promise<void> {

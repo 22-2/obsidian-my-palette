@@ -1,6 +1,8 @@
 import { expect, test } from "./fixtures.mts";
 import {
-	IGNORED_TOGGLE,
+	IGNORED_OPTION,
+	flipOption,
+	optionState,
 	MODAL_INPUT,
 	MODAL_ROW,
 	openPaletteWith,
@@ -16,33 +18,33 @@ test.beforeEach(async ({ obsidian }) => {
 	await setIgnoreFilters(obsidian, ["hidden-dir"]);
 });
 
-test("the Obsidian-excluded switch finds notes hidden by Excluded files", async ({ obsidian }) => {
+test("the Obsidian-excluded option finds notes hidden by Excluded files", async ({ obsidian }) => {
 	const page = await openPaletteWith(obsidian, "secret");
 	await expect(page.locator(MODAL_ROW)).toHaveCount(0);
 
-	await page.locator(IGNORED_TOGGLE).click();
-	await expect(page.locator(IGNORED_TOGGLE)).toHaveAttribute("aria-checked", "true");
+	await flipOption(page, IGNORED_OPTION);
+	expect(await optionState(page, IGNORED_OPTION)).toBe("on");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Secret plan", {
 		timeout: 15_000,
 	});
 	await expect(page.locator(MODAL_INPUT)).toBeFocused();
 
-	// Other modes never search Obsidian-excluded files, so the switch is not shown there.
+	// Other modes never search Obsidian-excluded files, so the option is not offered there.
 	await page.locator(MODAL_INPUT).press("Escape");
 	await expect(page.locator(".my-palette-suggest-modal")).toHaveAttribute("data-route", "home");
 	await page.locator(MODAL_INPUT).fill("> secret");
 	await expect(page.locator(".my-palette-mode-chip")).toHaveText(">");
-	await expect(page.locator(IGNORED_TOGGLE)).toBeHidden();
+	expect(await optionState(page, IGNORED_OPTION)).toBe("hidden");
 });
 
-test("the Obsidian-excluded switch searches excluded notes by keywords", async ({ obsidian }) => {
+test("the Obsidian-excluded option searches excluded notes by keywords", async ({ obsidian }) => {
 	await writeRaw(
 		obsidian,
 		"hidden-dir/Observations.md",
 		"---\nkeywords:\n  - 宇宙\n  - 星空観察\n---\n# Observations",
 	);
 	const page = await openPaletteWith(obsidian, "宇宙 星空");
-	await page.keyboard.press("Control+i");
+	await flipOption(page, IGNORED_OPTION);
 	await expect(page.locator(MODAL_ROW)).toHaveCount(1, { timeout: 15_000 });
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Observations");
 	await expect(page.locator(`${MODAL_ROW} .my-palette-suggestion__tag`)).toHaveText([
@@ -55,7 +57,7 @@ test("Enter opens an Obsidian-excluded Markdown file as an external Markdown vie
 	obsidian,
 }) => {
 	const page = await openPaletteWith(obsidian, "secret");
-	await page.keyboard.press("Control+i");
+	await flipOption(page, IGNORED_OPTION);
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Secret plan", {
 		timeout: 15_000,
 	});

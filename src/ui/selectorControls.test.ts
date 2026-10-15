@@ -234,18 +234,16 @@ describe("options menu switches", () => {
 	class SwitchSelector extends TestSelector {
 		readonly onChange = vi.fn();
 		protected override onSelectionModalOpen(): void {
-			this.addStatusToggle({
+			this.addSwitch({
 				id: "regex",
 				label: "Regex",
-				hotkey: () => null,
 				description: "Use a regular expression",
 				value: false,
 				onChange: this.onChange,
 			});
-			const hidden = this.addStatusToggle({
+			const hidden = this.addSwitch({
 				id: "hidden",
 				label: "Not here",
-				hotkey: () => null,
 				description: "Does not apply",
 				value: false,
 				onChange: vi.fn(),
