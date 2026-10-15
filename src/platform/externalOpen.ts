@@ -63,6 +63,11 @@ export async function openInExternalEditor(absolutePath: string): Promise<string
 
 /** Reveals a file in its folder, or opens a folder, in the OS file manager. */
 export function showInSystemExplorer(absolutePath: string, isFolder: boolean): void {
-	if (isFolder) void electron.shell.openPath(absolutePath);
+	if (isFolder) void openWithSystemApplication(absolutePath);
 	else electron.shell.showItemInFolder(absolutePath);
+}
+
+/** Opens a path with its operating-system default application. */
+export async function openWithSystemApplication(absolutePath: string): Promise<void> {
+	await electron.shell.openPath(absolutePath);
 }

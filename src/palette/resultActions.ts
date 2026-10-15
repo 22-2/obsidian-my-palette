@@ -2,15 +2,8 @@ import { Notice, TFile, type App, type WorkspaceLeaf } from "obsidian";
 import { openFileInLeaf, type LeafOpenAction } from "src/workspace/openLeaf";
 import { getVaultFullPath, isUserIgnoredPath } from "src/ignored-notes/ignoredPaths";
 import { getDesktopAdapter } from "src/platform/desktopAdapter";
+import { openWithSystemApplication, showInSystemExplorer } from "src/platform/externalOpen";
 import { resolveExternalOpenTarget, type ExternalOpenTarget } from "src/palette/openTargets";
-
-declare const electron: {
-	shell: {
-		showItemInFolder: (path: string) => void;
-		openPath: (path: string) => Promise<string>;
-		openExternal: (url: string) => Promise<void>;
-	};
-};
 import type { EverythingResult, PaletteResult } from "src/palette/results";
 
 export type ActionKind = LeafOpenAction;
@@ -56,7 +49,7 @@ async function openExternalTarget(
 		);
 		return { close: true };
 	}
-	await electron.shell.openPath(target.absolutePath);
+	await openWithSystemApplication(target.absolutePath);
 	return { close: true };
 }
 
@@ -110,9 +103,7 @@ export async function runResultAction(
 		return { close: false, message: "The selected path no longer exists." };
 	}
 	if (action === "alternate") {
-		if (everythingResult.kind === "folder")
-			await electron.shell.openPath(everythingResult.absolutePath);
-		else electron.shell.showItemInFolder(everythingResult.absolutePath);
+		showInSystemExplorer(everythingResult.absolutePath, everythingResult.kind === "folder");
 	} else if (everythingResult.vaultPath) {
 		const current = app.vault.getAbstractFileByPath(everythingResult.vaultPath);
 		if (current instanceof TFile) {
