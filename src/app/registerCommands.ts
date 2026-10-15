@@ -32,6 +32,11 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		callback: () => openWithHome(plugin.paletteOpener.commandPaletteInitialInput()),
 	});
 	plugin.addCommand({
+		id: "open-everything-list",
+		name: "Open Everything list",
+		callback: () => openWithHome(`${plugin.settings.modes.everything.alias} `),
+	});
+	plugin.addCommand({
 		id: "open-sidebar-palette",
 		name: "Open sidebar palette",
 		callback: () => void plugin.paletteOpener.openPaletteView(),
@@ -85,6 +90,21 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		id: "open-tab-list",
 		name: "Open tab list",
 		callback: () => openWithHome("", "tab"),
+	});
+	plugin.addCommand({
+		id: "open-plugin-list",
+		name: "Open plugin list",
+		callback: () => openWithHome(`${plugin.settings.modes.plugins.alias} `),
+	});
+	plugin.addCommand({
+		id: "open-snippet-list",
+		name: "Open snippet list",
+		callback: () => openWithHome(`${plugin.settings.modes.snippets.alias} `),
+	});
+	plugin.addCommand({
+		id: "open-property-list",
+		name: "Open property list",
+		callback: () => openWithHome(`${plugin.settings.modes.properties.alias} `),
 	});
 	plugin.addCommand({
 		id: "open-tag-insert-selector",

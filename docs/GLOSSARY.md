@@ -73,6 +73,7 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 | Open home                   | `open-home`                   | Home                 |
 | Open note list              | `open-note-list`              | ノートのモード       |
 | Open run list               | `open-run-list`               | Run Commandモード    |
+| Open Everything list        | `open-everything-list`        | Everythingモード     |
 | Open sidebar palette        | `open-sidebar-palette`        | Sidebar palette      |
 | Open table palette          | `open-table-palette`          | Table palette        |
 | Open outgoing link list     | `open-outgoing-link-list`     | 発リンクのモード     |
@@ -80,6 +81,9 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 | Open bookmark list          | `open-bookmark-list`          | ブックマークのモード |
 | Open Smart Connections list | `open-smart-connections-list` | 関連ノートのモード   |
 | Open tab list               | `open-tab-list`               | タブのモード         |
+| Open plugin list            | `open-plugin-list`            | Pluginsモード        |
+| Open snippet list           | `open-snippet-list`           | Snippetsモード       |
+| Open property list          | `open-property-list`          | Propertiesモード     |
 | Open folder move selector   | `open-folder-move-selector`   | Folder move selector |
 | Open tag insert selector    | `open-tag-insert-selector`    | Tag insert selector  |
 | Open MOC insert selector    | `open-moc-insert-selector`    | MOC insert selector  |
@@ -95,22 +99,20 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 | -------------- | ---------- | --------------------------- |
 | Notes          | `n`        | Open note list              |
 | Commands       | `>`        | Open run list               |
-| Everything     | `e`        | なし                        |
+| Everything     | `e`        | Open Everything list        |
 | Outgoing links | `o`        | Open outgoing link list     |
 | Backlinks      | `b`        | Open backlink list          |
 | Bookmarks      | `bk`       | Open bookmark list          |
 | Related notes  | `sc`       | Open Smart Connections list |
 | Tabs           | `t`        | Open tab list               |
-| Plugins        | `p`        | なし                        |
-| Snippets       | `sn`       | なし                        |
-| Properties     | `pr`       | なし                        |
+| Plugins        | `p`        | Open plugin list            |
+| Snippets       | `sn`       | Open snippet list           |
+| Properties     | `pr`       | Open property list          |
 
 - コマンド名には「command」を入れられない(Obsidianのlint)ので、コマンド一覧だけは、モード名「Commands」とコマンド名「Open run list」が対応する。
 - Everythingは1つのモード。Obsidian-excludedがOFFならObsidianで利用できる設定済み拡張子のファイル、ONなら保管庫フォルダー内の全ファイルを検索する。従来のVault notesとAll vault filesを統合し、`esdir`は保存済み履歴の読み取りだけで扱う。
 - `sn`は`sc`と先頭が同じだが、エイリアスは`alias + Space`で照合するので共存できる。
-- Plugins・Snippetsに対応するコマンド(「Open plugin list」など)は、使ってみて要るとわかってから足す。
 - Propertiesは現在のノートのプロパティを検索して編集する。Property value inputは、候補を選ぶSelectorではなく値を打つ入力欄なので、識別子`property-value-input`で範囲を分けず、ショートカットの範囲には入れない(Selectorの名前には`selector`を付けない)。
-- Propertiesに対応するコマンド(「Open property list」)は、使ってみて要るとわかってから足す。
 
 ### 開き方の操作名
 
