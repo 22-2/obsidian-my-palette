@@ -1101,6 +1101,32 @@
 	font-family: var(--font-monospace);
 }
 
+/* The filter field above a long action menu, and what hides actions that do not match it. */
+.my-palette-menu-filter {
+	padding: var(--size-2-2) var(--size-2-3) var(--size-2-1);
+}
+
+.my-palette-menu-filter__input {
+	width: 100%;
+}
+
+.menu-item.is-filtered,
+.menu-separator.is-filtered,
+.menu-group.is-filtered {
+	display: none;
+}
+
+.my-palette-menu-empty {
+	display: none;
+	padding: var(--size-4-2) var(--size-4-3);
+	color: var(--text-faint);
+	text-align: center;
+}
+
+.my-palette-menu-empty.is-visible {
+	display: block;
+}
+
 /* A confirmation that is also a warning reads as a destructive call to action, like a red button. */
 .menu-item.is-warning.mod-cta {
 	background-color: var(--text-error);

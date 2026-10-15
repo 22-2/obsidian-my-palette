@@ -306,6 +306,115 @@ describe("PaletteMenu selection", () => {
 	});
 });
 
+function filterMenu(minItems = 3) {
+	const menu = new PaletteMenu().enableFilter(minItems);
+	const runs = { copy: vi.fn(), open: vi.fn(), rename: vi.fn() };
+	menu.addItem((item) => item.setTitle("Open in terminal").onClick(runs.open));
+	menu.addSeparator();
+	menu.addItem((item) => item.setTitle("Copy file name").onClick(runs.copy));
+	menu.addItem((item) => item.setTitle("Rename…").onClick(runs.rename));
+	return { menu, runs };
+}
+
+function filterInput(): HTMLInputElement {
+	const input = document.querySelector<HTMLInputElement>(".my-palette-menu-filter__input");
+	if (!input) throw new Error("no filter input");
+	return input;
+}
+
+function type(text: string): void {
+	const input = filterInput();
+	input.value = text;
+	input.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function visibleTitles(): string[] {
+	return [...document.querySelectorAll<HTMLElement>(".menu-item:not(.is-filtered)")].map(
+		(element) => titleOf(element) ?? "",
+	);
+}
+
+describe("PaletteMenu filter", () => {
+	it("takes focus when opened, so typing never reaches the palette input", () => {
+		const { menu } = filterMenu();
+		menu.showAtPosition({ x: 0, y: 0 });
+
+		expect(document.activeElement).toBe(filterInput());
+	});
+
+	it("hides actions missing any typed word, ignoring case", () => {
+		const { menu } = filterMenu();
+		menu.showAtPosition({ x: 0, y: 0 });
+
+		type("FILE na");
+		expect(visibleTitles()).toEqual(["Copy file name"]);
+		type("");
+		expect(visibleTitles()).toEqual(["Open in terminal", "Copy file name", "Rename…"]);
+	});
+
+	it("selects the first match, and Enter runs it", () => {
+		const { menu, runs } = filterMenu();
+		menu.showAtPosition({ x: 0, y: 0 });
+
+		type("e");
+		expect(selectedTitle()).toBe("Open in terminal");
+		press("ArrowDown", filterInput());
+		press("Enter", filterInput());
+
+		expect(runs.copy).toHaveBeenCalledOnce();
+		expect(document.querySelector(".menu")).toBeNull();
+	});
+
+	it("shows an empty message when nothing matches", () => {
+		const { menu } = filterMenu();
+		menu.showAtPosition({ x: 0, y: 0 });
+
+		type("zzz");
+		expect(document.querySelector(".my-palette-menu-empty.is-visible")).not.toBeNull();
+		expect(selectedTitle()).toBeNull();
+		type("");
+		expect(document.querySelector(".my-palette-menu-empty.is-visible")).toBeNull();
+	});
+
+	it("lets Space and Home reach the text field instead of acting on the menu", () => {
+		const { menu, runs } = filterMenu();
+		menu.showAtPosition({ x: 0, y: 0 });
+		type("e");
+
+		expect(press(" ", filterInput()).defaultPrevented).toBe(false);
+		expect(press("Home", filterInput()).defaultPrevented).toBe(false);
+		expect(runs.open).not.toHaveBeenCalled();
+	});
+
+	it("clears the words when the menu is shown again", () => {
+		const { menu } = filterMenu();
+		menu.showAtPosition({ x: 0, y: 0 });
+		type("rename");
+		menu.close();
+		menu.showAtPosition({ x: 0, y: 0 });
+
+		expect(filterInput().value).toBe("");
+		expect(visibleTitles()).toHaveLength(3);
+	});
+
+	it("skips the field when the menu has fewer actions than the minimum", () => {
+		const { menu } = filterMenu(4);
+		menu.showAtPosition({ x: 0, y: 0 });
+
+		expect(filterInput().closest(".my-palette-menu-filter")?.hasAttribute("hidden")).toBe(true);
+		expect(document.activeElement).not.toBe(filterInput());
+	});
+
+	it("keeps a click on the field from stealing or losing focus", () => {
+		const { menu } = filterMenu();
+		menu.showAtPosition({ x: 0, y: 0 });
+		const press = new MouseEvent("mousedown", { bubbles: true, cancelable: true, button: 0 });
+		filterInput().dispatchEvent(press);
+
+		expect(press.defaultPrevented).toBe(false);
+	});
+});
+
 describe("PaletteMenu focus and placement", () => {
 	it("gives focus back to the element it had before opening", () => {
 		const { menu } = sample();

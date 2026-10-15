@@ -49,6 +49,7 @@ export class PaletteMenu {
 	private restoreFocusTo: HTMLElement | null = null;
 	private hideCallback: (() => void) | null = null;
 	private selectionListener: ((item: PaletteMenuItem | undefined) => void) | null = null;
+	private filter: MenuFilter | null = null;
 
 	constructor() {
 		this.dom = createDiv();
@@ -56,8 +57,9 @@ export class PaletteMenu {
 		this.dom.setAttribute("role", "menu");
 		this.scrollEl = this.dom.createDiv("menu-scroll");
 		// Why: a press on the menu must not move focus away from the palette input.
+		// The filter input is the one place in the menu that must take focus.
 		this.dom.addEventListener("mousedown", (event) => {
-			if (event.button === 0) event.preventDefault();
+			if (event.button === 0 && event.target !== this.filter?.inputEl) event.preventDefault();
 		});
 		this.scrollEl.addEventListener("pointerover", (event) => this.onPointerOver(event));
 	}
@@ -77,6 +79,60 @@ export class PaletteMenu {
 		this.scrollEl.createDiv("menu-separator").setAttribute("role", "separator");
 		this.group = null;
 		return this;
+	}
+
+	/**
+	 * Adds a text field above the actions. While the menu is open, typing narrows the list to the
+	 * actions whose title contains every typed word, instead of reaching the palette behind it.
+	 * A menu with fewer than `minItems` actions skips the field, since there is nothing to narrow.
+	 */
+	enableFilter(minItems = 5): this {
+		if (this.filter) return this;
+		const wrapEl = createDiv("my-palette-menu-filter");
+		const inputEl = wrapEl.createEl("input", {
+			cls: "my-palette-menu-filter__input",
+			attr: { type: "text", placeholder: "Filter actions…", "aria-label": "Filter actions" },
+		});
+		this.dom.insertBefore(wrapEl, this.scrollEl);
+		const emptyEl = this.scrollEl.createDiv({
+			cls: "my-palette-menu-empty",
+			text: "No matching actions",
+		});
+		inputEl.addEventListener("input", () => this.applyFilter());
+		this.filter = { wrapEl, inputEl, emptyEl, minItems, active: false };
+		return this;
+	}
+
+	/** Shows every action again and clears the typed words. */
+	private resetFilter(): void {
+		const filter = this.filter;
+		if (!filter) return;
+		filter.active = this.items.length >= filter.minItems;
+		filter.wrapEl.toggleAttribute("hidden", !filter.active);
+		filter.inputEl.value = "";
+		this.applyFilter();
+	}
+
+	private applyFilter(): void {
+		const filter = this.filter;
+		if (!filter) return;
+		const words = filter.inputEl.value.toLocaleLowerCase().split(/\s+/).filter(Boolean);
+		const filtering = words.length > 0;
+		for (const item of this.items) {
+			const title = item.title.toLocaleLowerCase();
+			item.setFiltered(filtering && !words.every((word) => title.includes(word)));
+		}
+		// Why: a separator between groups reads as a stray line once its neighbours are gone.
+		for (const separator of this.scrollEl.querySelectorAll(".menu-separator"))
+			separator.toggleClass("is-filtered", filtering);
+		for (const group of this.scrollEl.querySelectorAll(".menu-group"))
+			group.toggleClass("is-filtered", !group.querySelector(".menu-item:not(.is-filtered)"));
+		filter.emptyEl.toggleClass(
+			"is-visible",
+			filtering && this.items.every((item) => item.isFiltered),
+		);
+		this.setSelected(-1);
+		if (filtering) this.focusEnabled(0, 1);
 	}
 
 	setParentElement(parentEl: HTMLElement): this {
@@ -125,6 +181,9 @@ export class PaletteMenu {
 		win.addEventListener("resize", this.onWindowChange);
 		win.addEventListener("blur", this.onWindowChange);
 
+		this.resetFilter();
+		if (this.filter?.active && !doc.body.classList.contains("is-mobile"))
+			this.filter.inputEl.focus({ preventScroll: true });
 		if (options.selectFirst) this.focusEnabled(0, 1);
 	}
 
@@ -170,6 +229,8 @@ export class PaletteMenu {
 
 	private readonly onKeyDown = (event: KeyboardEvent): void => {
 		if (event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return;
+		// With the filter open, Space and the cursor keys belong to the text field.
+		if (this.filter?.active && [" ", "Home", "End"].includes(event.key)) return;
 		switch (event.key) {
 			case "ArrowDown":
 				this.focusEnabled(this.selected + 1, 1);
@@ -214,7 +275,7 @@ export class PaletteMenu {
 		const count = this.items.length;
 		for (let step = 0; step < count; step++) {
 			const index = (((start + direction * step) % count) + count) % count;
-			if (!this.items[index].isDisabled) {
+			if (!this.items[index].isDisabled && !this.items[index].isFiltered) {
 				this.setSelected(index);
 				return;
 			}
@@ -233,6 +294,15 @@ export class PaletteMenu {
 	}
 }
 
+interface MenuFilter {
+	wrapEl: HTMLElement;
+	inputEl: HTMLInputElement;
+	emptyEl: HTMLElement;
+	minItems: number;
+	/** Whether the field is shown for the open menu, which depends on how many actions it has. */
+	active: boolean;
+}
+
 /** A menu item. Appearance setters take effect even while the menu is open. */
 export class PaletteMenuItem {
 	readonly dom: HTMLElement;
@@ -241,6 +311,7 @@ export class PaletteMenuItem {
 	private readonly titleEl: HTMLElement;
 	private checkIconEl: HTMLElement | null = null;
 	private disabled = false;
+	private filtered = false;
 	private keepOpen = false;
 	private callback: ((event: PaletteMenuActivation) => void) | null = null;
 
@@ -256,6 +327,20 @@ export class PaletteMenuItem {
 
 	get isDisabled(): boolean {
 		return this.disabled;
+	}
+
+	get title(): string {
+		return this.titleEl.textContent ?? "";
+	}
+
+	/** Whether the menu's filter currently hides this item. */
+	get isFiltered(): boolean {
+		return this.filtered;
+	}
+
+	setFiltered(filtered: boolean): void {
+		this.filtered = filtered;
+		this.dom.toggleClass("is-filtered", filtered);
 	}
 
 	setTitle(title: string): this {
