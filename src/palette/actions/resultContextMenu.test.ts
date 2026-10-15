@@ -14,6 +14,9 @@ vi.mock("src/moc-relateds/mocInsertion", () => ({
 	addMocInsertionMenuItem: vi.fn(),
 	addMocInsertionMenuItems: vi.fn(),
 }));
+vi.mock("src/palette/actions/selectionHeader", () => ({
+	addSelectionHeader: vi.fn(),
+}));
 vi.mock("src/palette/actions/fileMoveMenu", () => ({
 	addFileMoveMenuItem: vi.fn(),
 }));

@@ -2,6 +2,7 @@ import type { App, WorkspaceLeaf } from "obsidian";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import type MyPalettePlugin from "src/main";
 import type { ActionKind } from "src/palette/resultActions";
+import { addSelectionHeader } from "src/palette/actions/selectionHeader";
 import { getCopyablePaths } from "src/palette/resultPresentation";
 import type { PaletteResult, TabResult } from "src/palette/results";
 import {
@@ -48,6 +49,7 @@ export function populateTabMenu({
 	const leavesNow = (): WorkspaceLeaf[] =>
 		tabs.flatMap((tab) => plugin.tabProvider.leafOf(tab.id) ?? []);
 
+	addSelectionHeader(menu, tabs.length);
 	if (single) {
 		menu.addItem((item) =>
 			item

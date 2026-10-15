@@ -4,6 +4,7 @@ import type { PaletteMenu } from "src/ui/paletteMenu";
 import type MyPalettePlugin from "src/main";
 import type { MocInsertionContext } from "src/moc-relateds/mocInsertion";
 import { addMocInsertionMenuItem, addMocInsertionMenuItems } from "src/moc-relateds/mocInsertion";
+import { addSelectionHeader } from "src/palette/actions/selectionHeader";
 import { addFileMoveMenuItem } from "src/palette/actions/fileMoveMenu";
 import { isTabResult, populateTabMenu } from "src/palette/actions/tabMenu";
 import type { ActionKind } from "src/palette/resultActions";
@@ -82,6 +83,7 @@ export function populatePaletteResultMenu({
 	if (selectedPaths.length > 1) {
 		// Why: a multi-selection has no single result for navigation actions, so expose
 		// actions that can operate on all selected paths or notes.
+		addSelectionHeader(menu, selectedItems.length);
 		addCopyPathListMenuItems(
 			menu,
 			selectedPaths,
