@@ -130,7 +130,7 @@ export class PaletteView extends ItemView {
 				)
 				.setIcon("plus")
 				.onClick(() => {
-					const state = this.newPaletteViewState();
+					const state = this.snapshotState();
 					void this.plugin.paletteOpener.openNewPaletteView({
 						input: state.input,
 						fixedMode: state.fixedMode,
@@ -145,6 +145,10 @@ export class PaletteView extends ItemView {
 	}
 
 	getState(): PaletteViewState {
+		return { ...this.snapshotState() };
+	}
+
+	private snapshotState(): NormalizedPaletteViewState {
 		return {
 			input: this.session?.prefixedInput ?? this.pendingState.input,
 			fixedMode: this.pendingState.fixedMode,
@@ -340,19 +344,6 @@ export class PaletteView extends ItemView {
 
 	focusSearchInput(): void {
 		this.panel?.focusSearchInput();
-	}
-
-	private newPaletteViewState(): NormalizedPaletteViewState {
-		// Duplicate the pin state as well as the query: an unpinned view should keep
-		// following the active note, while a pinned view should remain reproducible.
-		return {
-			input: this.session?.prefixedInput ?? this.pendingState.input,
-			fixedMode: this.pendingState.fixedMode,
-			sourcePath: this.sourcePinned ? this.sourcePath : undefined,
-			sourcePinned: this.sourcePinned,
-			includeIgnored: this.ignoredScope,
-			...normalizePaletteTableState(this.tableControls?.getState() ?? this.pendingState),
-		};
 	}
 
 	private get ignoredScope(): boolean {
