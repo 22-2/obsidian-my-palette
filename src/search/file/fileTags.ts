@@ -1,8 +1,5 @@
 import fuzzysort from "fuzzysort";
-
-function queryTerms(query: string): string[] {
-	return query.split("|").flatMap((branch) => branch.trim().split(/\s+/).filter(Boolean));
-}
+import { queryTerms } from "src/search/fuzzyQuery";
 
 function normalizedTag(value: unknown): string | undefined {
 	if (typeof value !== "string") return undefined;

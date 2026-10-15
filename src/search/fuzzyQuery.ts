@@ -17,6 +17,11 @@ function queryBranches(query: string): string[][] {
 		.filter((terms) => terms.length > 0);
 }
 
+/** All non-empty terms across the query's OR branches. */
+export function queryTerms(query: string): string[] {
+	return queryBranches(query).flat();
+}
+
 /**
  * Detect a complete contiguous match for at least one valid AND branch. This
  * is a common relevance tier: an exact metadata phrase should not lose to a
