@@ -25,8 +25,7 @@ export async function editPropertyResult(
 	}
 	switch (result.kind) {
 		case "tags":
-			await insertTags(plugin, [file]);
-			return "close";
+			return (await insertTags(plugin, [file])) ? "close" : "stay";
 		case "checkbox":
 			await toggleCheckbox(plugin.app, file, result.key);
 			return "stay";

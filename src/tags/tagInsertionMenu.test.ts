@@ -51,7 +51,7 @@ function menu() {
 
 const base = { id: "", primary: "", secondary: "", icon: "" };
 
-it("adds tags only to distinct indexed Markdown notes", () => {
+it("adds tags only to distinct indexed Markdown notes", async () => {
 	const results: PaletteResult[] = [
 		{ ...base, mode: "file", vaultPath: "a.md" },
 		{
@@ -68,15 +68,34 @@ it("adds tags only to distinct indexed Markdown notes", () => {
 		{ ...base, mode: "file", vaultPath: "ignored.md", ignored: true },
 		{ ...base, mode: "command", commandId: "x" },
 	];
-	const onSelected = vi.fn();
+	const onDone = vi.fn();
 	const m = menu();
+	vi.mocked(insertTags).mockResolvedValue(true);
 
-	addTagInsertionMenuItems(m.instance, plugin, results, onSelected);
+	addTagInsertionMenuItems(m.instance, plugin, results, onDone);
 	expect(m.titles).toEqual(["Add tags…"]);
 	m.click();
+	await Promise.resolve();
 
-	expect(onSelected).toHaveBeenCalledOnce();
+	expect(onDone).toHaveBeenCalledOnce();
 	expect(insertTags).toHaveBeenCalledWith(plugin, [files.get("a.md"), files.get("b.md")]);
+});
+
+it("does not report done when the tag selector was cancelled", async () => {
+	const onDone = vi.fn();
+	const m = menu();
+	vi.mocked(insertTags).mockResolvedValue(false);
+
+	addTagInsertionMenuItems(
+		m.instance,
+		plugin,
+		[{ ...base, mode: "file", vaultPath: "a.md" }],
+		onDone,
+	);
+	m.click();
+	await Promise.resolve();
+
+	expect(onDone).not.toHaveBeenCalled();
 });
 
 it("adds no item when nothing can be tagged", () => {

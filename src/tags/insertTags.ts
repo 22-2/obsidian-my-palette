@@ -71,14 +71,18 @@ function targetLabel(files: readonly TFile[]): string {
 
 /**
  * Lets the user pick tags to add and applied tags to remove, then writes both to the
- * frontmatter of every target note.
+ * frontmatter of every target note. Resolves true when changes were applied, and false
+ * when the user cancelled or chose nothing, so a caller can return to where it was.
  */
-export async function insertTags(plugin: MyPalettePlugin, files: readonly TFile[]): Promise<void> {
+export async function insertTags(
+	plugin: MyPalettePlugin,
+	files: readonly TFile[],
+): Promise<boolean> {
 	const { app, recentTagStore: recentTags } = plugin;
 	const targets = files.filter((file) => file.extension === "md");
 	if (targets.length === 0) {
 		new Notice("No Markdown note to add tags to.");
-		return;
+		return false;
 	}
 
 	const changes = await new TagSelectionModal(
@@ -88,8 +92,9 @@ export async function insertTags(plugin: MyPalettePlugin, files: readonly TFile[
 		targets.length,
 		(tag) => removeTag(app, targets, tag),
 	).openAndWaitChanges();
-	if (!changes || (changes.add.length === 0 && changes.remove.length === 0)) return;
+	if (!changes || (changes.add.length === 0 && changes.remove.length === 0)) return false;
 	await applyTagChanges(app, targets, changes, recentTags);
+	return true;
 }
 
 /** Writes tag changes per note, so one failing note does not block the rest. */

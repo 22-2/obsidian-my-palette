@@ -108,8 +108,15 @@ describe("editPropertyResult", () => {
 		expect(notices).toEqual(["Could not update the properties of note. See the console."]);
 	});
 
+	it("keeps the palette when Tag insertion is cancelled", async () => {
+		const { plugin: p } = plugin({});
+		insertTagsMock.mockResolvedValue(false);
+		expect(await editPropertyResult(p, row({ key: "tags", kind: "tags" }))).toBe("stay");
+	});
+
 	it("opens Tag insertion for the tags key and closes the palette", async () => {
 		const { plugin: p } = plugin({});
+		insertTagsMock.mockResolvedValue(true);
 		const outcome = await editPropertyResult(p, row({ key: "tags", kind: "tags" }));
 		expect(outcome).toBe("close");
 		expect(insertTagsMock).toHaveBeenCalledWith(p, [file]);

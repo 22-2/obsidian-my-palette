@@ -30,12 +30,15 @@ function resolveTagTarget(app: App, result: PaletteResult): TFile | undefined {
 	return file instanceof TFile && file.extension === "md" ? file : undefined;
 }
 
-/** Adds one action that inserts the chosen tags into every selected note. */
+/**
+ * Adds one action that inserts the chosen tags into every selected note. `onDone` runs only
+ * after tags were applied, so cancelling the selector leaves the palette where it was.
+ */
 export function addTagInsertionMenuItems(
 	menu: PaletteMenu,
 	plugin: MyPalettePlugin,
 	results: readonly PaletteResult[],
-	onSelected?: () => void,
+	onDone?: () => void,
 ): void {
 	const targets = new Map<string, TFile>();
 	for (const result of results) {
@@ -48,8 +51,9 @@ export function addTagInsertionMenuItems(
 			.setTitle("Add tags…")
 			.setIcon("tags")
 			.onClick(() => {
-				onSelected?.();
-				void insertTags(plugin, [...targets.values()]);
+				void insertTags(plugin, [...targets.values()]).then((applied) => {
+					if (applied) onDone?.();
+				});
 			}),
 	);
 }
