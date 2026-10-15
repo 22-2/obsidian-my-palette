@@ -9,6 +9,8 @@ export interface PaletteSearchRequest {
 	includeIgnored?: boolean;
 	/** Optional fixed origin used by persistent related-note searches. */
 	sourceFile?: TFile;
+	/** Several notes at once, for the modes that can list or edit them together (Properties). */
+	sourceFiles?: readonly TFile[];
 }
 
 export interface PaletteProvider<TResult extends PaletteResult = PaletteResult> {

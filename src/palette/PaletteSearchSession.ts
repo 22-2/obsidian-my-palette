@@ -57,6 +57,8 @@ export interface PaletteSearchSessionOptions {
 	/** The mode to start in. Esc still leaves it for Home. */
 	fixedMode?: FixedPaletteMode;
 	sourceFile?: TFile;
+	/** Notes edited together; only the Properties mode reads it. */
+	sourceFiles?: readonly TFile[];
 	includeIgnored?: boolean;
 	/** Home lists mode entries above the files; off for file-only palettes and tables. */
 	modeEntries?: boolean;
@@ -79,6 +81,7 @@ export class PaletteSearchSession {
 	private readonly listsModes: boolean;
 	private route: PaletteRoute = { kind: "home" };
 	private sourceFile?: TFile;
+	private readonly sourceFiles?: readonly TFile[];
 	private readonly onStateChange?: (state: PaletteSearchState) => void;
 	private state: PaletteSearchState;
 	private readonly stopReadinessUpdates: () => void;
@@ -89,6 +92,7 @@ export class PaletteSearchSession {
 			initialInput = "",
 			fixedMode,
 			sourceFile,
+			sourceFiles,
 			includeIgnored = false,
 			modeEntries = false,
 			onStateChange,
@@ -99,6 +103,7 @@ export class PaletteSearchSession {
 		const definition = fixedMode ? findPaletteMode(fixedMode) : undefined;
 		if (definition) this.route = { kind: "mode", modeId: definition.id };
 		this.sourceFile = sourceFile;
+		this.sourceFiles = sourceFiles;
 		this.onStateChange = onStateChange;
 		const parsed = this.parse(initialInput);
 		this.state = {
@@ -230,6 +235,7 @@ export class PaletteSearchSession {
 				everythingScope: this.scopeOf(parsed),
 				includeIgnored,
 				sourceFile: this.sourceFile,
+				sourceFiles: this.sourceFiles,
 			});
 			const settings =
 				this.listsModes && this.route.kind === "home" ? settingsEntries(input) : [];

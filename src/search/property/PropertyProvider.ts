@@ -61,6 +61,8 @@ interface PropertyRowInit {
 	secondary: string;
 	inNote: boolean;
 	sourcePath: string;
+	/** Set when the list spans several notes. */
+	sourcePaths?: readonly string[];
 }
 
 function propertyRow({
@@ -70,6 +72,7 @@ function propertyRow({
 	secondary,
 	inNote,
 	sourcePath,
+	sourcePaths,
 }: PropertyRowInit): PropertyResult {
 	return {
 		id: `property:${key}`,
@@ -82,10 +85,15 @@ function propertyRow({
 		section,
 		inNote,
 		sourcePath,
+		...(sourcePaths ? { sourcePaths } : {}),
 	};
 }
 
-function newKeyRow(key: string, sourcePath: string): PropertyResult {
+function newKeyRow(
+	key: string,
+	sourcePath: string,
+	sourcePaths?: readonly string[],
+): PropertyResult {
 	return {
 		id: `property:new:${key}`,
 		mode: "property",
@@ -97,6 +105,7 @@ function newKeyRow(key: string, sourcePath: string): PropertyResult {
 		section: "New",
 		inNote: false,
 		sourcePath,
+		...(sourcePaths ? { sourcePaths } : {}),
 	};
 }
 
@@ -108,17 +117,102 @@ function newKeyRow(key: string, sourcePath: string): PropertyResult {
 export class PropertyProvider implements PaletteProvider<PropertyResult> {
 	constructor(private readonly app: App) {}
 
-	async search({ query, sourceFile }: PaletteSearchRequest): Promise<PropertyResult[]> {
-		const file = sourceFile ?? this.app.workspace.getActiveFile();
-		if (file?.extension !== "md") return [];
-		const sections = this.sectionsOf(file);
+	async search({
+		query,
+		sourceFile,
+		sourceFiles,
+	}: PaletteSearchRequest): Promise<PropertyResult[]> {
+		const files = (
+			sourceFiles && sourceFiles.length > 0
+				? sourceFiles
+				: [sourceFile ?? this.app.workspace.getActiveFile()]
+		).filter((candidate): candidate is TFile => candidate?.extension === "md");
+		if (files.length === 0) return [];
+		const file = files[0];
+		const many = files.length > 1;
+		const sections = many ? this.sectionsOfMany(files) : this.sectionsOf(file);
 		if (!query.trim()) return sections.flat();
 		const matched = sections.flatMap((section) =>
 			searchFuzzyQuery(query, section, [(result) => result.primary]).map(({ obj }) => obj),
 		);
 		// Nothing matches, so the typed text can only be a key the note does not have yet.
-		if (matched.length === 0) return [newKeyRow(query.trim(), file.path)];
+		if (matched.length === 0)
+			return [
+				newKeyRow(
+					query.trim(),
+					file.path,
+					many ? files.map(({ path }) => path) : undefined,
+				),
+			];
 		return matched;
+	}
+
+	/**
+	 * Keys of several notes at once: those any of them has come first, most shared first,
+	 * then the reserved keys and the rest of the vault. Each row edits all the notes.
+	 */
+	private sectionsOfMany(files: readonly TFile[]): PropertyResult[][] {
+		const frontmatters = files.map(
+			(file): Record<string, unknown> =>
+				this.app.metadataCache.getFileCache(file)?.frontmatter ?? {},
+		);
+		const sourcePaths = files.map(({ path }) => path);
+		const sourcePath = sourcePaths[0];
+		const infos = vaultInfos(this.app);
+		const holders = (key: string) => frontmatters.filter((frontmatter) => key in frontmatter);
+		const sharedLabel = (key: string) => `${holders(key).length}/${files.length} notes`;
+		const kindOf = (key: string) =>
+			propertyKindOf(key, holders(key)[0]?.[key], declaredType(this.app, key, infos[key]));
+
+		const shared = new Map<string, number>();
+		for (const frontmatter of frontmatters)
+			for (const key of Object.keys(frontmatter))
+				if (!HIDDEN_KEYS.has(key) && !isReserved(key))
+					shared.set(key, (shared.get(key) ?? 0) + 1);
+		const theseNotes = [...shared]
+			.sort(([a, countA], [b, countB]) => countB - countA || a.localeCompare(b))
+			.map(([key]) =>
+				propertyRow({
+					key,
+					section: "These notes",
+					kind: kindOf(key),
+					secondary: sharedLabel(key),
+					inNote: true,
+					sourcePath,
+					sourcePaths,
+				}),
+			);
+		const reserved = RESERVED_KEYS.map((key) =>
+			propertyRow({
+				key,
+				section: "Reserved",
+				kind: kindOf(key),
+				secondary: holders(key).length > 0 ? sharedLabel(key) : "Not set",
+				inNote: holders(key).length > 0,
+				sourcePath,
+				sourcePaths,
+			}),
+		);
+		const counts =
+			(
+				this.app as unknown as { metadataTypeManager?: TypeManagerInternals }
+			).metadataTypeManager?.getPropertyOccurrences?.() ?? {};
+		const vault = Object.keys(infos)
+			.filter((key) => !shared.has(key) && !isReserved(key) && !HIDDEN_KEYS.has(key))
+			.map((key) => ({ key, count: counts[key.toLowerCase()] ?? 0 }))
+			.sort((a, b) => b.count - a.count || a.key.localeCompare(b.key))
+			.map(({ key, count }) =>
+				propertyRow({
+					key,
+					section: "Vault",
+					kind: kindOf(key),
+					secondary: countLabel(count),
+					inNote: false,
+					sourcePath,
+					sourcePaths,
+				}),
+			);
+		return [theseNotes, reserved, vault];
 	}
 
 	private sectionsOf(file: TFile): PropertyResult[][] {

@@ -6,6 +6,8 @@ const note = { path: "note.md", extension: "md" } as unknown as TFile;
 
 function app(options: {
 	frontmatter?: Record<string, unknown>;
+	/** Per-note frontmatter, by path; falls back to `frontmatter`. */
+	frontmatters?: Record<string, Record<string, unknown>>;
 	vault?: Record<string, { type?: string; widget?: string }>;
 	counts?: Record<string, number>;
 	assigned?: Record<string, string>;
@@ -14,7 +16,9 @@ function app(options: {
 	return {
 		workspace: { getActiveFile: () => options.file ?? null },
 		metadataCache: {
-			getFileCache: () => ({ frontmatter: options.frontmatter }),
+			getFileCache: (file: TFile) => ({
+				frontmatter: options.frontmatters?.[file.path] ?? options.frontmatter,
+			}),
 		},
 		metadataTypeManager: {
 			getAllProperties: () => options.vault ?? {},
@@ -179,5 +183,59 @@ describe("PropertyProvider", () => {
 		const provider = new PropertyProvider(app({ frontmatter: {} }));
 		const results = await provider.search({ mode: "property", query: "  ", sourceFile: note });
 		expect(results.some((result) => result.kind === "new")).toBe(false);
+	});
+
+	describe("several notes", () => {
+		const second = { path: "second.md", extension: "md" } as unknown as TFile;
+		const third = { path: "third.md", extension: "md" } as unknown as TFile;
+		const frontmatters = {
+			"note.md": { status: "done", topic: ["a"], tags: ["x"] },
+			"second.md": { status: "todo", rating: 3 },
+			"third.md": { status: "todo", topic: ["b"], position: {} },
+		};
+
+		it("lists the keys of all notes, most shared first, each editing every note", async () => {
+			const provider = new PropertyProvider(
+				app({ frontmatters, vault: { project: {} }, counts: { project: 4 } }),
+			);
+			const results = await provider.search({
+				mode: "property",
+				query: "",
+				sourceFiles: [note, second, third],
+			});
+			expect(results.map((r) => [r.section, r.primary, r.secondary])).toEqual([
+				["These notes", "status", "3/3 notes"],
+				["These notes", "topic", "2/3 notes"],
+				["These notes", "rating", "1/3 notes"],
+				["Reserved", "aliases", "Not set"],
+				["Reserved", "tags", "1/3 notes"],
+				["Reserved", "cssclasses", "Not set"],
+				["Vault", "project", "4 notes"],
+			]);
+			expect(results.every((r) => r.sourcePaths?.length === 3)).toBe(true);
+			expect(results[0].sourcePath).toBe("note.md");
+			expect(results.find((r) => r.key === "topic")).toMatchObject({ kind: "list" });
+		});
+
+		it("offers a new key for all the notes", async () => {
+			const provider = new PropertyProvider(app({ frontmatters }));
+			const [row] = await provider.search({
+				mode: "property",
+				query: "zzz",
+				sourceFiles: [note, second],
+			});
+			expect(row).toMatchObject({ kind: "new", sourcePaths: ["note.md", "second.md"] });
+		});
+
+		it("keeps a single note's rows free of the multi-note fields", async () => {
+			const provider = new PropertyProvider(app({ frontmatters }));
+			const results = await provider.search({
+				mode: "property",
+				query: "",
+				sourceFiles: [note],
+			});
+			expect(results[0]).toMatchObject({ section: "This note", primary: "status" });
+			expect(results.every((r) => r.sourcePaths === undefined)).toBe(true);
+		});
 	});
 });

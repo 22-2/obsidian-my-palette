@@ -146,11 +146,18 @@ export interface PropertyResult extends BaseResult {
 	key: string;
 	/** `new` is the row that adds a key nothing matches; choosing it picks a type first. */
 	kind: PropertyKind | "new";
-	section: "This note" | "Reserved" | "Vault" | "New";
+	section: "This note" | "These notes" | "Reserved" | "Vault" | "New";
 	/** Whether the current note has this key; a reserved key may be listed without it. */
 	inNote: boolean;
 	/** The note the list was built from; edits go to this note, not the active one. */
 	sourcePath: string;
+	/** Every note the list was built from, when it spans several; edits go to all of them. */
+	sourcePaths?: readonly string[];
+}
+
+/** The notes a property row edits: all of a multi-note list, or just its one source note. */
+export function propertyTargetPaths(result: PropertyResult): readonly string[] {
+	return result.sourcePaths ?? [result.sourcePath];
 }
 
 export type PaletteResult =

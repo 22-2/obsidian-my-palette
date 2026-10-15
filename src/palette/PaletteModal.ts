@@ -29,6 +29,13 @@ export interface PaletteModalOptions {
 	restore?: PaletteRestoreState;
 	/** The note that source-dependent modes (links, properties) read, instead of the active note. */
 	sourceFile?: TFile;
+	/** Several notes edited together in Properties; the footer then counts them. */
+	sourceFiles?: readonly TFile[];
+}
+
+function sourceFooterText(app: App, sourceFile?: TFile, sourceFiles?: readonly TFile[]): string {
+	if (sourceFiles && sourceFiles.length > 1) return `Source: ${sourceFiles.length} notes`;
+	return `Source: ${sourceFile?.path ?? app.workspace.getActiveFile()?.path ?? "No active note"}`;
 }
 
 export class PaletteModal extends SelectionModal<PaletteResult> {
@@ -48,7 +55,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		private readonly plugin: MyPalettePlugin,
 		initialInput = "",
 		fixedMode?: FixedPaletteMode,
-		{ modeEntries = false, restore, sourceFile }: PaletteModalOptions = {},
+		{ modeEntries = false, restore, sourceFile, sourceFiles }: PaletteModalOptions = {},
 	) {
 		super(
 			{
@@ -58,7 +65,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				initialInput,
 				selectionMode: "extended",
 				activateOnClick: (result) => result.mode === "settings-entry",
-				footerText: `Source: ${sourceFile?.path ?? app.workspace.getActiveFile()?.path ?? "No active note"}`,
+				footerText: sourceFooterText(app, sourceFile, sourceFiles),
 			},
 			app,
 		);
@@ -69,6 +76,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			fixedMode,
 			modeEntries,
 			sourceFile,
+			sourceFiles,
 			includeIgnored: restore?.includeIgnored ?? false,
 			onModesChange: () => this.refreshSuggestions(),
 			onStateChange: (state) => {
