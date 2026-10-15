@@ -13,6 +13,7 @@ export type SelectorHistoryCategory =
 	| "tag-insertion"
 	| "moc-insertion"
 	| "folder-move"
+	| "bulk-rename"
 	| "property-value";
 
 export type SearchHistoryCategory =

@@ -26,7 +26,7 @@ describe("search history", () => {
 			parseStoredSearchHistoryEntries([stored], DEFAULT_SETTINGS.modes)[0]?.includeIgnored,
 		).toBe(true);
 	});
-	it.each(["tag-insertion", "moc-insertion", "folder-move"] as const)(
+	it.each(["tag-insertion", "moc-insertion", "folder-move", "bulk-rename"] as const)(
 		"preserves %s entries through storage normalization",
 		(category) => {
 			const entry = { input: "i example", category, lastSearchedAt: 1_000, count: 1 };

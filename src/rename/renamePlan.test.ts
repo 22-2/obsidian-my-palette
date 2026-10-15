@@ -76,10 +76,7 @@ describe("planRename", () => {
 	});
 
 	it("flags files that would get the same new name", () => {
-		const rows = plan("1/", ["x1.md", "x.md2"].slice(0, 1).concat(["x11.md"]), {}, [
-			"x1.md",
-			"x11.md",
-		]);
+		const rows = plan("1/", ["x1.md", "x11.md"]);
 		expect(rows.map((row) => row.status)).toEqual(["duplicate", "duplicate"]);
 	});
 
