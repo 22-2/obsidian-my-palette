@@ -5,6 +5,7 @@ import type MyPalettePlugin from "src/main";
 import type { MocInsertionContext } from "src/moc-relateds/mocInsertion";
 import { addMocInsertionMenuItem, addMocInsertionMenuItems } from "src/moc-relateds/mocInsertion";
 import { addBulkRenameMenuItem } from "src/palette/actions/bulkRenameMenu";
+import { addPropertyEditMenuItem } from "src/palette/actions/propertyEditMenu";
 import { addSelectionHeader } from "src/palette/actions/selectionHeader";
 import { addFileMoveMenuItem } from "src/palette/actions/fileMoveMenu";
 import { isTabResult, populateTabMenu } from "src/palette/actions/tabMenu";
@@ -278,6 +279,7 @@ export function populatePaletteResultMenu({
 	addCopyPathMenuItems(menu, paths, (path) => void copyPathToClipboard(path));
 	addFileMoveMenuItem(menu, plugin, [result], onNoteActionDone);
 	addBulkRenameMenuItem(menu, plugin, [result], onNoteActionDone);
+	addPropertyEditMenuItem(menu, plugin, [result], onNoteActionSelected);
 	// Why: MOC insertion mutates multiple notes, so keep it after navigation and
 	// non-mutating copy actions in both palette surfaces.
 	addMocInsertionMenuItem(menu, plugin, result, onNoteActionSelected, getMocContext);
