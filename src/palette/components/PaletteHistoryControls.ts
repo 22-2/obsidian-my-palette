@@ -44,6 +44,11 @@ interface PaletteHistoryControlsOptions {
 	focusInput?: () => void;
 	/** The host's footer switches, read each time the menu opens, so the menu can flip them too. */
 	getSwitches?: () => readonly PanelSwitch[];
+	/**
+	 * Whether the menu offers "Highlight search matches". Only palettes do: a selector's
+	 * candidates are a fixed list, so the palette's highlight preference is not theirs to set.
+	 */
+	showHighlightOption?: boolean;
 }
 
 /** Shared search-history and options controls for both palette surfaces. */
@@ -203,9 +208,12 @@ export class PaletteHistoryControls {
 		});
 		// Why: the switches come first so they can be flipped with Enter, without remembering
 		// each one's shortcut. Each stays open so several can be flipped in a row.
-		menu.addItem((item) => item.setTitle("Options").setIcon("settings").setDisabled(true));
-		for (const toggle of this.options.getSwitches?.() ?? []) {
-			if (toggle.isHidden) continue;
+		const switches = (this.options.getSwitches?.() ?? []).filter(({ isHidden }) => !isHidden);
+		const offersHighlight = this.options.showHighlightOption !== false;
+		// Why: a heading with nothing under it would only be noise.
+		if (switches.length > 0 || offersHighlight)
+			menu.addItem((item) => item.setTitle("Options").setIcon("settings").setDisabled(true));
+		for (const toggle of switches) {
 			menu.addItem((item) =>
 				item
 					.setTitle(toggle.label)
@@ -218,25 +226,27 @@ export class PaletteHistoryControls {
 					}),
 			);
 		}
-		menu.addItem((item) =>
-			item
-				.setTitle("Highlight search matches")
-				.setIcon("highlighter")
-				.setChecked(
-					plugin.paletteDisplaySettings.get(this.options.surface).highlightSearchMatches,
-				)
-				.setKeepOpen()
-				.onClick(() => {
-					void plugin.paletteDisplaySettings
-						.toggleHighlight(this.options.surface)
-						.then(() =>
-							item.setChecked(
-								plugin.paletteDisplaySettings.get(this.options.surface)
-									.highlightSearchMatches,
-							),
-						);
-				}),
-		);
+		if (offersHighlight)
+			menu.addItem((item) =>
+				item
+					.setTitle("Highlight search matches")
+					.setIcon("highlighter")
+					.setChecked(
+						plugin.paletteDisplaySettings.get(this.options.surface)
+							.highlightSearchMatches,
+					)
+					.setKeepOpen()
+					.onClick(() => {
+						void plugin.paletteDisplaySettings
+							.toggleHighlight(this.options.surface)
+							.then(() =>
+								item.setChecked(
+									plugin.paletteDisplaySettings.get(this.options.surface)
+										.highlightSearchMatches,
+								),
+							);
+					}),
+			);
 		menu.addSeparator();
 		menu.addItem((item) =>
 			item

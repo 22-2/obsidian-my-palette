@@ -57,7 +57,7 @@ test("checked MOC notes stay above results from a different query", async ({ obs
 		"Options",
 		"Obsidian-excluded",
 		"Mutual",
-		"Highlight search matches",
+		"Help",
 	]);
 	await page.locator(MODAL_INPUT).fill("alpha");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Alpha child");

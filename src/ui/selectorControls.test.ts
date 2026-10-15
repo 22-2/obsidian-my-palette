@@ -141,13 +141,7 @@ describe("selector controls", () => {
 		await flush();
 		expect(f.modal.modalEl.querySelectorAll(selector)).toHaveLength(2);
 		f.click(".my-palette-options-button");
-		expect(paletteMenuTitles()).toEqual([
-			"Options",
-			"Highlight search matches",
-			"Help",
-			"Move to selected",
-			"Clear search history",
-		]);
+		expect(paletteMenuTitles()).toEqual(["Help", "Move to selected", "Clear search history"]);
 		expect(paletteMenuTitles()).not.toContain("Move to right sidebar");
 		clickPaletteMenuItem("Move to selected");
 		expect(f.modal.choose).toHaveBeenCalledExactlyOnceWith("one");
@@ -156,20 +150,23 @@ describe("selector controls", () => {
 	it("opens the options menu from the keyboard with its first switch selected, and closes it again", async () => {
 		const f = await fixture();
 		expect(f.key("o", { ctrlKey: true }).defaultPrevented).toBe(true);
-		expect(paletteMenuTitles()[0]).toBe("Options");
-		expect(document.querySelector(".menu-item.selected")?.textContent).toBe(
-			"Highlight search matches",
-		);
+		// A selector with no switches has no Options heading, so Help comes first and is selected.
+		expect(paletteMenuTitles()[0]).toBe("Help");
+		expect(document.querySelector(".menu-item.selected")?.textContent).toBe("Help");
 
 		f.key("o", { ctrlKey: true });
 		expect(isPaletteMenuOpen()).toBe(false);
 	});
 
-	it("uses selector help and shares the modal highlight preference", async () => {
+	it("does not offer the highlight option in a selector", async () => {
 		const f = await fixture();
 		f.click(".my-palette-options-button");
-		clickPaletteMenuItem("Highlight search matches");
-		expect(f.modal.modalEl.classList.contains("my-palette-highlight-disabled")).toBe(true);
+		expect(paletteMenuTitles()).not.toContain("Highlight search matches");
+		expect(paletteMenuTitles()).not.toContain("Options");
+	});
+
+	it("uses selector help", async () => {
+		const f = await fixture();
 		f.click(".my-palette-options-button");
 		clickPaletteMenuItem("Help");
 		const help = document.querySelector(".my-palette-help-modal")!;
@@ -262,11 +259,7 @@ describe("options menu switches", () => {
 		modal.modalEl
 			.querySelector<HTMLElement>(".my-palette-options-button")!
 			.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
-		expect(paletteMenuTitles().slice(0, 3)).toEqual([
-			"Options",
-			"Regex",
-			"Highlight search matches",
-		]);
+		expect(paletteMenuTitles().slice(0, 3)).toEqual(["Options", "Regex", "Help"]);
 
 		clickPaletteMenuItem("Regex");
 		expect(modal.onChange).toHaveBeenCalledExactlyOnceWith(true);
