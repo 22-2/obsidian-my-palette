@@ -71,6 +71,7 @@ The action (`…`) and history (clock) buttons are also available in the Tag ins
 | Double-click / `Enter` | Open the result (or run the command)               |
 | Middle-click           | Open in a new background tab                       |
 | Right-click            | Open the action menu (acts on the whole selection) |
+| `Ctrl+O`               | Options menu: switches, help and actions           |
 | `Ctrl+R`               | Search history                                     |
 | `Esc`                  | Leave a mode; at Home, close or clear              |
 
@@ -109,7 +110,7 @@ Every alias can be changed, and a mode can be turned off, in **Settings → My P
 
 Integration modes appear only after their setup is ready. Everything checks its HTTP connection in the background; Smart Connections needs an enabled plugin with an initialized source store and vector adapter. Unready integrations are hidden from Home and the Modes settings page. Correct the connection settings or use **Test connection** in Integrations to make Everything available again.
 
-The `Obsidian-excluded` switch at the left of the footer (`Ctrl+I`) includes files hidden by Obsidian's Excluded files setting. It applies to Home, Notes, and Everything, and is hidden in other modes. In Everything it also removes the extension filter, searching every file type under the Vault folder. Search history remembers the scope and restoring an entry sets the switch.
+Every footer switch is also in the options menu (the `…` button, or `Ctrl+O`), under an `Options` heading at its top: `↑`/`↓` to move, `Enter` to flip one while the menu stays open, `Esc` to close, so no switch shortcut has to be remembered. The `Obsidian-excluded` switch at the left of the footer (`Ctrl+I`) includes files hidden by Obsidian's Excluded files setting. It applies to Home, Notes, and Everything, and is hidden in other modes. In Everything it also removes the extension filter, searching every file type under the Vault folder. Search history remembers the scope and restoring an entry sets the switch.
 
 ### Search syntax
 

@@ -76,6 +76,14 @@ export class PaletteHelpModal extends Modal {
 						],
 					] satisfies Array<[string, string]>)
 				: []),
+			...(this.hotkeys.optionsMenu
+				? ([
+						[
+							formatHotkey(this.hotkeys.optionsMenu),
+							"Open the options menu: flip switches with Enter, then Esc",
+						],
+					] satisfies Array<[string, string]>)
+				: []),
 			[formatHotkey(this.hotkeys.history), "Open search history"],
 			[
 				formatHotkey(this.hotkeys.toggleIgnored),

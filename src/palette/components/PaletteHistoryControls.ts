@@ -1,6 +1,6 @@
 import { Notice, setIcon } from "obsidian";
 import { PaletteMenu, type PaletteMenuItem } from "src/ui/paletteMenu";
-import { showMenuAtEvent } from "src/ui/menus";
+import { markKeyboardMenuEvent, showMenuAtEvent } from "src/ui/menus";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
 import type { PaletteSurface, SearchHistoryCategory } from "src/settings/model";
@@ -54,6 +54,7 @@ export class PaletteHistoryControls {
 	private readonly buttons: HTMLElement[] = [];
 	private activeMenu?: PaletteMenu;
 	private historyButton?: HTMLButtonElement;
+	private optionsButton?: HTMLButtonElement;
 
 	constructor(private readonly options: PaletteHistoryControlsOptions) {
 		this.suggest = new SearchHistorySuggest(options.containerEl, options.apply);
@@ -107,6 +108,7 @@ export class PaletteHistoryControls {
 			cls: "clickable-icon my-palette-options-button",
 			attr: { type: "button", title: "Palette options" },
 		});
+		this.optionsButton = optionsButton;
 		// Why: this menu contains actions as well as preferences.
 		setIcon(optionsButton, "ellipsis");
 		// Why: the open menu may already be dismissed by the press itself before the
@@ -147,7 +149,14 @@ export class PaletteHistoryControls {
 	}
 
 	private updateHotkeyHint(): void {
-		const hotkey = (this.options.plugin.settings.hotkeys ?? DEFAULT_HOTKEYS).history;
+		const hotkeys = this.options.plugin.settings.hotkeys ?? DEFAULT_HOTKEYS;
+		this.optionsButton?.setAttribute(
+			"title",
+			hotkeys.optionsMenu
+				? `Palette options (${formatHotkey(hotkeys.optionsMenu)})`
+				: "Palette options",
+		);
+		const hotkey = hotkeys.history;
 		if (!this.historyButton) return;
 		// Why: Obsidian shows aria-label as the tooltip, so a title as well would show two.
 		this.historyButton.setAttribute(
@@ -162,6 +171,25 @@ export class PaletteHistoryControls {
 		this.historyButton.setAttribute(
 			"aria-keyshortcuts",
 			[...hotkey.modifiers.map((modifier) => names[modifier]), hotkey.key].join("+"),
+		);
+	}
+
+	/**
+	 * Opens the options menu just under its button, the same place every time, with its first
+	 * action selected so Enter works at once. Pressing the key again closes it.
+	 */
+	private toggleOptionsMenuFromKeyboard(): void {
+		if (this.activeMenu) {
+			this.activeMenu.close();
+			return;
+		}
+		const button = this.optionsButton;
+		if (!button) return;
+		const rect = button.getBoundingClientRect();
+		this.showOptionsMenu(
+			markKeyboardMenuEvent(
+				new MouseEvent("click", { clientX: rect.left, clientY: rect.bottom }),
+			),
 		);
 	}
 
@@ -332,12 +360,17 @@ export class PaletteHistoryControls {
 	private handleKeyDown(event: KeyboardEvent): void {
 		// Composition keys belong to the IME, including Enter used to confirm text.
 		if (event.isComposing) return;
-		if (
-			matchesHotkey(event, (this.options.plugin.settings.hotkeys ?? DEFAULT_HOTKEYS).history)
-		) {
+		const hotkeys = this.options.plugin.settings.hotkeys ?? DEFAULT_HOTKEYS;
+		if (matchesHotkey(event, hotkeys.history)) {
 			event.preventDefault();
 			event.stopImmediatePropagation();
 			this.show();
+			return;
+		}
+		if (matchesHotkey(event, hotkeys.optionsMenu)) {
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			this.toggleOptionsMenuFromKeyboard();
 			return;
 		}
 		if (!this.suggest.isOpen) return;

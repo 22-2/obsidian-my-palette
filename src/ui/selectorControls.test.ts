@@ -153,6 +153,18 @@ describe("selector controls", () => {
 		expect(f.modal.choose).toHaveBeenCalledExactlyOnceWith("one");
 	});
 
+	it("opens the options menu from the keyboard with its first switch selected, and closes it again", async () => {
+		const f = await fixture();
+		expect(f.key("o", { ctrlKey: true }).defaultPrevented).toBe(true);
+		expect(paletteMenuTitles()[0]).toBe("Options");
+		expect(document.querySelector(".menu-item.selected")?.textContent).toBe(
+			"Highlight search matches",
+		);
+
+		f.key("o", { ctrlKey: true });
+		expect(isPaletteMenuOpen()).toBe(false);
+	});
+
 	it("uses selector help and shares the modal highlight preference", async () => {
 		const f = await fixture();
 		f.click(".my-palette-options-button");

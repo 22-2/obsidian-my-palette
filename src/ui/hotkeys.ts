@@ -42,6 +42,12 @@ export const HOTKEY_ACTIONS = {
 		description: "Open saved searches in any palette or selector.",
 		scopes: ["palette", "selector"],
 	},
+	optionsMenu: {
+		name: "Show options menu",
+		description:
+			"Open the options menu (the … button) of any palette or selector, with its switches and actions.",
+		scopes: ["palette", "selector"],
+	},
 	contextMenu: {
 		name: "Show result actions",
 		description: "Open the right-click menu for the active result from the keyboard.",
@@ -110,6 +116,7 @@ export const DEFAULT_HOTKEYS: PaletteHotkeys = {
 	hidePreview: { key: "H", modifiers: ["Alt"] },
 	preview: { key: "ArrowRight", modifiers: [] },
 	history: { key: "R", modifiers: ["Ctrl"] },
+	optionsMenu: { key: "O", modifiers: ["Ctrl"] },
 	contextMenu: { key: "K", modifiers: ["Ctrl"] },
 	enterMode: { key: "Tab", modifiers: [] },
 	toggleIgnored: { key: "I", modifiers: ["Ctrl"] },
@@ -195,6 +202,7 @@ export function hotkeyError(
 const MODIFIER_ACTIONS: readonly HotkeyAction[] = [
 	"hidePreview",
 	"history",
+	"optionsMenu",
 	"preview",
 	"contextMenu",
 	"enterMode",

@@ -36,6 +36,7 @@ describe("compareScopes", () => {
 		expect(names).toEqual([
 			"Hide palette or selector",
 			"Search history",
+			"Show options menu",
 			"Show result actions",
 			"Enter mode",
 			"Preview selected result",

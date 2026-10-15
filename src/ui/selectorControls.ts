@@ -81,6 +81,14 @@ export class SelectorHelpModal extends Modal {
 						description,
 					] as const,
 			),
+			...(hotkeys.optionsMenu
+				? ([
+						[
+							`${formatHotkey(hotkeys.optionsMenu)} / … button`,
+							"Open the options menu: flip switches with Enter, then Esc",
+						],
+					] as const)
+				: []),
 			[
 				`${formatHotkey(hotkeys.history)} / history button`,
 				"Restore a saved search without running an action",
