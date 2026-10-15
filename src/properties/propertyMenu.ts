@@ -1,7 +1,7 @@
 import { Notice, type App, type TFile } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import type { PropertyResult } from "src/palette/results";
-import type { PaletteMenu } from "src/ui/paletteMenu";
+import { propertyTargetPaths, type PropertyResult } from "src/palette/results";
+import type { PaletteMenu, PaletteMenuItem } from "src/ui/paletteMenu";
 import { readList } from "src/properties/propertyList";
 import { updateFrontmatter } from "src/shared/frontmatter";
 
@@ -32,7 +32,10 @@ export function populatePropertyMenu(
 			.setIcon("search")
 			.onClick(() => openPropertySearch(plugin.app, result.key, beforeSearch)),
 	);
-	if (result.inNote) {
+	const targetCount = propertyTargetPaths(result).length;
+	if (result.inNote && targetCount > 1) {
+		addBulkDeleteItem(menu, plugin.app, result, targetCount);
+	} else if (result.inNote) {
 		menu.addItem((item) =>
 			item
 				.setTitle("Copy value")
@@ -79,6 +82,79 @@ async function copyText(text: string, message: string): Promise<void> {
 	} catch {
 		new Notice("Could not copy to the clipboard.");
 	}
+}
+
+/**
+ * Deleting a key from several notes cannot be undone, so the first press turns the item into a
+ * confirmation that keeps the menu open; the second press deletes and closes.
+ */
+function addBulkDeleteItem(
+	menu: PaletteMenu,
+	app: App,
+	result: PropertyResult,
+	targetCount: number,
+): void {
+	let confirming = false;
+	let deleteItem: PaletteMenuItem | undefined;
+	const render = (item: PaletteMenuItem) => {
+		item.setTitle(
+			confirming
+				? `Click again to delete from ${targetCount} notes`
+				: `Delete property from ${targetCount} notes`,
+		)
+			.setIcon("trash-2")
+			.setWarning(true)
+			.setCta(confirming)
+			.setKeepOpen(confirming);
+	};
+	menu.addItem((item) => {
+		deleteItem = item;
+		render(item);
+		item.onClick(() => {
+			if (!confirming) {
+				confirming = true;
+				render(item);
+				return;
+			}
+			void deleteProperties(app, result);
+		});
+	});
+	// Why: moving to another item cancels the confirmation, so a later press starts over.
+	menu.onSelectionChange((selected) => {
+		if (!confirming || !deleteItem || selected === deleteItem) return;
+		confirming = false;
+		render(deleteItem);
+	});
+}
+
+/** Removes the key from every note the list spans that has it; one failing note does not stop the rest. */
+export async function deleteProperties(app: App, result: PropertyResult): Promise<void> {
+	const files = propertyTargetPaths(result).flatMap((path) => {
+		const file: TFile | null = app.vault.getFileByPath(path);
+		const frontmatter: Record<string, unknown> | undefined = file
+			? app.metadataCache.getFileCache(file)?.frontmatter
+			: undefined;
+		return file && frontmatter && result.key in frontmatter ? [file] : [];
+	});
+	let deleted = 0;
+	let failed = 0;
+	for (const file of files) {
+		const updated = await updateFrontmatter(
+			app,
+			file,
+			`delete the property ${result.key} of`,
+			(frontmatter) => {
+				delete frontmatter[result.key];
+			},
+		);
+		if (updated) deleted += 1;
+		else failed += 1;
+	}
+	if (deleted > 0)
+		new Notice(`Deleted ${result.key} from ${deleted} ${deleted === 1 ? "note" : "notes"}.`);
+	if (failed > 0)
+		new Notice(`Could not update the properties of ${failed} notes. See the console.`);
+	if (deleted === 0 && failed === 0) new Notice(`No selected note has ${result.key}.`);
 }
 
 /** Removes the key from the note the list was built from. */
