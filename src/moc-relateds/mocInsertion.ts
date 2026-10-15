@@ -40,8 +40,7 @@ async function resolveMocTarget(
 		result.mode === "snippet" ||
 		result.mode === "property" ||
 		result.mode === "search-history" ||
-		result.mode === "mode-entry" ||
-		result.mode === "settings-entry"
+		result.mode === "mode-entry"
 	)
 		return undefined;
 	return result.file;
@@ -78,8 +77,7 @@ export function addMocInsertionMenuItems(
 			result.mode === "snippet" ||
 			result.mode === "property" ||
 			result.mode === "search-history" ||
-			result.mode === "mode-entry" ||
-			result.mode === "settings-entry"
+			result.mode === "mode-entry"
 		)
 			return false;
 		if (result.mode === "everything" && (result.kind === "folder" || !result.vaultPath))

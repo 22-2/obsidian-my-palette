@@ -128,11 +128,10 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 - Everythingの結果に今ある「Show in file explorer」は、Obsidianの「File explorer」(左サイドバーのファイル一覧)と紛らわしいため、「Show in system explorer」に揃える。
 - 「Open in VS Code」のようにアプリ名を出すかどうかは、外部エディターの設定を決めてから合わせる。
 
-### HomeのSettings
+### Homeのセクション
 
-- HomeにはModes、Settings、Filesの順でセクションを並べる。
-- Settingsの項目はGeneral、Modes、File search、Shortcuts、Integrationの順。Integrationは既存のIntegrations設定ページへの入口。
-- Settings項目は設定ページを開く操作で、ファイルや検索履歴として扱わない。
+- HomeにはModes、Filesの順でセクションを並べる。Settingsのセクションは置かない。
+- 各プラグインの設定画面へは、Pluginsモードの結果の操作メニューにある「Open plugin settings」から開く。
 
 ### ショートカット表
 

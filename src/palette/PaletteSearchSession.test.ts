@@ -36,35 +36,14 @@ async function host() {
 	return { plugin, file, recordSearch };
 }
 
-describe("Home settings navigation", () => {
-	it("groups settings between modes and files, even when all modes are disabled", async () => {
+describe("Home sections", () => {
+	it("lists only files when every mode is disabled, without a Settings section", async () => {
 		const { plugin, file } = await host();
 		for (const mode of Object.values(plugin.settings.modes)) mode.enabled = false;
 		const session = new PaletteSearchSession(plugin, { modeEntries: true });
-		const results = await session.search("");
-		expect(
-			results
-				.filter((result) => result.mode === "settings-entry")
-				.map((result) => result.primary),
-		).toEqual(["General", "Modes", "File search", "Shortcuts", "Integration"]);
-		expect(paletteSectionOf(session.current, results[0])).toBe("Settings");
-		expect(paletteSectionOf(session.current, file)).toBe("Files");
+		expect(await session.search("settings")).toEqual([file]);
+		expect(paletteSectionOf(session.current, file)).toBeUndefined();
 		session.dispose();
-	});
-
-	it("keeps settings out of file-only palettes and Notes mode", async () => {
-		const { plugin } = await host();
-		const files = new PaletteSearchSession(plugin);
-		expect((await files.search("")).some((result) => result.mode === "settings-entry")).toBe(
-			false,
-		);
-		const home = new PaletteSearchSession(plugin, { modeEntries: true });
-		home.enterMode("notes");
-		expect((await home.search("")).some((result) => result.mode === "settings-entry")).toBe(
-			false,
-		);
-		files.dispose();
-		home.dispose();
 	});
 });
 
