@@ -4,6 +4,7 @@ import type { PaletteMenu } from "src/ui/paletteMenu";
 import type MyPalettePlugin from "src/main";
 import type { MocInsertionContext } from "src/moc-relateds/mocInsertion";
 import { addMocInsertionMenuItem, addMocInsertionMenuItems } from "src/moc-relateds/mocInsertion";
+import { addBookmarkMenuItems } from "src/palette/actions/bookmarkMenu";
 import { addBulkRenameMenuItem } from "src/palette/actions/bulkRenameMenu";
 import { addPropertyEditMenuItem } from "src/palette/actions/propertyEditMenu";
 import { addSelectionHeader } from "src/palette/actions/selectionHeader";
@@ -47,8 +48,8 @@ interface PaletteResultMenuOptions {
 	 */
 	onNoteActionDone?: () => void;
 	getMocContext?: () => MocInsertionContext;
-	/** Re-runs the search after a tab operation changed the open tabs. */
-	onTabsChanged?: () => void;
+	/** Re-runs the search after a tab or bookmark operation changed the listed results. */
+	onResultsChanged?: () => void;
 }
 
 /** Populates the result menu shared by modal and persistent palette surfaces. */
@@ -65,7 +66,7 @@ export function populatePaletteResultMenu({
 	onNoteActionSelected,
 	onNoteActionDone,
 	getMocContext,
-	onTabsChanged,
+	onResultsChanged,
 }: PaletteResultMenuOptions): void {
 	// Why: typing in an open menu would otherwise go to the palette's search input.
 	menu.enableFilter(app);
@@ -79,7 +80,7 @@ export function populatePaletteResultMenu({
 			menu,
 			tabs: targets,
 			activate,
-			onTabsChanged: onTabsChanged ?? (() => {}),
+			onTabsChanged: onResultsChanged ?? (() => {}),
 			onNoteActionDone,
 		});
 		return;
@@ -104,6 +105,13 @@ export function populatePaletteResultMenu({
 		addPropertyEditMenuItem(menu, plugin, selectedItems, onNoteActionSelected);
 		addMocInsertionMenuItems(menu, plugin, selectedItems, onNoteActionSelected, getMocContext);
 		addTagInsertionMenuItems(menu, plugin, selectedItems, onNoteActionDone);
+		addBookmarkMenuItems({
+			menu,
+			plugin,
+			results: selectedItems,
+			onBookmarksChanged: onResultsChanged,
+			onNoteActionDone,
+		});
 		return;
 	}
 
@@ -287,4 +295,13 @@ export function populatePaletteResultMenu({
 	// non-mutating copy actions in both palette surfaces.
 	addMocInsertionMenuItem(menu, plugin, result, onNoteActionSelected, getMocContext);
 	addTagInsertionMenuItems(menu, plugin, [result], onNoteActionDone);
+	// Why: a selection of search bookmarks has no paths, so it reaches this single-result
+	// menu; bookmark actions still apply to every selected bookmark.
+	addBookmarkMenuItems({
+		menu,
+		plugin,
+		results: targets,
+		onBookmarksChanged: onResultsChanged,
+		onNoteActionDone,
+	});
 }

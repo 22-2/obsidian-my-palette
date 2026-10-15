@@ -7,18 +7,11 @@ import {
 import type { BookmarkResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
-
-interface BookmarkItem {
-	type: string;
-	title?: string;
-	path?: string;
-	query?: string;
-	items?: BookmarkItem[];
-}
-
-interface BookmarksPlugin {
-	items?: BookmarkItem[];
-}
+import {
+	BOOKMARK_PATH_SEPARATOR,
+	getBookmarksInstance,
+	type BookmarkEntry,
+} from "src/search/bookmark/bookmarks";
 
 /** Reads the core Bookmarks plugin's nested items and exposes usable entries for the palette. */
 export class BookmarkProvider implements PaletteProvider<BookmarkResult> {
@@ -28,14 +21,7 @@ export class BookmarkProvider implements PaletteProvider<BookmarkResult> {
 	) {}
 
 	async search({ query }: PaletteSearchRequest): Promise<BookmarkResult[]> {
-		const plugin = (
-			this.app as unknown as {
-				internalPlugins?: {
-					getEnabledPluginById: (id: string) => BookmarksPlugin | undefined;
-				};
-			}
-		).internalPlugins?.getEnabledPluginById("bookmarks");
-		const results = this.flatten(plugin?.items ?? []);
+		const results = this.flatten(getBookmarksInstance(this.app)?.items ?? []);
 		// search種別には紐づくファイルがないため、file種別のみ共通除外を適用する。
 		const visible = filterExcludedFolders(this.excludedFolders, results, (result) =>
 			result.kind === "file" ? result.file?.path : undefined,
@@ -47,10 +33,10 @@ export class BookmarkProvider implements PaletteProvider<BookmarkResult> {
 		]).map(({ obj }) => obj);
 	}
 
-	private flatten(items: BookmarkItem[], groupPath = ""): BookmarkResult[] {
+	private flatten(items: BookmarkEntry[], groupPath = ""): BookmarkResult[] {
 		return items.flatMap((item) => {
 			const label = item.title || item.path || item.query || "Untitled";
-			const display = groupPath ? `${groupPath} › ${label}` : label;
+			const display = groupPath ? `${groupPath}${BOOKMARK_PATH_SEPARATOR}${label}` : label;
 			if (item.type === "group") return this.flatten(item.items ?? [], display);
 			if (item.type === "file" && item.path) {
 				const file = this.app.vault.getAbstractFileByPath(item.path);
@@ -64,6 +50,7 @@ export class BookmarkProvider implements PaletteProvider<BookmarkResult> {
 						icon: "bookmark",
 						kind: "file",
 						file,
+						entry: item,
 					},
 				];
 			}
@@ -77,6 +64,7 @@ export class BookmarkProvider implements PaletteProvider<BookmarkResult> {
 						icon: "search",
 						kind: "search",
 						query: item.query,
+						entry: item,
 					},
 				];
 			}

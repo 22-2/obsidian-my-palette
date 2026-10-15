@@ -23,6 +23,9 @@ vi.mock("src/palette/actions/bulkRenameMenu", () => ({
 vi.mock("src/palette/actions/propertyEditMenu", () => ({
 	addPropertyEditMenuItem: vi.fn(),
 }));
+vi.mock("src/palette/actions/bookmarkMenu", () => ({
+	addBookmarkMenuItems: vi.fn(),
+}));
 vi.mock("src/palette/actions/fileMoveMenu", () => ({
 	addFileMoveMenuItem: vi.fn(),
 }));
@@ -243,4 +246,32 @@ it("turns on the action filter for every result menu", () => {
 	const f = fixture(false);
 	populatePaletteResultMenu(f.options);
 	expect(f.options.menu.enableFilter).toHaveBeenCalledOnce();
+});
+
+it("adds bookmark actions for the whole selection and refreshes after changes", async () => {
+	const { addBookmarkMenuItems } = await import("src/palette/actions/bookmarkMenu");
+	const f = fixture(false);
+	const onResultsChanged = vi.fn();
+	const result: PaletteResult = {
+		id: "bookmark:search",
+		mode: "bookmark",
+		primary: "Query",
+		secondary: "",
+		icon: "search",
+		kind: "search",
+		query: "q",
+	};
+	const second = { ...result, id: "bookmark:search:2" };
+	populatePaletteResultMenu({
+		...f.options,
+		result,
+		selectedItems: [result, second],
+		onResultsChanged,
+	});
+	expect(addBookmarkMenuItems).toHaveBeenLastCalledWith(
+		expect.objectContaining({
+			results: [result, second],
+			onBookmarksChanged: onResultsChanged,
+		}),
+	);
 });
