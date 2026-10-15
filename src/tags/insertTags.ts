@@ -1,6 +1,11 @@
 import { getAllTags, Notice, parseFrontMatterTags, type App, type TFile } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import { mergeFrontmatterTags, removeFrontmatterTags } from "src/shared/frontmatter";
+import {
+	mergeFrontmatterTags,
+	removeFrontmatterTags,
+	setOrDeleteFrontmatterList,
+	updateFrontmatter,
+} from "src/shared/frontmatter";
 import { relationPaths } from "src/shared/noteRelations";
 import { buildTagChoices, tagKey, type TagChoice } from "src/tags/tagChoices";
 import type { MultiSelectChanges } from "src/ui/multiSelectChanges";
@@ -100,18 +105,16 @@ async function applyTagChanges(
 		const existing = frontmatterTags(app, file);
 		const removals = changes.remove.filter((tag) => hasTag(existing, tag));
 		if (changes.add.length === 0 && removals.length === 0) continue;
-		try {
-			await app.fileManager.processFrontMatter(file, (frontmatter: { tags?: unknown }) => {
-				let tags = frontmatter.tags;
-				if (changes.add.length > 0) tags = mergeFrontmatterTags(tags, changes.add);
-				if (removals.length > 0) tags = removeFrontmatterTags(tags, removals);
-				if (Array.isArray(tags) && tags.length > 0) frontmatter.tags = tags;
-				else delete frontmatter.tags;
-			});
+		const saved = await updateFrontmatter(app, file, "update tags of", (frontmatter) => {
+			let tags = frontmatter.tags;
+			if (changes.add.length > 0) tags = mergeFrontmatterTags(tags, changes.add);
+			if (removals.length > 0) tags = removeFrontmatterTags(tags, removals);
+			setOrDeleteFrontmatterList(frontmatter, "tags", Array.isArray(tags) ? tags : []);
+		});
+		if (saved) {
 			updated += 1;
-		} catch (error) {
+		} else {
 			failed += 1;
-			console.error(`Failed to update tags of ${file.path}`, error);
 		}
 	}
 	if (changes.add.length > 0) recentTags.record(...changes.add);
@@ -160,17 +163,15 @@ async function removeTag(
 		const inline = app.metadataCache
 			.getFileCache(file)
 			?.tags?.some((entry) => tagKey(entry.tag) === key);
-		try {
-			await app.fileManager.processFrontMatter(file, (frontmatter: { tags?: unknown }) => {
-				const rest = removeFrontmatterTags(frontmatter.tags, [tag]);
-				if (rest.length > 0) frontmatter.tags = rest;
-				else delete frontmatter.tags;
-			});
+		const saved = await updateFrontmatter(app, file, "remove tag from", (frontmatter) => {
+			const rest = removeFrontmatterTags(frontmatter.tags, [tag]);
+			setOrDeleteFrontmatterList(frontmatter, "tags", rest);
+		});
+		if (saved) {
 			removal.removed += 1;
 			if (!inline) removal.noLongerUsed += 1;
-		} catch (error) {
+		} else {
 			failed += 1;
-			console.error(`Failed to remove tag from ${file.path}`, error);
 		}
 	}
 	if (removal.removed > 0)

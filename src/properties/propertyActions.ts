@@ -5,6 +5,7 @@ import { insertTags } from "src/tags/insertTags";
 import { editListProperty } from "src/properties/propertyValueSelector";
 import { editPropertyValue } from "src/properties/propertyInputSelector";
 import { SelectionModal } from "src/ui/selectionModal";
+import { updateFrontmatter } from "src/shared/frontmatter";
 
 /** Whether the palette should close once the edit has started. */
 export type PropertyEditOutcome = "close" | "stay";
@@ -52,12 +53,15 @@ export async function editPropertyResult(
 async function toggleCheckbox(app: App, file: TFile, key: string): Promise<void> {
 	const current: unknown = app.metadataCache.getFileCache(file)?.frontmatter?.[key];
 	const next = current !== true;
-	try {
-		await app.fileManager.processFrontMatter(file, (frontmatter: Record<string, unknown>) => {
+	const updated = await updateFrontmatter(
+		app,
+		file,
+		`update the property ${key} of`,
+		(frontmatter) => {
 			frontmatter[key] = next;
-		});
-	} catch (error) {
-		console.error(`Failed to update the property ${key} of ${file.path}`, error);
+		},
+	);
+	if (!updated) {
 		new Notice(`Could not update the properties of ${file.basename}. See the console.`);
 		return;
 	}

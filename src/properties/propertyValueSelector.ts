@@ -6,6 +6,7 @@ import type { EditResult } from "src/properties/propertyInputSelector";
 import { typedNewValue, type NewValueRules } from "src/shared/newValue";
 import { MultiSelectModal, type MultiSelectCandidate } from "src/ui/MultiSelectModal";
 import { changeCount, type MultiSelectChanges } from "src/ui/multiSelectChanges";
+import { setOrDeleteFrontmatterList, updateFrontmatter } from "src/shared/frontmatter";
 
 // Unofficial API: the values already used for a key anywhere in the vault. A
 // missing function leaves the list with only the note's own values.
@@ -38,22 +39,23 @@ export async function applyListChanges(
 	key: string,
 	changes: MultiSelectChanges<string>,
 ): Promise<boolean> {
-	try {
-		await app.fileManager.processFrontMatter(file, (frontmatter: Record<string, unknown>) => {
+	const updated = await updateFrontmatter(
+		app,
+		file,
+		`update the property ${key} of`,
+		(frontmatter) => {
 			const current = readList(frontmatter[key]);
 			const next = [
 				...current.filter((value) => !changes.remove.includes(value)),
 				...changes.add.filter((value) => !current.includes(value)),
 			];
-			if (next.length > 0) frontmatter[key] = next;
-			else delete frontmatter[key];
-		});
-		return true;
-	} catch (error) {
-		console.error(`Failed to update the property ${key} of ${file.path}`, error);
+			setOrDeleteFrontmatterList(frontmatter, key, next);
+		},
+	);
+	if (!updated) {
 		new Notice(`Could not update the properties of ${file.basename}. See the console.`);
-		return false;
 	}
+	return updated;
 }
 
 /** Opens the value selector for a list property of the note and writes the result. */

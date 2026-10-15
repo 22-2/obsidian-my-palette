@@ -7,6 +7,7 @@ import {
 } from "src/properties/propertyInput";
 import { vaultValuesOf } from "src/properties/propertyValueSelector";
 import { SelectionModal } from "src/ui/selectionModal";
+import { updateFrontmatter } from "src/shared/frontmatter";
 
 interface PropertyInputOptions {
 	placeholder: string;
@@ -90,14 +91,15 @@ async function writeValue(
 	key: string,
 	value: string | number,
 ): Promise<boolean> {
-	try {
-		await app.fileManager.processFrontMatter(file, (frontmatter: Record<string, unknown>) => {
+	const updated = await updateFrontmatter(
+		app,
+		file,
+		`update the property ${key} of`,
+		(frontmatter) => {
 			frontmatter[key] = value;
-		});
-		return true;
-	} catch (error) {
-		console.error(`Failed to update the property ${key} of ${file.path}`, error);
+		},
+	);
+	if (!updated)
 		new Notice(`Could not update the properties of ${file.basename}. See the console.`);
-		return false;
-	}
+	return updated;
 }

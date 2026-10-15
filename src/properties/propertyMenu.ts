@@ -3,6 +3,7 @@ import type MyPalettePlugin from "src/main";
 import type { PropertyResult } from "src/palette/results";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { readList } from "src/properties/propertyList";
+import { updateFrontmatter } from "src/shared/frontmatter";
 
 /**
  * The text copied for a property value. A list is copied one item per line, and a
@@ -87,13 +88,14 @@ async function deleteProperty(app: App, result: PropertyResult): Promise<void> {
 		new Notice("The note for this property no longer exists.");
 		return;
 	}
-	try {
-		await app.fileManager.processFrontMatter(file, (frontmatter: Record<string, unknown>) => {
+	const updated = await updateFrontmatter(
+		app,
+		file,
+		`delete the property ${result.key} of`,
+		(frontmatter) => {
 			delete frontmatter[result.key];
-		});
-		new Notice(`Deleted ${result.key} from ${file.basename}.`);
-	} catch (error) {
-		console.error(`Failed to delete the property ${result.key} of ${file.path}`, error);
-		new Notice(`Could not update the properties of ${file.basename}. See the console.`);
-	}
+		},
+	);
+	if (updated) new Notice(`Deleted ${result.key} from ${file.basename}.`);
+	else new Notice(`Could not update the properties of ${file.basename}. See the console.`);
 }

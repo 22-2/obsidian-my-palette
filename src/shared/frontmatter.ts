@@ -1,3 +1,31 @@
+import type { App, TFile } from "obsidian";
+
+/** Write a frontmatter change and report failures consistently to the console. */
+export async function updateFrontmatter(
+	app: App,
+	file: TFile,
+	operation: string,
+	update: (frontmatter: Record<string, unknown>) => void,
+): Promise<boolean> {
+	try {
+		await app.fileManager.processFrontMatter(file, update);
+		return true;
+	} catch (error) {
+		console.error(`Failed to ${operation} ${file.path}`, error);
+		return false;
+	}
+}
+
+/** Store a non-empty list, or remove its key when the list is empty. */
+export function setOrDeleteFrontmatterList(
+	frontmatter: Record<string, unknown>,
+	key: string,
+	values: readonly unknown[],
+): void {
+	if (values.length > 0) frontmatter[key] = values;
+	else delete frontmatter[key];
+}
+
 /**
  * Normalize the only frontmatter value currently used by file ordering.
  * Invalid values are treated as absent so a malformed property cannot produce
