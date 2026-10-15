@@ -234,54 +234,59 @@ function normalizeModes(source: Record<string, unknown>): ModeSettingsMap {
 	) as ModeSettingsMap;
 	// A new mode must not steal an alias the user already assigned to another mode.
 	if (!rawModes.notes) {
-		const taken = new Set(
-			modeIds.filter((id) => id !== "notes").map((id) => modes[id].alias.toLocaleLowerCase()),
-		);
-		let alias = "n";
-		for (let suffix = 1; taken.has(alias); suffix++)
-			alias = suffix === 1 ? "notes" : `notes${suffix}`;
-		modes.notes.alias = alias;
+		modes.notes.alias = unusedAlias("n", "notes", "notes", modeIds, modes);
 	}
 	// Plugins arrived after the other modes; keep a stored custom alias that
 	// collides with it by moving the new mode to a free fallback.
 	if (!rawModes.plugins) {
-		const taken = new Set(
-			modeIds
-				.filter((id) => id !== "plugins")
-				.map((id) => modes[id].alias.toLocaleLowerCase()),
+		modes.plugins.alias = unusedAlias(
+			DEFAULT_SETTINGS.modes.plugins.alias,
+			"plugins",
+			"plugins",
+			modeIds,
+			modes,
 		);
-		let alias = DEFAULT_SETTINGS.modes.plugins.alias;
-		for (let suffix = 1; taken.has(alias.toLocaleLowerCase()); suffix++)
-			alias = suffix === 1 ? "plugins" : `plugins${suffix}`;
-		modes.plugins.alias = alias;
 	}
 	// Snippets arrived with plugins; `sn` shares its first letter with `sc`
 	// but aliases match as `alias + Space`, so only an identical alias collides.
 	if (!rawModes.snippets) {
-		const taken = new Set(
-			modeIds
-				.filter((id) => id !== "snippets")
-				.map((id) => modes[id].alias.toLocaleLowerCase()),
+		modes.snippets.alias = unusedAlias(
+			DEFAULT_SETTINGS.modes.snippets.alias,
+			"snippets",
+			"snippets",
+			modeIds,
+			modes,
 		);
-		let alias = DEFAULT_SETTINGS.modes.snippets.alias;
-		for (let suffix = 1; taken.has(alias.toLocaleLowerCase()); suffix++)
-			alias = suffix === 1 ? "snippets" : `snippets${suffix}`;
-		modes.snippets.alias = alias;
 	}
 	// Properties arrived last; `pr` shares its first letter with `p` (Plugins),
 	// which is fine because aliases match as `alias + Space`.
 	if (!rawModes.properties) {
-		const taken = new Set(
-			modeIds
-				.filter((id) => id !== "properties")
-				.map((id) => modes[id].alias.toLocaleLowerCase()),
+		modes.properties.alias = unusedAlias(
+			DEFAULT_SETTINGS.modes.properties.alias,
+			"properties",
+			"properties",
+			modeIds,
+			modes,
 		);
-		let alias = DEFAULT_SETTINGS.modes.properties.alias;
-		for (let suffix = 1; taken.has(alias.toLocaleLowerCase()); suffix++)
-			alias = suffix === 1 ? "properties" : `properties${suffix}`;
-		modes.properties.alias = alias;
 	}
 	return modes;
+}
+
+function unusedAlias(
+	preferred: string,
+	fallback: string,
+	modeId: PaletteModeId,
+	modeIds: readonly PaletteModeId[],
+	modes: ModeSettingsMap,
+): string {
+	const taken = new Set(
+		modeIds.filter((id) => id !== modeId).map((id) => modes[id].alias.toLocaleLowerCase()),
+	);
+	if (!taken.has(preferred.toLocaleLowerCase())) return preferred;
+	for (let suffix = 1; ; suffix++) {
+		const candidate = suffix === 1 ? fallback : `${fallback}${suffix}`;
+		if (!taken.has(candidate.toLocaleLowerCase())) return candidate;
+	}
 }
 
 function normalizePaletteDisplay(
