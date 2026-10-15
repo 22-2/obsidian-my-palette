@@ -7,6 +7,7 @@ import {
 	openPaletteWith,
 	pluginVaultOptions,
 	runPaletteCommand,
+	waitForResolvedLinks,
 } from "./support.mts";
 
 test.use({ vaultOptions: pluginVaultOptions() });
@@ -116,6 +117,7 @@ test("the highlight option is not offered in the palette and works in a selector
 
 test("moving a link search preserves its fixed mode and source note", async ({ obsidian }) => {
 	await obsidian.createNote("Source.md", "[[Alpha plan]]");
+	await waitForResolvedLinks(obsidian, { "Source.md": ["Alpha plan.md"] });
 	await obsidian.open("Source.md");
 	await runPaletteCommand(obsidian, "open-outgoing-link-list");
 	const page = obsidian.page;

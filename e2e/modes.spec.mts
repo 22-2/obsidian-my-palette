@@ -7,6 +7,7 @@ import {
 	pluginVaultOptions,
 	rowLabels,
 	runPaletteCommand,
+	waitForResolvedLinks,
 } from "./support.mts";
 
 test.use({ vaultOptions: pluginVaultOptions() });
@@ -75,6 +76,10 @@ test("o lists outgoing links and b lists backlinks of the active note", async ({
 	await obsidian.createNote("Target one.md", "one");
 	await obsidian.createNote("Target two.md", "two");
 	await obsidian.createNote("Referrer.md", "points to [[Hub]]");
+	await waitForResolvedLinks(obsidian, {
+		"Hub.md": ["Target one.md", "Target two.md"],
+		"Referrer.md": ["Hub.md"],
+	});
 	await obsidian.open("Hub.md");
 
 	const page = await openHomeWith(obsidian, "o ");

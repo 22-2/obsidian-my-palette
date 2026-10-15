@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -12,64 +13,114 @@ concurrency:
 permissions:
   contents: read
 
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+env:
+  # Keep in sync with devEngines.packageManager in package.json.
+  PNPM_VERSION: 12.9.1
+  # obsidian-e2e-toolkit requires Node.js 23 or later, so every job uses the same version.
+  NODE_VERSION: 24
 
-      # Keep in sync with devEngines.packageManager in package.json.
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v4
         with:
-          version: 12.9.1
-
-      - uses: actions/setup-node@v4
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
-
-      # The unit-test job never launches Obsidian, so skip the large Electron download.
+      # Only the e2e job launches Obsidian, so skip the large Electron download.
       - run: pnpm install --frozen-lockfile
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
-
       - name: Format check
-        run: pnpm run format:check
+        run: pnpm format:check
+      - name: Lint
+        run: pnpm lint
 
+  typecheck:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
       - name: Type check
-        run: pnpm run check-types
+        run: pnpm check-types
+      - name: Build
+        run: pnpm build
 
+  unit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
       - name: Unit tests
         run: pnpm test
 
   e2e:
-    runs-on: ubuntu-latest
+    # Pinned because ubuntu-latest moves to Ubuntu 26, where Electron has not been tried yet.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     # obsidian-e2e-toolkit documents that Electron can fail to launch on GitHub's
     # Ubuntu runners (microsoft/playwright#11932). Report the result without
     # blocking merges until the job has proven stable.
     continue-on-error: true
+    strategy:
+      # Let every shard finish so one failure does not hide the others.
+      fail-fast: false
+      matrix:
+        # Split the suite across runners. Playwright assigns whole files to one shard.
+        shard: [1, 2]
+    env:
+      CI: true
     steps:
-      - uses: actions/checkout@v4
-
+      - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v4
         with:
-          version: 12.9.1
-
-      # The toolkit requires Node.js 23 or later.
-      - uses: actions/setup-node@v4
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
-
+      # @electron/get keeps the downloaded Electron zip here, so `pnpm e2e` skips the download.
+      - name: Cache Electron
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/electron
+          key: ${{ runner.os }}-electron-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-
       - run: pnpm install --frozen-lockfile
-
       - name: End-to-end tests
-        run: xvfb-run -a pnpm e2e
-
+        # Pass the shard straight after the script name: `pnpm e2e -- --shard` would hand
+        # Playwright a literal "--" and every shard would run the whole suite.
+        run: xvfb-run -a pnpm e2e --shard=${{ matrix.shard }}/2
       - name: Upload failure artifacts
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
-          name: e2e-test-results
+          name: e2e-test-results-${{ matrix.shard }}
           path: test-results/
           if-no-files-found: ignore

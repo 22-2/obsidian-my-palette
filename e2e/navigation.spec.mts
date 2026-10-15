@@ -1,5 +1,11 @@
 import { expect, test } from "./fixtures.mts";
-import { MODAL_INPUT, MODAL_ROW, pluginVaultOptions, runPaletteCommand } from "./support.mts";
+import {
+	MODAL_INPUT,
+	MODAL_ROW,
+	pluginVaultOptions,
+	runPaletteCommand,
+	waitForResolvedLinks,
+} from "./support.mts";
 
 test.use({ vaultOptions: pluginVaultOptions() });
 
@@ -10,6 +16,7 @@ const HEADING = ".my-palette-section-heading";
 test.beforeEach(async ({ obsidian }) => {
 	await obsidian.createNote("Hub.md", "# Hub");
 	await obsidian.createNote("Referrer.md", "points to [[Hub]]");
+	await waitForResolvedLinks(obsidian, { "Referrer.md": ["Hub.md"] });
 	await obsidian.open("Hub.md");
 });
 

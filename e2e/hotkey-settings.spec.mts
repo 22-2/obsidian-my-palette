@@ -106,11 +106,11 @@ test("the Shortcuts table records changes, rejects conflicts and restores defaul
 
 	// The filter narrows the table by command, keybinding or place.
 	const filter = settingsPage.getByRole("searchbox", { name: "Filter shortcuts" });
-	await filter.fill("mutual");
+	await filter.fill("history");
 	await expect(settingsPage.locator("tr.my-palette-shortcuts__row:visible")).toHaveCount(1);
-	await expect(row("Toggle Mutual")).toBeVisible();
+	await expect(row("Search history")).toBeVisible();
 	await filter.fill("");
-	await expect(settingsPage.locator("tr.my-palette-shortcuts__row:visible")).toHaveCount(9);
+	await expect(settingsPage.locator("tr.my-palette-shortcuts__row:visible")).toHaveCount(8);
 
 	// Only the changed binding is kept after a reload, and it works in the palette.
 	await key.click();
