@@ -33,6 +33,7 @@ import { IntegrationAvailability } from "src/app/integrationAvailability";
 import { getVaultRootPath } from "src/ignored-notes/ignoredPaths";
 import { openPluginSettings } from "src/search/plugin/pluginSettings";
 import "../styles.css";
+import { ICONS } from "src/ui/icons";
 
 const logger = log.withTag("MyPalette");
 const debugLog = (message: string, detail?: unknown): void => logger.debug(message, detail);
@@ -203,7 +204,7 @@ export default class MyPalettePlugin extends Plugin {
 			mode: "search-history",
 			primary: entry.input,
 			secondary: "Search history",
-			icon: "history",
+			icon: ICONS.history,
 			...entry,
 		}));
 	}

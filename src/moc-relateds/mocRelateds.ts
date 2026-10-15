@@ -24,6 +24,8 @@ import { matchedMetadataPresentation } from "src/palette/resultPresentation";
 import { relationPaths } from "src/shared/noteRelations";
 import { isExcludedFolder } from "src/search/excludedFolders";
 import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
+import { addOpenMenuItems } from "src/ui/menuActions";
+import { ICONS } from "src/ui/icons";
 
 function toRelatedCandidate(
 	app: App,
@@ -48,7 +50,7 @@ function toRelatedCandidate(
 		item: {
 			label: result.primary,
 			description: path,
-			icon: "file-text",
+			icon: ICONS.note,
 			// Show matching metadata to explain hits with no query text in the name.
 			...matchedMetadataPresentation(result.matchedTags ?? [], result.matchedKeywords ?? []),
 			badge: ignored
@@ -81,7 +83,7 @@ function toCandidateResult(plugin: MyPalettePlugin, item: SelectionItem): FileRe
 		mode: "file",
 		primary: item.label,
 		secondary: vaultPath,
-		icon: "file-text",
+		icon: ICONS.note,
 		vaultPath,
 		file: file instanceof TFile ? file : undefined,
 		ignored,
@@ -117,42 +119,24 @@ function populateCandidateMenu(
 ): void {
 	const result = toCandidateResult(plugin, item);
 	if (!result) return;
-	menu.addItem((menuItem) =>
-		menuItem
-			.setTitle("Open")
-			.setIcon("external-link")
-			.onClick(() => {
-				close();
-				void runCandidateAction(plugin, result, "primary");
-			}),
-	);
-	menu.addItem((menuItem) =>
-		menuItem
-			.setTitle("Open in new tab (background)")
-			.setIcon("panel-top-open")
-			.onClick(() => {
-				close();
-				void openCandidateInBackground(plugin, result);
-			}),
-	);
-	menu.addItem((menuItem) =>
-		menuItem
-			.setTitle("Open side by side")
-			.setIcon("separator-vertical")
-			.onClick(() => {
-				close();
-				void runCandidateAction(plugin, result, "vertical");
-			}),
-	);
-	menu.addItem((menuItem) =>
-		menuItem
-			.setTitle("Open below")
-			.setIcon("separator-horizontal")
-			.onClick(() => {
-				close();
-				void runCandidateAction(plugin, result, "horizontal");
-			}),
-	);
+	addOpenMenuItems(menu, {
+		open: () => {
+			close();
+			void runCandidateAction(plugin, result, "primary");
+		},
+		openInBackground: () => {
+			close();
+			void openCandidateInBackground(plugin, result);
+		},
+		openSideBySide: () => {
+			close();
+			void runCandidateAction(plugin, result, "vertical");
+		},
+		openBelow: () => {
+			close();
+			void runCandidateAction(plugin, result, "horizontal");
+		},
+	});
 	addCopyPathMenuItems(
 		menu,
 		{
@@ -212,7 +196,7 @@ abstract class MocRelatedsModal extends MultiSelectModal<string> {
 		this.addSwitch({
 			id: "mutual",
 			label: "Mutual",
-			icon: "arrow-left-right",
+			icon: ICONS.mutualLinks,
 			description: "Also update the note's link to the MOC",
 			value: this.mutual,
 			onChange: (value) => {

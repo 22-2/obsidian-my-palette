@@ -5,6 +5,7 @@ import { SelectorHelpModal, type SelectorControls } from "src/ui/selectorControl
 import { SuggestionPanel, type SuggestionPanelView } from "src/ui/suggestionPanel";
 import type { PanelSwitch, PanelSwitchOptions } from "src/ui/panelSwitch";
 import { DEFAULT_HOTKEYS, matchesHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
+import { ICONS } from "src/ui/icons";
 
 export interface SuggestModalProps<T> {
 	getHotkeys?: () => PaletteHotkeys;
@@ -294,7 +295,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		menu.addItem((item) =>
 			item
 				.setTitle(`${controls.actionLabel} selected`)
-				.setIcon("corner-down-left")
+				.setIcon(ICONS.confirm)
 				.setDisabled(candidate === undefined)
 				.onClick(() => {
 					if (candidate !== undefined) this.onChooseSuggestion(candidate, event);

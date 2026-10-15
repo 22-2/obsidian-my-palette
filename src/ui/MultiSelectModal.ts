@@ -11,6 +11,8 @@ import {
 	pendingChanges,
 	type MultiSelectChanges,
 } from "src/ui/multiSelectChanges";
+import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
+import { ICONS } from "src/ui/icons";
 
 /** One selectable row. `value` is what the modal resolves with when the row is checked. */
 export interface MultiSelectCandidate<V> {
@@ -187,9 +189,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		this.addCheckMenuItems(menu, targets);
 		this.addRemovalMenuItem(menu, targets);
 		menu.addItem((item) =>
-			item
-				.setTitle("Clear changes")
-				.setIcon("square")
+			withAction(item, MENU_ACTIONS.clearChanges)
 				.setDisabled(this.toggled.size === 0)
 				.onClick(() => this.clearPendingChanges()),
 		);
@@ -342,7 +342,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 			menu.addItem((item) =>
 				item
 					.setTitle(`${allChecked ? "Uncheck" : "Check"}${suffix}`)
-					.setIcon(allChecked ? "square" : "square-check")
+					.setIcon(allChecked ? ICONS.unchecked : ICONS.checked)
 					.onClick(() => this.toggleChecks(targets)),
 			);
 		}
@@ -357,7 +357,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 						addsPending ? "now" : "checked",
 					),
 				)
-				.setIcon("corner-down-left")
+				.setIcon(ICONS.confirm)
 				.onClick(() => this.confirm(changes)),
 		);
 	}
@@ -373,7 +373,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		menu.addItem((item) =>
 			item
 				.setTitle(removable.length > 1 ? `${label} (${removable.length} selected)` : label)
-				.setIcon("trash-2")
+				.setIcon(ICONS.delete)
 				.onClick(() => {
 					void (async () => {
 						// Why: removals may rewrite the same note, so run them one at a time.
@@ -398,7 +398,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 			attr: { type: "button", title: "Checked items" },
 		});
 		container.insertBefore(button, container.querySelector(".my-palette-options-button"));
-		setIcon(button, "list-checks");
+		setIcon(button, ICONS.selection);
 		this.checkedCountEl = button.createSpan("my-palette-checked-button__count");
 		this.checkedButtonEl = button;
 		// Keep focus in the input so typing and keyboard selection continue after a click.
@@ -428,7 +428,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		menu.addItem((item) =>
 			item
 				.setTitle(runTitle(changes, this.multiSelect.actionLabel, "checked"))
-				.setIcon("corner-down-left")
+				.setIcon(ICONS.confirm)
 				.onClick(() => this.confirm(changes)),
 		);
 		menu.addSeparator();
@@ -437,16 +437,13 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 			menu.addItem((item) =>
 				item
 					.setTitle(candidate.item.label)
-					.setIcon(this.isChecked(candidate) ? "square-check" : "square")
+					.setIcon(this.isChecked(candidate) ? ICONS.checked : ICONS.unchecked)
 					.onClick(() => this.toggleChecks([candidate])),
 			);
 		}
 		menu.addSeparator();
 		menu.addItem((item) =>
-			item
-				.setTitle("Clear changes")
-				.setIcon("square")
-				.onClick(() => this.clearPendingChanges()),
+			withAction(item, MENU_ACTIONS.clearChanges).onClick(() => this.clearPendingChanges()),
 		);
 		menu.setParentElement(this.modalEl);
 		showMenuAtEvent(menu, event);

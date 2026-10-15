@@ -7,6 +7,7 @@ import {
 import type { SmartConnectionResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { ICONS } from "src/ui/icons";
 
 interface SmartSource {
 	vec?: number[];
@@ -67,7 +68,7 @@ export class SmartConnectionProvider implements PaletteProvider<SmartConnectionR
 					mode: "smart" as const,
 					primary: file.basename,
 					secondary: file.path,
-					icon: "brain-circuit",
+					icon: ICONS.smartConnections,
 					file,
 					score,
 				},

@@ -9,6 +9,7 @@ import {
 } from "src/ui/hotkeys";
 import { markKeyboardMenuEvent } from "src/ui/menus";
 import { PanelSwitch, type PanelSwitchOptions } from "src/ui/panelSwitch";
+import { ICONS } from "src/ui/icons";
 
 export interface SuggestionPanelProps<T> {
 	getHotkeys?: () => PaletteHotkeys;
@@ -129,7 +130,7 @@ export class SuggestionPanel<T> extends Component {
 		const inputContainer = this.rootEl.createDiv("prompt-input-container");
 		if (surface === "view") {
 			const searchIcon = inputContainer.createSpan("my-palette-panel__search-icon");
-			setIcon(searchIcon, "search");
+			setIcon(searchIcon, ICONS.search);
 		}
 		this.modeChipEl = inputContainer.createDiv({
 			cls: "my-palette-mode-chip",

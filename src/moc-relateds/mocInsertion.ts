@@ -7,6 +7,7 @@ import {
 	insertFileToMocRelateds,
 } from "src/moc-relateds/mocRelateds";
 import { materializeIgnoredNote } from "src/ignored-notes/ignoredNoteMaterializer";
+import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 
 /** Resolves a palette result to a vault note for the shared MOC menu action. */
 async function resolveMocTarget(
@@ -87,40 +88,37 @@ export function addMocInsertionMenuItems(
 	if (!insertableResults.length) return;
 	menu.addSeparator();
 	menu.addItem((item) =>
-		item
-			.setTitle("Insert into MOC Relateds")
-			.setIcon("list-plus")
-			.onClick(() => {
-				onSelected?.();
-				void (async () => {
-					const targets = new Map<string, TFile>();
-					let unavailableCount = 0;
-					for (const result of insertableResults) {
-						const target = await resolveMocTarget(plugin, result);
-						if (target) targets.set(target.path, target);
-						else unavailableCount++;
-					}
-					if (unavailableCount === 1 && insertableResults.length === 1)
-						new Notice("This result is not an available vault note.");
-					else if (unavailableCount > 0)
-						new Notice(
-							`${unavailableCount} selected results are not available vault notes.`,
+		withAction(item, MENU_ACTIONS.insertIntoMoc).onClick(() => {
+			onSelected?.();
+			void (async () => {
+				const targets = new Map<string, TFile>();
+				let unavailableCount = 0;
+				for (const result of insertableResults) {
+					const target = await resolveMocTarget(plugin, result);
+					if (target) targets.set(target.path, target);
+					else unavailableCount++;
+				}
+				if (unavailableCount === 1 && insertableResults.length === 1)
+					new Notice("This result is not an available vault note.");
+				else if (unavailableCount > 0)
+					new Notice(
+						`${unavailableCount} selected results are not available vault notes.`,
+					);
+				if (!targets.size) return;
+				const context = getContext?.();
+				// Why: each insertion reads and updates the shared MOC, so process targets
+				// serially to keep one selection from overwriting another's changes.
+				for (const target of targets.values()) {
+					if (context)
+						await insertFileToMocRelateds(
+							plugin,
+							context.mocFile,
+							target,
+							context.mocLeaf,
 						);
-					if (!targets.size) return;
-					const context = getContext?.();
-					// Why: each insertion reads and updates the shared MOC, so process targets
-					// serially to keep one selection from overwriting another's changes.
-					for (const target of targets.values()) {
-						if (context)
-							await insertFileToMocRelateds(
-								plugin,
-								context.mocFile,
-								target,
-								context.mocLeaf,
-							);
-						else await insertFileToActiveMocRelateds(plugin, target);
-					}
-				})();
-			}),
+					else await insertFileToActiveMocRelateds(plugin, target);
+				}
+			})();
+		}),
 	);
 }

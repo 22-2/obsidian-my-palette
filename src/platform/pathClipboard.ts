@@ -1,5 +1,6 @@
 import { Notice } from "obsidian";
 import type { PaletteMenu } from "src/ui/paletteMenu";
+import { MENU_ACTIONS, withAction, type MenuAction } from "src/ui/menuActions";
 
 export interface CopyablePaths {
 	fileName?: string;
@@ -17,26 +18,21 @@ export function addCopyPathMenuItems(
 	menu.addSeparator();
 	if (paths.fileName) {
 		menu.addItem((item) =>
-			item
-				.setTitle("Copy file name")
-				.setIcon("copy")
-				.onClick(() => onCopy(paths.fileName!)),
+			withAction(item, MENU_ACTIONS.copyFileName).onClick(() => onCopy(paths.fileName!)),
 		);
 	}
 	if (paths.relativePath) {
 		menu.addItem((item) =>
-			item
-				.setTitle("Copy path relative to vault")
-				.setIcon("copy")
-				.onClick(() => onCopy(paths.relativePath!)),
+			withAction(item, MENU_ACTIONS.copyRelativePath).onClick(() =>
+				onCopy(paths.relativePath!),
+			),
 		);
 	}
 	if (paths.absolutePath) {
 		menu.addItem((item) =>
-			item
-				.setTitle("Copy absolute path")
-				.setIcon("clipboard-copy")
-				.onClick(() => onCopy(paths.absolutePath!)),
+			withAction(item, MENU_ACTIONS.copyAbsolutePath).onClick(() =>
+				onCopy(paths.absolutePath!),
+			),
 		);
 	}
 }
@@ -52,9 +48,9 @@ export function addCopyPathListMenuItems(
 	const absolutePaths = uniqueValues(pathsList.map(({ absolutePath }) => absolutePath));
 	if (!fileNames.length && !relativePaths.length && !absolutePaths.length) return;
 	menu.addSeparator();
-	addListItem(menu, "Copy file names", "copy", fileNames, onCopy);
-	addListItem(menu, "Copy paths relative to Vault", "copy", relativePaths, onCopy);
-	addListItem(menu, "Copy absolute paths", "clipboard-copy", absolutePaths, onCopy);
+	addListItem(menu, MENU_ACTIONS.copyFileNames, fileNames, onCopy);
+	addListItem(menu, MENU_ACTIONS.copyRelativePaths, relativePaths, onCopy);
+	addListItem(menu, MENU_ACTIONS.copyAbsolutePaths, absolutePaths, onCopy);
 }
 
 export async function copyPathListToClipboard(values: readonly string[]): Promise<void> {
@@ -77,18 +73,12 @@ export async function copyPathToClipboard(value: string): Promise<void> {
 
 function addListItem(
 	menu: PaletteMenu,
-	title: string,
-	icon: string,
+	action: MenuAction,
 	values: string[],
 	onCopy: (values: string[]) => void,
 ): void {
 	if (!values.length) return;
-	menu.addItem((item) =>
-		item
-			.setTitle(title)
-			.setIcon(icon)
-			.onClick(() => onCopy(values)),
-	);
+	menu.addItem((item) => withAction(item, action).onClick(() => onCopy(values)));
 }
 
 function uniqueValues(values: readonly (string | undefined)[]): string[] {

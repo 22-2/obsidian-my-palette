@@ -30,6 +30,12 @@ import {
 import { addTagInsertionMenuItems } from "src/tags/tagInsertionMenu";
 import { populatePropertyMenu } from "src/properties/propertyMenu";
 import { openPluginSettings } from "src/search/plugin/pluginSettings";
+import {
+	addExternalAppMenuItems,
+	addMenuAction,
+	addOpenMenuItems,
+	MENU_ACTIONS,
+} from "src/ui/menuActions";
 
 interface PaletteResultMenuOptions {
 	app: App;
@@ -117,21 +123,11 @@ export function populatePaletteResultMenu({
 	}
 
 	if (result.mode === "search-history") {
-		menu.addItem((item) =>
-			item
-				.setTitle("Use search")
-				.setIcon("history")
-				.onClick(() => applySearchHistory(result)),
-		);
+		addMenuAction(menu, MENU_ACTIONS.useSearch, () => applySearchHistory(result));
 		return;
 	}
 	if (result.mode === "mode-entry") {
-		menu.addItem((item) =>
-			item
-				.setTitle("Enter mode")
-				.setIcon("corner-down-left")
-				.onClick(() => void activate("primary", result)),
-		);
+		addMenuAction(menu, MENU_ACTIONS.enterMode, () => void activate("primary", result));
 		return;
 	}
 	if (result.mode === "property") {
@@ -145,12 +141,7 @@ export function populatePaletteResultMenu({
 		return;
 	}
 	if (result.mode === "command") {
-		menu.addItem((item) =>
-			item
-				.setTitle("Run command")
-				.setIcon("play")
-				.onClick(() => void activate("primary", result)),
-		);
+		addMenuAction(menu, MENU_ACTIONS.runCommand, () => void activate("primary", result));
 		return;
 	}
 
@@ -166,44 +157,26 @@ export function populatePaletteResultMenu({
 		// Why: plugin folders and snippet files have no Obsidian view, so skip leaf
 		// navigation and note actions (MOC, tags) and offer only external opening.
 		// Plugins additionally offer their settings tab when one exists.
-		menu.addItem((item) =>
-			item
-				.setTitle("Open in external editor")
-				.setIcon("code")
-				.onClick(() => void activate("primary", result)),
-		);
-		if (isDesktopApp()) {
-			const externalPath = getResultAbsolutePath(app, result);
-			if (externalPath) {
-				const externalFolder = isFolderResult(result);
-				menu.addItem((item) =>
-					item
-						.setTitle("Show in system explorer")
-						.setIcon("folder-open")
-						.onClick(() => {
+		const externalPath = isDesktopApp() ? getResultAbsolutePath(app, result) : undefined;
+		const externalFolder = isFolderResult(result);
+		addExternalAppMenuItems(menu, {
+			openInExternalEditor: () => void activate("primary", result),
+			...(externalPath
+				? {
+						showInSystemExplorer: () => {
 							onNoteActionSelected?.();
 							showInSystemExplorer(externalPath, externalFolder);
-						}),
-				);
-				menu.addItem((item) =>
-					item
-						.setTitle("Open in terminal")
-						.setIcon("terminal")
-						.onClick(() => openTerminal(externalPath, externalFolder)),
-				);
-			}
-		}
+						},
+						openInTerminal: () => openTerminal(externalPath, externalFolder),
+					}
+				: {}),
+		});
 		if (result.mode === "plugin" && result.hasSettings) {
 			const pluginId = result.pluginId;
-			menu.addItem((item) =>
-				item
-					.setTitle("Open plugin settings")
-					.setIcon("settings")
-					.onClick(() => {
-						onNoteActionSelected?.();
-						openPluginSettings(app, pluginId);
-					}),
-			);
+			addMenuAction(menu, MENU_ACTIONS.openPluginSettings, () => {
+				onNoteActionSelected?.();
+				openPluginSettings(app, pluginId);
+			});
 		}
 		addCopyPathMenuItems(
 			menu,
@@ -214,70 +187,33 @@ export function populatePaletteResultMenu({
 	}
 
 	const paths = getCopyablePaths(app, result);
-	menu.addItem((item) =>
-		item
-			.setTitle("Open")
-			.setIcon("external-link")
-			.onClick(() => void activate("primary", result)),
-	);
-	// Why: only popout hosts provide this action; ordinary palettes already open
-	// in the main window and should not offer a redundant navigation command.
-	if (openInMainWindow) {
-		menu.addItem((item) =>
-			item
-				.setTitle("Open in main window")
-				.setIcon("app-window")
-				.onClick(() => void openInMainWindow(result)),
-		);
-	}
-	menu.addItem((item) =>
-		item
-			.setTitle("Open in new tab (background)")
-			.setIcon("panel-top-open")
-			.onClick(() => void openInBackground(result)),
-	);
-	menu.addItem((item) =>
-		item
-			.setTitle("Open side by side")
-			.setIcon("separator-vertical")
-			.onClick(() => void activate("vertical", result)),
-	);
-	menu.addItem((item) =>
-		item
-			.setTitle("Open below")
-			.setIcon("separator-horizontal")
-			.onClick(() => void activate("horizontal", result)),
-	);
+	addOpenMenuItems(menu, {
+		open: () => void activate("primary", result),
+		// Why: only popout hosts provide this action; ordinary palettes already open
+		// in the main window and should not offer a redundant navigation command.
+		...(openInMainWindow ? { openInMainWindow: () => void openInMainWindow(result) } : {}),
+		openInBackground: () => void openInBackground(result),
+		openSideBySide: () => void activate("vertical", result),
+		openBelow: () => void activate("horizontal", result),
+	});
 	const absolutePath = isDesktopApp() ? getResultAbsolutePath(app, result) : undefined;
 	if (absolutePath) {
 		// Why: external-app actions apply to every file result, not only Everything.
 		// "Show in system explorer" unifies the old Everything-only "Show in file explorer",
 		// which was confused with Obsidian's file explorer.
+		const isFolder = isFolderResult(result);
 		menu.addSeparator();
-		menu.addItem((item) =>
-			item
-				.setTitle("Open in external editor")
-				.setIcon("code")
-				.onClick(() => {
-					onNoteActionSelected?.();
-					void openInExternalEditor(absolutePath);
-				}),
-		);
-		menu.addItem((item) =>
-			item
-				.setTitle("Show in system explorer")
-				.setIcon("folder-open")
-				.onClick(() => {
-					onNoteActionSelected?.();
-					showInSystemExplorer(absolutePath, isFolderResult(result));
-				}),
-		);
-		menu.addItem((item) =>
-			item
-				.setTitle("Open in terminal")
-				.setIcon("terminal")
-				.onClick(() => openTerminal(absolutePath, isFolderResult(result))),
-		);
+		addExternalAppMenuItems(menu, {
+			openInExternalEditor: () => {
+				onNoteActionSelected?.();
+				void openInExternalEditor(absolutePath);
+			},
+			showInSystemExplorer: () => {
+				onNoteActionSelected?.();
+				showInSystemExplorer(absolutePath, isFolder);
+			},
+			openInTerminal: () => openTerminal(absolutePath, isFolder),
+		});
 	}
 	addCopyPathMenuItems(menu, paths, (path) => void copyPathToClipboard(path));
 	addFileMoveMenuItem(menu, plugin, [result], onNoteActionDone);

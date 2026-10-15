@@ -7,6 +7,7 @@ import {
 } from "src/properties/propertyKind";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { ICONS } from "src/ui/icons";
 
 /** Obsidian fixes these keys, so they are always listed, even when the note lacks them. */
 const RESERVED_KEYS = ["aliases", "tags", "cssclasses"] as const;
@@ -99,7 +100,7 @@ function newKeyRow(
 		mode: "property",
 		primary: `Add property "${key}"`,
 		secondary: "Choose a type",
-		icon: "plus",
+		icon: ICONS.add,
 		key,
 		kind: "new",
 		section: "New",

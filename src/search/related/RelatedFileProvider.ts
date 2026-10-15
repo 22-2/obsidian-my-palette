@@ -7,6 +7,7 @@ import {
 import type { RelatedFileResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { ICONS } from "src/ui/icons";
 
 /** Finds distinct outgoing destinations or incoming source notes for the active note. */
 export class RelatedFileProvider implements PaletteProvider<RelatedFileResult> {
@@ -46,7 +47,7 @@ export class RelatedFileProvider implements PaletteProvider<RelatedFileResult> {
 					mode,
 					primary: file.basename,
 					secondary: `${file.path} · ${line + 1}: ${text}`,
-					icon: "file-text",
+					icon: ICONS.note,
 					file,
 					line,
 				} satisfies RelatedFileResult;

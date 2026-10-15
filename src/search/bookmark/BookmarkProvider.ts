@@ -12,6 +12,7 @@ import {
 	getBookmarksInstance,
 	type BookmarkEntry,
 } from "src/search/bookmark/bookmarks";
+import { ICONS } from "src/ui/icons";
 
 /** Reads the core Bookmarks plugin's nested items and exposes usable entries for the palette. */
 export class BookmarkProvider implements PaletteProvider<BookmarkResult> {
@@ -47,7 +48,7 @@ export class BookmarkProvider implements PaletteProvider<BookmarkResult> {
 						mode: "bookmark",
 						primary: display,
 						secondary: item.path,
-						icon: "bookmark",
+						icon: ICONS.bookmark,
 						kind: "file",
 						file,
 						entry: item,
@@ -61,7 +62,7 @@ export class BookmarkProvider implements PaletteProvider<BookmarkResult> {
 						mode: "bookmark",
 						primary: display,
 						secondary: item.query,
-						icon: "search",
+						icon: ICONS.search,
 						kind: "search",
 						query: item.query,
 						entry: item,
