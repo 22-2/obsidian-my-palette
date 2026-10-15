@@ -1,4 +1,4 @@
-import type { App } from "obsidian";
+import type { App, TFile } from "obsidian";
 import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
 import type MyPalettePlugin from "src/main";
@@ -27,6 +27,8 @@ export interface PaletteModalOptions {
 	modeEntries?: boolean;
 	/** The state of a palette closed recently enough to resume. */
 	restore?: PaletteRestoreState;
+	/** The note that source-dependent modes (links, properties) read, instead of the active note. */
+	sourceFile?: TFile;
 }
 
 export class PaletteModal extends SelectionModal<PaletteResult> {
@@ -46,7 +48,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		private readonly plugin: MyPalettePlugin,
 		initialInput = "",
 		fixedMode?: FixedPaletteMode,
-		{ modeEntries = false, restore }: PaletteModalOptions = {},
+		{ modeEntries = false, restore, sourceFile }: PaletteModalOptions = {},
 	) {
 		super(
 			{
@@ -56,7 +58,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				initialInput,
 				selectionMode: "extended",
 				activateOnClick: (result) => result.mode === "settings-entry",
-				footerText: `Source: ${app.workspace.getActiveFile()?.path ?? "No active note"}`,
+				footerText: `Source: ${sourceFile?.path ?? app.workspace.getActiveFile()?.path ?? "No active note"}`,
 			},
 			app,
 		);
@@ -66,6 +68,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			initialInput,
 			fixedMode,
 			modeEntries,
+			sourceFile,
 			includeIgnored: restore?.includeIgnored ?? false,
 			onModesChange: () => this.refreshSuggestions(),
 			onStateChange: (state) => {
