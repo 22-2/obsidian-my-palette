@@ -43,11 +43,15 @@ vi.mock("src/properties/propertyValueSelector", () => ({
 vi.mock("src/properties/propertyInputSelector", () => ({ editPropertyValue: vi.fn() }));
 
 const file = { path: "note.md", basename: "note" } as unknown as TFile;
+const second = { path: "second.md", basename: "second" } as unknown as TFile;
 
 function plugin(frontmatter: Record<string, unknown>, options: { fail?: boolean } = {}) {
 	const written: Record<string, unknown> = {};
 	const app = {
-		vault: { getFileByPath: (path: string) => (path === "note.md" ? file : null) },
+		vault: {
+			getFileByPath: (path: string) =>
+				path === "note.md" ? file : path === "second.md" ? second : null,
+		},
 		metadataCache: { getFileCache: () => ({ frontmatter }) },
 		fileManager: {
 			processFrontMatter: async (_file: TFile, fn: (fm: Record<string, unknown>) => void) => {
@@ -136,7 +140,7 @@ describe("editPropertyResult", () => {
 		const { plugin: p } = plugin({});
 		const outcome = await editPropertyResult(p, row({ key: "aliases", kind: "list" }));
 		expect(outcome).toBe("close");
-		expect(editListProperty).toHaveBeenCalledWith(p, file, "aliases");
+		expect(editListProperty).toHaveBeenCalledWith(p, [file], "aliases");
 	});
 
 	it("tells the user that nested values are edited in source mode", async () => {
@@ -186,5 +190,58 @@ describe("editPropertyResult", () => {
 		const outcome = await editPropertyResult(p, row({ sourcePath: "gone.md" }));
 		expect(outcome).toBe("stay");
 		expect(notices).toEqual(["The note for this property no longer exists."]);
+	});
+
+	describe("a row spanning several notes", () => {
+		const many = { sourcePaths: ["note.md", "second.md"] };
+
+		it("opens the list selector with every note", async () => {
+			const { plugin: p } = plugin({});
+			const outcome = await editPropertyResult(
+				p,
+				row({ key: "topic", kind: "list", ...many }),
+			);
+			expect(outcome).toBe("close");
+			expect(editListProperty).toHaveBeenCalledWith(p, [file, second], "topic");
+		});
+
+		it("opens Tag insertion with every note", async () => {
+			const { plugin: p } = plugin({});
+			insertTagsMock.mockResolvedValue(true);
+			await editPropertyResult(p, row({ key: "tags", kind: "tags", ...many }));
+			expect(insertTagsMock).toHaveBeenCalledWith(p, [file, second]);
+		});
+
+		it.each(["text", "number", "date", "datetime", "checkbox"] as const)(
+			"does not set a %s value on several notes yet",
+			async (kind) => {
+				const { plugin: p, written } = plugin({});
+				const outcome = await editPropertyResult(p, row({ key: "due", kind, ...many }));
+				expect(outcome).toBe("stay");
+				expect(written).toEqual({});
+				expect(notices).toEqual(["Setting due on several notes is not supported yet."]);
+				expect(editPropertyValue).not.toHaveBeenCalled();
+			},
+		);
+
+		it("offers only the list type for a new key, then edits every note", async () => {
+			const { plugin: p } = plugin({});
+			selectedKinds.push("list");
+			const outcome = await editPropertyResult(
+				p,
+				row({ key: "topic", kind: "new", ...many }),
+			);
+			expect(outcome).toBe("close");
+			expect(editListProperty).toHaveBeenCalledWith(p, [file, second], "topic");
+		});
+
+		it("skips a note that no longer exists", async () => {
+			const { plugin: p } = plugin({});
+			await editPropertyResult(
+				p,
+				row({ key: "topic", kind: "list", sourcePaths: ["note.md", "gone.md"] }),
+			);
+			expect(editListProperty).toHaveBeenCalledWith(p, [file], "topic");
+		});
 	});
 });

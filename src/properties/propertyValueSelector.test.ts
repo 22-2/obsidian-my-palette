@@ -2,7 +2,11 @@ import { Notice, type App, type TFile } from "obsidian";
 import { Window } from "happy-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
-import { applyListChanges, PropertyValueModal } from "src/properties/propertyValueSelector";
+import {
+	applyListChanges,
+	applyListChangesToFiles,
+	PropertyValueModal,
+} from "src/properties/propertyValueSelector";
 import { installObsidianDom } from "src/ui/testing/obsidianDom";
 import { createSelectorPlugin } from "src/ui/testing/selectorPlugin";
 
@@ -58,6 +62,34 @@ describe("applyListChanges", () => {
 	});
 });
 
+describe("applyListChangesToFiles", () => {
+	it("writes every note and keeps going when one fails", async () => {
+		const written: Record<string, Record<string, unknown>> = {
+			"a.md": { aliases: ["x"] },
+			"c.md": {},
+		};
+		const app = {
+			fileManager: {
+				processFrontMatter: async (
+					target: TFile,
+					fn: (fm: Record<string, unknown>) => void,
+				) => {
+					if (target.path === "b.md") throw new Error("YAML");
+					fn(written[target.path]);
+				},
+			},
+		} as unknown as App;
+		const files = ["a.md", "b.md", "c.md"].map((path) => ({ path }) as unknown as TFile);
+		const result = await applyListChangesToFiles(app, files, "aliases", {
+			add: ["y"],
+			remove: ["x"],
+		});
+		expect(result).toEqual({ updated: 2, failed: 1 });
+		expect(written["a.md"].aliases).toEqual(["y"]);
+		expect(written["c.md"].aliases).toEqual(["y"]);
+	});
+});
+
 describe("PropertyValueModal", () => {
 	beforeEach(() => {
 		const dom = new Window();
@@ -85,7 +117,7 @@ describe("PropertyValueModal", () => {
 
 	function open(current: string[], vault: string[]) {
 		const plugin = createSelectorPlugin({} as App) as unknown as MyPalettePlugin;
-		const modal = new PropertyValueModal(plugin, file, "aliases", current, vault);
+		const modal = new PropertyValueModal(plugin, [file], "aliases", [current], vault);
 		const result = modal.openAndWaitChanges();
 		const rows = () => [...modal.modalEl.querySelectorAll<HTMLElement>(".suggestion-item")];
 		const checked = () =>
@@ -144,5 +176,29 @@ describe("PropertyValueModal", () => {
 		await f.type("a");
 		f.key("Enter");
 		await expect(f.result).resolves.toEqual({ add: [], remove: ["a"] });
+	});
+
+	it("checks values every note has and badges values only some have", async () => {
+		const plugin = createSelectorPlugin({} as App) as unknown as MyPalettePlugin;
+		const other = { path: "other.md", basename: "other" } as unknown as TFile;
+		const modal = new PropertyValueModal(
+			plugin,
+			[file, other],
+			"aliases",
+			[["shared", "only-first"], ["shared"]],
+			["vault"],
+		);
+		void modal.openAndWaitChanges();
+		await flush();
+		const rows = [...modal.modalEl.querySelectorAll<HTMLElement>(".suggestion-item")];
+		const text = (row: HTMLElement) => row.textContent ?? "";
+		expect(rows.find((row) => text(row).includes("only-first"))?.textContent).toContain(
+			"On 1/2 notes",
+		);
+		const checked = rows
+			.filter((row) => row.classList.contains("is-checked"))
+			.map((row) => row.querySelector(".my-palette-suggestion__label")?.textContent);
+		expect(checked).toEqual(["shared"]);
+		modal.close();
 	});
 });
