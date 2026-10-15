@@ -1,5 +1,6 @@
 import type { TFile } from "obsidian";
 import type { PaletteModeId } from "src/palette/modes";
+import type { BookmarkEntry } from "src/search/bookmark/bookmarks";
 import type { SearchHistoryEntry } from "src/settings/model";
 
 export type PaletteMode =
@@ -81,6 +82,8 @@ export interface BookmarkResult extends BaseResult {
 	kind: "file" | "search";
 	file?: TFile;
 	query?: string;
+	/** The Bookmarks plugin's own entry, so actions can rename, move or remove it. */
+	entry?: BookmarkEntry;
 }
 
 export interface SmartConnectionResult extends BaseResult {
