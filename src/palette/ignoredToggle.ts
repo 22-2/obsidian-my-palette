@@ -11,6 +11,7 @@ export function ignoredToggleOptions(
 	return {
 		id: "include-ignored",
 		label: "Obsidian-excluded",
+		icon: "eye",
 		hotkey,
 		description: "Include files hidden by Obsidian's Excluded files setting",
 		value,

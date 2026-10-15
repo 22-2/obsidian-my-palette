@@ -87,10 +87,16 @@ export class BulkRenameModal extends SelectionModal<RenameItem> {
 	}
 
 	protected override onSelectionModalOpen(): void {
-		const toggle = (id: keyof RenameOptions, label: string, description: string) =>
+		const toggle = (
+			id: keyof RenameOptions,
+			label: string,
+			icon: string,
+			description: string,
+		) =>
 			this.addStatusToggle({
 				id,
 				label,
+				icon,
 				// Why: these switches have no shortcut yet, so a click is the only way to flip them.
 				hotkey: () => null,
 				description,
@@ -100,9 +106,24 @@ export class BulkRenameModal extends SelectionModal<RenameItem> {
 					this.refreshSuggestions();
 				},
 			});
-		toggle("regex", "Regex", "Read the find part as a regular expression; $1 inserts a group");
-		toggle("matchCase", "Match case", "Distinguish upper and lower case when matching");
-		toggle("all", "All occurrences", "Replace every match in a name, not only the first");
+		toggle(
+			"regex",
+			"Regex",
+			"regex",
+			"Read the find part as a regular expression; $1 inserts a group",
+		);
+		toggle(
+			"matchCase",
+			"Match case",
+			"case-sensitive",
+			"Distinguish upper and lower case when matching",
+		);
+		toggle(
+			"all",
+			"All occurrences",
+			"replace-all",
+			"Replace every match in a name, not only the first",
+		);
 	}
 
 	private plan(query: string): RenameItem[] {

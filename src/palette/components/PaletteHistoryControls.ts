@@ -209,6 +209,7 @@ export class PaletteHistoryControls {
 			menu.addItem((item) =>
 				item
 					.setTitle(toggle.label)
+					.setIcon(toggle.icon ?? null)
 					.setChecked(toggle.value)
 					.setKeepOpen()
 					.onClick(() => {

@@ -213,6 +213,7 @@ abstract class MocRelatedsModal extends MultiSelectModal<string> {
 		this.addStatusToggle({
 			id: "mutual",
 			label: "Mutual",
+			icon: "arrow-left-right",
 			hotkey: () => this.plugin.settings.hotkeys.toggleMutual,
 			description: "Also update the note's link to the MOC",
 			value: this.mutual,

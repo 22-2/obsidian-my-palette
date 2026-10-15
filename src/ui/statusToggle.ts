@@ -4,6 +4,8 @@ export interface StatusToggleOptions {
 	/** Identifies the toggle so a reopened modal replaces it instead of adding another. */
 	id: string;
 	label: string;
+	/** Shown beside the switch in the options menu, like the other menu items. */
+	icon?: string;
 	/**
 	 * Read on each key press and each render, so a changed binding applies at once.
 	 * `null` leaves the switch clickable without a shortcut or hint.
@@ -82,6 +84,10 @@ export class StatusToggle {
 
 	get label(): string {
 		return this.options.label;
+	}
+
+	get icon(): string | undefined {
+		return this.options.icon;
 	}
 
 	get description(): string {
