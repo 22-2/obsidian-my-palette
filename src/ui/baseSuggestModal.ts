@@ -400,6 +400,11 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		return this.panel.addStatusToggle(options);
 	}
 
+	/** The footer switches added so far, in order. */
+	protected get statusToggles(): StatusToggle[] {
+		return this.panel.statusToggles;
+	}
+
 	protected updateFooterText(text: string): void {
 		this.panel.updateFooterText(text);
 	}

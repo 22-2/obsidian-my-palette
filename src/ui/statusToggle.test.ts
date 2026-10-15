@@ -128,4 +128,26 @@ describe("status toggle", () => {
 			"my-palette-status-bar__count",
 		);
 	});
+
+	it("lists its switches in order for menus, without the one it replaced", () => {
+		const { panel, add } = fixture();
+		add({ id: "a", label: "A" });
+		add({ id: "b", label: "B" });
+		const { toggle } = add({ id: "a", label: "A again", description: "Second" });
+
+		expect(panel.statusToggles.map(({ id, label }) => `${id}:${label}`)).toEqual([
+			"a:A again",
+			"b:B",
+		]);
+		expect(toggle.description).toBe("Second");
+	});
+
+	it("flips and notifies the host when asked to", () => {
+		const { add } = fixture();
+		const { toggle, onChange } = add({ value: false });
+
+		toggle.flip();
+		expect(toggle.value).toBe(true);
+		expect(onChange).toHaveBeenCalledExactlyOnceWith(true);
+	});
 });

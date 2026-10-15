@@ -110,6 +110,7 @@ export class SuggestionPanel<T> extends Component {
 	private readonly rightClickRows = new WeakSet<Element>();
 	private resultsLayout?: SuggestionPanelResultsLayout<T>;
 	private readonly modes?: InteractionModes;
+	private readonly toggles = new Map<string, StatusToggle>();
 
 	constructor(rootEl: HTMLElement, props: SuggestionPanelProps<T>) {
 		super();
@@ -183,6 +184,7 @@ export class SuggestionPanel<T> extends Component {
 	}
 
 	onunload(): void {
+		this.toggles.clear();
 		this.previewContainerEl.removeClass("my-palette-preview-surface", "is-preview-hidden");
 	}
 
@@ -430,13 +432,20 @@ export class SuggestionPanel<T> extends Component {
 	addStatusToggle(options: StatusToggleOptions): StatusToggle {
 		// Modal footers are hidden by default; a switch opts its panel in.
 		this.rootEl.addClass("has-status-toggle");
-		return new StatusToggle(
+		const toggle = new StatusToggle(
 			this.statusBarEl,
 			this.inputEl,
 			(el, type, callback, eventOptions) =>
 				this.registerDomEvent(el, type, callback, eventOptions),
 			options,
 		);
+		this.toggles.set(options.id, toggle);
+		return toggle;
+	}
+
+	/** The footer switches in the order they were added, for menus that mirror them. */
+	get statusToggles(): StatusToggle[] {
+		return [...this.toggles.values()];
 	}
 
 	updateResultCount(total: number): void {

@@ -76,6 +76,23 @@ export class StatusToggle {
 		return this.current;
 	}
 
+	get id(): string {
+		return this.options.id;
+	}
+
+	get label(): string {
+		return this.options.label;
+	}
+
+	get description(): string {
+		return this.options.description;
+	}
+
+	/** Whether the switch is currently hidden because it does not apply to the screen. */
+	get isHidden(): boolean {
+		return this.hidden;
+	}
+
 	/** Shows the state without notifying, for hosts restoring their own value. */
 	set(value: boolean): void {
 		this.current = value;
@@ -88,7 +105,8 @@ export class StatusToggle {
 		this.render();
 	}
 
-	private flip(): void {
+	/** Flips the switch as a click or its shortcut does, and notifies the host. */
+	flip(): void {
 		this.set(!this.current);
 		this.options.onChange(this.current);
 	}
