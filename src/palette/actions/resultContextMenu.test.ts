@@ -78,6 +78,7 @@ function fixture(popout: boolean) {
 			configure(item);
 		},
 		addSeparator: vi.fn(),
+		enableFilter: vi.fn(),
 	} as unknown as PaletteMenu;
 	const result: PaletteResult = {
 		id: "note",
@@ -236,4 +237,10 @@ it("offers editor and explorer for snippet results without settings", () => {
 	expect(f.actions.has("Open in terminal")).toBe(true);
 	expect(f.actions.has("Open plugin settings")).toBe(false);
 	expect(f.actions.has("Open")).toBe(false);
+});
+
+it("turns on the action filter for every result menu", () => {
+	const f = fixture(false);
+	populatePaletteResultMenu(f.options);
+	expect(f.options.menu.enableFilter).toHaveBeenCalledOnce();
 });
