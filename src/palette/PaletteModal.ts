@@ -99,6 +99,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			apply: (result) => this.applySearchHistory(result),
 			focusInput: () => this.focusSearchInput(),
 			moveToSidebar: () => this.moveToSidebar(),
+			getToggles: () => this.statusToggles,
 		});
 		this.ignoredToggle = this.addStatusToggle(
 			ignoredToggleOptions(

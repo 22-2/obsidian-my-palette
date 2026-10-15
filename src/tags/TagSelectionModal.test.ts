@@ -132,13 +132,13 @@ describe("TagSelectionModal", () => {
 		)!;
 		f.mouse(actionButton, "click");
 		expect(paletteMenuTitles()).toEqual([
+			"Options",
+			"Highlight search matches",
 			"Help",
 			"Check",
 			"Add 1 now",
 			"Clear changes",
 			"Clear search history",
-			"Options",
-			"Highlight search matches",
 		]);
 		clickPaletteMenuItem("Check");
 		expect(f.checked()).toEqual(["#alpha", "#mine"]);

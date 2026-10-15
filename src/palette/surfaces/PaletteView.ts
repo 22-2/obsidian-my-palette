@@ -478,6 +478,7 @@ export class PaletteView extends ItemView {
 				},
 			apply: (result) => this.applySearchHistory(result),
 			focusInput: () => this.panel?.focusSearchInput(),
+			getToggles: () => this.panel?.statusToggles ?? [],
 		});
 	}
 

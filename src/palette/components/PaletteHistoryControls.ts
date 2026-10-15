@@ -8,6 +8,7 @@ import { PaletteHelpModal } from "src/ui/paletteHelpModal";
 import { availableModes } from "src/palette/modes";
 import { SearchHistorySuggest } from "src/ui/searchHistorySuggest";
 import { DEFAULT_HOTKEYS, formatHotkey, matchesHotkey } from "src/ui/hotkeys";
+import type { StatusToggle } from "src/ui/statusToggle";
 
 interface PaletteHistoryContext {
 	query: string;
@@ -41,6 +42,8 @@ interface PaletteHistoryControlsOptions {
 	populateActions?: (menu: PaletteMenu, event: MouseEvent) => void;
 	showHelp?: () => void;
 	focusInput?: () => void;
+	/** The host's footer switches, read each time the menu opens, so the menu can flip them too. */
+	getToggles?: () => readonly StatusToggle[];
 }
 
 /** Shared search-history and options controls for both palette surfaces. */
@@ -170,6 +173,42 @@ export class PaletteHistoryControls {
 		menu.onHide(() => {
 			if (this.activeMenu === menu) this.activeMenu = undefined;
 		});
+		// Why: the switches come first so they can be flipped with Enter, without remembering
+		// each one's shortcut. Each stays open so several can be flipped in a row.
+		menu.addItem((item) => item.setTitle("Options").setIcon("settings").setDisabled(true));
+		for (const toggle of this.options.getToggles?.() ?? []) {
+			if (toggle.isHidden) continue;
+			menu.addItem((item) =>
+				item
+					.setTitle(toggle.label)
+					.setChecked(toggle.value)
+					.setKeepOpen()
+					.onClick(() => {
+						toggle.flip();
+						item.setChecked(toggle.value);
+					}),
+			);
+		}
+		menu.addItem((item) =>
+			item
+				.setTitle("Highlight search matches")
+				.setIcon("highlighter")
+				.setChecked(
+					plugin.paletteDisplaySettings.get(this.options.surface).highlightSearchMatches,
+				)
+				.setKeepOpen()
+				.onClick(() => {
+					void plugin.paletteDisplaySettings
+						.toggleHighlight(this.options.surface)
+						.then(() =>
+							item.setChecked(
+								plugin.paletteDisplaySettings.get(this.options.surface)
+									.highlightSearchMatches,
+							),
+						);
+				}),
+		);
+		menu.addSeparator();
 		menu.addItem((item) =>
 			item
 				.setTitle("Help")
@@ -188,19 +227,6 @@ export class PaletteHistoryControls {
 		this.options.populateActions?.(menu, event);
 		// Why: the destructive clear comes after the screen's own actions, so it is not the first thing a press reaches.
 		this.addClearHistoryItem(menu);
-		menu.addSeparator();
-		menu.addItem((item) => item.setTitle("Options").setIcon("settings").setDisabled(true));
-		menu.addItem((item) =>
-			item
-				.setTitle("Highlight search matches")
-				.setIcon("highlighter")
-				.setChecked(
-					plugin.paletteDisplaySettings.get(this.options.surface).highlightSearchMatches,
-				)
-				.onClick(
-					() => void plugin.paletteDisplaySettings.toggleHighlight(this.options.surface),
-				),
-		);
 		menu.setParentElement(hostEl);
 		showMenuAtEvent(menu, event);
 	}

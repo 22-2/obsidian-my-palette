@@ -5,7 +5,11 @@ import type { SelectorHistoryCategory } from "src/settings/model";
 import { SelectionModal } from "src/ui/selectionModal";
 import { createSelectorPlugin } from "src/ui/testing/selectorPlugin";
 import { installObsidianDom } from "src/ui/testing/obsidianDom";
-import { clickPaletteMenuItem, paletteMenuTitles } from "src/ui/testing/paletteMenuDom";
+import {
+	clickPaletteMenuItem,
+	isPaletteMenuOpen,
+	paletteMenuTitles,
+} from "src/ui/testing/paletteMenuDom";
 
 vi.mock("obsidian", () => import("src/ui/testing/obsidianDom"));
 
@@ -138,11 +142,11 @@ describe("selector controls", () => {
 		expect(f.modal.modalEl.querySelectorAll(selector)).toHaveLength(2);
 		f.click(".my-palette-options-button");
 		expect(paletteMenuTitles()).toEqual([
+			"Options",
+			"Highlight search matches",
 			"Help",
 			"Move to selected",
 			"Clear search history",
-			"Options",
-			"Highlight search matches",
 		]);
 		expect(paletteMenuTitles()).not.toContain("Move to right sidebar");
 		clickPaletteMenuItem("Move to selected");
@@ -211,5 +215,55 @@ describe("selector controls", () => {
 		expect(document.querySelector(".my-palette-help-modal")?.textContent).toContain(
 			"Alt+Y / history button",
 		);
+	});
+});
+
+describe("options menu switches", () => {
+	class SwitchSelector extends TestSelector {
+		readonly onChange = vi.fn();
+		protected override onSelectionModalOpen(): void {
+			this.addStatusToggle({
+				id: "regex",
+				label: "Regex",
+				hotkey: () => null,
+				description: "Use a regular expression",
+				value: false,
+				onChange: this.onChange,
+			});
+			const hidden = this.addStatusToggle({
+				id: "hidden",
+				label: "Not here",
+				hotkey: () => null,
+				description: "Does not apply",
+				value: false,
+				onChange: vi.fn(),
+			});
+			hidden.setHidden(true);
+		}
+	}
+
+	it("lists the footer switches right under Options and flips them without closing", async () => {
+		const plugin = createSelectorPlugin({} as App);
+		const modal = new SwitchSelector(plugin, "folder-move");
+		modal.open();
+		await flush();
+		cleanups.push(() => modal.close());
+
+		modal.modalEl
+			.querySelector<HTMLElement>(".my-palette-options-button")!
+			.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+		expect(paletteMenuTitles().slice(0, 3)).toEqual([
+			"Options",
+			"Regex",
+			"Highlight search matches",
+		]);
+
+		clickPaletteMenuItem("Regex");
+		expect(modal.onChange).toHaveBeenCalledExactlyOnceWith(true);
+		expect(isPaletteMenuOpen()).toBe(true);
+		const item = [...document.querySelectorAll(".menu-item")].find(
+			(element) => element.textContent === "Regex",
+		);
+		expect(item?.getAttribute("aria-checked")).toBe("true");
 	});
 });

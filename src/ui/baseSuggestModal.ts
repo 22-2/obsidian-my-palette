@@ -196,6 +196,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 				},
 				populateActions: (menu, event) => this.populateSelectorActions(menu, event),
 				showHelp: () => new SelectorHelpModal(this.app, controls).open(),
+				getToggles: () => this.statusToggles,
 				focusInput: () => this.focusSearchInput(),
 			});
 		}
