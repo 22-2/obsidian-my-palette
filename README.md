@@ -61,7 +61,7 @@ Open the command palette and run one of these, then bind a hotkey if you like:
 
 Palette lists and tables keep the first result highlighted while you type, so `Enter` runs it right away and `↑`/`↓` move through results. Tag and MOC insertion add separate input and selection modes (see below) because `Space` checks candidates there.
 
-The action (`…`) and history (clock) buttons are also available in the Tag insert selector, the MOC insert and remove selectors, and the Folder move selector. Actions and Help describe the current selector. Each selector has its own search history; selecting an entry restores only the query and never inserts tags, adds links or moves a file. `Ctrl+R` opens history, and the history enablement, delay and retention settings apply to these selectors too. Selectors have no highlight option in their options menu; they follow the modal palette's highlight preference.
+The action (`…`) and history (clock) buttons are also available in the Tag insert selector, the MOC insert and remove selectors, and the Folder move selector. Actions and Help describe the current selector. Each selector has its own search history; selecting an entry restores only the query and never inserts tags, adds links or moves a file. `Ctrl+R` opens history, and the history enablement, delay and retention settings apply to these selectors too. Highlighting uses the shared modal display preference, which is changed from a selector's options menu; palettes have no highlight option in theirs.
 
 | Action                 | Result                                             |
 | ---------------------- | -------------------------------------------------- |

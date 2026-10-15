@@ -50,7 +50,6 @@ test("Clear search history takes two presses and clears only the palette's own h
 	expect(await menuItems(page).allTextContents()).toEqual([
 		"Options",
 		"Obsidian-excluded",
-		"Highlight search matches",
 		"Help",
 		"Move to right sidebar",
 		"Clear search history",

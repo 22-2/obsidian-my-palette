@@ -45,8 +45,8 @@ interface PaletteHistoryControlsOptions {
 	/** The host's footer switches, read each time the menu opens, so the menu can flip them too. */
 	getSwitches?: () => readonly PanelSwitch[];
 	/**
-	 * Whether the menu offers "Highlight search matches". Only palettes do: a selector's
-	 * candidates are a fixed list, so the palette's highlight preference is not theirs to set.
+	 * Whether the menu offers "Highlight search matches"; on by default. Palettes turn it off:
+	 * the preference is for the selectors, whose menu is the only place it is changed.
 	 */
 	showHighlightOption?: boolean;
 }

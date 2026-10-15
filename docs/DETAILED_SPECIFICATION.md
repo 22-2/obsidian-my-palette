@@ -565,7 +565,7 @@ interface MyPaletteSettings {
 - 既存の `data.json` にある履歴エントリは、初回起動時に IndexedDB へ移行する。IndexedDB が利用できない場合は履歴を `data.json` の一時的なフォールバックとして保持し、次回起動時に再試行する。
 - 検索結果リストへフォーカスが移ったときに履歴へ追加する。検索欄のblurや入力停止後の経過時間だけでは追加しない。
 - 大文字小文字だけが異なる入力は同じ履歴項目として扱い、最新の表記と回数を保持する。
-- 入力欄右端の「…」ボタンまたは `Ctrl+O`（設定で変更可）でオプションメニューを開く。ボタンの真下の固定位置に出し、最初の項目を選択済みにする。先頭の `Options` 見出しの下に、パネルのスイッチ（Obsidian-excluded、Mutual、Regex、Match case、All occurrences。画面に無いものは出さない）と、パレットだけ「Highlight search matches」をチェック付きで並べる（selectorには出さず、並べるものが無ければ `Options` 見出しも出さない）。Enterやクリックで切り替えてもメニューは閉じない。もう一度 `Ctrl+O` か `Esc` で閉じる。
+- 入力欄右端の「…」ボタンまたは `Ctrl+O`（設定で変更可）でオプションメニューを開く。ボタンの真下の固定位置に出し、最初の項目を選択済みにする。先頭の `Options` 見出しの下に、パネルのスイッチ（Obsidian-excluded、Mutual、Regex、Match case、All occurrences。画面に無いものは出さない）と、selectorだけ「Highlight search matches」をチェック付きで並べる（パレットには出さず、並べるものが無ければ `Options` 見出しも出さない）。Enterやクリックで切り替えてもメニューは閉じない。もう一度 `Ctrl+O` か `Esc` で閉じる。
 - 入力欄右端の履歴ボタンまたは `Ctrl+R` で現在のモードの検索履歴を表示し、項目を選ぶと現在のプレフィックス付き入力へ復元する。
 
 ## 11. アーキテクチャ

@@ -100,6 +100,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			focusInput: () => this.focusSearchInput(),
 			moveToSidebar: () => this.moveToSidebar(),
 			getSwitches: () => this.switches,
+			showHighlightOption: false,
 		});
 		this.ignoredToggle = this.addSwitch(
 			ignoredToggleOptions(this.session.current.ignoredScope, (value) => {

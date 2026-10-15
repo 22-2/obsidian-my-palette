@@ -71,7 +71,6 @@ test("moves the current modal search into a fresh sidebar pane", async ({ obsidi
 	await expect(menuItems(page)).toHaveText([
 		"Options",
 		"Obsidian-excluded",
-		"Highlight search matches",
 		"Help",
 		"Move to right sidebar",
 		"Clear search history",
@@ -89,12 +88,20 @@ test("moves the current modal search into a fresh sidebar pane", async ({ obsidi
 	await expect(menuItems(page).filter({ hasText: /^Move to right sidebar$/ })).toHaveCount(0);
 });
 
-test("the highlight option works in the palette and is not offered in a selector", async ({
+test("the highlight option is not offered in the palette and works in a selector", async ({
 	obsidian,
 }) => {
 	const page = await openPaletteWith(obsidian, "alpha");
 	const highlight = () =>
 		page.locator(".menu .menu-item").filter({ hasText: /^Highlight search matches$/ });
+	await page.locator(".my-palette-suggest-modal .my-palette-options-button").click();
+	await expect(highlight()).toHaveCount(0);
+	await page.keyboard.press("Escape");
+	await closePalette(page);
+
+	await obsidian.createNote("Source.md", "text");
+	await obsidian.open("Source.md");
+	await runPaletteCommand(obsidian, "open-folder-move-selector");
 	await page.locator(".my-palette-suggest-modal .my-palette-options-button").click();
 	await expect(highlight()).toHaveCount(1);
 	await highlight().click();
@@ -105,14 +112,6 @@ test("the highlight option works in the palette and is not offered in a selector
 	await expect(page.locator(".my-palette-suggest-modal")).not.toHaveClass(
 		/my-palette-highlight-disabled/,
 	);
-	await page.keyboard.press("Escape");
-	await closePalette(page);
-
-	await obsidian.createNote("Source.md", "text");
-	await obsidian.open("Source.md");
-	await runPaletteCommand(obsidian, "open-folder-move-selector");
-	await page.locator(".my-palette-suggest-modal .my-palette-options-button").click();
-	await expect(highlight()).toHaveCount(0);
 });
 
 test("moving a link search preserves its fixed mode and source note", async ({ obsidian }) => {
