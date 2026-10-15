@@ -1,6 +1,5 @@
 import { Notice, TFile, type App, type WorkspaceLeaf } from "obsidian";
 import type { PaletteMenu } from "src/ui/paletteMenu";
-import { openFileInLeaf } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
 import type { FileResult } from "src/palette/results";
 import type { SelectionItem } from "src/ui/selectionModal";
@@ -18,7 +17,6 @@ import {
 	copyPathListToClipboard,
 	copyPathToClipboard,
 } from "src/platform/pathClipboard";
-import { isMarkdownPath } from "src/shared/externalFiles";
 import { ignoredToggleOptions } from "src/palette/ignoredToggle";
 import { formatHotkey } from "src/ui/hotkeys";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
@@ -26,6 +24,7 @@ import { executePaletteResult } from "src/palette/executePaletteResult";
 import { matchedMetadataPresentation } from "src/palette/resultPresentation";
 import { relationPaths } from "src/shared/noteRelations";
 import { isExcludedFolder } from "src/search/excludedFolders";
+import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
 
 function toRelatedCandidate(
 	app: App,
@@ -108,31 +107,7 @@ async function openCandidateInBackground(
 	plugin: MyPalettePlugin,
 	result: FileResult,
 ): Promise<void> {
-	if (result.ignored) {
-		const absolutePath = getVaultFullPath(plugin.app, result.vaultPath);
-		if (!absolutePath) {
-			new Notice("This vault adapter cannot resolve an absolute path.");
-			return;
-		}
-		if (isMarkdownPath(absolutePath) && plugin.settings.openExternalMarkdownInObsidian) {
-			await plugin.openExternalMarkdown(absolutePath, "primary", true, false);
-			plugin.recordFileUsage(result.vaultPath);
-			return;
-		}
-		new Notice("This item cannot be opened in a background Obsidian tab.");
-		return;
-	}
-	if (result.file) {
-		await openFileInLeaf(plugin.app, result.file, {
-			action: "alternate",
-			active: false,
-			autoFocus: false,
-			focusExisting: plugin.settings.focusExistingTab,
-		});
-		plugin.recordFileUsage(result.vaultPath);
-		return;
-	}
-	new Notice("The file no longer exists.");
+	await openPaletteResultInBackground(plugin, result);
 }
 
 function populateCandidateMenu(
