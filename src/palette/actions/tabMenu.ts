@@ -29,7 +29,7 @@ interface TabMenuOptions {
 	onNoteActionSelected?: () => void;
 }
 
-const pluralTabs = (count: number): string => (count === 1 ? "tab" : `${count} tabs`);
+const pluralTabs = (count: number): string => (count === 1 ? "tab" : "tabs");
 
 /**
  * Tab-mode menu. Tabs are not files to open, so navigation items are replaced by

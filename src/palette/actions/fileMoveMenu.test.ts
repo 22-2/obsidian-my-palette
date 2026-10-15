@@ -73,7 +73,7 @@ it("moves distinct indexed files of any type and skips the rest", () => {
 	const m = menu();
 	const onSelected = vi.fn();
 	addFileMoveMenuItem(m.instance, plugin, results, onSelected);
-	expect(m.titles).toEqual(["Move 3 files to…"]);
+	expect(m.titles).toEqual(["Move to…"]);
 
 	m.click();
 	expect(onSelected).toHaveBeenCalledOnce();

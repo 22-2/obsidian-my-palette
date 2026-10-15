@@ -45,7 +45,7 @@ export function addTagInsertionMenuItems(
 	if (targets.size === 0) return;
 	menu.addItem((item) =>
 		item
-			.setTitle(targets.size > 1 ? `Add tags to ${targets.size} notes…` : "Add tags…")
+			.setTitle("Add tags…")
 			.setIcon("tags")
 			.onClick(() => {
 				onSelected?.();

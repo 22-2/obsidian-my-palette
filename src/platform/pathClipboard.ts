@@ -85,7 +85,7 @@ function addListItem(
 	if (!values.length) return;
 	menu.addItem((item) =>
 		item
-			.setTitle(`${title} (${values.length})`)
+			.setTitle(title)
 			.setIcon(icon)
 			.onClick(() => onCopy(values)),
 	);

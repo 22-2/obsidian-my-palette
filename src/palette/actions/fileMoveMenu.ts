@@ -49,7 +49,7 @@ export function addFileMoveMenuItem(
 	if (targets.size === 0) return;
 	menu.addItem((item) =>
 		item
-			.setTitle(targets.size > 1 ? `Move ${targets.size} files to…` : "Move to…")
+			.setTitle("Move to…")
 			.setIcon("folder-input")
 			.onClick(() => {
 				onSelected?.();

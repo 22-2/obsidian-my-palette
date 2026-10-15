@@ -72,7 +72,7 @@ it("adds tags only to distinct indexed Markdown notes", () => {
 	const m = menu();
 
 	addTagInsertionMenuItems(m.instance, plugin, results, onSelected);
-	expect(m.titles).toEqual(["Add tags to 2 notes…"]);
+	expect(m.titles).toEqual(["Add tags…"]);
 	m.click();
 
 	expect(onSelected).toHaveBeenCalledOnce();

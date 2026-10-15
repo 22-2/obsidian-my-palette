@@ -90,11 +90,7 @@ export function addMocInsertionMenuItems(
 	menu.addSeparator();
 	menu.addItem((item) =>
 		item
-			.setTitle(
-				results.length > 1
-					? "Insert selected into MOC Relateds"
-					: "Insert into MOC Relateds",
-			)
+			.setTitle("Insert into MOC Relateds")
 			.setIcon("list-plus")
 			.onClick(() => {
 				onSelected?.();
