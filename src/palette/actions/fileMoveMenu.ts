@@ -1,6 +1,7 @@
 import { TFile, type App } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import { isUserIgnoredPath } from "src/ignored-notes/ignoredPaths";
+import { resolveVaultFile } from "src/palette/actions/resultFile";
 import { MoveFileModal, type MoveSource } from "src/palette/MoveFileModal";
 import type { PaletteResult } from "src/palette/results";
 import type { PaletteMenu } from "src/ui/paletteMenu";
@@ -12,25 +13,14 @@ import type { PaletteMenu } from "src/ui/paletteMenu";
  * Folders and paths outside the vault resolve to nothing.
  */
 function resolveMoveSource(app: App, result: PaletteResult): MoveSource | undefined {
-	switch (result.mode) {
-		case "file":
-		case "everything": {
-			if (!result.vaultPath) return undefined;
-			const file = app.vault.getAbstractFileByPath(result.vaultPath);
-			if (file instanceof TFile) return file;
-			const importable =
-				isUserIgnoredPath(app, result.vaultPath) &&
-				result.vaultPath.toLocaleLowerCase().endsWith(".md");
-			return importable ? { excludedPath: result.vaultPath } : undefined;
-		}
-		case "link":
-		case "backlink":
-		case "bookmark":
-		case "smart":
-			return result.file;
-		default:
-			return undefined;
-	}
+	const file = resolveVaultFile(app, result);
+	if (file) return file;
+	if ((result.mode !== "file" && result.mode !== "everything") || !result.vaultPath)
+		return undefined;
+	const importable =
+		isUserIgnoredPath(app, result.vaultPath) &&
+		result.vaultPath.toLocaleLowerCase().endsWith(".md");
+	return importable ? { excludedPath: result.vaultPath } : undefined;
 }
 
 /** Adds one action that moves every selected file into the folder chosen next. */
