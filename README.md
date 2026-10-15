@@ -50,6 +50,7 @@ Open the command palette and run one of these, then bind a hotkey if you like:
 | `My Palette: Open Smart Connections list` | Notes related to the current note (needs Smart Connections) |
 | `My Palette: Open tab list`               | Open tabs                                                   |
 | `My Palette: Open folder move selector`   | Move the current file                                       |
+| `My Palette: Open rename selector`        | Rename the current file                                     |
 | `My Palette: Open tag insert selector`    | Add tags to the current note                                |
 | `My Palette: Open MOC insert selector`    | Add mutual Relateds links to the active MOC                 |
 | `My Palette: Open MOC remove selector`    | Remove Relateds links from the active MOC                   |
@@ -73,7 +74,7 @@ The action (`…`) and history (clock) buttons are also available in the Tag ins
 | `Ctrl+R`               | Search history                                     |
 | `Esc`                  | Leave a mode; at Home, close or clear              |
 
-The action menu offers: open, open in a background tab, open side by side, open below, open in external editor, show in system explorer, open in terminal, copy file names, Vault-relative paths or absolute paths, move to another folder (`Move to…`; every selected file moves at once; Obsidian-excluded Markdown notes are imported into the vault first), insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current palette. The palette modal's footer shows the `Obsidian-excluded` switch; other keyboard instructions and insertion targets live in Help. Hold `Alt+H` in any search or interaction mode to gently fade out the palette or selector while inspecting a preview; releasing either key fades it back in and returns focus to the search field. This works in modals (including their backdrop), Sidebar palettes and Table palettes, preserving the query, selection and workspace layout. In a mode, `Esc` returns to Home. At Home, `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
+The action menu offers: open, open in a background tab, open side by side, open below, open in external editor, show in system explorer, open in terminal, copy file names, Vault-relative paths or absolute paths, rename (`Rename…`), move to another folder (`Move to…`; every selected file moves at once; Obsidian-excluded Markdown notes are imported into the vault first), insert into a MOC and add tags. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current palette. The palette modal's footer shows the `Obsidian-excluded` switch; other keyboard instructions and insertion targets live in Help. Hold `Alt+H` in any search or interaction mode to gently fade out the palette or selector while inspecting a preview; releasing either key fades it back in and returns focus to the search field. This works in modals (including their backdrop), Sidebar palettes and Table palettes, preserving the query, selection and workspace layout. In a mode, `Esc` returns to Home. At Home, `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
 
 ### Custom shortcuts
 
@@ -145,6 +146,12 @@ Recently inserted tags are stored per Vault in local IndexedDB.
 The MOC insert selector uses the same input/selection modes and gestures. Checked notes always appear first regardless of the query. `→` previews the highlighted note while keeping the modal focused. `Enter` inserts highlighted notes immediately; `Space` toggles checks in selection mode, and `Ctrl+Enter` or the checked-list button adds mutual `Relateds` links to the original MOC for every checked note, even after previewing another note. Notes already linked in both directions start checked; clearing their check unlinks them when you press `Ctrl+Enter`, and `Enter` unlinks the highlighted one at once. Only links inside a `Relateds` item count, not other links in the body.
 
 Notes linked in both directions appear last and cannot be selected. Notes linked in one direction stay selectable so you can complete the link. Right-click a linked note and choose `Remove link` to remove the Relateds links in both directions.
+
+### Renaming files
+
+Select files in a palette, right-click and choose `Rename…` (or run `Open rename selector` for the current file). Type `find/replace` in the input and the list previews every new name: for example `_/-` turns `2026_01_02.md` into `2026-01-02.md`, and `draft/` deletes the word. A file name cannot contain `/`, so the first `/` separates the two parts and nothing needs escaping. The footer switches choose `Regex` (the find part is a regular expression and `$1` inserts a group, so it cannot contain `/`), `Match case` and `All occurrences`.
+
+Only the name of files inside the vault changes; folders, extensions and Obsidian-excluded or external files are never renamed. Rows are marked when a name is invalid, already exists or would be given to two files, and nothing is renamed until every mark is resolved. `Enter` only reminds you of the shortcut; `Ctrl+Enter` renames every listed file whose name changes. Links to the files are updated by Obsidian.
 
 ## Views
 

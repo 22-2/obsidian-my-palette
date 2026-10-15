@@ -1,6 +1,7 @@
 import type MyPalettePlugin from "src/main";
 import { insertLinkToMocRelateds, removeLinkInMocRelateds } from "src/moc-relateds/mocRelateds";
 import { MoveFileModal } from "src/palette/MoveFileModal";
+import { BulkRenameModal } from "src/rename/BulkRenameModal";
 import type { FixedPaletteMode } from "src/palette/PaletteSearchSession";
 import { insertTags } from "src/tags/insertTags";
 
@@ -84,6 +85,15 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 			const file = plugin.app.workspace.getActiveFile();
 			if (checking) return Boolean(file);
 			if (file) new MoveFileModal(plugin, file).open();
+		},
+	});
+	plugin.addCommand({
+		id: "open-rename-selector",
+		name: "Open rename selector",
+		checkCallback: (checking) => {
+			const file = plugin.app.workspace.getActiveFile();
+			if (checking) return Boolean(file);
+			if (file) new BulkRenameModal(plugin, [file]).open();
 		},
 	});
 	plugin.addCommand({

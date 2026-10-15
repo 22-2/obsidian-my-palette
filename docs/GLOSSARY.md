@@ -40,13 +40,14 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 
 ### Selector
 
-| 正式名                  | 意味                                                         | 現在の表記              | 識別子(ショートカットの範囲) |
-| ----------------------- | ------------------------------------------------------------ | ----------------------- | ---------------------------- |
-| Tag insert selector     | 現在のノートにタグを挿入する                                 | Tag selector            | `tag-insert-selector`        |
-| MOC insert selector     | MOC Relatedsにリンクを挿入する                               | MOC selector            | `moc-insert-selector`        |
-| MOC remove selector     | MOC Relatedsからリンクを削除する                             | MOC selector            | `moc-remove-selector`        |
-| Folder move selector    | ファイルを別のフォルダーへ移動する                           | Folder picker(コメント) | なし                         |
-| Property value selector | 現在のノートのList型プロパティの値を付ける・外す・新しく足す | 値のpicker              | `property-value-selector`    |
+| 正式名                  | 意味                                                         | 現在の表記                    | 識別子(ショートカットの範囲) |
+| ----------------------- | ------------------------------------------------------------ | ----------------------------- | ---------------------------- |
+| Tag insert selector     | 現在のノートにタグを挿入する                                 | Tag selector                  | `tag-insert-selector`        |
+| MOC insert selector     | MOC Relatedsにリンクを挿入する                               | MOC selector                  | `moc-insert-selector`        |
+| MOC remove selector     | MOC Relatedsからリンクを削除する                             | MOC selector                  | `moc-remove-selector`        |
+| Folder move selector    | ファイルを別のフォルダーへ移動する                           | Folder picker(コメント)       | なし                         |
+| Rename selector         | 選んだファイルの名前を `置換前/置換後` で一括変更する        | Bulk rename(UIの名前としては) | `bulk-rename`                |
+| Property value selector | 現在のノートのList型プロパティの値を付ける・外す・新しく足す | 値のpicker                    | `property-value-selector`    |
 
 - MOC insert selectorでも、リンク済みのノートを右クリックメニューから削除できる。主な用途で名付けたものとして、この重なりは許容する。
 - ショートカットの範囲は`moc-insert-selector`と`moc-remove-selector`に分けた。Obsidian-excludedのスイッチはinsertだけにあるため、`toggleIgnored`はinsertだけで有効にした。
@@ -85,6 +86,7 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 | Open snippet list           | `open-snippet-list`           | Snippetsモード       |
 | Open property list          | `open-property-list`          | Propertiesモード     |
 | Open folder move selector   | `open-folder-move-selector`   | Folder move selector |
+| Open rename selector        | `open-rename-selector`        | Rename selector      |
 | Open tag insert selector    | `open-tag-insert-selector`    | Tag insert selector  |
 | Open MOC insert selector    | `open-moc-insert-selector`    | MOC insert selector  |
 | Open MOC remove selector    | `open-moc-remove-selector`    | MOC remove selector  |

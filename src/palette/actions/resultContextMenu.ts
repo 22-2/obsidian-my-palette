@@ -4,6 +4,7 @@ import type { PaletteMenu } from "src/ui/paletteMenu";
 import type MyPalettePlugin from "src/main";
 import type { MocInsertionContext } from "src/moc-relateds/mocInsertion";
 import { addMocInsertionMenuItem, addMocInsertionMenuItems } from "src/moc-relateds/mocInsertion";
+import { addBulkRenameMenuItem } from "src/palette/actions/bulkRenameMenu";
 import { addSelectionHeader } from "src/palette/actions/selectionHeader";
 import { addFileMoveMenuItem } from "src/palette/actions/fileMoveMenu";
 import { isTabResult, populateTabMenu } from "src/palette/actions/tabMenu";
@@ -90,6 +91,7 @@ export function populatePaletteResultMenu({
 			(values) => void copyPathListToClipboard(values),
 		);
 		addFileMoveMenuItem(menu, plugin, selectedItems, onNoteActionSelected);
+		addBulkRenameMenuItem(menu, plugin, selectedItems, onNoteActionSelected);
 		addMocInsertionMenuItems(menu, plugin, selectedItems, onNoteActionSelected, getMocContext);
 		addTagInsertionMenuItems(menu, plugin, selectedItems, onNoteActionSelected);
 		return;
@@ -269,6 +271,7 @@ export function populatePaletteResultMenu({
 	}
 	addCopyPathMenuItems(menu, paths, (path) => void copyPathToClipboard(path));
 	addFileMoveMenuItem(menu, plugin, [result], onNoteActionSelected);
+	addBulkRenameMenuItem(menu, plugin, [result], onNoteActionSelected);
 	// Why: MOC insertion mutates multiple notes, so keep it after navigation and
 	// non-mutating copy actions in both palette surfaces.
 	addMocInsertionMenuItem(menu, plugin, result, onNoteActionSelected, getMocContext);
