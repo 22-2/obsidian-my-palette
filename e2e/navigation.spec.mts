@@ -10,6 +10,14 @@ const HEADING = ".my-palette-section-heading";
 test.beforeEach(async ({ obsidian }) => {
 	await obsidian.createNote("Hub.md", "# Hub");
 	await obsidian.createNote("Referrer.md", "points to [[Hub]]");
+	// Backlinks read the resolved links, which the metadata cache fills in a moment after a note is created.
+	await expect
+		.poll(() =>
+			obsidian.evaluateApp(
+				() => app.metadataCache.resolvedLinks["Referrer.md"]?.["Hub.md"] ?? 0,
+			),
+		)
+		.toBe(1);
 	await obsidian.open("Hub.md");
 });
 
