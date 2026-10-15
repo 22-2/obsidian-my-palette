@@ -1,4 +1,4 @@
-import { setIcon, type IconName } from "obsidian";
+import { Scope, setIcon, type App, type IconName } from "obsidian";
 
 export interface PaletteMenuPosition {
 	x: number;
@@ -86,7 +86,7 @@ export class PaletteMenu {
 	 * actions whose title contains every typed word, instead of reaching the palette behind it.
 	 * A menu with fewer than `minItems` actions skips the field, since there is nothing to narrow.
 	 */
-	enableFilter(minItems = 5): this {
+	enableFilter(app: App, minItems = 5): this {
 		if (this.filter) return this;
 		const wrapEl = createDiv("my-palette-menu-filter");
 		const inputEl = wrapEl.createEl("input", {
@@ -99,7 +99,7 @@ export class PaletteMenu {
 			text: "No matching actions",
 		});
 		inputEl.addEventListener("input", () => this.applyFilter());
-		this.filter = { wrapEl, inputEl, emptyEl, minItems, active: false };
+		this.filter = { app, wrapEl, inputEl, emptyEl, minItems, active: false, scope: null };
 		return this;
 	}
 
@@ -182,8 +182,12 @@ export class PaletteMenu {
 		win.addEventListener("blur", this.onWindowChange);
 
 		this.resetFilter();
-		if (this.filter?.active && !doc.body.classList.contains("is-mobile"))
-			this.filter.inputEl.focus({ preventScroll: true });
+		if (this.filter?.active) {
+			this.filter.scope = new Scope();
+			this.filter.app.keymap.pushScope(this.filter.scope);
+			if (!doc.body.classList.contains("is-mobile"))
+				this.filter.inputEl.focus({ preventScroll: true });
+		}
 		if (options.selectFirst) this.focusEnabled(0, 1);
 	}
 
@@ -210,6 +214,10 @@ export class PaletteMenu {
 		win.removeEventListener("resize", this.onWindowChange);
 		win.removeEventListener("blur", this.onWindowChange);
 		this.openDoc = null;
+		if (this.filter?.scope) {
+			this.filter.app.keymap.popScope(this.filter.scope);
+			this.filter.scope = null;
+		}
 		this.setSelected(-1);
 		this.parentEl?.removeClass("has-active-menu");
 		this.dom.remove();
@@ -295,6 +303,12 @@ export class PaletteMenu {
 }
 
 interface MenuFilter {
+	app: App;
+	/**
+	 * Pushed while the menu is open. A modal's scope pulls focus back from any element outside
+	 * the modal, so without its own scope the filter field could never keep focus.
+	 */
+	scope: Scope | null;
 	wrapEl: HTMLElement;
 	inputEl: HTMLInputElement;
 	emptyEl: HTMLElement;

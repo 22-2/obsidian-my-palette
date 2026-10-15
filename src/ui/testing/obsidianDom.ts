@@ -2,6 +2,8 @@ import type { App as ObsidianApp } from "obsidian";
 
 export class App {}
 
+export class Scope {}
+
 interface ElementOptions {
 	cls?: string;
 	text?: string;

@@ -68,7 +68,7 @@ export function populatePaletteResultMenu({
 	onTabsChanged,
 }: PaletteResultMenuOptions): void {
 	// Why: typing in an open menu would otherwise go to the palette's search input.
-	menu.enableFilter();
+	menu.enableFilter(app);
 	// Tab results get their own menu; a mixed selection cannot happen because
 	// one search produces results of a single mode.
 	const targets = selectedItems.length > 1 ? selectedItems : [result];

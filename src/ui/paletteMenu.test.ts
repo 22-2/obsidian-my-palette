@@ -1,5 +1,6 @@
 import { Window } from "happy-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { App } from "obsidian";
 import { PaletteMenu, placeMenu, type PaletteMenuItem } from "src/ui/paletteMenu";
 import { installObsidianDom } from "src/ui/testing/obsidianDom";
 
@@ -306,8 +307,10 @@ describe("PaletteMenu selection", () => {
 	});
 });
 
+const keymap = { pushScope: vi.fn(), popScope: vi.fn() };
+
 function filterMenu(minItems = 3) {
-	const menu = new PaletteMenu().enableFilter(minItems);
+	const menu = new PaletteMenu().enableFilter({ keymap } as unknown as App, minItems);
 	const runs = { copy: vi.fn(), open: vi.fn(), rename: vi.fn() };
 	menu.addItem((item) => item.setTitle("Open in terminal").onClick(runs.open));
 	menu.addSeparator();
@@ -340,6 +343,24 @@ describe("PaletteMenu filter", () => {
 		menu.showAtPosition({ x: 0, y: 0 });
 
 		expect(document.activeElement).toBe(filterInput());
+	});
+
+	it("holds its own keymap scope while open, so a modal cannot pull focus back", () => {
+		keymap.pushScope.mockClear();
+		keymap.popScope.mockClear();
+		const { menu } = filterMenu();
+		menu.showAtPosition({ x: 0, y: 0 });
+		expect(keymap.pushScope).toHaveBeenCalledOnce();
+
+		menu.close();
+		expect(keymap.popScope).toHaveBeenCalledExactlyOnceWith(keymap.pushScope.mock.calls[0][0]);
+	});
+
+	it("pushes no scope for a menu too short to show the field", () => {
+		keymap.pushScope.mockClear();
+		const { menu } = filterMenu(4);
+		menu.showAtPosition({ x: 0, y: 0 });
+		expect(keymap.pushScope).not.toHaveBeenCalled();
 	});
 
 	it("hides actions missing any typed word, ignoring case", () => {
