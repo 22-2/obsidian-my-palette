@@ -23,12 +23,15 @@ function resolveMoveSource(app: App, result: PaletteResult): MoveSource | undefi
 	return importable ? { excludedPath: result.vaultPath } : undefined;
 }
 
-/** Adds one action that moves every selected file into the folder chosen next. */
+/**
+ * Adds one action that moves every selected file into the folder chosen next. `onDone` runs
+ * once files moved; cancelling the selector leaves the palette where it was.
+ */
 export function addFileMoveMenuItem(
 	menu: PaletteMenu,
 	plugin: MyPalettePlugin,
 	results: readonly PaletteResult[],
-	onSelected?: () => void,
+	onDone?: () => void,
 ): void {
 	const targets = new Map<string, MoveSource>();
 	for (const result of results) {
@@ -41,9 +44,6 @@ export function addFileMoveMenuItem(
 		item
 			.setTitle("Move to…")
 			.setIcon("folder-input")
-			.onClick(() => {
-				onSelected?.();
-				new MoveFileModal(plugin, [...targets.values()]).open();
-			}),
+			.onClick(() => new MoveFileModal(plugin, [...targets.values()], onDone).open()),
 	);
 }

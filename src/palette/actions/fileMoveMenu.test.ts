@@ -71,17 +71,16 @@ it("moves distinct indexed files of any type and skips the rest", () => {
 		{ ...base, mode: "command", commandId: "x" },
 	];
 	const m = menu();
-	const onSelected = vi.fn();
-	addFileMoveMenuItem(m.instance, plugin, results, onSelected);
+	const onDone = vi.fn();
+	addFileMoveMenuItem(m.instance, plugin, results, onDone);
 	expect(m.titles).toEqual(["Move to…"]);
 
 	m.click();
-	expect(onSelected).toHaveBeenCalledOnce();
-	expect(MoveFileModal).toHaveBeenCalledWith(plugin, [
-		files.get("a.md"),
-		files.get("image.png"),
-		{ excludedPath: "secret/excluded.md" },
-	]);
+	expect(MoveFileModal).toHaveBeenCalledWith(
+		plugin,
+		[files.get("a.md"), files.get("image.png"), { excludedPath: "secret/excluded.md" }],
+		onDone,
+	);
 });
 
 it("uses the single-file title for one file", () => {

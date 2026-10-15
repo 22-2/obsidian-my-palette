@@ -40,6 +40,11 @@ interface PaletteResultMenuOptions {
 	applySearchHistory: (result: Extract<PaletteResult, { mode: "search-history" }>) => void;
 	/** Lets a modal palette close before an action that opens its own modal or edits notes. */
 	onNoteActionSelected?: () => void;
+	/**
+	 * Closes a modal palette once an action that opens its own selector (tags, move, rename)
+	 * has finished. The palette stays open underneath, so cancelling returns to it.
+	 */
+	onNoteActionDone?: () => void;
 	getMocContext?: () => MocInsertionContext;
 	/** Re-runs the search after a tab operation changed the open tabs. */
 	onTabsChanged?: () => void;
@@ -57,6 +62,7 @@ export function populatePaletteResultMenu({
 	openInMainWindow,
 	applySearchHistory,
 	onNoteActionSelected,
+	onNoteActionDone,
 	getMocContext,
 	onTabsChanged,
 }: PaletteResultMenuOptions): void {
@@ -71,7 +77,7 @@ export function populatePaletteResultMenu({
 			tabs: targets,
 			activate,
 			onTabsChanged: onTabsChanged ?? (() => {}),
-			onNoteActionSelected,
+			onNoteActionDone,
 		});
 		return;
 	}
@@ -90,10 +96,10 @@ export function populatePaletteResultMenu({
 			selectedPaths,
 			(values) => void copyPathListToClipboard(values),
 		);
-		addFileMoveMenuItem(menu, plugin, selectedItems, onNoteActionSelected);
-		addBulkRenameMenuItem(menu, plugin, selectedItems, onNoteActionSelected);
+		addFileMoveMenuItem(menu, plugin, selectedItems, onNoteActionDone);
+		addBulkRenameMenuItem(menu, plugin, selectedItems, onNoteActionDone);
 		addMocInsertionMenuItems(menu, plugin, selectedItems, onNoteActionSelected, getMocContext);
-		addTagInsertionMenuItems(menu, plugin, selectedItems, onNoteActionSelected);
+		addTagInsertionMenuItems(menu, plugin, selectedItems, onNoteActionDone);
 		return;
 	}
 
@@ -270,10 +276,10 @@ export function populatePaletteResultMenu({
 		);
 	}
 	addCopyPathMenuItems(menu, paths, (path) => void copyPathToClipboard(path));
-	addFileMoveMenuItem(menu, plugin, [result], onNoteActionSelected);
-	addBulkRenameMenuItem(menu, plugin, [result], onNoteActionSelected);
+	addFileMoveMenuItem(menu, plugin, [result], onNoteActionDone);
+	addBulkRenameMenuItem(menu, plugin, [result], onNoteActionDone);
 	// Why: MOC insertion mutates multiple notes, so keep it after navigation and
 	// non-mutating copy actions in both palette surfaces.
 	addMocInsertionMenuItem(menu, plugin, result, onNoteActionSelected, getMocContext);
-	addTagInsertionMenuItems(menu, plugin, [result], onNoteActionSelected);
+	addTagInsertionMenuItems(menu, plugin, [result], onNoteActionDone);
 }

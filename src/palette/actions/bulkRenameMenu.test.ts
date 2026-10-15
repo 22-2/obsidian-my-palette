@@ -59,16 +59,16 @@ it("renames distinct vault files of any type and skips everything else", () => {
 		{ ...base, mode: "command", commandId: "x" },
 	];
 	const m = menu();
-	const onSelected = vi.fn();
-	addBulkRenameMenuItem(m.instance, plugin, results, onSelected);
+	const onDone = vi.fn();
+	addBulkRenameMenuItem(m.instance, plugin, results, onDone);
 	expect(m.titles).toEqual(["Rename…"]);
 
 	m.click();
-	expect(onSelected).toHaveBeenCalledOnce();
-	expect(BulkRenameModal).toHaveBeenCalledWith(plugin, [
-		files.get("a.md"),
-		files.get("image.png"),
-	]);
+	expect(BulkRenameModal).toHaveBeenCalledWith(
+		plugin,
+		[files.get("a.md"), files.get("image.png")],
+		onDone,
+	);
 });
 
 it("adds nothing when no result is a vault file", () => {

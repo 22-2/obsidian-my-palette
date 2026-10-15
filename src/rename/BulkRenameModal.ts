@@ -53,6 +53,7 @@ export class BulkRenameModal extends SelectionModal<RenameItem> {
 	constructor(
 		private readonly plugin: SelectorControls["plugin"],
 		files: readonly TFile[],
+		private readonly onDone?: () => void,
 	) {
 		const paths = files.map((file) => file.path).sort((a, b) => a.localeCompare(b));
 		super(
@@ -180,5 +181,6 @@ export class BulkRenameModal extends SelectionModal<RenameItem> {
 				: `Renamed ${renamed} files, ${failures.length} failed:\n${failures.join("\n")}`,
 		);
 		this.close();
+		if (renamed > 0) this.onDone?.();
 	}
 }

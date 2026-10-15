@@ -26,7 +26,14 @@ function isSourceList(files: MoveSource | readonly MoveSource[]): files is reado
 export class MoveFileModal extends SelectionModal<FolderItem> {
 	private readonly files: readonly MoveSource[];
 
-	constructor(plugin: SelectorControls["plugin"], files: MoveSource | readonly MoveSource[]) {
+	/** Whether any file moved, so a palette that opened this selector can close behind it. */
+	private changed = false;
+
+	constructor(
+		plugin: SelectorControls["plugin"],
+		files: MoveSource | readonly MoveSource[],
+		private readonly onDone?: () => void,
+	) {
 		const targets = isSourceList(files) ? files : [files];
 		super(
 			{
@@ -82,6 +89,7 @@ export class MoveFileModal extends SelectionModal<FolderItem> {
 				failures.push(`${name}: ${error instanceof Error ? error.message : String(error)}`);
 			}
 		}
+		this.changed ||= moved > 0;
 		const folderName = item.path || "Vault root";
 		if (failures.length === 0) {
 			if (moved > 0)
@@ -94,5 +102,10 @@ export class MoveFileModal extends SelectionModal<FolderItem> {
 		}
 		if (moved > 0) new Notice(`Moved ${moved} files to ${folderName}`);
 		this.emptyStateText = failures.join("\n");
+	}
+
+	protected override onSelectionModalClose(): void {
+		super.onSelectionModalClose();
+		if (this.changed) this.onDone?.();
 	}
 }

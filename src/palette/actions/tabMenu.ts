@@ -26,7 +26,7 @@ interface TabMenuOptions {
 	activate: (action: ActionKind, result: PaletteResult) => void | Promise<void>;
 	/** Re-runs the search so closed or duplicated tabs show up in the list. */
 	onTabsChanged: () => void;
-	onNoteActionSelected?: () => void;
+	onNoteActionDone?: () => void;
 }
 
 const pluralTabs = (count: number): string => (count === 1 ? "tab" : "tabs");
@@ -42,7 +42,7 @@ export function populateTabMenu({
 	tabs,
 	activate,
 	onTabsChanged,
-	onNoteActionSelected,
+	onNoteActionDone,
 }: TabMenuOptions): void {
 	const single = tabs.length === 1 ? tabs[0] : undefined;
 	// Resolve leaves when the item is clicked: the tabs may have changed since the menu opened.
@@ -115,5 +115,5 @@ export function populateTabMenu({
 	} else {
 		addCopyPathListMenuItems(menu, paths, (values) => void copyPathListToClipboard(values));
 	}
-	addTagInsertionMenuItems(menu, plugin, tabs, onNoteActionSelected);
+	addTagInsertionMenuItems(menu, plugin, tabs, onNoteActionDone);
 }

@@ -6,14 +6,15 @@ import type { PaletteMenu } from "src/ui/paletteMenu";
 import type { TFile } from "obsidian";
 
 /**
- * Adds one action that renames the selected files in the Rename selector. Only files the vault
+ * Adds one action that renames the selected files in the Rename selector. `onDone` runs once
+ * files were renamed; cancelling leaves the palette where it was. Only files the vault
  * indexes qualify: folders and Obsidian-excluded or external files are never renamed.
  */
 export function addBulkRenameMenuItem(
 	menu: PaletteMenu,
 	plugin: MyPalettePlugin,
 	results: readonly PaletteResult[],
-	onSelected?: () => void,
+	onDone?: () => void,
 ): void {
 	const targets = new Map<string, TFile>();
 	for (const result of results) {
@@ -25,9 +26,6 @@ export function addBulkRenameMenuItem(
 		item
 			.setTitle("Rename…")
 			.setIcon("pencil-line")
-			.onClick(() => {
-				onSelected?.();
-				new BulkRenameModal(plugin, [...targets.values()]).open();
-			}),
+			.onClick(() => new BulkRenameModal(plugin, [...targets.values()], onDone).open()),
 	);
 }

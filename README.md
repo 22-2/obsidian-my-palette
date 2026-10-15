@@ -125,6 +125,8 @@ Everything queries are passed through unchanged and use Everything's own syntax.
 
 Selection is shared by the palette, the Tag insert selector and the MOC insert and remove selectors: click, `Ctrl`/`Shift`+click, arrow keys.
 
+When a modal palette's menu opens a selector (`Add tags…`, `Move to…`, `Rename…`) or a property editor, the palette stays open underneath. Cancelling the selector with `Esc` returns to the palette as it was; it closes only after the action has been applied.
+
 ### Adding tags
 
 Run `Open tag insert selector`, or right-click results and choose `Add tags…`. With several results selected, the tags are added to every selected Markdown note. Obsidian-excluded files are skipped.

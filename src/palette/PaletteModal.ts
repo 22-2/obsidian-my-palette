@@ -185,6 +185,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			openInBackground: (selected) => this.openResultInBackground(selected),
 			applySearchHistory: (history) => this.applySearchHistory(history),
 			onNoteActionSelected: () => this.close(),
+			onNoteActionDone: () => this.close(),
 			onTabsChanged: () => this.refreshSuggestions(),
 		});
 		menu.setParentElement(this.modalEl);

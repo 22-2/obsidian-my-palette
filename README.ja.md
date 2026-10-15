@@ -117,6 +117,8 @@ Everything のクエリは変換せず、そのまま Everything 独自の構文
 
 選択操作は、パレット、Tag insert selector、MOC insert selector、MOC remove selector で共通です。クリック、`Ctrl` / `Shift`+クリック、矢印キーで選びます。
 
+モーダルのパレットのメニューから selector（`Add tags…`、`Move to…`、`Rename…`）やプロパティの編集を開いたとき、パレットは裏に残ります。`Esc` でキャンセルするとパレットの元の画面に戻り、操作を実行したあとで閉じます。
+
 ### タグの追加
 
 `Open tag insert selector` を実行するか、結果を右クリックして `Add tags…` を選びます。複数の結果を選択していると、選択したすべての Markdown ノートに同じタグを追加します。除外ファイルは対象外です。
