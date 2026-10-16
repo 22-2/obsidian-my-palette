@@ -8,6 +8,7 @@ import type { SmartConnectionResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 import { ICONS } from "src/ui/icons";
+import { getCommunityPlugin } from "src/platform/obsidianInternals";
 
 interface SmartSource {
 	vec?: number[];
@@ -82,11 +83,8 @@ export class SmartConnectionProvider implements PaletteProvider<SmartConnectionR
 	}
 
 	private environment(): SmartConnectionsEnvironment | undefined {
-		const plugins = (
-			this.app as unknown as {
-				plugins?: { plugins?: Record<string, { env?: SmartConnectionsEnvironment }> };
-			}
-		).plugins?.plugins;
-		return plugins?.["smart-connect-pro"]?.env ?? plugins?.["smart-connections"]?.env;
+		const plugin = (id: string) =>
+			getCommunityPlugin<{ env?: SmartConnectionsEnvironment }>(this.app, id);
+		return plugin("smart-connect-pro")?.env ?? plugin("smart-connections")?.env;
 	}
 }

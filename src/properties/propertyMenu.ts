@@ -7,6 +7,7 @@ import { updateFrontmatter } from "src/shared/frontmatter";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 import { ICONS } from "src/ui/icons";
 import { logger } from "src/shared/logger";
+import { getGlobalSearch } from "src/platform/obsidianInternals";
 
 /**
  * The text copied for a property value. A list is copied one item per line, and a
@@ -57,7 +58,7 @@ export function populatePropertyMenu(
 }
 
 function openPropertySearch(app: App, key: string, beforeSearch?: () => void): void {
-	const search = app.internalPlugins.getEnabledPluginById("global-search");
+	const search = getGlobalSearch(app);
 	if (!search) {
 		new Notice("Enable Obsidian's search core plugin to search properties.");
 		return;

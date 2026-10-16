@@ -4,6 +4,7 @@ import type { PaletteProvider, PaletteSearchRequest } from "src/search/PalettePr
 import { type Command, sortCommandMatches } from "src/search/command/commandSorting";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 import { ICONS } from "src/ui/icons";
+import { getCommands } from "src/platform/obsidianInternals";
 
 export class CommandProvider implements PaletteProvider<CommandResult> {
 	constructor(
@@ -11,9 +12,7 @@ export class CommandProvider implements PaletteProvider<CommandResult> {
 		private readonly recents: () => string[],
 	) {}
 	getCommands(): Command[] {
-		return Object.values(
-			(this.app.commands as unknown as { commands: Record<string, Command> }).commands ?? {},
-		);
+		return getCommands(this.app);
 	}
 	async search({ query }: PaletteSearchRequest): Promise<CommandResult[]> {
 		const commands = this.getCommands();

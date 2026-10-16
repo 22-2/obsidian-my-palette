@@ -1,22 +1,19 @@
 import { normalizePath, type App } from "obsidian";
 import { getDesktopAdapter } from "src/platform/desktopAdapter";
 import { isUserIgnoredPathWithFilters } from "src/ignored-notes/ignoredPathMatching";
+import {
+	getVaultBasePath,
+	getVaultConfig,
+	getVaultFullPath as getInternalVaultFullPath,
+} from "src/platform/obsidianInternals";
 
 export {
 	isUserIgnoreFilterRegex,
 	isUserIgnoredPathWithFilters,
 } from "src/ignored-notes/ignoredPathMatching";
 
-type ConfigurableVault = App["vault"] & {
-	getConfig: (key: string) => unknown;
-	adapter: App["vault"]["adapter"] & {
-		getBasePath?: () => string;
-		getFullPath?: (vaultPath: string) => string;
-	};
-};
-
 export function getUserIgnoreFilters(app: App): string[] {
-	const configured = (app.vault as ConfigurableVault).getConfig("userIgnoreFilters");
+	const configured = getVaultConfig(app, "userIgnoreFilters");
 	if (!Array.isArray(configured)) return [];
 	return configured.flatMap((value): string[] => {
 		if (typeof value !== "string" || !value.trim()) return [];
@@ -35,21 +32,21 @@ export function isUserIgnoredPath(app: App, vaultPath: string): boolean {
 }
 
 export function getVaultFullPath(app: App, vaultPath: string): string | null {
-	return (app.vault as ConfigurableVault).adapter.getFullPath?.(vaultPath) ?? null;
+	return getInternalVaultFullPath(app, vaultPath) ?? null;
 }
 
 export function getVaultRootPath(app: App): string | null {
-	return (app.vault as ConfigurableVault).adapter.getBasePath?.() ?? null;
+	return getVaultBasePath(app.vault) ?? null;
 }
 
 export function getVaultNewFileFolderPath(app: App): string {
-	const configured = (app.vault as ConfigurableVault).getConfig("newFileFolderPath");
+	const configured = getVaultConfig(app, "newFileFolderPath");
 	if (typeof configured !== "string" || !configured.trim()) return "";
 	return normalizePath(configured.trim().replace(/^\/+/, "")).replace(/\/$/, "");
 }
 
 export function vaultPathFromAbsolute(app: App, absolutePath: string): string | null {
-	const basePath = (app.vault as ConfigurableVault).adapter.getBasePath?.();
+	const basePath = getVaultBasePath(app.vault);
 	if (!basePath) return null;
 	const path = getDesktopAdapter(app).path;
 	const relative = path.relative(basePath, absolutePath);

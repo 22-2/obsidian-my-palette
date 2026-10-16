@@ -1,4 +1,4 @@
-import { App, Modal, Notice, type KeymapEventHandler } from "obsidian";
+import { App, Modal, Notice } from "obsidian";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 import { SelectorHelpModal, type SelectorControls } from "src/ui/selectorControls";
@@ -7,6 +7,7 @@ import type { PanelSwitch, PanelSwitchOptions } from "src/ui/panelSwitch";
 import { DEFAULT_HOTKEYS, matchesHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
 import { ICONS } from "src/ui/icons";
 import { logger } from "src/shared/logger";
+import { getScopeHandlers } from "src/platform/obsidianInternals";
 
 export interface SuggestModalProps<T> {
 	getHotkeys?: () => PaletteHotkeys;
@@ -116,7 +117,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		this.panel.selected = defaultValue ?? null;
 		this.inputEl = this.panel.inputEl;
 		this.resultContainerEl = this.panel.resultContainerEl;
-		const scopeHandlers = (this.scope as unknown as { keys?: KeymapEventHandler[] }).keys ?? [];
+		const scopeHandlers = getScopeHandlers(this.scope);
 		for (let index = scopeHandlers.length - 1; index >= 0; index -= 1) {
 			const handler = scopeHandlers[index];
 			if (
