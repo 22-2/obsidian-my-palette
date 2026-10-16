@@ -6,6 +6,7 @@ import { readList } from "src/properties/propertyList";
 import { updateFrontmatter } from "src/shared/frontmatter";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 import { ICONS } from "src/ui/icons";
+import { logger } from "src/shared/logger";
 
 /**
  * The text copied for a property value. A list is copied one item per line, and a
@@ -77,7 +78,8 @@ async function copyText(text: string, message: string): Promise<void> {
 	try {
 		await navigator.clipboard.writeText(text);
 		new Notice(message);
-	} catch {
+	} catch (error) {
+		logger.error("Failed to copy to the clipboard", error);
 		new Notice("Could not copy to the clipboard.");
 	}
 }

@@ -1,5 +1,4 @@
 import { Plugin, type WorkspaceLeaf } from "obsidian";
-import log, { LogLevels } from "consola";
 import { DEFAULT_SETTINGS, MyPaletteSettingTab } from "src/settings";
 import type { LeafOpenAction } from "src/workspace/openLeaf";
 import type { MyPaletteSettings } from "src/settings/model";
@@ -34,9 +33,7 @@ import { getVaultRootPath } from "src/ignored-notes/ignoredPaths";
 import { openPluginSettings } from "src/search/plugin/pluginSettings";
 import "../styles.css";
 import { ICONS } from "src/ui/icons";
-
-const logger = log.withTag("MyPalette");
-const debugLog = (message: string, detail?: unknown): void => logger.debug(message, detail);
+import { debugLog, logger, setDebugLogging } from "src/shared/logger";
 
 export default class MyPalettePlugin extends Plugin {
 	settings: MyPaletteSettings = DEFAULT_SETTINGS;
@@ -160,7 +157,7 @@ export default class MyPalettePlugin extends Plugin {
 	}
 
 	initializeLogger(): void {
-		logger.level = this.settings.showLog ? LogLevels.debug : LogLevels.error;
+		setDebugLogging(this.settings.showLog);
 	}
 
 	async loadSettings(): Promise<LoadedPluginSettings> {

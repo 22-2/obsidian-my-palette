@@ -6,6 +6,7 @@ import { SuggestionPanel, type SuggestionPanelView } from "src/ui/suggestionPane
 import type { PanelSwitch, PanelSwitchOptions } from "src/ui/panelSwitch";
 import { DEFAULT_HOTKEYS, matchesHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
 import { ICONS } from "src/ui/icons";
+import { logger } from "src/shared/logger";
 
 export interface SuggestModalProps<T> {
 	getHotkeys?: () => PaletteHotkeys;
@@ -279,7 +280,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		try {
 			await this.onSuggestionPreview(item);
 		} catch (error) {
-			console.error("Failed to preview selection", error);
+			logger.error("Failed to preview selection", error);
 			new Notice(error instanceof Error ? error.message : "Failed to preview selection.");
 		} finally {
 			this.previewPending = false;
