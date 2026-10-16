@@ -8,29 +8,15 @@ import {
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 import { ICONS } from "src/ui/icons";
+import { getMetadataTypeManager, type VaultPropertyInfo } from "src/platform/obsidianInternals";
 
 /** Obsidian fixes these keys, so they are always listed, even when the note lacks them. */
 const RESERVED_KEYS = ["aliases", "tags", "cssclasses"] as const;
 /** Written by Obsidian for the note's own metadata, not an editable property. */
 const HIDDEN_KEYS = new Set(["position"]);
 
-interface VaultPropertyInfo {
-	type?: unknown;
-	widget?: unknown;
-}
-
-// Unofficial APIs: the vault-wide keys and each key's assigned type. A missing
-// function leaves the Vault section empty and the rest of the list working.
-interface TypeManagerInternals {
-	getAllProperties?: () => Record<string, VaultPropertyInfo>;
-	getPropertyOccurrences?: () => Record<string, number>;
-	getAssignedWidget?: (key: string) => unknown;
-}
-
 function vaultInfos(app: App): Record<string, VaultPropertyInfo> {
-	const infos = (
-		app as unknown as { metadataTypeManager?: TypeManagerInternals }
-	).metadataTypeManager?.getAllProperties?.();
+	const infos = getMetadataTypeManager(app)?.getAllProperties?.();
 	return infos && typeof infos === "object" ? infos : {};
 }
 
@@ -39,9 +25,7 @@ function declaredType(
 	key: string,
 	info: VaultPropertyInfo | undefined,
 ): string | undefined {
-	const assigned = (
-		app as unknown as { metadataTypeManager?: TypeManagerInternals }
-	).metadataTypeManager?.getAssignedWidget?.(key);
+	const assigned = getMetadataTypeManager(app)?.getAssignedWidget?.(key);
 	if (typeof assigned === "string") return assigned;
 	if (typeof info?.widget === "string") return info.widget;
 	return typeof info?.type === "string" ? info.type : undefined;
@@ -194,10 +178,7 @@ export class PropertyProvider implements PaletteProvider<PropertyResult> {
 				sourcePaths,
 			}),
 		);
-		const counts =
-			(
-				this.app as unknown as { metadataTypeManager?: TypeManagerInternals }
-			).metadataTypeManager?.getPropertyOccurrences?.() ?? {};
+		const counts = getMetadataTypeManager(this.app)?.getPropertyOccurrences?.() ?? {};
 		const vault = Object.keys(infos)
 			.filter((key) => !shared.has(key) && !isReserved(key) && !HIDDEN_KEYS.has(key))
 			.map((key) => ({ key, count: counts[key.toLowerCase()] ?? 0 }))
@@ -276,10 +257,7 @@ export class PropertyProvider implements PaletteProvider<PropertyResult> {
 	): PropertyResult[] {
 		const inNote = new Set(noteKeys);
 		// Obsidian returns usage counts separately, keyed by lowercase property name.
-		const counts =
-			(
-				this.app as unknown as { metadataTypeManager?: TypeManagerInternals }
-			).metadataTypeManager?.getPropertyOccurrences?.() ?? {};
+		const counts = getMetadataTypeManager(this.app)?.getPropertyOccurrences?.() ?? {};
 		return Object.keys(infos)
 			.filter((key) => !inNote.has(key) && !isReserved(key) && !HIDDEN_KEYS.has(key))
 			.map((key) => ({ key, count: counts[key.toLowerCase()] ?? 0 }))

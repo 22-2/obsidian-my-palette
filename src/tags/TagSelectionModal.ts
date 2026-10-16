@@ -9,6 +9,7 @@ import {
 	tagSuggestionKey,
 	type TagSuggestion,
 } from "src/tags/tagSuggestions";
+import { getGlobalSearch } from "src/platform/obsidianInternals";
 
 function choiceBadge(choice: TagChoice, targetCount: number): string | undefined {
 	if (choice.registered) return "Registered";
@@ -103,15 +104,7 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 	protected override async onSuggestionPreview(
 		candidate: MultiSelectCandidate<string>,
 	): Promise<void> {
-		const search = (
-			this.plugin.app as unknown as {
-				internalPlugins: {
-					getEnabledPluginById(
-						id: string,
-					): { openGlobalSearch(query: string, active: boolean): void } | undefined;
-				};
-			}
-		).internalPlugins.getEnabledPluginById("global-search");
+		const search = getGlobalSearch(this.plugin.app);
 		if (!search) {
 			new Notice("Enable Obsidian's search core plugin to preview tags.");
 			return;

@@ -1,3 +1,5 @@
+import { getVaultBasePath } from "src/platform/obsidianInternals";
+
 interface VaultIdentityApp {
 	vault: {
 		adapter: object;
@@ -6,10 +8,7 @@ interface VaultIdentityApp {
 }
 
 export function getVaultId(app: VaultIdentityApp): string {
-	const adapter = app.vault.adapter as {
-		getBasePath?: () => string;
-	};
-	const source = adapter.getBasePath?.() ?? app.vault.getName();
+	const source = getVaultBasePath(app.vault) ?? app.vault.getName();
 	// A stable hash keeps the absolute Vault path out of browser storage while
 	// still separating two Vaults that happen to contain identically named notes.
 	let hash = 2166136261;

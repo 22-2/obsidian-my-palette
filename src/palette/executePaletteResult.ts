@@ -5,6 +5,7 @@ import type { PaletteResult } from "src/palette/results";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
 import { openInExternalEditor } from "src/platform/externalOpen";
 import { editPropertyResult } from "src/properties/propertyActions";
+import { executeCommandById } from "src/platform/obsidianInternals";
 
 export interface PaletteResultExecutionOptions {
 	/** Keep the persistent panel alive after a successful action. */
@@ -51,9 +52,7 @@ export async function executePaletteResult(
 		plugin.recordCommand(result.commandId);
 		if (options.closeWhenDone) options.close();
 		window.queueMicrotask(() => {
-			(
-				plugin.app.commands as unknown as { executeCommandById: (id: string) => boolean }
-			).executeCommandById(result.commandId);
+			executeCommandById(plugin.app, result.commandId);
 		});
 		return;
 	}
