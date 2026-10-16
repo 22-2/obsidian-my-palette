@@ -90,6 +90,12 @@ export function installObsidianDom(): void {
 				this.textContent = text;
 			},
 		},
+		appendText: {
+			configurable: true,
+			value(this: HTMLElement, text: string) {
+				this.append(text);
+			},
+		},
 		hasClass: {
 			configurable: true,
 			value(this: HTMLElement, name: string) {
