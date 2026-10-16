@@ -11,8 +11,8 @@ import {
 } from "src/palette/searchHistory";
 import type { SearchHistoryCategory, SearchHistoryEntry } from "src/settings/model";
 import { getVaultId, getVaultPathKey } from "src/shared/vaultIdentity";
+import { DATABASE_NAMES } from "src/shared/databaseNames";
 
-export const SEARCH_HISTORY_DATABASE_NAME = "my-palette-search-history";
 const SEARCH_HISTORY_DATABASE_VERSION = 1;
 const SEARCH_HISTORY_MIGRATION_VERSION = 1;
 
@@ -199,7 +199,7 @@ export class SearchHistoryStore {
 
 	private getDatabase(): Promise<IDBPDatabase<SearchHistoryDatabase>> {
 		this.databasePromise ??= openDB<SearchHistoryDatabase>(
-			SEARCH_HISTORY_DATABASE_NAME,
+			DATABASE_NAMES.searchHistory,
 			SEARCH_HISTORY_DATABASE_VERSION,
 			{
 				upgrade(database) {

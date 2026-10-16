@@ -3,6 +3,7 @@ import type { CommandResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { type Command, sortCommandMatches } from "src/search/command/commandSorting";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { ICONS } from "src/ui/icons";
 
 export class CommandProvider implements PaletteProvider<CommandResult> {
 	constructor(
@@ -38,7 +39,7 @@ export class CommandProvider implements PaletteProvider<CommandResult> {
 			mode: "command",
 			primary: command.name,
 			secondary: command.id,
-			icon: "terminal",
+			icon: ICONS.command,
 			commandId: command.id,
 		}));
 	}

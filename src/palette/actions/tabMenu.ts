@@ -12,6 +12,8 @@ import {
 	copyPathToClipboard,
 } from "src/platform/pathClipboard";
 import { addTagInsertionMenuItems } from "src/tags/tagInsertionMenu";
+import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
+import { ICONS } from "src/ui/icons";
 
 export function isTabResult(result: PaletteResult): result is TabResult {
 	return result.mode === "tab";
@@ -52,20 +54,14 @@ export function populateTabMenu({
 	addSelectionHeader(menu, tabs.length);
 	if (single) {
 		menu.addItem((item) =>
-			item
-				.setTitle("Focus tab")
-				.setIcon("arrow-right-to-line")
-				.onClick(() => void activate("primary", single)),
+			withAction(item, MENU_ACTIONS.focusTab).onClick(() => void activate("primary", single)),
 		);
 		menu.addItem((item) =>
-			item
-				.setTitle("Duplicate tab")
-				.setIcon("copy-plus")
-				.onClick(() => {
-					const [leaf] = leavesNow();
-					if (!leaf) return;
-					void app.workspace.duplicateLeaf(leaf, "tab").then(onTabsChanged);
-				}),
+			withAction(item, MENU_ACTIONS.duplicateTab).onClick(() => {
+				const [leaf] = leavesNow();
+				if (!leaf) return;
+				void app.workspace.duplicateLeaf(leaf, "tab").then(onTabsChanged);
+			}),
 		);
 		menu.addSeparator();
 	}
@@ -77,7 +73,7 @@ export function populateTabMenu({
 		menu.addItem((item) =>
 			item
 				.setTitle(`Pin ${pluralTabs(tabs.length)}`)
-				.setIcon("pin")
+				.setIcon(ICONS.pin)
 				.onClick(() => {
 					for (const leaf of leavesNow()) leaf.setPinned(true);
 					onTabsChanged();
@@ -88,7 +84,7 @@ export function populateTabMenu({
 		menu.addItem((item) =>
 			item
 				.setTitle(`Unpin ${pluralTabs(tabs.length)}`)
-				.setIcon("pin-off")
+				.setIcon(ICONS.unpin)
 				.onClick(() => {
 					for (const leaf of leavesNow()) leaf.setPinned(false);
 					onTabsChanged();
@@ -98,7 +94,7 @@ export function populateTabMenu({
 	menu.addItem((item) =>
 		item
 			.setTitle(`Close ${pluralTabs(tabs.length)}`)
-			.setIcon("x")
+			.setIcon(ICONS.close)
 			.onClick(() => {
 				for (const leaf of leavesNow()) leaf.detach();
 				onTabsChanged();

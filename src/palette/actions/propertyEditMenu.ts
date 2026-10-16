@@ -3,6 +3,7 @@ import type MyPalettePlugin from "src/main";
 import { resolveVaultFile } from "src/palette/actions/resultFile";
 import type { PaletteResult } from "src/palette/results";
 import type { PaletteMenu } from "src/ui/paletteMenu";
+import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 
 /**
  * Adds an action that opens the Properties mode for the selected Markdown notes, so their
@@ -25,18 +26,15 @@ export function addPropertyEditMenuItem(
 	if (notes.size === 0) return;
 	const files = [...notes.values()];
 	menu.addItem((item) =>
-		item
-			.setTitle("Edit properties…")
-			.setIcon("text-cursor-input")
-			.onClick(() => {
-				onSelected?.();
-				plugin.paletteOpener.openPalette(
-					`${plugin.settings.modes.properties.alias} `,
-					undefined,
-					files.length === 1
-						? { modeEntries: true, sourceFile: files[0] }
-						: { modeEntries: true, sourceFiles: files },
-				);
-			}),
+		withAction(item, MENU_ACTIONS.editProperties).onClick(() => {
+			onSelected?.();
+			plugin.paletteOpener.openPalette(
+				`${plugin.settings.modes.properties.alias} `,
+				undefined,
+				files.length === 1
+					? { modeEntries: true, sourceFile: files[0] }
+					: { modeEntries: true, sourceFiles: files },
+			);
+		}),
 	);
 }

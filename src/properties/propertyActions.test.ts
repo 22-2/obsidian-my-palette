@@ -69,7 +69,7 @@ function row(overrides: Partial<PropertyResult>): PropertyResult {
 		mode: "property",
 		primary: "x",
 		secondary: "",
-		icon: "check-square",
+		icon: "square-check",
 		key: "x",
 		kind: "checkbox",
 		section: "This note",

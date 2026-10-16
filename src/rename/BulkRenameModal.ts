@@ -10,6 +10,7 @@ import {
 	type RenamePlanRow,
 	type RenameStatus,
 } from "src/rename/renamePlan";
+import { ICONS } from "src/ui/icons";
 
 interface RenameItem extends SelectionItem {
 	row: RenamePlanRow;
@@ -33,7 +34,7 @@ function toItem(row: RenamePlanRow): RenameItem {
 	return {
 		label: changed ? `${row.oldName} → ${row.newName}` : row.oldName,
 		description: directoryOf(row.path),
-		icon: row.status === "ready" ? "arrow-right" : changed ? "alert-triangle" : "file",
+		icon: row.status === "ready" ? ICONS.ready : changed ? ICONS.warning : ICONS.file,
 		badge: STATUS_BADGE[row.status],
 		row,
 	};
@@ -107,19 +108,19 @@ export class BulkRenameModal extends SelectionModal<RenameItem> {
 		toggle(
 			"regex",
 			"Regex",
-			"regex",
+			ICONS.regex,
 			"Read the find part as a regular expression; $1 inserts a group",
 		);
 		toggle(
 			"matchCase",
 			"Match case",
-			"case-sensitive",
+			ICONS.matchCase,
 			"Distinguish upper and lower case when matching",
 		);
 		toggle(
 			"all",
 			"All occurrences",
-			"replace-all",
+			ICONS.replaceAll,
 			"Replace every match in a name, not only the first",
 		);
 	}

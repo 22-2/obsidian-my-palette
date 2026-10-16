@@ -1,4 +1,5 @@
 import type { PropertyKind } from "src/palette/results";
+import { ICONS } from "src/ui/icons";
 
 /** Keys whose type Obsidian fixes, so a stored type never changes how they are edited. */
 const RESERVED_KINDS: Readonly<Record<string, PropertyKind>> = {
@@ -9,7 +10,7 @@ const RESERVED_KINDS: Readonly<Record<string, PropertyKind>> = {
 
 /** Obsidian's names for a property type: the newer `widget` and the older `type`. */
 const DECLARED_KINDS: Readonly<Record<string, PropertyKind>> = {
-	text: "text",
+	text: ICONS.text,
 	multitext: "list",
 	number: "number",
 	checkbox: "checkbox",
@@ -25,14 +26,14 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const DATETIME_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/;
 
 export const PROPERTY_KIND_ICONS: Readonly<Record<PropertyKind, string>> = {
-	text: "text",
-	list: "list",
-	number: "binary",
-	checkbox: "check-square",
-	date: "calendar",
-	datetime: "clock",
-	tags: "tags",
-	unsupported: "lock",
+	text: ICONS.text,
+	list: ICONS.list,
+	number: ICONS.number,
+	checkbox: ICONS.checkbox,
+	date: ICONS.date,
+	datetime: ICONS.datetime,
+	tags: ICONS.tags,
+	unsupported: ICONS.locked,
 };
 
 /**

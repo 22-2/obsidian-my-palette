@@ -2,6 +2,7 @@ import { Notice, TFile, TFolder } from "obsidian";
 import type { SelectorControls } from "src/ui/selectorControls";
 import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
 import { materializeIgnoredNote } from "src/ignored-notes/ignoredNoteMaterializer";
+import { ICONS } from "src/ui/icons";
 
 interface FolderItem extends SelectionItem {
 	path: string;
@@ -51,14 +52,14 @@ export class MoveFileModal extends SelectionModal<FolderItem> {
 					actionLabel: "Move to",
 				},
 				items: [
-					{ label: "Vault root", description: "/", icon: "folder-root", path: "" },
+					{ label: "Vault root", description: "/", icon: ICONS.vaultRoot, path: "" },
 					...plugin.app.vault
 						.getAllLoadedFiles()
 						.filter((entry): entry is TFolder => entry instanceof TFolder)
 						.map((folder) => ({
 							label: folder.name,
 							description: folder.path,
-							icon: "folder",
+							icon: ICONS.folder,
 							path: folder.path,
 						})),
 				],

@@ -4,6 +4,7 @@ import type { PluginResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 import { hasPluginSettingsTab } from "src/search/plugin/pluginSettings";
+import { ICONS } from "src/ui/icons";
 
 interface PluginManifest {
 	id: string;
@@ -44,7 +45,7 @@ export class PluginProvider implements PaletteProvider<PluginResult> {
 				primary: manifest.name || manifest.id,
 				secondary:
 					`${manifest.id} ${manifest.version ?? ""}${enabled ? "" : " (disabled)"}`.trim(),
-				icon: "puzzle",
+				icon: ICONS.plugin,
 				pluginId: manifest.id,
 				absolutePath,
 				vaultPath: manifest.dir,

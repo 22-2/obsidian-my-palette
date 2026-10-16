@@ -25,6 +25,7 @@ import { isTagOnlyQuery, normalizeTags } from "src/search/file/fileTags";
 import type { FileUsageScoreSource } from "src/search/file/fileUsageHistory";
 import { searchFuzzyQueryWithFieldScores } from "src/search/fuzzyQuery";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
+import { fileIcon } from "src/ui/icons";
 
 /** Vault events also report folders, which have no extension; this tells files apart without a cast. */
 function isTFile(file: TAbstractFile): file is TFile {
@@ -247,7 +248,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			mode: "file",
 			primary: [entry.basename, ...entry.aliases].join(" / "),
 			secondary: entry.path,
-			icon: entry.extension === "md" ? "file-text" : "file",
+			icon: fileIcon(entry.extension),
 			vaultPath: entry.path,
 			file: entry.file,
 			ignored: entry.ignored,

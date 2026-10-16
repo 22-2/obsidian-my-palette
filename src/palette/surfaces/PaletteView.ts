@@ -41,6 +41,7 @@ import {
 import { FileListRefresh } from "src/palette/surfaces/fileListRefresh";
 import { PaletteLeafTracker } from "src/palette/surfaces/paletteLeafTracker";
 import { PALETTE_VIEW_TYPE, type PaletteViewType } from "src/palette/surfaces/paletteViewTypes";
+import { ICONS } from "src/ui/icons";
 
 interface PaletteViewState extends Record<string, unknown> {
 	input?: unknown;
@@ -128,7 +129,7 @@ export class PaletteView extends ItemView {
 						? "Open new table palette in center"
 						: "Open new palette in right sidebar",
 				)
-				.setIcon("plus")
+				.setIcon(ICONS.openNewPalette)
 				.onClick(() => {
 					const state = this.snapshotState();
 					void this.plugin.paletteOpener.openNewPaletteView({
@@ -404,7 +405,7 @@ export class PaletteView extends ItemView {
 		menu.addItem((item) =>
 			item
 				.setTitle(this.sourcePinned ? "Unpin source note" : "Pin source note")
-				.setIcon(this.sourcePinned ? "pin-off" : "pin")
+				.setIcon(this.sourcePinned ? ICONS.unpin : ICONS.pin)
 				.setDisabled(!canPin)
 				.onClick(() => this.toggleSourcePin()),
 		);

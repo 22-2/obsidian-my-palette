@@ -1,8 +1,8 @@
 import type { App } from "obsidian";
 import { RecentIdStore, type RecentIdStoreLogger } from "src/shared/recentIdStore";
 import { tagKey } from "src/tags/tagChoices";
+import { DATABASE_NAMES } from "src/shared/databaseNames";
 
-export const RECENT_TAG_DATABASE_NAME = "my-palette-recent-tags";
 export const MAX_RECENT_TAGS = 20;
 
 /**
@@ -14,7 +14,7 @@ export class RecentTagStore extends RecentIdStore {
 		super(
 			app,
 			{
-				databaseName: RECENT_TAG_DATABASE_NAME,
+				databaseName: DATABASE_NAMES.recentTags,
 				idField: "tag",
 				migrationName: "recent-tags",
 				maxEntries: MAX_RECENT_TAGS,

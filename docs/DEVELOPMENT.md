@@ -23,6 +23,12 @@ Formatting, linting, type checking and tests are separate so they can be run ind
 
 `esbuild.config.mjs` writes `main.js` and `styles.css` to `dist/`. Copy them with `manifest.json` into a Vault's plugin folder, then enable or reload the plugin in Obsidian.
 
+## Icons and shared constants
+
+- Icon names live in `src/ui/icons.ts` (`ICONS`), keyed by what they mean rather than how they look. Use an entry from there instead of writing a Lucide name inline, so one action keeps one icon everywhere.
+- Menu items that appear in more than one menu, or that name the same action, are defined once in `src/ui/menuActions.ts` (`MENU_ACTIONS`) with their title and icon. `withAction` applies one to a menu item; `addOpenMenuItems` and `addExternalAppMenuItems` add the open and external-app groups in a fixed order.
+- IndexedDB database names live in `src/shared/databaseNames.ts`. They are stored in the user's browser profile, so renaming one drops its data.
+
 ## End-to-end tests
 
 `pnpm e2e` builds the plugin, installs it into a temporary Vault and drives a real Obsidian with Playwright through [obsidian-e2e-toolkit](https://github.com/22-2/obsidian-e2e-toolkit). The specs live in `e2e/`; Vitest only runs `src/**/*.test.ts`.
