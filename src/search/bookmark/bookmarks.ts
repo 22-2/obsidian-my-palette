@@ -1,4 +1,5 @@
 import type { App } from "obsidian";
+import { getEnabledCorePlugin } from "src/platform/obsidianInternals";
 
 /** One node of the core Bookmarks plugin's tree. The palette keeps a reference to edit it. */
 export interface BookmarkEntry {
@@ -33,15 +34,7 @@ export const BOOKMARK_PATH_SEPARATOR = " › ";
 
 /** The enabled core Bookmarks plugin, or undefined when it is off. */
 export function getBookmarksInstance(app: App): BookmarksInstance | undefined {
-	return (
-		(
-			app as unknown as {
-				internalPlugins?: {
-					getEnabledPluginById: (id: string) => BookmarksInstance | undefined | null;
-				};
-			}
-		).internalPlugins?.getEnabledPluginById("bookmarks") ?? undefined
-	);
+	return getEnabledCorePlugin<BookmarksInstance>(app, "bookmarks");
 }
 
 /** Whether the instance offers every operation the bookmark actions call. */

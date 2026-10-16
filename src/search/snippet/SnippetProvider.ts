@@ -4,17 +4,7 @@ import type { SnippetResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 import { ICONS } from "src/ui/icons";
-
-interface CustomCss {
-	snippets?: unknown;
-	enabledSnippets?: unknown;
-	getSnippetsFolder?: () => string;
-	getSnippetPath?: (snippet: string) => string;
-}
-
-function getCustomCss(app: App): CustomCss {
-	return (app as unknown as { customCss?: CustomCss }).customCss ?? {};
-}
+import { getCustomCss } from "src/platform/obsidianInternals";
 
 function listSnippets(app: App): string[] {
 	const snippets = getCustomCss(app).snippets;
