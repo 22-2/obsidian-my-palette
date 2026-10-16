@@ -1,6 +1,7 @@
 import { Notice } from "obsidian";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { MENU_ACTIONS, withAction, type MenuAction } from "src/ui/menuActions";
+import { logger } from "src/shared/logger";
 
 export interface CopyablePaths {
 	fileName?: string;
@@ -57,7 +58,8 @@ export async function copyPathListToClipboard(values: readonly string[]): Promis
 	try {
 		await navigator.clipboard.writeText(values.join("\n"));
 		new Notice(`${values.length} items copied.`);
-	} catch {
+	} catch (error) {
+		logger.error("Failed to copy the selected items", error);
 		new Notice("Could not copy the selected items.");
 	}
 }
@@ -66,7 +68,8 @@ export async function copyPathToClipboard(value: string): Promise<void> {
 	try {
 		await navigator.clipboard.writeText(value);
 		new Notice("Path copied.");
-	} catch {
+	} catch (error) {
+		logger.error("Failed to copy the path", error);
 		new Notice("Could not copy the path.");
 	}
 }

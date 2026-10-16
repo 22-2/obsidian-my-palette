@@ -26,6 +26,7 @@ import { isExcludedFolder } from "src/search/excludedFolders";
 import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
 import { addOpenMenuItems } from "src/ui/menuActions";
 import { ICONS } from "src/ui/icons";
+import { logger } from "src/shared/logger";
 
 function toRelatedCandidate(
 	app: App,
@@ -352,7 +353,7 @@ async function resolveInsertTarget(
 	try {
 		return await materializeIgnoredNote(plugin.app, path);
 	} catch (error) {
-		console.error("Failed to import Obsidian-excluded file", error);
+		logger.error("Failed to import Obsidian-excluded file", error);
 		new Notice(
 			error instanceof Error ? error.message : "Failed to import Obsidian-excluded file.",
 		);
@@ -374,7 +375,7 @@ async function addLink(app: App, mocFile: TFile, fileToLink: TFile): Promise<voi
 			new Notice(`${mocFile.basename}: ${result.message}`);
 		}
 	} catch (error) {
-		console.error("Failed to insert link to MOC", error);
+		logger.error("Failed to insert link to MOC", error);
 		new Notice("Failed to insert a link to the MOC.");
 	}
 }
@@ -394,7 +395,7 @@ async function removeLink(
 		new Notice(`${note.basename}: ${result.message}`);
 		return "failed";
 	} catch (error) {
-		console.error("Failed to remove link from MOC", error);
+		logger.error("Failed to remove link from MOC", error);
 		new Notice("Failed to remove the link.");
 		return "failed";
 	}
