@@ -437,14 +437,15 @@ describe("TagSelectionModal", () => {
 		});
 	});
 
-	it("pins checked existing and new tags above matches across queries", async () => {
+	it("keeps a checked tag in place, then pins it above matches on the next search", async () => {
 		const f = await open();
 		f.key("ArrowDown");
 		f.key("ArrowDown");
 		f.key(" ");
 		await flush();
-		expect(f.labels()[0]).toContain("#beta");
-		expect(f.rows()[0].classList.contains("is-active")).toBe(true);
+		// Checking leaves the rows and the cursor where they were.
+		expect(f.labels()[1]).toContain("#beta");
+		expect(f.rows()[1].classList.contains("is-active")).toBe(true);
 		f.key("f");
 		await f.type("fresh");
 		expect(f.labels()[0]).toContain("#beta");

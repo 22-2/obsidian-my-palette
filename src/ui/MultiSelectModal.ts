@@ -78,6 +78,9 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 	private checkedButtonEl?: HTMLElement;
 	private checkedCountEl?: HTMLElement;
 	private readonly candidateLimit = this.limit;
+	/** Keys in the order last listed, kept while checks change so rows do not jump. */
+	private listedOrder: string[] = [];
+	private keepListedOrder = false;
 
 	constructor(
 		private readonly multiSelect: MultiSelectModalProps,
@@ -149,13 +152,29 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		this.limit = this.candidateLimit + pending.length;
 		const rest = found.filter(({ key }) => !this.toggled.has(key));
 		// Stable groups keep changed rows first, then rows to add, then applied rows.
-		const candidates = [
+		const grouped = [
 			...pending,
 			...rest.filter(({ applied }) => !applied),
 			...rest.filter(({ applied }) => applied),
 		];
+		const candidates = this.keepListedOrder ? this.inListedOrder(grouped) : grouped;
+		this.keepListedOrder = false;
+		this.listedOrder = candidates.map(({ key }) => key);
 		this.updateResultCount(candidates.length);
 		return candidates;
+	}
+
+	/**
+	 * Why: checking a row would pin it at the top and pull the cursor along with it. Rows keep
+	 * their place until the next search; rows shown for the first time, as the limit grows
+	 * with each check, come after them.
+	 */
+	private inListedOrder(
+		candidates: readonly MultiSelectCandidate<V>[],
+	): MultiSelectCandidate<V>[] {
+		const rank = new Map(this.listedOrder.map((key, index) => [key, index]));
+		const rankOf = ({ key }: MultiSelectCandidate<V>) => rank.get(key) ?? rank.size;
+		return [...candidates].sort((a, b) => rankOf(a) - rankOf(b));
 	}
 
 	renderSuggestion(candidate: MultiSelectCandidate<V>, el: HTMLElement): void {
@@ -294,8 +313,8 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		for (const candidate of candidates) {
 			if (this.isChecked(candidate) === allChecked) this.flip(candidate);
 		}
-		// Update icons immediately, then rebuild the pinned group while retaining
-		// the cursor and selection by key rather than by their old row indexes.
+		// Update icons immediately, then list again in the same order, retaining the cursor
+		// and selection by key rather than by their old row indexes.
 		this.rerenderVisibleSuggestions();
 		this.refreshKeepingSelection();
 	}
@@ -314,6 +333,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 
 	private refreshKeepingSelection(): void {
 		this.updateCheckedButton();
+		this.keepListedOrder = true;
 		this.refreshSuggestionsKeepingSelection((a, b) => a.key === b.key);
 	}
 
