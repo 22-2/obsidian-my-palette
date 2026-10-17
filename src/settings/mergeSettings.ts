@@ -53,6 +53,17 @@ export function excludedFolders(value: unknown): string[] {
 	return [...new Set(normalized)];
 }
 
+/** Tags without `#`, from a stored list or from text separated by commas, spaces or lines. */
+export function tagList(value: unknown): string[] {
+	if (typeof value === "string") value = value.split(/[\s,]+/);
+	if (!Array.isArray(value)) return [];
+	const normalized = value
+		.filter((tag): tag is string => typeof tag === "string")
+		.map((tag) => tag.trim().replace(/^#/, ""))
+		.filter((tag) => tag.length > 0);
+	return [...new Set(normalized)];
+}
+
 export function mergeSettings(data: unknown): MyPaletteSettings {
 	const source = (data && typeof data === "object" ? data : {}) as Record<string, unknown>;
 	const rawFile = (source.file ?? {}) as Record<string, unknown>;
@@ -184,16 +195,7 @@ function normalizeAudit(source: Record<string, unknown>): AuditSettings {
 			excludedFolders(typeof raw.archiveFolder === "string" ? [raw.archiveFolder] : [])[0] ??
 			"",
 		excludedFolders: excludedFolders(raw.excludedFolders),
-		excludedTags: Array.isArray(raw.excludedTags)
-			? [
-					...new Set(
-						raw.excludedTags
-							.filter((tag): tag is string => typeof tag === "string")
-							.map((tag) => tag.trim().replace(/^#/, ""))
-							.filter((tag) => tag.length > 0),
-					),
-				]
-			: [],
+		excludedTags: tagList(raw.excludedTags),
 		// Why: unlike Everything's list, an empty list is the default here, not a missing value.
 		excludedExtensions: Array.isArray(raw.excludedExtensions)
 			? extensions(raw.excludedExtensions)

@@ -55,11 +55,17 @@ describe("settings page layout", () => {
 			"General",
 			"Modes",
 			"File search",
+			"Vault audit",
 			"Shortcuts",
 			"Integrations",
 		]);
 
-		const [general, modes, fileSearch, hotkeys, integrations] = pages.filter(isPage);
+		const [general, modes, fileSearch, vaultAudit, hotkeys, integrations] =
+			pages.filter(isPage);
+		expect(groupsOf(vaultAudit).map((group) => group.heading)).toEqual([
+			"Archive",
+			"Left out of Vault audit",
+		]);
 		expect(groupsOf(modes).map((group) => group.heading)).toEqual(["Search modes"]);
 		expect(
 			groupsOf(modes)[0].items?.map((item) => ("name" in item ? item.name : undefined)),

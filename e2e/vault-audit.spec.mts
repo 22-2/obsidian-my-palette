@@ -252,6 +252,25 @@ test.describe("moving items", () => {
 		expect((await runAuditCli(obsidian, { kind: "empty-files" })).items).toEqual([]);
 	});
 
+	test("moves a multi-selection to the trash at once", async ({ obsidian }) => {
+		const page = await openHomeWith(obsidian, "a ");
+		const rows = page.locator(".my-palette-suggest-modal .suggestion-item");
+		await expect.poll(() => rows.count()).toBeGreaterThan(2);
+		const [first, second] = (await rowLabels(page)).slice(0, 2);
+		await rows.nth(0).click();
+		await rows.nth(1).click({ modifiers: ["Shift"] });
+		await rows.nth(1).click({ button: "right" });
+		await expect(page.locator(".menu .menu-item").first()).toContainText("2 items selected");
+		await page.locator(".menu .menu-item").filter({ hasText: "Move to trash" }).click();
+		await page.locator(".menu .menu-item.mod-cta").click();
+		const remaining = () =>
+			obsidian.evaluateApp(
+				(names) => app.vault.getFiles().filter((file) => names.includes(file.name)).length,
+				[first!, second!],
+			);
+		await expect.poll(remaining).toBe(0);
+	});
+
 	test("Move to trash in the row menu needs a second press", async ({ obsidian }) => {
 		const page = await openHomeWith(obsidian, "a orphan");
 		await expect.poll(() => rowLabels(page)).toEqual(["orphan.md"]);

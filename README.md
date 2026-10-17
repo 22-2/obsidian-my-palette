@@ -30,6 +30,7 @@ Other sources (commands, Everything, bookmarks, …) are modes one step away fro
 - **Command, bookmark, link, backlink and Smart Connections search** in the same window.
 - **Multi-select** with the same gestures as a file manager, then copy paths, add tags or insert MOC links to all selected notes at once.
 - **Three surfaces**: the modal Palette, the Sidebar palette in the right sidebar, and the sortable Table palette in a center tab.
+- **Vault audit**: orphaned files, broken links, empty files and empty folders in one mode, with columns per kind in the Table palette, and moving to the trash or an archive folder. Also available from the Obsidian CLI.
 - **Obsidian-excluded files on demand**: files hidden by Obsidian's Excluded files setting stay out of the way until you turn on the `Include Obsidian-excluded files` option in the options menu (`Ctrl+O`).
 - Desktop only (Windows is the primary target).
 
@@ -49,6 +50,7 @@ Open the command palette and run one of these, then bind a hotkey if you like:
 | `My Palette: Open bookmark list`          | Saved bookmarks                                             |
 | `My Palette: Open Smart Connections list` | Notes related to the current note (needs Smart Connections) |
 | `My Palette: Open tab list`               | Open tabs                                                   |
+| `My Palette: Open vault audit list`       | Vault audit in a Table palette                              |
 | `My Palette: Open folder move selector`   | Move the current file                                       |
 | `My Palette: Open rename selector`        | Rename the current file                                     |
 | `My Palette: Open tag insert selector`    | Add tags to the current note                                |
@@ -101,6 +103,7 @@ Between Modes and Files, Home's **Settings** section lists **General**, **Modes*
 | `p`   | Plugins        | Open installed plugin folders in an external editor                     |
 | `sn`  | Snippets       | Open CSS snippets in an external editor                                 |
 | `pr`  | Properties     | Find and edit the properties of the current note                        |
+| `a`   | Vault audit    | Orphaned files, broken links, empty files or empty folders              |
 
 Plugins lists every installed plugin by name, with disabled ones marked; Snippets lists the snippets folder first, then each snippet with its enabled state. `Enter` opens the folder or file in the external editor (VS Code for now). The menu also offers show in system explorer and open in terminal, plus path copying. Plugin rows with a settings tab offer open plugin settings.
 
@@ -165,6 +168,29 @@ Select files in a palette, right-click and choose `Rename…` (or run `Open rena
 
 Only the name of files inside the vault changes; folders, extensions and Obsidian-excluded or external files are never renamed. Rows are marked when a name is invalid, already exists or would be given to two files, and nothing is renamed until every mark is resolved. `Enter` only reminds you of the shortcut; `Ctrl+Enter` renames every listed file whose name changes. Links to the files are updated by Obsidian.
 
+## Vault audit
+
+Vault audit lists what a vault collects over time. Choose what to list under **Show** in the options menu (`Ctrl+O`); the choice is kept for next time, and the input's placeholder names it.
+
+| Show           | Lists                                                       | Table columns                   |
+| -------------- | ----------------------------------------------------------- | ------------------------------- |
+| Orphaned files | Files no other note links to or embeds, canvases included   | Name, Path, Size, Modified      |
+| Broken links   | Link targets that do not exist, with the notes linking them | Link, Linked from, First source |
+| Empty files    | Files with no content; notes with only frontmatter count    | Name, Path, Modified            |
+| Empty folders  | The topmost folder of each tree holding no files            | Name, Path, Folders inside      |
+
+Nothing is written to the vault to show the list, so the list never changes what it judges. `Open vault audit list` opens it in a Table palette, where each kind keeps its own columns and sorting.
+
+`Enter` opens a file, goes to the line of a broken link in the first note that has it, or reveals a folder in the file explorer. Broken links with several notes list them in the row menu. `Move to trash` (following Obsidian's **Deleted files** setting) and `Move to archive folder` work on the selection and need a second press. Each item is checked again just before it moves; items that were linked or edited since the list was made are skipped.
+
+**Settings → My Palette → Vault audit** sets the archive folder (files keep their paths under it, and it is left out of the lists) and the folders, tags and extensions to leave out. Obsidian's Excluded files and this plugin's Excluded folders are always left out. The Daily notes and Templates folders are left out of Orphaned files unless turned off.
+
+### Obsidian CLI
+
+`obsidian my-palette:audit kind=<kind>` prints the same lists as JSON, for scripts and AI agents. `kind` is `orphaned-files`, `broken-links`, `empty-files` or `empty-folders`; `glob=<pattern>` keeps the matching paths (for broken links, the linking notes). Broken links report one-based line numbers.
+
+It only lists unless `trash` or `archive` is passed, and both require `glob`, so a missing pattern never moves the whole vault. Each item then reports `trashed`, `archived`, `skipped` or `failed`. `obsidian my-palette` lists the available CLI commands.
+
 ## Views
 
 `Open sidebar palette` opens the Sidebar palette and `Open table palette` opens the Table palette in a center tab. Each command reuses its own pane without replacing the other, and each pane can be duplicated from its pane menu.
@@ -205,7 +231,7 @@ Notes without a `prior` sort last. Complete contiguous matches on a name, path, 
 
 ## Settings
 
-Settings are split into five pages: **General** (Return to Home after, search history, highlighting and diagnostics), **Modes** (each mode's alias and switch), **File search** (file types, excluded folders, Obsidian-excluded index, sort priorities), **Shortcuts** (the table described above) and **Integrations** (Everything, Smart Connections and VS Code).
+Settings are split into six pages: **General** (Return to Home after, search history, highlighting and diagnostics), **Modes** (each mode's alias and switch), **File search** (file types, excluded folders, Obsidian-excluded index, sort priorities), **Vault audit** (archive folder and what to leave out), **Shortcuts** (the table described above) and **Integrations** (Everything, Smart Connections and VS Code).
 
 ### Everything setup
 
