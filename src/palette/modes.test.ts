@@ -63,6 +63,13 @@ describe("matchPaletteModes", () => {
 		expect(ids("  ")).toEqual(PALETTE_MODES.map(({ id }) => id));
 	});
 
+	test("finds a mode by its English name, ignoring case", () => {
+		expect(ids("prop")).toEqual(["properties"]);
+		expect(ids("VAULT au")).toEqual(["audit"]);
+		expect(ids("related")).toEqual(["smart"]);
+		expect(ids("out links")).toEqual(["outlinks"]);
+	});
+
 	test("lists Plugins after Tabs and enters it by alias", () => {
 		const order = ids("");
 		expect(order.at(-3)).toBe("snippets");

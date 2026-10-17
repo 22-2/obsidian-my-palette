@@ -21,6 +21,8 @@ export type PaletteModeId =
 export interface PaletteModeDefinition {
 	id: PaletteModeId;
 	mode: PaletteMode;
+	/** 日本語 UI でも Home で検索できる、用語集の英語のモード名。 */
+	englishName: string;
 	title: string;
 	subtitle: string;
 	icon: string;
@@ -32,6 +34,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "notes",
 		mode: "file",
+		englishName: "Notes",
 		title: t("mode.notes.title"),
 		subtitle: t("mode.subtitle.obsidian"),
 		icon: ICONS.files,
@@ -40,6 +43,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "commands",
 		mode: "command",
+		englishName: "Commands",
 		title: t("mode.commands.title"),
 		subtitle: t("mode.subtitle.obsidian"),
 		icon: ICONS.command,
@@ -48,6 +52,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "everything",
 		mode: "everything",
+		englishName: "Everything",
 		title: "Everything",
 		subtitle: t("mode.everything.subtitle"),
 		icon: ICONS.search,
@@ -56,6 +61,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "outlinks",
 		mode: "link",
+		englishName: "Outgoing links",
 		title: t("mode.outlinks.title"),
 		subtitle: t("mode.subtitle.currentNote"),
 		icon: ICONS.outgoingLinks,
@@ -64,6 +70,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "backlinks",
 		mode: "backlink",
+		englishName: "Backlinks",
 		title: t("mode.backlinks.title"),
 		subtitle: t("mode.subtitle.currentNote"),
 		icon: ICONS.backlinks,
@@ -72,6 +79,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "bookmarks",
 		mode: "bookmark",
+		englishName: "Bookmarks",
 		title: t("mode.bookmarks.title"),
 		subtitle: t("mode.subtitle.obsidian"),
 		icon: ICONS.bookmark,
@@ -80,6 +88,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "smart",
 		mode: "smart",
+		englishName: "Related notes",
 		title: t("mode.smart.title"),
 		subtitle: t("settings.smart.name"),
 		icon: ICONS.smartConnections,
@@ -88,6 +97,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "tabs",
 		mode: "tab",
+		englishName: "Tabs",
 		title: t("mode.tabs.title"),
 		subtitle: t("mode.tabs.subtitle"),
 		icon: ICONS.tab,
@@ -96,6 +106,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "plugins",
 		mode: "plugin",
+		englishName: "Plugins",
 		title: t("mode.plugins.title"),
 		subtitle: t("mode.plugins.subtitle"),
 		icon: ICONS.plugin,
@@ -104,6 +115,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "snippets",
 		mode: "snippet",
+		englishName: "Snippets",
 		title: t("mode.snippets.title"),
 		subtitle: t("mode.subtitle.css"),
 		icon: ICONS.snippet,
@@ -112,6 +124,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "properties",
 		mode: "property",
+		englishName: "Properties",
 		title: t("mode.properties.title"),
 		subtitle: t("mode.subtitle.currentNote"),
 		icon: ICONS.selection,
@@ -120,6 +133,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "audit",
 		mode: "audit",
+		englishName: "Vault audit",
 		title: t("mode.audit.title"),
 		subtitle: t("mode.subtitle.vault"),
 		icon: ICONS.vaultAudit,
@@ -206,7 +220,7 @@ export function availableModes(
 
 /**
  * Home のモードの一覧: エイリアスが完全一致するものを先に、次にエイリアスの前方一致、
- * 最後に、入力したすべての語で始まる単語を持つタイトル。入力が空ならすべてのモードを並べる。
+ * 最後に、入力したすべての語で始まる単語を持つ日本語・英語のタイトル。入力が空ならすべてのモードを並べる。
  */
 export function matchPaletteModes(input: string, modes: ModeSettingsMap): PaletteModeDefinition[] {
 	const query = input.trim().toLocaleLowerCase();
@@ -226,7 +240,9 @@ export function matchPaletteModes(input: string, modes: ModeSettingsMap): Palett
 }
 
 function matchesTitleWords(definition: PaletteModeDefinition, query: string): boolean {
-	const words = `${definition.title} ${definition.subtitle}`.toLocaleLowerCase().split(/\s+/);
+	const words = `${definition.title} ${definition.englishName} ${definition.subtitle}`
+		.toLocaleLowerCase()
+		.split(/\s+/);
 	return query.split(/\s+/).every((term) => words.some((word) => word.startsWith(term)));
 }
 
