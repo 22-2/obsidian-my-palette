@@ -321,6 +321,17 @@ export interface MyPaletteSettings {
 		requestTimeoutMs: number;
 		vaultExtensions: string[];
 	};
+	audit: AuditSettings;
+}
+
+/** Applied on top of Obsidian's Excluded files and this plugin's Excluded folders. */
+export interface AuditSettings {
+	excludedFolders: string[];
+	/** Without `#`. A tag also excludes its nested tags. */
+	excludedTags: string[];
+	excludedExtensions: string[];
+	/** Daily notes and templates are rarely linked, so they would crowd the orphaned files. */
+	excludeDailyNotesAndTemplates: boolean;
 }
 
 export const DEFAULT_SETTINGS: MyPaletteSettings = {
@@ -377,5 +388,11 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		debounceMs: SETTING_DEFAULTS.everything.debounceMs,
 		requestTimeoutMs: SETTING_DEFAULTS.everything.requestTimeoutMs,
 		vaultExtensions: ["md", "canvas", "base"],
+	},
+	audit: {
+		excludedFolders: [],
+		excludedTags: [],
+		excludedExtensions: [],
+		excludeDailyNotesAndTemplates: true,
 	},
 };

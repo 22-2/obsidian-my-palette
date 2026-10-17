@@ -8,6 +8,7 @@ import {
 	type PaletteProviderInstances,
 } from "src/app/createPaletteProviders";
 import { PaletteOpener } from "src/app/paletteOpener";
+import { registerCli } from "src/app/registerCli";
 import { registerPluginCommands } from "src/app/registerCommands";
 import { registerPluginEvents } from "src/app/registerEvents";
 import { openExternalMarkdown } from "src/workspace/external-markdown/openExternalMarkdown";
@@ -122,6 +123,7 @@ export default class MyPalettePlugin extends Plugin {
 		this.providers = providers.providers;
 		this.addSettingTab(new MyPaletteSettingTab(this));
 		registerPluginCommands(this);
+		registerCli(this);
 		void this.integrationAvailability.refresh();
 	}
 

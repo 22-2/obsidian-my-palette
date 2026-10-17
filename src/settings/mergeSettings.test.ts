@@ -410,3 +410,26 @@ describe("Return to Home after", () => {
 		expect(settings).not.toHaveProperty("launcher");
 	});
 });
+
+describe("audit settings", () => {
+	it("defaults to no extra exclusions with daily notes and templates excluded", () => {
+		expect(mergeSettings({}).audit).toEqual(DEFAULT_SETTINGS.audit);
+	});
+
+	it("normalizes stored folders, tags and extensions", () => {
+		const settings = mergeSettings({
+			audit: {
+				excludedFolders: ["/Archive/", "Archive", ""],
+				excludedTags: ["#draft", "draft", " ", 3],
+				excludedExtensions: [".CSV", "bad ext"],
+				excludeDailyNotesAndTemplates: false,
+			},
+		});
+		expect(settings.audit).toEqual({
+			excludedFolders: ["Archive"],
+			excludedTags: ["draft"],
+			excludedExtensions: ["csv"],
+			excludeDailyNotesAndTemplates: false,
+		});
+	});
+});

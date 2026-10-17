@@ -75,7 +75,7 @@ src/audit/vaultAudit.ts   判定(純粋な関数)
 - `resolvedLinks`の値に一度も出てこないファイル。リンクと埋め込みの両方を数える(`resolvedLinks`は両方を含む)。
 - 自分自身へのリンクだけを持つファイルは孤立として扱う。
 - 既定で除外する: Daily notesのフォルダー、Templatesのフォルダー(コアプラグインの設定から読む。無効なら除外しない)。どちらもリンクされないのが普通のため。設定で外せるようにする。
-- Canvasからのリンクが`resolvedLinks`に入るかは要確認。入らない場合は、`.canvas`をJSONとして読み、`file`ノードと`text`ノード内のリンクを数える。
+- Canvasの`file`ノードも`resolvedLinks`に入る(E2Eの`e2e/vault-audit.spec.mts`で確かめた)。Canvasを別に読む必要はない。
 
 ### Broken links
 
@@ -275,6 +275,5 @@ Vault auditを作ったあとで、ほかのプラグイン(My Commandsなど)�
 
 ## 決めていないこと
 
-- Canvasからのリンクが`resolvedLinks`に入るか(実装の1段目で確かめる)。
 - 大きな保管庫での判定の時間。1段目のCLIで計る。数千ファイルで目立って遅ければ、結果を保持して差分で更新する。
 - 壊れたリンクの「リンク先のノートを作る」操作。使う場面が出てきたら足す。

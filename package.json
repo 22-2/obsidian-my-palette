@@ -30,13 +30,15 @@
 		"@tanstack/table-core": "^9.2.4",
 		"consola": "^3.4.2",
 		"fuzzysort": "^3.1.0",
-		"idb": "^8.0.3"
+		"idb": "^8.0.3",
+		"picomatch": "^4.0.7"
 	},
 	"devDependencies": {
 		"@eslint/js": "10.0.1",
 		"@obsidian-typings/obsidian-public-latest": "^6.20.0",
 		"@playwright/test": "^1.63.0",
 		"@types/node": "26.1.0",
+		"@types/picomatch": "^4.0.3",
 		"@vitest/coverage-v8": "5.0.3",
 		"electron": "^44.6.0",
 		"esbuild": "^0.28.2",

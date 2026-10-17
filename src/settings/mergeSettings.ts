@@ -1,5 +1,6 @@
 import type { PaletteModeId } from "src/palette/modes";
 import type {
+	AuditSettings,
 	IntegrationSettings,
 	ModeSettingsMap,
 	MyPaletteSettings,
@@ -167,6 +168,35 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 			),
 			vaultExtensions: extensions(rawEverything.vaultExtensions),
 		},
+		audit: normalizeAudit(source),
+	};
+}
+
+function normalizeAudit(source: Record<string, unknown>): AuditSettings {
+	const raw =
+		source.audit && typeof source.audit === "object"
+			? (source.audit as Record<string, unknown>)
+			: {};
+	return {
+		excludedFolders: excludedFolders(raw.excludedFolders),
+		excludedTags: Array.isArray(raw.excludedTags)
+			? [
+					...new Set(
+						raw.excludedTags
+							.filter((tag): tag is string => typeof tag === "string")
+							.map((tag) => tag.trim().replace(/^#/, ""))
+							.filter((tag) => tag.length > 0),
+					),
+				]
+			: [],
+		// Why: unlike Everything's list, an empty list is the default here, not a missing value.
+		excludedExtensions: Array.isArray(raw.excludedExtensions)
+			? extensions(raw.excludedExtensions)
+			: [],
+		excludeDailyNotesAndTemplates:
+			typeof raw.excludeDailyNotesAndTemplates === "boolean"
+				? raw.excludeDailyNotesAndTemplates
+				: DEFAULT_SETTINGS.audit.excludeDailyNotesAndTemplates,
 	};
 }
 
