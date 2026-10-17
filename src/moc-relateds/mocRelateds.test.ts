@@ -46,7 +46,7 @@ describe("addLinkToMocRelateds", () => {
 		const content = "## MOC\n- Relateds\n    - [[Existing note]]";
 		expect(addLinkToMocRelateds(content, "Existing note", 4)).toEqual({
 			success: false,
-			message: "Link already exists.",
+			message: "リンクはすでにあります。",
 		});
 	});
 });
@@ -73,7 +73,7 @@ describe("removeLinkFromMocRelateds", () => {
 	it("ignores links outside the Relateds item", () => {
 		expect(removeLinkFromMocRelateds(moc.join("\n"), "Z")).toEqual({
 			success: false,
-			message: "Link not found.",
+			message: "リンクが見つかりません。",
 		});
 	});
 

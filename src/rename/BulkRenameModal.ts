@@ -11,6 +11,8 @@ import {
 	type RenameStatus,
 } from "src/rename/renamePlan";
 import { ICONS } from "src/ui/icons";
+import { countLabel } from "src/shared/countLabel";
+import { t } from "src/i18n";
 
 interface RenameItem extends SelectionItem {
 	row: RenamePlanRow;
@@ -18,10 +20,10 @@ interface RenameItem extends SelectionItem {
 
 const STATUS_BADGE: Record<RenameStatus, string | undefined> = {
 	ready: undefined,
-	unchanged: "No change",
-	invalid: "Invalid name",
-	exists: "Already exists",
-	duplicate: "Same new name",
+	unchanged: t("rename.status.unchanged"),
+	invalid: t("rename.status.invalid"),
+	exists: t("rename.status.exists"),
+	duplicate: t("rename.status.duplicate"),
 };
 
 function directoryOf(path: string): string {
@@ -41,8 +43,8 @@ function toItem(row: RenamePlanRow): RenameItem {
 }
 
 /**
- * Rename selector: the input is a `find/replace` rule and the list previews every new name.
- * Only file names inside the vault change; folders and extensions stay as they are.
+ * 名前変更のセレクター: 入力は `検索/置換` のルールで、一覧は新しい名前をすべてプレビューする。
+ * 変わるのは Vault 内のファイル名だけ。フォルダーと拡張子はそのまま。
  */
 export class BulkRenameModal extends SelectionModal<RenameItem> {
 	private readonly paths: string[];
@@ -59,24 +61,22 @@ export class BulkRenameModal extends SelectionModal<RenameItem> {
 		const paths = files.map((file) => file.path).sort((a, b) => a.localeCompare(b));
 		super(
 			{
-				placeholder: "Find/replace, e.g. _/-",
+				placeholder: t("rename.placeholder"),
 				footerText:
 					paths.length === 1
-						? `Renaming: ${paths[0]}`
-						: `Renaming: ${paths.length} files`,
+						? t("rename.footer.renaming", { path: paths[0] })
+						: t("rename.footer.renamingMany", {
+								what: countLabel(paths.length, "ファイル"),
+							}),
 				controls: {
 					plugin,
 					category: "bulk-rename",
-					title: "Rename selector",
-					description:
-						"Type find/replace to rename the selected files. Only file names change: folders and extensions stay as they are. The list previews each new name.",
-					actionLabel: "Rename",
+					title: t("rename.controls.title"),
+					description: t("rename.controls.description"),
+					actionLabel: t("rename.action"),
 					shortcuts: [
-						["Ctrl+Enter", "Rename every listed file whose name changes"],
-						[
-							"find/replace",
-							"The first / separates the two parts; a name cannot contain /",
-						],
+						["Ctrl+Enter", t("rename.shortcut.ctrlEnter")],
+						[t("rename.shortcut.findReplaceKey"), t("rename.shortcut.findReplace")],
 					],
 				},
 				search: (query) => this.plan(query),
@@ -105,24 +105,14 @@ export class BulkRenameModal extends SelectionModal<RenameItem> {
 					this.refreshSuggestions();
 				},
 			});
-		toggle(
-			"regex",
-			"Regex",
-			ICONS.regex,
-			"Read the find part as a regular expression; $1 inserts a group",
-		);
+		toggle("regex", t("rename.option.regex"), ICONS.regex, t("rename.option.regexDescription"));
 		toggle(
 			"matchCase",
-			"Match case",
+			t("rename.option.matchCase"),
 			ICONS.matchCase,
-			"Distinguish upper and lower case when matching",
+			t("rename.option.matchCaseDescription"),
 		);
-		toggle(
-			"all",
-			"All occurrences",
-			ICONS.replaceAll,
-			"Replace every match in a name, not only the first",
-		);
+		toggle("all", t("rename.option.all"), ICONS.replaceAll, t("rename.option.allDescription"));
 	}
 
 	private plan(query: string): RenameItem[] {
@@ -141,14 +131,16 @@ export class BulkRenameModal extends SelectionModal<RenameItem> {
 		const count = renamableRows(this.rows).length;
 		this.updateFooterText(
 			count > 0
-				? `${count} of ${this.rows.length} files will be renamed`
-				: `Renaming: ${this.rows.length} files`,
+				? t("rename.footer.willRename", { count, total: this.rows.length })
+				: t("rename.footer.renamingMany", {
+						what: countLabel(this.rows.length, "ファイル"),
+					}),
 		);
 		return this.rows.map(toItem);
 	}
 
 	override renderSuggestion(item: RenameItem, el: HTMLElement): void {
-		// Why: the input is a rule, not a search, so its characters must not highlight labels.
+		// Why: 入力はルールであって検索ではないので、その文字がラベルを強調してはいけない。
 		renderSelectionItem(item, el);
 	}
 
@@ -157,7 +149,7 @@ export class BulkRenameModal extends SelectionModal<RenameItem> {
 			event.type === "keydown" &&
 			((event as KeyboardEvent).ctrlKey || (event as KeyboardEvent).metaKey);
 		if (!runShortcut) {
-			new Notice("Press Ctrl+Enter to rename every listed file.");
+			new Notice(t("rename.notice.pressCtrlEnter"));
 			return;
 		}
 		await this.apply();
@@ -166,23 +158,23 @@ export class BulkRenameModal extends SelectionModal<RenameItem> {
 	private async apply(): Promise<void> {
 		if (this.applying) return;
 		if (isBlocked(this.rows)) {
-			new Notice("Fix the marked names before renaming.");
+			new Notice(t("rename.notice.fixMarked"));
 			return;
 		}
 		const targets = renamableRows(this.rows);
 		if (targets.length === 0) {
-			new Notice("No file names would change.");
+			new Notice(t("rename.notice.noChange"));
 			return;
 		}
 		this.applying = true;
 		this.commitSearchHistory();
 		let renamed = 0;
 		const failures: string[] = [];
-		// Why: rename one at a time so each rename updates links before the next starts.
+		// Why: 1つずつ名前を変えて、名前の変更のたびにリンクを更新してから次を始める。
 		for (const row of targets) {
 			const file = this.app.vault.getAbstractFileByPath(row.path);
 			if (!(file instanceof TFile)) {
-				failures.push(`${row.oldName}: file not found`);
+				failures.push(`${row.oldName}: ${t("rename.error.notFound")}`);
 				continue;
 			}
 			try {
@@ -197,8 +189,12 @@ export class BulkRenameModal extends SelectionModal<RenameItem> {
 		this.applying = false;
 		new Notice(
 			failures.length === 0
-				? `Renamed ${renamed} files`
-				: `Renamed ${renamed} files, ${failures.length} failed:\n${failures.join("\n")}`,
+				? t("rename.notice.renamed", { count: renamed })
+				: t("rename.notice.renamedWithFailures", {
+						count: renamed,
+						failed: failures.length,
+						list: failures.join("\n"),
+					}),
 		);
 		this.close();
 		if (renamed > 0) this.onDone?.();

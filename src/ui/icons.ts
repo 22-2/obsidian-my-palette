@@ -1,12 +1,12 @@
 import type { IconName } from "obsidian";
 
 /**
- * Lucide icon names for every action and kind the plugin draws.
- * Entries are named after what they mean, not how they look, so one action keeps one icon
- * across menus, buttons and result rows. Add an entry here instead of writing an icon name inline.
+ * プラグインが描くすべての操作と種類の Lucide アイコン名。
+ * 項目は見た目ではなく意味で名付けるので、1つの操作はメニュー、ボタン、結果の行をまたいで同じアイコンを保つ。
+ * アイコン名を直接書かず、ここに項目を追加すること。
  */
 export const ICONS = {
-	// Opening a result
+	// 結果を開く
 	open: "external-link",
 	openInMainWindow: "app-window",
 	openInBackground: "panel-top-open",
@@ -20,7 +20,7 @@ export const ICONS = {
 	openNewPalette: "plus",
 	moveToSidebar: "panel-right",
 
-	// Running and confirming
+	// 実行と確認
 	run: "play",
 	confirm: "corner-down-left",
 
@@ -56,7 +56,7 @@ export const ICONS = {
 	unchecked: "square",
 	check: "check",
 
-	// Palette controls
+	// パレットの操作
 	search: "search",
 	history: "history",
 	options: "settings-2",
@@ -71,7 +71,7 @@ export const ICONS = {
 	warning: "alert-triangle",
 	error: "alert-circle",
 
-	// Kinds of result
+	// 結果の種類
 	file: "file",
 	note: "file-text",
 	files: "files",
@@ -90,7 +90,7 @@ export const ICONS = {
 	brokenLink: "unlink",
 	emptyFolder: "folder-x",
 
-	// Kinds of property value
+	// プロパティ値の種類
 	text: "text",
 	list: "list",
 	number: "binary",

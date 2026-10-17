@@ -1,14 +1,15 @@
 import type { PropertyKind } from "src/palette/results";
 import { ICONS } from "src/ui/icons";
+import { t } from "src/i18n";
 
-/** Keys whose type Obsidian fixes, so a stored type never changes how they are edited. */
+/** Obsidian が種類を固定しているキー。保存された種類が、編集のしかたを変えることはない。 */
 const RESERVED_KINDS: Readonly<Record<string, PropertyKind>> = {
 	tags: "tags",
 	aliases: "list",
 	cssclasses: "list",
 };
 
-/** Obsidian's names for a property type: the newer `widget` and the older `type`. */
+/** Obsidian のプロパティの種類の名前。新しい `widget` と古い `type`。 */
 const DECLARED_KINDS: Readonly<Record<string, PropertyKind>> = {
 	text: ICONS.text,
 	multitext: "list",
@@ -16,7 +17,7 @@ const DECLARED_KINDS: Readonly<Record<string, PropertyKind>> = {
 	checkbox: "checkbox",
 	date: "date",
 	datetime: "datetime",
-	// A declared `tags` type on another key is a plain list: Tag insertion writes only `tags`.
+	// 別のキーで宣言された `tags` の種類は、ただのリスト。タグ挿入は `tags` キーだけを書く。
 	tags: "list",
 	aliases: "list",
 	cssclasses: "list",
@@ -37,13 +38,13 @@ export const PROPERTY_KIND_ICONS: Readonly<Record<PropertyKind, string>> = {
 };
 
 /**
- * Works out how a property is shown and edited. A declared type is used when the
- * vault has one; otherwise the value decides. Nothing here changes the stored type.
+ * プロパティの表示と編集のしかたを決める。Vault に宣言された種類があればそれを使い、なければ値が決める。
+ * ここでは保存された種類は変えない。
  */
 export function propertyKindOf(key: string, value: unknown, declaredType?: string): PropertyKind {
 	const reserved = RESERVED_KINDS[key];
 	if (reserved) return reserved;
-	// Nested objects cannot be edited from a single value, whatever the type says.
+	// 入れ子のオブジェクトは、種類が何と言っていても、1つの値では編集できない。
 	if (isNestedObject(value)) return "unsupported";
 	const declared = declaredType === undefined ? undefined : DECLARED_KINDS[declaredType];
 	return declared ?? kindFromValue(value);
@@ -68,9 +69,9 @@ function isNestedObject(value: unknown): boolean {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-/** The one-line text a row shows for a value. Lists are joined; nothing is edited here. */
+/** 値を行に示す1行のテキスト。リストは連結する。ここでは編集しない。 */
 export function formatPropertyValue(kind: PropertyKind, value: unknown): string {
-	if (value === undefined || value === null || value === "") return "Not set";
+	if (value === undefined || value === null || value === "") return t("property.value.notSet");
 	if (kind === "unsupported") return "{…}";
 	if (Array.isArray(value)) return value.map(formatItem).join(", ");
 	return formatItem(value);

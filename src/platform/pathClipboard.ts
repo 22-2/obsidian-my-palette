@@ -2,6 +2,7 @@ import { Notice } from "obsidian";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { MENU_ACTIONS, withAction, type MenuAction } from "src/ui/menuActions";
 import { logger } from "src/shared/logger";
+import { t } from "src/i18n";
 
 export interface CopyablePaths {
 	fileName?: string;
@@ -9,7 +10,7 @@ export interface CopyablePaths {
 	absolutePath?: string;
 }
 
-/** Keeps path-copy menu labels and clipboard error handling identical across file lists. */
+/** パスをコピーするメニューの項目と、クリップボードのエラーの扱いを、ファイルの一覧すべてで同じに保つ。 */
 export function addCopyPathMenuItems(
 	menu: PaletteMenu,
 	paths: CopyablePaths,
@@ -38,7 +39,7 @@ export function addCopyPathMenuItems(
 	}
 }
 
-/** Adds newline-delimited copy actions for the current visible selection. */
+/** 現在表示されている選択について、改行で区切ったコピーの操作を加える。 */
 export function addCopyPathListMenuItems(
 	menu: PaletteMenu,
 	pathsList: readonly CopyablePaths[],
@@ -57,20 +58,20 @@ export function addCopyPathListMenuItems(
 export async function copyPathListToClipboard(values: readonly string[]): Promise<void> {
 	try {
 		await navigator.clipboard.writeText(values.join("\n"));
-		new Notice(`${values.length} items copied.`);
+		new Notice(t("clipboard.copiedItems", { count: values.length }));
 	} catch (error) {
 		logger.error("Failed to copy the selected items", error);
-		new Notice("Could not copy the selected items.");
+		new Notice(t("clipboard.copyItemsFailed"));
 	}
 }
 
 export async function copyPathToClipboard(value: string): Promise<void> {
 	try {
 		await navigator.clipboard.writeText(value);
-		new Notice("Path copied.");
+		new Notice(t("clipboard.copiedPath"));
 	} catch (error) {
 		logger.error("Failed to copy the path", error);
-		new Notice("Could not copy the path.");
+		new Notice(t("clipboard.copyPathFailed"));
 	}
 }
 

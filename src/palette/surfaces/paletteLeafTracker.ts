@@ -1,8 +1,8 @@
 import { TFile, type App, type View, type WorkspaceLeaf } from "obsidian";
 
 /**
- * Resolves which center-pane leaf and note a persistent palette view acts on.
- * The palette itself, and any other palette view, is never a valid target.
+ * 常駐のパレットビューが操作する、中央のペインのリーフとノートを決める。
+ * パレット自身と、ほかのパレットのビューは、対象として有効にしない。
  */
 export class PaletteLeafTracker {
 	private targetLeaf?: WorkspaceLeaf;
@@ -13,30 +13,30 @@ export class PaletteLeafTracker {
 		private readonly isPaletteView: (view: View) => boolean,
 	) {}
 
-	/** Remembers a center leaf as the latest open target; other leaves are ignored. */
+	/** 中央のリーフを、最新の開く対象として覚える。ほかのリーフは無視する。 */
 	track(leaf: WorkspaceLeaf | undefined): boolean {
 		if (!leaf || !this.isCenterLeaf(leaf)) return false;
 		this.targetLeaf = leaf;
 		return true;
 	}
 
-	/** Re-detects the target at surface creation, keeping the old one as a fallback. */
+	/** ビューを作るときに対象を検出し直す。古い対象は、見つからない場合の予備として残す。 */
 	refresh(): void {
 		this.targetLeaf = this.findTargetLeaf() ?? this.targetLeaf;
 	}
 
 	resolveTargetLeaf(): WorkspaceLeaf {
-		// Clicks in the sidebar must always open in the center: never reuse a
-		// sidebar leaf, and never trust a cached leaf that has moved out of
-		// the main area. Prefer the current center leaf over any history.
+		// サイドバーでのクリックは、必ず中央で開く。サイドバーのリーフは再利用せず、
+		// メインの領域から移動したキャッシュ済みのリーフも信用しない。履歴よりも、
+		// いま中央にあるリーフを優先する。
 		const active = this.app.workspace.getMostRecentLeaf();
 		if (active && this.isCenterLeaf(active)) {
 			this.targetLeaf = active;
 			return active;
 		}
 		if (this.targetLeaf && this.isCenterLeaf(this.targetLeaf)) return this.targetLeaf;
-		// A sidebar can be opened with no note pane at all. Allocate a normal tab
-		// once so a first zap can never replace the palette view itself.
+		// ノートのペインがないサイドバーも開ける。最初の操作でパレットのビュー自身を
+		// 置き換えないように、通常のタブを一度だけ作る。
 		this.targetLeaf = this.app.workspace.getLeaf("tab");
 		return this.targetLeaf;
 	}
@@ -58,9 +58,9 @@ export class PaletteLeafTracker {
 		}
 		const active = this.app.workspace.getMostRecentLeaf();
 		if (active && this.isCenterLeaf(active)) return active;
-		// Why: opening or restoring the sidebar can make the palette the active
-		// leaf before tracking is registered. The most recent center leaf preserves
-		// the user's current tab in that startup window, including non-file views.
+		// Why: サイドバーを開く、または復元すると、追跡が登録される前にパレットがアクティブな
+		// リーフになることがある。最近の中央のリーフを使えば、その起動の間もユーザーの現在のタブを
+		// 保てる。ファイル以外のビューも含めて。
 		const recent = this.app.workspace.getMostRecentLeaf(this.app.workspace.rootSplit);
 		return recent && this.isCenterLeaf(recent) ? recent : undefined;
 	}
@@ -83,11 +83,11 @@ export class PaletteLeafTracker {
 	}
 
 	isCenterLeaf(leaf: WorkspaceLeaf): boolean {
-		// Why: a table moved into the center must never become another palette's
-		// open target or source note. The shared base covers both registered views.
+		// Why: 中央に移された表が、別のパレットの開く対象や元のノートになることは絶対に避ける。
+		// 共通の基底が、登録済みの両方のビューを対象にする。
 		if (leaf === this.ownLeaf || this.isPaletteView(leaf.view)) return false;
 		try {
-			// Sidebar leaves live under leftSplit/rightSplit; only rootSplit is center.
+			// サイドバーのリーフは leftSplit/rightSplit の下にある。中央は rootSplit だけ。
 			return leaf.getRoot() === this.app.workspace.rootSplit;
 		} catch {
 			return true;
@@ -100,7 +100,7 @@ export class PaletteLeafTracker {
 	}
 }
 
-/** A view's file has a path; checking for it avoids casting the unknown value to TFile. */
+/** ビューのファイルはパスを持つ。確認することで、不明な値を TFile にキャストせずに済む。 */
 function hasPath(value: unknown): value is TFile {
 	return typeof value === "object" && value !== null && "path" in value;
 }

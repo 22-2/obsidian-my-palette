@@ -1,8 +1,8 @@
 export interface PanelSwitchOptions {
-	/** Identifies the switch so a reopened modal replaces it instead of adding another. */
+	/** スイッチを特定する。開き直したモーダルは、もう1つ足す代わりにこれを置き換える。 */
 	id: string;
 	label: string;
-	/** Shown beside the switch in the options menu, like the other menu items. */
+	/** オプションのメニューで、ほかのメニュー項目と同じようにスイッチの横に出す。 */
 	icon?: string;
 	description: string;
 	value: boolean;
@@ -10,8 +10,8 @@ export interface PanelSwitchOptions {
 }
 
 /**
- * An on/off option of a palette or selector, such as including Obsidian-excluded files.
- * It only holds the state; the options menu lists it and flips it.
+ * パレットやセレクターのオン/オフのオプション。Obsidian の除外ファイルを含めるなど。
+ * 状態だけを持つ。オプションのメニューがそれを並べ、切り替える。
  */
 export class PanelSwitch {
 	private current: boolean;
@@ -41,22 +41,22 @@ export class PanelSwitch {
 		return this.options.description;
 	}
 
-	/** Whether the switch is currently hidden because it does not apply to the screen. */
+	/** 画面に当てはまらないため、いまスイッチが隠れているかどうか。 */
 	get isHidden(): boolean {
 		return this.hidden;
 	}
 
-	/** Shows the state without notifying, for hosts restoring their own value. */
+	/** 通知せずに状態を示す。ホストが自分の値を復元するときに使う。 */
 	set(value: boolean): void {
 		this.current = value;
 	}
 
-	/** A hidden switch leaves the options menu; its value is kept. */
+	/** 隠されたスイッチはオプションのメニューから外れるが、値は保たれる。 */
 	setHidden(hidden: boolean): void {
 		this.hidden = hidden;
 	}
 
-	/** Flips the switch and notifies the host. */
+	/** スイッチを反転し、ホストに通知する。 */
 	flip(): void {
 		this.set(!this.current);
 		this.options.onChange(this.current);

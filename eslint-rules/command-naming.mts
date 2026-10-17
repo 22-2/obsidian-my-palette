@@ -1,10 +1,9 @@
 import type { Rule } from "eslint";
 import type { ObjectExpression, Property } from "estree";
 
-// Commands are named "Open <thing>" and their id is that name in kebab case, so the
-// command list, the hotkey settings and the e2e tests all read the same
-// (docs/GLOSSARY.md).
-const NAME_PREFIX = "Open ";
+// コマンドの id は英語のケバブケースで固定する。id はホットキー設定や保存データに残るため、
+// 表示名(日本語)を変えても id を変えない。
+const ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 function literalProperty(object: ObjectExpression, key: string): Property | undefined {
 	return object.properties.find(
@@ -27,8 +26,8 @@ const commandNaming: Rule.RuleModule = {
 		type: "problem",
 		schema: [],
 		messages: {
-			name: 'Command name "{{name}}" must start with "Open " (docs/GLOSSARY.md).',
-			id: 'Command id "{{id}}" must be "{{expected}}", the kebab case of its name.',
+			name: "コマンドの表示名 {{name}} が空です。",
+			id: 'コマンドの id "{{id}}" は英語の小文字とハイフンだけにしてください(例: "open-home")。',
 		},
 	},
 	create(context) {
@@ -44,15 +43,13 @@ const commandNaming: Rule.RuleModule = {
 				const name = literalProperty(definition, "name");
 				const id = literalProperty(definition, "id");
 				if (!name || !id) return;
-				const nameText = stringValue(name);
-				if (!nameText.startsWith(NAME_PREFIX)) {
-					context.report({ node: name, messageId: "name", data: { name: nameText } });
+				if (stringValue(name).trim() === "") {
+					context.report({ node: name, messageId: "name", data: { name: "" } });
 					return;
 				}
-				const expected = nameText.toLowerCase().replace(/\s+/g, "-");
 				const idText = stringValue(id);
-				if (idText !== expected)
-					context.report({ node: id, messageId: "id", data: { id: idText, expected } });
+				if (!ID_PATTERN.test(idText))
+					context.report({ node: id, messageId: "id", data: { id: idText } });
 			},
 		};
 	},

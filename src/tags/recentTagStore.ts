@@ -6,8 +6,8 @@ import { DATABASE_NAMES } from "src/shared/databaseNames";
 export const MAX_RECENT_TAGS = 20;
 
 /**
- * Recently inserted tags per vault, without `#`. Tags differing only by case
- * are one tag in Obsidian, so they share a single recent slot.
+ * 最近挿入したタグを保管庫ごとに保持する。`#` は含めない。大文字小文字だけが違うタグは
+ * Obsidian では同じタグなので、最近使った枠を 1 つだけ共有する。
  */
 export class RecentTagStore extends RecentIdStore {
 	constructor(app: App, log?: RecentIdStoreLogger) {

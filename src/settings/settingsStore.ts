@@ -14,8 +14,8 @@ export interface LoadedPluginSettings {
 }
 
 /**
- * Persistence policy is isolated from the settings UI so schema migrations do
- * not depend on rendering controls or the Obsidian settings pane.
+ * 保存のルールは設定 UI から分けてあるので、スキーマの移行が操作の描画や Obsidian の設定画面に
+ * 依存しない。
  */
 export async function loadPluginSettings(plugin: MyPalettePlugin): Promise<LoadedPluginSettings> {
 	const data = await plugin.loadData();
@@ -38,8 +38,8 @@ export async function loadPluginSettings(plugin: MyPalettePlugin): Promise<Loade
 	return {
 		legacySearchHistoryEntries,
 		legacyRecentCommandIds,
-		// An old schema or legacy history data needs to be written after both
-		// stores accept migration, so data.json never loses its fallback.
+		// 古いスキーマや古い履歴のデータは、両方の保存先が移行を受け付けた後に書き直す必要がある。
+		// data.json が予備を失わないように。
 		shouldSave:
 			Object.prototype.hasOwnProperty.call(rawSearchHistory, "entries") ||
 			Object.prototype.hasOwnProperty.call(source, "recentCommandIds") ||

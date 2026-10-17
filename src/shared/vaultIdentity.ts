@@ -9,8 +9,8 @@ interface VaultIdentityApp {
 
 export function getVaultId(app: VaultIdentityApp): string {
 	const source = getVaultBasePath(app.vault) ?? app.vault.getName();
-	// A stable hash keeps the absolute Vault path out of browser storage while
-	// still separating two Vaults that happen to contain identically named notes.
+	// 安定したハッシュを使うことで、絶対パスをブラウザの保存領域に残さずに済む。
+	// 同じ名前のノートを含む 2 つの保管庫も区別できるようにするため。
 	let hash = 2166136261;
 	for (const character of source) {
 		hash ^= character.charCodeAt(0);

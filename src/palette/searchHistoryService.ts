@@ -4,9 +4,8 @@ import { SearchHistoryStore, type SearchHistoryStoreLogger } from "src/palette/s
 import type { SearchHistoryCategory, SearchHistoryEntry } from "src/settings/model";
 
 /**
- * Search history backed by IndexedDB. When IndexedDB cannot accept the data,
- * the entries stay in memory and are mirrored to `data.json` through
- * `onLegacyChange`, so a later settings save can never erase the history.
+ * IndexedDB に保存する検索履歴。IndexedDB がデータを受け付けられないときは、エントリをメモリに置き、
+ * `onLegacyChange` を通じて `data.json` にも写す。そうすれば、後の設定の保存で履歴が消えることはない。
  */
 export class SearchHistoryService {
 	private readonly store: SearchHistoryStore;
@@ -22,12 +21,11 @@ export class SearchHistoryService {
 
 	async load(legacyEntries: readonly SearchHistoryEntry[], daysToKeep: number): Promise<void> {
 		const persistent = await this.store.load(legacyEntries, daysToKeep);
-		// Keep the legacy payload in data.json only when IndexedDB cannot accept
-		// the migration.
+		// IndexedDB が移行を受け付けられないときだけ、古い内容を data.json に残す。
 		this.legacyEntries = persistent ? undefined : [...this.store.getEntries()];
 	}
 
-	/** Entries to write to `data.json`; undefined once IndexedDB owns the history. */
+	/** data.json に書く項目。IndexedDB が履歴を持つようになったら undefined。 */
 	getLegacyEntries(): readonly SearchHistoryEntry[] | undefined {
 		return this.legacyEntries;
 	}

@@ -1,4 +1,4 @@
-/** Test helpers for the menu that PaletteMenu draws in the document. */
+/** PaletteMenu が文書に描くメニューのためのテスト用ヘルパー。 */
 
 function openMenuItems(): HTMLElement[] {
 	const menu = document.querySelector<HTMLElement>(".menu");

@@ -9,10 +9,11 @@ import type { PaletteProvider, PaletteSearchRequest } from "src/search/PalettePr
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 import { ICONS } from "src/ui/icons";
 import { getMetadataTypeManager, type VaultPropertyInfo } from "src/platform/obsidianInternals";
+import { t } from "src/i18n";
 
-/** Obsidian fixes these keys, so they are always listed, even when the note lacks them. */
+/** Obsidian が固定するキー。ノートが持っていなくても、常に一覧に出す。 */
 const RESERVED_KEYS = ["aliases", "tags", "cssclasses"] as const;
-/** Written by Obsidian for the note's own metadata, not an editable property. */
+/** Obsidian がノート自身のメタデータとして書くもので、編集できるプロパティではない。 */
 const HIDDEN_KEYS = new Set(["position"]);
 
 function vaultInfos(app: App): Record<string, VaultPropertyInfo> {
@@ -35,8 +36,8 @@ function isReserved(key: string): boolean {
 	return (RESERVED_KEYS as readonly string[]).includes(key);
 }
 
-function countLabel(count: number): string {
-	return `${count} ${count === 1 ? "note" : "notes"}`;
+function noteCountLabel(count: number): string {
+	return t("property.noteCount", { count });
 }
 
 interface PropertyRowInit {
@@ -46,7 +47,7 @@ interface PropertyRowInit {
 	secondary: string;
 	inNote: boolean;
 	sourcePath: string;
-	/** Set when the list spans several notes. */
+	/** 一覧が複数のノートにまたがるときに設定する。 */
 	sourcePaths?: readonly string[];
 }
 
@@ -82,12 +83,12 @@ function newKeyRow(
 	return {
 		id: `property:new:${key}`,
 		mode: "property",
-		primary: `Add property "${key}"`,
-		secondary: "Choose a type",
+		primary: t("property.addKey", { key }),
+		secondary: t("property.chooseType"),
 		icon: ICONS.add,
 		key,
 		kind: "new",
-		section: "New",
+		section: "新規",
 		inNote: false,
 		sourcePath,
 		...(sourcePaths ? { sourcePaths } : {}),
@@ -95,9 +96,8 @@ function newKeyRow(
 }
 
 /**
- * Lists the properties of the current note under This note and Reserved, then the
- * keys used elsewhere in the vault under Vault. Typed input filters each section
- * separately, so the section order stays fixed.
+ * 現在のノートのプロパティを「このノート」と「予約済み」の下に並べ、ほかで使われているキーを
+ * 「Vault」の下に並べる。入力された文字列は各セクションごとに絞り込むので、セクションの順は固定のまま。
  */
 export class PropertyProvider implements PaletteProvider<PropertyResult> {
 	constructor(private readonly app: App) {}
@@ -120,7 +120,7 @@ export class PropertyProvider implements PaletteProvider<PropertyResult> {
 		const matched = sections.flatMap((section) =>
 			searchFuzzyQuery(query, section, [(result) => result.primary]).map(({ obj }) => obj),
 		);
-		// Nothing matches, so the typed text can only be a key the note does not have yet.
+		// 一致するものがないので、入力された文字列はノートがまだ持たないキーでしかありえない。
 		if (matched.length === 0)
 			return [
 				newKeyRow(
@@ -133,8 +133,8 @@ export class PropertyProvider implements PaletteProvider<PropertyResult> {
 	}
 
 	/**
-	 * Keys of several notes at once: those any of them has come first, most shared first,
-	 * then the reserved keys and the rest of the vault. Each row edits all the notes.
+	 * 複数のノートのキーを一度に扱う。どれかのノートが持つものを先に、共有の多いものを先頭にし、
+	 * その後に予約済みのキーと、Vault のそれ以外を並べる。各行はすべてのノートを編集する。
 	 */
 	private sectionsOfMany(files: readonly TFile[]): PropertyResult[][] {
 		const frontmatters = files.map(
@@ -145,7 +145,8 @@ export class PropertyProvider implements PaletteProvider<PropertyResult> {
 		const sourcePath = sourcePaths[0];
 		const infos = vaultInfos(this.app);
 		const holders = (key: string) => frontmatters.filter((frontmatter) => key in frontmatter);
-		const sharedLabel = (key: string) => `${holders(key).length}/${files.length} notes`;
+		const sharedLabel = (key: string) =>
+			t("property.sharedNotes", { shared: holders(key).length, total: files.length });
 		const kindOf = (key: string) =>
 			propertyKindOf(key, holders(key)[0]?.[key], declaredType(this.app, key, infos[key]));
 
@@ -159,7 +160,7 @@ export class PropertyProvider implements PaletteProvider<PropertyResult> {
 			.map(([key]) =>
 				propertyRow({
 					key,
-					section: "These notes",
+					section: "これらのノート",
 					kind: kindOf(key),
 					secondary: sharedLabel(key),
 					inNote: true,
@@ -170,9 +171,9 @@ export class PropertyProvider implements PaletteProvider<PropertyResult> {
 		const reserved = RESERVED_KEYS.map((key) =>
 			propertyRow({
 				key,
-				section: "Reserved",
+				section: "予約済み",
 				kind: kindOf(key),
-				secondary: holders(key).length > 0 ? sharedLabel(key) : "Not set",
+				secondary: holders(key).length > 0 ? sharedLabel(key) : t("property.notSet"),
 				inNote: holders(key).length > 0,
 				sourcePath,
 				sourcePaths,
@@ -188,7 +189,7 @@ export class PropertyProvider implements PaletteProvider<PropertyResult> {
 					key,
 					section: "Vault",
 					kind: kindOf(key),
-					secondary: countLabel(count),
+					secondary: noteCountLabel(count),
 					inNote: false,
 					sourcePath,
 					sourcePaths,
@@ -222,7 +223,7 @@ export class PropertyProvider implements PaletteProvider<PropertyResult> {
 				const kind = propertyKindOf(key, value, declaredType(this.app, key, infos[key]));
 				return propertyRow({
 					key,
-					section: "This note",
+					section: "このノート",
 					kind,
 					secondary: formatPropertyValue(kind, value),
 					inNote: true,
@@ -241,7 +242,7 @@ export class PropertyProvider implements PaletteProvider<PropertyResult> {
 			const kind = propertyKindOf(key, value, declaredType(this.app, key, infos[key]));
 			return propertyRow({
 				key,
-				section: "Reserved",
+				section: "予約済み",
 				kind,
 				secondary: formatPropertyValue(kind, value),
 				inNote: key in frontmatter,
@@ -256,7 +257,7 @@ export class PropertyProvider implements PaletteProvider<PropertyResult> {
 		infos: Record<string, VaultPropertyInfo>,
 	): PropertyResult[] {
 		const inNote = new Set(noteKeys);
-		// Obsidian returns usage counts separately, keyed by lowercase property name.
+		// Obsidian は使用数を別に返す。キーは小文字のプロパティ名になっている。
 		const counts = getMetadataTypeManager(this.app)?.getPropertyOccurrences?.() ?? {};
 		return Object.keys(infos)
 			.filter((key) => !inNote.has(key) && !isReserved(key) && !HIDDEN_KEYS.has(key))
@@ -272,7 +273,7 @@ export class PropertyProvider implements PaletteProvider<PropertyResult> {
 					key,
 					section: "Vault",
 					kind,
-					secondary: countLabel(count),
+					secondary: noteCountLabel(count),
 					inNote: false,
 					sourcePath,
 				});

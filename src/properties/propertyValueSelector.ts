@@ -8,6 +8,8 @@ import { MultiSelectModal, type MultiSelectCandidate } from "src/ui/MultiSelectM
 import { changeCount, type MultiSelectChanges } from "src/ui/multiSelectChanges";
 import { setOrDeleteFrontmatterList, updateFrontmatter } from "src/shared/frontmatter";
 import { getFrontmatterValuesForKey } from "src/platform/obsidianInternals";
+import { countLabel } from "src/shared/countLabel";
+import { t } from "src/i18n";
 
 const VALUE_RULES: NewValueRules = {
 	normalize: (query) => query.trim(),
@@ -16,14 +18,14 @@ const VALUE_RULES: NewValueRules = {
 };
 
 export function vaultValuesOf(app: App, key: string): string[] {
-	// A missing API leaves the list with only the note's own values.
+	// API がなければ、一覧はノート自身の値だけになる。
 	const values = getFrontmatterValuesForKey(app, key);
 	return Array.isArray(values)
 		? values.filter((value): value is string => typeof value === "string")
 		: [];
 }
 
-/** Writes the changes to one note; false when the write failed (the reason is in the console). */
+/** 1つのノートに変更を書き込む。書き込みに失敗したら false(理由はコンソールにある)。 */
 async function writeListChanges(
 	app: App,
 	file: TFile,
@@ -41,8 +43,8 @@ async function writeListChanges(
 }
 
 /**
- * Writes the changed values of a list property. The order of the kept values is
- * preserved and new ones are appended; a list left empty removes the key.
+ * リストのプロパティの変更された値を書き込む。残す値の順序は保ち、新しい値は末尾に足す。
+ * 空になったリストはキーを削除する。
  */
 export async function applyListChanges(
 	app: App,
@@ -52,20 +54,20 @@ export async function applyListChanges(
 ): Promise<boolean> {
 	const updated = await writeListChanges(app, file, key, changes);
 	if (!updated) {
-		new Notice(`Could not update the properties of ${file.basename}. See the console.`);
+		new Notice(t("property.error.updateFailed", { name: file.basename }));
 	}
 	return updated;
 }
 
-/** How many notes a bulk write changed and how many it could not. */
+/** 一括の書き込みで、変更できたノートの数と、できなかったノートの数。 */
 export interface BulkWriteResult {
 	updated: number;
 	failed: number;
 }
 
 /**
- * Applies the same changes to every note, one at a time, so one failing note (broken YAML)
- * does not stop the rest. Notes the changes leave as they were still count as updated.
+ * 同じ変更をすべてのノートに、1つずつ適用する。1つのノートが(壊れた YAML などで)失敗しても、
+ * 残りは止まらない。変更によって元のままになったノートも、更新済みとして数える。
  */
 export async function applyListChangesToFiles(
 	app: App,
@@ -81,7 +83,7 @@ export async function applyListChangesToFiles(
 	return result;
 }
 
-/** Reads the values a list property has in each note's frontmatter cache. */
+/** 各ノートのフロントマターのキャッシュから、リストのプロパティが持つ値を読む。 */
 function currentValues(app: App, files: readonly TFile[], key: string): string[][] {
 	return files.map((file) => {
 		const frontmatter: Record<string, unknown> | undefined =
@@ -91,10 +93,10 @@ function currentValues(app: App, files: readonly TFile[], key: string): string[]
 }
 
 function notesLabel(files: readonly TFile[]): string {
-	return files.length === 1 ? files[0].basename : `${files.length} notes`;
+	return files.length === 1 ? files[0].basename : countLabel(files.length, "ノート");
 }
 
-/** Opens the value selector for a list property of the notes and writes the result to all of them. */
+/** ノートのリストのプロパティの値セレクターを開き、結果をすべてのノートに書き込む。 */
 export async function editListProperty(
 	plugin: MyPalettePlugin,
 	files: readonly TFile[],
@@ -111,51 +113,48 @@ export async function editListProperty(
 	if (!changes || changeCount(changes) === 0) return "dismissed";
 	if (files.length === 1) {
 		if (await applyListChanges(plugin.app, files[0], key, changes))
-			new Notice(`Updated ${key} on ${files[0].basename}.`);
+			new Notice(t("property.notice.updatedOne", { key, name: files[0].basename }));
 		return "done";
 	}
 	const { updated, failed } = await applyListChangesToFiles(plugin.app, files, key, changes);
-	if (updated > 0) new Notice(`Updated ${key} on ${updated} notes.`);
-	if (failed > 0) new Notice(`Could not update ${key} on ${failed} notes. See the console.`);
+	if (updated > 0) new Notice(t("property.notice.updatedMany", { key, count: updated }));
+	if (failed > 0) new Notice(t("property.error.updateFailedKey", { key, count: failed }));
 	return "done";
 }
 
 /**
- * Selector for the values of one list property. A value every target has is checked and can be
- * removed; a value only some targets have shows how many and can be added to the rest.
+ * 1つのリストのプロパティの値のセレクター。すべての対象が持つ値はチェックされ、削除できる。
+ * 一部の対象だけが持つ値は、何件が持つかを表示し、残りの対象に追加できる。
  */
 export class PropertyValueModal extends MultiSelectModal<string> {
-	/** How many targets have each value, kept current as values are removed from the context menu. */
+	/** 各値を持つ対象の数。右クリックメニューから値を削除するたびに、最新に保つ。 */
 	private counts = new Map<string, number>();
 
 	constructor(
 		private readonly plugin: MyPalettePlugin,
 		private readonly files: readonly TFile[],
 		private readonly key: string,
-		/** The values each target has now, in the same order as `files`. */
+		/** 対象が今持っている値。`files` と同じ順序。 */
 		current: readonly (readonly string[])[],
 		private readonly vaultValues: string[],
 	) {
 		super(
 			{
-				placeholder: `Select values for ${key} (type to add a new value)`,
+				placeholder: t("property.value.placeholder", { key }),
 				contextLabel:
 					files.length === 1
-						? `Target: ${files[0].path}`
-						: `Targets: ${files.length} notes`,
-				actionLabel: "Add",
+						? t("property.value.target", { path: files[0].path })
+						: t("property.value.targets", { count: files.length }),
+				actionLabel: t("property.value.add"),
 				controls: {
 					plugin,
 					category: "property-value",
-					title: "Property value selector",
-					description: `Values of ${key} in the target ${files.length === 1 ? "note" : "notes"}. Checked values are kept on every target; unchecking a value that all targets have removes it when you run the selector.`,
-					actionLabel: "Add",
+					title: t("property.value.controlsTitle"),
+					description: t("property.value.description", { key }),
+					actionLabel: t("property.value.add"),
 					shortcuts: [
-						["Space", "Toggle checks in selection mode"],
-						[
-							"Ctrl+Enter",
-							"Apply the checks: add checked values and remove unchecked ones; with no changes, add the selected values",
-						],
+						["Space", t("shortcut.toggle")],
+						["Ctrl+Enter", t("property.value.shortcutApply")],
 					],
 				},
 			},
@@ -200,7 +199,7 @@ export class PropertyValueModal extends MultiSelectModal<string> {
 		return {
 			...this.valueRow(value),
 			applied: true,
-			removal: { label: "Remove value", run: () => this.removeValue(value) },
+			removal: { label: t("property.value.remove"), run: () => this.removeValue(value) },
 		};
 	}
 
@@ -210,9 +209,12 @@ export class PropertyValueModal extends MultiSelectModal<string> {
 			value,
 			item: {
 				label: value,
-				badge: `On ${this.counts.get(value)}/${this.files.length} notes`,
+				badge: t("property.badge.partial", {
+					count: this.counts.get(value) ?? 0,
+					total: this.files.length,
+				}),
 			},
-			removal: { label: "Remove value", run: () => this.removeValue(value) },
+			removal: { label: t("property.value.remove"), run: () => this.removeValue(value) },
 		};
 	}
 
@@ -220,12 +222,12 @@ export class PropertyValueModal extends MultiSelectModal<string> {
 		return {
 			key: `new:${value}`,
 			value,
-			item: { label: value, badge: "New value" },
+			item: { label: value, badge: t("property.badge.newValue") },
 			uncheckedIcon: "plus",
 		};
 	}
 
-	/** Removes one value from every target at once and updates the list, since the modal stays open. */
+	/** 値を1回ですべての対象から削除し、モーダルは開いたままなので一覧を更新する。 */
 	private async removeValue(value: string): Promise<void> {
 		const changes = { add: [], remove: [value] };
 		if (this.files.length === 1) {
@@ -238,10 +240,17 @@ export class PropertyValueModal extends MultiSelectModal<string> {
 				this.key,
 				changes,
 			);
-			if (failed > 0) new Notice(`Could not update ${failed} notes. See the console.`);
+			if (failed > 0)
+				new Notice(t("property.error.updateFailedKey", { key: this.key, count: failed }));
 			if (updated === 0) return;
 		}
-		new Notice(`Removed ${value} from ${this.key} on ${notesLabel(this.files)}.`);
+		new Notice(
+			t("property.notice.removedValue", {
+				value,
+				key: this.key,
+				name: notesLabel(this.files),
+			}),
+		);
 		this.counts.delete(value);
 	}
 }

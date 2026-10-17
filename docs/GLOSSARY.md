@@ -1,5 +1,7 @@
 # 用語集
 
+> 注: UIの文言は日本語にし、`src/i18n/ja.json` に集約した。この表の英語の正式名は旧表記で、新しい文言では使わない。識別子(`palette`、`home`、`moc-insert-selector` など)は変えず、参照用に残す。コマンドの表示名は日本語にし、idは英語のケバブケースのまま(`eslint-rules/command-naming.mts` で検査)。
+
 UIの文言(設定画面、コマンド名、ショートカット表、説明文、README)で使う用語の正本。新しい文言を書くときや既存の文言を直すときは、この表に合わせる。表にない用語が必要になったら、先にここへ足してから使う。
 
 コード上の識別子は、保存済みデータの移行が要るものもあるため、UIの文言とは別に扱う。「識別子」列は現状を記録したもので、改名するかどうかは各項目の備考に書く。
@@ -182,4 +184,4 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 - モード名: `src/palette/modes.ts`(`PALETTE_MODES`)
 - コマンド名: `src/app/registerCommands.ts`
 - オプションメニューのスイッチ: `src/ui/panelSwitch.ts`、`src/palette/ignoredToggle.ts`
-- 利用者向けの説明: `README.md`、`README.ja.md`
+- 利用者向けの説明: `README.md`

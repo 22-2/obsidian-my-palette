@@ -5,6 +5,7 @@ import type { PaletteProvider, PaletteSearchRequest } from "src/search/PalettePr
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 import { ICONS } from "src/ui/icons";
 import { getCustomCss } from "src/platform/obsidianInternals";
+import { t } from "src/i18n";
 
 function listSnippets(app: App): string[] {
 	const snippets = getCustomCss(app).snippets;
@@ -27,8 +28,8 @@ function displayName(snippet: string): string {
 }
 
 /**
- * Lists the snippets folder first, then each CSS snippet, so the folder can be
- * opened externally like a plugin folder. Typed input searches snippets only.
+ * スニペットのフォルダーを先に、次に各 CSS スニペットを一覧にする。フォルダーはプラグインのフォルダーと
+ * 同じく、外部で開ける。入力したときは、スニペットだけを検索する。
  */
 export class SnippetProvider implements PaletteProvider<SnippetResult> {
 	constructor(private readonly app: App) {}
@@ -53,7 +54,7 @@ export class SnippetProvider implements PaletteProvider<SnippetResult> {
 						id: `snippet:${snippet}`,
 						mode: "snippet",
 						primary: displayName(snippet),
-						secondary: enabled ? "Enabled" : "Disabled",
+						secondary: enabled ? t("snippet.enabled") : t("snippet.disabled"),
 						icon: ICONS.snippet,
 						snippetName: snippet,
 						absolutePath,
@@ -75,7 +76,7 @@ export class SnippetProvider implements PaletteProvider<SnippetResult> {
 			{
 				id: "snippet:folder",
 				mode: "snippet",
-				primary: "snippets folder",
+				primary: t("snippet.folderName"),
 				secondary: folderVaultPath,
 				icon: ICONS.folder,
 				snippetName: "",

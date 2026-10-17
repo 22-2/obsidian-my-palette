@@ -3,19 +3,20 @@ import type { SettingsHost } from "src/settings/settingsHost";
 import { DEFAULT_SETTINGS, SETTING_LIMITS } from "src/settings/model";
 import { ICONS } from "src/ui/icons";
 import { getCommunityPlugin } from "src/platform/obsidianInternals";
+import { t } from "src/i18n";
 
-/** The names inside the Everything modal, so the Integrations row is found by any of them. */
+/** Everything のモーダルの中の名前。連携の行は、このどれからでも見つけられる。 */
 export const EVERYTHING_MODAL_ITEMS = [
-	"HTTP server URL",
-	"Username",
-	"Password",
-	"Test connection",
-	"Maximum results",
-	"Input delay",
-	"Request timeout",
+	t("settings.everything.item.url"),
+	t("settings.everything.item.username"),
+	t("settings.everything.item.password"),
+	t("settings.everything.item.test"),
+	t("settings.everything.item.maxResults"),
+	t("settings.everything.item.inputDelay"),
+	t("settings.everything.item.timeout"),
 ] as const;
 
-/** Whether Smart Connections is installed, under either of its plugin ids. */
+/** Smart Connections がインストールされているかどうか。どちらのプラグイン ID でも。 */
 export function isSmartConnectionsInstalled(app: App): boolean {
 	return (
 		getCommunityPlugin(app, "smart-connections") !== undefined ||
@@ -32,7 +33,7 @@ function addSwitch(
 }
 
 /**
- * The Everything card opens its settings from anywhere in the header, except its switch.
+ * Everything のカードは、スイッチ以外のヘッダーのどこを押しても設定を開く。
  */
 export function renderEverythingIntegration(setting: Setting, plugin: SettingsHost): void {
 	const panelId = "my-palette-everything-panel";
@@ -80,14 +81,17 @@ export function renderSmartConnectionsIntegration(
 	installed: boolean,
 ): void {
 	if (!installed)
-		setting.infoEl.createDiv({ cls: "my-palette-mode-note", text: "Not installed" });
+		setting.infoEl.createDiv({
+			cls: "my-palette-mode-note",
+			text: t("settings.smart.notInstalled"),
+		});
 	addSwitch(setting, plugin.settings.integrations.smartConnections.enabled, async (value) => {
 		plugin.settings.integrations.smartConnections.enabled = value;
 		await plugin.saveSettings();
 	});
 }
 
-/** Switched on means Markdown opens in VS Code, which is the opposite of the stored setting. */
+/** オンは、Markdown を VS Code で開くこと。保存された設定とは逆になる。 */
 export function renderVscodeIntegration(setting: Setting, plugin: SettingsHost): void {
 	addSwitch(setting, !plugin.settings.openExternalMarkdownInObsidian, async (value) => {
 		plugin.settings.openExternalMarkdownInObsidian = !value;
@@ -96,16 +100,15 @@ export function renderVscodeIntegration(setting: Setting, plugin: SettingsHost):
 }
 
 /**
- * Everything's connection and result settings. Each change is saved as it is made,
- * like the rest of the settings.
+ * Everything の接続と結果の設定。設定のほかの項目と同じく、変更のたびにすぐ保存する。
  */
 function renderEverythingFields(containerEl: HTMLElement, plugin: SettingsHost): void {
 	const { everything } = plugin.settings;
 
-	new Setting(containerEl).setName("Connection").setHeading();
+	new Setting(containerEl).setName(t("settings.everything.connection")).setHeading();
 	const url = new Setting(containerEl)
-		.setName("HTTP server URL")
-		.setDesc("URL configured in the official Everything 1.5 HTTP Server plugin.");
+		.setName(t("settings.everything.item.url"))
+		.setDesc(t("settings.everything.urlDesc"));
 	const urlError = url.infoEl.createDiv({
 		cls: "my-palette-mode-error",
 		attr: { role: "alert" },
@@ -118,7 +121,7 @@ function renderEverythingFields(containerEl: HTMLElement, plugin: SettingsHost):
 				try {
 					new URL(value);
 				} catch {
-					urlError.textContent = "Enter a valid URL.";
+					urlError.textContent = t("settings.everything.urlInvalid");
 					urlError.hidden = false;
 					return;
 				}
@@ -129,8 +132,8 @@ function renderEverythingFields(containerEl: HTMLElement, plugin: SettingsHost):
 	});
 
 	new Setting(containerEl)
-		.setName("Username")
-		.setDesc("Optional username configured in Everything.")
+		.setName(t("settings.everything.item.username"))
+		.setDesc(t("settings.everything.usernameDesc"))
 		.addText((text) =>
 			text.setValue(everything.username).onChange(async (value) => {
 				everything.username = value;
@@ -138,8 +141,8 @@ function renderEverythingFields(containerEl: HTMLElement, plugin: SettingsHost):
 			}),
 		);
 	new Setting(containerEl)
-		.setName("Password")
-		.setDesc("Stored in this plugin's local data.json.")
+		.setName(t("settings.everything.item.password"))
+		.setDesc(t("settings.everything.passwordDesc"))
 		.addText((text) => {
 			text.inputEl.type = "password";
 			text.setValue(everything.password).onChange(async (value) => {
@@ -148,21 +151,25 @@ function renderEverythingFields(containerEl: HTMLElement, plugin: SettingsHost):
 			});
 		});
 	new Setting(containerEl)
-		.setName("Test connection")
-		.setDesc("Runs a harmless query against the configured HTTP server.")
+		.setName(t("settings.everything.item.test"))
+		.setDesc(t("settings.everything.testDesc"))
 		.addButton((button) =>
-			button.setButtonText("Test").onClick(async () => {
+			button.setButtonText(t("settings.everything.testButton")).onClick(async () => {
 				const result = await plugin.testEverythingConnection();
-				new Notice(result.ok ? result.message : `Everything: ${result.message}`);
+				new Notice(
+					result.ok
+						? result.message
+						: t("settings.everything.prefixed", { message: result.message }),
+				);
 			}),
 		);
 
-	new Setting(containerEl).setName("Results and timing").setHeading();
+	new Setting(containerEl).setName(t("settings.everything.resultsTiming")).setHeading();
 	addSlider(
 		containerEl,
 		plugin,
-		"Maximum results",
-		"Most results requested from Everything for each search.",
+		t("settings.everything.item.maxResults"),
+		t("settings.everything.maxResultsDesc"),
 		everything.maxResults,
 		SETTING_LIMITS.everything.maxResults,
 		(value) => (everything.maxResults = value),
@@ -170,8 +177,8 @@ function renderEverythingFields(containerEl: HTMLElement, plugin: SettingsHost):
 	addSlider(
 		containerEl,
 		plugin,
-		"Input delay",
-		"Milliseconds to wait after typing before asking Everything.",
+		t("settings.everything.item.inputDelay"),
+		t("settings.everything.inputDelayDesc"),
 		everything.debounceMs,
 		SETTING_LIMITS.everything.debounceMs,
 		(value) => (everything.debounceMs = value),
@@ -179,8 +186,8 @@ function renderEverythingFields(containerEl: HTMLElement, plugin: SettingsHost):
 	addSlider(
 		containerEl,
 		plugin,
-		"Request timeout",
-		"Milliseconds to wait for Everything before showing an error.",
+		t("settings.everything.item.timeout"),
+		t("settings.everything.timeoutDesc"),
 		everything.requestTimeoutMs,
 		SETTING_LIMITS.everything.requestTimeoutMs,
 		(value) => (everything.requestTimeoutMs = value),

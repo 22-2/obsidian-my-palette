@@ -16,7 +16,7 @@ describe("matched metadata presentation", () => {
 			),
 		).toEqual({
 			tags: ["#project", "roadmap", "planning", "+2"],
-			tagsTitle: "Tags: #project\nKeywords: roadmap, planning, milestone, schedule",
+			tagsTitle: "タグ: #project\nキーワード: roadmap, planning, milestone, schedule",
 		});
 		expect(matchedMetadataPresentation([])).toEqual({});
 	});
@@ -38,7 +38,7 @@ describe("matched metadata presentation", () => {
 		expect(item).toMatchObject({
 			label: "note",
 			tags: ["宇宙", "星空観察"],
-			tagsTitle: "Keywords: 宇宙, 星空観察",
+			tagsTitle: "キーワード: 宇宙, 星空観察",
 		});
 	});
 });

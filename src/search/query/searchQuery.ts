@@ -1,22 +1,21 @@
 /**
- * Everything-style search syntax shared by every palette and selector filter.
+ * すべてのパレットとセレクターの絞り込みで共有する、Everything 風の検索構文。
  *
- * - whitespace: AND
- * - `|`: OR, which binds tighter than AND (`a b|c` is `a <b|c>`)
- * - `!`: NOT, only at the start of a term (`hello!` stays literal)
- * - `<` `>`: grouping
- * - `"..."`: literal text, matched contiguously instead of fuzzily
+ * - 空白: AND
+ * - `|`: OR。AND より強く結びつく(`a b|c` は `a <b|c>`)
+ * - `!`: NOT。項の先頭にだけ付く(`hello!` はリテラルのまま)
+ * - `<` `>`: グループ化
+ * - `"..."`: 文字どおりの検索。あいまい一致ではなく、連続した部分文字列として一致させる
  *
- * Plain queries never touch these operators, and half-typed input (`!`, `a |`,
- * an unclosed `<` or `"`) parses to whatever is complete so far instead of
- * failing. New syntax such as `path:` modifiers belongs in `readTerm` and the
- * term node, leaving the boolean structure and its evaluators unchanged.
+ * 普通のクエリはこれらの演算子に触れず、入力の途中の文字列(`!`、`a |`、閉じていない `<` や `"`)は、
+ * 失敗せずにそこまでで完成している部分として解析する。`path:` のような新しい構文は `readTerm` と
+ * 項のノードに足し、論理構造とその評価器は変えないままにする。
  */
 
 export interface QueryTerm {
 	readonly kind: "term";
 	readonly text: string;
-	/** True when any part was quoted; the term then matches as a contiguous substring. */
+	/** 一部でも引用されていれば true。その項は連続した部分文字列として一致する。 */
 	readonly exact: boolean;
 }
 
@@ -46,8 +45,8 @@ function isSpace(char: string): boolean {
 }
 
 /**
- * `>` closes a group only where a term could end, so a future `size:>10mb`
- * inside a group keeps its comparison operator.
+ * `>` は、項が終わりうる場所でだけグループを閉じる。将来、グループの中の `size:>10mb` が
+ * 比較演算子を保てるように。
  */
 function isTermEnd(query: string, index: number): boolean {
 	const next = query[index];
@@ -88,8 +87,8 @@ function tokenize(query: string): Token[] {
 			tokens.push({ type: "space" });
 			continue;
 		}
-		// Every branch below runs at a token boundary, which is what keeps `!` and
-		// `<` literal in the middle of a word.
+		// 以下のすべての分岐は、トークンの境界で動く。単語の途中の `!` と `<` をリテラルのままにするのは、
+		// この性質による。
 		if (char === "|" || char === "!" || char === "<" || (char === ">" && depth > 0)) {
 			if (char === "<") depth++;
 			if (char === ">") depth--;
@@ -100,7 +99,7 @@ function tokenize(query: string): Token[] {
 			continue;
 		}
 		const { token, end } = readTerm(query, index, depth);
-		// An empty pair of quotes contributes nothing to search.
+		// 空の引用符の組は、検索には何も寄与しない。
 		if (token.type === "term" && token.text) tokens.push(token);
 		index = end;
 	}
@@ -141,7 +140,7 @@ class Parser {
 			const start = this.index;
 			const operand = this.parseOr();
 			if (operand) operands.push(operand);
-			// A stray operator (`|` with nothing before it) must not stall the loop.
+			// 前に何もない余分な演算子(項の前の `|`)で、ループが止まってはいけない。
 			if (this.index === start) this.index++;
 		}
 		return combine("and", operands);
@@ -152,7 +151,7 @@ class Parser {
 		const first = this.parseUnary();
 		if (first) operands.push(first);
 		for (;;) {
-			// Spaces around `|` are part of the OR, as in Everything.
+			// `|` の前後の空白は、Everything と同じく OR の一部。
 			const beforeSpaces = this.index;
 			this.skipSpaces();
 			if (this.peek()?.type !== "or") {
@@ -179,7 +178,7 @@ class Parser {
 			case "open": {
 				this.index++;
 				const inner = this.parseAnd(true);
-				// An unclosed group simply runs to the end of the query.
+				// 閉じていないグループは、単にクエリの終わりまで続く。
 				if (this.peek()?.type === "close") this.index++;
 				return inner;
 			}
@@ -196,9 +195,8 @@ let cachedQuery: string | undefined;
 let cachedNode: QueryNode | undefined;
 
 /**
- * Parse a query; undefined means it has no searchable content. File matching
- * asks for several views of the same query per candidate, so the last parse is
- * reused.
+ * クエリを解析する。undefined は、検索できる内容がないこと。ファイルの一致は、候補ごとに
+ * 同じクエリの複数の見え方を求めるので、直前の解析結果を再利用する。
  */
 export function parseSearchQuery(query: string): QueryNode | undefined {
 	if (query !== cachedQuery) {
@@ -228,9 +226,8 @@ function positiveBranchesOf(node: QueryNode): QueryTerm[][] {
 }
 
 /**
- * The terms a match must satisfy, as alternative AND branches. Ranking and
- * highlighting read these so an excluded term can never raise a result or
- * light up in its label.
+ * 一致が満たすべき項を、代わりの AND の分岐として返す。順位付けと強調表示は、これを読むので、
+ * 除外された項が結果の順位を上げたり、ラベルを光らせたりすることはない。
  */
 export function positiveTermBranches(query: string): string[][] {
 	const node = parseSearchQuery(query);
@@ -240,7 +237,7 @@ export function positiveTermBranches(query: string): string[][] {
 		.map((terms) => terms.map(({ text }) => text));
 }
 
-/** Every term that can contribute to a match. */
+/** 一致に寄与しうるすべての項。 */
 export function positiveQueryTerms(query: string): string[] {
 	return positiveTermBranches(query).flat();
 }
@@ -257,7 +254,7 @@ function collectTerms(node: QueryNode): QueryTerm[] {
 	}
 }
 
-/** Every term in the query, excluded ones included. */
+/** クエリのすべての項。除外された項も含む。 */
 export function allQueryTerms(query: string): string[] {
 	const node = parseSearchQuery(query);
 	return node ? collectTerms(node).map(({ text }) => text) : [];

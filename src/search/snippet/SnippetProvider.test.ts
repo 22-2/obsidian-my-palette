@@ -35,16 +35,16 @@ describe("SnippetProvider", () => {
 			"snippet:beta.css",
 		]);
 		expect(results[0]).toMatchObject({
-			primary: "snippets folder",
+			primary: "スニペットのフォルダー",
 			isFolder: true,
 			absolutePath: "C:/vault/cfg/snippets",
 		});
 		expect(results[1]).toMatchObject({
 			primary: "alpha",
-			secondary: "Enabled",
+			secondary: "有効",
 			isFolder: false,
 		});
-		expect(results[2]).toMatchObject({ primary: "beta", secondary: "Disabled" });
+		expect(results[2]).toMatchObject({ primary: "beta", secondary: "無効" });
 	});
 
 	it("searches snippets only, without the folder row", async () => {

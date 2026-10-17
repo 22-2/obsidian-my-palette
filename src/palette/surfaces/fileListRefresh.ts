@@ -3,14 +3,14 @@ import type { App, EventRef } from "obsidian";
 const FILE_LIST_REFRESH_DELAY_MS = 400;
 
 /**
- * Re-runs a view's current search when vault or metadata changes, so an open
- * result list does not stay stale until the next keystroke. A hidden view (a
- * background tab) waits until it is shown again, and then searches once.
+ * Vault やメタデータが変わったら、ビューの現在の検索をやり直す。開いている結果の一覧が、
+ * 次のキーストロークまで古いままにならないようにするため。非表示のビュー(バックグラウンドの
+ * タブ)は、再び表示されるまで待ち、そのあとに一度だけ検索する。
  */
 export class FileListRefresh {
 	private registered = false;
 	private timer?: number;
-	/** A change arrived while the view was hidden. */
+	/** ビューが非表示の間に変更が届いた。 */
 	private stale = false;
 
 	constructor(
@@ -21,15 +21,15 @@ export class FileListRefresh {
 		private readonly refresh: () => void,
 	) {}
 
-	/** Subscribes once; the view's own lifecycle unregisters the events. */
+	/** 購読は一度だけ行う。イベントの登録解除は、ビュー自身のライフサイクルが行う。 */
 	register(): void {
 		if (this.registered) return;
 		this.registered = true;
-		// Why: the file index (FileProvider) already updates on these events, but
-		// the open list would stay stale until the next keystroke. Re-run the
-		// current search so mtime/alias/frontmatter edits reorder the visible list.
-		// Note: metadataCache `resolved` fires after the initial index pass and
-		// again after later modifications, so it covers the startup bulk load too.
+		// Why: ファイルの索引(FileProvider)はすでにこれらのイベントで更新されるが、開いている一覧は
+		// 次のキーストロークまで古いままになる。現在の検索をやり直し、mtime・別名・フロントマターの
+		// 編集で、表示中の一覧の並びが変わるようにする。
+		// 注: metadataCache の `resolved` は、初回の索引の後と、以降の変更の後に発火するので、
+		// 起動時の一括読み込みも対象に含む。
 		const schedule = (): void => this.schedule();
 		const { vault, metadataCache, workspace } = this.app;
 		this.registerEvent(vault.on("create", schedule));
@@ -40,7 +40,7 @@ export class FileListRefresh {
 		this.registerEvent(metadataCache.on("deleted", schedule));
 		this.registerEvent(metadataCache.on("resolve", schedule));
 		this.registerEvent(metadataCache.on("resolved", schedule));
-		// Why: switching tabs or opening a collapsed sidebar shows the view again.
+		// Why: タブを切り替えたり、折りたたまれたサイドバーを開いたりすると、ビューが再び表示される。
 		const scheduleIfStale = (): void => {
 			if (this.stale) this.schedule();
 		};
@@ -56,14 +56,14 @@ export class FileListRefresh {
 
 	private schedule(): void {
 		if (!this.isActive()) return;
-		// vault `modify` fires per keystroke while editing; debounce the re-search
-		// so a long edit session does not queue a search per character.
+		// vault の `modify` は編集中のキーストロークごとに発火する。再検索をデバウンスして、
+		// 長い編集の間に一文字ごとの検索が積み上がらないようにする。
 		this.cancel();
 		this.timer = window.setTimeout(() => {
 			this.timer = undefined;
 			if (!this.isActive()) return;
-			// Why: a search in a hidden view (Vault audit reads the whole vault) is wasted work
-			// while the user edits notes elsewhere.
+			// Why: 非表示のビュー(Vault 監査は Vault 全体を読む)での検索は、ユーザーが別の場所で
+			// ノートを編集している間は無駄な作業になる。
 			if (!this.isVisible()) {
 				this.stale = true;
 				return;

@@ -17,4 +17,4 @@ This project uses pnpm scripts directly. The plugin is bundled with esbuild (`es
 
 - [ ] Run `pnpm install` after pulling remote changes and before getting started.
 - [ ] Run `pnpm format:check`, `pnpm lint`, `pnpm check-types` and `pnpm test` before committing.
-- [ ] Use the terms in `docs/GLOSSARY.md` for any UI text.
+- [ ] Put every UI text in `src/i18n/ja.json` in Japanese and show it with `t("key")`. Write code comments in Japanese.

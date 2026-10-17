@@ -10,12 +10,13 @@ import {
 } from "obsidian";
 import type { SettingsHost } from "src/settings/settingsHost";
 import { SETTING_LIMITS, type PaletteSurface, type ReturnToHomeSeconds } from "src/settings/model";
+import { t } from "src/i18n";
 
 const RETURN_TO_HOME_LABELS: Record<string, string> = {
-	"0": "Immediately",
-	"30": "After 30 seconds",
-	"60": "After 60 seconds",
-	"90": "After 90 seconds",
+	"0": t("settings.returnHome.immediately"),
+	"30": t("settings.returnHome.after", { seconds: 30 }),
+	"60": t("settings.returnHome.after", { seconds: 60 }),
+	"90": t("settings.returnHome.after", { seconds: 90 }),
 };
 import { excludedFolders, extensions } from "src/settings/mergeSettings";
 import { renderFileSortPriorityControl } from "src/settings/fileSortPriorityControl";
@@ -71,9 +72,8 @@ const createSettingPageHelpers = (): SettingPageHelpers => ({
 });
 
 /**
- * Keep the top level organized by task. Obsidian opens plugin
- * settings in a separate window, so a page for every small setting group makes
- * users hunt through links before they can see the controls they need.
+ * 最上位は作業の単位で整理する。Obsidian はプラグインの設定を別のウィンドウで開くので、
+ * 小さな設定のグループごとにページを作ると、必要な設定を見つけるまでリンクをたどることになるため。
  */
 export function createSettingPages(plugin: SettingsHost): SettingDefinitionItem[] {
 	const helpers = createSettingPageHelpers();
@@ -88,123 +88,101 @@ export function createSettingPages(plugin: SettingsHost): SettingDefinitionItem[
 }
 
 function createShortcutsPage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
-	return helpers.page(
-		"Shortcuts",
-		"Click a keybinding to record a new one. Backspace or Delete turns it off, and Escape cancels. Arrow keys, Enter and Tab keep their standard behavior.",
-		[
-			helpers.group("Palette and selector shortcuts", [
-				helpers.render("", "", (setting) => renderShortcutsTable(setting, plugin)),
-			]),
-		],
-	);
+	return helpers.page(t("settings.shortcuts.name"), t("settings.shortcuts.desc"), [
+		helpers.group(t("settings.shortcuts.group"), [
+			helpers.render("", "", (setting) => renderShortcutsTable(setting, plugin)),
+		]),
+	]);
 }
 
 function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
-	return helpers.page(
-		"File search",
-		"Which files the palette lists, which folders are hidden or ranked lower, and how results are sorted.",
-		[
-			helpers.group("File types", [
-				helpers.render(
-					"Vault search extensions",
-					"Comma-separated extensions used by the file list. Everything searches every file type when Obsidian-excluded is on.",
-					(setting) =>
-						setting.addText((text) =>
-							text
-								.setPlaceholder("Example: md, canvas, base")
-								.setValue(plugin.settings.everything.vaultExtensions.join(", "))
-								.onChange((value) => {
-									plugin.settings.everything.vaultExtensions = extensions(
-										value.split(","),
-									);
-									void plugin.saveSettings();
-									plugin.fileProvider.refreshExtensions();
-								}),
-						),
+	return helpers.page(t("settings.fileSearch.name"), t("settings.fileSearch.desc"), [
+		helpers.group(t("settings.fileSearch.fileTypes"), [
+			helpers.render(
+				t("settings.extensions.name"),
+				t("settings.extensions.desc"),
+				(setting) =>
+					setting.addText((text) =>
+						text
+							.setPlaceholder(t("settings.extensions.placeholder"))
+							.setValue(plugin.settings.everything.vaultExtensions.join(", "))
+							.onChange((value) => {
+								plugin.settings.everything.vaultExtensions = extensions(
+									value.split(","),
+								);
+								void plugin.saveSettings();
+								plugin.fileProvider.refreshExtensions();
+							}),
+					),
+			),
+		]),
+		helpers.group(t("settings.fileSearch.excludedFolders"), [
+			helpers.render(
+				t("settings.excludedFolders.name"),
+				t("settings.excludedFolders.desc"),
+				(setting) =>
+					setting.addTextArea((text) =>
+						text
+							.setPlaceholder("Archive\nprivate/diary")
+							.setValue(plugin.settings.file.excludedFolders.join("\n"))
+							.onChange((value) => {
+								// 保存時に正規化して重複を除くことで、表示と検索判定のズレを防ぐ。
+								plugin.settings.file.excludedFolders = excludedFolders(value);
+								void plugin.saveSettings();
+							}),
+					),
+			),
+		]),
+		helpers.group(t("settings.fileSearch.demoted"), [
+			helpers.render(t("settings.demoted.name"), t("settings.demoted.desc"), (setting) =>
+				setting.addTextArea((text) =>
+					text
+						.setPlaceholder("Archive\nreference")
+						.setValue(plugin.settings.file.demotedPriorFolders.join("\n"))
+						.onChange((value) => {
+							// 除外と同じパスの整理を行い、フォルダーの照合を一貫させる。
+							plugin.settings.file.demotedPriorFolders = excludedFolders(value);
+							void plugin.saveSettings();
+						}),
 				),
-			]),
-			helpers.group("Excluded folders", [
-				helpers.render(
-					"Excluded folders",
-					"Folder paths hidden from every file list, one per line. Subfolders are also hidden.",
-					(setting) =>
-						setting.addTextArea((text) =>
-							text
-								.setPlaceholder("Archive\nprivate/diary")
-								.setValue(plugin.settings.file.excludedFolders.join("\n"))
-								.onChange((value) => {
-									// 保存時に正規化して重複を除くことで表示と検索判定のズレを防ぐ。
-									plugin.settings.file.excludedFolders = excludedFolders(value);
-									void plugin.saveSettings();
-								}),
-						),
-				),
-			]),
-			helpers.group("Lower prior folders", [
-				helpers.render(
-					"Lower prior folders",
-					"Folder paths to rank lower, one per line, including subfolders. Enable Lower prior folders in Sort priorities and move it before criteria you want it to override. Configure blank and typed input separately.",
-					(setting) =>
-						setting.addTextArea((text) =>
-							text
-								.setPlaceholder("Archive\nreference")
-								.setValue(plugin.settings.file.demotedPriorFolders.join("\n"))
-								.onChange((value) => {
-									// Preserve the same path cleanup as exclusions so folder matching stays consistent.
-									plugin.settings.file.demotedPriorFolders =
-										excludedFolders(value);
-									void plugin.saveSettings();
-								}),
-						),
-				),
-			]),
-			helpers.group("Obsidian-excluded files index", [
-				{
-					name: "Rebuild Obsidian-excluded files index",
-					desc: "Rescan files hidden by Obsidian's Excluded files setting so they are available with the Obsidian-excluded switch.",
-					action: () => {
-						// Keep index maintenance with the file-search settings because it
-						// repairs the cache used by the include-ignored search scope.
-						void plugin.fileProvider
-							.rebuildIgnoredIndex()
-							.then(() => new Notice("Obsidian-excluded files index rebuilt."));
-					},
+			),
+		]),
+		helpers.group(t("settings.fileSearch.ignoredIndex"), [
+			{
+				name: t("settings.ignoredIndex.name"),
+				desc: t("settings.ignoredIndex.desc"),
+				action: () => {
+					// 索引の保守は、ファイル検索の設定と一緒に置く。除外ファイルを含める検索範囲が使う
+					// キャッシュを修復するため。
+					void plugin.fileProvider
+						.rebuildIgnoredIndex()
+						.then(() => new Notice(t("settings.ignoredIndex.done")));
 				},
-			]),
-			helpers.group("Result sorting", [
-				helpers.render(
-					"Sort priorities",
-					"Choose priorities separately for blank and typed input. Enabled priorities run from top to bottom; drag them to reorder. @prior:desc puts higher-priority notes first, Activity combines recent opens with persistent palette usage, and missing prior values are last.",
-					(setting) => {
-						renderFileSortPriorityControl(
-							setting,
-							plugin.settings.file.sortPriorities,
-							() => plugin.saveSettings(),
-						);
-					},
-				),
-			]),
-		],
-	);
+			},
+		]),
+		helpers.group(t("settings.fileSearch.sorting"), [
+			helpers.render(t("settings.sort.name"), t("settings.sort.desc"), (setting) => {
+				renderFileSortPriorityControl(setting, plugin.settings.file.sortPriorities, () =>
+					plugin.saveSettings(),
+				);
+			}),
+		]),
+	]);
 }
 
 function createModesPage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
-	return helpers.page(
-		"Modes",
-		"Type an alias and a space to enter a mode directly, or find the mode on Home. Turn a mode off to hide it from Home and from alias entry.",
-		[
-			helpers.group(
-				"Search modes",
-				PALETTE_MODES.map((mode) => ({
-					...helpers.render(mode.title, mode.subtitle, (setting) =>
-						renderModeSetting(setting, plugin, mode.id),
-					),
-					visible: () =>
-						isModeIntegrationReady(mode.id, plugin.integrationAvailability.current),
-				})),
-			),
-		],
-	);
+	return helpers.page(t("settings.modes.name"), t("settings.modes.desc"), [
+		helpers.group(
+			t("settings.modes.group"),
+			PALETTE_MODES.map((mode) => ({
+				...helpers.render(mode.title, mode.subtitle, (setting) =>
+					renderModeSetting(setting, plugin, mode.id),
+				),
+				visible: () =>
+					isModeIntegrationReady(mode.id, plugin.integrationAvailability.current),
+			})),
+		),
+	]);
 }
 
 function createGeneralPage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
@@ -218,11 +196,11 @@ function createGeneralPage(plugin: SettingsHost, helpers: SettingPageHelpers): P
 					),
 			),
 		);
-	return helpers.page("General", "Home, search history, display, and diagnostics.", [
-		helpers.group("Home", [
+	return helpers.page(t("settings.general.name"), t("settings.general.desc"), [
+		helpers.group(t("settings.general.home"), [
 			helpers.render(
-				"Return to Home after",
-				"When Open home is used again, resume the last search if it was closed this recently. Immediately always starts at Home. Search text is kept in memory only.",
+				t("settings.returnHome.name"),
+				t("settings.returnHome.desc"),
 				(setting) =>
 					setting.addDropdown((dropdown) =>
 						dropdown
@@ -237,55 +215,55 @@ function createGeneralPage(plugin: SettingsHost, helpers: SettingPageHelpers): P
 					),
 			),
 		]),
-		helpers.group("Tabs", [
+		helpers.group(t("settings.general.tabs"), [
 			{
-				name: "Focus open tab",
-				desc: "When a note is already open in a tab, switch to that tab instead of opening it again. Background opens leave it as it is.",
+				name: t("settings.focusTab.name"),
+				desc: t("settings.focusTab.desc"),
 				...helpers.control("toggle", "focusExistingTab"),
 			},
 		]),
-		helpers.group("Search history", [
+		helpers.group(t("settings.general.searchHistory"), [
 			{
-				name: "Save searches",
-				desc: "Keep committed searches for the search history button.",
+				name: t("settings.saveSearches.name"),
+				desc: t("settings.saveSearches.desc"),
 				...helpers.control("toggle", "searchHistory.enabled"),
 			},
 			{
-				name: "Save after",
-				desc: "Milliseconds a search must stay unchanged before it is saved. 0 saves only searches whose results were used.",
+				name: t("settings.saveAfter.name"),
+				desc: t("settings.saveAfter.desc"),
 				...helpers.control("slider", "searchHistory.addDelayMs", {
 					...SETTING_LIMITS.searchHistory.addDelayMs,
 				}),
 			},
 			{
-				name: "Keep for",
-				desc: "Days to keep saved searches. 0 keeps them until they are cleared from a palette's ... menu.",
+				name: t("settings.keepFor.name"),
+				desc: t("settings.keepFor.desc"),
 				...helpers.control("slider", "searchHistory.daysToKeep", {
 					...SETTING_LIMITS.searchHistory.daysToKeep,
 				}),
 			},
 		]),
-		helpers.group("Display", [
+		helpers.group(t("settings.general.display"), [
 			highlightRow(
 				"palette",
-				"Highlight in palette",
-				"Mark the typed text in the palette's results.",
+				t("settings.highlightPalette.name"),
+				t("settings.highlightPalette.desc"),
 			),
 			highlightRow(
 				"view",
-				"Highlight in sidebar palette",
-				"Mark the typed text in the sidebar palette's results.",
+				t("settings.highlightView.name"),
+				t("settings.highlightView.desc"),
 			),
 			highlightRow(
 				"table",
-				"Highlight in table palette",
-				"Mark the typed text in the table palette's results.",
+				t("settings.highlightTable.name"),
+				t("settings.highlightTable.desc"),
 			),
 		]),
-		helpers.group("Diagnostics", [
+		helpers.group(t("settings.general.diagnostics"), [
 			{
-				name: "Show debug messages",
-				desc: "Write debug messages to the developer console.",
+				name: t("settings.debug.name"),
+				desc: t("settings.debug.desc"),
 				...helpers.control("toggle", "showLog"),
 			},
 		]),
@@ -293,35 +271,26 @@ function createGeneralPage(plugin: SettingsHost, helpers: SettingPageHelpers): P
 }
 
 function createIntegrationsPage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
-	return helpers.page(
-		"Integrations",
-		"Turn an integration off to hide its modes from Home and alias entry. Everything has its own settings; the others have none.",
-		[
-			helpers.group("Integrations", [
-				{
-					...helpers.render(
-						"Everything",
-						"Search vault files, including Obsidian-excluded files when the switch is on.",
-						(setting) => renderEverythingIntegration(setting, plugin),
-					),
-					aliases: [...EVERYTHING_MODAL_ITEMS],
-				},
-				helpers.render(
-					"Smart Connections",
-					"Related notes, using the embeddings Smart Connections already has.",
-					(setting) =>
-						renderSmartConnectionsIntegration(
-							setting,
-							plugin,
-							isSmartConnectionsInstalled(plugin.app),
-						),
+	return helpers.page(t("settings.integrations.name"), t("settings.integrations.desc"), [
+		helpers.group(t("settings.integrations.group"), [
+			{
+				...helpers.render(
+					t("settings.everything.name"),
+					t("settings.everything.desc"),
+					(setting) => renderEverythingIntegration(setting, plugin),
 				),
-				helpers.render(
-					"VS Code",
-					"Open Markdown outside the Vault, or hidden by Excluded files, in VS Code instead of Obsidian.",
-					(setting) => renderVscodeIntegration(setting, plugin),
+				aliases: [...EVERYTHING_MODAL_ITEMS],
+			},
+			helpers.render(t("settings.smart.name"), t("settings.smart.desc"), (setting) =>
+				renderSmartConnectionsIntegration(
+					setting,
+					plugin,
+					isSmartConnectionsInstalled(plugin.app),
 				),
-			]),
-		],
-	);
+			),
+			helpers.render(t("settings.vscode.name"), t("settings.vscode.desc"), (setting) =>
+				renderVscodeIntegration(setting, plugin),
+			),
+		]),
+	]);
 }

@@ -1,11 +1,12 @@
 import { getFrontMatterInfo, type App, type TFile } from "obsidian";
 import { isMocOnly } from "src/moc-relateds/mocRelatedsCore";
+import { t } from "src/i18n";
 
 export type NoteEmptiness = { kind: "empty" } | { kind: "moc-only" } | { kind: "written" };
 
 /**
- * Whether a file says anything, read from the file itself: the metadata cache may not have
- * caught up with an edit yet. Shared by Vault audit's actions and the MOC remove selector.
+ * ファイルに中身があるかどうかを、ファイル自体から読んで判定する。メタデータキャッシュが
+ * まだ編集に追いついていないことがあるため。Vault 監査の操作と、MOC 削除セレクターで共有する。
  */
 export async function noteEmptiness(app: App, file: TFile): Promise<NoteEmptiness> {
 	if (file.extension !== "md")
@@ -16,17 +17,17 @@ export async function noteEmptiness(app: App, file: TFile): Promise<NoteEmptines
 	return isMocOnly(content) ? { kind: "moc-only" } : { kind: "written" };
 }
 
-/** The short mark a list shows beside a note that is empty or holds only its MOC. */
+/** 空のノート、または MOC だけを持つノートの横に一覧が出す短い印。 */
 export const EMPTINESS_LABELS = {
-	empty: "Empty",
-	"moc-only": "MOC only",
+	empty: t("audit.emptiness.empty"),
+	"moc-only": t("audit.emptiness.mocOnly"),
 } as const satisfies Record<Exclude<NoteEmptiness["kind"], "written">, string>;
 
 export function emptinessBadge(emptiness: NoteEmptiness): string | undefined {
 	return emptiness.kind === "written" ? undefined : EMPTINESS_LABELS[emptiness.kind];
 }
 
-/** The mark of a row in Vault audit's Empty files, the same as the MOC remove selector's. */
+/** Vault 監査の「空のファイル」の行に付く印。MOC 削除セレクターと同じもの。 */
 export function emptyFileLabel(mocOnly: true | undefined): string {
 	return EMPTINESS_LABELS[mocOnly ? "moc-only" : "empty"];
 }

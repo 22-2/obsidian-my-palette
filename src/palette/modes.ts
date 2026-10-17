@@ -2,6 +2,7 @@ import type { IntegrationSettings, ModeSettingsMap, MyPaletteSettings } from "sr
 import type { PaletteMode } from "src/palette/results";
 import type { IntegrationReadiness } from "src/app/integrationAvailability";
 import { ICONS } from "src/ui/icons";
+import { t } from "src/i18n";
 
 export type PaletteModeId =
 	| "notes"
@@ -26,104 +27,104 @@ export interface PaletteModeDefinition {
 	placeholder: string;
 }
 
-/** Home lists the modes in this order when the input is empty. */
+/** Home で入力が空のとき、モードはこの順に並ぶ。 */
 export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 	{
 		id: "notes",
 		mode: "file",
-		title: "Notes",
-		subtitle: "Obsidian",
+		title: t("mode.notes.title"),
+		subtitle: t("mode.subtitle.obsidian"),
 		icon: ICONS.files,
-		placeholder: "Search notes",
+		placeholder: t("mode.notes.placeholder"),
 	},
 	{
 		id: "commands",
 		mode: "command",
-		title: "Commands",
-		subtitle: "Obsidian",
+		title: t("mode.commands.title"),
+		subtitle: t("mode.subtitle.obsidian"),
 		icon: ICONS.command,
-		placeholder: "Search commands",
+		placeholder: t("mode.commands.placeholder"),
 	},
 	{
 		id: "everything",
 		mode: "everything",
 		title: "Everything",
-		subtitle: "All files",
+		subtitle: t("mode.everything.subtitle"),
 		icon: ICONS.search,
-		placeholder: "Search vault files with Everything",
+		placeholder: t("mode.everything.placeholder"),
 	},
 	{
 		id: "outlinks",
 		mode: "link",
-		title: "Outgoing links",
-		subtitle: "Current note",
+		title: t("mode.outlinks.title"),
+		subtitle: t("mode.subtitle.currentNote"),
 		icon: ICONS.outgoingLinks,
-		placeholder: "Search links in the active note",
+		placeholder: t("mode.outlinks.placeholder"),
 	},
 	{
 		id: "backlinks",
 		mode: "backlink",
-		title: "Backlinks",
-		subtitle: "Current note",
+		title: t("mode.backlinks.title"),
+		subtitle: t("mode.subtitle.currentNote"),
 		icon: ICONS.backlinks,
-		placeholder: "Search backlinks to the active note",
+		placeholder: t("mode.backlinks.placeholder"),
 	},
 	{
 		id: "bookmarks",
 		mode: "bookmark",
-		title: "Bookmarks",
-		subtitle: "Obsidian",
+		title: t("mode.bookmarks.title"),
+		subtitle: t("mode.subtitle.obsidian"),
 		icon: ICONS.bookmark,
-		placeholder: "Search bookmarks",
+		placeholder: t("mode.bookmarks.placeholder"),
 	},
 	{
 		id: "smart",
 		mode: "smart",
-		title: "Related notes",
-		subtitle: "Smart Connections",
+		title: t("mode.smart.title"),
+		subtitle: t("settings.smart.name"),
 		icon: ICONS.smartConnections,
-		placeholder: "Search Smart Connections",
+		placeholder: t("mode.smart.placeholder"),
 	},
 	{
 		id: "tabs",
 		mode: "tab",
-		title: "Tabs",
-		subtitle: "Workspace",
+		title: t("mode.tabs.title"),
+		subtitle: t("mode.tabs.subtitle"),
 		icon: ICONS.tab,
-		placeholder: "Search open tabs",
+		placeholder: t("mode.tabs.placeholder"),
 	},
 	{
 		id: "plugins",
 		mode: "plugin",
-		title: "Plugins",
-		subtitle: "Installed",
+		title: t("mode.plugins.title"),
+		subtitle: t("mode.plugins.subtitle"),
 		icon: ICONS.plugin,
-		placeholder: "Search installed plugins",
+		placeholder: t("mode.plugins.placeholder"),
 	},
 	{
 		id: "snippets",
 		mode: "snippet",
-		title: "Snippets",
-		subtitle: "CSS",
+		title: t("mode.snippets.title"),
+		subtitle: t("mode.subtitle.css"),
 		icon: ICONS.snippet,
-		placeholder: "Search CSS snippets",
+		placeholder: t("mode.snippets.placeholder"),
 	},
 	{
 		id: "properties",
 		mode: "property",
-		title: "Properties",
-		subtitle: "Current note",
+		title: t("mode.properties.title"),
+		subtitle: t("mode.subtitle.currentNote"),
 		icon: ICONS.selection,
-		placeholder: "Search properties in the active note",
+		placeholder: t("mode.properties.placeholder"),
 	},
 	{
 		id: "audit",
 		mode: "audit",
-		title: "Vault audit",
-		subtitle: "Vault",
+		title: t("mode.audit.title"),
+		subtitle: t("mode.subtitle.vault"),
 		icon: ICONS.vaultAudit,
-		// Replaced by the kind shown (see auditKindChoice.ts); kept for the mode's own definition.
-		placeholder: "Search audit results",
+		// 表示中の種類に置き換わる(auditKindChoice.ts を参照)。モード自身の定義として残す。
+		placeholder: t("mode.audit.placeholder"),
 	},
 ];
 
@@ -137,14 +138,14 @@ export function findPaletteMode(mode: PaletteMode): PaletteModeDefinition | unde
 	return PALETTE_MODES.find((definition) => definition.mode === mode);
 }
 
-/** The alias typed to enter a mode, as stored in the settings. */
+/** 設定に保存された、モードに入るために打つエイリアス。 */
 export function paletteModeAlias(id: PaletteModeId, modes: ModeSettingsMap): string {
 	return modes[id].alias;
 }
 
 /**
- * Checks an alias typed in the settings. Aliases are matched as `alias + Space`,
- * so aliases sharing a prefix can coexist; only an identical alias would be ambiguous.
+ * 設定で打たれたエイリアスを確認する。エイリアスは「エイリアス + Space」で照合するので、
+ * 前方が同じエイリアスは共存できる。まったく同じエイリアスだけが曖昧になる。
  */
 export function validateModeAlias(
 	id: PaletteModeId,
@@ -152,30 +153,30 @@ export function validateModeAlias(
 	modes: ModeSettingsMap,
 ): string | undefined {
 	const alias = value.trim().toLocaleLowerCase();
-	if (!alias) return "Enter an alias.";
-	if (/\s/.test(alias)) return "Aliases cannot contain spaces.";
+	if (!alias) return t("mode.alias.empty");
+	if (/\s/.test(alias)) return t("mode.alias.noSpace");
 	const taken = PALETTE_MODES.filter((mode) => mode.id !== id)
 		.map((mode) => paletteModeAlias(mode.id, modes))
 		.map((other) => other.toLocaleLowerCase());
-	if (taken.includes(alias)) return `"${value.trim()}" is already used by another mode.`;
+	if (taken.includes(alias)) return t("mode.alias.taken", { alias: value.trim() });
 	return undefined;
 }
 
-/** The integration that provides a mode. Modes without one are built in. */
+/** モードを提供する連携。連携のないモードは組み込み。 */
 const INTEGRATION_OF_MODE: Partial<Record<PaletteModeId, keyof IntegrationSettings>> = {
 	everything: "everything",
 	smart: "smartConnections",
 };
 
-/** Whether the integration that provides a mode is switched on. */
+/** モードを提供する連携のスイッチが入っているかどうか。 */
 export function isModeIntegrationOn(id: PaletteModeId, settings: MyPaletteSettings): boolean {
 	const integration = INTEGRATION_OF_MODE[id];
 	return integration ? settings.integrations[integration].enabled : true;
 }
 
 /**
- * The modes the palette may enter. A mode is off when its own switch or its integration
- * is off; Home and alias entry read this, while the settings keep each switch as set.
+ * パレットに入ってよいモード。モード自身のスイッチか連携のスイッチが切れていれば無効になる。
+ * Home とエイリアスによる入力はこれを読み、設定画面は各スイッチの状態をそのまま保つ。
  */
 export function isModeIntegrationReady(
 	id: PaletteModeId,
@@ -204,8 +205,8 @@ export function availableModes(
 }
 
 /**
- * Mode entries for Home: an exact alias first, then alias prefixes, then
- * titles whose words start with every typed term. An empty input lists all modes.
+ * Home のモードの一覧: エイリアスが完全一致するものを先に、次にエイリアスの前方一致、
+ * 最後に、入力したすべての語で始まる単語を持つタイトル。入力が空ならすべてのモードを並べる。
  */
 export function matchPaletteModes(input: string, modes: ModeSettingsMap): PaletteModeDefinition[] {
 	const query = input.trim().toLocaleLowerCase();
@@ -230,8 +231,8 @@ function matchesTitleWords(definition: PaletteModeDefinition, query: string): bo
 }
 
 /**
- * `alias + Space` enters a mode directly, as the prefixes did. Longer aliases are
- * tried first so a longer alias is not read as a shorter one followed by a query.
+ * 「エイリアス + Space」で、プレフィックスと同じようにモードへ直接入る。長いエイリアスを先に試し、
+ * 長いエイリアスが短いエイリアスと後続のクエリとして読まれないようにする。
  */
 export function parseDirectModeEntry(
 	input: string,

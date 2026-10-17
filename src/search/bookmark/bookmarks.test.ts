@@ -138,7 +138,7 @@ describe("bookmarkGroupRows", () => {
 		expect(
 			bookmarkGroupRows(t.instance.items, "").map((row) => [row.label, row.description]),
 		).toEqual([
-			["Top level", "Outside any group"],
+			["最上位", "どのグループにも属さない"],
 			["Work", "Work"],
 			["Inner", "Work › Inner"],
 		]);

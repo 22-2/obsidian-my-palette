@@ -14,6 +14,7 @@ import type { EverythingResult } from "src/palette/results";
 import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { buildEverythingQuery } from "src/search/everything/everythingQuery";
+import { t } from "src/i18n";
 
 export class EverythingProvider implements PaletteProvider<EverythingResult> {
 	constructor(
@@ -28,13 +29,13 @@ export class EverythingProvider implements PaletteProvider<EverythingResult> {
 		everythingScope: scope = "vault",
 	}: PaletteSearchRequest): Promise<EverythingResult[]> {
 		const vaultRoot = getVaultRootPath(this.app);
-		if (!vaultRoot) throw new Error("This vault adapter cannot resolve the Vault folder.");
+		if (!vaultRoot) throw new Error(t("everything.noVaultFolder"));
 		const settings = this.settings();
 		const vaultExtensions = new Set(
 			settings.vaultExtensions.map((extension) => extension.toLocaleLowerCase()),
 		);
-		// Directory searches are meant to locate any file beside the current note;
-		// Vault-only extension preferences must not hide useful non-Markdown files.
+		// フォルダー検索は、現在のノートの隣にあるどのファイルも見つけることを目的とする。
+		// Vault 専用の拡張子の設定が、役立つ Markdown 以外のファイルを隠してはいけない。
 		const extensions = scope === "directory" ? [] : settings.vaultExtensions;
 		const scopedQuery = buildEverythingQuery(vaultRoot, scope, extensions, query);
 		const results = await this.client.search(scopedQuery, settings, signal, 500);

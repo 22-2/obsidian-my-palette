@@ -23,7 +23,7 @@ function menu() {
 it("adds a disabled count row followed by a separator for several results", () => {
 	const m = menu();
 	addSelectionHeader(m.instance, 4);
-	expect(m.titles).toEqual(["4 items selected"]);
+	expect(m.titles).toEqual(["4 件を選択中"]);
 	expect(m.disabled).toEqual([true]);
 	expect(m.addSeparator).toHaveBeenCalledOnce();
 });

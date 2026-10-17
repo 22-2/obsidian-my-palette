@@ -18,8 +18,8 @@ interface RecentIdMigration {
 	migratedAt: number;
 }
 
-// The object store keeps its original "commands" name: renaming it would need a
-// schema upgrade, and existing recent-command databases must stay readable.
+// オブジェクトストアは元の "commands" という名前のまま残す。名前を変えるにはスキーマの
+// 更新が必要になり、既存の最近使ったコマンドのデータベースが読めなくなるため。
 interface RecentIdDatabase extends DBSchema {
 	commands: {
 		key: string;
@@ -64,9 +64,9 @@ export function normalizeRecentIds(
 }
 
 /**
- * Keeps recent-id lookups synchronous while IndexedDB writes run in order.
- * The position field is persisted because ids have no useful natural ordering
- * and several ids can be recorded within the same millisecond.
+ * IndexedDB への書き込みは順番どおりに行い、最近使った ID の参照は同期的に保つ。
+ * ID には自然な並び順がなく、同じミリ秒に複数の ID が記録されることもあるため、
+ * 位置のフィールドを保存する。
  */
 export class RecentIdStore {
 	private current: string[] = [];
@@ -126,7 +126,7 @@ export class RecentIdStore {
 		try {
 			(await this.databasePromise).close();
 		} catch {
-			// Database initialization failures are optional and have already been logged.
+			// データベースの初期化失敗は任意の機能で、すでにログに出力済み。
 		}
 	}
 
@@ -169,8 +169,8 @@ export class RecentIdStore {
 	}
 
 	private queuePersist(): void {
-		// Rewriting the bounded list keeps ordering exact and avoids races between
-		// quick successive records that would otherwise update rank independently.
+		// 上限付きのリストを書き直すことで、順序を正確に保つ。
+		// 連続した記録が個別に順位を更新して競合するのを避けるため。
 		this.writePromise = this.writePromise
 			.then(() => this.persistCurrent())
 			.catch((error: unknown) =>

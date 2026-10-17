@@ -1,13 +1,14 @@
 import type { IconName } from "obsidian";
 import type { AuditKind } from "src/audit/vaultAudit";
 import { ICONS } from "src/ui/icons";
+import { t } from "src/i18n";
 
-/** UI names of the kinds, as in docs/GLOSSARY.md. */
+/** 種類の表示名。 */
 export const AUDIT_KIND_LABELS: Readonly<Record<AuditKind, string>> = {
-	"orphaned-files": "Orphaned files",
-	"broken-links": "Broken links",
-	"empty-files": "Empty files",
-	"empty-folders": "Empty folders",
+	"orphaned-files": t("audit.kind.orphaned-files"),
+	"broken-links": t("audit.kind.broken-links"),
+	"empty-files": t("audit.kind.empty-files"),
+	"empty-folders": t("audit.kind.empty-folders"),
 };
 
 export const AUDIT_KIND_ICONS: Readonly<Record<AuditKind, IconName>> = {
@@ -18,5 +19,5 @@ export const AUDIT_KIND_ICONS: Readonly<Record<AuditKind, IconName>> = {
 };
 
 export function auditPlaceholder(kind: AuditKind): string {
-	return `Search ${AUDIT_KIND_LABELS[kind].toLocaleLowerCase()}`;
+	return t("audit.placeholder", { label: AUDIT_KIND_LABELS[kind] });
 }

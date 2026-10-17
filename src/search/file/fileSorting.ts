@@ -13,9 +13,8 @@ import {
 import { isUserIgnoredPathWithFilters } from "src/ignored-notes/ignoredPathMatching";
 import { positiveTermBranches } from "src/search/query/searchQuery";
 
-// Keep the existing module exports stable while the match data model lives
-// outside the comparator, so future providers can create signals without
-// importing the sorting implementation.
+// 既存のモジュールの公開を保つ。一致のデータモデルは比較関数の外に置くので、将来のプロバイダーが
+// 並べ替えの実装を読み込まずにシグナルを作れる。
 export { extractFileMatchSignals };
 export type { FileMatch, FileMatchSignals, SortableFileEntry };
 
@@ -50,8 +49,8 @@ function hasPrefixMatch(
 	query: string,
 	field: "filename" | "alias",
 ): boolean {
-	// Each OR branch is a phrase the user could have meant; operators and
-	// excluded terms are not part of any name and would defeat the prefix check.
+	// OR の各分岐は、ユーザーが意図したかもしれない1つのフレーズである。演算子と除外された項は、
+	// どの名前の一部でもなく、前方一致の判定を台無しにするので含めない。
 	const needles = positiveTermBranches(query).map((terms) => normalized(terms.join(" ")));
 	const values = field === "filename" ? [entry.basename] : entry.aliases;
 	return values.some((value) => needles.some((needle) => normalized(value).startsWith(needle)));
@@ -66,8 +65,8 @@ function compareNumber(a: number, b: number, order: "asc" | "desc" = "asc"): num
 function compareOptionalScore(a: number | undefined, b: number | undefined): number {
 	const scoreA = typeof a === "number" && Number.isFinite(a) ? a : undefined;
 	const scoreB = typeof b === "number" && Number.isFinite(b) ? b : undefined;
-	// A candidate can match through another field; keep it behind candidates that
-	// actually matched the field selected by this priority.
+	// 候補は別のフィールドを通じて一致することがある。この優先度が選んだフィールドに実際に一致した候補の後ろに、
+	// それを置く。
 	if (scoreA === undefined && scoreB === undefined) return 0;
 	if (scoreA === undefined) return 1;
 	if (scoreB === undefined) return -1;
@@ -75,8 +74,8 @@ function compareOptionalScore(a: number | undefined, b: number | undefined): num
 }
 
 function compareContiguousMatch(a: boolean | undefined, b: boolean | undefined): number {
-	// Keep exact phrase relevance ahead of user-selected fuzzy fields while
-	// leaving legacy callers without this metadata in the normal priority flow.
+	// 完全なフレーズの関連度を、ユーザーが選んだあいまいなフィールドより前に保つ。
+	// このメタデータを持たない古い呼び出し元は、通常の優先度の流れに残す。
 	if (a === true && b !== true) return -1;
 	if (b === true && a !== true) return 1;
 	return 0;
@@ -89,8 +88,8 @@ function compareOptionalPrior(
 ): number {
 	const priorA = typeof a.prior === "number" && Number.isFinite(a.prior) ? a.prior : undefined;
 	const priorB = typeof b.prior === "number" && Number.isFinite(b.prior) ? b.prior : undefined;
-	// Missing and null values are not priorities; keeping them last preserves the
-	// user's explicit ranking without making unannotated notes disappear.
+	// 欠けている値と null は優先度ではない。それらを最後に置くことで、ユーザーが明示した順位を保ち、
+	// 注釈のないノートが消えることもないようにする。
 	if (priorA === undefined && priorB === undefined) return 0;
 	if (priorA === undefined) return 1;
 	if (priorB === undefined) return -1;
@@ -104,8 +103,8 @@ function compareRecent(
 ): number {
 	const indexA = recent.get(a.path);
 	const indexB = recent.get(b.path);
-	// Infinity - Infinity is NaN, which makes Array#sort's result engine-dependent.
-	// Compare absent history explicitly so the comparator always returns a number.
+	// Infinity - Infinity は NaN になり、Array#sort の結果が実行環境によって変わってしまう。
+	// そのため、履歴がないものを明示的に比較し、比較関数が常に数を返すようにする。
 	if (indexA === undefined && indexB === undefined) return 0;
 	if (indexA === undefined) return 1;
 	if (indexB === undefined) return -1;
@@ -117,20 +116,19 @@ function compareUsage(
 	b: SortableFileEntry,
 	usageScores: ReadonlyMap<string, number>,
 ): number {
-	// Usage is an optional, bounded hint. Missing records stay behind recorded
-	// notes only when this priority is explicitly selected by the user.
+	// 利用は、任意で上限のある手がかり。記録のないものは、ユーザーがこの優先度を明示的に選んだときだけ、
+	// 記録のあるノートの後ろに残る。
 	return compareOptionalScore(usageScores.get(a.path), usageScores.get(b.path));
 }
 
 function compareActivity(a: SortableFileEntry, b: SortableFileEntry, context: SortContext): number {
-	// Keep the existing short-term ordering first, then use the persistent
-	// aggregate only when both candidates have the same recent-open status.
+	// 既存の短期的な順序を先に保ち、両方の候補が同じ最近開いた状態のときだけ、永続的な集計を使う。
 	return compareRecent(a, b, context.recent) || compareUsage(a, b, context.usageScores);
 }
 
 function compareFallback(a: SortableFileEntry, b: SortableFileEntry): number {
-	// Last modified is a configurable priority. The fallback must stay
-	// deterministic without silently reintroducing that signal after a user omits it.
+	// 最終更新日時は設定できる優先度。ユーザーがそれを省いた後に、黙って再び持ち込むことなく、
+	// フォールバックは決定的なままにする。
 	return a.path.localeCompare(b.path, undefined, { sensitivity: "base" });
 }
 
@@ -142,8 +140,8 @@ function compareAlphabetical(a: SortableFileEntry, b: SortableFileEntry, reverse
 }
 
 function compareIgnored(a: SortableFileEntry, b: SortableFileEntry): number {
-	// The include-ignored prefix is an explicit request to inspect archived notes,
-	// so those candidates should be visible before the much larger normal set.
+	// Obsidian の除外ファイルの接頭辞は、アーカイブされたノートを確認する明示的な要求なので、
+	// その候補は、ずっと多い通常の集合の前に見えるべき。
 	return Number(Boolean(b.ignored)) - Number(Boolean(a.ignored));
 }
 
@@ -155,7 +153,7 @@ function comparePriority(
 ): number {
 	switch (priority) {
 		case FILE_SORT_PRIORITIES.lowerPriorFolders:
-			// Compare folders at the chosen position so custom rankings need not reach @prior.
+			// 選んだ位置でフォルダーを比べるので、独自の順位が @prior に頼らなくてよい。
 			return (
 				Number(isUserIgnoredPathWithFilters(context.demotedPriorFolders, a.path)) -
 				Number(isUserIgnoredPathWithFilters(context.demotedPriorFolders, b.path))
@@ -178,15 +176,15 @@ function comparePriority(
 		case FILE_SORT_PRIORITIES.aliasFuzzyMatch:
 			return compareOptionalScore(context.signalsA.aliasScore, context.signalsB.aliasScore);
 		case FILE_SORT_PRIORITIES.tagMatch:
-			// A note can match the query through another field; keep notes with no
-			// matching tag behind notes that have an explicit tag contribution.
+			// ノートは別のフィールドを通じてクエリに一致することがある。一致するタグがないノートは、
+			// タグによる明示的な寄与を持つノートの後ろに置く。
 			return compareOptionalScore(
 				context.signalsA.tagMatchCount,
 				context.signalsB.tagMatchCount,
 			);
 		case FILE_SORT_PRIORITIES.matchCoverage:
-			// Coverage is opt-in/configurable so its cross-field signal cannot bypass
-			// the user's chosen filename, alias, tag, or property priorities.
+			// 網羅度は選択制で設定可能。フィールドをまたぐシグナルが、ユーザーの選んだファイル名・エイリアス・
+			// タグ・プロパティの優先度を迂回しないようにするため。
 			return compareOptionalScore(
 				context.signalsA.matchCoverage,
 				context.signalsB.matchCoverage,
@@ -201,8 +199,8 @@ function comparePriority(
 		case FILE_SORT_PRIORITIES.lastModified:
 			return compareNumber(a.mtime, b.mtime, "desc");
 		case FILE_SORT_PRIORITIES.aliasesCount:
-			// Alias count is a derived centrality signal, not the first alias value;
-			// keep it opt-in so a few heavily aliased notes do not dominate by default.
+			// エイリアスの数は、派生した中心性のシグナルであり、最初のエイリアスの値ではない。
+			// 既定で、少数の多くエイリアスを持つノートが支配しないよう、選択制にする。
 			return compareNumber(a.aliases.length, b.aliases.length, "desc");
 		case FILE_SORT_PRIORITIES.alphabetical:
 			return compareAlphabetical(a, b);
@@ -231,8 +229,8 @@ function comparePriorities(
 export function filterNoQueryPriorities(
 	priorities: readonly FileSortPriority[],
 ): FileSortPriority[] {
-	// Match-based priorities have no signal for an empty query; AQS applies the
-	// same rule so property and recency priorities can still work for empty input.
+	// 一致系の優先度は、空のクエリには手がかりがない。AQS も同じルールを適用し、空の入力でも
+	// プロパティと最近の優先度が働くようにする。
 	return priorities.filter((priority) => !QUERY_SORT_PRIORITIES.has(priority));
 }
 
@@ -247,8 +245,8 @@ export function sortFilesWithoutQuery<T extends SortableFileEntry>(
 	return entries.sort(
 		(a, b) =>
 			compareIgnored(a, b) ||
-			// Match-based priorities are removed above, but the shared comparator
-			// still receives an explicit empty signal set to keep its contract uniform.
+			// 一致系の優先度は上で除いたが、共通の比較関数は、契約を統一するために
+			// 明示的な空のシグナルの集合を受け取る。
 			comparePriorities(a, b, noQueryPriorities, {
 				recent,
 				demotedPriorFolders,
@@ -268,8 +266,8 @@ export function sortFileMatches<T extends SortableFileEntry>(
 	usageScores?: ReadonlyMap<string, number>,
 	demotedPriorFolders: readonly string[] = [],
 ): T[] {
-	// Extract once before sorting so the comparator only compares stable signals;
-	// this keeps the compatibility boundary cheap when a vault has many matches.
+	// 並べ替えの前に一度だけ取り出し、比較関数が安定したシグナルだけを比べるようにする。
+	// Vault に一致が多いときも、互換の境界を安く保つため。
 	const signalsByMatch = new Map(
 		matches.map((match) => [match, extractFileMatchSignals(match)] as const),
 	);

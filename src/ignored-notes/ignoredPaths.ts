@@ -18,8 +18,8 @@ export function getUserIgnoreFilters(app: App): string[] {
 	return configured.flatMap((value): string[] => {
 		if (typeof value !== "string" || !value.trim()) return [];
 		const trimmed = value.trim();
-		// Obsidian accepts slash-delimited regular expressions; keep their delimiters
-		// so callers do not mistake a pattern for a literal folder path.
+		// Obsidian はスラッシュで囲んだ正規表現を受け付ける。区切りを残し、
+		// 呼び出し元がパターンをフォルダーの文字列パスと取り違えないようにする。
 		if (trimmed.length >= 2 && trimmed.startsWith("/") && trimmed.endsWith("/"))
 			return [trimmed];
 		const normalized = normalizePath(trimmed.replace(/^\/+/, "")).replace(/\/$/, "");

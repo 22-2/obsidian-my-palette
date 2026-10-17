@@ -10,31 +10,29 @@ import {
 	type AuditKind,
 	type AuditReport,
 } from "src/audit/vaultAudit";
+import { t } from "src/i18n";
 
 export const auditCliApi: CliApi = {
 	action: "audit",
-	description:
-		"List orphaned files, broken links, empty files or empty folders as JSON. Lists only, unless trash is passed.",
+	description: t("cli.audit.description"),
 	flags: {
 		kind: {
 			value: `<${AUDIT_KINDS.join("|")}>`,
-			description: "What to list",
+			description: t("cli.audit.kindFlag"),
 			required: true,
 		},
 		glob: {
 			value: "<pattern>",
-			description:
-				"Keep results whose vault-relative path matches (for broken links, the path of the linking note). Required with trash",
+			description: t("cli.audit.globFlag"),
 		},
 		trash: {
-			description:
-				"Move the listed files or folders to the trash (Obsidian's Deleted files setting). Not for broken-links",
+			description: t("cli.audit.trashFlag"),
 		},
 	},
 	run: async (plugin, params) => {
 		const { kind, glob } = params;
 		if (!isAuditKind(kind))
-			throw new Error(`Specify kind as one of: ${AUDIT_KINDS.join(", ")}.`);
+			throw new Error(t("cli.audit.kindRequired", { kinds: AUDIT_KINDS.join(", ") }));
 		const trash = requestsTrash(params, kind);
 		const report = await auditVault(plugin.app, kind, plugin.settings);
 		const filtered =
@@ -53,18 +51,17 @@ export const auditCliApi: CliApi = {
 };
 
 /**
- * Checks the flags before anything is listed, so a wrong combination never moves files.
- * Why: a missing glob would act on every result in the vault, which an AI should not do
- * by accident.
+ * 一覧を作る前にフラグを確認する。組み合わせが誤っていれば、ファイルを動かさない。
+ * Why: glob がないと Vault のすべての結果が対象になってしまう。AI が誤ってそうしないように。
  */
 function requestsTrash(params: CliData, kind: AuditKind): boolean {
 	if (params.trash !== "true") return false;
-	if (params.glob === undefined) throw new Error("Pass glob to choose what to trash.");
-	if (!canTrash(kind)) throw new Error(`${kind} cannot be moved to trash.`);
+	if (params.glob === undefined) throw new Error(t("cli.audit.globRequired"));
+	if (!canTrash(kind)) throw new Error(t("audit.error.notTrashable", { kind }));
 	return true;
 }
 
-/** Lines are one-based in the CLI, as editors show them. */
+/** CLI の行番号は、エディターが表示するのと同じ1始まり。 */
 function toCliItems(report: AuditReport): object[] {
 	if (report.kind !== "broken-links") return report.items;
 	return report.items.map(({ link, sources }) => ({

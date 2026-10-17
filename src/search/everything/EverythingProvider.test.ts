@@ -91,7 +91,7 @@ describe("EverythingProvider", () => {
 			() => DEFAULT_SETTINGS.everything,
 		);
 		await expect(provider.search({ mode: "everything", query: "x" })).rejects.toThrow(
-			"cannot resolve",
+			"解決できません",
 		);
 	});
 });

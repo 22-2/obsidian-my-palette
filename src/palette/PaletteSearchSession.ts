@@ -20,6 +20,7 @@ import {
 	type PaletteModeId,
 } from "src/palette/modes";
 import type { ModeEntryResult } from "src/palette/results";
+import { t } from "src/i18n";
 
 export type FixedPaletteMode = Extract<
 	PaletteMode,
@@ -27,8 +28,8 @@ export type FixedPaletteMode = Extract<
 >;
 
 /**
- * Where a navigating palette is. Home lists mode entries above the files
- * (unless `modeEntries` is off); a mode shows one provider without a prefix.
+ * 移動できるパレットの現在位置。Home は、ファイルの上にモードの一覧を出す(`modeEntries` が off でない限り)。
+ * モードは、接頭辞なしで1つのプロバイダーを表示する。
  */
 export type PaletteRoute = { kind: "home" } | { kind: "mode"; modeId: PaletteModeId };
 
@@ -43,9 +44,9 @@ export interface PaletteSearchState {
 	query: string;
 	mode: PaletteMode;
 	everythingScope: EverythingScope;
-	/** Switch value; it applies only where the mode supports the Obsidian-excluded scope. */
+	/** スイッチの値。モードが Obsidian の除外ファイルの範囲に対応している場所でだけ効く。 */
 	ignoredScope: boolean;
-	/** Whether the current search actually includes Obsidian-excluded files. */
+	/** 現在の検索が実際に Obsidian の除外ファイルを含むかどうか。 */
 	includeIgnored: boolean;
 	results: PaletteResult[];
 	resultCount: number;
@@ -55,24 +56,23 @@ export interface PaletteSearchState {
 
 export interface PaletteSearchSessionOptions {
 	initialInput?: string;
-	/** The mode to start in. Esc still leaves it for Home. */
+	/** 最初に入るモード。Esc を押すと、そこから Home に戻る。 */
 	fixedMode?: FixedPaletteMode;
 	sourceFile?: TFile;
-	/** Notes edited together; only the Properties mode reads it. */
+	/** 一緒に編集するノート。プロパティのモードだけが読む。 */
 	sourceFiles?: readonly TFile[];
 	includeIgnored?: boolean;
-	/** Home lists mode entries above the files; off for file-only palettes and tables. */
+	/** Home はファイルの上にモードの一覧を出す。ファイルだけのパレットと表では off にする。 */
 	modeEntries?: boolean;
 	onStateChange?: (state: PaletteSearchState) => void;
-	/** Modal hosts refresh their own suggestion list when integration setup changes. */
+	/** モーダルのホストは、連携の設定が変わったときに、自分の候補の一覧を更新する。 */
 	onModesChange?: () => void;
 }
 
 /**
- * Owns the palette's input-to-provider pipeline independently of a UI host.
- * The modal and the persistent workspace view must share cancellation, history,
- * and stale-result handling; keeping those rules here prevents the two shells
- * from slowly developing different search behavior.
+ * パレットの入力からプロバイダーへの流れを、UI のホストとは独立に持つ。モーダルと
+ * 常駐のワークスペースビューは、キャンセル・履歴・古い結果の扱いを共有しなければならない。
+ * その規則をここに置くことで、2つの外枠の検索の挙動が少しずつ食い違うのを防ぐ。
  */
 export class PaletteSearchSession {
 	private generation = 0;
@@ -128,15 +128,15 @@ export class PaletteSearchSession {
 		void plugin.integrationAvailability.refresh();
 	}
 
-	/** Enter a mode from Home; the input then holds only the query. */
+	/** Home からモードに入る。入力にはクエリだけが残る。 */
 	enterMode(modeId: PaletteModeId, query = ""): void {
 		this.route = { kind: "mode", modeId };
 		this.state = { ...this.state, input: query, route: this.route };
 	}
 
 	/**
-	 * Leave a mode for Home and return the alias that should fill the
-	 * input, so the mode stays one Enter away.
+	 * モードを抜けて Home に戻り、入力を埋めるエイリアスを返す。モードには Enter 1回で
+	 * 入り直せる状態のままになる。
 	 */
 	returnToHome(): string {
 		const alias =
@@ -149,8 +149,8 @@ export class PaletteSearchSession {
 	}
 
 	/**
-	 * The input with its mode's alias, for persisting and handing the search to
-	 * another palette: restoring it enters the same mode through `alias + Space`.
+	 * モードのエイリアスを付けた入力。保存する場合や、ほかのパレットへ検索を渡す場合に使う。
+	 * 復元すると、`エイリアス + Space` で同じモードに入る。
 	 */
 	get prefixedInput(): string {
 		return this.rawInput(this.state.input);
@@ -171,14 +171,14 @@ export class PaletteSearchSession {
 	}
 
 	/**
-	 * Switches the Obsidian-excluded scope for the next search. Hosts search again
-	 * themselves, since the modal renders results through its own refresh.
+	 * 次の検索で使う、Obsidian の除外ファイルの範囲を切り替える。モーダルは自分の更新で結果を描くので、
+	 * ホストが自分で検索をやり直す。
 	 */
 	setIgnoredScope(value: boolean): void {
 		this.state = { ...this.state, ignoredScope: value };
 	}
 
-	/** Update the note used by source-dependent modes without replacing the UI shell. */
+	/** UI の外枠を作り直さずに、元のノートに依存するモードが使うノートを更新する。 */
 	setSourceFile(sourceFile?: TFile): void {
 		if (this.sourceFile?.path === sourceFile?.path) return;
 		this.sourceFile = sourceFile;
@@ -191,7 +191,7 @@ export class PaletteSearchSession {
 			void this.search(this.state.input, { suppressHistory: true });
 	}
 
-	/** Start a new provider search and discard any result from an older input. */
+	/** プロバイダーの新しい検索を始め、古い入力の結果は捨てる。 */
 	async search(
 		input = this.state.input,
 		options: { suppressHistory?: boolean; keepResults?: boolean } = {},
@@ -203,9 +203,9 @@ export class PaletteSearchSession {
 		input = this.applyDirectModeEntry(input);
 		const parsed = this.parse(input);
 		const includeIgnored = this.includesIgnored(parsed);
-		// Why: a background refresh (autosave, metadata change) re-runs the same
-		// input; clearing the list first would flash the whole view empty. Keep the
-		// old rows on screen until the new results replace them in one render.
+		// Why: バックグラウンドの再読み込み(自動保存、メタデータの変更)は同じ入力を再実行する。
+		// 先に一覧を空にすると、表示全体が一瞬空になってしまう。新しい結果が1回の描画で置き換えるまで、
+		// 古い行を画面に残す。
 		const keepResults = options.keepResults === true && input === this.state.input;
 		this.state = {
 			...this.state,
@@ -220,8 +220,8 @@ export class PaletteSearchSession {
 		};
 		if (!keepResults) this.emit();
 
-		// History is committed when the result list receives focus. Keeping it out
-		// of the search pipeline prevents typing alone from creating history.
+		// 履歴は、結果の一覧がフォーカスを受け取ったときに記録する。検索の流れから外しておくと、
+		// 入力するだけでは履歴が作られないようにできる。
 
 		const delay = parsed.mode === "everything" ? this.plugin.settings.everything.debounceMs : 0;
 		if (delay) await new Promise((resolve) => window.setTimeout(resolve, delay));
@@ -309,7 +309,7 @@ export class PaletteSearchSession {
 		return { raw: input, mode, query: input, everythingScope };
 	}
 
-	/** In Home, `alias + Space` (typed or pasted) moves into that mode. */
+	/** Home では、「エイリアス + Space」(打ち込んだものでも貼り付けたものでも)がそのモードに入る。 */
 	private applyDirectModeEntry(input: string): string {
 		if (this.route.kind !== "home") return input;
 		const entry = parseDirectModeEntry(
@@ -321,7 +321,7 @@ export class PaletteSearchSession {
 		return entry.query;
 	}
 
-	/** The prefixed form, so remembered input reopens in the same mode. */
+	/** 接頭辞付きの形。覚えた入力が同じモードで開き直せるようにする。 */
 	private rawInput(input: string): string {
 		const alias = this.modeAlias;
 		return alias === undefined ? input : `${alias} ${input}`;
@@ -362,7 +362,7 @@ export interface PaletteRouteChrome {
 	chip?: { icon: string; label: string; title: string };
 }
 
-/** The input decoration shared by the modal and the workspace views. */
+/** モーダルと常駐のワークスペースビューが共有する、入力欄の装飾。 */
 export function paletteRouteChrome(
 	state: Pick<PaletteSearchState, "route" | "mode">,
 	alias: string | undefined,
@@ -372,7 +372,7 @@ export function paletteRouteChrome(
 	if (state.route.kind === "mode") {
 		const definition = getPaletteMode(state.route.modeId);
 		return {
-			// Why: Vault audit switches its kind in the options menu, so the input names it.
+			// Why: Vault 監査は、オプションのメニューで種類を切り替えるので、入力欄にその名前を出す。
 			placeholder:
 				definition.id === "audit" && auditKind
 					? auditPlaceholder(auditKind)
@@ -381,11 +381,13 @@ export function paletteRouteChrome(
 		};
 	}
 	return {
-		placeholder: modeEntries ? "Search files, or pick a mode" : palettePlaceholder(state.mode),
+		placeholder: modeEntries
+			? t("palette.placeholder.homeSearch")
+			: palettePlaceholder(state.mode),
 	};
 }
 
-/** Home headings, shown only while mode entries and files share the list. */
+/** Home の見出し。モードの項目とファイルが同じ一覧にあるときだけ表示する。 */
 export function paletteSectionOf(
 	state: Pick<PaletteSearchState, "route" | "results"> | undefined,
 	result: PaletteResult,
@@ -393,25 +395,25 @@ export function paletteSectionOf(
 	if (result.mode === "property") return result.section;
 	if (state?.route.kind !== "home") return undefined;
 	if (!state.results.some((item) => item.mode === "mode-entry")) return undefined;
-	return result.mode === "mode-entry" ? "Modes" : "Files";
+	return result.mode === "mode-entry" ? t("palette.section.modes") : t("palette.section.files");
 }
 
 export function palettePlaceholder(mode: PaletteMode): string {
 	return mode === "link"
-		? "Search links in the active file"
+		? t("palette.placeholder.link")
 		: mode === "backlink"
-			? "Search backlinks to the active file"
+			? t("palette.placeholder.backlink")
 			: mode === "bookmark"
-				? "Search bookmarks"
+				? t("palette.placeholder.bookmark")
 				: mode === "smart"
-					? "Search Smart Connections"
+					? t("palette.placeholder.smart")
 					: mode === "tab"
-						? "Search open tabs"
+						? t("palette.placeholder.tab")
 						: mode === "plugin"
-							? "Search installed plugins"
+							? t("palette.placeholder.plugin")
 							: mode === "snippet"
-								? "Search CSS snippets"
+								? t("palette.placeholder.snippet")
 								: mode === "property"
-									? "Search properties in the active note"
-									: "Search files";
+									? t("palette.placeholder.property")
+									: t("palette.placeholder.files");
 }

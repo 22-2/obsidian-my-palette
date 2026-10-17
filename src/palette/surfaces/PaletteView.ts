@@ -52,6 +52,7 @@ import {
 	worksIn,
 	type HotkeyAction,
 } from "src/ui/hotkeys";
+import { t } from "src/i18n";
 
 interface PaletteViewState extends Record<string, unknown> {
 	input?: unknown;
@@ -73,7 +74,7 @@ interface NormalizedPaletteViewState extends PaletteTableState {
 	includeIgnored: boolean;
 }
 
-/** Persistent ItemView shell for searching while the note pane remains usable. */
+/** メモを表示したままでも検索できる、常駐の ItemView の外枠。 */
 export class PaletteView extends ItemView {
 	navigation = false;
 
@@ -125,7 +126,7 @@ export class PaletteView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return "Sidebar palette";
+		return t("view.sidebarPalette");
 	}
 
 	getIcon(): string {
@@ -137,9 +138,7 @@ export class PaletteView extends ItemView {
 		menu.addItem((item) =>
 			item
 				.setTitle(
-					this.tableView
-						? "Open new table palette in center"
-						: "Open new palette in right sidebar",
+					this.tableView ? t("view.openNewTableCenter") : t("view.openNewRightSidebar"),
 				)
 				.setIcon(ICONS.openNewPalette)
 				.onClick(() => {
@@ -173,8 +172,8 @@ export class PaletteView extends ItemView {
 	}
 
 	async setState(state: PaletteViewState): Promise<void> {
-		// Why: the registered view type owns presentation. Ignore legacy List/Table
-		// state so restoring a pane cannot turn a regular palette into a table.
+		// Why: 登録されたビューの種類が表示形式を決める。古い一覧・表の状態は無視し、
+		// ペインを復元したときに通常のパレットが表になってしまわないようにする。
 		const next = normalizeState({ ...state, displayMode: this.tableView ? "table" : "list" });
 		const fixedModeChanged = next.fixedMode !== this.pendingState.fixedMode;
 		const sourceChanged = next.sourcePath !== this.pendingState.sourcePath;
@@ -191,7 +190,7 @@ export class PaletteView extends ItemView {
 		this.panel.setInput(next.input, "end");
 		this.session.setIgnoredScope(next.includeIgnored);
 		this.ignoredToggle?.set(next.includeIgnored);
-		// The saved input carries its alias; Home turns it back into a mode.
+		// 保存された入力にはエイリアスが含まれる。Home がそれをモードに戻す。
 		this.session.returnToHome();
 		this.session.setInput(next.input, { suppressHistory: true });
 	}
@@ -211,8 +210,8 @@ export class PaletteView extends ItemView {
 							event.targetNode &&
 							this.contentEl.contains(event.targetNode))),
 			);
-			// Obsidian checks its scope during window capture, before the panel's DOM handlers.
-			// Returning true skips global shortcuts while still letting those handlers run.
+			// Obsidian は window のキャプチャ中にスコープを確認し、パネルの DOM ハンドラーより前に行う。
+			// true を返すと、グローバルのショートカットは飛ばしつつ、パネル側のハンドラーは動かし続ける。
 			if (ownsShortcut) return true;
 		});
 		this.createSurface(this.pendingState);
@@ -220,8 +219,8 @@ export class PaletteView extends ItemView {
 
 	async onClose(): Promise<void> {
 		if (this.session) {
-			// Why: Obsidian may collect the workspace state after onClose has
-			// disposed the session, so keep the last input in the fallback state too.
+			// Why: onClose でセッションを破棄したあとに、Obsidian がワークスペースの状態を
+			// 集めることがあるため、最後の入力を予備の状態にも残しておく。
 			this.pendingState = {
 				...this.pendingState,
 				input: this.session.prefixedInput,
@@ -259,9 +258,8 @@ export class PaletteView extends ItemView {
 		this.sourcePath = this.sourcePinned
 			? state.sourcePath
 			: this.leafTracker.currentSourceFile()?.path;
-		// Why: sourcePath identifies the note used for searching, while targetLeaf
-		// identifies the center pane that receives an open action. Keeping them
-		// independent prevents a pinned search source from becoming the write target.
+		// Why: sourcePath は検索に使うノートを表し、targetLeaf は開く操作を受け取る中央のペインを表す。
+		// 別々に保つことで、ピン留めした検索元が書き込み先になってしまうのを防ぐ。
 		this.leafTracker.refresh();
 		this.contentEl.empty();
 		this.contentEl.addClass("my-palette-view");
@@ -270,15 +268,15 @@ export class PaletteView extends ItemView {
 		this.session = new PaletteSearchSession(this.plugin, {
 			initialInput,
 			fixedMode: state.fixedMode,
-			// Why: unpinned views derive the source from the current center note;
-			// passing the persisted state here would make their first search stale.
+			// Why: ピン留めされていない表示は、元のノートを現在の中央のノートから決める。
+			// ここで保存された状態を渡すと、最初の検索が古くなってしまうため。
 			sourceFile: this.leafTracker.sourceFile(this.sourcePath),
 			includeIgnored: state.includeIgnored,
-			// Table columns describe files, so the table offers modes only by alias.
+			// 表の列はファイルを表すので、表ではエイリアスによるモードだけを出す。
 			modeEntries: !this.tableView,
 			onStateChange: (next) => this.renderState(next),
 		});
-		// A fixed mode is now just the starting mode; persist it as an alias instead.
+		// 固定のモードは、今では単なる開始時のモードになった。代わりにエイリアスとして保存する。
 		this.pendingState = {
 			...this.pendingState,
 			fixedMode: undefined,
@@ -292,7 +290,7 @@ export class PaletteView extends ItemView {
 			placeholder: palettePlaceholder(state.fixedMode ?? "file"),
 			onInput: (input) => this.updateInput(input),
 			onResultFocus: () => {
-				// Entering a mode is navigation; the alias typed to reach it is not a search.
+				// モードに入るのはナビゲーションであり、そこへ入るために打ったエイリアスは検索ではない。
 				const mode = this.panel?.getSelectedItem()?.mode;
 				if (mode === "mode-entry") return;
 				this.session?.commitCurrentSearch();
@@ -329,15 +327,15 @@ export class PaletteView extends ItemView {
 				return true;
 			},
 			sectionOf: (result) => paletteSectionOf(this.session?.current, result),
-			// Why: the pin is rarely toggled, so it lives in the source name's menu
-			// instead of a permanent footer button; a plain click goes to the note.
+			// Why: ピン留めはめったに切り替えないので、常設のフッターボタンではなく元のノート名の
+			// メニューに置く。通常のクリックはノートに移動する。
 			onFooterTextClick: () => void this.focusSourceNote(),
 			onFooterTextContextMenu: (event) => this.showSourceMenu(event),
 		});
 		this.addChild(this.panel);
 		this.panel.load();
-		// Why: only the dedicated table view adds sorting and column controls;
-		// both views still use the same search session and result actions.
+		// Why: 並び順と列の操作を追加するのは専用の表のビューだけ。どちらのビューも
+		// 同じ検索セッションと結果の操作を使う。
 		if (this.tableView) {
 			this.tableControls = new PaletteTableControls(this.panel, this.app, {
 				initialState: state,
@@ -346,14 +344,14 @@ export class PaletteView extends ItemView {
 						openExternalMarkdownInObsidian:
 							this.plugin.settings.openExternalMarkdownInObsidian,
 					}),
-				// Why: Vault audit lists different things per kind, each with its own columns.
+				// Why: Vault 監査は種類ごとに別のものを一覧にし、それぞれ列が異なる。
 				columnSet: () =>
 					this.session?.current.mode === "audit"
 						? this.plugin.settings.audit.kind
 						: "files",
 				onChange: (tableState) => {
-					// The same query can have different sort priorities in separate panes.
-					// Save presentation in the leaf layout rather than global file settings.
+					// 同じクエリでも、別のペインでは並び順の優先度が違うことがある。
+					// 表示の設定はファイルの全体設定ではなく、ペインのレイアウトに保存する。
 					this.pendingState = { ...this.pendingState, ...tableState };
 					void this.app.workspace.requestSaveLayout();
 				},
@@ -373,7 +371,7 @@ export class PaletteView extends ItemView {
 		this.registerTargetLeafTracking();
 		this.fileListRefresh.register();
 		this.renderState(this.session.current);
-		// Set the raw input first: a search that enters a mode replaces it with the query.
+		// 生の入力を先にセットする。モードに入る検索は、それをクエリに置き換えるため。
 		this.panel.setInput(initialInput, "end");
 		void this.session.search(initialInput);
 	}
@@ -388,7 +386,7 @@ export class PaletteView extends ItemView {
 
 	private renderState(state: PaletteSearchState): void {
 		if (!this.panel || !this.session) return;
-		// `alias + Space` moves into a mode and leaves only the query behind.
+		// 「エイリアス + Space」でモードに入り、残るのはクエリだけになる。
 		if (this.panel.inputEl.value !== state.input) this.panel.setInput(state.input, "end");
 		const chrome = paletteRouteChrome(
 			state,
@@ -416,12 +414,12 @@ export class PaletteView extends ItemView {
 	}
 
 	private renderFooter(message?: string): void {
-		const source = this.sourcePath ?? "No active note";
+		const source = this.sourcePath ?? t("view.noActiveNote");
 		const suffix = message ? ` · ${message}` : "";
-		// Why: the pin has no button of its own, so a pinned source is the only
-		// state the footer must show; an unpinned source follows the active note.
+		// Why: ピン留めには専用のボタンがないので、フッターが示す必要があるのはピン留めの状態だけ。
+		// ピン留めされていない元のノートは、アクティブなノートに従う。
 		this.panel?.updateFooterText(
-			`Source: ${source}${suffix}`,
+			`${t("view.source", { source })}${suffix}`,
 			this.sourcePinned ? "pin" : undefined,
 		);
 	}
@@ -434,7 +432,7 @@ export class PaletteView extends ItemView {
 			await revealOpenedLeaf(this.app, leaf);
 			return;
 		}
-		// The note is not open in the center: open it where a primary action would.
+		// ノートが中央で開いていなければ、主な操作で開く場所に開く。
 		await openFileInLeaf(this.app, file, {
 			action: "primary",
 			targetLeaf: this.leafTracker.resolveTargetLeaf(),
@@ -454,7 +452,7 @@ export class PaletteView extends ItemView {
 		const canPin = this.sourcePinned || this.leafTracker.currentSourceFile() !== undefined;
 		menu.addItem((item) =>
 			item
-				.setTitle(this.sourcePinned ? "Unpin source note" : "Pin source note")
+				.setTitle(this.sourcePinned ? t("view.unpinSource") : t("view.pinSource"))
 				.setIcon(this.sourcePinned ? ICONS.unpin : ICONS.pin)
 				.setDisabled(!canPin)
 				.onClick(() => this.toggleSourcePin()),
@@ -537,7 +535,7 @@ export class PaletteView extends ItemView {
 	private applySearchHistory(result: Extract<PaletteResult, { mode: "search-history" }>): void {
 		const input = this.plugin.formatSearchHistoryInput(result);
 		this.historyControls?.close();
-		// History stores the prefixed form; Home turns it back into a mode.
+		// 履歴はプレフィックス付きの形で保存する。Home がそれをモードに戻す。
 		this.session?.returnToHome();
 		this.session?.setIgnoredScope(Boolean(result.includeIgnored));
 		this.ignoredToggle?.set(Boolean(result.includeIgnored));
@@ -559,15 +557,15 @@ export class PaletteView extends ItemView {
 			if (result.mode === "search-history") this.applySearchHistory(result);
 			return;
 		}
-		// Why: explicit main-window navigation must bypass the currently active
-		// popout and any cached target leaf belonging to the palette.
+		// Why: 明示的なメインウィンドウへの移動は、いま有効なポップアウトや、
+		// パレットが持つキャッシュ済みの対象リーフを必ず迂回する。
 		const targetLeaf = targetOverride ?? this.leafTracker.resolveTargetLeaf();
 		const execution: PaletteResultExecutionOptions = {
 			closeWhenDone: false,
 			targetLeaf,
 			reuseExternalMarkdownLeaf,
-			// Opening a note is a navigation action: focus the destination rather
-			// than returning to this palette's input after the open completes.
+			// ノートを開くのはナビゲーションなので、開き終えた後にこのパレットの入力へ戻るのではなく、
+			// 移動先にフォーカスを当てる。
 			active: true,
 			close: () => undefined,
 			showError: (message) => {
@@ -590,16 +588,16 @@ export class PaletteView extends ItemView {
 
 	private async openInMainWindow(result: PaletteResult): Promise<void> {
 		const { workspace } = this.app;
-		// Why: this menu action promises a fresh main-window tab on every use,
-		// including external Markdown that already has a tab in the same window.
+		// Why: このメニュー操作は、使うたびに新しいメインウィンドウのタブを開くことを約束する。
+		// 同じウィンドウにタブがすでにある外部の Markdown も含めて。
 		const target = workspace.createLeafInParent(workspace.rootSplit, 0);
 		await this.execute(result, "primary", target, false);
 	}
 
 	private focusPanelAfterAction(existingExternalLeaves: readonly WorkspaceLeaf[]): void {
 		const activeLeaf = this.app.workspace.getMostRecentLeaf();
-		// Reusing an external Markdown leaf reveals the requested tab. Focusing the sidebar
-		// input afterward would immediately activate the palette again and undo it.
+		// 既存の外部 Markdown のリーフを再利用すると、要求されたタブが表示される。その後にサイドバーの
+		// 入力へフォーカスすると、パレットがすぐまた前面に出て、表示を元に戻してしまうため。
 		if (
 			activeLeaf &&
 			existingExternalLeaves.includes(activeLeaf) &&
@@ -628,8 +626,8 @@ export class PaletteView extends ItemView {
 			selectedItems,
 			activate: (action, selected) => this.execute(selected, action),
 			openInBackground: (selected) => this.openInBackground(selected),
-			// Why: compare owning documents at menu-open time so moving the same
-			// view between windows immediately updates the available navigation action.
+			// Why: メニューを開いた時点で所有するドキュメントを比べる。同じビューをウィンドウ間で移すと、
+			// 使えるナビゲーションの操作がすぐに更新されるようにするため。
 			openInMainWindow:
 				this.contentEl.ownerDocument !== this.app.workspace.rootSplit.doc
 					? (selected) => this.openInMainWindow(selected)
@@ -643,9 +641,9 @@ export class PaletteView extends ItemView {
 	}
 
 	private resolveMocInsertionContext(): MocInsertionContext {
-		// The sidebar palette keeps focus in its search input, so a cached
-		// sourcePath/targetLeaf can point at the previously active note. Prefer
-		// the currently active center note at click time.
+		// サイドバーのパレットは検索入力にフォーカスを保つので、キャッシュされた
+		// sourcePath/targetLeaf が直前にアクティブだったノートを指すことがある。
+		// クリックの時点で、いま中央でアクティブなノートを優先する。
 		const recentLeaf = this.app.workspace.getMostRecentLeaf();
 		const activeLeaf =
 			recentLeaf && this.leafTracker.isCenterLeaf(recentLeaf) ? recentLeaf : undefined;
@@ -665,13 +663,13 @@ export class PaletteView extends ItemView {
 		if (!this.session || !this.panel) return;
 		this.session.enterMode(modeId);
 		this.panel.setInput("", "end");
-		// Empty the list now; a slow provider would otherwise show Home rows.
-		this.panel.setResults({ items: [], total: 0, error: "Searching…" });
+		// 一覧は今すぐ空にする。遅いプロバイダーだと、Home の行が見えてしまうため。
+		this.panel.setResults({ items: [], total: 0, error: t("view.searching") });
 		this.updateInput("", "end");
 		this.panel.focusSearchInput();
 	}
 
-	/** Back to Home with the alias selected, so Enter re-enters the mode. */
+	/** エイリアスを選択した状態で Home に戻る。Enter でモードに入り直せるようにする。 */
 	private returnToHome(): void {
 		if (!this.session || !this.panel) return;
 		const alias = this.session.returnToHome();
@@ -694,14 +692,13 @@ export class PaletteView extends ItemView {
 		selection: "all" | "end" | "none" = "none",
 		options: { suppressHistory?: boolean; syncPanel?: boolean } = {},
 	): void {
-		// Why: getState() is the per-leaf persistence boundary, but Obsidian does
-		// not necessarily request a layout save for each DOM input event. Updating
-		// the fallback and requesting a debounced save keeps the leaf's latest query
-		// available even if the view is deferred or closed immediately afterward.
+		// Why: getState() はリーフごとの保存の境界だが、Obsidian は DOM の入力イベントのたびに
+		// レイアウトの保存を要求するとは限らない。予備の状態を更新し、遅延した保存を要求しておけば、
+		// ビューが遅れて閉じられても、リーフの最新のクエリが残るため。
 		if (options.syncPanel) this.panel?.setInput(input, selection);
 		if (options.suppressHistory) this.session?.setInputFromHistory(input);
 		else this.session?.setInput(input);
-		// Store the alias-prefixed form so a restored pane re-enters the same mode.
+		// エイリアス付きの形で保存し、復元されたペインが同じモードに入り直せるようにする。
 		this.pendingState = { ...this.pendingState, input: this.session?.prefixedInput ?? input };
 		void this.app.workspace.requestSaveLayout();
 	}
@@ -711,9 +708,9 @@ export class PaletteView extends ItemView {
 		this.targetTrackingRegistered = true;
 		this.registerEvent(
 			this.app.workspace.on("active-leaf-change", (leaf) => {
-				// Why: a non-Markdown center view can still be the user's current tab
-				// and must be replaced by a primary open. Track the leaf independently
-				// from fileOf(), which is only needed for source-note searches.
+				// Why: 中央の Markdown 以外のビューも、ユーザーの現在のタブであることがあり、
+				// 主な操作で置き換えられる必要がある。fileOf() はノートを元にする検索のためだけに必要なので、
+				// リーフは fileOf() とは独立に追跡する。
 				if (!leaf || !this.leafTracker.track(leaf)) return;
 				const file = this.leafTracker.fileOf(leaf);
 				if (!this.sourcePinned) this.updateSource(file);

@@ -3,37 +3,39 @@ import { noteEmptiness } from "src/audit/noteEmptiness";
 import { logger } from "src/shared/logger";
 import type { AuditKind } from "src/audit/vaultAudit";
 import { removeLinkFromMocRelateds } from "src/moc-relateds/mocRelatedsCore";
+import { t } from "src/i18n";
 
 export interface AuditActionResult {
 	path: string;
 	outcome: "trashed" | "skipped" | "failed";
 	reason?: string;
-	/** Notes whose MOC Relateds no longer link to a trashed MOC-only note. */
+	/** ゴミ箱に移動したMOC専用ノートへのリンクを、Relateds から外したノート。 */
 	unlinkedFrom?: string[];
 }
 
-/** Kinds whose items are files or folders that can be moved; broken links are not. */
+/** 項目がファイルまたはフォルダーで移動できる種類。壊れたリンクは移動できない。 */
 export function canTrash(kind: AuditKind): boolean {
 	return kind !== "broken-links";
 }
 
-/** Kinds whose items are files, which the palette's Move to… can take elsewhere. */
+/** 項目がファイルの種類。パレットの「移動」で別の場所へ移せる。 */
 export function listsFiles(kind: AuditKind): boolean {
 	return kind === "orphaned-files" || kind === "empty-files";
 }
 
 /**
- * Moves the items to the trash, one at a time. Each item is checked again first, because
- * the vault may have changed since the list was made.
+ * 項目を1つずつゴミ箱に移動する。一覧を作ったあとに Vault が変わっているかもしれないため、
+ * 各項目を移動の前にもう一度確認する。
  */
 export async function trashAuditItems(
 	app: App,
 	kind: AuditKind,
 	paths: readonly string[],
 ): Promise<AuditActionResult[]> {
-	if (!canTrash(kind)) throw new Error(`${kind} cannot be moved to trash.`);
-	// Why: built once for the batch rather than scanning every link per item. Trashing files
-	// only takes links away, so a stale set can skip an item but never trashes a linked one.
+	if (!canTrash(kind)) throw new Error(t("audit.error.notTrashable", { kind }));
+	// Why: 項目ごとにすべてのリンクを調べず、一括の処理で一度だけ作る。ファイルをゴミ箱に
+	// 移すとリンクが減るだけなので、古い集合では項目を飛ばすことはあっても、
+	// リンクされたものをゴミ箱に入れることはない。
 	const linked = kind === "orphaned-files" ? linkedFromOtherFiles(app) : new Set<string>();
 	const results: AuditActionResult[] = [];
 	for (const path of paths) {
@@ -58,18 +60,18 @@ async function trashItem(
 	linked: ReadonlySet<string>,
 ): Promise<AuditActionResult> {
 	const target = app.vault.getAbstractFileByPath(path);
-	if (!target) return { path, outcome: "skipped", reason: "No longer exists." };
+	if (!target) return { path, outcome: "skipped", reason: t("audit.reason.missing") };
 	const state = await currentState(app, kind, target, linked);
 	if (typeof state === "string") return { path, outcome: "skipped", reason: state };
-	// Why: a MOC-only note is linked back from its partners' Relateds; trashing it alone
-	// would leave those links broken.
+	// Why: MOC専用ノートは、相手のノートの Relateds からリンクされている。これだけを
+	// ゴミ箱に入れると、それらのリンクが壊れたままになるため。
 	const unlinkedFrom =
 		state.mocOnly && target instanceof TFile ? await unlinkFromRelateds(app, target) : [];
 	await app.fileManager.trashFile(target);
 	return { path, outcome: "trashed", ...(unlinkedFrom.length > 0 ? { unlinkedFrom } : {}) };
 }
 
-/** Whether the item still belongs in the list; a string says why it no longer does. */
+/** 項目がまだ一覧に入るべきか。文字列を返した場合は、入らなくなった理由を表す。 */
 async function currentState(
 	app: App,
 	kind: AuditKind,
@@ -79,23 +81,23 @@ async function currentState(
 	const listed = { mocOnly: false };
 	switch (kind) {
 		case "orphaned-files":
-			if (!(target instanceof TFile)) return "Not a file.";
-			return linked.has(target.path) ? "Now linked from a note." : listed;
+			if (!(target instanceof TFile)) return t("audit.reason.notFile");
+			return linked.has(target.path) ? t("audit.reason.linked") : listed;
 		case "empty-files": {
-			if (!(target instanceof TFile)) return "Not a file.";
+			if (!(target instanceof TFile)) return t("audit.reason.notFile");
 			const { kind: emptiness } = await noteEmptiness(app, target);
 			if (emptiness === "empty") return listed;
-			return emptiness === "moc-only" ? { mocOnly: true } : "No longer empty.";
+			return emptiness === "moc-only" ? { mocOnly: true } : t("audit.reason.notEmpty");
 		}
 		case "empty-folders":
-			if (!(target instanceof TFolder)) return "Not a folder.";
-			return holdsFiles(target) ? "No longer empty." : listed;
+			if (!(target instanceof TFolder)) return t("audit.reason.notFolder");
+			return holdsFiles(target) ? t("audit.reason.notEmpty") : listed;
 		case "broken-links":
-			return "Broken links cannot be moved.";
+			return t("audit.reason.brokenLinks");
 	}
 }
 
-/** Removes the note from the MOC Relateds of every note linking to it; returns those notes. */
+/** そのノートにリンクしているすべてのノートの MOC Relateds から、ノートへのリンクを外す。外したノートを返す。 */
 async function unlinkFromRelateds(app: App, note: TFile): Promise<string[]> {
 	const sources = Object.entries(app.metadataCache.resolvedLinks)
 		.filter(([source, targets]) => source !== note.path && note.path in targets)
@@ -107,7 +109,7 @@ async function unlinkFromRelateds(app: App, note: TFile): Promise<string[]> {
 		await app.vault.process(source, (content) => {
 			const result = removeLinkFromMocRelateds(content, note.basename);
 			removed = result.success;
-			// Why: a link outside Relateds, or one with nested items, is left for the user.
+			// Why: Relateds の外にあるリンクや、入れ子の項目を持つリンクは、ユーザーに任せて残す。
 			return result.success ? result.newContent : content;
 		});
 		if (removed) unlinked.push(source.path);
@@ -115,7 +117,7 @@ async function unlinkFromRelateds(app: App, note: TFile): Promise<string[]> {
 	return unlinked;
 }
 
-/** Every file that another file links to; a link to itself does not count. */
+/** ほかのファイルからリンクされているすべてのファイル。自分自身へのリンクは数えない。 */
 function linkedFromOtherFiles(app: App): Set<string> {
 	const linked = new Set<string>();
 	for (const [source, targets] of Object.entries(app.metadataCache.resolvedLinks)) {
@@ -130,25 +132,20 @@ function holdsFiles(folder: TFolder): boolean {
 	);
 }
 
-/** One notice for the whole batch: what moved, and how many were skipped or failed. */
+/** 一括処理の結果を1つの通知にまとめる。移動した数と、スキップ・失敗した数を出す。 */
 export function describeAuditActionResults(
 	kind: AuditKind,
 	results: readonly AuditActionResult[],
 ): string {
 	const count = (outcome: AuditActionResult["outcome"]) =>
 		results.filter((result) => result.outcome === outcome).length;
-	const noun = kind === "empty-folders" ? "folder" : "file";
-	const parts = [`Moved ${plural(count("trashed"), noun)} to trash.`];
+	const noun = kind === "empty-folders" ? "フォルダー" : "ファイル";
+	const parts = [t("audit.summary.trashed", { noun, count: count("trashed") })];
 	const skipped = count("skipped");
-	if (skipped > 0) parts.push(`Skipped ${skipped} that changed since the list was made.`);
+	if (skipped > 0) parts.push(t("audit.summary.skipped", { count: skipped }));
 	const unlinked = new Set(results.flatMap((result) => result.unlinkedFrom ?? [])).size;
-	if (unlinked > 0)
-		parts.push(`Removed their links from the Relateds of ${plural(unlinked, "note")}.`);
+	if (unlinked > 0) parts.push(t("audit.summary.unlinked", { count: unlinked }));
 	const failed = count("failed");
-	if (failed > 0) parts.push(`${failed} failed; see the console.`);
+	if (failed > 0) parts.push(t("audit.summary.failed", { count: failed }));
 	return parts.join(" ");
-}
-
-export function plural(count: number, noun: string): string {
-	return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }

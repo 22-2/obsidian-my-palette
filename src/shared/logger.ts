@@ -1,8 +1,8 @@
 import log, { LogLevels } from "consola";
 
 /**
- * The plugin's one logger. Errors always reach the developer console; debug messages
- * appear only while the "Show log" setting is on.
+ * プラグインのロガーは 1 つだけ。エラーは常に開発者コンソールに出し、デバッグ情報は
+ * ログ表示の設定がオンのときだけ出す。
  */
 export const logger = log.withTag("MyPalette");
 

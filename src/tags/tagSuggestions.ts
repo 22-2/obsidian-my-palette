@@ -4,7 +4,7 @@ import { typedNewValue, type NewValueRules } from "src/shared/newValue";
 
 export type TagSuggestion = { type: "tag"; choice: TagChoice } | { type: "new"; tag: string };
 
-// Text containing `#` or whitespace cannot form one tag, so it is not offered as new.
+// `#` や空白を含むテキストは 1 つのタグにならないため、新規候補にはしない。
 const VALID_NEW_TAG = /^[^\s#]+$/;
 const TAG_VALUE_RULES: NewValueRules = {
 	normalize: normalizeTagQuery,
@@ -29,7 +29,7 @@ function filterChoices(choices: readonly TagChoice[], needle: string): TagChoice
 		.go(needle, choices, { key: "tag" })
 		.map((result) => ({ choice: result.obj, score: result.score }))
 		.sort((a, b) => {
-			// Registered tags stay last; ties keep the recent/related/count order.
+			// 登録済みのタグは最後に置く。同順位は最近・関連・使用数の順を保つ。
 			if (a.choice.registered !== b.choice.registered) return a.choice.registered ? 1 : -1;
 			return b.score - a.score || (indexes.get(a.choice) ?? 0) - (indexes.get(b.choice) ?? 0);
 		})
@@ -37,9 +37,9 @@ function filterChoices(choices: readonly TagChoice[], needle: string): TagChoice
 }
 
 /**
- * Builds the rows shown for the current input: new tags first, then matching
- * existing tags. Checked new tags stay listed while they match the input, because
- * they are in no tag list that could bring them back.
+ * 現在の入力に対して表示する行を作る。新規タグを先頭にし、その後に一致する既存タグを並べる。
+ * チェック済みの新規タグは、入力に一致する間は表示し続ける。
+ * 他のタグ一覧には含まれないため、消すと戻す手段がないから。
  */
 export function buildTagSuggestions(
 	choices: readonly TagChoice[],

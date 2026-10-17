@@ -1,5 +1,6 @@
 import type { MyPaletteSettings } from "src/settings/model";
 import type { EverythingResult } from "src/palette/results";
+import { t } from "src/i18n";
 
 interface EverythingHttpItem {
 	type?: unknown;
@@ -54,7 +55,7 @@ export class EverythingHttpClient {
 		const timeout = new Promise<never>(
 			(_, reject) =>
 				(timeoutId = window.setTimeout(
-					() => reject(new Error("Everything HTTP search timed out.")),
+					() => reject(new Error(t("everything.error.timeout"))),
 					settings.requestTimeoutMs,
 				)),
 		);
@@ -69,11 +70,11 @@ export class EverythingHttpClient {
 				timeout,
 			]);
 			if (controller.signal.aborted) throw new DOMException("Aborted", "AbortError");
-			if (response.status === 401) throw new Error("Everything HTTP authentication failed.");
+			if (response.status === 401) throw new Error(t("everything.error.auth"));
 			if (response.status < 200 || response.status >= 300)
-				throw new Error(`Everything HTTP Server returned ${response.status}.`);
+				throw new Error(t("everything.error.status", { status: response.status }));
 			if (response.arrayBuffer.byteLength > 2 * 1024 * 1024)
-				throw new Error("Everything HTTP response exceeded 2 MiB.");
+				throw new Error(t("everything.error.tooLarge"));
 			return this.parseResponse(response.text);
 		} catch (error) {
 			if (controller.signal.aborted) throw new DOMException("Aborted", "AbortError");
@@ -90,10 +91,10 @@ export class EverythingHttpClient {
 		try {
 			endpoint = new URL(settings.httpUrl);
 		} catch {
-			throw new Error("Set a valid Everything HTTP Server URL.");
+			throw new Error(t("everything.error.invalidUrl"));
 		}
 		if (endpoint.protocol !== "http:" && endpoint.protocol !== "https:")
-			throw new Error("Everything HTTP Server URL must use http or https.");
+			throw new Error(t("everything.error.protocol"));
 		endpoint.search = "";
 		endpoint.searchParams.set("search", query);
 		endpoint.searchParams.set("json", "1");
@@ -108,10 +109,9 @@ export class EverythingHttpClient {
 		try {
 			parsed = JSON.parse(body) as EverythingHttpResponse;
 		} catch {
-			throw new Error("Everything HTTP Server returned invalid JSON.");
+			throw new Error(t("everything.error.invalidJson"));
 		}
-		if (!Array.isArray(parsed.results))
-			throw new Error("Everything HTTP Server returned an unsupported JSON format.");
+		if (!Array.isArray(parsed.results)) throw new Error(t("everything.error.format"));
 		return parsed.results.flatMap((raw): EverythingResult[] => {
 			const item = raw as EverythingHttpItem;
 			if (typeof item.name !== "string") return [];

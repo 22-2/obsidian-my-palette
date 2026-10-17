@@ -1,3 +1,5 @@
+import { t } from "src/i18n";
+
 export type HotkeyModifier = "Ctrl" | "Alt" | "Shift" | "Meta";
 export interface PaletteHotkey {
 	key: string;
@@ -5,9 +7,9 @@ export interface PaletteHotkey {
 }
 
 /**
- * A place where a shortcut can be pressed. A place inside another one (a MOC insert selector
- * inside selectors) overlaps it, so the two cannot share a key. Palette modes such as file
- * search are all part of "palette", so a palette shortcut works in every mode.
+ * ショートカットを押せる場所。別の場所の内側にある場所(セレクターの中の MOC 挿入セレクター)は
+ * それと重なるので、2つは同じキーを共有できない。ファイル検索などのパレットのモードは、すべて
+ * 「palette」に含まれるので、パレットのショートカットはどのモードでも動く。
  */
 export type HotkeyScope =
 	| "palette"
@@ -26,42 +28,39 @@ const SCOPE_PARENT: Partial<Record<HotkeyScope, HotkeyScope>> = {
 
 export const HOTKEY_ACTIONS = {
 	hidePreview: {
-		name: "Hide palette or selector",
-		description: "Hold to fade out any palette or selector. Release either key to restore it.",
+		name: t("hotkey.hidePreview.name"),
+		description: t("hotkey.hidePreview.description"),
 		scopes: ["palette", "selector"],
 	},
 	preview: {
-		name: "Preview selected result",
-		description:
-			"Preview in a modal without closing it. Plain Right Arrow requires the cursor at the end of the input.",
-		// The MOC remove selector lists only notes already linked, and has no preview.
+		name: t("hotkey.preview.name"),
+		description: t("hotkey.preview.description"),
+		// MOC 削除セレクターはリンク済みのノートだけを並べ、プレビューはない。
 		scopes: ["palette", "tag-insert-selector", "moc-insert-selector"],
 	},
 	history: {
-		name: "Search history",
-		description: "Open saved searches in any palette or selector.",
+		name: t("hotkey.history.name"),
+		description: t("hotkey.history.description"),
 		scopes: ["palette", "selector"],
 	},
 	optionsMenu: {
-		name: "Show options menu",
-		description:
-			"Open the options menu (the … button) of any palette or selector, with its switches and actions.",
+		name: t("hotkey.optionsMenu.name"),
+		description: t("hotkey.optionsMenu.description"),
 		scopes: ["palette", "selector"],
 	},
 	contextMenu: {
-		name: "Show result actions",
-		description: "Open the right-click menu for the active result from the keyboard.",
+		name: t("hotkey.contextMenu.name"),
+		description: t("hotkey.contextMenu.description"),
 		scopes: ["palette", "selector"],
 	},
 	enterMode: {
-		name: "Enter mode",
-		description: "Enter the highlighted mode from Home.",
+		name: t("hotkey.enterMode.name"),
+		description: t("hotkey.enterMode.description"),
 		scopes: ["palette"],
 	},
 	focusInput: {
-		name: "Return to input mode",
-		description:
-			"Return from selection mode to typing in tag insert, MOC insert, MOC remove and property value selectors.",
+		name: t("hotkey.focusInput.name"),
+		description: t("hotkey.focusInput.description"),
 		scopes: [
 			"tag-insert-selector",
 			"moc-insert-selector",
@@ -70,9 +69,8 @@ export const HOTKEY_ACTIONS = {
 		],
 	},
 	toggleSelection: {
-		name: "Toggle selection",
-		description:
-			"Check or toggle the active row in selection mode. Hold Shift to extend a range where supported.",
+		name: t("hotkey.toggleSelection.name"),
+		description: t("hotkey.toggleSelection.description"),
 		scopes: [
 			"tag-insert-selector",
 			"moc-insert-selector",
@@ -84,19 +82,19 @@ export const HOTKEY_ACTIONS = {
 
 export type HotkeyAction = keyof typeof HOTKEY_ACTIONS;
 
-/** Two scopes overlap when one is the other or sits inside it. */
+/** 2つの場所は、一方が他方であるか、他方の内側にあるとき重なる。 */
 export function scopesOverlap(a: readonly HotkeyScope[], b: readonly HotkeyScope[]): boolean {
 	return a.some((first) =>
 		b.some((second) => scopeWithin(first, second) || scopeWithin(second, first)),
 	);
 }
 
-/** Whether a shortcut with these scopes can be pressed in `place`. */
+/** これらの場所を持つショートカットが、`place` で押せるかどうか。 */
 export function worksIn(scopes: readonly HotkeyScope[], place: HotkeyScope): boolean {
 	return scopes.some((scope) => scopeWithin(place, scope));
 }
 
-/** Whether `scope` is `outer` or sits inside it. */
+/** `scope` が `outer` であるか、その内側にあるかどうか。 */
 function scopeWithin(scope: HotkeyScope, outer: HotkeyScope): boolean {
 	for (let current: HotkeyScope | undefined = scope; current; current = SCOPE_PARENT[current]) {
 		if (current === outer) return true;
@@ -148,7 +146,7 @@ export function hotkeyFromEvent(event: KeyboardEvent): PaletteHotkey | undefined
 }
 
 export function formatHotkey(hotkey: PaletteHotkey | null): string {
-	if (!hotkey) return "Disabled";
+	if (!hotkey) return t("hotkey.disabled");
 	const key = hotkey.key === "ArrowRight" ? "→" : hotkey.key;
 	return [...hotkey.modifiers, key].join("+");
 }
@@ -179,17 +177,17 @@ export function hotkeyError(
 		const assigned = settings[other];
 		if (other === action || !assigned || assigned.key !== hotkey.key) continue;
 		if (!scopesOverlap(HOTKEY_ACTIONS[action].scopes, HOTKEY_ACTIONS[other].scopes)) continue;
-		// Shift is also a range extension for the selection shortcut.
+		// Shift は選択のショートカットでは範囲を広げる修飾キーにもなる。
 		const range = action === "toggleSelection" || other === "toggleSelection";
 		const modifiers = (binding: PaletteHotkey) =>
 			binding.modifiers.filter((modifier) => !range || modifier !== "Shift").join("+");
 		if (modifiers(assigned) === modifiers(hotkey))
-			return `Already assigned to ${HOTKEY_ACTIONS[other].name}.`;
+			return t("hotkey.error.assigned", { name: HOTKEY_ACTIONS[other].name });
 	}
 	return undefined;
 }
 
-/** Actions whose key would otherwise type text in the palette input. */
+/** キーを押すと、そのままパレットの入力に文字が入ってしまう操作。 */
 const MODIFIER_ACTIONS: readonly HotkeyAction[] = [
 	"hidePreview",
 	"history",
@@ -200,9 +198,8 @@ const MODIFIER_ACTIONS: readonly HotkeyAction[] = [
 ];
 
 function bindingError(action: HotkeyAction, hotkey: PaletteHotkey): string | undefined {
-	if (hotkey.key === "ArrowRight" && action !== "preview")
-		return "Right Arrow is reserved for cursor movement and preview.";
-	// Tab is the standard way into a mode, so it may be bound without a modifier.
+	if (hotkey.key === "ArrowRight" && action !== "preview") return t("hotkey.error.rightArrow");
+	// Tab はモードに入る標準の方法なので、修飾キーなしで割り当ててよい。
 	const typesNothing =
 		hotkey.key === "ArrowRight" ||
 		/^F\d+$/.test(hotkey.key) ||
@@ -212,7 +209,7 @@ function bindingError(action: HotkeyAction, hotkey: PaletteHotkey): string | und
 		!typesNothing &&
 		!hotkey.modifiers.some((modifier) => modifier !== "Shift")
 	)
-		return "Use Ctrl, Alt or Meta with this key so typing still works.";
+		return t("hotkey.error.modifierNeeded");
 	return undefined;
 }
 
@@ -243,7 +240,7 @@ export function normalizeHotkeys(value: unknown): PaletteHotkeys {
 		};
 		if (!bindingError(action, candidate)) result[action] = candidate;
 	}
-	// Conflicting persisted bindings cannot be dispatched unambiguously.
+	// 衝突している保存済みの割り当ては、一意に振り分けられないので、既定に戻す。
 	if (
 		(Object.keys(HOTKEY_ACTIONS) as HotkeyAction[]).some((action) =>
 			hotkeyError(action, result[action], result),

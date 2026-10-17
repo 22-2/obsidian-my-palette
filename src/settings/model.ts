@@ -41,7 +41,7 @@ export interface SearchHistorySettings {
 
 export const SETTINGS_SCHEMA_VERSION = 23;
 
-/** Seconds after closing the palette before Open home starts from Home again; 0 means immediately. */
+/** パレットを閉じてから、「ホームを開く」が Home から始め直すまでの秒数。0 なら即座に。 */
 export type ReturnToHomeSeconds = 0 | 30 | 60 | 90;
 export const MAX_RECENT_COMMAND_IDS = 20;
 export const MILLISECONDS_PER_SECOND = 1_000;
@@ -49,13 +49,13 @@ export const DISABLED_DELAY_MS = 0;
 export const UNLIMITED_DAYS = 0;
 
 /**
- * Keep persisted defaults in one named block so validation and the settings UI
- * cannot silently drift when a default changes.
+ * 保存される既定値を1つの名前付きブロックに置く。既定値が変わったときに、検証と設定 UI が
+ * 黙って食い違わないようにするため。
  */
 export const SETTING_DEFAULTS = {
 	searchHistory: {
-		// Search history is most useful when it reflects an action the user
-		// completed, so idle input must be opt-in rather than the default.
+		// 検索履歴は、ユーザーが完了させた操作を反映するときに最も役立つ。そのため、
+		// 入力を止めて保存するのは既定ではなく、ユーザーが選ぶものにする。
 		addDelayMs: 0,
 		daysToKeep: UNLIMITED_DAYS,
 	},
@@ -67,8 +67,8 @@ export const SETTING_DEFAULTS = {
 } as const;
 
 /**
- * The same ranges drive both data sanitization and slider controls, keeping
- * interactive edits consistent with values loaded from data.json.
+ * 同じ範囲が、データの整形とスライダーの両方を動かす。対話的な編集を、data.json から
+ * 読み込んだ値と一貫させるため。
  */
 export const SETTING_LIMITS = {
 	searchHistory: {
@@ -83,9 +83,9 @@ export const SETTING_LIMITS = {
 } as const;
 
 /**
- * These strings are persisted in data.json, so the names are stable setting
- * tokens as well as labels shown in documentation. Keep them centralized so a
- * sorter branch and a migration cannot accidentally drift apart.
+ * これらの文字列は data.json に保存されるので、名前は安定した設定のトークンであり、ドキュメントに
+ * 出るラベルでもある。ここに集約しておくと、並べ替えの分岐と移行が食い違わない。
+ * 表示名は ja.json の sort.label.* で与える。
  */
 export const FILE_SORT_PRIORITIES = {
 	filenamePrefixMatch: "Filename prefix match",
@@ -233,11 +233,11 @@ export function normalizeFileSortPriorities(
 ): FileSortPriority[] {
 	if (!Array.isArray(value)) return [...fallback];
 	const trimmed = value.map((item) => (typeof item === "string" ? item.trim() : undefined));
-	// The first version of this setting shipped combined name/alias priorities;
-	// migrate its untouched defaults so existing users receive the separated behavior.
+	// この設定の最初の版は、名前とエイリアスを合わせた優先度を出荷していた。手を加えていない既定値は
+	// 移行し、既存のユーザーが分かれた挙動を受け取れるようにする。
 	if (isPriorityList(trimmed, LEGACY_DEFAULT_FILE_SORT_PRIORITIES)) return [...fallback];
-	// Adding a new default priority should reach users who never customized the
-	// previous list, while an arbitrary custom order remains exactly as entered.
+	// 新しい既定の優先度は、以前の一覧を変えていないユーザーに届くべき。一方で、任意の独自の順序は
+	// 入力したとおりに残す。
 	if (
 		isPriorityList(trimmed, PRE_TAG_DEFAULT_FILE_SORT_PRIORITIES) ||
 		isPriorityList(trimmed, PREVIOUS_DEFAULT_FILE_SORT_PRIORITIES) ||
@@ -250,13 +250,13 @@ export function normalizeFileSortPriorities(
 		const priority = LEGACY_FILE_SORT_PRIORITY_ALIASES[item] ?? item;
 		return isFileSortPriority(priority) ? [priority] : [];
 	});
-	// A dual list represents enablement, so repeated tokens cannot be expressed
-	// meaningfully and would otherwise appear as ambiguous duplicate rows.
+	// 二段のリストは有効かどうかを表すので、同じトークンが繰り返すと意味が通らず、
+	// 曖昧な重複行として現れてしまう。
 	return [...new Set(normalized)];
 }
 
-// Keep the existing relevance and recency behavior while making `prior` useful
-// by default as a tie-breaker and as the first meaningful criterion for empty input.
+// 既存の関連度と最近の順の挙動を保ちつつ、`prior` を既定で役立つものにする。同点の決め手として、
+// また入力が空のときの最初の意味のある基準として使う。
 export const DEFAULT_FILE_SORT_PRIORITIES: readonly FileSortPriority[] = [
 	FILE_SORT_PRIORITIES.filenamePrefixMatch,
 	FILE_SORT_PRIORITIES.filenameFuzzyMatch,
@@ -270,8 +270,8 @@ export const DEFAULT_FILE_SORT_PRIORITIES: readonly FileSortPriority[] = [
 	FILE_SORT_PRIORITIES.lastModified,
 ];
 
-// 空クエリ時はマッチ系が除去されるため、有効なデフォルトは Activity → Last modified →
-// @prior:desc の順になる。ユーザーの実設定に合わせて blank だけ別デフォルトにするっす。
+// 空のクエリでは一致系の基準が除かれるため、有効な既定は Activity → Last modified →
+// @prior:desc の順になる。ユーザーの実際の設定に合わせて、blank だけ別の既定にする。
 export const DEFAULT_BLANK_FILE_SORT_PRIORITIES: readonly FileSortPriority[] = [
 	FILE_SORT_PRIORITIES.activity,
 	FILE_SORT_PRIORITIES.lastModified,
@@ -286,7 +286,7 @@ export interface PaletteDisplaySettings {
 
 export interface ModeSettings {
 	alias: string;
-	/** A disabled mode is left out of Home and cannot be entered by its alias. */
+	/** 無効なモードは Home から外れ、エイリアスでは入れない。 */
 	enabled: boolean;
 }
 
@@ -305,7 +305,7 @@ export interface MyPaletteSettings {
 	home: { returnAfterSeconds: ReturnToHomeSeconds };
 	paletteDisplay: Record<PaletteSurface, PaletteDisplaySettings>;
 	openExternalMarkdownInObsidian: boolean;
-	/** Opening a note that is already in a tab focuses that tab instead of opening another. */
+	/** タブで既に開いているノートを開くと、別のタブを開く代わりにそのタブへフォーカスする。 */
 	focusExistingTab: boolean;
 	searchHistory: SearchHistorySettings;
 	modes: ModeSettingsMap;
@@ -327,7 +327,7 @@ export interface MyPaletteSettings {
 }
 
 export interface AuditSettings {
-	/** The kind Vault audit lists, chosen in the options menu and shared by every surface. */
+	/** Vault 監査が一覧にする種類。オプションのメニューで選び、すべての画面で共有する。 */
 	kind: AuditKind;
 }
 
@@ -367,15 +367,15 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		audit: { alias: "a", enabled: true },
 	},
 	file: {
-		// Start both states identically so the split adds control without changing
-		// the ordering users already expect from a fresh installation.
+		// 2つの状態を同じに始め、分けたことで制御は増えるが、新規インストールでユーザーが期待する
+		// 並び順は変えないようにする。
 		sortPriorities: {
 			blank: [...DEFAULT_BLANK_FILE_SORT_PRIORITIES],
 			input: [...DEFAULT_FILE_SORT_PRIORITIES],
 		},
-		// プラグイン共通の除外フォルダ。Obsidianの除外設定とは独立に全リストへ適用する。
+		// プラグイン共通の除外フォルダー。Obsidian の除外設定とは独立に、すべての一覧へ適用する。
 		excludedFolders: [],
-		// Keep folder demotion separate from frontmatter so users can choose its ranking position.
+		// フォルダーの優先度低下はフロントマターとは別に保ち、ユーザーが順位の位置を選べるようにする。
 		demotedPriorFolders: [],
 	},
 	everything: {

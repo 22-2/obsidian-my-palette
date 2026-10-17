@@ -14,7 +14,7 @@ export interface SelectionItem {
 	value?: unknown;
 }
 
-/** Render a selection row without requiring a SuggestModal host. */
+/** SuggestModal の外枠を必要とせずに、選択の行を描く。 */
 export function renderSelectionItem(
 	result: SelectionItem,
 	container: HTMLElement,
@@ -38,7 +38,7 @@ export function renderSelectionItem(
 	}
 	if (result.badge) main.createSpan({ cls: "my-palette-suggestion__badge", text: result.badge });
 	if (result.tags?.length) {
-		// Matching tags and keywords explain the hit below the compact filename/path row.
+		// 一致したタグとキーワードは、コンパクトなファイル名・パスの行の下に、一致の理由を説明する。
 		const tags = body.createDiv("my-palette-suggestion__tags");
 		tags.setAttr("title", result.tagsTitle ?? result.tags.join(" "));
 		for (const tag of result.tags)
@@ -66,8 +66,8 @@ export class SelectionModal<T> extends BaseSuggestModal<T> {
 			this.updateResultCount(this.items.length);
 			return this.items;
 		}
-		// The label highlight already reads the shared syntax; filtering with it too
-		// keeps `!` and `|` from highlighting one thing and matching another.
+		// ラベルの強調はすでに共通の構文を読んでいる。ここでも同じ構文で絞り込むことで、
+		// `!` や `|` が、ある部分を強調しつつ別のものを一致させてしまうのを防ぐ。
 		const results = searchFuzzyQuery(query, this.items, [
 			(item) => this.toSelectionItem(item).label,
 		]);

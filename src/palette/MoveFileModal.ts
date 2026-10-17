@@ -3,12 +3,14 @@ import type { SelectorControls } from "src/ui/selectorControls";
 import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
 import { materializeIgnoredNote } from "src/ignored-notes/ignoredNoteMaterializer";
 import { ICONS } from "src/ui/icons";
+import { countLabel } from "src/shared/countLabel";
+import { t } from "src/i18n";
 
 interface FolderItem extends SelectionItem {
 	path: string;
 }
 
-/** An Obsidian-excluded note that is copied into the vault only once a destination is chosen. */
+/** 移動先が選ばれるまで Vault にコピーされない、Obsidian の除外ノート。 */
 export interface ExcludedNoteSource {
 	excludedPath: string;
 }
@@ -23,11 +25,11 @@ function isSourceList(files: MoveSource | readonly MoveSource[]): files is reado
 	return Array.isArray(files);
 }
 
-/** Folder move selector for moving one or more files into the chosen folder. */
+/** 1つ以上のファイルを、選んだフォルダーに移動するためのフォルダー移動セレクター。 */
 export class MoveFileModal extends SelectionModal<FolderItem> {
 	private readonly files: readonly MoveSource[];
 
-	/** Whether any file moved, so a palette that opened this selector can close behind it. */
+	/** どれかのファイルが移動したかどうか。このセレクターを開いたパレットは、その後ろで閉じられる。 */
 	private changed = false;
 
 	constructor(
@@ -38,21 +40,27 @@ export class MoveFileModal extends SelectionModal<FolderItem> {
 		const targets = isSourceList(files) ? files : [files];
 		super(
 			{
-				placeholder: "Search destination folders",
+				placeholder: t("folder.placeholder"),
 				footerText:
 					targets.length === 1
-						? `Moving: ${sourcePath(targets[0])}`
-						: `Moving: ${targets.length} files`,
+						? t("folder.footer.moving", { path: sourcePath(targets[0]) })
+						: t("folder.footer.movingMany", {
+								what: countLabel(targets.length, "ファイル"),
+							}),
 				controls: {
 					plugin,
 					category: "folder-move",
-					title: "Folder move selector",
-					description:
-						"Search destination folders for the files to move. Restoring history only changes the folder search.",
-					actionLabel: "Move to",
+					title: t("folder.controls.title"),
+					description: t("folder.controls.description"),
+					actionLabel: t("folder.action"),
 				},
 				items: [
-					{ label: "Vault root", description: "/", icon: ICONS.vaultRoot, path: "" },
+					{
+						label: t("folder.vaultRoot"),
+						description: "/",
+						icon: ICONS.vaultRoot,
+						path: "",
+					},
 					...plugin.app.vault
 						.getAllLoadedFiles()
 						.filter((entry): entry is TFolder => entry instanceof TFolder)
@@ -72,12 +80,12 @@ export class MoveFileModal extends SelectionModal<FolderItem> {
 	protected override async onItemActivated(item: FolderItem): Promise<void> {
 		const failures: string[] = [];
 		let moved = 0;
-		// Why: move one at a time so each rename updates links before the next starts,
-		// and keep going after a failure so one name collision does not block the rest.
+		// Why: 1つずつ移動して、名前の変更のたびにリンクを更新してから次を始める。
+		// また、1つの名前の衝突が残りを止めないよう、失敗しても続ける。
 		for (const source of this.files) {
 			const name = sourcePath(source).split("/").pop() ?? "";
 			try {
-				// Why: import lazily so cancelling the selector never copies anything.
+				// Why: 遅延して取り込むので、セレクターをキャンセルしたときに何もコピーされない。
 				const file =
 					source instanceof TFile
 						? source
@@ -91,17 +99,17 @@ export class MoveFileModal extends SelectionModal<FolderItem> {
 			}
 		}
 		this.changed ||= moved > 0;
-		const folderName = item.path || "Vault root";
+		const folderName = item.path || t("folder.vaultRoot");
 		if (failures.length === 0) {
 			if (moved > 0)
 				new Notice(
 					moved === 1
-						? `Moved to ${folderName}`
-						: `Moved ${moved} files to ${folderName}`,
+						? t("folder.moved", { folder: folderName })
+						: t("folder.movedMany", { count: moved, folder: folderName }),
 				);
 			return this.close();
 		}
-		if (moved > 0) new Notice(`Moved ${moved} files to ${folderName}`);
+		if (moved > 0) new Notice(t("folder.movedMany", { count: moved, folder: folderName }));
 		this.emptyStateText = failures.join("\n");
 	}
 

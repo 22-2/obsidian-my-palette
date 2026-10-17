@@ -73,7 +73,7 @@ it("moves distinct indexed files of any type and skips the rest", () => {
 	const m = menu();
 	const onDone = vi.fn();
 	addFileMoveMenuItem(m.instance, plugin, results, onDone);
-	expect(m.titles).toEqual(["Move to…"]);
+	expect(m.titles).toEqual(["移動…"]);
 
 	m.click();
 	expect(MoveFileModal).toHaveBeenCalledWith(
@@ -86,7 +86,7 @@ it("moves distinct indexed files of any type and skips the rest", () => {
 it("uses the single-file title for one file", () => {
 	const m = menu();
 	addFileMoveMenuItem(m.instance, plugin, [{ ...base, mode: "file", vaultPath: "a.md" }]);
-	expect(m.titles).toEqual(["Move to…"]);
+	expect(m.titles).toEqual(["移動…"]);
 });
 
 it("adds nothing when no result is a movable file", () => {

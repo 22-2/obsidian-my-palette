@@ -41,15 +41,15 @@ interface ProviderFactoryOptions {
 	demotedPriorFolders?: ExcludedFolderSource;
 	recentCommandIds: () => string[];
 	everythingSettings: () => MyPaletteSettings["everything"];
-	/** Vault audit reads its kind and exclusions, and this plugin's Excluded folders. */
+	/** Vault 監査は対象の種類と除外設定を読み、このプラグインの除外フォルダーも使う。 */
 	settings: () => MyPaletteSettings;
 	fileUsageHistory?: FileUsageScoreSource;
 	log: (message: string, detail?: unknown) => void;
 }
 
 /**
- * Provider construction is kept in one composition boundary so the Plugin
- * lifecycle does not also own mode registration and dependency wiring.
+ * プロバイダーの生成は一か所にまとめる。プラグインのライフサイクルが、
+ * モードの登録や依存関係の組み立てまで持たないようにするため。
  */
 export function createPaletteProviders(
 	app: App,

@@ -35,6 +35,7 @@ import { openPluginSettings } from "src/search/plugin/pluginSettings";
 import "../styles.css";
 import { ICONS } from "src/ui/icons";
 import { debugLog, logger, setDebugLogging } from "src/shared/logger";
+import { t } from "src/i18n";
 
 export default class MyPalettePlugin extends Plugin {
 	settings: MyPaletteSettings = DEFAULT_SETTINGS;
@@ -47,15 +48,14 @@ export default class MyPalettePlugin extends Plugin {
 		() => this.settings,
 		async (settings, signal) => {
 			try {
-				if (!getVaultRootPath(this.app))
-					throw new Error("This vault adapter cannot resolve the Vault folder.");
+				if (!getVaultRootPath(this.app)) throw new Error(t("everything.noVaultFolder"));
 				await this.everythingClient.search(
 					"__my_palette_connection_test__",
 					settings,
 					signal,
 					1,
 				);
-				return { ok: true, message: "Everything connection succeeded." };
+				return { ok: true, message: t("everything.connectionOk") };
 			} catch (error) {
 				return {
 					ok: false,
@@ -95,7 +95,7 @@ export default class MyPalettePlugin extends Plugin {
 		await this.recentCommands.load(loadedSettings.legacyRecentCommandIds);
 		if (loadedSettings.shouldSave) await this.saveSettings();
 		this.recentTagStore = new RecentTagStore(this.app, debugLog);
-		// Recent tags were never stored in data.json, so there is nothing to migrate.
+		// 最近使ったタグは data.json に保存されたことがないので、移行するものはない。
 		await this.recentTagStore.load();
 		this.fileUsageHistory = new FileUsageHistory(this.app, debugLog);
 		await this.fileUsageHistory.load();
@@ -136,7 +136,7 @@ export default class MyPalettePlugin extends Plugin {
 		targetLeaf?: WorkspaceLeaf,
 		reuseExisting = true,
 	): Promise<void> {
-		// Why: main-window new-tab actions intentionally bypass existing external tabs.
+		// Why: メインウィンドウで新しいタブを開く操作は、既存の外部のタブを意図的に迂回する。
 		await openExternalMarkdown(
 			this,
 			absolutePath,
@@ -206,7 +206,7 @@ export default class MyPalettePlugin extends Plugin {
 			id: `search-history:${entry.category}:${entry.input}`,
 			mode: "search-history",
 			primary: entry.input,
-			secondary: "Search history",
+			secondary: t("history.label"),
 			icon: ICONS.history,
 			...entry,
 		}));

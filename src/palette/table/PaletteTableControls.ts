@@ -15,16 +15,17 @@ import { formatSize } from "src/shared/fileSize";
 import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
 import { renderSelectionItem, type SelectionItem } from "src/ui/selectionModal";
 import type { SuggestionPanel, SuggestionPanelResults } from "src/ui/suggestionPanel";
+import { t } from "src/i18n";
 
 interface PaletteTableControlsOptions {
 	initialState: PaletteTableState;
 	presentation: (result: PaletteResult) => SelectionItem;
 	onChange: (state: PaletteTableState) => void;
-	/** Which columns the current results need; read whenever new results arrive. */
+	/** 現在の結果に必要な列。新しい結果が届くたびに読む。 */
 	columnSet: () => PaletteTableColumnSetId;
 }
 
-/** A per-pane table presentation; search providers continue to own matching. */
+/** ペインごとの表の表示。検索の一致は、引き続き検索のプロバイダーが持つ。 */
 export class PaletteTableControls extends Component {
 	private readonly model: PaletteTableModel;
 	private readonly dateFormat = new Intl.DateTimeFormat(undefined, {
@@ -53,8 +54,8 @@ export class PaletteTableControls extends Component {
 			if (!button || button.dataset.action !== "sort") return;
 			event.preventDefault();
 			event.stopPropagation();
-			// Why: some hosts emit a pointer click after a native drag. Do not let
-			// reordering accidentally cycle sorting; keyboard activation still works.
+			// Why: 一部のホストは、ネイティブのドラッグの後にポインターのクリックを出す。
+			// 並べ替えの位置変更が、誤って並べ替えを切り替えないようにする。キーボードの操作は引き続き動く。
 			if (event.detail > 0 && Date.now() - this.dragEndedAt < 250) return;
 			const column = this.model.columns.find(({ id }) => id === button.dataset.column);
 			if (!column) return;
@@ -158,8 +159,8 @@ export class PaletteTableControls extends Component {
 			result,
 			name: result.primary,
 			path: result.secondary,
-			// Missing metadata remains undefined, rather than becoming zero and
-			// sorting ahead of real timestamps or negative prior values.
+			// Why: 欠けているメタデータは undefined のまま残す。0 にすると、実際のタイムスタンプや
+			// 負の prior の値より前に並んでしまうため。
 			modified:
 				typeof modified === "number" && Number.isFinite(modified) ? modified : undefined,
 			prior,
@@ -192,15 +193,14 @@ export class PaletteTableControls extends Component {
 	}
 
 	private render(): void {
-		// Why: the presentation belongs exclusively to PaletteTableView, so
-		// persisted legacy state cannot reintroduce a mode toggle.
+		// Why: 表示の形は PaletteTableView だけが決める。保存された古い状態が、
+		// 表示の切り替えを再び持ち込めないようにするため。
 		this.panel.setAttribute("data-result-layout", "table");
 		this.panel.setResultsLayout({
 			render: (container, items, query, decorateRow) =>
 				this.renderTable(container, items, query, decorateRow),
 		});
-		// Why: pass every sorted match; the panel applies the same limit and count
-		// label as the list view.
+		// Why: 並べ替えた一致をすべて渡す。パネルはリストの表示と同じ件数の上限と件数の表示を適用する。
 		this.panel.setResults({
 			...this.results,
 			items: this.model.sortedRows().map((row) => row.result),
@@ -221,8 +221,8 @@ export class PaletteTableControls extends Component {
 		const head = table.createEl("thead").createEl("tr");
 		const visibleColumns = this.model.visibleColumns;
 		const totalWidth = visibleColumns.reduce((total, column) => total + column.width, 0);
-		// Why: widths follow column identities, not positions, and hidden columns
-		// release their space instead of keeping an unnecessarily wide table.
+		// Why: 幅は列の位置ではなく列の識別子に従う。非表示の列は、不必要に広い表を保つ代わりに
+		// 占めていた幅を手放す。
 		table.style.minWidth = `${Math.max(260, totalWidth * 7.4)}px`;
 		for (const column of visibleColumns) {
 			const th = head.createEl("th", {
@@ -243,7 +243,7 @@ export class PaletteTableControls extends Component {
 			const button = this.button(
 				th,
 				"sort",
-				`Sort by ${column.label}. Click to cycle sorting, drag to reorder, right-click for columns`,
+				t("table.sortTitle", { label: column.label }),
 				column.id,
 			);
 			button.setText(`${column.label}${sort ? ` ${sort.desc ? "↓" : "↑"}${index + 1}` : ""}`);
@@ -253,8 +253,8 @@ export class PaletteTableControls extends Component {
 			const row = body.createEl("tr");
 			decorateRow(row, index);
 			const data = this.rowsByResult.get(result);
-			// Why: render headers and cells from the same visible order so hiding or
-			// moving a column cannot leave another column's values beneath its label.
+			// Why: ヘッダーとセルを同じ表示順から描く。列を隠したり動かしたりしても、
+			// ほかの列の値が見出しの下に残らないようにするため。
 			for (const column of visibleColumns) {
 				const cell = row.createEl("td", { attr: { "data-column": column.id } });
 				this.renderCell(cell, column.id, result, data, query);
@@ -323,7 +323,7 @@ export class PaletteTableControls extends Component {
 
 	private headerAtEvent(event: Event): HTMLElement | undefined {
 		const target = event.target as Node | null;
-		// Why: popout headers belong to another DOM realm after workspace restore.
+		// Why: ワークスペースを復元したあとは、ポップアウトのヘッダーは別の DOM の領域に属する。
 		return target?.instanceOf(Element)
 			? (target.closest<HTMLElement>("th[data-column]") ?? undefined)
 			: undefined;
@@ -360,7 +360,7 @@ export class PaletteTableControls extends Component {
 
 	private buttonAtEvent(event: MouseEvent): HTMLButtonElement | undefined {
 		const target = event.target as Node | null;
-		// Why: sorting must recognize buttons created in a popout window.
+		// Why: ポップアウトのウィンドウで作られたボタンも、並べ替えとして認識する必要がある。
 		return target?.instanceOf(Element)
 			? (target.closest<HTMLButtonElement>("button[data-action]") ?? undefined)
 			: undefined;
@@ -374,7 +374,7 @@ export class PaletteTableControls extends Component {
 	): HTMLButtonElement {
 		return container.createEl("button", {
 			cls: "my-palette-table-button",
-			// Why: keep operation hints in the tooltip without adding aria-labels.
+			// Why: 操作のヒントはツールチップに入れ、aria-label は付けない。
 			attr: { type: "button", title, "data-action": action, "data-column": column },
 		});
 	}

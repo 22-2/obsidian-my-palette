@@ -1,5 +1,6 @@
 import { Scope, setIcon, type App, type IconName } from "obsidian";
 import { ICONS } from "src/ui/icons";
+import { t } from "src/i18n";
 
 export interface PaletteMenuPosition {
 	x: number;
@@ -7,22 +8,22 @@ export interface PaletteMenuPosition {
 }
 
 export interface PaletteMenuShowOptions {
-	/** Document to show the menu in. Defaults to the parent element's document, then the current one. */
+	/** メニューを表示する文書。既定は親要素の文書、なければ現在の文書。 */
 	doc?: Document;
-	/** Open with the first enabled item selected (used when opened from the keyboard). */
+	/** 最初の有効な項目を選んだ状態で開く(キーボードから開いたとき)。 */
 	selectFirst?: boolean;
 }
 
 export type PaletteMenuActivation = MouseEvent | KeyboardEvent;
 
-/** An action that is hard to undo, run only on a second press. */
+/** 取り消しにくい操作。2回押したときだけ実行する。 */
 export interface ConfirmedMenuItemOptions {
 	title: string;
-	/** Shown after the first press, e.g. "Click again to clear". */
+	/** 1回目の押下のあとに出す。例: 「もう一度クリックして消去」。 */
 	confirmTitle: string;
 	icon: IconName;
 	tooltip?: string;
-	/** Red, for actions that destroy something. Defaults to true. */
+	/** 何かを破壊する操作は赤くする。既定は true。 */
 	warning?: boolean;
 	run: () => void;
 }
@@ -30,8 +31,8 @@ export interface ConfirmedMenuItemOptions {
 const GAP = 2;
 
 /**
- * Places the menu at the pointer, and flips it to the other side when it would leave the viewport.
- * Like Obsidian's Menu, a menu overflowing the right or bottom edge moves to the left or top of the pointer.
+ * メニューをポインターの位置に置き、表示領域から出そうなら反対側に寄せる。
+ * Obsidian の Menu と同じく、右端や下端からはみ出すメニューはポインターの左や上に移る。
  */
 export function placeMenu(
 	position: PaletteMenuPosition,
@@ -47,9 +48,8 @@ export function placeMenu(
 }
 
 /**
- * A menu drawn with the same DOM and classes as Obsidian's Menu.
- * Obsidian's CSS provides the look; this class handles keep-open items, keyboard navigation,
- * outside presses, and focus restoration itself.
+ * Obsidian の Menu と同じ DOM とクラスで描くメニュー。見た目は Obsidian の CSS が担う。
+ * このクラスは、開いたままにする項目、キーボードの移動、外側の押下、フォーカスの復元を自分で扱う。
  */
 export class PaletteMenu {
 	readonly dom: HTMLElement;
@@ -69,8 +69,8 @@ export class PaletteMenu {
 		this.dom.className = "menu";
 		this.dom.setAttribute("role", "menu");
 		this.scrollEl = this.dom.createDiv("menu-scroll");
-		// Why: a press on the menu must not move focus away from the palette input.
-		// The filter input is the one place in the menu that must take focus.
+		// Why: メニューの上の押下で、パレットの入力欄からフォーカスが離れてはいけない。
+		// メニューの中でフォーカスを取らなければならないのは、絞り込みの入力欄だけ。
 		this.dom.addEventListener("mousedown", (event) => {
 			if (event.button === 0 && event.target !== this.filter?.inputEl) event.preventDefault();
 		});
@@ -87,9 +87,9 @@ export class PaletteMenu {
 	}
 
 	/**
-	 * The first press turns the item into a confirmation that keeps the menu open, and the
-	 * second press runs it and closes the menu. Moving to another item cancels the confirmation,
-	 * so a later press starts over. A menu holds at most one such item.
+	 * 1回目の押下で、その項目はメニューを開いたままにする確認に変わり、2回目の押下で実行してメニューを閉じる。
+	 * ほかの項目へ移ると確認は取り消されるので、後の押下は最初からやり直す。メニューには
+	 * そのような項目を最大1つだけ持てる。
 	 */
 	addConfirmedItem({
 		title,
@@ -117,7 +117,7 @@ export class PaletteMenu {
 					render(item);
 					return;
 				}
-				// Why: the first press kept the menu open; leaving that on would keep it open now.
+				// Why: 1回目の押下でメニューを開いたままにしていたので、それを解除しないと今も開いたままになる。
 				item.setKeepOpen(false);
 				run();
 			});
@@ -130,8 +130,8 @@ export class PaletteMenu {
 	}
 
 	/**
-	 * Adds a quiet label that names the items after it. It is not an item, so the keyboard and
-	 * the filter pass over it, and it never reads as a command that is turned off.
+	 * 後ろに続く項目の名前になる、控えめなラベルを加える。項目ではないので、キーボードと絞り込みは
+	 * それを飛ばし、無効になったコマンドには見えない。
 	 */
 	addHeading(title: string): this {
 		if (!this.group) this.group = this.scrollEl.createDiv("menu-group");
@@ -140,7 +140,7 @@ export class PaletteMenu {
 	}
 
 	addSeparator(): this {
-		// Why: a separator with no item before it, or right after another one, would show as a stray line.
+		// Why: 前に項目がない区切り、または別の区切りの直後の区切りは、無関係な線に見えてしまう。
 		if (!this.group) return this;
 		this.scrollEl.createDiv("menu-separator").setAttribute("role", "separator");
 		this.group = null;
@@ -148,28 +148,32 @@ export class PaletteMenu {
 	}
 
 	/**
-	 * Adds a text field above the actions. While the menu is open, typing narrows the list to the
-	 * actions whose title contains every typed word, instead of reaching the palette behind it.
-	 * A menu with fewer than `minItems` actions skips the field, since there is nothing to narrow.
+	 * 操作の上に入力欄を加える。メニューが開いている間、入力すると、背後のパレットには届かず、
+	 * 入力したすべての語を含むタイトルの操作だけに一覧を絞る。`minItems` より少ない操作しかない
+	 * メニューは、絞り込むものがないので入力欄を省く。
 	 */
 	enableFilter(app: App, minItems = 5): this {
 		if (this.filter) return this;
 		const wrapEl = createDiv("my-palette-menu-filter");
 		const inputEl = wrapEl.createEl("input", {
 			cls: "my-palette-menu-filter__input",
-			attr: { type: "text", placeholder: "Filter actions…", "aria-label": "Filter actions" },
+			attr: {
+				type: "text",
+				placeholder: t("menu.filter.placeholder"),
+				"aria-label": t("menu.filter.label"),
+			},
 		});
 		this.dom.insertBefore(wrapEl, this.scrollEl);
 		const emptyEl = this.scrollEl.createDiv({
 			cls: "my-palette-menu-empty",
-			text: "No matching actions",
+			text: t("menu.filter.noMatch"),
 		});
 		inputEl.addEventListener("input", () => this.applyFilter());
 		this.filter = { app, wrapEl, inputEl, emptyEl, minItems, active: false, scope: null };
 		return this;
 	}
 
-	/** Shows every action again and clears the typed words. */
+	/** すべての操作をもう一度表示し、入力した語を消す。 */
 	private resetFilter(): void {
 		const filter = this.filter;
 		if (!filter) return;
@@ -188,7 +192,7 @@ export class PaletteMenu {
 			const title = item.title.toLocaleLowerCase();
 			item.setFiltered(filtering && !words.every((word) => title.includes(word)));
 		}
-		// Why: a separator between groups reads as a stray line once its neighbours are gone.
+		// Why: 両隣が消えると、グループの間の区切りは無関係な線に見えてしまう。
 		for (const separator of this.scrollEl.querySelectorAll(".menu-separator"))
 			separator.toggleClass("is-filtered", filtering);
 		for (const group of this.scrollEl.querySelectorAll(".menu-group"))
@@ -210,7 +214,7 @@ export class PaletteMenu {
 		this.hideCallback = callback;
 	}
 
-	/** Calls back whenever the selection moves, with the newly selected item or undefined. */
+	/** 選択が動くたびに、新しく選ばれた項目(または undefined)で呼び戻す。 */
 	onSelectionChange(listener: (item: PaletteMenuItem | undefined) => void): this {
 		this.selectionListener = listener;
 		return this;
@@ -221,7 +225,7 @@ export class PaletteMenu {
 	}
 
 	showAtPosition(position: PaletteMenuPosition, options: PaletteMenuShowOptions = {}): void {
-		// Why: reopening replaces the open menu without a hide, so onHide stays registered for the next close.
+		// Why: 開き直すときは、hide を経ずに開いているメニューを置き換える。次に閉じるときのために onHide は登録したままにする。
 		this.teardown();
 		if (this.items.length === 0) return;
 
@@ -240,8 +244,8 @@ export class PaletteMenu {
 		this.dom.style.left = `${left}px`;
 		this.dom.style.top = `${top}px`;
 
-		// Why: the capture phase sees a press on the palette's own rows before they act on it,
-		// so the menu closes for any outside press without each row having to close it.
+		// Why: キャプチャ段階は、パレット自身の行が押下を処理する前にそれを見るので、
+		// どの行も個別に閉じなくても、外側のどの押下でもメニューが閉じる。
 		doc.addEventListener("mousedown", this.onOutsidePress, true);
 		doc.addEventListener("keydown", this.onKeyDown, true);
 		win.addEventListener("resize", this.onWindowChange);
@@ -265,12 +269,12 @@ export class PaletteMenu {
 		callback?.();
 	}
 
-	/** Same as `hide()`, under the name Obsidian's Menu uses. */
+	/** `hide()` と同じ。Obsidian の Menu が使う名前で。 */
 	close(): void {
 		this.hide();
 	}
 
-	/** Removes the open menu and its listeners. It does not call `onHide`, so a reopen can reuse this. */
+	/** 開いているメニューとそのリスナーを取り除く。`onHide` は呼ばないので、開き直しで再利用できる。 */
 	private teardown(): void {
 		const doc = this.openDoc;
 		if (!doc) return;
@@ -290,7 +294,7 @@ export class PaletteMenu {
 
 		const restore = this.restoreFocusTo;
 		this.restoreFocusTo = null;
-		// Why: focus goes back only when nothing else took it, so a click on another input keeps its focus.
+		// Why: フォーカスは、ほかに何も取っていないときだけ戻す。別の入力欄をクリックした場合はそのフォーカスを保つ。
 		if (restore?.isConnected && (doc.activeElement === null || doc.activeElement === doc.body))
 			restore.focus();
 	}
@@ -303,7 +307,7 @@ export class PaletteMenu {
 
 	private readonly onKeyDown = (event: KeyboardEvent): void => {
 		if (event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return;
-		// With the filter open, Space and the cursor keys belong to the text field.
+		// 絞り込みが開いているとき、スペースとカーソルキーは入力欄のものになる。
 		if (this.filter?.active && [" ", "Home", "End"].includes(event.key)) return;
 		switch (event.key) {
 			case "ArrowDown":
@@ -334,7 +338,7 @@ export class PaletteMenu {
 			default:
 				return;
 		}
-		// Why: the menu takes its keys here, so Escape and Enter never reach the palette behind it.
+		// Why: キーはメニューが受け取るので、Escape と Enter は背後のパレットに届かない。
 		event.preventDefault();
 		event.stopPropagation();
 	};
@@ -344,7 +348,7 @@ export class PaletteMenu {
 		if (index >= 0 && !this.items[index].isDisabled) this.setSelected(index);
 	}
 
-	/** Selects the first enabled item, searching from `start` in `direction` and skipping disabled items. */
+	/** `start` から `direction` の向きに探し、最初の有効な項目を選ぶ。無効な項目は飛ばす。 */
 	private focusEnabled(start: number, direction: 1 | -1): void {
 		const count = this.items.length;
 		for (let step = 0; step < count; step++) {
@@ -371,19 +375,19 @@ export class PaletteMenu {
 interface MenuFilter {
 	app: App;
 	/**
-	 * Pushed while the menu is open. A modal's scope pulls focus back from any element outside
-	 * the modal, so without its own scope the filter field could never keep focus.
+	 * メニューが開いている間に積む。モーダルのスコープは、モーダルの外の要素からフォーカスを引き戻すため、
+	 * 独自のスコープがなければ絞り込みの欄は決してフォーカスを保てない。
 	 */
 	scope: Scope | null;
 	wrapEl: HTMLElement;
 	inputEl: HTMLInputElement;
 	emptyEl: HTMLElement;
 	minItems: number;
-	/** Whether the field is shown for the open menu, which depends on how many actions it has. */
+	/** 開いているメニューで絞り込みの欄を出すかどうか。操作の数によって決まる。 */
 	active: boolean;
 }
 
-/** A menu item. Appearance setters take effect even while the menu is open. */
+/** メニューの項目。見た目の設定は、メニューが開いている間でも反映される。 */
 export class PaletteMenuItem {
 	readonly dom: HTMLElement;
 	private readonly menu: PaletteMenu;
@@ -414,7 +418,7 @@ export class PaletteMenuItem {
 		return this.titleEl.textContent ?? "";
 	}
 
-	/** Whether the menu's filter currently hides this item. */
+	/** メニューの絞り込みで、いまこの項目が隠れているかどうか。 */
 	get isFiltered(): boolean {
 		return this.filtered;
 	}
@@ -450,8 +454,8 @@ export class PaletteMenuItem {
 	}
 
 	/**
-	 * Shows the item as an on/off switch. Unlike setChecked, the switch is drawn in both states,
-	 * so an option that is off still reads as something that can be turned on.
+	 * 項目をオン/オフのスイッチとして示す。setChecked と違い、スイッチはどちらの状態でも描かれるので、
+	 * オフのオプションも、オンにできるものとして読める。
 	 */
 	setSwitch(on: boolean): this {
 		if (!this.switchEl) {
@@ -464,7 +468,7 @@ export class PaletteMenuItem {
 		return this;
 	}
 
-	/** Explains the item in a tooltip, for labels that cannot say everything. */
+	/** すべてを言えないラベルのために、ツールチップで項目を説明する。 */
 	setTooltip(text: string): this {
 		this.dom.setAttribute("title", text);
 		return this;
@@ -482,13 +486,13 @@ export class PaletteMenuItem {
 		return this;
 	}
 
-	/** Marks the item as the main action of a confirmation. With setWarning, it shows as a red call to action. */
+	/** 確認の主な操作として項目に印を付ける。setWarning と組み合わせると、赤い目立つ操作になる。 */
 	setCta(cta = true): this {
 		this.dom.toggleClass("mod-cta", cta);
 		return this;
 	}
 
-	/** Keeps the menu open after this item is activated, e.g. for a click-again confirmation. */
+	/** この項目を有効にした後もメニューを開いたままにする。例: もう一度クリックして確認する操作。 */
 	setKeepOpen(keepOpen = true): this {
 		this.keepOpen = keepOpen;
 		return this;
@@ -499,7 +503,7 @@ export class PaletteMenuItem {
 		return this;
 	}
 
-	/** Called on click or keyboard activation. Does nothing for a disabled item. */
+	/** クリックまたはキーボードで有効にしたときに呼ぶ。無効な項目では何もしない。 */
 	activate(event: PaletteMenuActivation): void {
 		if (this.disabled) return;
 		this.callback?.(event);

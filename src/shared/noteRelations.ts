@@ -1,10 +1,10 @@
 import { TFile, type App } from "obsidian";
 
 /**
- * Collects vault paths linked from and linking to a note. Shared by MOC
- * insertion badges and related-tag ranking so both use the same notion of a
- * related note. Outgoing links come from body links only; embeds and
- * frontmatter links are deliberately not counted.
+ * リンク元とリンク先の保管庫内のパスを集める。MOC 挿入の
+ * バッジと関連タグのランキングの両方で同じ「関連ノート」の定義を使うために共有する。
+ * 発リンクは本文のリンクだけを数える。埋め込みとフロントマターのリンクは
+ * 意図的に数えない。
  */
 export function relationPaths(
 	app: App,

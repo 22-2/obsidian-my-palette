@@ -72,7 +72,7 @@ function row(overrides: Partial<PropertyResult>): PropertyResult {
 		icon: "square-check",
 		key: "x",
 		kind: "checkbox",
-		section: "This note",
+		section: "このノート",
 		inNote: true,
 		sourcePath: "note.md",
 		...overrides,
@@ -93,7 +93,7 @@ describe("editPropertyResult", () => {
 		const outcome = await editPropertyResult(p, row({ key: "done" }));
 		expect(outcome).toBe("stay");
 		expect(written).toEqual({ done: true });
-		expect(notices).toEqual(["Set done to true on note."]);
+		expect(notices).toEqual(["note の done を true に設定しました。"]);
 	});
 
 	it("flips a true checkbox to false and a false one to true", async () => {
@@ -109,7 +109,9 @@ describe("editPropertyResult", () => {
 		const { plugin: p } = plugin({}, { fail: true });
 		const outcome = await editPropertyResult(p, row({ key: "done" }));
 		expect(outcome).toBe("stay");
-		expect(notices).toEqual(["Could not update the properties of note. See the console."]);
+		expect(notices).toEqual([
+			"note のプロパティを更新できませんでした。コンソールを確認してください。",
+		]);
 	});
 
 	it("keeps the palette when Tag insertion is cancelled", async () => {
@@ -146,7 +148,7 @@ describe("editPropertyResult", () => {
 	it("tells the user that nested values are edited in source mode", async () => {
 		const { plugin: p } = plugin({});
 		await editPropertyResult(p, row({ kind: "unsupported" }));
-		expect(notices).toEqual(["Edit this property in source mode."]);
+		expect(notices).toEqual(["このプロパティはソースモードで編集してください。"]);
 	});
 
 	it.each(["text", "number", "date", "datetime", "list"] as const)(
@@ -189,7 +191,7 @@ describe("editPropertyResult", () => {
 		const { plugin: p } = plugin({});
 		const outcome = await editPropertyResult(p, row({ sourcePath: "gone.md" }));
 		expect(outcome).toBe("stay");
-		expect(notices).toEqual(["The note for this property no longer exists."]);
+		expect(notices).toEqual(["このプロパティのノートは存在しません。"]);
 	});
 
 	describe("a row spanning several notes", () => {
@@ -219,7 +221,9 @@ describe("editPropertyResult", () => {
 				const outcome = await editPropertyResult(p, row({ key: "due", kind, ...many }));
 				expect(outcome).toBe("stay");
 				expect(written).toEqual({});
-				expect(notices).toEqual(["Setting due on several notes is not supported yet."]);
+				expect(notices).toEqual([
+					"複数のノートに due を設定する操作は、まだ対応していません。",
+				]);
 				expect(editPropertyValue).not.toHaveBeenCalled();
 			},
 		);

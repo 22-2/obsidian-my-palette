@@ -1,262 +1,256 @@
 # My Palette
 
-A command palette for Obsidian that finds a file first and lets you decide what to do with it afterwards. The look is borrowed from the VS Code command palette, but you can drive it with the mouse just as comfortably as with the keyboard.
+まずファイルを見つけて、その扱い方は見つけたあとに決める Obsidian 用パレットです。見た目は VS Code のコマンドパレットがベースですが、キーボードだけでなくマウスでも同じくらい快適に使えるように作っています。
 
-[日本語版](README.ja.md)
+## なぜ作ったか
 
-## Why another switcher
+Another Quick Switcher、標準の Quick Switcher、Quick Switcher++、Omnisearch を一通り使いましたが、どれも一長一短で、全体としてしっくりきませんでした。それで自分で作りました。
 
-I tried Another Quick Switcher, the core Quick Switcher, Quick Switcher++ and Omnisearch. Each was good at something, none of them felt right as a whole, so I made my own.
+最初は VS Code のパレットをほぼそのまま真似していました。文字を入力し、候補を選び、実行する、という流れです。ただ、Obsidian では「どれを実行するか」以外に決めることが多く、この文法は合いませんでした。
 
-My Palette started as a near copy of the VS Code palette: type, pick a candidate, run it. That grammar turned out to be a poor fit for Obsidian, where there is more to decide than which entry to run:
+- **対象**: どのノート、どの外部ファイルか
+- **検索元**: Vault、Everything、リンク、バックリンク、ブックマークのどれか
+- **開き方**: 現在のタブ、別タブ、分割、サイドバーのどれか
+- **操作**: 開く以外に、パスのコピー、MOC への挿入、タグ付け、移動などもある
 
-- **Target**: which note or external file?
-- **Source**: the Vault, Everything, links, backlinks, bookmarks?
-- **Destination**: the current tab, a new tab, a split, the sidebar?
-- **Operation**: open, copy a path, insert into a MOC, tag, move?
+そこで現在は次の流れにしています。
 
-So the palette now works like this:
+1. 探したいものを自然に入力する。通常のファイル検索にモード切り替えは要りません。
+2. 扱い方は結果を選んだあとに決める（クリック、ダブルクリック、中クリック、右クリック、キー操作）。
+3. 高度な操作は、適用する結果があるときだけ表示する。
 
-1. Type what you are looking for. No mode switch is needed for ordinary file search.
-2. Choose how to handle the result afterwards (click, double-click, middle-click, right-click, or keys).
-3. Advanced operations are shown only once you have a result to apply them to.
+ほかの検索元（コマンド、Everything、ブックマークなど）は、Home（モードに入る前のパレット）から一歩で入れるモードで、操作の主役ではありません。
 
-Other sources (commands, Everything, bookmarks, …) are modes one step away from Home (the palette before a mode is entered), not the main way to operate the palette.
+## 機能
 
-## Features
+- **Everything 風の検索構文**: すべてのパレットと selector で、スペースが AND、`|` が OR（AND より強く結びつくので `a b|c` は `a <b|c>`）、`!` が NOT、`< >` がグループ、`"..."` が文字どおりの検索です。使わなければ普通の検索のままです。
+- **Vault のファイル検索**: alias、frontmatter の `keywords`、frontmatter とインラインのタグに対応し、並び順を細かく設定できます。
+- **Everything 1.5a 検索**: Vault 外のファイルも検索でき、Markdown は Obsidian で、それ以外は OS の関連付けアプリで開きます。
+- **コマンド・ブックマーク・リンク・バックリンク・Smart Connections の検索**を同じウィンドウで行えます。
+- **複数選択**: ファイルマネージャーと同じ操作で選び、選択したノートへまとめてパスのコピー、タグ追加、MOC リンク挿入ができます。
+- **3つの表示面**: モーダルの Palette、右サイドバーの Sidebar palette、センタータブでソートできる Table palette。
+- **Vault audit**: 孤立ファイル・壊れたリンク・空ファイル・空フォルダーを1つのモードで一覧にし、Table palette では種類ごとの列で表示します。ゴミ箱や別のフォルダーへの移動もでき、Obsidian CLI からも使えます。
+- **Obsidian-excluded files は必要なときだけ**: Obsidian の「Excluded files」で除外されたファイル（Obsidian-excluded files）は普段は出さず、`Include Obsidian-excluded files` オプション（オプションメニュー、`Ctrl+O`）をオンにしたときだけ検索対象にできます。
+- デスクトップ専用です（主な対象は Windows）。
 
-- **Everything-style search syntax** in every palette and selector: a space for AND, `|` for OR (it binds tighter than AND, so `a b|c` is `a <b|c>`), `!` for NOT, `< >` for grouping and `"..."` for literal text. Plain words work as before without any of it.
-- **Vault file search** with aliases, frontmatter `keywords`, frontmatter and inline tags, and fully configurable sort priorities.
-- **Everything 1.5a search** for files outside the Vault, opened in Obsidian (Markdown) or in the OS default app.
-- **Command, bookmark, link, backlink and Smart Connections search** in the same window.
-- **Multi-select** with the same gestures as a file manager, then copy paths, add tags or insert MOC links to all selected notes at once.
-- **Three surfaces**: the modal Palette, the Sidebar palette in the right sidebar, and the sortable Table palette in a center tab.
-- **Vault audit**: orphaned files, broken links, empty files and empty folders in one mode, with columns per kind in the Table palette, and moving to the trash or another folder. Also available from the Obsidian CLI.
-- **Obsidian-excluded files on demand**: files hidden by Obsidian's Excluded files setting stay out of the way until you turn on the `Include Obsidian-excluded files` option in the options menu (`Ctrl+O`).
-- Desktop only (Windows is the primary target).
+## はじめかた
 
-## Getting started
+Obsidian のコマンドパレットから次のコマンドを実行します。必要に応じてホットキーを割り当ててください。
 
-Open the command palette and run one of these, then bind a hotkey if you like:
+| コマンド                                  | 内容                                                     |
+| ----------------------------------------- | -------------------------------------------------------- |
+| `My Palette: Open home`                   | Home：モードの一覧と最近使ったファイル                   |
+| `My Palette: Open note list`              | Notes モードから始まる                                   |
+| `My Palette: Open run list`               | Commands モードから始まる                                |
+| `My Palette: Open sidebar palette`        | Sidebar palette：右サイドバーに常駐するリスト            |
+| `My Palette: Open table palette`          | Table palette：センターのタブに常駐するテーブル          |
+| `My Palette: Open outgoing link list`     | 現在のノートからのリンク先                               |
+| `My Palette: Open backlink list`          | 現在のノートへのリンク元                                 |
+| `My Palette: Open bookmark list`          | 保存したブックマーク                                     |
+| `My Palette: Open Smart Connections list` | 現在のノートに関連するノート（Smart Connections が必要） |
+| `My Palette: Open tab list`               | 開いているタブ                                           |
+| `My Palette: Open vault audit list`       | Vault audit を Table palette で開く                      |
+| `My Palette: Open folder move selector`   | 現在のファイルを別フォルダーへ移動                       |
+| `My Palette: Open rename selector`        | 現在のファイルの名前を変更                               |
+| `My Palette: Open tag insert selector`    | 現在のノートにタグを追加                                 |
+| `My Palette: Open MOC insert selector`    | アクティブな MOC に相互 Relateds リンクを追加            |
+| `My Palette: Open MOC remove selector`    | アクティブな MOC から Relateds リンクを削除              |
 
-| Command                                   | What it does                                                |
-| ----------------------------------------- | ----------------------------------------------------------- |
-| `My Palette: Open home`                   | Home: modes above recently used files                       |
-| `My Palette: Open note list`              | Starts in the Notes mode                                    |
-| `My Palette: Open run list`               | Starts in the Commands mode                                 |
-| `My Palette: Open sidebar palette`        | Sidebar palette: a persistent list view                     |
-| `My Palette: Open table palette`          | Table palette: a persistent table in a center tab           |
-| `My Palette: Open outgoing link list`     | Notes linked from the current note                          |
-| `My Palette: Open backlink list`          | Notes linking to the current note                           |
-| `My Palette: Open bookmark list`          | Saved bookmarks                                             |
-| `My Palette: Open Smart Connections list` | Notes related to the current note (needs Smart Connections) |
-| `My Palette: Open tab list`               | Open tabs                                                   |
-| `My Palette: Open vault audit list`       | Vault audit in a Table palette                              |
-| `My Palette: Open folder move selector`   | Move the current file                                       |
-| `My Palette: Open rename selector`        | Rename the current file                                     |
-| `My Palette: Open tag insert selector`    | Add tags to the current note                                |
-| `My Palette: Open MOC insert selector`    | Add mutual Relateds links to the active MOC                 |
-| `My Palette: Open MOC remove selector`    | Remove Relateds links from the active MOC                   |
+## パレットの使い方
 
-## Using the palette
+### マウスとキーボード
 
-### Mouse and keyboard
+Palette、Sidebar palette、Table paletteは、入力中も先頭候補を強調したままにします。そのため `Enter` ですぐ実行でき、`↑`／`↓` で候補を移動できます。タグ挿入と MOC 挿入では `Space` で候補をチェックするため、入力モードと選択モードを分けています（後述）。
 
-Palette lists and tables keep the first result highlighted while you type, so `Enter` runs it right away and `↑`/`↓` move through results. Tag and MOC insertion add separate input and selection modes (see below) because `Space` checks candidates there.
+Tag insert selector、MOC insert selector、MOC remove selector、Folder move selector にも、オプション（スライダー）と履歴（時計）のボタンを表示します。アクションとヘルプはその selector に合わせた内容です。履歴は selector ごとに分かれ、選択しても検索語を復元するだけで、タグ挿入・リンク追加・ファイル移動は実行しません。`Ctrl+R` でも履歴を開けます。履歴の有効／無効・保存待ち時間・保持期間は既存の設定を使い、ハイライト設定はモーダル間で共有し、selector のオプションメニューで変更します。パレットのオプションメニューにはハイライトの項目はありません。
 
-The options (sliders) and history (clock) buttons are also available in the Tag insert selector, the MOC insert and remove selectors, and the Folder move selector. Actions and Help describe the current selector. Each selector has its own search history; selecting an entry restores only the query and never inserts tags, adds links or moves a file. `Ctrl+R` opens history, and the history enablement, delay and retention settings apply to these selectors too. Highlighting uses the shared modal display preference, which is changed from a selector's options menu; palettes have no highlight option in theirs.
+| 操作                     | 動作                                         |
+| ------------------------ | -------------------------------------------- |
+| クリック                 | 結果を選択                                   |
+| `Ctrl`+クリック          | 選択に追加 / 選択から除外                    |
+| `Shift`+クリック         | 範囲選択                                     |
+| ダブルクリック / `Enter` | 結果を開く（コマンドなら実行）               |
+| 中クリック               | 新しいタブをバックグラウンドで開く           |
+| 右クリック               | アクションメニュー（選択中の全件が対象）     |
+| `Ctrl+O`                 | オプションメニュー（スイッチ・ヘルプ・操作） |
+| `Ctrl+R`                 | 検索履歴                                     |
+| `Esc`                    | モードから戻る。Homeでは閉じる/クリア        |
 
-| Action                 | Result                                             |
-| ---------------------- | -------------------------------------------------- |
-| Click                  | Select a result                                    |
-| `Ctrl`+click           | Add or remove a result from the selection          |
-| `Shift`+click          | Select a range                                     |
-| Double-click / `Enter` | Open the result (or run the command)               |
-| Middle-click           | Open in a new background tab                       |
-| Right-click            | Open the action menu (acts on the whole selection) |
-| `Ctrl+O`               | Options menu: switches, help and actions           |
-| `Ctrl+R`               | Search history                                     |
-| `Esc`                  | Leave a mode; at Home, close or clear              |
+アクションメニューには、開く、バックグラウンドタブで開く、左右に分割して開く、下に分割して開く、外部エディターで開く、システムエクスプローラーで表示、ターミナルで開く、ファイル名・Vault 相対パス・絶対パスのコピー、プロパティの編集（`Edit properties…`。選択した Markdown ノートが対象）、名前の変更（`Rename…`）、別フォルダーへの移動（`Move to…`。選択したファイルをまとめて移動。Obsidian-excluded の Markdown ノートは先に保管庫へ取り込みます）、MOC への挿入、タグの追加、ブックマークへの追加（`Add to bookmarks…`。Bookmark group selector で追加先のグループを選び、新しい名前を打つとそのグループを作ります）があります。Bookmarks モードでは、`Rename bookmark…`（空にするとファイル名に戻ります）、`Move to bookmark group…`、`Remove from bookmarks` も出します。後の2つは選択したブックマークすべてが対象です。結果のメニューは絞り込み欄付きで開き、入力した語（すべてがタイトルに含まれるもの）に操作を絞れます。パレットの入力欄ではなく、この欄に入力され、`↑` / `↓` で移動して `Enter` で実行します。操作が5件未満のメニューには欄を出しません。メニューボタンの `Help` に、その画面で使える操作をまとめています。パレットのモーダル下部には `Include Obsidian-excluded files` スイッチを表示します。そのほかのキー操作と挿入先の情報はヘルプで確認できます。`Alt+H` を押している間は、モーダルと背後の暗幕を非表示にして、プレビューを確認できます。どちらかのキーを離すと再表示して検索欄にフォーカスを戻します。モードの中では `Esc` でHomeに戻ります。Homeの `Esc` は、モーダルでは閉じる操作、常設ビューでは検索語をクリアしてから入力欄へ戻る操作です。
 
-The action menu offers: open, open in a background tab, open side by side, open below, open in external editor, show in system explorer, open in terminal, copy file names, Vault-relative paths or absolute paths, edit properties (`Edit properties…`, for the selected Markdown notes), rename (`Rename…`), move to another folder (`Move to…`; every selected file moves at once; Obsidian-excluded Markdown notes are imported into the vault first), insert into a MOC, add tags and bookmark files (`Add to bookmarks…`, into a group chosen in the Bookmark group selector, where typing a new name creates the group). In Bookmarks mode the menu also offers `Rename bookmark…` (an empty title restores the file name), `Move to bookmark group…` and `Remove from bookmarks`; the last two act on every selected bookmark. The result menu opens with a filter field: type to narrow the actions (every typed word must appear in a title), `↑`/`↓` to move and `Enter` to run, instead of typing into the palette. Menus with fewer than five actions skip the field. The palette's menu button also has a `Help` entry that lists the prefixes and gestures for the current palette. Keyboard instructions and insertion targets live in Help. Hold `Alt+H` in any search or interaction mode to gently fade out the palette or selector while inspecting a preview; releasing either key fades it back in and returns focus to the search field. This works in modals (including their backdrop), Sidebar palettes and Table palettes, preserving the query, selection and workspace layout. In a mode, `Esc` returns to Home. At Home, `Esc` closes a modal; in a persistent view it clears the query, then focuses the search field.
+### 検索モード
 
-### Custom shortcuts
+`My Palette: Open home` は、Raycast のようにモードの一覧をファイルの上に並べた Home（モードに入る前のパレット）から始まります。モードの行で `Enter` か `Tab` を押すか、エイリアスに続けてスペースを入力すると、そのモードに入ります。エイリアスは入力欄から消えて左側のチップになり、入力欄には検索語だけが残ります。`Esc`（空の入力欄での `Backspace`、チップのクリックでも可）でHomeに戻り、エイリアスが選択された状態になるので、`Enter` でもう一度同じモードに入れます。Homeで `Esc` を押すとパレットを閉じます。
 
-Open **Settings → My Palette → Shortcuts** to see every palette and selector shortcut in one table: the command, its keybinding and a Reset button. Shortcuts are grouped by the places they work in, and each group's heading names those places (Palette, Tag, MOC +, MOC −, Property, or All palettes and selectors). Filter the table by command, keybinding or place, or choose one place from the dropdown to see only the shortcuts that work there. Click a keybinding and press the new shortcut; **Escape** cancels, and **Backspace** or **Delete** turns the shortcut off. A conflict appears under its row, and **Reset** appears only for a changed binding. Changes are saved and apply immediately to open palettes and selectors. Keys that would type text in the input are rejected unless the shortcut is one that does not type, such as Tab for Enter mode. Arrow keys, Enter and Escape keep their standard behavior. Hotkeys for opening palettes remain available in Obsidian's own **Settings → Hotkeys**.
+| エイリアス | モード         | 用途                                                         |
+| ---------- | -------------- | ------------------------------------------------------------ |
+| なし       | Files          | Vault 内のファイルを検索                                     |
+| `n`        | Notes          | Home から Obsidian 標準のファイル検索に入る                  |
+| `>`        | Commands       | Obsidian のコマンドを検索・実行                              |
+| `e`        | Everything     | Vault のファイルを検索。Obsidian-excluded オンで全種類       |
+| `o`        | Outgoing links | 現在のノートからリンクしているノート                         |
+| `b`        | Backlinks      | 現在のノートへリンクしているノート                           |
+| `bk`       | Bookmarks      | 保存したブックマークを検索                                   |
+| `sc`       | Related notes  | 現在のノートに関連するノート（Smart Connections）            |
+| `t`        | Tabs           | 開いているタブへ切り替え                                     |
+| `p`        | Plugins        | インストール済みプラグインのフォルダーを外部エディターで開く |
+| `sn`       | Snippets       | CSS スニペットを外部エディターで開く                         |
+| `pr`       | Properties     | 現在のノートのプロパティを検索して編集する                   |
+| `a`        | Vault audit    | 孤立ファイル・壊れたリンク・空ファイル・空フォルダー         |
 
-### Search modes
+Plugins はインストール済みのプラグインを名前順に並べ、無効なものには印を付けます。Snippets は先頭に snippets フォルダーの行、その後に各スニペットを有効・無効付きで並べます。どれか1つの操作に決めにくいので、`Enter`（またはダブルクリック）では行のメニューを開きます。メニューには、外部エディター（当面は VS Code）で開く、システムエクスプローラーでの表示、ターミナルで開く、パスのコピーがあり、設定タブのあるプラグインには設定を開く項目も出ます。
 
-`My Palette: Open home` starts at Home, which lists the modes above your files, much like Raycast. Pick a mode with `Enter` or `Tab`, or type its alias followed by a space. The alias then leaves the input and shows as a chip on its left, so the input holds only the query. `Esc` (or `Backspace` in an empty input, or a click on the chip) goes back to Home with the alias selected, so `Enter` re-enters the mode. `Esc` at Home closes the palette.
+Properties は現在のノートのプロパティを **This note**、予約キー（`aliases`、`tags`、`cssclasses`）を **Reserved**、保管庫の他のノートで使われているキーを **Vault** の見出しで並べます。`Enter` は型に合わせて編集します。タグは Tag insert selector を開き、リストは値の selector を開き、チェックボックスはその場で切り替え、テキスト・数値・日付・日時は入力欄に値を打ちます。どのキーにも一致しない名前を入力すると、型を選んでそのキーを追加できます。ネストした値は source mode で編集します。右クリックメニューには値のコピー、プロパティの削除、プロパティ名のコピーもあります。型は保管庫の設定を読むだけで、Palette からは変更しません。
 
-Between Modes and Files, Home's **Settings** section lists **General**, **Modes**, **File search**, **Shortcuts**, and **Integration**. Click a row or choose it with Enter or Tab to open that settings page directly. Typing a page name or `settings` filters these entries.
+すべてのエイリアスは **設定 → My Palette → Modes** で変更でき、モードごとにオフにできます。モードをオフにするか、**Integrations** で連携をオフにすると、そのモードはHomeとエイリアス入力から外れます。Table paletteはモードの一覧を出しませんが、エイリアスでモードに入れます。`Open note list` や `Open backlink list` など、モードを直接開くコマンドはそのモードから始まり、`Esc` でHomeに戻ります。
 
-| Alias | Mode           | Purpose                                                                 |
-| ----- | -------------- | ----------------------------------------------------------------------- |
-| none  | Files          | Search files in the Vault                                               |
-| `n`   | Notes          | Enter the built-in Obsidian file search from Home                       |
-| `>`   | Commands       | Search and run Obsidian commands                                        |
-| `e`   | Everything     | Search vault files; turn Obsidian-excluded on to search every file type |
-| `o`   | Outgoing links | Notes linked from the current note                                      |
-| `b`   | Backlinks      | Notes linking to the current note                                       |
-| `bk`  | Bookmarks      | Search saved bookmarks                                                  |
-| `sc`  | Related notes  | Notes related to the current note (Smart Connections)                   |
-| `t`   | Tabs           | Switch to an open tab                                                   |
-| `p`   | Plugins        | Open installed plugin folders in an external editor                     |
-| `sn`  | Snippets       | Open CSS snippets in an external editor                                 |
-| `pr`  | Properties     | Find and edit the properties of the current note                        |
-| `a`   | Vault audit    | Orphaned files, broken links, empty files or empty folders              |
+フッターのスイッチはすべて、オプションメニュー（スライダーのボタンまたは `Ctrl+O`）の先頭の `Options` 見出しの下にもあります。`↑` / `↓` で移動し、`Enter` で切り替えてもメニューは閉じず、`Esc` で閉じるので、スイッチごとのショートカットを覚える必要はありません。各オプションには現在の状態を示すスイッチが付き、マウスを重ねると説明が出ます。オプションの下には、その画面の操作（`Move to right sidebar` など）、`Help`、`Clear search history` がそれぞれ区切られて並びます。下部左端の `Include Obsidian-excluded files` オプション（オプションメニュー、`Ctrl+O`）をオンにすると、Obsidian の「Excluded files」で除外されたファイル（Obsidian-excluded files）も検索します。ファイル検索でだけ有効で、ほかのモードでは薄く表示します。検索履歴は除外ファイルを含めたかどうかも記録し、履歴を選ぶとスイッチも復元します。
 
-Plugins lists every installed plugin by name, with disabled ones marked; Snippets lists the snippets folder first, then each snippet with its enabled state. `Enter` (or a double-click) opens the row's menu, since no single action fits every time: open in the external editor (VS Code for now), show in system explorer, open in terminal, and path copying. Plugin rows with a settings tab also offer open plugin settings.
+### 検索構文
 
-Properties lists the current note's properties under **This note**, the reserved `aliases`, `tags` and `cssclasses` under **Reserved**, and the other keys used in the vault under **Vault**. `Enter` edits a value by its type: tags open the tag insert selector, lists open a selector of their values, checkboxes flip in place, and text, number, date and date-time values are typed into an input. Typing a key that nothing matches offers to add it, after choosing a type. Nested values are edited in source mode. The menu also offers copy value, delete property and copy property name. The type is read from the vault and never changed from here.
+Everything 以外のモードでは、スペース区切りが AND、`|` 区切りが OR です。たとえば `meeting project | agenda` は、`meeting` と `project` の両方を含むノート、または `agenda` を含むノートに一致します。
 
-Every alias can be changed, and a mode can be turned off, in **Settings → My Palette → Modes**. Turning off a mode, or its integration in **Integrations**, removes it from Home and from alias entry. The Table palette does not list modes but still enters them by alias. Commands that open a mode directly, such as `Open note list` or `Open backlink list`, start in that mode; `Esc` returns to Home.
+ファイル検索はインラインタグと frontmatter の `tags` の両方を対象にします。`#project` はタグを直接検索し、通常の検索語でもタグに一致します。一致したタグはファイル名の下に最大3件表示され、残りは `+N` にまとまります。行にカーソルを合わせると全件を確認できます。
 
-Integration modes appear only after their setup is ready. Everything checks its HTTP connection in the background; Smart Connections needs an enabled plugin with an initialized source store and vector adapter. Unready integrations are hidden from Home and the Modes settings page. Correct the connection settings or use **Test connection** in Integrations to make Everything available again.
+frontmatter の `keywords` も文字列配列として検索対象になります（例: `keywords: [宇宙, 星空観察]`）。`Include Obsidian-excluded files` オプションで検索する Obsidian-excluded filesにも対応します。一致した keywords はタグの隣に `#` なしで表示し、合わせて最大3件、残りは `+N` にまとめます。チップにカーソルを合わせると全件を確認できます。`#` 付きの語だけを入力した場合はタグのみを検索します。
 
-Palette and selector options, such as `Include Obsidian-excluded files`, `Mutual` and the rename switches, live in the options menu (the sliders button, or `Ctrl+O`) under an `Options` heading at its top: `↑`/`↓` to move, `Enter` to flip one while the menu stays open, `Esc` to close. No per-option shortcut has to be remembered. Each option shows a switch with its current state, and hovering it explains what it does. Below the options come the screen's own actions (such as `Move to right sidebar`), then `Help`, then `Clear search history`, each in its own group. The `Include Obsidian-excluded files` option includes files hidden by Obsidian's Excluded files setting. It applies to Home, Notes, and Everything, and is hidden in other modes. In Everything it also removes the extension filter, searching every file type under the Vault folder. Search history remembers the scope and restoring an entry sets the option.
+Everything のクエリは変換せず、そのまま Everything 独自の構文に渡されます。Everything モードには Everything 1.5a と公式 HTTP Server Plugin の起動が必要です。詳しくは [Everything の設定](#everything-の設定)を参照してください。
 
-### Search syntax
+## 複数のノートをまとめて扱う
 
-Outside Everything mode, separate terms with spaces for AND and use `|` for OR. For example, `meeting project | agenda` matches notes containing both `meeting` and `project`, or notes containing `agenda`.
+選択操作は、パレット、Tag insert selector、MOC insert selector、MOC remove selector で共通です。クリック、`Ctrl` / `Shift`+クリック、矢印キーで選びます。
 
-File search covers inline tags and frontmatter `tags`. `#project` searches tags directly, and ordinary terms can match tags too. Matching tags appear under the file name (up to three, then `+N`); hover a row to see all of them.
+モーダルのパレットのメニューから selector（`Add tags…`、`Move to…`、`Rename…`）やプロパティの編集を開いたとき、パレットは裏に残ります。`Esc` でキャンセルするとパレットの元の画面に戻り、操作を実行したあとで閉じます。
 
-Frontmatter `keywords` is also searchable as a string array (for example, `keywords: [astronomy, stargazing]`), including in Obsidian-excluded files searched with the `Include Obsidian-excluded files` option. Matching keywords appear beside matching tags without a `#`, with up to three chips in total followed by `+N`. Hover the chips to see all matches. Hash-prefixed tag-only queries search tags only.
+### タグの追加
 
-Everything queries are passed through unchanged and use Everything's own syntax. Everything mode needs Everything 1.5a with the official HTTP Server plugin running. See [Everything setup](#everything-setup).
+`Open tag insert selector` を実行するか、結果を右クリックして `Add tags…` を選びます。複数の結果を選択していると、選択したすべての Markdown ノートに同じタグを追加します。除外ファイルは対象外です。
 
-## Working with several notes
+- 候補は、最近追加したタグ、リンクでつながったノートで使われているタグ（最大10件、`Related N` と表示）、使用回数の順に並びます。
+- 対象すべてに登録済みのタグは `Registered` として末尾に表示され、選択できません。一部だけに付いているタグは `On N/M notes` と表示され、選択できます。
+- 最初は入力モードで、Space も検索文字として入力できます。`↑`／`↓` または結果のクリックで選択モードへ移り、`f` または入力欄のクリックで入力モードへ戻ります。
+- チェック済みのタグは、新規タグも含めて検索語に関係なく常に先頭に表示します。チェックを外すと通常の検索結果に戻ります。
+- `→` で選択中のタグを Obsidian 標準の Search に表示し、モーダルのフォーカスを維持します。入力モードではカーソルが検索語の末尾にあるとき、選択モードではカーソル位置に関係なく使えます。
+- 選択モードの `Space`、右クリックメニュー、チェックアイコンのクリック（その行だけ切り替え）でチェックを切り替えます。`Enter`（テンキー Enter も含む）またはダブルクリックで選択中の行をすぐ反映します。ノートにまだないタグは追加し、すべての対象が持つタグは削除します。すべての対象が持つタグは最初からチェック済みで、チェックを外すと削除の変更になります。`Ctrl+Enter` で保留中の変更（チェックしたタグの追加と、チェックを外したタグの削除）をまとめて反映します。右クリックメニューの `Add N now` で、チェック済みと選択中の行をまとめてすぐ実行することもできます。
+- 入力欄右端のボタンでチェック済みの一覧を確認し、チェックを外したり実行したりできます。
+- 存在しないタグを入力すると、新しいタグとして追加できます。
+- 登録済み・一部登録のタグを右クリックして `Remove tag` を選ぶと、対象ノートからタグを削除できます。複数行を選択していれば、選択した全タグを削除します。
 
-Selection is shared by the palette, the Tag insert selector and the MOC insert and remove selectors: click, `Ctrl`/`Shift`+click, arrow keys.
+最近追加したタグは Vault ごとのローカル IndexedDB に保存されます。
 
-When a modal palette's menu opens a selector (`Add tags…`, `Move to…`, `Rename…`) or a property editor, the palette stays open underneath. Cancelling the selector with `Esc` returns to the palette as it was; it closes only after the action has been applied.
+### MOC への挿入
 
-### Adding tags
+MOC insert selector も同じ入力／選択モードと操作です。相互にリンク済みのノートは最初からチェック済みで、チェックを外して `Ctrl+Enter` を押すとリンクを外します。`Enter` は選択中の行のリンクをすぐ外します。チェック済みのノートは検索語に関係なく常に先頭に表示します。`→` で選択中のノートをプレビューし、モーダルのフォーカスを維持します。`Enter` で選択中のノートを即挿入し、選択モードの `Space` でチェックを切り替えます。`Ctrl+Enter` または入力欄右端のチェック済み一覧ボタンで、チェックしたすべてのノートへの相互 `Relateds` リンクを最初に開いていた MOC に追加します。別のノートをプレビューしても挿入先は変わりません。リンクの有無は `Relateds` 項目内のものだけで判定し、本文中の他のリンクは数えません。
 
-Run `Open tag insert selector`, or right-click results and choose `Add tags…`. With several results selected, the tags are added to every selected Markdown note. Obsidian-excluded files are skipped.
+双方向にリンク済みのノートは末尾に表示され、選択できません。片方向だけのノートは、リンクを補完するために選択できます。リンク済みのノートを右クリックして `Remove link` を選ぶと、双方向の Relateds リンクを削除できます。
 
-- Candidates are ordered as recently inserted tags, tags used by linked notes (up to 10, marked `Related N`), then usage count.
-- Tags that every target already has appear last as `Registered` and cannot be chosen. Tags only some targets have show `On N/M notes` and stay selectable.
-- Start in input mode, where Space is part of the search query. `↑`/`↓` or clicking a result switches to selection mode; `f` or clicking the input returns to input mode.
-- Checked tags always appear first, including new tags, even when they do not match the query. Unchecking returns them to the normal search results.
-- `→` previews the highlighted tag in Obsidian's core Search without moving focus away from the modal. In input mode the cursor must be at the end of the query; in selection mode the shortcut works anywhere.
-- In selection mode, check rows with `Space`, the context menu or the check icon (which toggles only its row). `Enter` (including numpad Enter) or double-click applies highlighted rows immediately: a tag the note lacks is added, and a tag that every target already has is removed. Tags every target already has start checked; clearing such a check marks it for removal. `Ctrl+Enter` applies every pending change at once, adding checked tags and removing cleared ones. The context menu's `Add N now` runs the checked and highlighted rows at once.
-- The button at the right end of the input lists the checked rows, lets you uncheck them and runs them.
-- Typing a tag that does not exist offers it as a new tag.
-- Right-click a registered or partly applied tag and choose `Remove tag` to remove it from the target notes; inside a multi-row selection it removes every selected tag.
+### 複数ノートのプロパティ編集
 
-Recently inserted tags are stored per Vault in local IndexedDB.
+パレットで Markdown ノートを選んで右クリックし、`Edit properties…` を選びます。選んだすべてのノートを対象に Properties が開き（フッターは `Source: N notes`）、いずれかのノートにあるキーを `These notes` 見出しの下に、共有するノートが多い順に、何件が持つか（`2/3 notes`）と一緒に並べます。
 
-### Inserting into a MOC
+- **List 型の値**（`aliases`、`cssclasses` を含む）: キーで `Enter` を押すと、全ノートを対象に Property value selector が開きます。全ノートが持つ値はチェック済みで、外すと全ノートから削除します。一部のノートだけが持つ値は `On 2/3 notes` と出て、チェックすると残りのノートに追加します。`Ctrl+Enter` でチェックを反映します。新しい値を入力して `Enter` を押すと、全ノートに追加します。
+- **tags**: `tags` で `Enter` を押すと、`Add tags…` と同じく全ノートを対象に Tag insert selector が開きます。
+- **キーの削除**: キーを右クリックして `Delete property from N notes` を選びます。最初の押下は確認に変わるだけで、2回目の押下でそのキーを持つノートから削除します。元に戻せません。
+- Text・Number・Date・Checkbox の値を複数ノートへ設定することは、まだできません。書き込みに失敗したノート（YAML が壊れている場合など）は数えて通知し、残りのノートは更新します。
 
-The MOC insert selector uses the same input/selection modes and gestures. Checked notes always appear first regardless of the query. `→` previews the highlighted note while keeping the modal focused. `Enter` inserts highlighted notes immediately; `Space` toggles checks in selection mode, and `Ctrl+Enter` or the checked-list button adds mutual `Relateds` links to the original MOC for every checked note, even after previewing another note. Notes already linked in both directions start checked; clearing their check unlinks them when you press `Ctrl+Enter`, and `Enter` unlinks the highlighted one at once. Only links inside a `Relateds` item count, not other links in the body.
+### ファイル名の変更
 
-Notes linked in both directions appear last and cannot be selected. Notes linked in one direction stay selectable so you can complete the link. Right-click a linked note and choose `Remove link` to remove the Relateds links in both directions.
+パレットでファイルを選んで右クリックし、`Rename…` を選びます（現在のファイルだけなら `Open rename selector`）。入力欄に `置換前/置換後` を打つと、一覧に各ファイルの新しい名前をプレビューします。たとえば `_/-` は `2026_01_02.md` を `2026-01-02.md` に、`draft/` は `draft` を削除します。ファイル名に `/` は使えないため、最初の `/` で2つに分かれ、エスケープは要りません。フッターのスイッチで `Regex`（置換前を正規表現として読み、`$1` でグループを挿入できます。そのため `/` は含められません）、`Match case`、`All occurrences` を切り替えます。
 
-### Editing properties of several notes
-
-Select Markdown notes in a palette, right-click and choose `Edit properties…`. Properties opens for all of them (the footer says `Source: N notes`) and lists the keys any of them has under `These notes`, most shared first, with how many notes have each (`2/3 notes`).
-
-- **List values** (including `aliases` and `cssclasses`): `Enter` on the key opens the Property value selector for every note. A value all notes have is checked and unchecking it removes it from all of them; a value only some have shows `On 2/3 notes` and checking it adds it to the rest. `Ctrl+Enter` applies the checks. Typing a new value and pressing `Enter` adds it to every note.
-- **Tags**: `Enter` on `tags` opens the Tag insert selector for all of them, as `Add tags…` does.
-- **Deleting a key**: right-click the key and choose `Delete property from N notes`. The first press only asks again; the second deletes the key from the notes that have it. It cannot be undone.
-- Text, Number, Date and Checkbox values cannot be set on several notes yet. Write failures (for example broken YAML) are counted and reported, and the other notes are still updated.
-
-### Renaming files
-
-Select files in a palette, right-click and choose `Rename…` (or run `Open rename selector` for the current file). Type `find/replace` in the input and the list previews every new name: for example `_/-` turns `2026_01_02.md` into `2026-01-02.md`, and `draft/` deletes the word. A file name cannot contain `/`, so the first `/` separates the two parts and nothing needs escaping. The footer switches choose `Regex` (the find part is a regular expression and `$1` inserts a group, so it cannot contain `/`), `Match case` and `All occurrences`.
-
-Only the name of files inside the vault changes; folders, extensions and Obsidian-excluded or external files are never renamed. Rows are marked when a name is invalid, already exists or would be given to two files, and nothing is renamed until every mark is resolved. `Enter` only reminds you of the shortcut; `Ctrl+Enter` renames every listed file whose name changes. Links to the files are updated by Obsidian.
+変わるのは保管庫内のファイル名だけで、フォルダー、拡張子、Obsidian-excluded や保管庫外のファイルは対象外です。名前が不正、すでに存在する、複数のファイルに同じ名前がつく行には印が付き、すべて解消するまで実行できません。`Enter` はショートカットの案内を出すだけで、`Ctrl+Enter` で、名前が変わる一覧のファイルをすべて変更します。ファイルへのリンクは Obsidian が更新します。
 
 ## Vault audit
 
-Vault audit lists what a vault collects over time. Choose what to list under **Show** in the options menu (`Ctrl+O`); the choice is kept for next time, and the input's placeholder names it.
+Vault audit は、保管庫にたまっていく片付けの対象を一覧にします。何を出すかはオプションメニュー（`Ctrl+O`）の **Show** で選びます。選んだ種類は次回も使われ、入力欄の案内に表示されます。
 
-| Show           | Lists                                                       | Table columns                   |
-| -------------- | ----------------------------------------------------------- | ------------------------------- |
-| Orphaned files | Files no other note links to or embeds, canvases included   | Name, Path, Size, Modified      |
-| Broken links   | Link targets that do not exist, with the notes linking them | Link, Linked from, First source |
-| Empty files    | Files with no content; notes with only frontmatter count    | Name, Path, Modified, Content   |
-| Empty folders  | The topmost folder of each tree holding no files            | Name, Path, Folders inside      |
+| Show           | 一覧にするもの                                                                      | テーブルの列                    |
+| -------------- | ----------------------------------------------------------------------------------- | ------------------------------- |
+| Orphaned files | どのノートからもリンク・埋め込みされていないファイル（Canvas からのリンクも数える） | Name, Path, Size, Modified      |
+| Broken links   | 存在しないリンク先と、そこへリンクしているノート                                    | Link, Linked from, First source |
+| Empty files    | 中身のないファイル。フロントマターだけのノートも含む                                | Name, Path, Modified, Content   |
+| Empty folders  | ファイルを1つも含まないフォルダーのうち、一番上のもの                               | Name, Path, Folders inside      |
 
-Orphaned files and Empty files list only files Obsidian can open; config files such as `cog.toml`, shown when **Detect all file extensions** is on, are left out. Nothing is written to the vault to show the list, so the list never changes what it judges. `Open vault audit list` opens it in a Table palette, where each kind keeps its own columns and sorting.
+Orphaned files と Empty files には、Obsidian で開けるファイルだけを出します。**Detect all file extensions** をオンにしたときに見える `cog.toml` のような設定ファイルは除きます。一覧を出すために保管庫へファイルを書き出さないので、一覧が判定に影響しません。`Open vault audit list` は Table palette で開き、種類ごとに列の並びと並べ替えを保ちます。
 
-`Enter` opens a file, goes to the line of a broken link in the first note that has it, or reveals a folder in the file explorer. Broken links with several notes list them in the row menu. `Move to trash` (following Obsidian's **Deleted files** setting) works on the selection and needs a second press. Each item is checked again just before it moves; items that were linked or edited since the list was made are skipped. Files to keep go elsewhere with `Move to…`, as in other modes.
+`Enter` は、ファイルなら開き、壊れたリンクなら最初の参照元のその行へ移り、フォルダーならファイルエクスプローラーで表示します。参照元が複数ある壊れたリンクは、右クリックメニューに参照元を並べます。`Move to trash`（Obsidian の **Deleted files** の設定に従う）は選択した行に対して働き、2回押して実行します。移す直前に各項目をもう一度確かめ、一覧を作ってからリンクされたり編集されたりしたものは飛ばします。残しておきたいファイルは、ほかのモードと同じく `Move to…` で別のフォルダーへ移せます。
 
-Vault audit has no settings of its own. Obsidian's Excluded files and this plugin's Excluded folders are left out, as in File search, and **Include Obsidian-excluded files** in the options menu lists them too; a folder of files kept for later can be checked that way. The Daily notes and Templates folders are always left out of Orphaned files, since such notes are rarely linked.
+Vault audit に専用の設定はありません。File search と同じく、Obsidian の Excluded files と、このプラグインの Excluded folders を除外します。オプションメニューの **Include Obsidian-excluded files** をオンにすると、それらも一覧に含めます。残しておくファイルを入れたフォルダーも、こうして点検できます。Daily notes と Templates のフォルダーは、リンクされないのが普通なので、Orphaned files から常に除きます。
 
-Empty files also lists notes with nothing but frontmatter and a `## MOC` section, such as notes made from a template and never written. Each row is marked `Empty` or `MOC only` (the Content column in a Table palette). Moving a MOC-only note to the trash also removes it from the Relateds of the notes linking to it, so their links do not break.
+Empty files には、テンプレートから作って書かずに残ったノートのような、フロントマターと `## MOC` の節しかないノートも含めます。各行には `Empty` か `MOC only` の印が付きます（Table palette では Content の列）。MOC だけのノートをゴミ箱へ移すと、そのノートへリンクしているノートの Relateds からもリンクを外すので、相手側のリンクが壊れません。
 
-The MOC remove selector marks linked notes the same way (`Empty`, `MOC only`). Tidying a hub of blank notes then takes two steps: unlink the notes that have since been written with the selector, and move the ones still blank to the trash from Vault audit.
+MOC remove selector も、同じ判定でつながっているノートに印（`Empty`、`MOC only`）を付けます。ブランクノートのまとめ（ハブ）を片付けるときは、書かれたノートを selector でハブから外し、まだ空のノートを Vault audit からゴミ箱へ移す、という2段階になります。
 
 ### Obsidian CLI
 
-`obsidian my-palette:audit kind=<kind>` prints the same lists as JSON, for scripts and AI agents. `kind` is `orphaned-files`, `broken-links`, `empty-files` or `empty-folders`; `glob=<pattern>` keeps the matching paths (for broken links, the linking notes). Broken links report one-based line numbers.
+`obsidian my-palette:audit kind=<kind>` で同じ一覧を JSON で出力します。スクリプトや AI エージェントから使うためのものです。`kind` は `orphaned-files`・`broken-links`・`empty-files`・`empty-folders` のどれかで、`glob=<pattern>` で一致するパス（壊れたリンクでは参照元のノート）だけに絞ります。壊れたリンクの行番号は1から数えます。
 
-It only lists unless `trash` is passed, which requires `glob`, so a missing pattern never moves the whole vault. Each item then reports `trashed`, `skipped` or `failed`. `obsidian my-palette` lists the available CLI commands.
+`trash` を付けない限り一覧を出すだけです。`trash` には `glob` が必須なので、指定を忘れて保管庫全体を動かすことはありません。そのときは各項目に `trashed`・`skipped`・`failed` の結果が付きます。`obsidian my-palette` で使える CLI コマンドの一覧を出します。
 
-## Views
+## ビュー
 
-`Open sidebar palette` opens the Sidebar palette and `Open table palette` opens the Table palette in a center tab. Each command reuses its own pane without replacing the other, and each pane can be duplicated from its pane menu.
+`Open sidebar palette` は Sidebar palette、`Open table palette` は センタータブの Table palette です。それぞれ同じ種類の既存ペインを再利用し、もう一方の検索を置き換えません。ペインメニューから複製もできます。
 
-In the Table palette:
+Table palette では次の操作ができます。
 
-- Click a column header to add it to the sort priorities or cycle its direction and remove it. Other priorities stay active; no modifier key is needed.
-- Drag a header to reorder columns. Right-click a header to show or hide columns (Name is always visible).
-- The numbered sort controls change direction, move a priority earlier or later, remove it, or reset to the search ranking.
-- Columns are Name, Path, Modified and `prior`. Missing metadata sorts last.
-- Sort priorities, column order and hidden columns are remembered per pane, including after duplication or restart.
-- Pages hold 50 rows and are sorted across all results from the search provider first. Everything searches are still limited by the configured maximum result count.
+- 列ヘッダーをクリックすると、ソート条件に追加するか、方向を切り替えて解除できます。他のソート条件は維持され、修飾キーは不要です。
+- ヘッダーをドラッグして列順を変更し、ヘッダーを右クリックして列の表示・非表示を切り替えられます（名前列は常に表示）。
+- 番号付きのソート操作で、方向の反転、優先順位の前後移動、個別解除、検索順位への復帰ができます。
+- 列は名前・パス・更新日時・`prior` です。値がないものは末尾に並びます。
+- ソート条件・列順・非表示の列は、ペインごとに保存され、複製や再起動後も引き継がれます。
+- 1ページ50件で、検索プロバイダーが返した全件をソートしてから分割します。Everything 検索の取得件数は設定の上限に従います。
 
-## File sort priorities
+## ファイルのソート
 
-Configure the order under `Settings → My Palette → Vault file search → Sort priorities`, separately for blank and typed input. Enabled priorities run top to bottom and the first one that differs wins. When everything ties, the Vault-relative path decides.
+並び順は `Settings → My Palette → File search → Sort priorities` で、空入力と入力ありのそれぞれについて設定します。有効な項目を上から順に比較し、差がついた最初の項目が採用されます。すべて同点なら Vault 内の相対パスで決まります。
 
-| Priority                                | Ranks first                                                                            |
-| --------------------------------------- | -------------------------------------------------------------------------------------- |
-| `Filename prefix match`                 | Names that start with the query                                                        |
-| `Filename fuzzy match`                  | Higher fuzzy score on the name                                                         |
-| `Alias prefix match`                    | Aliases that start with the query                                                      |
-| `Alias fuzzy match`                     | Higher fuzzy score on an alias                                                         |
-| `Tag match`                             | More matching tags                                                                     |
-| `Match coverage`                        | More matched characters across name, path, aliases, tags and keywords (best OR branch) |
-| `Folder path match`                     | Higher fuzzy score on the folder portion of the path                                   |
-| `Lower prior folders`                   | Pushes notes in the configured folders down (see below)                                |
-| `Activity`                              | Recently opened first; ties broken by persistent palette usage                         |
-| `Last modified`                         | Newest modification time                                                               |
-| `Aliases count`                         | More aliases                                                                           |
-| `Alphabetical` / `Alphabetical reverse` | Name, then path, ascending / descending                                                |
-| `@prior` / `@prior:asc`                 | Smaller numeric `prior` in frontmatter                                                 |
-| `@prior:desc`                           | Larger numeric `prior` in frontmatter                                                  |
+| ソートキー                              | 先に置かれる候補                                                               |
+| --------------------------------------- | ------------------------------------------------------------------------------ |
+| `Filename prefix match`                 | ファイル名が検索語で始まる                                                     |
+| `Filename fuzzy match`                  | ファイル名の fuzzy score が高い                                                |
+| `Alias prefix match`                    | alias が検索語で始まる                                                         |
+| `Alias fuzzy match`                     | alias の fuzzy score が高い                                                    |
+| `Tag match`                             | 一致したタグが多い                                                             |
+| `Match coverage`                        | ファイル名・パス・alias・タグ・keywords で一致した文字数が多い（最良の OR 枝） |
+| `Folder path match`                     | ファイル名を除いたフォルダーパスの fuzzy score が高い                          |
+| `Lower prior folders`                   | 設定したフォルダー配下を後ろへ送る（下記）                                     |
+| `Activity`                              | 最近開いた順。差がつかなければ永続的な利用履歴のスコアが高い                   |
+| `Last modified`                         | 更新日時が新しい                                                               |
+| `Aliases count`                         | alias の数が多い                                                               |
+| `Alphabetical` / `Alphabetical reverse` | ファイル名、次にパスの昇順 / 降順                                              |
+| `@prior` / `@prior:asc`                 | frontmatter の数値 `prior` が小さい                                            |
+| `@prior:desc`                           | frontmatter の数値 `prior` が大きい                                            |
 
-Notes without a `prior` sort last. Complete contiguous matches on a name, path, alias, tag or keyword always beat fuzzy-only matches before this list is applied.
+`prior` がないノートは末尾です。ファイル名・パス・alias・タグ・keywords のいずれかに完全な連続一致がある候補は、この一覧を適用する前に fuzzy のみの一致より先に置かれます。
 
-`Lower prior folders` takes one folder path per line (subfolders included). Enable the criterion in `Sort priorities` to rank those notes lower even without `@prior`, and move it above name or activity criteria to give demotion precedence. Include-ignored preference still runs first.
+`Lower prior folders` には、フォルダーパスを1行ずつ指定します（サブフォルダーを含む）。`Sort priorities` で同名の項目を有効にすると、`@prior` なしでもその配下のノートを後ろに並べられます。名前や Activity より優先したい場合は、それらより上に置いてください。include-ignored の優先は従来どおり先に評価されます。
 
-## Settings
+## 設定
 
-Settings are split into five pages: **General** (Return to Home after, search history, highlighting and diagnostics), **Modes** (each mode's alias and switch), **File search** (file types, excluded folders, Obsidian-excluded index, sort priorities), **Shortcuts** (the table described above) and **Integrations** (Everything, Smart Connections and VS Code).
+設定は5ページに分かれています。**General**（Home に戻るまでの時間、検索履歴、ハイライト、デバッグメッセージ）、**Modes**（各モードのエイリアスと有効/無効）、**File search**（対象拡張子、Excluded folders、Obsidian-excluded files のインデックス、ソート）、**Shortcuts**（ホットキーの表）、**Integrations**（Everything、Smart Connections、VS Code）です。
 
-### Everything setup
+### ショートカット
 
-1. Install Everything 1.5a and the official HTTP Server plugin, and start both.
-2. Under `Settings → My Palette → Integrations`, click **Everything** to expand its settings, then set the HTTP server URL (and username / password if you set them) and press `Test connection`.
+**設定 → My Palette → Shortcuts** で、パレットと選択画面のホットキーを1つの表で見られます。操作名、キー、既定値への戻しを並べます。ショートカットは使える場所の組み合わせごとにまとめ、まとまりの見出しに場所（Palette、Tag、MOC +、MOC −、Property、またはAll palettes and selectors）を表示します。操作名・キー・使える場所で絞り込めるほか、ドロップダウンで場所を1つ選ぶと、そこで使えるショートカットだけを表示します。キーをクリックして新しいキーを押すと記録され、`Esc` で取り消し、`Backspace` か `Delete` で無効にできます。重複はその行の下に表示されます。変更はすぐに開いているパレットへ反映されます。
 
-Only localhost communication is used; My Palette sends nothing to external services.
+### Everything の設定
+
+1. Everything 1.5a と公式 HTTP Server Plugin をインストールして起動する。
+2. `Settings → My Palette → Integrations` で **Everything** を押して設定を展開し、HTTP server URL（ユーザー名・パスワードを設定した場合はそれも）を入力し、`Test connection` を押す。
+
+通信は localhost のみで、外部サービスには何も送信しません。
 
 ### Return to Home after
 
-`Open home` resumes the palette you closed last: its query with the mode alias, the Obsidian-excluded option, the selected row and the scroll position. It does so only when you come back within the time set by **Settings → My Palette → General → Return to Home after** (Immediately, 30, 60 or 90 seconds; 90 by default), and otherwise starts at Home. The resumed query is selected, so typing replaces it. This state is kept in memory only, so restarting Obsidian starts at Home.
+`My Palette: Open home` は、閉じたときの入力・Obsidian-excluded オプションの状態・選択行・スクロール位置を、**設定 → My Palette → General → Return to Home after** で決めた時間（Immediately、30、60、90 秒。既定は 90 秒）以内に開き直すと復元します。それ以外はHomeの空の状態から始まります。復元した検索語は選択された状態になるので、そのまま打ち直せます。この状態はメモリーにだけ保持し、Obsidian を再起動するとHomeから始まります。
 
-### Search history
+### 検索履歴
 
-Search history and recently run command IDs are stored per Vault in local IndexedDB. `data.json` is used only as a fallback when IndexedDB is unavailable.
+検索履歴と最近実行したコマンドの ID は Vault ごとのローカル IndexedDB に保存されます。IndexedDB が使えない場合に限り、`data.json` を一時的なフォールバックとして使います。
 
-## Installation
+## インストール
 
-The plugin is not in the community plugin list yet. To install it manually, copy `main.js`, `styles.css` and `manifest.json` from a release into `VaultFolder/.obsidian/plugins/my-palette/`, then enable My Palette in Obsidian's settings.
+コミュニティプラグイン一覧にはまだ登録されていません。手動でインストールするには、リリースの `main.js`、`styles.css`、`manifest.json` を `VaultFolder/.obsidian/plugins/my-palette/` にコピーし、Obsidian の設定で My Palette を有効化してください。
 
-## Development
+## 開発
 
-Building requires Node.js and pnpm. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for the build, test and release workflow.
+ビルドには Node.js と pnpm が必要です。ビルド・テスト・リリースの手順は [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) を参照してください。

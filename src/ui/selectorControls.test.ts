@@ -141,25 +141,23 @@ describe("selector controls", () => {
 		await flush();
 		expect(f.modal.modalEl.querySelectorAll(selector)).toHaveLength(2);
 		f.click(".my-palette-options-button");
-		expect(document.querySelector(".my-palette-menu-heading")?.textContent).toBe("Options");
+		expect(document.querySelector(".my-palette-menu-heading")?.textContent).toBe("オプション");
 		expect(paletteMenuTitles()).toEqual([
-			"Highlight search matches",
-			"Move to selected",
-			"Help",
-			"Clear search history",
+			"検索の一致を強調",
+			"選択中をMove to",
+			"ヘルプ",
+			"検索履歴を消去",
 		]);
 		expect(paletteMenuTitles()).not.toContain("Move to right sidebar");
-		clickPaletteMenuItem("Move to selected");
+		clickPaletteMenuItem("選択中をMove to");
 		expect(f.modal.choose).toHaveBeenCalledExactlyOnceWith("one");
 	});
 
 	it("opens the options menu from the keyboard with its first switch selected, and closes it again", async () => {
 		const f = await fixture();
 		expect(f.key("o", { ctrlKey: true }).defaultPrevented).toBe(true);
-		expect(paletteMenuTitles()[0]).toBe("Highlight search matches");
-		expect(document.querySelector(".menu-item.selected")?.textContent).toBe(
-			"Highlight search matches",
-		);
+		expect(paletteMenuTitles()[0]).toBe("検索の一致を強調");
+		expect(document.querySelector(".menu-item.selected")?.textContent).toBe("検索の一致を強調");
 
 		f.key("o", { ctrlKey: true });
 		expect(isPaletteMenuOpen()).toBe(false);
@@ -168,13 +166,13 @@ describe("selector controls", () => {
 	it("uses selector help and shares the modal highlight preference", async () => {
 		const f = await fixture();
 		f.click(".my-palette-options-button");
-		clickPaletteMenuItem("Highlight search matches");
+		clickPaletteMenuItem("検索の一致を強調");
 		expect(f.modal.modalEl.classList.contains("my-palette-highlight-disabled")).toBe(true);
 		f.click(".my-palette-options-button");
-		clickPaletteMenuItem("Help");
+		clickPaletteMenuItem("ヘルプ");
 		const help = document.querySelector(".my-palette-help-modal")!;
-		expect(help.textContent).toContain("Folder selection help");
-		expect(help.textContent).toContain("Restore a saved search without running an action");
+		expect(help.textContent).toContain("Folder selection のヘルプ");
+		expect(help.textContent).toContain("実行せずに、保存した検索を復元");
 		expect(help.textContent).not.toContain("Everything");
 		expect(help.textContent).not.toContain("Return to input mode");
 		expect(help.textContent).not.toContain("Space");
@@ -223,9 +221,9 @@ describe("selector controls", () => {
 		f.key("y", { altKey: true });
 		expect(history.classList.contains("is-hidden")).toBe(false);
 		f.click(".my-palette-options-button");
-		clickPaletteMenuItem("Help");
+		clickPaletteMenuItem("ヘルプ");
 		expect(document.querySelector(".my-palette-help-modal")?.textContent).toContain(
-			"Alt+Y / history button",
+			"Alt+Y / 履歴ボタン",
 		);
 	});
 });
@@ -262,7 +260,7 @@ describe("options menu switches", () => {
 		modal.modalEl
 			.querySelector<HTMLElement>(".my-palette-options-button")!
 			.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
-		expect(paletteMenuTitles().slice(0, 2)).toEqual(["Regex", "Highlight search matches"]);
+		expect(paletteMenuTitles().slice(0, 2)).toEqual(["Regex", "検索の一致を強調"]);
 
 		clickPaletteMenuItem("Regex");
 		expect(modal.onChange).toHaveBeenCalledExactlyOnceWith(true);

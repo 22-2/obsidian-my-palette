@@ -19,13 +19,13 @@ import {
 } from "src/settings/model";
 
 const PREVIOUS_DEFAULT_SEARCH_HISTORY_DELAY_MS = 3_000;
-// Schema 12 changed the default from delayed input to action-only history;
-// later schema bumps must not reinterpret a user's explicit 3-second delay.
+// スキーマ 12 で既定を、入力を遅らせる保存から操作だけの履歴へ変えた。以後のスキーマの変更で、
+// ユーザーが明示的に選んだ3秒の遅延を読み替えてはいけない。
 const SEARCH_HISTORY_ACTION_ONLY_SCHEMA_VERSION = 12;
 
 /**
- * `data.json` is untrusted persisted input. Keeping normalization separate from
- * the Obsidian settings UI lets the migration contract stay pure and testable.
+ * `data.json` は信頼できない保存済みの入力。正規化を Obsidian の設定 UI から分けておくと、
+ * 移行の契約を純粋で、テストできる形に保てる。
  */
 
 export function bounded(value: unknown, fallback: number, min: number, max: number): number {
@@ -64,8 +64,7 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 	const storedSchemaVersion =
 		typeof source.schemaVersion === "number" ? source.schemaVersion : undefined;
 	const migratedSearchHistoryDelay =
-		// Treat the previous default as a migration value, while preserving an
-		// explicit delay in settings written by the new schema.
+		// 以前の既定値は移行の対象として扱い、新しいスキーマで保存された明示的な遅延は残す。
 		(storedSchemaVersion === undefined ||
 			storedSchemaVersion < SEARCH_HISTORY_ACTION_ONLY_SCHEMA_VERSION) &&
 		rawSearchHistory.addDelayMs === PREVIOUS_DEFAULT_SEARCH_HISTORY_DELAY_MS
@@ -77,8 +76,8 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 		rawSortPriorities,
 		DEFAULT_BLANK_FILE_SORT_PRIORITIES,
 	);
-	// The old setting controlled both query states. Copy it into each branch so
-	// upgrading does not silently change either empty or typed search ordering.
+	// 古い設定は両方の検索状態を制御していた。各枝にコピーし、アップグレードで空の入力と
+	// 入力した検索語のどちらの並び順も、黙って変わらないようにする。
 	const sortPriorities =
 		rawSortPriorities &&
 		typeof rawSortPriorities === "object" &&
@@ -94,8 +93,8 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 				}
 			: { blank: [...legacyBlankSortPriorities], input: [...legacySortPriorities] };
 	const demotedPriorFolders = excludedFolders(rawFile.demotedPriorFolders);
-	// Existing folder rules should stay effective after decoupling from @prior.
-	// Migrate once so later edits can disable or reposition the independent criterion.
+	// 既存のフォルダーのルールは、@prior から切り離した後も効き続けるべき。一度だけ移行し、
+	// 以後の編集で独立した基準を無効にしたり位置を変えたりできるようにする。
 	if ((storedSchemaVersion ?? 0) < 18 && demotedPriorFolders.length > 0) {
 		for (const state of ["blank", "input"] as const) {
 			if (!sortPriorities[state].includes(FILE_SORT_PRIORITIES.lowerPriorFolders)) {
@@ -178,13 +177,13 @@ function normalizeAudit(source: Record<string, unknown>): AuditSettings {
 		source.audit && typeof source.audit === "object"
 			? (source.audit as Record<string, unknown>)
 			: {};
-	// Why: the removed exclusion lists, archive folder and toggles are dropped here; Vault
-	// audit now follows the plugin-wide exclusions and always counts MOC-only notes as empty.
+	// Why: 廃止された除外リスト、アーカイブのフォルダー、スイッチはここで捨てる。Vault 監査は今では
+	// プラグイン全体の除外に従い、MOC だけのノートは常に空として数えるため。
 	return { kind: isAuditKind(raw.kind) ? raw.kind : DEFAULT_SETTINGS.audit.kind };
 }
 
-// Schema 20 replaced "remember last input" with a timeout: off meant immediately, on meant the default.
-// Schema 21 moved it from launcher.popToRootAfterSeconds to home.returnAfterSeconds.
+// スキーマ 20 は「最後の入力を覚える」を、タイムアウトに置き換えた。off は即座、on は既定を意味した。
+// スキーマ 21 で launcher.popToRootAfterSeconds から home.returnAfterSeconds へ移した。
 const RETURN_TO_HOME_OPTIONS: readonly ReturnToHomeSeconds[] = [0, 30, 60, 90];
 
 function normalizeReturnToHome(source: Record<string, unknown>): ReturnToHomeSeconds {
@@ -199,7 +198,7 @@ function normalizeReturnToHome(source: Record<string, unknown>): ReturnToHomeSec
 	return source.rememberLastInput ? DEFAULT_SETTINGS.home.returnAfterSeconds : 0;
 }
 
-// A missing or non-boolean switch means the integration stays on, as it did before switches existed.
+// スイッチがないか真偽値でない場合、連携は on のままになる。スイッチができる前の挙動と同じ。
 function normalizeIntegrations(source: Record<string, unknown>): IntegrationSettings {
 	const raw = (source.integrations ?? {}) as Record<string, Record<string, unknown> | undefined>;
 	const enabled = (key: keyof IntegrationSettings) => {
@@ -209,8 +208,8 @@ function normalizeIntegrations(source: Record<string, unknown>): IntegrationSett
 	return { everything: enabled("everything"), smartConnections: enabled("smartConnections") };
 }
 
-// Before schema 19 the two configurable aliases were stored as `prefixes` with a trailing space.
-// Read them as the fallback for a mode that has no alias of its own yet.
+// スキーマ 19 より前は、設定できる2つのエイリアスが末尾に空白を付けた `prefixes` として保存されていた。
+// まだ独自のエイリアスを持たないモードの、代わりの値として読む。
 const LEGACY_PREFIX_KEYS: Partial<Record<PaletteModeId, "command" | "everything">> = {
 	commands: "command",
 	everything: "everything",
@@ -233,9 +232,9 @@ function normalizeModes(source: Record<string, unknown>): ModeSettingsMap {
 			const stored = [rawMode.alias, legacyAlias].find(
 				(value): value is string => typeof value === "string" && value.trim() !== "",
 			);
-			// An empty alias could never be typed; fall back to the default instead.
+			// 空のエイリアスは入力できないので、既定の値に戻す。
 			let enabled = typeof rawMode.enabled === "boolean" ? rawMode.enabled : true;
-			// Either old Everything entry being enabled keeps the merged mode enabled on upgrade.
+			// 古い Everything の2つの項目のどちらかが有効なら、アップグレード後も統合したモードは有効のまま。
 			if (
 				id === "everything" &&
 				(Number(source.schemaVersion) || 0) < 22 &&
@@ -245,12 +244,12 @@ function normalizeModes(source: Record<string, unknown>): ModeSettingsMap {
 			return [id, { alias: (stored ?? DEFAULT_SETTINGS.modes[id].alias).trim(), enabled }];
 		}),
 	) as ModeSettingsMap;
-	// A new mode must not steal an alias the user already assigned to another mode.
+	// 新しいモードが、ユーザーがすでに別のモードへ割り当てたエイリアスを奪ってはいけない。
 	if (!rawModes.notes) {
 		modes.notes.alias = unusedAlias("n", "notes", "notes", modeIds, modes);
 	}
-	// Plugins arrived after the other modes; keep a stored custom alias that
-	// collides with it by moving the new mode to a free fallback.
+	// プラグインは他のモードより後に来た。保存された独自のエイリアスがぶつかるなら、
+	// 新しいモードを空いている代わりのエイリアスへ移す。
 	if (!rawModes.plugins) {
 		modes.plugins.alias = unusedAlias(
 			DEFAULT_SETTINGS.modes.plugins.alias,
@@ -260,8 +259,8 @@ function normalizeModes(source: Record<string, unknown>): ModeSettingsMap {
 			modes,
 		);
 	}
-	// Snippets arrived with plugins; `sn` shares its first letter with `sc`
-	// but aliases match as `alias + Space`, so only an identical alias collides.
+	// スニペットはプラグインと一緒に来た。`sn` は `sc` と先頭の文字が同じだが、エイリアスは
+	// 「エイリアス + Space」で照合するので、まったく同じエイリアスだけが衝突する。
 	if (!rawModes.snippets) {
 		modes.snippets.alias = unusedAlias(
 			DEFAULT_SETTINGS.modes.snippets.alias,
@@ -271,8 +270,8 @@ function normalizeModes(source: Record<string, unknown>): ModeSettingsMap {
 			modes,
 		);
 	}
-	// Properties arrived last; `pr` shares its first letter with `p` (Plugins),
-	// which is fine because aliases match as `alias + Space`.
+	// プロパティは最後に来た。`pr` は `p`(プラグイン)と先頭の文字が同じだが、
+	// エイリアスは「エイリアス + Space」で照合するので問題ない。
 	if (!rawModes.properties) {
 		modes.properties.alias = unusedAlias(
 			DEFAULT_SETTINGS.modes.properties.alias,
@@ -282,7 +281,7 @@ function normalizeModes(source: Record<string, unknown>): ModeSettingsMap {
 			modes,
 		);
 	}
-	// Vault audit arrived after Properties; a user may already type `a` for another mode.
+	// Vault 監査はプロパティの後に来た。ユーザーがすでに別のモードへ `a` を打っているかもしれない。
 	if (!rawModes.audit) {
 		modes.audit.alias = unusedAlias(
 			DEFAULT_SETTINGS.modes.audit.alias,
@@ -319,7 +318,7 @@ function normalizePaletteDisplay(
 		source.paletteDisplay && typeof source.paletteDisplay === "object"
 			? (source.paletteDisplay as Record<string, unknown>)
 			: {};
-	// Why: preserve the previous shared preference in each surface when upgrading.
+	// Why: アップグレードのとき、以前の共通の設定を各画面の中で保つ。
 	const legacyHighlight =
 		typeof source.highlightSearchMatches === "boolean" ? source.highlightSearchMatches : true;
 	const normalize = (surface: PaletteSurface) => {

@@ -7,9 +7,10 @@ import type { TFile } from "obsidian";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 
 /**
- * Adds one action that renames the selected files in the Rename selector. `onDone` runs once
- * files were renamed; cancelling leaves the palette where it was. Only files the vault
- * indexes qualify: folders and Obsidian-excluded or external files are never renamed.
+ * 名前の変更セレクターで、選んだファイルの名前を変える操作を1つ加える。`onDone` は
+ * ファイルの名前を変えたあとに実行する。キャンセルすると、パレットは元の場所に残る。
+ * 対象になるのは、Vault がインデックスしているファイルだけ。フォルダー、Obsidian の除外ファイル、
+ * 外部のファイルの名前は、決して変えない。
  */
 export function addBulkRenameMenuItem(
 	menu: PaletteMenu,

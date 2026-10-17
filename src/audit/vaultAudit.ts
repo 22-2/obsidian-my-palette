@@ -1,8 +1,9 @@
 import { createUserIgnoredPathMatcher } from "src/ignored-notes/ignoredPathMatching";
 
 /**
- * Vault audit judgement, kept free of Obsidian so the palette mode and the CLI share one
- * tested definition of "orphaned", "broken" and "empty". `auditSnapshot.ts` reads the vault.
+ * Vault 監査の判定。Obsidian に依存しないように保ち、パレットのモードと CLI が
+ * 「浮いた」「壊れた」「空」の同じ定義を共有してテストできるようにする。
+ * `auditSnapshot.ts` が Vault を読む。
  */
 
 export const AUDIT_KINDS = [
@@ -20,46 +21,46 @@ export function isAuditKind(value: unknown): value is AuditKind {
 
 export interface AuditFile {
 	path: string;
-	/** Lower case, without the dot. */
+	/** 小文字で、ドットを含まない。 */
 	extension: string;
 	size: number;
 	mtime: number;
 	/**
-	 * Whether Obsidian can open the file. Orphaned and empty files list only these: a
-	 * config file such as `cog.toml` is never linked and is not the user's to tidy here.
+	 * Obsidian がファイルを開けるかどうか。浮いたファイルと空のファイルは、開けるものだけを
+	 * 一覧にする。`cog.toml` のような設定ファイルはリンクされないのが普通で、ここで整理するものではないため。
 	 */
 	openable: boolean;
 	/**
-	 * Markdown only: whether anything but frontmatter is in the note. Undefined when the
-	 * metadata cache has not indexed the note, so the size decides instead.
+	 * Markdown だけ: フロントマター以外の中身があるかどうか。メタデータキャッシュがそのノートを
+	 * まだ索引していない場合は undefined になり、代わりにサイズで判定する。
 	 */
 	hasContent?: boolean;
-	/** Markdown only: the note holds nothing but frontmatter and its MOC section. */
+	/** Markdown だけ: フロントマターと MOC の節以外に何もないノート。 */
 	mocOnly?: boolean;
 }
 
-/** One link or embed whose target does not exist. */
+/** 存在しないファイルを指す、リンクまたは埋め込み1つ。 */
 export interface UnresolvedLinkOccurrence {
 	source: string;
-	/** The link path without its heading or block part, as written. */
+	/** 見出しやブロックの部分を除いた、書かれたままのリンクのパス。 */
 	link: string;
-	/** Zero-based. Undefined for links in the frontmatter. */
+	/** 0始まり。フロントマター内のリンクは undefined。 */
 	line?: number;
 }
 
 export interface AuditSnapshot {
 	files: readonly AuditFile[];
-	/** Every folder except the vault root. */
+	/** Vault のルートを除く、すべてのフォルダー。 */
 	folders: readonly string[];
-	/** `metadataCache.resolvedLinks`: source path → target path → count. */
+	/** `metadataCache.resolvedLinks`: 元のパス → 先のパス → 件数。 */
 	resolvedLinks: Readonly<Record<string, Readonly<Record<string, number>>>>;
 	unresolvedLinks: readonly UnresolvedLinkOccurrence[];
 }
 
 export interface AuditExclusions {
-	/** Path filters in Obsidian's Excluded files format (folder paths or `/regex/`). */
+	/** Obsidian の「除外ファイル」の形式のパスフィルター(フォルダーのパスまたは `/正規表現/`)。 */
 	folders: readonly string[];
-	/** Extra path filters applied only to orphaned files (Daily notes, Templates). */
+	/** 浮いたファイルにだけ適用する追加のパスフィルター(デイリーノート、テンプレート)。 */
 	orphanFolders: readonly string[];
 }
 
@@ -72,7 +73,7 @@ export interface AuditFileItem {
 	path: string;
 	size: number;
 	mtime: number;
-	/** Empty files only: the note holds its MOC section, so it is not blank. */
+	/** 空のファイルだけ: ノートに MOC の節があり、空白ではないことを示す。 */
 	mocOnly?: true;
 }
 
@@ -88,7 +89,7 @@ export interface BrokenLinkItem {
 
 export interface EmptyFolderItem {
 	path: string;
-	/** Empty folders nested inside, which go with this one when it is removed. */
+	/** 中に入っている空のフォルダー。このフォルダーを削除すると一緒に消える。 */
 	foldersInside: number;
 }
 
@@ -117,7 +118,7 @@ export function runAudit(
 	}
 }
 
-/** Keeps the items whose path matches; for broken links, the linking notes' paths. */
+/** パスが一致する項目だけを残す。壊れたリンクは、リンクしているノートのパスで判定する。 */
 export function filterAuditReport(
 	report: AuditReport,
 	isMatch: (path: string) => boolean,
@@ -150,7 +151,7 @@ export function findOrphanedFiles(
 	const linked = new Set<string>();
 	for (const [source, targets] of Object.entries(snapshot.resolvedLinks)) {
 		for (const target of Object.keys(targets)) {
-			// Why: a note that only links to itself is still unreachable from the rest of the vault.
+			// Why: 自分自身にだけリンクしているノートも、Vault の残りからは到達できないままなので数えない。
 			if (target !== source) linked.add(target);
 		}
 	}
@@ -197,7 +198,7 @@ export function findEmptyFolders(
 	snapshot: AuditSnapshot,
 	exclusions: AuditExclusions,
 ): EmptyFolderItem[] {
-	// Why: any file counts, excluded or not, because removing the folder would remove it too.
+	// Why: 除外されているかどうかにかかわらず、どのファイルも数える。フォルダーを消すと、そのファイルも消えるため。
 	const holdingFiles = new Set(snapshot.files.flatMap((file) => ancestorFolders(file.path)));
 	const empty = snapshot.folders.filter((folder) => !holdingFiles.has(folder));
 	const emptySet = new Set(empty);

@@ -4,9 +4,9 @@ export interface SelectionModifiers {
 }
 
 /**
- * Models Explorer-style list selection independently from DOM event handling.
- * Results are reset whenever a search rerenders, so index-based state cannot
- * retain hidden files that the user can no longer see before a batch action.
+ * DOM のイベント処理とは独立に、エクスプローラー風の一覧の選択を表す。
+ * 検索で描き直すたびに結果はリセットされるので、インデックスに基づく状態が、一括操作の前に
+ * ユーザーにもう見えないファイルを残すことはない。
  */
 export class ExtendedSelection {
 	private selectedIndexes = new Set<number>();
@@ -17,7 +17,7 @@ export class ExtendedSelection {
 		this.anchorIndex = size > 0 ? 0 : -1;
 	}
 
-	/** Reinstates a selection after a rerender whose rows moved, keeping the anchor on the cursor row. */
+	/** 行が動いた描き直しの後に、選択を戻す。アンカーはカーソルの行に保つ。 */
 	restore(indexes: readonly number[], anchor: number, size: number): void {
 		const valid = indexes.filter((index) => this.isValidIndex(index, size));
 		if (valid.length === 0) return;
@@ -46,8 +46,8 @@ export class ExtendedSelection {
 
 	selectForContextMenu(index: number, size: number): void {
 		if (!this.isValidIndex(index, size) || this.selectedIndexes.has(index)) return;
-		// Why: Explorer preserves a multi-selection when it is right-clicked, but
-		// right-clicking outside that selection starts a new one-item context.
+		// Why: エクスプローラーは、複数選択を右クリックしても選択を保つ。一方で、その選択の外を
+		// 右クリックすると、1項目の新しい操作の対象になるため。
 		this.selectedIndexes = new Set([index]);
 		this.anchorIndex = index;
 	}

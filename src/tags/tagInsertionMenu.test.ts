@@ -73,7 +73,7 @@ it("adds tags only to distinct indexed Markdown notes", async () => {
 	vi.mocked(insertTags).mockResolvedValue(true);
 
 	addTagInsertionMenuItems(m.instance, plugin, results, onDone);
-	expect(m.titles).toEqual(["Add tags…"]);
+	expect(m.titles).toEqual(["タグを追加…"]);
 	m.click();
 	await Promise.resolve();
 

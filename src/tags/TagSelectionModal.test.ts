@@ -113,12 +113,12 @@ describe("TagSelectionModal", () => {
 	it("keeps insertion shortcuts and target context in its own help", async () => {
 		const f = await open();
 		f.mouse(f.modal.modalEl.querySelector(".my-palette-options-button")!, "click");
-		clickPaletteMenuItem("Help");
+		clickPaletteMenuItem("ヘルプ");
 		const help = document.querySelector(".my-palette-help-modal")!;
-		expect(help.textContent).toContain("Tag insert selector help");
+		expect(help.textContent).toContain("タグ挿入セレクター のヘルプ");
 		expect(help.textContent).toContain("Target: note.md");
-		expect(help.textContent).toContain("Return to input mode");
-		expect(help.textContent).toContain("Preview the tag in core Search");
+		expect(help.textContent).toContain("入力モードに戻る");
+		expect(help.textContent).toContain("このセレクターを閉じずに、コア検索でタグをプレビュー");
 		expect(help.textContent).toContain("Space");
 		expect(help.textContent).toContain("Ctrl+Enter");
 		expect(f.modal.modalEl.textContent).not.toContain("Space: check");
@@ -132,18 +132,18 @@ describe("TagSelectionModal", () => {
 		)!;
 		f.mouse(actionButton, "click");
 		expect(paletteMenuTitles()).toEqual([
-			"Highlight search matches",
-			"Check",
-			"Add 1 now",
-			"Clear changes",
-			"Help",
-			"Clear search history",
+			"検索の一致を強調",
+			"チェック",
+			"追加 1 件",
+			"変更を取り消す",
+			"ヘルプ",
+			"検索履歴を消去",
 		]);
-		clickPaletteMenuItem("Check");
+		clickPaletteMenuItem("チェック");
 		expect(f.checked()).toEqual(["#alpha", "#mine"]);
 		f.mouse(actionButton, "click");
-		expect(paletteMenuTitles()).toContain("Add 1 checked");
-		clickPaletteMenuItem("Add 1 checked");
+		expect(paletteMenuTitles()).toContain("追加 1 件(チェック済み)");
+		clickPaletteMenuItem("追加 1 件(チェック済み)");
 		await expect(f.result).resolves.toEqual({ add: ["alpha"], remove: [] });
 	});
 
@@ -256,7 +256,7 @@ describe("TagSelectionModal", () => {
 			f.key("Enter", { code });
 			await flush();
 			expect(Notice).toHaveBeenCalledExactlyOnceWith(
-				expect.stringContaining('Enter will only add "#beta". Press Ctrl+Enter'),
+				expect.stringContaining("Enter では「#beta」だけを追加します。"),
 			);
 			expect(f.modal.modalEl.isConnected).toBe(true);
 			expect(f.checked()).toEqual(["#mine"]);
@@ -279,7 +279,7 @@ describe("TagSelectionModal", () => {
 		f.key("Enter");
 		await flush();
 		expect(Notice).toHaveBeenCalledExactlyOnceWith(
-			expect.stringContaining('Enter will only add "#fresh". Press Ctrl+Enter'),
+			expect.stringContaining("Enter では「#fresh」だけを追加します。"),
 		);
 		expect(f.modal.modalEl.isConnected).toBe(true);
 		expect(f.checked()).toEqual(["#alpha", "#beta"]);
@@ -350,17 +350,21 @@ describe("TagSelectionModal", () => {
 	it("shows a check menu for one row and a bulk one for a multi-selection", async () => {
 		const f = await open();
 		f.mouse(f.rows()[0], "contextmenu", { button: 2 });
-		expect(paletteMenuTitles()).toEqual(["Check", "Add 1 now"]);
+		expect(paletteMenuTitles()).toEqual(["チェック", "追加 1 件"]);
 		f.mouse(f.rows()[0], "mousedown");
 		f.mouse(f.rows()[1], "mousedown", { shiftKey: true });
 		f.mouse(f.rows()[1], "contextmenu", { button: 2 });
-		expect(paletteMenuTitles()).toContain("Check 2 selected");
-		expect(paletteMenuTitles()).toContain("Add 2 now");
-		clickPaletteMenuItem("Check 2 selected");
+		expect(paletteMenuTitles()).toContain("チェック (2 件選択中)");
+		expect(paletteMenuTitles()).toContain("追加 2 件");
+		clickPaletteMenuItem("チェック (2 件選択中)");
 		await flush();
 		expect(f.checked()).toEqual(["#alpha", "#beta", "#mine"]);
 		f.mouse(f.rows()[1], "contextmenu", { button: 2 });
-		expect(paletteMenuTitles()).toEqual(["Uncheck 2 selected", "Add 2 checked", "Remove tag"]);
+		expect(paletteMenuTitles()).toEqual([
+			"チェックを外す (2 件選択中)",
+			"追加 2 件(チェック済み)",
+			"タグを削除",
+		]);
 		f.modal.close();
 	});
 
@@ -382,8 +386,12 @@ describe("TagSelectionModal", () => {
 		expect(f.button().hidden).toBe(false);
 		expect(f.button().textContent).toBe("+1");
 		f.mouse(f.button(), "click");
-		expect(paletteMenuTitles()).toEqual(["Add 1 checked", "#alpha", "Clear changes"]);
-		clickPaletteMenuItem("Clear changes");
+		expect(paletteMenuTitles()).toEqual([
+			"追加 1 件(チェック済み)",
+			"#alpha",
+			"変更を取り消す",
+		]);
+		clickPaletteMenuItem("変更を取り消す");
 		await flush();
 		expect(f.checked()).toEqual(["#mine"]);
 		expect(f.button().hidden).toBe(true);
@@ -475,7 +483,7 @@ describe("TagSelectionModal", () => {
 		await flush();
 		f.mouse(f.rows()[1], "mousedown");
 		f.mouse(f.rows()[1], "contextmenu", { button: 2 });
-		clickPaletteMenuItem("Add 2 now");
+		clickPaletteMenuItem("追加 2 件");
 		await expect(f.result).resolves.toEqual({ add: ["alpha", "beta"], remove: [] });
 	});
 

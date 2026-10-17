@@ -6,14 +6,14 @@ export interface PanelChoiceItem<T extends string> {
 
 export interface PanelChoiceOptions<T extends string> {
 	id: string;
-	/** The heading the items are listed under in the options menu. */
+	/** オプションのメニューで、項目の上に出す見出し。 */
 	label: string;
 	items: readonly PanelChoiceItem<T>[];
 	value: T;
 	onChange: (value: T) => void;
 }
 
-/** What the options menu reads from a choice, whatever the type of its values. */
+/** 値の型が何であれ、オプションのメニューが選択肢から読むもの。 */
 export interface MenuChoice {
 	readonly label: string;
 	readonly isHidden: boolean;
@@ -23,8 +23,8 @@ export interface MenuChoice {
 }
 
 /**
- * A pick-one option of a palette, such as the kind Vault audit lists. Like PanelSwitch it
- * only holds the state; the options menu lists the items and marks the chosen one.
+ * パレットの「1つだけ選ぶ」オプション。Vault 監査が一覧にする種類など。PanelSwitch と同じく
+ * 状態だけを持つ。項目を並べて選ばれたものに印を付けるのは、オプションのメニューの役目。
  */
 export class PanelChoice<T extends string = string> implements MenuChoice {
 	private current: T;
@@ -54,17 +54,17 @@ export class PanelChoice<T extends string = string> implements MenuChoice {
 		return this.hidden;
 	}
 
-	/** Shows the value without notifying, for hosts restoring their own value. */
+	/** 通知せずに値を示す。ホストが自分の値を復元するときに使う。 */
 	set(value: T): void {
 		this.current = value;
 	}
 
-	/** A hidden choice leaves the options menu; its value is kept. */
+	/** 隠された選択肢はオプションのメニューから外れるが、値は保たれる。 */
 	setHidden(hidden: boolean): void {
 		this.hidden = hidden;
 	}
 
-	/** Chooses an item and notifies the host; choosing the current one does nothing. */
+	/** 項目を選び、ホストに通知する。現在の値を選んでも何もしない。 */
 	choose(value: T): void {
 		if (value === this.current) return;
 		this.current = value;

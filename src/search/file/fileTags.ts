@@ -9,9 +9,9 @@ function normalizedTag(value: unknown): string | undefined {
 }
 
 /**
- * Keep inline and frontmatter tags in one display/search format. Obsidian can
- * expose frontmatter values without the hash, while cached inline tags include
- * it, so normalizing at the index boundary prevents duplicate behaviors.
+ * インラインのタグとフロントマターのタグを、1つの表示・検索の形式にそろえる。Obsidian は
+ * フロントマターの値を `#` なしで出すことがあり、キャッシュされたインラインのタグは `#` を含むので、
+ * 索引の境界で正規化して、同じ動作が重複しないようにする。
  */
 export function normalizeTags(values: readonly unknown[]): string[] {
 	const tags: string[] = [];
@@ -25,10 +25,10 @@ export function normalizeTags(values: readonly unknown[]): string[] {
 }
 
 /**
- * A hash-prefixed query is intentionally tag-only. This lets `#project` find
- * a tagged note even when its filename and aliases do not contain "project".
- * Excluded terms count too: `#project !archive` means the folder or name
- * "archive", which only a full-field search can exclude.
+ * ハッシュで始まるクエリは、意図的にタグだけを検索する。これにより、`#project` は、ファイル名や
+ * 別名に「project」が含まれていなくても、タグ付きのノートを見つけられる。除外された項も数える。
+ * `#project !archive` は、フォルダーや名前の「archive」を意味し、それを除外できるのは
+ * すべてのフィールドの検索だけだから。
  */
 export function isTagOnlyQuery(query: string): boolean {
 	return (
@@ -38,9 +38,8 @@ export function isTagOnlyQuery(query: string): boolean {
 }
 
 /**
- * Return tags that contributed to the current query for the second result row.
- * Fuzzy matching mirrors the file search, and an empty hash suffix makes `#`
- * useful as a quick way to list tagged notes.
+ * 2行目の結果のために、現在のクエリに寄与したタグを返す。あいまい一致はファイル検索と同じ。
+ * ハッシュの後が空なら、`#` だけでタグ付きのノートを一覧にできる簡便な方法になる。
  */
 export function matchingTags(tags: readonly string[], query: string): string[] {
 	const terms = positiveQueryTerms(query);

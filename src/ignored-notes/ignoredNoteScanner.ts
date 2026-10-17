@@ -17,8 +17,8 @@ export async function collectVaultPaths(
 		visited.add(folder);
 		try {
 			const stat = await adapter.stat(folder);
-			// Ignore filters can outlive a moved or deleted folder. Do not call
-			// list() for a missing root, because that turns stale settings into errors.
+			// 除外フィルターは、移動や削除されたフォルダーより長く残ることがある。存在しないルートに対して
+			// list() を呼ばない。古い設定がエラーになってしまうため。
 			if (!stat) {
 				log("Skipped missing ignored folder", { folder });
 				continue;

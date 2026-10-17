@@ -54,7 +54,7 @@ describe("toAuditResults", () => {
 			() => undefined,
 		);
 		expect(result).toEqual(
-			expect.objectContaining({ primary: "Missing", secondary: "2 notes · a.md" }),
+			expect.objectContaining({ primary: "Missing", secondary: "ノート 2 件 · a.md" }),
 		);
 	});
 
@@ -71,7 +71,7 @@ describe("toAuditResults", () => {
 		);
 		expect(results.map(({ primary, secondary }) => [primary, secondary])).toEqual([
 			["empty", "a/empty"],
-			["tree", "tree · 1 folder inside"],
+			["tree", "tree · 内部に 1 件のフォルダー"],
 		]);
 	});
 });

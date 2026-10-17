@@ -3,10 +3,11 @@ import { AUDIT_KINDS, type AuditKind } from "src/audit/vaultAudit";
 import type MyPalettePlugin from "src/main";
 import type { PaletteMode } from "src/palette/results";
 import { PanelChoice } from "src/ui/panelChoice";
+import { t } from "src/i18n";
 
 /**
- * The kind Vault audit lists, chosen in the options menu. The kind is saved in the settings,
- * so every surface shows the same kind and the next one opens with it.
+ * Vault 監査が一覧にする種類。オプションのメニューで選ぶ。種類は設定に保存するので、
+ * どの画面も同じ種類を表示し、次に開いたときもその種類で始まる。
  */
 export function createAuditKindChoice(
 	plugin: MyPalettePlugin,
@@ -14,7 +15,7 @@ export function createAuditKindChoice(
 ): PanelChoice<AuditKind> {
 	return new PanelChoice<AuditKind>({
 		id: "audit-kind",
-		label: "Show",
+		label: t("audit.kindChoice.label"),
 		items: AUDIT_KINDS.map((kind) => ({
 			value: kind,
 			label: AUDIT_KIND_LABELS[kind],
@@ -29,7 +30,7 @@ export function createAuditKindChoice(
 	});
 }
 
-/** The choice is shown only in Vault audit; another surface may have changed the kind. */
+/** この選択肢は Vault 監査でだけ表示する。ほかの画面が種類を変えているかもしれないため。 */
 export function syncAuditKindChoice(
 	choice: PanelChoice<AuditKind> | undefined,
 	mode: PaletteMode,

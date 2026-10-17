@@ -8,6 +8,7 @@ import { DEFAULT_HOTKEYS, matchesHotkey, type PaletteHotkeys } from "src/ui/hotk
 import { ICONS } from "src/ui/icons";
 import { logger } from "src/shared/logger";
 import { getScopeHandlers } from "src/platform/obsidianInternals";
+import { t } from "src/i18n";
 
 export interface SuggestModalProps<T> {
 	getHotkeys?: () => PaletteHotkeys;
@@ -19,15 +20,15 @@ export interface SuggestModalProps<T> {
 	footerText?: string;
 	selectionMode?: "single" | "extended";
 	activateOnClick?: (item: T) => boolean;
-	/** Input/selection modes; see SuggestionPanelProps.interactionModes. */
+	/** 入力モードと選択モード。SuggestionPanelProps.interactionModes を参照。 */
 	interactionModes?: boolean;
 	controls?: SelectorControls;
-	/** Optional dynamic source used by selectors whose candidates depend on input. */
+	/** 候補が入力に依存するセレクターが使う、任意の動的な供給元。 */
 	search?: (query: string) => T[] | Promise<T[]>;
 }
 
 /**
- * Obsidian SuggestModal互換の検索・ライフサイクルを提供する薄いモーダル。
+ * Obsidian の SuggestModal と互換の検索とライフサイクルを提供する薄いモーダル。
  * 候補の描画と操作は常設ビューと同じ部品に任せ、修正箇所が分岐しないようにする。
  */
 export abstract class BaseSuggestModal<T> extends Modal {
@@ -50,7 +51,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		{
 			items = [],
 			defaultValue,
-			placeholder = "Search…",
+			placeholder = t("modal.placeholderDefault"),
 			initialInput = "",
 			footerText,
 			selectionMode = "single",
@@ -161,8 +162,8 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		super.onOpen();
 		this.modalEl.removeClass("modal");
 		this.modalEl.addClass("prompt", "my-palette-suggest-modal");
-		// ModalはComponentを継承しないため、開閉に合わせて部品のイベントを管理する。
-		// 同じインスタンスを再度開いてもフッターやハンドラを増やさない。
+		// Modal は Component を継承しないため、開閉に合わせて部品のイベントを管理する。
+		// 同じインスタンスを再度開いても、フッターやハンドラを増やさない。
 		this.panel.load();
 		this.containerEl.addClass("my-palette-modal-container");
 		if (this.handlesSuggestionPreview())
@@ -187,8 +188,8 @@ export abstract class BaseSuggestModal<T> extends Modal {
 					category: controls.category,
 					includeIgnored: false,
 				}),
-				// Restoring a history entry only replaces the query. In particular, a
-				// saved MOC prefix must stay intact and must never trigger insertion.
+				// 履歴の項目を復元するのは、検索語を置き換えるだけ。特に、保存された MOC の接頭辞は
+				// そのまま残り、挿入を起こしてはいけない。
 				apply: (result) => {
 					this.cancelHistoryTimer();
 					this.historyCommitted = false;
@@ -273,8 +274,8 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		const selectionEnd = this.inputEl.selectionEnd;
 		const restoreFocus = () => {
 			if (generation !== this.previewGeneration || !this.inputEl.isConnected) return;
-			// Focus the DOM input directly: switching to input mode would discard
-			// the selector's read-only selection mode after every preview.
+			// DOM の入力欄に直接フォーカスする。入力モードに切り替えると、プレビューのたびに
+			// セレクターの読み取り専用の選択モードが失われてしまうため。
 			this.inputEl.focus({ preventScroll: true });
 			this.inputEl.setSelectionRange(selectionStart, selectionEnd);
 		};
@@ -282,7 +283,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			await this.onSuggestionPreview(item);
 		} catch (error) {
 			logger.error("Failed to preview selection", error);
-			new Notice(error instanceof Error ? error.message : "Failed to preview selection.");
+			new Notice(error instanceof Error ? error.message : t("modal.error.previewFailed"));
 		} finally {
 			this.previewPending = false;
 			restoreFocus();
@@ -296,7 +297,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		if (!controls) return;
 		menu.addItem((item) =>
 			item
-				.setTitle(`${controls.actionLabel} selected`)
+				.setTitle(t("selector.actionSelected", { action: controls.actionLabel }))
 				.setIcon(ICONS.confirm)
 				.setDisabled(candidate === undefined)
 				.onClick(() => {
@@ -325,12 +326,12 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	}
 	protected onSelectionModalClose(): void {}
 
-	/** Lands the next results on a row and scroll position, for a palette that is being resumed. */
+	/** 再開するパレットのために、次の結果を行とスクロール位置に合わせる。 */
 	protected restoreResultView(view: SuggestionPanelView): void {
 		this.panel.restoreView(view);
 	}
 
-	/** The selected row and scroll position, read while the modal is still open. */
+	/** モーダルがまだ開いている間に読む、選ばれた行とスクロール位置。 */
 	protected currentResultView(): SuggestionPanelView {
 		return this.panel.currentView;
 	}
@@ -348,8 +349,8 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		return undefined;
 	}
 	/**
-	 * Empty the list right away. A slow provider (Everything) would otherwise keep
-	 * the previous screen's rows until it answers, which reads as the wrong screen.
+	 * 一覧をすぐに空にする。遅いプロバイダー(Everything)は、答えるまで前の画面の行を残してしまい、
+	 * 間違った画面に見えるため。
 	 */
 	protected clearSuggestions(text: string): void {
 		this.panel.setResults({ items: [], total: 0, error: text });
@@ -402,12 +403,12 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		this.panel.updateResultCount(total);
 	}
 
-	/** Call from onSelectionModalOpen: listeners are released when the modal closes. */
+	/** onSelectionModalOpen から呼ぶ。リスナーはモーダルを閉じるときに解放される。 */
 	protected addSwitch(options: PanelSwitchOptions): PanelSwitch {
 		return this.panel.addSwitch(options);
 	}
 
-	/** The footer switches added so far, in order. */
+	/** これまでに追加されたフッターのスイッチを、追加された順に。 */
 	protected get switches(): PanelSwitch[] {
 		return this.panel.switchList;
 	}
@@ -436,10 +437,9 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	}
 
 	/**
-	 * Rerender for the current input and keep the selection and cursor on the same
-	 * items. Hosts that stay open after an action (multi-toggle selectors) need
-	 * this because a normal rerender resets the selection to the first row and
-	 * loses the user's place in the list.
+	 * 同じ入力で描き直し、選択とカーソルを同じ項目に保つ。操作の後も開いたままになるホスト
+	 * (複数切り替えのセレクター)に必要。通常の描き直しは選択を先頭の行に戻し、
+	 * 一覧での位置を失ってしまうため。
 	 */
 	protected refreshSuggestionsKeepingSelection(isSameItem: (a: T, b: T) => boolean): void {
 		const scrollTop = this.resultContainerEl.scrollTop;
@@ -457,9 +457,8 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	}
 
 	/**
-	 * Redraw visible rows in place. Multi-toggle selectors use this after a check
-	 * changes, since a full refresh would move the cursor back to the first row
-	 * and, for asynchronous sources, search again.
+	 * 見えている行をその場で描き直す。チェックが変わった後に複数切り替えのセレクターが使う。
+	 * 全体の更新だとカーソルが先頭の行に戻り、非同期の供給元では再び検索してしまうため。
 	 */
 	protected rerenderVisibleSuggestions(): void {
 		this.panel.rerenderRows();
@@ -470,12 +469,12 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		const query = this.inputEl.value;
 		const generation = ++this.refreshGeneration;
 		this.query = query;
-		this.emptyStateText = "No suggestions";
+		this.emptyStateText = t("suggest.noSuggestions");
 		const suggestions = this.getSuggestions(query);
 		void Promise.resolve(suggestions).then((items) => {
 			if (generation !== this.refreshGeneration || !this.inputEl.isConnected) return;
 			// パレットはプレフィックスを除いた検索語を使い、検索側の総件数を表示する。
-			// 生入力や表示件数で上書きすると強調表示と件数が検索モードによって変わる。
+			// 生の入力や表示件数で上書きすると、強調表示と件数が検索モードによって変わるため。
 			this.panel.setResults({
 				items,
 				total: this.resultTotal,

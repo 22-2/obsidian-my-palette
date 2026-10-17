@@ -44,7 +44,7 @@ describe("settings page layout", () => {
 				.map((item) => ("name" in item ? item.name : undefined));
 		expect(visibleNames()).not.toContain("Everything");
 		expect(visibleNames()).not.toContain("Related notes");
-		expect(visibleNames()).toContain("Notes");
+		expect(visibleNames()).toContain("ノート");
 		readiness.everything = true;
 		expect(visibleNames()).toContain("Everything");
 	});
@@ -52,38 +52,38 @@ describe("settings page layout", () => {
 		const pages = createSettingPages({} as SettingsHost);
 
 		expect(pages.filter(isPage).map((page) => page.name)).toEqual([
-			"General",
-			"Modes",
-			"File search",
-			"Shortcuts",
-			"Integrations",
+			"一般",
+			"モード",
+			"ファイル検索",
+			"ショートカット",
+			"連携",
 		]);
 
 		const [general, modes, fileSearch, hotkeys, integrations] = pages.filter(isPage);
-		expect(groupsOf(modes).map((group) => group.heading)).toEqual(["Search modes"]);
+		expect(groupsOf(modes).map((group) => group.heading)).toEqual(["検索モード"]);
 		expect(
 			groupsOf(modes)[0].items?.map((item) => ("name" in item ? item.name : undefined)),
 		).toEqual(PALETTE_MODES.map((mode) => mode.title));
 		// The table is one row item; its contents are drawn by renderShortcutsTable.
 		expect(groupsOf(hotkeys).map((group) => group.heading)).toEqual([
-			"Palette and selector shortcuts",
+			"パレットとセレクターのショートカット",
 		]);
-		expect(general.desc).toContain("search history");
+		expect(general.desc).toContain("検索履歴");
 		expect(groupsOf(general).map((group) => group.heading)).toEqual([
 			"Home",
-			"Tabs",
-			"Search history",
-			"Display",
-			"Diagnostics",
+			"タブ",
+			"検索履歴",
+			"表示",
+			"診断",
 		]);
 		expect(groupsOf(fileSearch).map((group) => group.heading)).toEqual([
-			"File types",
-			"Excluded folders",
-			"Lower prior folders",
-			"Obsidian-excluded files index",
-			"Result sorting",
+			"ファイルの種類",
+			"除外フォルダー",
+			"優先度を下げるフォルダー",
+			"Obsidian の除外ファイルの索引",
+			"結果の並び順",
 		]);
-		expect(groupsOf(integrations).map((group) => group.heading)).toEqual(["Integrations"]);
+		expect(groupsOf(integrations).map((group) => group.heading)).toEqual(["連携"]);
 		expect(
 			groupsOf(integrations)[0].items?.map((item) =>
 				"name" in item ? item.name : undefined,

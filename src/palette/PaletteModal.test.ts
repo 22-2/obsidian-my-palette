@@ -145,14 +145,14 @@ describe("PaletteModal", () => {
 		const f = await open();
 		expect(f.labels()).toContain("Alpha");
 		expect(f.labels()).toContain("Beta");
-		expect(f.modal.modalEl.textContent).toContain("Source: Active.md");
+		expect(f.modal.modalEl.textContent).toContain("元: Active.md");
 		expect(f.modal.modalEl.getAttribute("data-route")).toBe("home");
 	});
 
 	it("counts several source notes instead of naming one", async () => {
 		const sourceFiles = [{ path: "A.md" }, { path: "B.md" }] as TFile[];
 		const f = await open("", { sourceFiles });
-		expect(f.modal.modalEl.textContent).toContain("Source: 2 notes");
+		expect(f.modal.modalEl.textContent).toContain("元: 2 件のノート");
 	});
 
 	it("opens the chosen file with Enter and lets the action close the palette", async () => {

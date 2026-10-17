@@ -16,7 +16,7 @@ export interface RecordSearchHistoryOptions {
 
 export const SEARCH_HISTORY_MAX_ENTRIES = 256;
 
-/** Categories of the palette's own searches. Selectors each keep one category of their own. */
+/** パレット自身の検索のカテゴリ。セレクターはそれぞれ独自のカテゴリを持つ。 */
 export const PALETTE_HISTORY_CATEGORIES: readonly SearchHistoryCategory[] = [
 	"file",
 	"command",
@@ -65,8 +65,8 @@ function isSearchHistoryCategory(value: unknown): value is SearchHistoryCategory
 }
 
 /**
- * Use one identity for the in-memory map and IndexedDB key so case-only
- * updates cannot create duplicate history rows during persistence migration.
+ * メモリ上のマップと IndexedDB のキーに同じ識別子を使う。大文字・小文字だけが違う更新で、
+ * 保存の移行中に履歴の行が重複して増えないようにするため。
  */
 export function getSearchHistoryEntryIdentity(
 	entry: Pick<SearchHistoryEntry, "input" | "category" | "includeIgnored">,
@@ -78,7 +78,7 @@ export function getSearchHistoryEntryIdentity(
 	]);
 }
 
-/** Normalize a row already carrying an explicit, supported history category. */
+/** 対応するカテゴリを明示的に持つ行を正規化する。 */
 export function normalizeSearchHistoryEntry(value: unknown): SearchHistoryEntry | undefined {
 	if (!value || typeof value !== "object") return undefined;
 	const source = value as Record<string, unknown>;
@@ -105,9 +105,8 @@ export function normalizeSearchHistoryEntry(value: unknown): SearchHistoryEntry 
 }
 
 /**
- * Parse the legacy `data.json` representation before handing it to IndexedDB.
- * Invalid explicit categories retain the historical prefix-based inference so
- * old entries remain usable while the storage backend changes.
+ * 古い `data.json` の形式を、IndexedDB に渡す前に解析する。
+ * 不正なカテゴリは、過去の接頭辞からの推定を残す。保存先が変わっても、古い項目を使えるようにするため。
  */
 export function parseStoredSearchHistoryEntries(
 	value: unknown,
@@ -125,7 +124,7 @@ export function parseStoredSearchHistoryEntries(
 			!Number.isFinite(source.count)
 		)
 			return [];
-		// Rows from before the Obsidian-excluded switch kept that scope as an `i ` prefix.
+		// 「Obsidian の除外ファイル」のスイッチより前の行は、その範囲を `i ` の接頭辞で持っていた。
 		const legacyIgnored = source.input
 			.toLocaleLowerCase()
 			.startsWith(LEGACY_INCLUDE_IGNORED_PREFIX);
@@ -136,8 +135,8 @@ export function parseStoredSearchHistoryEntries(
 		const category = isSearchHistoryCategory(source.category)
 			? source.category
 			: getSearchHistoryCategory(parsed);
-		// Selector entries store the complete input, including MOC prefixes and
-		// folder names. Do not reinterpret their text as a palette search scope.
+		// セレクターの項目は、MOC の接頭辞やフォルダー名を含む入力全体を保存する。
+		// その文字列をパレットの検索範囲として解釈し直してはいけない。
 		return [
 			{
 				input: isSearchHistoryCategory(source.category) ? source.input : parsed.query,
@@ -254,8 +253,8 @@ export function getSearchHistorySuggestions(
 }
 
 /**
- * Rebuilds the palette input that would produce the given history entry. The
- * Obsidian-excluded scope is not part of the text; hosts restore it on their switch.
+ * 与えられた履歴の項目を生み出すパレットの入力を組み立て直す。Obsidian の除外ファイルの範囲は
+ * 文字列の一部ではなく、ホストがスイッチで復元する。
  */
 export function formatSearchHistoryInput(
 	entry: SearchHistoryEntry,

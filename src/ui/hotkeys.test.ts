@@ -54,11 +54,11 @@ describe("custom hotkeys", () => {
 	});
 	it("detects collisions including Shift range shortcuts", () => {
 		expect(hotkeyError("hidePreview", DEFAULT_HOTKEYS.history, DEFAULT_HOTKEYS)).toContain(
-			"Search history",
+			"検索履歴",
 		);
 		expect(
 			hotkeyError("focusInput", { key: "Space", modifiers: ["Shift"] }, DEFAULT_HOTKEYS),
-		).toContain("Toggle selection");
+		).toContain("選択を切り替え");
 		expect(hotkeyError("hidePreview", null, DEFAULT_HOTKEYS)).toBeUndefined();
 		expect(normalizeHotkeys({ hidePreview: DEFAULT_HOTKEYS.history })).toEqual(DEFAULT_HOTKEYS);
 	});
@@ -71,11 +71,11 @@ describe("custom hotkeys", () => {
 			hotkeyError("enterMode", { key: "Tab", modifiers: [] }, DEFAULT_HOTKEYS),
 		).toBeUndefined();
 		expect(hotkeyError("enterMode", { key: "J", modifiers: [] }, DEFAULT_HOTKEYS)).toContain(
-			"Use Ctrl, Alt or Meta",
+			"Ctrl、Alt、Meta のいずれか",
 		);
 		expect(
 			hotkeyError("optionsMenu", { key: "O", modifiers: ["Shift"] }, DEFAULT_HOTKEYS),
-		).toContain("Use Ctrl, Alt or Meta");
+		).toContain("Ctrl、Alt、Meta のいずれか");
 		expect(
 			hotkeyError("optionsMenu", { key: "P", modifiers: ["Ctrl"] }, DEFAULT_HOTKEYS),
 		).toBeUndefined();
@@ -90,7 +90,7 @@ describe("custom hotkeys", () => {
 		// The selectors sit inside the "all palettes and selectors" scope, so the hide shortcut clashes with them.
 		expect(
 			hotkeyError("toggleSelection", DEFAULT_HOTKEYS.hidePreview, DEFAULT_HOTKEYS),
-		).toContain("Hide palette or selector");
+		).toContain("パレットまたはセレクターを隠す");
 	});
 
 	it("matches exact modifiers and allows range Shift only for selection", () => {

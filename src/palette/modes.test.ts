@@ -91,8 +91,8 @@ describe("matchPaletteModes", () => {
 	});
 
 	test("matches the start of title and subtitle words", () => {
-		expect(ids("tab")).toEqual(["tabs"]);
-		expect(ids("outgoing link")).toEqual(["outlinks"]);
+		expect(ids("タブ")).toEqual(["tabs"]);
+		expect(ids("発リンク")).toEqual(["outlinks"]);
 		expect(ids("smart")).toEqual(["smart"]);
 	});
 
@@ -140,10 +140,10 @@ describe("validateModeAlias", () => {
 	});
 
 	test("rejects empty, spaced and taken aliases", () => {
-		expect(validateModeAlias("commands", " ", modes)).toBe("Enter an alias.");
-		expect(validateModeAlias("commands", "c x", modes)).toBe("Aliases cannot contain spaces.");
+		expect(validateModeAlias("commands", " ", modes)).toBe("エイリアスを入力してください。");
+		expect(validateModeAlias("commands", "c x", modes)).toBe("エイリアスに空白は使えません。");
 		expect(validateModeAlias("commands", "E", modes)).toBe(
-			'"E" is already used by another mode.',
+			'"E" はほかのモードですでに使われています。',
 		);
 		expect(validateModeAlias("commands", "esdir", modes)).toBeUndefined();
 		// es is free again, since it is no longer a hidden alias.

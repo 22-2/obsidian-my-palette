@@ -154,18 +154,18 @@ describe("palette route presentation", () => {
 				false,
 			),
 		).toEqual({
-			placeholder: "Search commands",
-			chip: { icon: "square-terminal", label: ">", title: "Commands" },
+			placeholder: "コマンドを検索",
+			chip: { icon: "square-terminal", label: ">", title: "コマンド" },
 		});
-		expect(palettePlaceholder("link")).toBe("Search links in the active file");
-		expect(palettePlaceholder("backlink")).toBe("Search backlinks to the active file");
-		expect(palettePlaceholder("bookmark")).toBe("Search bookmarks");
-		expect(palettePlaceholder("smart")).toBe("Search Smart Connections");
-		expect(palettePlaceholder("tab")).toBe("Search open tabs");
-		expect(palettePlaceholder("plugin")).toBe("Search installed plugins");
-		expect(palettePlaceholder("snippet")).toBe("Search CSS snippets");
-		expect(palettePlaceholder("property")).toBe("Search properties in the active note");
-		expect(palettePlaceholder("file")).toBe("Search files");
+		expect(palettePlaceholder("link")).toBe("アクティブなファイルのリンクを検索");
+		expect(palettePlaceholder("backlink")).toBe("アクティブなファイルへの被リンクを検索");
+		expect(palettePlaceholder("bookmark")).toBe("ブックマークを検索");
+		expect(palettePlaceholder("smart")).toBe("Smart Connections を検索");
+		expect(palettePlaceholder("tab")).toBe("開いているタブを検索");
+		expect(palettePlaceholder("plugin")).toBe("インストール済みのプラグインを検索");
+		expect(palettePlaceholder("snippet")).toBe("CSS スニペットを検索");
+		expect(palettePlaceholder("property")).toBe("アクティブなノートのプロパティを検索");
+		expect(palettePlaceholder("file")).toBe("ファイルを検索");
 	});
 
 	it("shows section headings only for mixed home lists", () => {
@@ -187,14 +187,14 @@ describe("palette route presentation", () => {
 			icon: "files",
 		} as const;
 		const state = { route: { kind: "home" as const }, results: [mode] };
-		expect(paletteSectionOf(state, mode)).toBe("Modes");
-		expect(paletteSectionOf(state, file)).toBe("Files");
+		expect(paletteSectionOf(state, mode)).toBe("モード");
+		expect(paletteSectionOf(state, file)).toBe("ファイル");
 		expect(paletteSectionOf(undefined, file)).toBeUndefined();
 		expect(
 			paletteSectionOf({ route: { kind: "mode", modeId: "notes" }, results: [mode] }, file),
 		).toBeUndefined();
 		expect(
 			paletteRouteChrome({ route: { kind: "home" }, mode: "file" }, undefined, true),
-		).toEqual({ placeholder: "Search files, or pick a mode" });
+		).toEqual({ placeholder: "ファイルを検索、またはモードを選択" });
 	});
 });

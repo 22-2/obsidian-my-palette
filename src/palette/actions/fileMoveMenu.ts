@@ -8,10 +8,10 @@ import type { PaletteMenu } from "src/ui/paletteMenu";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 
 /**
- * Resolves a palette result to something movable. Indexed files move directly;
- * Obsidian-excluded Markdown notes (also reached through Everything) are imported
- * when the destination is chosen, because Obsidian can only rename files it tracks.
- * Folders and paths outside the vault resolve to nothing.
+ * 結果を、移動できるものに解決する。インデックスされたファイルは直接移動する。
+ * Obsidian の除外ファイルの Markdown ノート(Everything からも到達する)は、移動先を選んだときに取り込む。
+ * Obsidian が追跡しているファイルしか名前を変えられないためである。
+ * フォルダーと Vault の外のパスは、どれにも解決しない。
  */
 function resolveMoveSource(app: App, result: PaletteResult): MoveSource | undefined {
 	const file = resolveVaultFile(app, result);
@@ -25,8 +25,8 @@ function resolveMoveSource(app: App, result: PaletteResult): MoveSource | undefi
 }
 
 /**
- * Adds one action that moves every selected file into the folder chosen next. `onDone` runs
- * once files moved; cancelling the selector leaves the palette where it was.
+ * 選んだファイルすべてを、次に選ぶフォルダーへ移す操作を1つ加える。`onDone` はファイルを移動したあとに
+ * 実行する。セレクターをキャンセルしたら、パレットは元の場所に残る。
  */
 export function addFileMoveMenuItem(
 	menu: PaletteMenu,

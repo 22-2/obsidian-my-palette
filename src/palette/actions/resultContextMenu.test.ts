@@ -111,9 +111,9 @@ it.each([false, true])(
 	(popout) => {
 		const f = fixture(popout);
 		populatePaletteResultMenu(f.options);
-		expect(f.actions.has("Open in main window")).toBe(popout);
+		expect(f.actions.has("メインウィンドウで開く")).toBe(popout);
 		if (popout) {
-			f.actions.get("Open in main window")!();
+			f.actions.get("メインウィンドウで開く")!();
 			expect(f.openInMainWindow).toHaveBeenCalledExactlyOnceWith(f.options.result);
 		}
 	},
@@ -125,7 +125,7 @@ it("does not add single-result navigation to bulk selections", () => {
 		...f.options,
 		selectedItems: [f.options.result, { ...f.options.result, id: "second", primary: "Second" }],
 	});
-	expect(f.actions.has("Open in main window")).toBe(false);
+	expect(f.actions.has("メインウィンドウで開く")).toBe(false);
 });
 
 it("does not offer main-window file navigation for commands", () => {
@@ -139,8 +139,8 @@ it("does not offer main-window file navigation for commands", () => {
 		commandId: "command",
 	};
 	populatePaletteResultMenu({ ...f.options, result, selectedItems: [result] });
-	expect(f.actions.has("Open in main window")).toBe(false);
-	expect(f.actions.has("Run command")).toBe(true);
+	expect(f.actions.has("メインウィンドウで開く")).toBe(false);
+	expect(f.actions.has("コマンドを実行")).toBe(true);
 });
 
 it("offers external open actions for file results on desktop", async () => {
@@ -149,19 +149,19 @@ it("offers external open actions for file results on desktop", async () => {
 		...f.options,
 		onNoteActionSelected: vi.fn(),
 	});
-	expect(f.actions.has("Open in external editor")).toBe(true);
-	expect(f.actions.has("Show in system explorer")).toBe(true);
-	expect(f.actions.has("Open in terminal")).toBe(true);
+	expect(f.actions.has("外部エディターで開く")).toBe(true);
+	expect(f.actions.has("システムのエクスプローラーで表示")).toBe(true);
+	expect(f.actions.has("ターミナルで開く")).toBe(true);
 	expect(f.actions.has("Show in file explorer")).toBe(false);
 
 	const { openInExternalEditor, showInSystemExplorer } =
 		await import("src/platform/externalOpen");
 	const { getTerminalDirectory, openDirectoryInTerminal } = await import("src/platform/terminal");
-	f.actions.get("Open in external editor")!();
+	f.actions.get("外部エディターで開く")!();
 	expect(openInExternalEditor).toHaveBeenCalledExactlyOnceWith("C:/vault/Note.md");
-	f.actions.get("Show in system explorer")!();
+	f.actions.get("システムのエクスプローラーで表示")!();
 	expect(showInSystemExplorer).toHaveBeenCalledExactlyOnceWith("C:/vault/Note.md", false);
-	f.actions.get("Open in terminal")!();
+	f.actions.get("ターミナルで開く")!();
 	expect(getTerminalDirectory).toHaveBeenCalledWith("C:/vault/Note.md", false);
 	expect(openDirectoryInTerminal).toHaveBeenCalledWith("C:/vault");
 });
@@ -177,9 +177,9 @@ it("hides external open actions for commands", () => {
 		commandId: "command",
 	};
 	populatePaletteResultMenu({ ...f.options, result, selectedItems: [result] });
-	expect(f.actions.has("Open in external editor")).toBe(false);
-	expect(f.actions.has("Show in system explorer")).toBe(false);
-	expect(f.actions.has("Open in terminal")).toBe(false);
+	expect(f.actions.has("外部エディターで開く")).toBe(false);
+	expect(f.actions.has("システムのエクスプローラーで表示")).toBe(false);
+	expect(f.actions.has("ターミナルで開く")).toBe(false);
 });
 
 it("offers editor, explorer and settings for plugin results without note navigation", () => {
@@ -207,15 +207,15 @@ it("offers editor, explorer and settings for plugin results without note navigat
 		selectedItems: [result],
 		onNoteActionSelected,
 	});
-	expect(f.actions.has("Open in external editor")).toBe(true);
-	expect(f.actions.has("Show in system explorer")).toBe(true);
-	expect(f.actions.has("Open in terminal")).toBe(true);
-	expect(f.actions.has("Open plugin settings")).toBe(true);
-	expect(f.actions.has("Open")).toBe(false);
+	expect(f.actions.has("外部エディターで開く")).toBe(true);
+	expect(f.actions.has("システムのエクスプローラーで表示")).toBe(true);
+	expect(f.actions.has("ターミナルで開く")).toBe(true);
+	expect(f.actions.has("プラグインの設定を開く")).toBe(true);
+	expect(f.actions.has("開く")).toBe(false);
 
-	f.actions.get("Open in external editor")!();
+	f.actions.get("外部エディターで開く")!();
 	expect(f.options.activate).toHaveBeenCalledExactlyOnceWith("primary", result);
-	f.actions.get("Open plugin settings")!();
+	f.actions.get("プラグインの設定を開く")!();
 	expect(app.setting.open).toHaveBeenCalledOnce();
 	expect(app.setting.openTabById).toHaveBeenCalledExactlyOnceWith("alpha");
 	expect(onNoteActionSelected).toHaveBeenCalled();
@@ -236,11 +236,11 @@ it("offers editor and explorer for snippet results without settings", () => {
 		enabled: true,
 	};
 	populatePaletteResultMenu({ ...f.options, result, selectedItems: [result] });
-	expect(f.actions.has("Open in external editor")).toBe(true);
-	expect(f.actions.has("Show in system explorer")).toBe(true);
-	expect(f.actions.has("Open in terminal")).toBe(true);
-	expect(f.actions.has("Open plugin settings")).toBe(false);
-	expect(f.actions.has("Open")).toBe(false);
+	expect(f.actions.has("外部エディターで開く")).toBe(true);
+	expect(f.actions.has("システムのエクスプローラーで表示")).toBe(true);
+	expect(f.actions.has("ターミナルで開く")).toBe(true);
+	expect(f.actions.has("プラグインの設定を開く")).toBe(false);
+	expect(f.actions.has("開く")).toBe(false);
 });
 
 it("turns on the action filter for every result menu", () => {

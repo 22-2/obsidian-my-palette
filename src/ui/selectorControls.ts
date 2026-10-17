@@ -3,6 +3,7 @@ import type MyPalettePlugin from "src/main";
 import type { PaletteControlsPlugin } from "src/palette/components/PaletteHistoryControls";
 import type { SelectorHistoryCategory } from "src/settings/model";
 import { DEFAULT_HOTKEYS, formatHotkey } from "src/ui/hotkeys";
+import { t } from "src/i18n";
 
 export interface SelectorControls {
 	plugin: PaletteControlsPlugin & Pick<MyPalettePlugin, "recordSearch">;
@@ -13,11 +14,11 @@ export interface SelectorControls {
 	context?: string;
 	interactionModes?: boolean;
 	selectionMode?: "single" | "extended";
-	/** Additional shortcuts specific to this selector, such as checking candidates. */
+	/** チェックなど、このセレクターだけの追加のショートカット。 */
 	shortcuts?: readonly (readonly [string, string])[];
 }
 
-/** Selector help uses its own action vocabulary instead of file-search prefixes. */
+/** セレクターのヘルプは、ファイル検索の接頭辞ではなく、独自の操作の語彙を使う。 */
 export class SelectorHelpModal extends Modal {
 	constructor(
 		app: App,
@@ -29,7 +30,7 @@ export class SelectorHelpModal extends Modal {
 	onOpen(): void {
 		this.modalEl.addClass("my-palette-help-modal");
 		this.contentEl.empty();
-		this.titleEl.setText(`${this.controls.title} help`);
+		this.titleEl.setText(t("selector.help.title", { title: this.controls.title }));
 		this.contentEl.createDiv({
 			cls: "my-palette-help-modal__intro",
 			text: this.controls.description,
@@ -45,31 +46,41 @@ export class SelectorHelpModal extends Modal {
 			[
 				"↑ / ↓",
 				this.controls.interactionModes
-					? "Enter selection mode at the first result, then move through results"
-					: "Move through results",
+					? t("selector.help.arrowsInteraction")
+					: t("selector.help.arrows"),
 			],
 			...(this.controls.interactionModes
 				? ([
 						[
-							`${formatHotkey(hotkeys.focusInput)} / click input`,
-							"Return to input mode",
+							t("selector.help.clickInput", {
+								key: formatHotkey(hotkeys.focusInput),
+							}),
+							t("selector.help.returnInput"),
 						],
-						["↑ from the first result", "Return to input mode"],
+						[t("selector.help.upFromFirst"), t("selector.help.returnInput")],
 					] as const)
 				: []),
-			["Enter / numpad Enter", `${this.controls.actionLabel} the active result`],
-			["Home / End", "Move to the start or end of the search input"],
-			["Ctrl+Home / Ctrl+End", "Move to the first or last result"],
+			[
+				"Enter / numpad Enter",
+				t("selector.help.enter", { action: this.controls.actionLabel }),
+			],
+			["Home / End", t("help.row.homeEnd")],
+			["Ctrl+Home / Ctrl+End", t("help.row.ctrlHomeEnd")],
 			...(this.controls.selectionMode === "extended"
 				? ([
-						["Click / Ctrl+click", "Select one result or toggle several results"],
-						["Shift+click / Shift+↑ / Shift+↓", "Extend the result selection"],
-						["Ctrl+↑ / Ctrl+↓", "Move the active row without changing the selection"],
-						["Double-click", `${this.controls.actionLabel} the active selection`],
-						["Right-click", "Show actions for the selection"],
-						[formatHotkey(hotkeys.contextMenu), "Show actions for the selection"],
+						[t("help.row.click"), t("help.row.clickDescription")],
+						["Shift+click / Shift+↑ / Shift+↓", t("selector.help.shiftSelect")],
+						["Ctrl+↑ / Ctrl+↓", t("help.row.ctrlArrows")],
+						[
+							"Double-click",
+							t("selector.help.doubleClick", { action: this.controls.actionLabel }),
+						],
+						["Right-click", t("selector.help.rightClick")],
+						[formatHotkey(hotkeys.contextMenu), t("selector.help.rightClick")],
 					] as const)
-				: ([["Click", `${this.controls.actionLabel} the result`]] as const)),
+				: ([
+						["Click", t("selector.help.click", { action: this.controls.actionLabel })],
+					] as const)),
 			...(this.controls.shortcuts ?? []).map(
 				([key, description]) =>
 					[
@@ -84,20 +95,24 @@ export class SelectorHelpModal extends Modal {
 			...(hotkeys.optionsMenu
 				? ([
 						[
-							`${formatHotkey(hotkeys.optionsMenu)} / … button`,
-							"Open the options menu: flip switches with Enter, then Esc",
+							t("selector.help.optionsKey", {
+								key: formatHotkey(hotkeys.optionsMenu),
+							}),
+							t("help.row.optionsDescription"),
 						],
 					] as const)
 				: []),
 			[
-				`${formatHotkey(hotkeys.history)} / history button`,
-				"Restore a saved search without running an action",
+				t("selector.help.historyKey", { key: formatHotkey(hotkeys.history) }),
+				t("selector.help.historyRestore"),
 			],
 			[
-				hotkeys.hidePreview ? `Hold ${formatHotkey(hotkeys.hidePreview)}` : "Disabled",
-				"Temporarily fade out the selector; release to restore",
+				hotkeys.hidePreview
+					? t("help.row.holdKey", { key: formatHotkey(hotkeys.hidePreview) })
+					: t("hotkey.disabled"),
+				t("selector.help.fade"),
 			],
-			["Esc", "Cancel"],
+			["Esc", t("selector.help.cancel")],
 		];
 		for (const [key, description] of shortcuts) {
 			const row = section.createDiv("my-palette-help-modal__row");

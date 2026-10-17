@@ -33,7 +33,7 @@ export function installObsidianDom(): void {
 		this.append(element);
 		return element;
 	};
-	// Obsidian also provides these as global functions, which the plugin code calls.
+	// Obsidian もこれらをグローバル関数として提供しており、プラグインのコードはそれを呼び出す。
 	Object.assign(globalThis, {
 		createEl: (tag: string, options?: string | ElementOptions) => buildElement(tag, options),
 		createDiv: (options?: string | ElementOptions) => buildElement("div", options),
@@ -43,7 +43,7 @@ export function installObsidianDom(): void {
 		instanceOf: {
 			configurable: true,
 			value(this: HTMLElement, type: { name: string }) {
-				// Match Obsidian's cross-window check using the node's owning realm.
+				// Obsidian の別ウィンドウ判定と同じく、ノードの所有 realm を使って判定する。
 				const realm = this.ownerDocument.defaultView;
 				const constructor = type.name === "Node" ? realm?.Node : realm?.Element;
 				return !!constructor && this instanceof constructor;

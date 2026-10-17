@@ -100,16 +100,16 @@ it("offers rename, move and remove for one bookmark", () => {
 		onBookmarksChanged: changed,
 	});
 	expect([...s.actions.keys()]).toEqual([
-		"Rename bookmark…",
-		"Move to bookmark group…",
-		"Remove from bookmarks",
+		"ブックマークの名前を変更…",
+		"ブックマークのグループへ移動…",
+		"ブックマークから削除",
 	]);
 
-	s.actions.get("Rename bookmark…")!();
+	s.actions.get("ブックマークの名前を変更…")!();
 	(modals.title[0] as (title: string) => void)("Alpha");
 	expect(s.a.title).toBe("Alpha");
 
-	s.actions.get("Move to bookmark group…")!();
+	s.actions.get("ブックマークのグループへ移動…")!();
 	(modals.group[0] as GroupOptions).onChoose(s.group, {
 		label: "G",
 		description: "G",
@@ -117,7 +117,7 @@ it("offers rename, move and remove for one bookmark", () => {
 	});
 	expect(s.group.items).toEqual([s.a]);
 
-	s.actions.get("Remove from bookmarks")!();
+	s.actions.get("ブックマークから削除")!();
 	expect(s.group.items).toEqual([]);
 	expect(changed).toHaveBeenCalledTimes(3);
 });
@@ -130,7 +130,10 @@ it("drops rename for several bookmarks", () => {
 		plugin: s.plugin,
 		results: [bookmarkResult(s.a), { ...base, mode: "bookmark", kind: "search", entry: b }],
 	});
-	expect([...s.actions.keys()]).toEqual(["Move to bookmark group…", "Remove from bookmarks"]);
+	expect([...s.actions.keys()]).toEqual([
+		"ブックマークのグループへ移動…",
+		"ブックマークから削除",
+	]);
 });
 
 it("bookmarks files from other modes and closes the palette after adding", () => {
@@ -145,8 +148,8 @@ it("bookmarks files from other modes and closes the palette after adding", () =>
 		],
 		onNoteActionDone: done,
 	});
-	expect([...s.actions.keys()]).toEqual(["Add to bookmarks…"]);
-	s.actions.get("Add to bookmarks…")!();
+	expect([...s.actions.keys()]).toEqual(["ブックマークに追加…"]);
+	s.actions.get("ブックマークに追加…")!();
 	(modals.group[0] as GroupOptions).onChoose(undefined, {
 		label: "Top level",
 		target: { kind: "top" },

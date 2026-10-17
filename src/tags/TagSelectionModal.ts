@@ -1,4 +1,5 @@
 import { Notice } from "obsidian";
+import { t } from "src/i18n";
 import type { SelectorControls } from "src/ui/selectorControls";
 import { MultiSelectModal, type MultiSelectCandidate } from "src/ui/MultiSelectModal";
 import type { TagRemoval } from "src/tags/insertTags";
@@ -13,10 +14,10 @@ import { getGlobalSearch } from "src/platform/obsidianInternals";
 
 function choiceBadge(choice: TagChoice, targetCount: number): string | undefined {
 	if (choice.registered) return "Registered";
-	// Partly applied tags say how many notes still lack them; this outranks the ranking reason.
+	// 一部のノートにだけ付いているタグは、残りのノートにまだ無いことを示すので、関連度の理由より優先する。
 	if (choice.appliedCount) return `On ${choice.appliedCount}/${targetCount} notes`;
 	if (choice.reason === "recent") return "Recent";
-	// The vault-wide count alone does not tell how common the tag is among related notes.
+	// 保管庫全体の件数だけでは、関連ノートの中でそのタグがどれほど一般的かは分からない。
 	if (choice.reason === "related") return `Related ${choice.relatedCount ?? 0}`;
 	return undefined;
 }
@@ -31,7 +32,7 @@ function toCandidate(
 		return {
 			key,
 			value: suggestion.tag,
-			item: { label: `#${suggestion.tag}`, badge: "New tag" },
+			item: { label: `#${suggestion.tag}`, badge: t("tag.badge.new") },
 			uncheckedIcon: "plus",
 		};
 	}
@@ -41,13 +42,13 @@ function toCandidate(
 		value: choice.tag,
 		item: {
 			label: `#${choice.tag}`,
-			description: `${choice.count} ${choice.count === 1 ? "note" : "notes"}`,
+			description: t("tag.noteCount", { count: choice.count }),
 			badge: choiceBadge(choice, targetCount),
 		},
-		// Tags every target already has start checked; clearing the check removes them.
+		// 対象のすべてのノートが持つタグは最初からチェック済みにし、チェックを外すと削除する。
 		applied: choice.registered,
 		removal: choice.appliedCount
-			? { label: "Remove tag", run: () => removeTag(choice.tag) }
+			? { label: t("tag.remove"), run: () => removeTag(choice.tag) }
 			: undefined,
 	};
 }
@@ -67,23 +68,19 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 	) {
 		super(
 			{
-				placeholder: "Select tags to add (type to create a new tag)",
+				placeholder: t("tag.placeholder"),
 				contextLabel: targetLabel,
-				actionLabel: "Add",
+				actionLabel: t("tag.controls.add"),
 				controls: {
 					plugin,
 					category: "tag-insertion",
-					title: "Tag insert selector",
-					description:
-						"Search existing tags or type a new tag. Checked tags are added to the target notes; unchecking a tag that all targets have removes it.",
-					actionLabel: "Add",
+					title: t("tag.controls.title"),
+					description: t("tag.controls.description"),
+					actionLabel: t("tag.controls.add"),
 					shortcuts: [
-						["→", "Preview the tag in core Search without leaving this selector"],
-						["Space", "Toggle checks in selection mode"],
-						[
-							"Ctrl+Enter",
-							"Apply the checks: add checked tags and remove unchecked ones; with no changes, add the selected tags",
-						],
+						["→", t("tag.shortcut.preview")],
+						["Space", t("tag.shortcut.toggle")],
+						["Ctrl+Enter", t("tag.shortcut.apply")],
 					],
 				},
 			},
@@ -106,10 +103,10 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 	): Promise<void> {
 		const search = getGlobalSearch(this.plugin.app);
 		if (!search) {
-			new Notice("Enable Obsidian's search core plugin to preview tags.");
+			new Notice(t("tag.notice.noSearchCore"));
 			return;
 		}
-		// The core API's second argument reveals search without activating its leaf.
+		// コア API の 2 番目の引数で、リーフを有効化せずに検索を表示する。
 		search.openGlobalSearch(`tag:#${candidate.value}`, false);
 	}
 
@@ -120,7 +117,7 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 		this.choices = this.choices.map((choice) => {
 			if (choice.tag !== tag) return choice;
 			const { appliedCount: _applied, ...rest } = choice;
-			// Notes that still have the tag inline keep counting toward its usage.
+			// まだインラインでタグを持つノートは、タグの使用数に含め続ける。
 			return {
 				...rest,
 				registered: false,
@@ -129,7 +126,7 @@ export class TagSelectionModal extends MultiSelectModal<string> {
 		});
 	}
 
-	// Highlight with the same text used for matching, without the optional `#`.
+	// 一致判定と同じテキストでハイライトする。省略可能な `#` は除く。
 	protected override matchQuery(query: string): string {
 		return normalizeTagQuery(query);
 	}

@@ -3,17 +3,16 @@ import type { ModeSettingsMap, SearchHistoryCategory } from "src/settings/model"
 import { paletteModeAlias } from "src/palette/modes";
 
 /**
- * Reads a prefixed input the way the palette did before Home. Palettes now
- * enter modes through `src/palette/modes`; this remains for history rows stored
- * without a category.
+ * Home の前のパレットと同じように、接頭辞付きの入力を読む。パレットは今では
+ * `src/palette/modes` を通じてモードに入る。これは、カテゴリなしで保存された履歴の行のために残す。
  */
 export function parseInput(raw: string, modes: ModeSettingsMap): ParsedInput {
 	const lower = raw.toLocaleLowerCase();
-	// Read the retired alias only for legacy stored history, not live mode entry.
+	// 廃止されたエイリアスは、保存済みの履歴のためだけに読む。モードに入る操作では読まない。
 	const directoryAlias = "esdir";
 	if (lower === directoryAlias.toLocaleLowerCase()) {
-		// Why: the folder-wide alias is useful as a zero-query search; requiring a
-		// trailing space would make it look like an ordinary file query until the user types more.
+		// Why: フォルダー全体のエイリアスは、クエリなしの検索として役立つ。末尾の空白を
+		// 必須にすると、ユーザーがさらに打つまでは普通のファイル検索に見えてしまうため。
 		return {
 			raw,
 			mode: "everything",

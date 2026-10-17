@@ -2,8 +2,9 @@ import type { PropertyKind } from "src/palette/results";
 import { formatPropertyValue } from "src/properties/propertyKind";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 import { ICONS } from "src/ui/icons";
+import { t } from "src/i18n";
 
-/** The kinds edited by typing a single value. */
+/** 単一の値を入力して編集する種類。 */
 export type InputPropertyKind = Extract<PropertyKind, "text" | "number" | "date" | "datetime">;
 
 export type PropertyInputCheck =
@@ -19,8 +20,8 @@ function isCalendarDate(year: number, month: number, day: number): boolean {
 }
 
 /**
- * Checks a typed value for its property kind. Empty input is always accepted and
- * stored as an empty value, so a value can be cleared without removing its key.
+ * 入力した値を、その種類について確認する。空の入力は常に受け付け、空の値として保存する。
+ * そのためキーを削除せずに、値だけを消せる。
  */
 export function checkPropertyInput(kind: InputPropertyKind, input: string): PropertyInputCheck {
 	const value = input.trim();
@@ -30,13 +31,13 @@ export function checkPropertyInput(kind: InputPropertyKind, input: string): Prop
 		const number = Number(value);
 		return Number.isFinite(number)
 			? { ok: true, value: number }
-			: { ok: false, reason: "Enter a number." };
+			: { ok: false, reason: t("property.input.number") };
 	}
 	if (kind === "date") {
 		const match = DATE_PATTERN.exec(value);
 		return match && isCalendarDate(Number(match[1]), Number(match[2]), Number(match[3]))
 			? { ok: true, value }
-			: { ok: false, reason: "Enter a date as YYYY-MM-DD." };
+			: { ok: false, reason: t("property.input.date") };
 	}
 	const match = DATETIME_PATTERN.exec(value);
 	const valid =
@@ -45,23 +46,21 @@ export function checkPropertyInput(kind: InputPropertyKind, input: string): Prop
 		Number(match[4]) < 24 &&
 		Number(match[5]) < 60 &&
 		Number(match[6] ?? 0) < 60;
-	return valid
-		? { ok: true, value }
-		: { ok: false, reason: "Enter a date and time as YYYY-MM-DDTHH:mm." };
+	return valid ? { ok: true, value } : { ok: false, reason: t("property.input.datetime") };
 }
 
-/** One row of the input selector; a row without `value` cannot be chosen. */
+/** 入力の選択肢の1行。`value` がない行は選べない。 */
 export interface PropertyInputRow {
 	label: string;
 	description: string;
 	icon: string;
-	/** The value the row writes, when the row can be chosen. */
+	/** 選べるとき、その行が書き込む値。 */
 	value?: string | number;
 }
 
 /**
- * The rows for the typed input: the typed value itself first (or the reason it cannot
- * be written), then the values other notes use that match the input.
+ * 入力された値の行: まず入力した値そのもの(書き込めないならその理由)、次に入力に一致する、
+ * ほかのノートが使っている値。
  */
 export function propertyInputRows(options: {
 	kind: InputPropertyKind;
@@ -70,10 +69,17 @@ export function propertyInputRows(options: {
 	vaultValues: readonly string[];
 }): PropertyInputRow[] {
 	const { kind, query, current, vaultValues } = options;
-	const description = `Current: ${formatPropertyValue(kind, current)}`;
+	const description = t("property.input.current", {
+		value: formatPropertyValue(kind, current),
+	});
 	const check = checkPropertyInput(kind, query);
 	const setRow: PropertyInputRow = check.ok
-		? { label: `Set to "${query}"`, description, icon: ICONS.check, value: check.value }
+		? {
+				label: t("property.input.setTo", { value: query }),
+				description,
+				icon: ICONS.check,
+				value: check.value,
+			}
 		: { label: check.reason, description, icon: ICONS.error };
 	const usable = vaultValues.flatMap((value) => {
 		const usableCheck = checkPropertyInput(kind, value);
@@ -81,7 +87,7 @@ export function propertyInputRows(options: {
 			? [
 					{
 						label: value,
-						description: "Used in the vault",
+						description: t("property.input.usedInVault"),
 						icon: ICONS.list,
 						value: usableCheck.value,
 					},

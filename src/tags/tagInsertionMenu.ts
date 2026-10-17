@@ -6,9 +6,9 @@ import type MyPalettePlugin from "src/main";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 
 /**
- * Resolves a palette result to an indexed Markdown note. Obsidian-excluded files are
- * skipped instead of imported: adding a tag is not a reason to move a note
- * into the vault index, unlike MOC insertion which needs a link target.
+ * パレットの結果を、インデックス済みの Markdown ノートに解決する。Obsidian の除外ファイルは
+ * 取り込まずにスキップする。タグを付けるためだけにノートを保管庫のインデックスへ移すべきではないため。
+ * MOC への挿入はリンク先が必要なので、この扱いとは異なる。
  */
 function resolveTagTarget(app: App, result: PaletteResult): TFile | undefined {
 	if (
@@ -32,8 +32,8 @@ function resolveTagTarget(app: App, result: PaletteResult): TFile | undefined {
 }
 
 /**
- * Adds one action that inserts the chosen tags into every selected note. `onDone` runs only
- * after tags were applied, so cancelling the selector leaves the palette where it was.
+ * 選んだすべてのノートに、選んだタグを挿入するアクションを 1 つ追加する。`onDone` は
+ * タグを適用した後にだけ実行する。セレクターをキャンセルしたときは、パレットの位置を保つ。
  */
 export function addTagInsertionMenuItems(
 	menu: PaletteMenu,

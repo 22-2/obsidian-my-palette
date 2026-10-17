@@ -1,20 +1,43 @@
 import { DropdownComponent, type Setting } from "obsidian";
 import {
+	FILE_SORT_PRIORITIES,
 	FILE_SORT_PRIORITY_OPTIONS,
 	type FileSortPriorities,
 	type FileSortPriority,
 	type FileSortState,
 } from "src/settings/model";
 import { moveByInsertionIndex } from "src/settings/fileSortPriorityOrdering";
+import { t } from "src/i18n";
+
+/** 保存される値(英語のトークン)に対応する、表示名。並べ替えの名前は data.json に残すので、表示だけを訳す。 */
+const SORT_PRIORITY_LABELS: Partial<Record<FileSortPriority, string>> = {
+	[FILE_SORT_PRIORITIES.filenamePrefixMatch]: t("sort.label.filenamePrefixMatch"),
+	[FILE_SORT_PRIORITIES.aliasPrefixMatch]: t("sort.label.aliasPrefixMatch"),
+	[FILE_SORT_PRIORITIES.filenameFuzzyMatch]: t("sort.label.filenameFuzzyMatch"),
+	[FILE_SORT_PRIORITIES.aliasFuzzyMatch]: t("sort.label.aliasFuzzyMatch"),
+	[FILE_SORT_PRIORITIES.tagMatch]: t("sort.label.tagMatch"),
+	[FILE_SORT_PRIORITIES.matchCoverage]: t("sort.label.matchCoverage"),
+	[FILE_SORT_PRIORITIES.folderPathMatch]: t("sort.label.folderPathMatch"),
+	[FILE_SORT_PRIORITIES.lowerPriorFolders]: t("sort.label.lowerPriorFolders"),
+	[FILE_SORT_PRIORITIES.activity]: t("sort.label.activity"),
+	[FILE_SORT_PRIORITIES.lastModified]: t("sort.label.lastModified"),
+	[FILE_SORT_PRIORITIES.aliasesCount]: t("sort.label.aliasesCount"),
+	[FILE_SORT_PRIORITIES.alphabetical]: t("sort.label.alphabetical"),
+	[FILE_SORT_PRIORITIES.alphabeticalReverse]: t("sort.label.alphabeticalReverse"),
+};
+
+function sortPriorityLabel(priority: FileSortPriority): string {
+	return SORT_PRIORITY_LABELS[priority] ?? priority;
+}
 
 const STATE_LABELS: Record<FileSortState, string> = {
-	blank: "On blank",
-	input: "On input",
+	blank: t("settings.sort.onBlank"),
+	input: t("settings.sort.onInput"),
 };
 
 /**
- * Render the Office-style dual list separately from Obsidian's ordinary
- * controls because ordering, enablement, and query state form one atomic value.
+ * Office 風の二段のリストを、Obsidian の通常の操作とは分けて描く。並び順・有効かどうか・
+ * 検索の状態が、1つの不可分な値を成すため。
  */
 export function renderFileSortPriorityControl(
 	setting: Setting,
@@ -24,7 +47,7 @@ export function renderFileSortPriorityControl(
 	setting.settingEl.addClass("my-palette-sort-priorities-setting");
 	const control = setting.controlEl;
 	const stateRow = control.createDiv({ cls: "my-palette-sort-priorities__state" });
-	stateRow.createSpan({ text: "Apply when" });
+	stateRow.createSpan({ text: t("settings.sort.applyWhen") });
 	let state: FileSortState = "blank";
 	let selectedEnabled: FileSortPriority | undefined;
 	let selectedDisabled: FileSortPriority | undefined;
@@ -36,21 +59,27 @@ export function renderFileSortPriorityControl(
 
 	const dualList = control.createDiv({ cls: "my-palette-sort-priorities__dual-list" });
 	const enabledColumn = dualList.createDiv({ cls: "my-palette-sort-priorities__column" });
-	enabledColumn.createDiv({ cls: "my-palette-sort-priorities__label", text: "Enabled" });
+	enabledColumn.createDiv({
+		cls: "my-palette-sort-priorities__label",
+		text: t("settings.sort.enabled"),
+	});
 	const enabledList = enabledColumn.createDiv({
 		cls: "my-palette-sort-priorities__list",
 	});
 	const transferButtons = dualList.createDiv({ cls: "my-palette-sort-priorities__buttons" });
 	const enableButton = transferButtons.createEl("button", {
 		text: "←",
-		attr: { type: "button", "aria-label": "Enable selected sort priority" },
+		attr: { type: "button", "aria-label": t("settings.sort.enableAria") },
 	});
 	const disableButton = transferButtons.createEl("button", {
 		text: "→",
-		attr: { type: "button", "aria-label": "Disable selected sort priority" },
+		attr: { type: "button", "aria-label": t("settings.sort.disableAria") },
 	});
 	const disabledColumn = dualList.createDiv({ cls: "my-palette-sort-priorities__column" });
-	disabledColumn.createDiv({ cls: "my-palette-sort-priorities__label", text: "Disabled" });
+	disabledColumn.createDiv({
+		cls: "my-palette-sort-priorities__label",
+		text: t("settings.sort.disabled"),
+	});
 	const disabledList = disabledColumn.createDiv({
 		cls: "my-palette-sort-priorities__list",
 	});
@@ -77,8 +106,8 @@ export function renderFileSortPriorityControl(
 		];
 		const target = options[dropIndex];
 		const last = options.at(-1);
-		// Overlay the indicator instead of inserting it into the list flow. Moving
-		// layout under the pointer can emit dragleave and discard an otherwise valid drop.
+		// 挿入位置の表示は、リストの流れに差し込まず、重ねて描く。ポインターの下でレイアウトが動くと、
+		// dragleave が発火して、本来有効なドロップを捨ててしまうため。
 		const indicatorTop = target
 			? target.offsetTop
 			: last
@@ -110,7 +139,7 @@ export function renderFileSortPriorityControl(
 		const selected = enabled ? selectedEnabled === priority : selectedDisabled === priority;
 		const option = list.createEl("button", {
 			cls: `my-palette-sort-priorities__option${selected ? " is-selected" : ""}`,
-			text: priority,
+			text: sortPriorityLabel(priority),
 			attr: {
 				type: "button",
 				role: "option",
@@ -182,8 +211,8 @@ export function renderFileSortPriorityControl(
 				".my-palette-sort-priorities__option",
 			),
 		];
-		// Resolve the destination from one stable list coordinate space. Child-level
-		// handlers could miss a drop when the pointer crossed the gap indicator.
+		// 挿入先は、1つの安定したリストの座標系から決める。子要素のハンドラーは、ポインターが
+		// 隙間の表示を横切ったときにドロップを取りこぼすことがあるため。
 		const targetIndex = options.findIndex((option) => {
 			const rect = option.getBoundingClientRect();
 			return event.clientY < rect.top + rect.height / 2;

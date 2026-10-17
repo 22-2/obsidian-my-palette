@@ -6,11 +6,10 @@ import type { PaletteMenu } from "src/ui/paletteMenu";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 
 /**
- * Adds an action that opens the Properties mode for the selected Markdown notes, so their
- * properties can be edited without opening them first. One note lists its own properties;
- * several list the keys of all of them and edit every note together. Other files are skipped,
- * and a selection with no note gets no item. `onSelected` closes a modal palette before the
- * new one opens.
+ * 選んだ Markdown ノートのプロパティモードを開く操作を加える。開かずにプロパティを編集できる。
+ * ノートが1つなら、そのプロパティを一覧にする。複数なら、すべてのキーを一覧にして、
+ * すべてのノートをまとめて編集する。ほかのファイルは飛ばし、ノートがない選択では項目を出さない。
+ * `onSelected` は、新しいパレットを開く前にモーダルのパレットを閉じる。
  */
 export function addPropertyEditMenuItem(
 	menu: PaletteMenu,

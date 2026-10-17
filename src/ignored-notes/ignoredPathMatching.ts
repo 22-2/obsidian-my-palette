@@ -1,6 +1,6 @@
 /**
- * Keep filter matching independent from Obsidian so path rules can be tested
- * in the Node-based unit-test environment without loading the desktop package.
+ * パスの一致判定を Obsidian から独立させる。これにより、デスクトップ版のパッケージを読み込まずに、
+ * Node ベースのユニットテスト環境でパスのルールをテストできる。
  */
 
 function normalizePath(value: string): string {
@@ -19,8 +19,8 @@ export function isUserIgnoredPathWithFilters(
 }
 
 /**
- * Compiles the filters once, for callers that test many paths against the same filters.
- * An invalid regular expression matches nothing.
+ * フィルターを一度だけコンパイルする。同じフィルターで多くのパスを判定する呼び出し元向け。
+ * 不正な正規表現は何にも一致しない。
  */
 export function createUserIgnoredPathMatcher(
 	filters: readonly string[],

@@ -1,7 +1,8 @@
 import type { App } from "obsidian";
 import { getEnabledCorePlugin } from "src/platform/obsidianInternals";
+import { t } from "src/i18n";
 
-/** One node of the core Bookmarks plugin's tree. The palette keeps a reference to edit it. */
+/** コアのブックマークプラグインの木の1つのノード。パレットは編集のために参照を保つ。 */
 export interface BookmarkEntry {
 	type: string;
 	title?: string;
@@ -12,8 +13,8 @@ export interface BookmarkEntry {
 }
 
 /**
- * The parts of the core Bookmarks plugin instance the palette uses. `addItem` takes the
- * parent group; omitting it adds to the top level.
+ * パレットが使う、コアのブックマークプラグインのインスタンスの部分。`addItem` は親のグループを受け取る。
+ * 省くと最上位に追加する。
  */
 export interface BookmarksInstance {
 	items?: BookmarkEntry[];
@@ -23,36 +24,36 @@ export interface BookmarksInstance {
 	saveData?(): void | Promise<void>;
 }
 
-/** A group a bookmark can be added to or moved into, with the titles leading to it. */
+/** ブックマークを追加または移動できるグループ。そこへ至るタイトルを付ける。 */
 export interface BookmarkGroup {
 	group: BookmarkEntry;
 	path: readonly string[];
 }
 
-/** Separator between group titles, shared with the Bookmarks mode's result titles. */
+/** グループのタイトルの区切り。ブックマークのモードの結果のタイトルと共有する。 */
 export const BOOKMARK_PATH_SEPARATOR = " › ";
 
-/** The enabled core Bookmarks plugin, or undefined when it is off. */
+/** 有効なコアのブックマークプラグイン。オフなら undefined。 */
 export function getBookmarksInstance(app: App): BookmarksInstance | undefined {
 	return getEnabledCorePlugin<BookmarksInstance>(app, "bookmarks");
 }
 
-/** Whether the instance offers every operation the bookmark actions call. */
+/** インスタンスが、ブックマークの操作が呼ぶすべての操作を提供しているかどうか。 */
 export function canEditBookmarks(
 	instance: BookmarksInstance | undefined,
 ): instance is Required<Pick<BookmarksInstance, "addItem" | "removeItem">> & BookmarksInstance {
 	return typeof instance?.addItem === "function" && typeof instance.removeItem === "function";
 }
 
-/** The title Obsidian shows for an entry: its own title, else the file name or query. */
+/** Obsidian が項目に出すタイトル: 項目自身のタイトル、なければファイル名または検索語。 */
 export function bookmarkLabel(entry: BookmarkEntry): string {
 	if (entry.title) return entry.title;
 	if (entry.type === "file" && entry.path)
 		return (entry.path.split("/").pop() ?? entry.path).replace(/\.md$/, "");
-	return entry.path || entry.query || "Untitled";
+	return entry.path || entry.query || t("bookmark.untitled");
 }
 
-/** Every group in tree order, each with the titles from the top level down to it. */
+/** 木の順に並ぶすべてのグループ。それぞれ、最上位からそこまでのタイトルを付ける。 */
 export function listBookmarkGroups(
 	items: readonly BookmarkEntry[],
 	parentPath: readonly string[] = [],
@@ -64,7 +65,7 @@ export function listBookmarkGroups(
 	});
 }
 
-/** The list that directly holds `entry`: the top level, a group's items, or undefined. */
+/** `entry` を直接持つ一覧: 最上位、グループの項目、または undefined。 */
 export function findContainingList(
 	items: BookmarkEntry[],
 	entry: BookmarkEntry,
@@ -78,7 +79,7 @@ export function findContainingList(
 	return undefined;
 }
 
-/** Saves the tree and redraws Obsidian's Bookmarks view after a direct edit. */
+/** 木を保存し、直接の編集のあとに Obsidian のブックマークの表示を描き直す。 */
 function persist(instance: BookmarksInstance): void {
 	if (typeof instance.onItemsChanged === "function") instance.onItemsChanged(true);
 	else void instance.saveData?.();
@@ -89,8 +90,8 @@ function targetList(instance: BookmarksInstance, parent: BookmarkEntry | undefin
 }
 
 /**
- * Bookmarks each file path in `parent` (the top level when undefined). Paths already
- * bookmarked in that group are skipped, as Obsidian would show them twice.
+ * `parent`(undefined なら最上位)に、各ファイルのパスをブックマークする。そのグループに既に
+ * ブックマークされたパスは、Obsidian では二重に表示されてしまうので飛ばす。
  */
 export function addFileBookmarks(
 	instance: BookmarksInstance,
@@ -113,7 +114,7 @@ export function addFileBookmarks(
 	return { added, skipped: new Set(paths).size - added };
 }
 
-/** Moves entries into `parent` (the top level when undefined), skipping ones already there. */
+/** 項目を `parent`(undefined なら最上位)へ移す。既にそこにあるものは飛ばす。 */
 export function moveBookmarks(
 	instance: BookmarksInstance,
 	entries: readonly BookmarkEntry[],
@@ -122,7 +123,7 @@ export function moveBookmarks(
 	const destination = targetList(instance, parent);
 	let moved = 0;
 	for (const entry of new Set(entries)) {
-		// Why: a group cannot move into itself, and moving to the current group changes nothing.
+		// Why: グループは自分自身へ移せず、現在のグループへ移しても何も変わらない。
 		if (entry === parent || destination.includes(entry)) continue;
 		if (parent && entry.type === "group" && findContainingList(entry.items ?? [], parent))
 			continue;
@@ -134,7 +135,7 @@ export function moveBookmarks(
 	return moved;
 }
 
-/** Removes entries from the tree; the files and searches they point to stay untouched. */
+/** 項目を木から削除する。指しているファイルや検索はそのまま残る。 */
 export function removeBookmarks(
 	instance: BookmarksInstance,
 	entries: readonly BookmarkEntry[],
@@ -145,7 +146,7 @@ export function removeBookmarks(
 	return unique.length;
 }
 
-/** Sets the title Obsidian shows for an entry; an empty title falls back to the file name. */
+/** Obsidian が項目に出すタイトルを設定する。空のタイトルはファイル名に戻す。 */
 export function setBookmarkTitle(
 	instance: BookmarksInstance,
 	entry: BookmarkEntry,
@@ -158,8 +159,8 @@ export function setBookmarkTitle(
 }
 
 /**
- * Adds a top-level group, or returns the existing top-level group with the same title
- * (ignoring case) so typing an existing name never creates a duplicate.
+ * 最上位にグループを追加する。同じタイトル(大文字・小文字は区別しない)の既存の最上位グループがあれば
+ * それを返す。既存の名前を入力しても、重複を作らないため。
  */
 export function createBookmarkGroup(
 	instance: BookmarksInstance,

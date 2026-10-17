@@ -75,7 +75,7 @@ export class MyPaletteSettingTab extends PluginSettingTab {
 				);
 				break;
 			case "searchHistory.daysToKeep":
-				// Keep interactive edits aligned with the documented default when the control value is invalid.
+				// 設定値が不正なときも、操作による変更は文書化された既定値に合わせる。
 				settings.searchHistory.daysToKeep = bounded(
 					value,
 					DEFAULT_SETTINGS.searchHistory.daysToKeep,

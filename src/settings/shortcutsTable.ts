@@ -11,17 +11,18 @@ import {
 	type PaletteHotkey,
 	worksIn,
 } from "src/ui/hotkeys";
+import { t } from "src/i18n";
 
 const SCOPE_NAMES: Record<HotkeyScope, string> = {
-	palette: "Palette",
-	selector: "Selectors",
-	"tag-insert-selector": "Tag insert selector",
-	"moc-insert-selector": "MOC insert selector",
-	"moc-remove-selector": "MOC remove selector",
-	"property-value-selector": "Property value selector",
+	palette: t("hotkey.scope.palette"),
+	selector: t("hotkey.scope.selector"),
+	"tag-insert-selector": t("hotkey.scope.tagInsert"),
+	"moc-insert-selector": t("hotkey.scope.mocInsert"),
+	"moc-remove-selector": t("hotkey.scope.mocRemove"),
+	"property-value-selector": t("hotkey.scope.propertyValue"),
 };
 
-/** The order places are listed in a When cell and, by that list, the rows of the table. */
+/** 「場所」の欄に並ぶ順。その並びが、表の行の順にもなる。 */
 const SCOPE_ORDER: readonly HotkeyScope[] = [
 	"palette",
 	"selector",
@@ -35,22 +36,22 @@ function orderedScopes(scopes: readonly HotkeyScope[]): HotkeyScope[] {
 	return SCOPE_ORDER.filter((scope) => scopes.includes(scope));
 }
 
-/** Palettes and selectors together read as one place, which comes before any narrower one. */
+/** パレットとセレクターの両方は、ひとつの場所として読める。より狭い場所より先に置く。 */
 function coversPalettesAndSelectors(scopes: readonly HotkeyScope[]): boolean {
 	return scopes.includes("palette") && scopes.includes("selector");
 }
 
-/** Names the places a shortcut works, as the When column shows them. */
+/** 「場所」の欄に出る、ショートカットが使える場所の名前。 */
 export function hotkeyScopeLabel(scopes: readonly HotkeyScope[]): string {
-	if (coversPalettesAndSelectors(scopes)) return "All palettes and selectors";
+	if (coversPalettesAndSelectors(scopes)) return t("hotkey.scope.everywhere");
 	return orderedScopes(scopes)
 		.map((scope) => SCOPE_NAMES[scope])
 		.join(", ");
 }
 
 /**
- * Sorts shortcuts by their When cell: everywhere first, then the places in
- * SCOPE_ORDER, a shorter list before a longer one that starts the same way.
+ * ショートカットを「場所」の欄で並べる。どこでも使えるものが先、次に SCOPE_ORDER の順の場所。
+ * 同じ書き出しなら、短いリストが先。
  */
 export function compareScopes(a: readonly HotkeyScope[], b: readonly HotkeyScope[]): number {
 	const keyOf = (scopes: readonly HotkeyScope[]) =>
@@ -65,19 +66,19 @@ export function compareScopes(a: readonly HotkeyScope[], b: readonly HotkeyScope
 }
 
 /**
- * Short names for the place chips in a group heading. The heading's tooltip and accessible
- * name list the full names, so the chips stay short as more places are added.
+ * グループの見出しにあるチップの短い名前。見出しのツールチップとアクセシブルな名前は正式名を並べるので、
+ * 場所が増えてもチップは短いままになる。
  */
 const SCOPE_SHORT_NAMES: Record<HotkeyScope, string> = {
-	palette: "Palette",
-	selector: "Selectors",
-	"tag-insert-selector": "Tag",
-	"moc-insert-selector": "MOC +",
-	"moc-remove-selector": "MOC −",
-	"property-value-selector": "Property",
+	palette: t("hotkey.short.palette"),
+	selector: t("hotkey.short.selector"),
+	"tag-insert-selector": t("hotkey.short.tag"),
+	"moc-insert-selector": t("hotkey.short.moc"),
+	"moc-remove-selector": t("hotkey.short.mocRemove"),
+	"property-value-selector": t("hotkey.short.property"),
 };
 
-/** Places offered by the place filter. "selector" is the group of every selector, not one place. */
+/** 場所の絞り込みが出す場所。「selector」は1つの場所ではなく、すべてのセレクターのグループ。 */
 const FILTER_PLACES = SCOPE_ORDER.filter((scope) => scope !== "selector");
 
 const TABLE_COLUMNS = 3;
@@ -86,7 +87,7 @@ const HOTKEY_ACTION_LIST = (Object.keys(HOTKEY_ACTIONS) as HotkeyAction[]).sort(
 	compareScopes(HOTKEY_ACTIONS[a].scopes, HOTKEY_ACTIONS[b].scopes),
 );
 
-/** Shortcuts used in the same places share a group, so each one is listed once. */
+/** 同じ場所で使うショートカットは1つのグループにまとめ、それぞれを1回だけ並べる。 */
 function scopeGroupKey(scopes: readonly HotkeyScope[]): string {
 	return coversPalettesAndSelectors(scopes) ? "*" : orderedScopes(scopes).join(" ");
 }
@@ -97,7 +98,7 @@ interface ShortcutGroup {
 	actions: HotkeyAction[];
 }
 
-/** A group's own tbody, headed by chips for the places its shortcuts work in. */
+/** グループ自身の tbody。その操作が使える場所のチップを見出しに付ける。 */
 function createGroup(table: HTMLTableElement, scopes: readonly HotkeyScope[]): ShortcutGroup {
 	const body = table.createEl("tbody", { cls: "my-palette-shortcuts__group" });
 	const heading = body.createEl("tr").createEl("th", {
@@ -133,10 +134,9 @@ interface ShortcutRow {
 }
 
 /**
- * The Shortcuts table: one row per action, with a keybinding that is recorded by
- * clicking it. Rows are grouped by the places they work in, so a new place adds a chip
- * to a heading instead of a column. The table is drawn by hand, so its events use the
- * elements themselves and work in a popout settings window too.
+ * ショートカットの表: 操作ごとに1行。キー割り当てをクリックして記録する。行は動作する場所でグループ化するので、
+ * 新しい場所は列ではなく見出しのチップとして増える。表は手で描くので、そのイベントは要素自体を使い、
+ * ポップアウトの設定ウィンドウでも動く。
  */
 export function renderShortcutsTable(setting: Setting, plugin: SettingsHost): void {
 	setting.settingEl.addClass("my-palette-shortcuts");
@@ -147,15 +147,15 @@ export function renderShortcutsTable(setting: Setting, plugin: SettingsHost): vo
 		cls: "my-palette-shortcuts__filter",
 		attr: {
 			type: "search",
-			placeholder: "Filter by command, keybinding or place",
-			"aria-label": "Filter shortcuts",
+			placeholder: t("hotkey.table.filterPlaceholder"),
+			"aria-label": t("hotkey.table.filterLabel"),
 		},
 	});
 	const placeFilter = controls.createEl("select", {
 		cls: "dropdown my-palette-shortcuts__place-filter",
-		attr: { "aria-label": "Filter by place" },
+		attr: { "aria-label": t("hotkey.table.placeLabel") },
 	});
-	placeFilter.createEl("option", { text: "All places", attr: { value: "" } });
+	placeFilter.createEl("option", { text: t("hotkey.table.allPlaces"), attr: { value: "" } });
 	for (const scope of FILTER_PLACES)
 		placeFilter.createEl("option", { text: SCOPE_NAMES[scope], attr: { value: scope } });
 
@@ -166,8 +166,9 @@ export function renderShortcutsTable(setting: Setting, plugin: SettingsHost): vo
 	columns.createEl("col", { cls: "my-palette-shortcuts__key-column" });
 	columns.createEl("col", { cls: "my-palette-shortcuts__reset-column" });
 	const head = table.createEl("thead").createEl("tr");
-	for (const label of ["Command", "Keybinding"]) head.createEl("th", { text: label });
-	head.createEl("th", { attr: { "aria-label": "Reset" } });
+	for (const label of [t("hotkey.table.command"), t("hotkey.table.keybinding")])
+		head.createEl("th", { text: label });
+	head.createEl("th", { attr: { "aria-label": t("hotkey.table.reset") } });
 
 	const rows = new Map<HotkeyAction, ShortcutRow>();
 	const groups = new Map<string, ShortcutGroup>();
@@ -177,7 +178,7 @@ export function renderShortcutsTable(setting: Setting, plugin: SettingsHost): vo
 
 	for (const action of HOTKEY_ACTION_LIST) {
 		const definition = HOTKEY_ACTIONS[action];
-		// The list is sorted by place, so each group's rows come together.
+		// 一覧は場所で並んでいるので、各グループの行はまとまって現れる。
 		const groupKey = scopeGroupKey(definition.scopes);
 		let group = groups.get(groupKey);
 		if (!group) {
@@ -199,7 +200,7 @@ export function renderShortcutsTable(setting: Setting, plugin: SettingsHost): vo
 		const keyCell = row.createEl("td");
 		const key = keyCell.createDiv({
 			cls: "my-palette-shortcuts__key",
-			// Named by its row and its own text, so only the description's tooltip shows.
+			// 行とそれ自身のテキストで名付けるので、説明のツールチップだけが出る。
 			attr: {
 				id: keyId,
 				role: "button",
@@ -209,9 +210,12 @@ export function renderShortcutsTable(setting: Setting, plugin: SettingsHost): vo
 		});
 		const resetCell = row.createEl("td");
 		const reset = resetCell.createEl("button", {
-			text: "Reset",
+			text: t("hotkey.table.reset"),
 			cls: "my-palette-shortcuts__reset",
-			attr: { type: "button", "aria-label": `Reset ${definition.name}` },
+			attr: {
+				type: "button",
+				"aria-label": t("hotkey.table.resetLabel", { name: definition.name }),
+			},
 		});
 
 		const errorRow = tbody.createEl("tr", { cls: "my-palette-shortcuts__error-row" });
@@ -231,7 +235,7 @@ export function renderShortcutsTable(setting: Setting, plugin: SettingsHost): vo
 
 		key.addEventListener("click", editor.startRecording);
 		key.addEventListener("keydown", (event) => {
-			// Enter and Space open the recorder like a click; they are not recorded themselves.
+			// Enter と Space は、クリックと同じく記録を開始する。それ自体は記録されない。
 			if (!editor.isRecording() && (event.key === "Enter" || event.key === " ")) {
 				event.preventDefault();
 				editor.startRecording();
@@ -254,10 +258,10 @@ export function renderShortcutsTable(setting: Setting, plugin: SettingsHost): vo
 				matchesQuery(action, query, plugin) &&
 				(!place || worksIn(HOTKEY_ACTIONS[action].scopes, place));
 			entry.row.toggleAttribute("hidden", !visible);
-			// Why: an error belongs to its row, so it hides with the row.
+			// Why: エラーは自分の行に属するので、行と一緒に隠れる。
 			entry.errorRow.toggleAttribute("hidden", !visible || !entry.errorRow.textContent);
 		}
-		// A group with no rows left hides its heading too; the chosen place is marked in the rest.
+		// 残る行がないグループは、見出しも隠す。選んだ場所は残りのチップで示す。
 		for (const group of groups.values()) {
 			const empty = group.actions.every((action) => rows.get(action)?.row.hidden);
 			group.body.toggleAttribute("hidden", empty);
@@ -303,12 +307,16 @@ function createRowEditor(action: HotkeyAction, plugin: SettingsHost, parts: RowP
 
 	const render = () => {
 		const hotkey = plugin.settings.hotkeys[action];
-		const label = recording ? "Press a shortcut…" : hotkey ? formatHotkey(hotkey) : "Disabled";
+		const label = recording
+			? t("hotkey.table.recording")
+			: hotkey
+				? formatHotkey(hotkey)
+				: t("hotkey.disabled");
 		parts.key.textContent = label;
 		parts.key.toggleClass("is-recording", recording);
 		parts.key.toggleClass("is-disabled", !recording && !hotkey);
 		parts.key.title = definition.description;
-		// Only a changed binding offers Reset.
+		// 変更された割り当てだけが「リセット」を出す。
 		parts.reset.toggleAttribute("hidden", sameHotkey(hotkey, DEFAULT_HOTKEYS[action]));
 	};
 
@@ -329,11 +337,13 @@ function createRowEditor(action: HotkeyAction, plugin: SettingsHost, parts: RowP
 		} catch (saveError) {
 			plugin.settings.hotkeys[action] = previous;
 			new Notice(
-				`Could not save hotkey: ${saveError instanceof Error ? saveError.message : String(saveError)}`,
+				t("hotkey.table.saveFailed", {
+					message: saveError instanceof Error ? saveError.message : String(saveError),
+				}),
 			);
 		} finally {
 			saving = false;
-			// Another row may now clash with this one, so every row is redrawn.
+			// ほかの行がこの行と衝突するかもしれないので、すべての行を描き直す。
 			parts.renderAll();
 		}
 	};
@@ -355,7 +365,7 @@ function createRowEditor(action: HotkeyAction, plugin: SettingsHost, parts: RowP
 
 	const handleKey = (event: KeyboardEvent) => {
 		if (!recording || event.isComposing) return;
-		// Tab keeps its focus behavior, and cancels a recording the way Escape does.
+		// Tab はフォーカスの挙動を保ち、記録をキャンセルする。Escape と同じように。
 		if (event.key === "Tab") {
 			cancelRecording();
 			return;
@@ -373,7 +383,7 @@ function createRowEditor(action: HotkeyAction, plugin: SettingsHost, parts: RowP
 		if (["Control", "Alt", "Shift", "Meta"].includes(event.key)) return;
 		const hotkey = hotkeyFromEvent(event);
 		if (!hotkey) {
-			showError("Choose a letter, number, function key or key combination.");
+			showError(t("hotkey.table.chooseKey"));
 			return;
 		}
 		void save(hotkey);

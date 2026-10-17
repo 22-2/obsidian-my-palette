@@ -13,7 +13,7 @@ import { getUserIgnoreFilters } from "src/ignored-notes/ignoredPaths";
 import { getCorePluginFolder, isExtensionOpenable } from "src/platform/obsidianInternals";
 import type { MyPaletteSettings } from "src/settings/model";
 
-/** Runs one kind of audit on the vault as it is now, with the exclusions from the settings. */
+/** 今の Vault に対して1種類の監査を実行する。除外は設定から読む。 */
 export async function auditVault(
 	app: App,
 	kind: AuditKind,
@@ -28,12 +28,12 @@ export async function auditVault(
 }
 
 /**
- * Reads what `vaultAudit.ts` judges from the vault and the metadata cache. Only what `kind`
- * needs is read; the rest stays empty, so pass the snapshot to `runAudit` with the same kind.
+ * `vaultAudit.ts` が判定する材料を、Vault とメタデータキャッシュから読む。`kind` に必要なものだけを
+ * 読み、残りは空のままにする。そのため、スナップショットは同じ種類で `runAudit` に渡す。
  */
 export async function collectAuditSnapshot(app: App, kind: AuditKind): Promise<AuditSnapshot> {
 	const { metadataCache, vault } = app;
-	// Why: an empty folder holds no file of any kind, so whether files open does not matter.
+	// Why: 空のフォルダーにはどの種類のファイルもないので、ファイルを開けるかどうかは関係ない。
 	const judgesFiles = kind !== "empty-folders";
 	const judgesContent = kind === "empty-files";
 	const openable = openableExtensions(app);
@@ -41,7 +41,7 @@ export async function collectAuditSnapshot(app: App, kind: AuditKind): Promise<A
 		vault.getFiles().map(async (file): Promise<AuditFile> => {
 			const cache = judgesContent ? metadataCache.getFileCache(file) : null;
 			const written = file.extension === "md" && cache ? hasContent(cache) : undefined;
-			// Why: only notes with a MOC heading are read, so this stays cheap on large vaults.
+			// Why: MOC の見出しがあるノートだけを読むので、大きな Vault でも軽いままにする。
 			const mocOnly =
 				written && cache && hasMocHeading(cache)
 					? isMocOnly(await vault.cachedRead(file))
@@ -66,9 +66,9 @@ export async function collectAuditSnapshot(app: App, kind: AuditKind): Promise<A
 }
 
 /**
- * Obsidian's Excluded files and this plugin's Excluded folders, lifted together by
- * "Include Obsidian-excluded files" as in File search. Daily notes and Templates stay out of
- * Orphaned files either way: they are rarely linked by nature, not hidden by the user.
+ * Obsidian の除外ファイルと、このプラグインの除外フォルダーをまとめて扱う。ファイル検索と同じく
+ * 「Obsidian の除外ファイルを含める」で両方とも外せる。デイリーノートとテンプレートは、どちらの場合も
+ * 「浮いたファイル」から外す。これらは性質上リンクされないことが多く、ユーザーが隠したわけではないため。
  */
 export function auditExclusions(
 	app: App,
@@ -83,7 +83,7 @@ export function auditExclusions(
 	};
 }
 
-/** The `## MOC` heading that `analyzeMocOnly` looks for. */
+/** `analyzeMocOnly` が探す `## MOC` の見出し。 */
 export function hasMocHeading(cache: CachedMetadata): boolean {
 	return (cache.headings ?? []).some(
 		({ level, heading }) => level === 2 && heading.trim().startsWith("MOC"),
@@ -95,9 +95,9 @@ function hasContent(cache: CachedMetadata): boolean {
 }
 
 /**
- * `unresolvedLinks` only counts links per note, so the notes it names are read again for
- * the line of each link. Its keys are the link paths as written, so a link is broken when
- * its path is one of them; nothing has to be resolved again.
+ * `unresolvedLinks` はノートごとのリンク数しか持たないので、名前の挙がったノートを読み直して
+ * 各リンクの行を取る。キーはリンクが書かれたままのパスなので、リンクがそのどれかに一致すれば壊れている。
+ * 改めて解決する必要はない。
  */
 function collectUnresolvedLinks(app: App): UnresolvedLinkOccurrence[] {
 	const { metadataCache } = app;
@@ -112,7 +112,7 @@ function collectUnresolvedLinks(app: App): UnresolvedLinkOccurrence[] {
 		];
 		return references.flatMap((reference): UnresolvedLinkOccurrence[] => {
 			const link = getLinkpath(reference.link);
-			// Why: a link to a heading in the same note (`[[#heading]]`) has no file to find.
+			// Why: 同じノート内の見出しへのリンク(`[[#見出し]]`)は、探すべきファイルがない。
 			if (!link || !(link in links)) return [];
 			return [
 				"position" in reference
@@ -123,7 +123,7 @@ function collectUnresolvedLinks(app: App): UnresolvedLinkOccurrence[] {
 	});
 }
 
-/** Asks Obsidian once per extension; a vault holds many files of few extensions. */
+/** 拡張子ごとに Obsidian へ一度だけ問い合わせる。Vault は少ない拡張子の多くのファイルを持つため。 */
 function openableExtensions(app: App): (extension: string) => boolean {
 	const known = new Map<string, boolean>();
 	return (extension) => {
@@ -135,12 +135,12 @@ function openableExtensions(app: App): (extension: string) => boolean {
 	};
 }
 
-/** The folders of the Daily notes and Templates core plugins, when they are on. */
+/** デイリーノートとテンプレートのコアプラグインが有効なら、そのフォルダー。 */
 function dailyNoteAndTemplateFolders(app: App): string[] {
 	const folders = ["daily-notes", "templates"].map((id) => getCorePluginFolder(app, id));
 	return folders.flatMap((folder) => {
 		const normalized = folder ? normalizePath(folder) : "";
-		// Why: an unset folder means the vault root, and excluding the root would hide everything.
+		// Why: フォルダーが未設定なら Vault のルートを指すので、ルートを除外するとすべて隠れてしまう。
 		return normalized && normalized !== "/" ? [normalized] : [];
 	});
 }

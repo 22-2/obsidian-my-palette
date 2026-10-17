@@ -29,21 +29,25 @@ import { createAuditKindChoice, syncAuditKindChoice } from "src/palette/auditKin
 import type { AuditKind } from "src/audit/vaultAudit";
 import type { PanelChoice } from "src/ui/panelChoice";
 import type { PanelSwitch } from "src/ui/panelSwitch";
+import { t } from "src/i18n";
 
 export interface PaletteModalOptions {
-	/** Home lists mode entries above the files; off for the file-only palette. */
+	/** Home ではファイルの上にモードの一覧を出す。ファイルだけのパレットでは off にする。 */
 	modeEntries?: boolean;
-	/** The state of a palette closed recently enough to resume. */
+	/** 再開できるほど最近閉じられたパレットの状態。 */
 	restore?: PaletteRestoreState;
-	/** The note that source-dependent modes (links, properties) read, instead of the active note. */
+	/** 元のノートに依存するモード(リンク、プロパティ)が、アクティブなノートの代わりに読むノート。 */
 	sourceFile?: TFile;
-	/** Several notes edited together in Properties; the footer then counts them. */
+	/** プロパティで一緒に編集する複数のノート。フッターはその件数を出す。 */
 	sourceFiles?: readonly TFile[];
 }
 
 function sourceFooterText(app: App, sourceFile?: TFile, sourceFiles?: readonly TFile[]): string {
-	if (sourceFiles && sourceFiles.length > 1) return `Source: ${sourceFiles.length} notes`;
-	return `Source: ${sourceFile?.path ?? app.workspace.getActiveFile()?.path ?? "No active note"}`;
+	if (sourceFiles && sourceFiles.length > 1)
+		return t("palette.source.notes", { count: sourceFiles.length });
+	return t("view.source", {
+		source: sourceFile?.path ?? app.workspace.getActiveFile()?.path ?? t("view.noActiveNote"),
+	});
 }
 
 export class PaletteModal extends SelectionModal<PaletteResult> {
@@ -68,9 +72,9 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	) {
 		super(
 			{
-				title: "Files",
+				title: t("palette.title.files"),
 				getHotkeys: () => plugin.settings.hotkeys,
-				placeholder: "Search files",
+				placeholder: t("palette.placeholder.files"),
 				initialInput,
 				selectionMode: "extended",
 				footerText: sourceFooterText(app, sourceFile, sourceFiles),
@@ -102,7 +106,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override onSelectionModalOpen(): void {
-		// SelectionModal applies and refreshes the initial input.
+		// SelectionModal が初期の入力を適用して更新する。
 		if (this.restore) this.restoreResultView(this.restore);
 		this.historyControls = new PaletteHistoryControls({
 			plugin: this.plugin,
@@ -132,7 +136,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		syncIgnoredToggle(this.ignoredToggle, this.mode);
 	}
 
-	/** What the next Open home resumes: the input, the scope option, and the row and scroll. */
+	/** 次の「ホームを開く」で再開するもの: 入力、範囲のオプション、行とスクロール位置。 */
 	private captureRestoreState(): PaletteRestoreState {
 		return {
 			input: this.session.prefixedInput,
@@ -144,8 +148,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	protected override onSelectionModalClose(): void {
 		this.plugin.paletteOpener.releaseModal(this);
 		this.plugin.paletteOpener.rememberClosedPalette(this.captureRestoreState());
-		// This session owns the request signal; canceling the shared client here
-		// would also interrupt searches in still-open sidebar views.
+		// このセッションが要求のシグナルを持つ。共有のクライアントをここでキャンセルすると、
+		// まだ開いているサイドバーのビューの検索も中断してしまうため。
 		this.session.dispose();
 		this.activeMenu?.close();
 		this.activeMenu = undefined;
@@ -170,7 +174,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override onResultFocus(): void {
-		// Entering a mode is navigation; the alias typed to reach it is not a search.
+		// モードに入るのはナビゲーションであり、そこへ入るために打ったエイリアスは検索ではない。
 		const mode = this.getSelectedItem()?.mode;
 		if (mode === "mode-entry") return;
 		this.session.commitCurrentSearch();
@@ -270,12 +274,12 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private enterMode(result: Extract<PaletteResult, { mode: "mode-entry" }>): void {
 		this.session.enterMode(result.modeId);
 		this.panelInput("");
-		this.clearSuggestions("Searching…");
+		this.clearSuggestions(t("view.searching"));
 		this.refreshSuggestions();
 		this.focusSearchInput();
 	}
 
-	/** Back to Home with the alias selected, so Enter re-enters the mode. */
+	/** エイリアスを選択した状態で Home に戻る。Enter でモードに入り直せるようにする。 */
 	private returnToHome(): void {
 		const alias = this.session.returnToHome();
 		this.panelInput(alias);
@@ -290,10 +294,10 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	private moveToSidebar(): void {
-		// Why: copy the live search and the Obsidian-excluded option before closing. The
-		// alias-prefixed input carries the mode, so the new pane enters it again.
-		// A fresh pane preserves this search without replacing another sidebar
-		// palette, and closing first lets the new input retain focus.
+		// Why: 閉じる前に、いまの検索と Obsidian の除外ファイルのオプションをコピーする。エイリアス付きの
+		// 入力にはモードが含まれるので、新しいペインは同じモードに入り直す。
+		// 新しいペインは、ほかのサイドバーのパレットを置き換えずに、この検索を残す。
+		// 閉じてから開くので、新しい入力がフォーカスを保てる。
 		const input = this.session.prefixedInput;
 		const includeIgnored = this.session.current.ignoredScope;
 		this.close();
@@ -328,7 +332,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private applySearchHistory(result: Extract<PaletteResult, { mode: "search-history" }>): void {
 		this.historyControls?.close();
 		this.suppressHistoryForNextInput = true;
-		// History stores the prefixed form; Home turns it back into a mode.
+		// 履歴はプレフィックス付きの形で保存する。Home がそれをモードに戻す。
 		this.session.returnToHome();
 		this.session.setIgnoredScope(Boolean(result.includeIgnored));
 		this.ignoredToggle?.set(Boolean(result.includeIgnored));
@@ -348,8 +352,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	private async openResultInBackground(result: PaletteResult): Promise<void> {
-		// Background opening does not close the palette, so retain its successful
-		// action behavior for callers that did not click the result list.
+		// Why: 裏で開いてもパレットは閉じないので、成功時の
+		// 操作の挙動を、結果の一覧をクリックしていない呼び出し元のために残す。
 		await openPaletteResultInBackground(this.plugin, result);
 	}
 

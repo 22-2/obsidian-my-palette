@@ -26,7 +26,7 @@ export interface ParsedInput {
 	everythingScope?: EverythingScope;
 }
 
-/** File search and Everything can include files hidden by Obsidian. */
+/** ファイル検索と Everything は、Obsidian が隠しているファイルを含められる。 */
 export function supportsIncludeIgnored(mode: PaletteMode): boolean {
 	return mode === "file" || mode === "everything" || mode === "audit";
 }
@@ -43,13 +43,13 @@ export interface FileResult extends BaseResult {
 	mode: "file";
 	vaultPath: string;
 	file?: TFile;
-	/** True when this result came from the explicit ignored-note search scope. */
+	/** この結果が、明示的な「除外されたノート」の検索範囲から来たなら true。 */
 	ignored?: boolean;
-	/** Tags matched by the current query; omitted for empty-query results. */
+	/** 現在のクエリに一致したタグ。クエリが空の結果では省略する。 */
 	matchedTags?: string[];
-	/** Keywords matched by the current query; omitted for empty and tag-only queries. */
+	/** 現在のクエリに一致したキーワード。空のクエリとタグだけのクエリでは省略する。 */
 	matchedKeywords?: string[];
-	/** Search snapshots also cover Obsidian-excluded files that have no Obsidian TFile. */
+	/** 検索のスナップショットには、Obsidian の TFile を持たない除外ファイルも含む。 */
 	mtime?: number;
 	prior?: number;
 }
@@ -72,7 +72,7 @@ export interface SearchHistoryResult extends Omit<BaseResult, "mode">, SearchHis
 	mode: "search-history";
 }
 
-/** A representative outgoing link or backlink occurrence for a related note. */
+/** 関連するノートの代表的な発リンクまたは被リンクの出現箇所。 */
 export interface RelatedFileResult extends BaseResult {
 	mode: "link" | "backlink";
 	file: TFile;
@@ -84,7 +84,7 @@ export interface BookmarkResult extends BaseResult {
 	kind: "file" | "search";
 	file?: TFile;
 	query?: string;
-	/** The Bookmarks plugin's own entry, so actions can rename, move or remove it. */
+	/** ブックマークプラグイン自身の項目。操作で名前の変更・移動・削除ができるように持つ。 */
 	entry?: BookmarkEntry;
 }
 
@@ -94,20 +94,20 @@ export interface SmartConnectionResult extends BaseResult {
 	score: number;
 }
 
-/** A Home row that enters a mode instead of opening anything. */
+/** 何も開かず、モードに入る Home の行。 */
 export interface ModeEntryResult extends Omit<BaseResult, "mode"> {
 	mode: "mode-entry";
 	modeId: PaletteModeId;
 	alias: string;
 }
 
-/** An open main-area tab; choosing it activates the tab instead of opening a file. */
+/** 開いているメイン領域のタブ。選ぶとファイルを開かず、そのタブを有効にする。 */
 export interface TabResult extends BaseResult {
 	mode: "tab";
 	file?: TFile;
 }
 
-/** An installed community plugin; choosing it opens its folder in an external editor. */
+/** インストール済みのコミュニティプラグイン。選ぶと、そのフォルダーを外部エディターで開く。 */
 export interface PluginResult extends BaseResult {
 	mode: "plugin";
 	pluginId: string;
@@ -117,7 +117,7 @@ export interface PluginResult extends BaseResult {
 	hasSettings: boolean;
 }
 
-/** A CSS snippet file or the snippets folder; choosing it opens the path externally. */
+/** CSS スニペットのファイル、またはスニペットのフォルダー。選ぶと、そのパスを外部で開く。 */
 export interface SnippetResult extends BaseResult {
 	mode: "snippet";
 	snippetName: string;
@@ -127,7 +127,7 @@ export interface SnippetResult extends BaseResult {
 	enabled: boolean;
 }
 
-/** The value kinds a property row can edit; `unsupported` values are edited in source mode. */
+/** プロパティの行が編集できる値の種類。`unsupported` の値はソースモードで編集する。 */
 export type PropertyKind =
 	| "text"
 	| "list"
@@ -138,22 +138,22 @@ export type PropertyKind =
 	| "tags"
 	| "unsupported";
 
-/** A property key in the current note, or a key from the vault that the note does not have. */
+/** 現在のノートにあるプロパティのキー、またはノートが持たない Vault のキー。 */
 export interface PropertyResult extends BaseResult {
 	mode: "property";
 	key: string;
-	/** `new` is the row that adds a key nothing matches; choosing it picks a type first. */
+	/** `new` は、どの候補にも一致しないキーを追加する行。選ぶと、まず種類を選ぶ。 */
 	kind: PropertyKind | "new";
-	section: "This note" | "These notes" | "Reserved" | "Vault" | "New";
-	/** Whether the current note has this key; a reserved key may be listed without it. */
+	section: "このノート" | "これらのノート" | "予約済み" | "Vault" | "新規";
+	/** 現在のノートがこのキーを持つかどうか。予約済みのキーは、持っていなくても一覧に出ることがある。 */
 	inNote: boolean;
-	/** The note the list was built from; edits go to this note, not the active one. */
+	/** 一覧を作ったノート。編集はアクティブなノートではなく、このノートに行う。 */
 	sourcePath: string;
-	/** Every note the list was built from, when it spans several; edits go to all of them. */
+	/** 一覧が複数のノートにまたがるとき、作った元のノートすべて。編集はそれらすべてに行う。 */
 	sourcePaths?: readonly string[];
 }
 
-/** The notes a property row edits: all of a multi-note list, or just its one source note. */
+/** プロパティの行が編集するノート。複数ノートの一覧ならすべて、そうでなければ元のノート1つだけ。 */
 export function propertyTargetPaths(result: PropertyResult): readonly string[] {
 	return result.sourcePaths ?? [result.sourcePath];
 }
@@ -162,23 +162,23 @@ interface AuditResultBase extends BaseResult {
 	mode: "audit";
 }
 
-/** An orphaned or empty file in Vault audit. */
+/** Vault 監査の、浮いたファイルまたは空のファイル。 */
 export interface AuditFileResult extends AuditResultBase {
 	kind: "orphaned-files" | "empty-files";
 	file: TFile;
 	size: number;
-	/** Empty files only: a note holding nothing but its MOC section. */
+	/** 空のファイルだけ: MOC の節だけを持つノート。 */
 	mocOnly?: true;
 }
 
-/** A link target that does not exist, with every note that links to it. */
+/** 存在しないリンク先と、それにリンクしているすべてのノート。 */
 export interface AuditBrokenLinkResult extends AuditResultBase {
 	kind: "broken-links";
 	link: string;
 	sources: readonly BrokenLinkSource[];
 }
 
-/** The topmost folder of an empty folder tree. */
+/** 空のフォルダーの木のうち、最上位のフォルダー。 */
 export interface AuditFolderResult extends AuditResultBase {
 	kind: "empty-folders";
 	folderPath: string;
@@ -203,15 +203,15 @@ export type PaletteResult =
 	| ModeEntryResult;
 
 /**
- * Choosing (Enter, double-click) a plugin or snippet row opens its menu instead of the
- * external editor: such rows have several equally likely actions (editor, explorer,
- * terminal, plugin settings), so none is the default.
+ * 結果を選ぶ(Enter、ダブルクリック)と、プラグインやスニペットの行は外部エディターではなく
+ * メニューを開く。そうした行には同じくらい有力な操作がいくつもある(エディター、エクスプローラー、
+ * ターミナル、プラグインの設定)ので、既定の操作はどれにもしない。
  */
 export function choosingOpensMenu(result: PaletteResult): boolean {
 	return result.mode === "plugin" || result.mode === "snippet";
 }
 
-/** The vault file a result opens, when it has one; used to record file usage. */
+/** 結果が開くボールトのファイル。持つ場合だけ返す。ファイルの利用履歴の記録に使う。 */
 export function getResultFilePath(result: PaletteResult): string | undefined {
 	switch (result.mode) {
 		case "file":

@@ -1,63 +1,70 @@
 import type { IconName } from "obsidian";
 import { ICONS } from "src/ui/icons";
 import type { PaletteMenu } from "src/ui/paletteMenu";
+import { t } from "src/i18n";
 
-/** The title and icon a menu item shows for one action. */
+/** メニューの項目が、1つの操作ごとに表示するタイトルとアイコン。 */
 export interface MenuAction {
 	readonly title: string;
 	readonly icon: IconName;
 }
 
 /**
- * Menu items that appear in more than one menu, or that name the same action as another item.
- * Keeping title and icon together means an action reads and looks the same wherever it is offered.
+ * 複数のメニューに現れる項目、または別の項目と同じ操作を指す項目。タイトルとアイコンを一緒に持つので、
+ * どこに出しても同じ名前と見た目になる。
  */
 export const MENU_ACTIONS = {
-	open: { title: "Open", icon: ICONS.open },
-	openInMainWindow: { title: "Open in main window", icon: ICONS.openInMainWindow },
-	openInBackground: { title: "Open in new tab (background)", icon: ICONS.openInBackground },
-	openSideBySide: { title: "Open side by side", icon: ICONS.openSideBySide },
-	openBelow: { title: "Open below", icon: ICONS.openBelow },
-	openInExternalEditor: { title: "Open in external editor", icon: ICONS.openInExternalEditor },
-	showInSystemExplorer: { title: "Show in system explorer", icon: ICONS.showInSystemExplorer },
-	openInTerminal: { title: "Open in terminal", icon: ICONS.openInTerminal },
-	openPluginSettings: { title: "Open plugin settings", icon: ICONS.openSettings },
+	open: { title: t("menu.open"), icon: ICONS.open },
+	openInMainWindow: { title: t("menu.openInMainWindow"), icon: ICONS.openInMainWindow },
+	openInBackground: { title: t("menu.openInBackground"), icon: ICONS.openInBackground },
+	openSideBySide: { title: t("menu.openSideBySide"), icon: ICONS.openSideBySide },
+	openBelow: { title: t("menu.openBelow"), icon: ICONS.openBelow },
+	openInExternalEditor: {
+		title: t("menu.openInExternalEditor"),
+		icon: ICONS.openInExternalEditor,
+	},
+	showInSystemExplorer: {
+		title: t("menu.revealInSystemExplorer"),
+		icon: ICONS.showInSystemExplorer,
+	},
+	openInTerminal: { title: t("menu.openInTerminal"), icon: ICONS.openInTerminal },
+	openPluginSettings: { title: t("menu.openPluginSettings"), icon: ICONS.openSettings },
 
-	copyFileName: { title: "Copy file name", icon: ICONS.copy },
-	copyRelativePath: { title: "Copy path relative to vault", icon: ICONS.copy },
-	copyAbsolutePath: { title: "Copy absolute path", icon: ICONS.copy },
-	copyFileNames: { title: "Copy file names", icon: ICONS.copy },
-	copyRelativePaths: { title: "Copy paths relative to vault", icon: ICONS.copy },
-	copyAbsolutePaths: { title: "Copy absolute paths", icon: ICONS.copy },
+	copyFileName: { title: t("menu.copyFileName"), icon: ICONS.copy },
+	copyRelativePath: { title: t("menu.copyRelativePath"), icon: ICONS.copy },
+	copyAbsolutePath: { title: t("menu.copyAbsolutePath"), icon: ICONS.copy },
+	copyFileNames: { title: t("menu.copyFileNames"), icon: ICONS.copy },
+	copyRelativePaths: { title: t("menu.copyRelativePaths"), icon: ICONS.copy },
+	copyAbsolutePaths: { title: t("menu.copyAbsolutePaths"), icon: ICONS.copy },
 
-	moveToFolder: { title: "Move to…", icon: ICONS.move },
-	rename: { title: "Rename…", icon: ICONS.rename },
-	editProperties: { title: "Edit properties…", icon: ICONS.editProperties },
-	addTags: { title: "Add tags…", icon: ICONS.addTags },
-	insertIntoMoc: { title: "Insert into MOC Relateds", icon: ICONS.insertIntoMoc },
+	moveToFolder: { title: t("menu.moveToFolder"), icon: ICONS.move },
+	rename: { title: t("menu.rename"), icon: ICONS.rename },
+	editProperties: { title: t("menu.editProperties"), icon: ICONS.editProperties },
+	addTags: { title: t("menu.addTags"), icon: ICONS.addTags },
+	insertIntoMoc: { title: t("menu.insertIntoMoc"), icon: ICONS.insertIntoMoc },
 
-	addToBookmarks: { title: "Add to bookmarks…", icon: ICONS.addBookmark },
-	renameBookmark: { title: "Rename bookmark…", icon: ICONS.rename },
-	moveToBookmarkGroup: { title: "Move to bookmark group…", icon: ICONS.move },
-	removeFromBookmarks: { title: "Remove from bookmarks", icon: ICONS.removeBookmark },
+	addToBookmarks: { title: t("menu.addToBookmarks"), icon: ICONS.addBookmark },
+	renameBookmark: { title: t("menu.renameBookmark"), icon: ICONS.rename },
+	moveToBookmarkGroup: { title: t("menu.moveToBookmarkGroup"), icon: ICONS.move },
+	removeFromBookmarks: { title: t("menu.removeFromBookmarks"), icon: ICONS.removeBookmark },
 
-	editProperty: { title: "Edit", icon: ICONS.edit },
-	openPropertyInSearch: { title: "Open in search", icon: ICONS.search },
-	copyPropertyValue: { title: "Copy value", icon: ICONS.copy },
-	copyPropertyName: { title: "Copy property name", icon: ICONS.copy },
-	deleteProperty: { title: "Delete property", icon: ICONS.delete },
+	editProperty: { title: t("menu.editProperty"), icon: ICONS.edit },
+	openPropertyInSearch: { title: t("menu.openPropertyInSearch"), icon: ICONS.search },
+	copyPropertyValue: { title: t("menu.copyPropertyValue"), icon: ICONS.copy },
+	copyPropertyName: { title: t("menu.copyPropertyName"), icon: ICONS.copy },
+	deleteProperty: { title: t("menu.deleteProperty"), icon: ICONS.delete },
 
-	focusTab: { title: "Focus tab", icon: ICONS.focusTab },
-	duplicateTab: { title: "Duplicate tab", icon: ICONS.duplicateTab },
+	focusTab: { title: t("menu.focusTab"), icon: ICONS.focusTab },
+	duplicateTab: { title: t("menu.duplicateTab"), icon: ICONS.duplicateTab },
 
-	runCommand: { title: "Run command", icon: ICONS.run },
-	enterMode: { title: "Enter mode", icon: ICONS.confirm },
-	useSearch: { title: "Use search", icon: ICONS.history },
-	clearChanges: { title: "Clear changes", icon: ICONS.unchecked },
+	runCommand: { title: t("menu.runCommand"), icon: ICONS.run },
+	enterMode: { title: t("menu.enterMode"), icon: ICONS.confirm },
+	useSearch: { title: t("menu.useSearch"), icon: ICONS.history },
+	clearChanges: { title: t("menu.clearChanges"), icon: ICONS.unchecked },
 
-	highlightSearchMatches: { title: "Highlight search matches", icon: ICONS.highlight },
-	moveToRightSidebar: { title: "Move to right sidebar", icon: ICONS.moveToSidebar },
-	help: { title: "Help", icon: ICONS.help },
+	highlightSearchMatches: { title: t("menu.highlightSearchMatches"), icon: ICONS.highlight },
+	moveToRightSidebar: { title: t("menu.moveToRightSidebar"), icon: ICONS.moveToSidebar },
+	help: { title: t("menu.help"), icon: ICONS.help },
 } as const satisfies Record<string, MenuAction>;
 
 interface MenuItemLike<T> {
@@ -65,26 +72,26 @@ interface MenuItemLike<T> {
 	setIcon(icon: IconName | null): T;
 }
 
-/** Sets an item's title and icon from one action, for both PaletteMenu and Obsidian's Menu. */
+/** 1つの操作から、項目のタイトルとアイコンを設定する。PaletteMenu と Obsidian の Menu の両方で使う。 */
 export function withAction<T extends MenuItemLike<T>>(item: T, action: MenuAction): T {
 	return item.setTitle(action.title).setIcon(action.icon);
 }
 
-/** Adds one item for an action. */
+/** 操作の項目を1つ加える。 */
 export function addMenuAction(menu: PaletteMenu, action: MenuAction, onClick: () => void): void {
 	menu.addItem((item) => withAction(item, action).onClick(onClick));
 }
 
 export interface OpenMenuHandlers {
 	open: () => void;
-	/** Only popout hosts offer this; leave it out elsewhere. */
+	/** ポップアウトのホストだけが出す。ほかでは省く。 */
 	openInMainWindow?: () => void;
 	openInBackground: () => void;
 	openSideBySide: () => void;
 	openBelow: () => void;
 }
 
-/** The ways to open a note, in the same order in every menu that lists them. */
+/** ノートを開く方法。それらを並べるすべてのメニューで、同じ順序にする。 */
 export function addOpenMenuItems(menu: PaletteMenu, handlers: OpenMenuHandlers): void {
 	addMenuAction(menu, MENU_ACTIONS.open, handlers.open);
 	if (handlers.openInMainWindow)
@@ -96,12 +103,12 @@ export function addOpenMenuItems(menu: PaletteMenu, handlers: OpenMenuHandlers):
 
 export interface ExternalAppMenuHandlers {
 	openInExternalEditor: () => void;
-	/** Left out when the item has no absolute path on this device. */
+	/** この端末で絶対パスがない項目では省く。 */
 	showInSystemExplorer?: () => void;
 	openInTerminal?: () => void;
 }
 
-/** The actions that hand a file or folder to another app, in the same order everywhere. */
+/** ファイルやフォルダーを別のアプリに渡す操作。どこでも同じ順序にする。 */
 export function addExternalAppMenuItems(
 	menu: PaletteMenu,
 	handlers: ExternalAppMenuHandlers,

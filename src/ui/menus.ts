@@ -2,14 +2,17 @@ import type { PaletteMenu } from "src/ui/paletteMenu";
 
 const keyboardMenuEvents = new WeakSet<MouseEvent>();
 
-/** Marks a synthetic event for a menu requested from the keyboard. */
+/** キーボードから開いたメニューのための、合成されたイベントであることを示す。 */
 export function markKeyboardMenuEvent(event: MouseEvent): MouseEvent {
 	keyboardMenuEvents.add(event);
 	return event;
 }
 
-/** Shows a menu at a mouse event. A menu opened from the keyboard starts on its first action, so Enter works at once. */
+/**
+ * マウスのイベントの位置にメニューを開く。キーボードから開いたメニューは、最初の操作を選んだ状態で始まるので、
+ * Enter がすぐ効く。
+ */
 export function showMenuAtEvent(menu: PaletteMenu, event: MouseEvent): void {
-	// Why: pointer menus keep the unselected start, so only keyboard-opened menus select their first action.
+	// Why: ポインターのメニューは未選択の状態で開くので、キーボードから開いたメニューだけが最初の操作を選ぶ。
 	menu.showAtMouseEvent(event, { selectFirst: keyboardMenuEvents.has(event) });
 }

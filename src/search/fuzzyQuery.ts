@@ -12,7 +12,7 @@ export interface FuzzyQueryMatch<T> {
 }
 
 export interface FuzzyQueryFieldMatch<T> extends FuzzyQueryMatch<T> {
-	/** One score per search key; undefined means that key did not contribute. */
+	/** 検索キーごとに1つのスコア。undefined はそのキーが寄与しなかったこと。 */
 	fieldScores: readonly (number | undefined)[];
 }
 
@@ -32,14 +32,14 @@ function containsTerm(term: QueryTerm, value: string): boolean {
 function termScore(term: QueryTerm, value: string): number | undefined {
 	if (!term.exact) return fuzzysort.single(term.text, value)?.score;
 	if (!containsTerm(term, value)) return undefined;
-	// Scoring the normalized pair keeps quoted terms on the same scale as fuzzy
-	// ones; a contained string is always a fuzzy match of itself.
+	// 正規化した組でスコアを付けると、引用された項もあいまい一致の項と同じ尺度になる。
+	// 含まれている文字列は、常に自分自身のあいまい一致になるため。
 	return fuzzysort.single(normalize(term.text), normalize(value))?.score;
 }
 
 /**
- * Exclusions use plain containment: a fuzzy `!ab` would reject nearly every
- * value holding an `a` before a `b`, which no one means by "not ab".
+ * 除外は単純な包含で判定する。あいまい一致の `!ab` は、`a` の後に `b` が来る値のほとんどを
+ * 除外してしまう。それは「ab でない」という意味ではないため。
  */
 function containsNode(node: QueryNode, values: readonly string[]): boolean {
 	switch (node.kind) {
@@ -63,9 +63,8 @@ function bestScore(scores: readonly (number | undefined)[]): number | undefined 
 }
 
 /**
- * AND adds the scores of its operands and OR keeps its best alternative, so
- * unrelated alternatives never add up. An exclusion only filters and
- * contributes no score.
+ * AND は各オペランドのスコアを足し、OR は最良の代わりの候補を残す。そのため、関係のない代わりの候補が
+ * 足し合わされることはない。除外は絞り込むだけで、スコアには寄与しない。
  */
 function matchNode(node: QueryNode, values: readonly string[]): NodeMatch | undefined {
 	switch (node.kind) {
@@ -110,15 +109,15 @@ function matchNode(node: QueryNode, values: readonly string[]): NodeMatch | unde
 	}
 }
 
-/** Whether the query has a term to rank by, rather than only exclusions or nothing at all. */
+/** クエリに、順位付けに使える項があるかどうか。除外だけ、または何もない場合は false。 */
 export function hasPositiveQueryTerms(query: string): boolean {
 	return positiveTermBranches(query).length > 0;
 }
 
 /**
- * Detect a complete contiguous match for at least one valid AND branch. This
- * is a common relevance tier: an exact metadata phrase should not lose to a
- * fuzzy-only candidate just because a user placed a field-specific priority first.
+ * 少なくとも1つの有効な AND の分岐が、連続して完全に一致するかを判定する。これは関連度の一般的な段階。
+ * 完全なメタデータのフレーズは、ユーザーがフィールド固有の優先度を先に置いただけで、
+ * あいまい一致だけの候補に負けるべきではないため。
  */
 export function hasContiguousQueryMatch(query: string, values: readonly string[]): boolean {
 	const normalizedValues = values.map(normalize);
@@ -131,17 +130,16 @@ export function hasContiguousQueryMatch(query: string, values: readonly string[]
 }
 
 /**
- * Count how much query evidence appears across distinct searchable values.
- * Each term contributes its character length once per matching value, and OR
- * branches compete by coverage so unrelated alternatives are never added together.
+ * 異なる検索対象の値の中に、クエリの根拠がどれだけ現れるかを数える。各項は、一致した値ごとに
+ * 文字数を1回ずつ寄与する。OR の分岐は網羅度で競わせ、関係のない代わりの候補が足し合わされることはない。
  */
 export function fuzzyMatchCoverage(query: string, values: readonly string[]): number {
 	const distinctValues = new Map<string, string>();
 	for (const value of values) {
 		const trimmed = value.trim();
 		if (!trimmed) continue;
-		// Metadata can repeat the same alias or tag with different casing. Treating
-		// those spellings as one value prevents duplicated metadata inflating rank.
+		// メタデータは、同じ別名やタグを大文字・小文字だけ違えて持つことがある。それらの表記を1つと
+		// 扱い、重複したメタデータで順位が膨らまないようにする。
 		const key = normalize(trimmed);
 		if (!distinctValues.has(key)) distinctValues.set(key, trimmed);
 	}
@@ -152,8 +150,8 @@ export function fuzzyMatchCoverage(query: string, values: readonly string[]): nu
 			const matchingValueCount = [...distinctValues.values()].filter(
 				(value) => fuzzysort.single(term, value) !== null,
 			).length;
-			// A valid AND branch must match every term somewhere. Keeping the same
-			// qualification here makes coverage describe the branch used by search.
+			// 有効な AND の分岐は、どこかですべての項に一致しなければならない。ここでも同じ条件を保つと、
+			// 網羅度は検索が使う分岐を表すことになる。
 			if (matchingValueCount === 0) return bestCoverage;
 			branchCoverage += Array.from(term.normalize("NFKC")).length * matchingValueCount;
 		}
@@ -162,10 +160,9 @@ export function fuzzyMatchCoverage(query: string, values: readonly string[]): nu
 }
 
 /**
- * Search while retaining each key's contribution for callers that need to
- * distinguish otherwise identical matches, such as filenames and aliases.
- * A query without positive terms keeps the input order, so exclusions alone
- * filter the list the caller would show for an empty query.
+ * 検索しつつ、各キーの寄与を保持する。ファイル名とエイリアスのように、そうしないと区別できない
+ * 一致を、呼び出し元が見分けるために使う。正の項がないクエリは入力の順序を保つので、除外だけが、
+ * 空のクエリで呼び出し元が示す一覧を絞り込む。
  */
 export function searchFuzzyQueryWithFieldScores<T>(
 	query: string,
@@ -187,7 +184,7 @@ export function searchFuzzyQueryWithFieldScores<T>(
 		.sort((a, b) => b.score - a.score);
 }
 
-/** Applies the shared search syntax described in `src/search/query/searchQuery`. */
+/** `src/search/query/searchQuery` に記述された、共通の検索構文を適用する。 */
 export function searchFuzzyQuery<T>(
 	query: string,
 	items: readonly T[],

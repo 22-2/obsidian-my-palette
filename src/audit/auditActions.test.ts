@@ -27,13 +27,13 @@ describe("describeAuditActionResults", () => {
 				{ path: "d.md", outcome: "failed", reason: "EBUSY" },
 			]),
 		).toBe(
-			"Moved 2 files to trash. Skipped 1 that changed since the list was made. 1 failed; see the console.",
+			"ファイル 2 件をゴミ箱に移動しました。 リストの作成後に変わった 1 件はスキップしました。 1 件は失敗しました。詳細はコンソールを確認してください。",
 		);
 	});
 
 	it("names folders", () => {
 		expect(
 			describeAuditActionResults("empty-folders", [{ path: "x", outcome: "trashed" }]),
-		).toBe("Moved 1 folder to trash.");
+		).toBe("フォルダー 1 件をゴミ箱に移動しました。");
 	});
 });

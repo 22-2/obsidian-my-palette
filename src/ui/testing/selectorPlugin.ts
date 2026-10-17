@@ -4,6 +4,7 @@ import { DEFAULT_SETTINGS, type SearchHistoryEntry } from "src/settings/model";
 import { PaletteDisplaySettingsStore } from "src/settings/paletteDisplaySettingsStore";
 import { getSearchHistorySuggestions, recordSearchHistory } from "src/palette/searchHistory";
 import type { SelectorControls } from "src/ui/selectorControls";
+import { t } from "src/i18n";
 
 /** Real history filtering and display subscriptions with an in-memory test store. */
 export function createSelectorPlugin(app = {} as App): SelectorControls["plugin"] {
@@ -14,7 +15,7 @@ export function createSelectorPlugin(app = {} as App): SelectorControls["plugin"
 		settings,
 		integrationAvailability: new IntegrationAvailability(
 			() => settings,
-			async () => ({ ok: false, message: "Not configured" }),
+			async () => ({ ok: false, message: t("integration.notConfigured") }),
 			() => false,
 		),
 		paletteDisplaySettings: new PaletteDisplaySettingsStore(
@@ -31,7 +32,7 @@ export function createSelectorPlugin(app = {} as App): SelectorControls["plugin"
 					id: `search-history:${entry.category}:${entry.input}`,
 					mode: "search-history",
 					primary: entry.input,
-					secondary: "Search history",
+					secondary: t("history.label"),
 					icon: "history",
 				}),
 			),

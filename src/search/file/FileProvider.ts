@@ -31,7 +31,7 @@ import {
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { fileIcon } from "src/ui/icons";
 
-/** Vault events also report folders, which have no extension; this tells files apart without a cast. */
+/** Vault のイベントはフォルダーも報告する。フォルダーには拡張子がないので、キャストせずにファイルを見分ける。 */
 function isTFile(file: TAbstractFile): file is TFile {
 	return "extension" in file;
 }
@@ -84,20 +84,18 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		this.refs.push(app.metadataCache.on("changed", (file) => this.update(file)));
 		this.refs.push(
 			app.metadataCache.on("deleted", (file) => {
-				// Why: `deleted` can fire for bookkeeping around a rename with a
-				// path that still exists in the vault. Only drop the entry when
-				// the path is actually gone so a rename cannot erase its own update.
+				// Why: `deleted` はリネームの前後の帳簿処理で、保管庫にまだ存在するパスについて発火することがある。
+				// そのため、パスが本当に消えたときだけ項目を捨て、リネームが自分の更新を消さないようにする。
 				if (this.app.vault.getAbstractFileByPath(file.path)) return;
 				this.deleteEntry(file.path);
 			}),
 		);
 		this.refs.push(app.metadataCache.on("resolve", (file) => this.update(file)));
-		// FileProvider can be constructed before Obsidian has finished parsing all
-		// frontmatter. Re-read files once that initial metadata pass completes so
-		// aliases are not permanently cached as empty until their note is edited.
-		// Note: `resolved` also fires after later modifications, so this stays a
-		// full rebuild to guarantee the index converges even if a single-file
-		// event was missed.
+		// FileProvider は、Obsidian がすべてのフロントマターを解析し終える前に作られることがある。
+		// その最初のメタデータの処理が終わったら、ファイルを一度読み直す。そうしないと、ノートを編集するまで
+		// 別名が空のまま恒久的にキャッシュされてしまうため。
+		// 注: `resolved` は後の変更の後にも発火するので、これは完全な作り直しのままにする。1つの
+		// ファイルのイベントを取りこぼしても、索引が必ず収束するように。
 		this.refs.push(
 			app.metadataCache.on("resolved", () => {
 				this.app.vault.getFiles().forEach((file) => this.update(file));
@@ -131,7 +129,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 	}
 
 	private update(file: TFile): void {
-		// Keep all entries so extension-setting changes only need an in-memory cache refresh.
+		// すべての項目を残すので、拡張子の設定が変わっても、メモリ上のキャッシュを更新するだけで済む。
 		const metadata = this.app.metadataCache.getFileCache(file);
 		const fileAliases = aliases(metadata?.frontmatter?.aliases ?? metadata?.frontmatter?.alias);
 		const fileKeywords = normalizeFrontmatterKeywords(metadata?.frontmatter?.keywords);
@@ -140,9 +138,9 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			...(parseFrontMatterTags(metadata?.frontmatter) ?? []),
 		]);
 		const prior = normalizeFrontmatterPrior(metadata?.frontmatter?.prior);
-		// Search metadata stays consistent between visible and Obsidian-excluded files; H1 is
-		// intentionally excluded because it is not stable note identity metadata. The
-		// numeric `prior` value is kept separately because it controls ordering only.
+		// 検索のメタデータは、表示されているファイルと Obsidian の除外ファイルで一貫させる。H1 は、
+		// 安定したノートの識別子ではないので、意図的に除く。数値の `prior` は並び順だけを決めるので、
+		// 別に保持する。
 		this.setEntry({
 			file,
 			path: file.path,
@@ -163,10 +161,10 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		const recent = new Map(recentPaths.map((filePath, index) => [filePath, index]));
 		const usageScores = this.usageHistory?.getScores();
 		const ignoreFilters = getUserIgnoreFilters(this.app);
-		// プラグイン共通の除外フォルダはObsidianの除外設定と合わせて判定する。
-		// includeIgnored指定時のみ両方をまとめて解除し、通常検索では常に除外する。
-		// The include-ignored prefix is an explicit broad search, so use the
-		// uncapped index to include file types excluded by the normal extension setting.
+		// プラグイン共通の除外フォルダーは、Obsidian の除外設定と合わせて判定する。
+		// includeIgnored 指定時のみ両方をまとめて解除し、通常検索では常に除外する。
+		// 「除外されたファイルを含める」の接頭辞は明示的な広い検索なので、上限のない索引を使い、
+		// 通常の拡張子設定では外れる種類のファイルも含める。
 		const entries = [
 			...(includeIgnored ? this.allEntries.values() : this.cache.values()),
 		].filter(
@@ -175,9 +173,8 @@ export class FileProvider implements PaletteProvider<FileResult> {
 				(includeIgnored || !isExcludedFolder(this.excludedFolders, entry.path)),
 		);
 		if (includeIgnored) {
-			// The explicit prefix also authorizes an empty-query listing. The
-			// result limit in the palette keeps the UI bounded while the sorter
-			// places Obsidian-excluded files before the normal Vault entries.
+			// 明示的な接頭辞は、空のクエリの一覧も許可する。パレットの結果の上限が UI を有限に保ち、
+			// 並べ替えが Obsidian の除外ファイルを通常の Vault の項目の前に置く。
 			for (const ignored of await this.ignoredIndex.getEntries()) {
 				const entry: FileSearchEntry = {
 					path: ignored.path,
@@ -196,15 +193,14 @@ export class FileProvider implements PaletteProvider<FileResult> {
 					mtime: ignored.mtime,
 					ignored: true,
 				};
-				// Keep extension filtering aligned for both indexed Vault files and Obsidian-excluded files.
+				// インデックスされた Vault のファイルと Obsidian の除外ファイルの両方で、拡張子の絞り込みを揃える。
 				entries.push(entry);
 			}
 		}
 		if (!hasPositiveQueryTerms(query)) {
-			// Empty and typed searches serve different browsing intents, so each
-			// reads its own priority sequence at search time for live settings edits.
-			// A query with only exclusions has nothing to rank by, so it browses
-			// what remains in the empty-query order.
+			// 空の検索と入力した検索は、閲覧の目的が違う。そのため、それぞれが検索時に独自の優先度の
+			// 並びを読み、設定の編集をすぐ反映できるようにする。除外だけのクエリは、順位付けの
+			// 手がかりがないので、残りのものを空のクエリの並びで閲覧する。
 			const remaining = searchFuzzyQuery(query, entries, fileSearchKeys(false)).map(
 				({ obj }) => obj,
 			);
@@ -217,14 +213,12 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			);
 			return files.map((entry) => this.result(entry));
 		}
-		// Boolean operators are resolved locally; Everything is deliberately left
-		// untouched because it already owns and interprets the same syntax.
+		// ブール演算子はローカルで解決する。Everything は、同じ構文をすでに持って解釈しているので、意図的に触れない。
 		const tagOnlyQuery = isTagOnlyQuery(query);
 		const inputSortPriorities = this.fileSortPriorities().input;
 		const usesMatchCoverage = inputSortPriorities.includes(FILE_SORT_PRIORITIES.matchCoverage);
-		// A hash-prefixed query is an explicit tag lookup. Restricting its candidate
-		// fields prevents a filename such as `project-plan.md` from masquerading as
-		// a tagged note when the user is browsing `#project`.
+		// ハッシュ付きのクエリは、明示的なタグの検索である。候補のフィールドを絞ると、`#project` を
+		// 閲覧しているときに `project-plan.md` のようなファイル名が、タグ付きのノートのふりをするのを防ぐ。
 		const candidates = tagOnlyQuery
 			? entries.filter((entry) => entry.tags.length > 0)
 			: entries;
@@ -263,7 +257,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			ignored: entry.ignored,
 			matchedTags: matchedTags?.length ? [...matchedTags] : undefined,
 			matchedKeywords: matchedKeywords?.length ? [...matchedKeywords] : undefined,
-			// Table sorting must use the same metadata for indexed and Obsidian-excluded files.
+			// 表の並べ替えは、インデックスされたファイルと Obsidian の除外ファイルで同じメタデータを使う必要がある。
 			mtime: entry.mtime,
 			prior: entry.prior,
 		};

@@ -5,6 +5,7 @@ import { getDesktopAdapter } from "src/platform/desktopAdapter";
 import { openWithSystemApplication, showInSystemExplorer } from "src/platform/externalOpen";
 import { resolveExternalOpenTarget, type ExternalOpenTarget } from "src/palette/openTargets";
 import type { EverythingResult, PaletteResult } from "src/palette/results";
+import { t } from "src/i18n";
 
 export type ActionKind = LeafOpenAction;
 export interface ActionOutcome {
@@ -23,13 +24,13 @@ interface ExternalMarkdownActions {
 }
 
 export interface ResultActionOptions {
-	/** Existing本文leaf used by a persistent palette for primary opens. */
+	/** 常駐のパレットが主な開く操作に使う、既存の本文のリーフ。 */
 	targetLeaf?: WorkspaceLeaf;
-	/** Whether a primary external/open-file action should focus its target. */
+	/** 主な外部の操作、またはファイルを開く操作で、対象にフォーカスするかどうか。 */
 	active?: boolean;
-	/** Preview actions reveal the destination without focusing the editor. */
+	/** プレビューの操作は、エディターにフォーカスせずに移動先を見せる。 */
 	autoFocus?: boolean;
-	/** Reuse the tab that already shows a file; defaults to on. */
+	/** ファイルをすでに表示しているタブを再利用する。既定は on。 */
 	focusExistingTab?: boolean;
 }
 
@@ -67,15 +68,15 @@ export async function runResultAction(
 			if (!absolutePath)
 				return {
 					close: false,
-					message: "This vault adapter cannot resolve an absolute path.",
+					message: t("palette.error.noAbsolutePath"),
 				};
 			try {
 				await getDesktopAdapter(app).fs.promises.stat(absolutePath);
 			} catch {
-				return { close: false, message: "The selected path no longer exists." };
+				return { close: false, message: t("palette.error.pathGone") };
 			}
-			// Obsidian-excluded results are an inspection scope. Keep the source untouched;
-			// The MOC insert selector owns the separate copy/materialize workflow.
+			// Obsidian の除外ファイルの結果は、中身を確認するための範囲。元のファイルには触れない。
+			// 別のコピーと取り込みの流れは、MOC 挿入セレクターが担当する。
 			const target = resolveExternalOpenTarget(absolutePath, {
 				openMarkdownInObsidian: externalMarkdown.openExternalMarkdownInObsidian,
 			});
@@ -89,18 +90,18 @@ export async function runResultAction(
 		}
 		const current = app.vault.getAbstractFileByPath(result.vaultPath);
 		if (!(current instanceof TFile))
-			return { close: false, message: "The file no longer exists." };
+			return { close: false, message: t("palette.error.fileGone") };
 		await openFile(app, current, action, options);
 		return { close: true };
 	}
 	if (result.mode === "command") return { close: true };
 	if (result.mode === "link" || result.mode === "backlink")
-		return { close: false, message: "This result must be opened by the related-file palette." };
+		return { close: false, message: t("palette.error.relatedOnly") };
 	const everythingResult = result as EverythingResult;
 	try {
 		await getDesktopAdapter(app).fs.promises.stat(everythingResult.absolutePath);
 	} catch {
-		return { close: false, message: "The selected path no longer exists." };
+		return { close: false, message: t("palette.error.pathGone") };
 	}
 	if (action === "alternate") {
 		showInSystemExplorer(everythingResult.absolutePath, everythingResult.kind === "folder");

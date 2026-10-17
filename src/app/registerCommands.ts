@@ -4,54 +4,55 @@ import { MoveFileModal } from "src/palette/MoveFileModal";
 import { BulkRenameModal } from "src/rename/BulkRenameModal";
 import type { FixedPaletteMode } from "src/palette/PaletteSearchSession";
 import { insertTags } from "src/tags/insertTags";
+import { t } from "src/i18n";
 
 /**
- * Command definitions are kept outside the Plugin class so lifecycle code and
- * command availability rules can evolve independently.
+ * コマンドの定義は Plugin クラスの外に置く。ライフサイクルの処理と、
+ * コマンドを使えるかどうかの判定を別々に変えられるようにするため。
  */
 export function registerPluginCommands(plugin: MyPalettePlugin): void {
-	// Why: Esc from a mode returns to Home, so every path that opens a mode
-	// lists the modes too.
+	// Why: モードから Esc を押すと Home に戻るため、モードを開くすべての経路で
+	// モードの一覧も表示する。
 	const openWithHome = (input: string, fixedMode?: FixedPaletteMode) =>
 		plugin.paletteOpener.openPalette(input, fixedMode, { modeEntries: true });
 	plugin.addCommand({
 		id: "open-home",
-		name: "Open home",
-		// Home starts empty and lists modes above files.
+		name: t("command.openHome"),
+		// Home は空の状態で始まり、ファイルの上にモードの一覧を出す。
 		callback: () => plugin.paletteOpener.openHomePalette(),
 	});
 	plugin.addCommand({
 		id: "open-note-list",
-		name: "Open note list",
-		// Notes is the built-in Obsidian file search; findPaletteMode("file")
-		// resolves to it because it is the first file mode in PALETTE_MODES.
+		name: t("command.openNoteList"),
+		// Notes は Obsidian の標準ファイル検索。findPaletteMode("file") は
+		// PALETTE_MODES で最初のファイルモードなので、これに解決される。
 		callback: () => openWithHome("", "file"),
 	});
 	plugin.addCommand({
 		id: "open-run-list",
-		name: "Open run list",
+		name: t("command.openRunList"),
 		callback: () => openWithHome(plugin.paletteOpener.commandPaletteInitialInput()),
 	});
 	plugin.addCommand({
 		id: "open-everything-list",
-		name: "Open Everything list",
+		name: t("command.openEverythingList"),
 		callback: () => openWithHome(`${plugin.settings.modes.everything.alias} `),
 	});
 	plugin.addCommand({
 		id: "open-sidebar-palette",
-		name: "Open sidebar palette",
+		name: t("command.openSidebarPalette"),
 		callback: () => void plugin.paletteOpener.openPaletteView(),
 	});
-	// Why: table search has its own entry point rather than a presentation toggle
-	// in the existing palette. Additional panes remain available in each pane menu.
+	// Why: 表の検索は既存のパレットの表示切り替えではなく、専用の入口を持つ。
+	// 追加のペインは各ペインのメニューから引き続き開ける。
 	plugin.addCommand({
 		id: "open-table-palette",
-		name: "Open table palette",
+		name: t("command.openTablePalette"),
 		callback: () => void plugin.paletteOpener.openPaletteTableView(),
 	});
 	plugin.addCommand({
 		id: "open-outgoing-link-list",
-		name: "Open outgoing link list",
+		name: t("command.openOutgoingLinkList"),
 		checkCallback: (checking) => {
 			if (checking) return Boolean(plugin.app.workspace.getActiveFile());
 			openWithHome("", "link");
@@ -59,7 +60,7 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	});
 	plugin.addCommand({
 		id: "open-backlink-list",
-		name: "Open backlink list",
+		name: t("command.openBacklinkList"),
 		checkCallback: (checking) => {
 			if (checking) return Boolean(plugin.app.workspace.getActiveFile());
 			openWithHome("", "backlink");
@@ -67,12 +68,12 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	});
 	plugin.addCommand({
 		id: "open-bookmark-list",
-		name: "Open bookmark list",
+		name: t("command.openBookmarkList"),
 		callback: () => openWithHome("", "bookmark"),
 	});
 	plugin.addCommand({
 		id: "open-smart-connections-list",
-		name: "Open Smart Connections list",
+		name: t("command.openSmartConnectionsList"),
 		checkCallback: (checking) => {
 			if (checking) return Boolean(plugin.app.workspace.getActiveFile());
 			openWithHome("", "smart");
@@ -80,7 +81,7 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	});
 	plugin.addCommand({
 		id: "open-folder-move-selector",
-		name: "Open folder move selector",
+		name: t("command.openFolderMoveSelector"),
 		checkCallback: (checking) => {
 			const file = plugin.app.workspace.getActiveFile();
 			if (checking) return Boolean(file);
@@ -89,7 +90,7 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	});
 	plugin.addCommand({
 		id: "open-rename-selector",
-		name: "Open rename selector",
+		name: t("command.openRenameSelector"),
 		checkCallback: (checking) => {
 			const file = plugin.app.workspace.getActiveFile();
 			if (checking) return Boolean(file);
@@ -98,32 +99,32 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	});
 	plugin.addCommand({
 		id: "open-tab-list",
-		name: "Open tab list",
+		name: t("command.openTabList"),
 		callback: () => openWithHome("", "tab"),
 	});
 	plugin.addCommand({
 		id: "open-plugin-list",
-		name: "Open plugin list",
+		name: t("command.openPluginList"),
 		callback: () => openWithHome(`${plugin.settings.modes.plugins.alias} `),
 	});
 	plugin.addCommand({
 		id: "open-snippet-list",
-		name: "Open snippet list",
+		name: t("command.openSnippetList"),
 		callback: () => openWithHome(`${plugin.settings.modes.snippets.alias} `),
 	});
 	plugin.addCommand({
 		id: "open-property-list",
-		name: "Open property list",
+		name: t("command.openPropertyList"),
 		callback: () => openWithHome(`${plugin.settings.modes.properties.alias} `),
 	});
 	plugin.addCommand({
 		id: "open-vault-audit-list",
-		name: "Open vault audit list",
+		name: t("command.openVaultAuditList"),
 		callback: () => void plugin.paletteOpener.openAuditTable(),
 	});
 	plugin.addCommand({
 		id: "open-tag-insert-selector",
-		name: "Open tag insert selector",
+		name: t("command.openTagInsertSelector"),
 		checkCallback: (checking) => {
 			const file = plugin.app.workspace.getActiveFile();
 			const canRun = file?.extension === "md";
@@ -133,7 +134,7 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	});
 	plugin.addCommand({
 		id: "open-moc-insert-selector",
-		name: "Open MOC insert selector",
+		name: t("command.openMocInsertSelector"),
 		checkCallback: (checking) => {
 			const canRun = Boolean(plugin.app.workspace.getActiveFile());
 			if (checking) return canRun;
@@ -142,7 +143,7 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	});
 	plugin.addCommand({
 		id: "open-moc-remove-selector",
-		name: "Open MOC remove selector",
+		name: t("command.openMocRemoveSelector"),
 		checkCallback: (checking) => {
 			const canRun = Boolean(plugin.app.workspace.getActiveFile());
 			if (checking) return canRun;

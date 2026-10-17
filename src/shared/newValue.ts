@@ -9,8 +9,8 @@ export interface NewValueRules {
 }
 
 /**
- * The value the typed input would add as new, or undefined when the input is empty,
- * cannot form a value, or already matches a known one.
+ * 入力された値が新しく追加される値を返す。入力が空、値にできない、
+ * または既知の値と一致する場合は undefined を返す。
  */
 export function typedNewValue(
 	query: string,

@@ -7,18 +7,19 @@ import {
 } from "src/search/bookmark/bookmarks";
 import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
 import { ICONS } from "src/ui/icons";
+import { t } from "src/i18n";
 
 interface BookmarkGroupOptions {
 	placeholder: string;
 	footerText: string;
-	/** Applies the action to the chosen group; undefined means the top level. */
+	/** 選んだグループに操作を適用する。undefined は最上位を意味する。 */
 	onChoose: (parent: BookmarkEntry | undefined, item: BookmarkGroupItem) => void;
 	createGroup: (title: string) => BookmarkEntry;
 }
 
 /**
- * Bookmark group selector: chooses the group that bookmarks are added to or moved into.
- * Typing a name that no top-level group has offers to create that group.
+ * ブックマークのグループのセレクター: ブックマークを追加・移動する先のグループを選ぶ。
+ * どの最上位のグループにもない名前を入力すると、そのグループを作ることを提案する。
  */
 export class BookmarkGroupModal extends SelectionModal<BookmarkGroupItem> {
 	constructor(
@@ -50,8 +51,8 @@ export class BookmarkGroupModal extends SelectionModal<BookmarkGroupItem> {
 }
 
 /**
- * A single-line input for a bookmark's title. Enter applies the typed title; an empty input
- * restores the default title (the file name or query).
+ * ブックマークのタイトルを入力する1行の欄。Enter で入力したタイトルを適用する。空の入力は、
+ * 既定のタイトル(ファイル名または検索語)に戻す。
  */
 export class BookmarkTitleModal extends SelectionModal<SelectionItem> {
 	constructor(
@@ -62,14 +63,19 @@ export class BookmarkTitleModal extends SelectionModal<SelectionItem> {
 		const fallback = bookmarkLabel({ ...entry, title: undefined });
 		super(
 			{
-				placeholder: "Bookmark title",
+				placeholder: t("bookmark.placeholder.title"),
 				initialInput: entry.title ?? "",
-				footerText: `Bookmark: ${entry.path ?? entry.query ?? fallback}`,
+				footerText: t("bookmark.footer.current", {
+					target: entry.path ?? entry.query ?? fallback,
+				}),
 				search: (query) => [
 					query.trim()
-						? { label: `Set title to ${query.trim()}`, icon: ICONS.rename }
+						? {
+								label: t("bookmark.title.set", { title: query.trim() }),
+								icon: ICONS.rename,
+							}
 						: {
-								label: "Use the default title",
+								label: t("bookmark.title.useDefault"),
 								description: fallback,
 								icon: ICONS.reset,
 							},

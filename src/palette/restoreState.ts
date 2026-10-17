@@ -1,8 +1,8 @@
 import type { ReturnToHomeSeconds } from "src/settings/model";
 
-/** What a closed palette leaves behind for the next Open home. Kept in memory only. */
+/** 閉じられたパレットが、次の「ホームを開く」のために残す状態。メモリ上にだけ保持する。 */
 export interface PaletteRestoreState {
-	/** The input with its mode alias, so restoring it enters the same mode. */
+	/** エイリアス付きの入力。復元するとそのモードに入り直す。 */
 	input: string;
 	includeIgnored: boolean;
 	activeIndex: number;
@@ -10,8 +10,8 @@ export interface PaletteRestoreState {
 }
 
 /**
- * Whether a palette closed at `closedAt` may be restored at `now`. A palette closed
- * exactly the allowed number of seconds ago is still restored; 0 never restores.
+ * `closedAt` に閉じられたパレットを、`now` に復元してよいかどうか。許される秒数の
+ * ちょうど前に閉じられたパレットは、まだ復元する。0 なら決して復元しない。
  */
 export function shouldRestore(
 	closedAt: number,

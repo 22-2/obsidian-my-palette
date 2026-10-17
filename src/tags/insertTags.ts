@@ -1,4 +1,5 @@
 import { getAllTags, Notice, parseFrontMatterTags, type App, type TFile } from "obsidian";
+import { t } from "src/i18n";
 import type MyPalettePlugin from "src/main";
 import {
 	mergeFrontmatterTags,
@@ -22,9 +23,9 @@ function frontmatterTags(app: App, file: TFile): string[] {
 }
 
 /**
- * Counts targets having each tag in frontmatter. Only frontmatter tags count,
- * because insertion writes there and an inline tag does not stop the user from
- * also adding it to frontmatter.
+ * 各タグを持つ対象ノートの数を、フロントマターのタグだけで数える。
+ * 挿入はフロントマターに書くため、インラインのタグがあっても
+ * フロントマターへの追加を妨げないように、インラインのタグは数えない。
  */
 function frontmatterTagCounts(app: App, files: readonly TFile[]): Map<string, number> {
 	const counts = new Map<string, number>();
@@ -54,8 +55,8 @@ function buildChoices(app: App, files: readonly TFile[], recentTags: RecentTagSo
 	const appliedCounts = frontmatterTagCounts(app, files);
 	return buildTagChoices({
 		allTags: app.metadataCache.getTags(),
-		// A tag is registered only when every target has it, so it stays selectable
-		// for the notes that still lack it.
+		// すべての対象が持つタグだけを登録済みとする。
+		// そうすると、まだ持っていないノートについては選択可能なままになる。
 		registeredTags: [...appliedCounts]
 			.filter(([, n]) => n === files.length)
 			.map(([key]) => key),
@@ -70,9 +71,9 @@ function targetLabel(files: readonly TFile[]): string {
 }
 
 /**
- * Lets the user pick tags to add and applied tags to remove, then writes both to the
- * frontmatter of every target note. Resolves true when changes were applied, and false
- * when the user cancelled or chose nothing, so a caller can return to where it was.
+ * 追加するタグと、適用済みのタグのうち削除するものを選んでもらい、両方を対象ノートすべての
+ * フロントマターに書き込む。変更を適用したら true、キャンセルまたは何も選ばなかったら false を返す。
+ * 呼び出し元が元の場所へ戻れるように、結果を返す。
  */
 export async function insertTags(
 	plugin: MyPalettePlugin,
@@ -81,7 +82,7 @@ export async function insertTags(
 	const { app, recentTagStore: recentTags } = plugin;
 	const targets = files.filter((file) => file.extension === "md");
 	if (targets.length === 0) {
-		new Notice("No Markdown note to add tags to.");
+		new Notice(t("tag.notice.noMarkdown"));
 		return false;
 	}
 
@@ -128,10 +129,10 @@ async function applyTagChanges(
 		new Notice(
 			tagChangeMessage(
 				changes,
-				targets.length === 1 ? targets[0].basename : `${updated} notes`,
+				targets.length === 1 ? targets[0].basename : t("tag.noteCount", { count: updated }),
 			),
 		);
-	if (failed > 0) new Notice(`Failed to update tags of ${failed} notes. See the console.`);
+	if (failed > 0) new Notice(t("tag.notice.updateFailed", { count: failed }));
 }
 
 function hasTag(tags: readonly string[], tag: string): boolean {
@@ -140,9 +141,15 @@ function hasTag(tags: readonly string[], tag: string): boolean {
 
 function tagChangeMessage(changes: MultiSelectChanges<string>, where: string): string {
 	const tagsOf = (tags: readonly string[]) => tags.map((tag) => `#${tag}`).join(" ");
-	if (changes.remove.length === 0) return `Added ${tagsOf(changes.add)} to ${where}.`;
-	if (changes.add.length === 0) return `Removed ${tagsOf(changes.remove)} from ${where}.`;
-	return `Added ${tagsOf(changes.add)} and removed ${tagsOf(changes.remove)} on ${where}.`;
+	if (changes.remove.length === 0)
+		return t("tag.notice.added", { where, tags: tagsOf(changes.add) });
+	if (changes.add.length === 0)
+		return t("tag.notice.removed", { where, tags: tagsOf(changes.remove) });
+	return t("tag.notice.addedAndRemoved", {
+		where,
+		added: tagsOf(changes.add),
+		removed: tagsOf(changes.remove),
+	});
 }
 
 /** Result of removing a tag from the targets' frontmatter. */
@@ -164,7 +171,7 @@ async function removeTag(
 	let failed = 0;
 	for (const file of files) {
 		if (!frontmatterTags(app, file).some((existing) => tagKey(existing) === key)) continue;
-		// Read before editing: the cache still describes the note as it was.
+		// 編集前に読む。キャッシュはまだ編集前のノートの状態を表しているため。
 		const inline = app.metadataCache
 			.getFileCache(file)
 			?.tags?.some((entry) => tagKey(entry.tag) === key);
@@ -180,10 +187,8 @@ async function removeTag(
 		}
 	}
 	if (removal.removed > 0)
-		new Notice(
-			`Removed #${tag} from ${removal.removed === 1 ? "1 note" : `${removal.removed} notes`}.`,
-		);
-	else if (failed === 0) new Notice(`#${tag} is not in the frontmatter of the target notes.`);
-	if (failed > 0) new Notice(`Failed to remove #${tag} from ${failed} notes. See the console.`);
+		new Notice(t("tag.notice.removedFromNotes", { count: removal.removed, tag: `#${tag}` }));
+	else if (failed === 0) new Notice(t("tag.notice.notInFrontmatter", { tag: `#${tag}` }));
+	if (failed > 0) new Notice(t("tag.notice.removeFailed", { count: failed, tag: `#${tag}` }));
 	return removal.removed > 0 ? removal : undefined;
 }

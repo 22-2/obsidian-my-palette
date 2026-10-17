@@ -5,12 +5,12 @@ import { getVaultFullPath, isUserIgnoredPath } from "src/ignored-notes/ignoredPa
 import { getDesktopAdapter } from "src/platform/desktopAdapter";
 import type { PaletteResult } from "src/palette/results";
 import { resolveExternalOpenTarget } from "src/palette/openTargets";
+import { t } from "src/i18n";
 
 /**
- * Background opening has platform and Vault checks that are unrelated to modal
- * selection state, so keep those side effects in a dedicated action module.
- * The boolean result lets the caller commit search history only after an open
- * actually succeeded.
+ * 裏で開く操作には、モーダルの選択状態とは無関係なプラットフォームと Vault の確認がある。
+ * そのため、それらの副作用は専用の操作のモジュールに置く。
+ * 戻り値の真偽値により、呼び出し元は開く操作が成功した後にだけ検索履歴を記録できる。
  */
 export async function openPaletteResultInBackground(
 	plugin: MyPalettePlugin,
@@ -18,8 +18,8 @@ export async function openPaletteResultInBackground(
 ): Promise<boolean> {
 	const opened = await openPaletteResultInBackgroundInternal(plugin, result);
 	if (opened) {
-		// Record only after the host accepted the open, so failed or unsupported
-		// results cannot teach the ranking about a note the user never saw.
+		// Why: ホストが開く操作を受け付けたあとにだけ記録する。失敗した結果や未対応の結果で、
+		// ユーザーが見ていないノートをランキングが覚えないようにするため。
 		plugin.recordResultUsage(result);
 	}
 	return opened;
@@ -44,13 +44,13 @@ async function openPaletteResultInBackgroundInternal(
 		if (ignored) {
 			const absolutePath = getVaultFullPath(plugin.app, result.vaultPath);
 			if (!absolutePath) {
-				new Notice("This vault adapter cannot resolve an absolute path.");
+				new Notice(t("palette.error.noAbsolutePath"));
 				return false;
 			}
 			try {
 				await getDesktopAdapter(plugin.app).fs.promises.stat(absolutePath);
 			} catch {
-				new Notice("The selected path no longer exists.");
+				new Notice(t("palette.error.pathGone"));
 				return false;
 			}
 			const target = resolveExternalOpenTarget(absolutePath, {
@@ -60,12 +60,12 @@ async function openPaletteResultInBackgroundInternal(
 				await openExternalMarkdownInBackground(plugin, absolutePath);
 				return true;
 			}
-			new Notice("This item cannot be opened in a background Obsidian tab.");
+			new Notice(t("palette.error.noBackgroundTab"));
 			return false;
 		}
 		const file = plugin.app.vault.getAbstractFileByPath(result.vaultPath);
 		if (!(file instanceof TFile)) {
-			new Notice("The file no longer exists.");
+			new Notice(t("palette.error.fileGone"));
 			return false;
 		}
 		await openFileInBackground(plugin, file);
@@ -79,7 +79,7 @@ async function openPaletteResultInBackgroundInternal(
 	try {
 		await getDesktopAdapter(plugin.app).fs.promises.stat(result.absolutePath);
 	} catch {
-		new Notice("The selected path no longer exists.");
+		new Notice(t("palette.error.pathGone"));
 		return false;
 	}
 	if (result.vaultPath) {
@@ -96,7 +96,7 @@ async function openPaletteResultInBackgroundInternal(
 		await openExternalMarkdownInBackground(plugin, result.absolutePath);
 		return true;
 	}
-	new Notice("This item cannot be opened in a background Obsidian tab.");
+	new Notice(t("palette.error.noBackgroundTab"));
 	return false;
 }
 
@@ -104,8 +104,8 @@ async function openExternalMarkdownInBackground(
 	plugin: MyPalettePlugin,
 	absolutePath: string,
 ): Promise<void> {
-	// Native Markdown views still need an alternate target for background opens,
-	// so the note that currently owns focus is never overwritten.
+	// ネイティブの Markdown ビューも、裏で開くには別の対象が要る。そのため、
+	// いまフォーカスを持っているノートを上書きすることは決してない。
 	await plugin.openExternalMarkdown(absolutePath, "alternate", true, false);
 }
 

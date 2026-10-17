@@ -6,7 +6,7 @@ import type MyPalettePlugin from "src/main";
 const MARKDOWN_VIEW_TYPE = "markdown";
 const EXTERNAL_FILE_PREFIX = "file:";
 
-/** Native Markdown views can represent files outside the Vault via a file URI. */
+/** ネイティブの Markdown ビューは、file の URI を介して Vault の外のファイルを表せる。 */
 export function isExternalMarkdownLeaf(leaf: WorkspaceLeaf): boolean {
 	if (leaf.view.getViewType() !== MARKDOWN_VIEW_TYPE) return false;
 	const file = leaf.view.getState().file;
@@ -20,8 +20,8 @@ export function getExternalMarkdownLeaves(app: App): WorkspaceLeaf[] {
 }
 
 /**
- * External Markdown leaf reuse is a workspace concern, so keep it outside the
- * Plugin class while retaining the public method used by palette actions.
+ * 外部の Markdown リーフの再利用はワークスペースの関心事なので、プラグインのクラスの外に置く。
+ * パレットの操作が使う公開メソッドは保つ。
  */
 export async function openExternalMarkdown(
 	plugin: MyPalettePlugin,
@@ -35,8 +35,8 @@ export async function openExternalMarkdown(
 	const resolvedPath = getDesktopAdapter(plugin.app).path.resolve(absolutePath);
 	const externalLeaves = getExternalMarkdownLeaves(plugin.app);
 	const existing = externalLeaves.find(
-		// Why: an explicit destination window must not be overridden by a matching
-		// external note in another window (for example, Open in main window).
+		// Why: 明示的な移動先のウィンドウは、別のウィンドウにある一致する外部のノートで上書きしてはいけない
+		// (例: メインウィンドウで開く)。
 		(leaf) =>
 			reuseExisting &&
 			plugin.settings.focusExistingTab &&
@@ -44,17 +44,17 @@ export async function openExternalMarkdown(
 			externalPathOf(leaf)?.toLocaleLowerCase() === resolvedPath.toLocaleLowerCase(),
 	);
 	if (existing) {
-		// Why: a background open must not switch the user's tab to a note that is already visible.
+		// Why: 裏で開く操作は、既に見えているノートへユーザーのタブを切り替えてはいけない。
 		if (!active) return;
-		// Why: a native Markdown leaf already owns this external path, so reopening
-		// it should navigate to that tab instead of creating a duplicate leaf.
+		// Why: ネイティブの Markdown リーフがこの外部のパスを既に持っているので、開き直すときは
+		// 重複するリーフを作らず、そのタブへ移動する。
 		await existing.setViewState({
 			type: MARKDOWN_VIEW_TYPE,
 			active: true,
 			state: markdownViewState(resolvedPath),
 		});
-		// Reused external notes still navigate to their existing tab; await its
-		// load and honor preview focus just as we do for a newly opened note.
+		// 再利用した外部のノートも既存のタブへ移動する。新しく開いたノートと同じく、読み込みを待ち、
+		// プレビューのフォーカスの指定に従う。
 		await revealOpenedLeaf(plugin.app, existing, autoFocus);
 		return;
 	}

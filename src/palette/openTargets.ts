@@ -1,9 +1,8 @@
 import { isMarkdownPath } from "src/shared/externalFiles";
 
 /**
- * Describes where a path should be opened after a search result has been
- * resolved. Keeping this decision separate lets file and Everything results
- * share the same external-file behavior.
+ * 検索結果が解決されたあと、パスをどこで開くかを表す。この判断を分けておくと、
+ * ファイルの結果と Everything の結果が同じ外部ファイルの挙動を共有できる。
  */
 export type ExternalOpenTarget =
 	| { kind: "markdown"; absolutePath: string }

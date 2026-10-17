@@ -56,8 +56,8 @@ function fingerprint(filters: readonly string[]): string {
 }
 
 /**
- * Indexes files hidden by Excluded files without making the normal palette pay
- * the scan cost. The index is a rebuildable cache, not a second source of truth.
+ * Obsidian の除外ファイルを索引にする。通常のパレットがスキャンの費用を払わないように分けてある。
+ * 索引は作り直せるキャッシュであり、2つ目の正とする情報源ではない。
  */
 export class IgnoredNoteIndex {
 	private readonly current = new Map<string, IgnoredNoteIndexEntry>();
@@ -81,9 +81,9 @@ export class IgnoredNoteIndex {
 		const filters = getUserIgnoreFilters(this.app);
 		const filtersChanged = fingerprint(filters) !== this.filterFingerprint;
 		if ((filtersChanged || this.needsScan()) && !this.scanPromise) {
-			// Excluded files can change while the plugin stays loaded. Waiting for an
-			// explicit `i ` search to rescan prevents the prefix from appearing broken
-			// for up to the index TTL after the user edits Obsidian's ignore filters.
+			// プラグインが読み込まれたままでも、除外の設定は変わりうる。ユーザーが
+			// Obsidian の除外フィルターを編集した後、索引の TTL の間ずっと接頭辞が壊れて見えないよう、
+			// 明示的な `i ` 検索で再スキャンするまで待たない。
 			if (filtersChanged || this.current.size === 0) await this.rebuild();
 			else void this.rebuild();
 		}
@@ -145,8 +145,8 @@ export class IgnoredNoteIndex {
 			for (const entry of entries) this.current.set(entry.path, this.toPublicEntry(entry));
 			this.lastScannedAt = meta.lastScannedAt;
 		} else {
-			// A changed entry shape, such as adding `prior` or tags, must be rebuilt before
-			// returning ignored results; otherwise the first search would use stale data.
+			// `prior` やタグの追加のように項目の形が変わったときは、除外された結果を返す前に
+			// 作り直す必要がある。さもないと、最初の検索が古いデータを使ってしまうため。
 			this.log("Obsidian-excluded index requires rebuild", { entries: entries.length });
 		}
 		this.loaded = true;
@@ -223,8 +223,8 @@ export class IgnoredNoteIndex {
 			};
 		} catch (error) {
 			this.log("Failed to index ignored file", { path, error });
-			// Keep a previously indexed entry through transient sync/lock errors; a
-			// later TTL refresh can replace it once the source becomes readable again.
+			// 同期やロックによる一時的なエラーでは、以前の索引の項目を残す。元のファイルが
+			// また読めるようになれば、後の TTL の更新で置き換えられる。
 			return cached;
 		}
 	}

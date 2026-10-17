@@ -6,14 +6,15 @@ import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 import { hasPluginSettingsTab } from "src/search/plugin/pluginSettings";
 import { ICONS } from "src/ui/icons";
 import { getCommunityPlugin, getCommunityPluginManifests } from "src/platform/obsidianInternals";
+import { t } from "src/i18n";
 
 function isEnabled(app: App, pluginId: string): boolean {
 	return getCommunityPlugin(app, pluginId) !== undefined;
 }
 
 /**
- * Lists installed community plugins so their folders can be opened externally.
- * Disabled plugins stay listed with a mark, since their folders still exist.
+ * インストール済みのコミュニティプラグインを一覧にし、そのフォルダーを外部で開けるようにする。
+ * 無効なプラグインも、フォルダーは残っているので印を付けて一覧に残す。
  */
 export class PluginProvider implements PaletteProvider<PluginResult> {
 	constructor(private readonly app: App) {}
@@ -30,7 +31,7 @@ export class PluginProvider implements PaletteProvider<PluginResult> {
 				mode: "plugin",
 				primary: manifest.name || manifest.id,
 				secondary:
-					`${manifest.id} ${manifest.version ?? ""}${enabled ? "" : " (disabled)"}`.trim(),
+					`${manifest.id} ${manifest.version ?? ""}${enabled ? "" : t("plugin.disabledMark")}`.trim(),
 				icon: ICONS.plugin,
 				pluginId: manifest.id,
 				absolutePath,

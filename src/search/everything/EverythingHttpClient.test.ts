@@ -51,17 +51,17 @@ describe("EverythingHttpClient", () => {
 	it("rejects invalid settings, failed responses, and oversized or malformed bodies", async () => {
 		const client = new EverythingHttpClient();
 		await expect(client.search("x", { ...settings, httpUrl: "bad url" })).rejects.toThrow(
-			"valid",
+			"有効な",
 		);
 		await expect(client.search("x", { ...settings, httpUrl: "file:///tmp" })).rejects.toThrow(
-			"http or https",
+			"http か",
 		);
 		for (const [status, text, size, message] of [
-			[401, "", 0, "authentication failed"],
-			[503, "", 0, "returned 503"],
-			[200, "", 2 * 1024 * 1024 + 1, "exceeded 2 MiB"],
-			[200, "{", 1, "invalid JSON"],
-			[200, "{}", 2, "unsupported JSON"],
+			[401, "", 0, "認証に失敗しました"],
+			[503, "", 0, "503 を返しました"],
+			[200, "", 2 * 1024 * 1024 + 1, "2 MiB を超えました"],
+			[200, "{", 1, "不正な JSON"],
+			[200, "{}", 2, "未対応の JSON 形式"],
 		] as const) {
 			vi.stubGlobal("window", {
 				requestUrl: vi

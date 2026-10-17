@@ -1,13 +1,13 @@
 import type { App, KeymapEventHandler, Scope, TAbstractFile } from "obsidian";
 
 /*
- * Every Obsidian API that is not in the public `obsidian` typings goes through this
- * module. Why: these APIs can change or disappear in any Obsidian release, so each
- * accessor checks what it reads and falls back to an empty or missing value instead
- * of throwing. When an update breaks one, this is the only file to fix.
+ * 公開の `obsidian` の型定義にない Obsidian の API は、すべてこのモジュールを通す。
+ * Why: これらの API は、どの Obsidian のリリースでも変わったり消えたりしうる。そのため、各アクセサーは
+ * 読むものを確認し、例外を投げる代わりに空または欠けた値へフォールバックする。更新で1つが壊れたら、
+ * 直すべきファイルはこれだけ。
  */
 
-/** Optional members, so a missing internal reads as undefined instead of throwing. */
+/** 任意のメンバー。内部のものが欠けていても、例外ではなく undefined として読めるようにする。 */
 interface AppInternals {
 	commands?: {
 		commands?: Record<string, { id: string; name: string }>;
@@ -56,7 +56,7 @@ export interface CustomCssInternals {
 export interface SettingWindowInternals {
 	open(): void;
 	openTabById(id: string): void;
-	/** Tabs that plugins register; settingTabs holds only Obsidian's own pages. */
+	/** プラグインが登録するタブ。settingTabs は Obsidian 自身のページだけを持つ。 */
 	pluginTabs?: readonly { id?: string }[];
 }
 
@@ -71,7 +71,7 @@ export interface MetadataTypeManagerInternals {
 	getAssignedWidget?: (key: string) => unknown;
 }
 
-/** The core Search plugin's entry point. */
+/** コアの検索プラグインの入口。 */
 export interface GlobalSearchInternals {
 	openGlobalSearch(query: string, active: boolean): void;
 }
@@ -80,48 +80,48 @@ function internals(app: App): AppInternals {
 	return app as unknown as AppInternals;
 }
 
-/** Every registered command, including other plugins' and Obsidian's own. */
+/** 登録されているすべてのコマンド。ほかのプラグインのものと Obsidian 自身のものを含む。 */
 export function getCommands(app: App): { id: string; name: string }[] {
 	return Object.values(internals(app).commands?.commands ?? {});
 }
 
-/** Runs a command by id; false when it is unknown or the API is missing. */
+/** ID でコマンドを実行する。ID が不明、または API がなければ false。 */
 export function executeCommandById(app: App, id: string): boolean {
 	return internals(app).commands?.executeCommandById?.(id) ?? false;
 }
 
-/** Installed community plugins, enabled or not. */
+/** インストール済みのコミュニティプラグイン。有効かどうかは問わない。 */
 export function getCommunityPluginManifests(app: App): CommunityPluginManifest[] {
 	return Object.values(internals(app).plugins?.manifests ?? {});
 }
 
-/** The loaded instance of an enabled community plugin. */
+/** 有効なコミュニティプラグインの、読み込まれたインスタンス。 */
 export function getCommunityPlugin<T = unknown>(app: App, id: string): T | undefined {
 	return (internals(app).plugins?.plugins?.[id] as T | undefined) ?? undefined;
 }
 
-/** The instance of an enabled core plugin, or undefined when it is off. */
+/** 有効なコアプラグインのインスタンス。オフなら undefined。 */
 export function getEnabledCorePlugin<T = unknown>(app: App, id: string): T | undefined {
 	return (internals(app).internalPlugins?.getEnabledPluginById?.(id) as T | null) ?? undefined;
 }
 
 /**
- * Whether Obsidian has a view for the extension (notes, canvases, images, PDF, audio...).
- * Files such as `.toml` show up only with "Detect all file extensions" and cannot be opened.
- * True when the API is missing, so nothing is hidden by a changed internal.
+ * Obsidian がその拡張子のビュー(ノート、キャンバス、画像、PDF、音声など)を持つかどうか。
+ * `.toml` のようなファイルは「すべてのファイル拡張子を検出」の設定でのみ現れ、開けない。
+ * API がなければ true。変わった内部のせいで、何も隠れないようにするため。
  */
 export function isExtensionOpenable(app: App, extension: string): boolean {
 	return internals(app).viewRegistry?.isExtensionRegistered?.(extension) ?? true;
 }
 
-/** The folder setting of an enabled core plugin such as Daily notes or Templates. */
+/** デイリーノートやテンプレートなど、有効なコアプラグインのフォルダー設定。 */
 export function getCorePluginFolder(app: App, id: string): string | undefined {
 	const folder = getEnabledCorePlugin<{ options?: { folder?: unknown } }>(app, id)?.options
 		?.folder;
 	return typeof folder === "string" ? folder : undefined;
 }
 
-/** Shows a file or folder in the file explorer; false when that core plugin is off. */
+/** ファイルまたはフォルダーをファイルエクスプローラーに表示する。そのコアプラグインがオフなら false。 */
 export function revealInFileExplorer(app: App, file: TAbstractFile): boolean {
 	const explorer = getEnabledCorePlugin<{ revealInFolder?: (file: TAbstractFile) => void }>(
 		app,
@@ -136,7 +136,7 @@ export function getGlobalSearch(app: App): GlobalSearchInternals | undefined {
 	return getEnabledCorePlugin<GlobalSearchInternals>(app, "global-search");
 }
 
-/** CSS snippet state; an empty object when the API is missing. */
+/** CSS スニペットの状態。API がなければ空のオブジェクト。 */
 export function getCustomCss(app: App): CustomCssInternals {
 	return internals(app).customCss ?? {};
 }
@@ -149,27 +149,27 @@ export function getMetadataTypeManager(app: App): MetadataTypeManagerInternals |
 	return internals(app).metadataTypeManager;
 }
 
-/** The values used for a frontmatter key anywhere in the vault, unvalidated. */
+/** Vault のどこでも、そのフロントマターのキーに使われている値。検証はしない。 */
 export function getFrontmatterValuesForKey(app: App, key: string): unknown {
 	return internals(app).metadataCache?.getFrontmatterPropertyValuesForKey?.(key);
 }
 
-/** A setting from Files and links, such as `userIgnoreFilters`, unvalidated. */
+/** ファイルとリンクの設定(`userIgnoreFilters` など)。検証はしない。 */
 export function getVaultConfig(app: App, key: string): unknown {
 	return internals(app).vault?.getConfig?.(key);
 }
 
-/** The vault folder on disk; undefined off desktop. Takes the vault alone so tests can pass one. */
+/** ディスク上の Vault のフォルダー。デスクトップ以外では undefined。テストで渡せるように、Vault だけを受け取る。 */
 export function getVaultBasePath(vault: { adapter: object }): string | undefined {
 	return (vault.adapter as AdapterInternals).getBasePath?.();
 }
 
-/** The absolute path of a vault path; undefined off desktop. */
+/** Vault のパスの絶対パス。デスクトップ以外では undefined。 */
 export function getVaultFullPath(app: App, vaultPath: string): string | undefined {
 	return (app.vault.adapter as AdapterInternals).getFullPath?.(vaultPath);
 }
 
-/** The handlers registered on a scope, so built-in ones can be replaced. */
+/** スコープに登録されたハンドラー。組み込みのものを置き換えられるように。 */
 export function getScopeHandlers(scope: Scope): readonly KeymapEventHandler[] {
 	return [...((scope as unknown as { keys?: KeymapEventHandler[] }).keys ?? [])];
 }

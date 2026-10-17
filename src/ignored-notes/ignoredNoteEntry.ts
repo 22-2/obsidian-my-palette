@@ -26,7 +26,7 @@ export function parseIgnoredNoteFrontmatter(
 	const info = getFrontMatterInfo(content);
 	if (!info.exists) return { aliases: [], keywords: [], tags: [] };
 	try {
-		// Parse once so all searchable metadata comes from the same snapshot.
+		// 一度だけ解析し、検索できるメタデータがすべて同じスナップショットから来るようにする。
 		const parsed = parseYaml(info.frontmatter);
 		const frontmatter =
 			parsed && typeof parsed === "object" && !Array.isArray(parsed)
@@ -39,7 +39,7 @@ export function parseIgnoredNoteFrontmatter(
 			prior: normalizeFrontmatterPrior(frontmatter?.prior),
 		};
 	} catch (error) {
-		// Broken frontmatter still lists the note, just without its metadata.
+		// 壊れたフロントマターでもノートは一覧に出す。メタデータだけは使わない。
 		logger.debug("Failed to read frontmatter of an Obsidian-excluded note", error);
 		return { aliases: [], keywords: [], tags: [] };
 	}

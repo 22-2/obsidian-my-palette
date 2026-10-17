@@ -13,32 +13,32 @@ export interface SortableFileEntry {
 	basename: string;
 	aliases: string[];
 	mtime: number;
-	/** Parsed numeric value of the Vault's `prior` frontmatter property. */
+	/** Vault の `prior` フロントマタープロパティを数値として解析した値。 */
 	prior?: number;
 	ignored?: boolean;
 }
 
 export interface FileMatchSignals {
-	/** Fuzzy score contributed by the file's basename, when it matched. */
+	/** ファイル名が一致したときに、その基本名が寄与するあいまい一致のスコア。 */
 	filenameScore?: number;
-	/** Fuzzy score contributed by the file's aliases, when they matched. */
+	/** ファイルのエイリアスが一致したときに、それが寄与するあいまい一致のスコア。 */
 	aliasScore?: number;
-	/** Fuzzy score contributed by the file's folder path, when it matched. */
+	/** ファイルのフォルダーパスが一致したときに、それが寄与するあいまい一致のスコア。 */
 	folderPathScore?: number;
-	/** Number of tags that matched the current query, when tag search was used. */
+	/** タグ検索を使ったとき、現在のクエリに一致したタグの数。 */
 	tagMatchCount?: number;
-	/** Total query characters matched across distinct searchable values. */
+	/** 異なる検索対象の値にまたがって一致した、クエリの文字の総数。 */
 	matchCoverage?: number;
-	/** Whether a complete AND branch matched contiguously in searchable metadata. */
+	/** 検索できるメタデータの中で、有効な AND の分岐が連続して完全に一致したかどうか。 */
 	contiguousMatch?: boolean;
 }
 
 export interface FileMatch<T extends SortableFileEntry> extends FileMatchSignals {
 	obj: T;
 	score: number;
-	/** Tags that matched the current query; carried through sorting for presentation. */
+	/** 現在のクエリに一致したタグ。表示のために並べ替えの後も引き継ぐ。 */
 	matchedTags?: string[];
-	/** Keywords that matched the query; displayed alongside matching tags. */
+	/** クエリに一致したキーワード。一致したタグと並べて表示する。 */
 	matchedKeywords?: string[];
 }
 
@@ -56,8 +56,8 @@ export interface FileMatchOptions {
 	usesMatchCoverage: boolean;
 }
 
-// Candidate generation and signal extraction share these descriptors so adding
-// or reordering a field cannot silently attach its fuzzy score to another signal.
+// 候補の生成とシグナルの取り出しは、この記述子を共有する。項目を足したり並べ替えたりしても、
+// あるフィールドのあいまい一致のスコアが、黙って別のシグナルに付くことがないように。
 export function folderPath(path: string): string {
 	const separator = path.lastIndexOf("/");
 	return separator === -1 ? "" : path.slice(0, separator);
@@ -65,8 +65,8 @@ export function folderPath(path: string): string {
 
 const FILE_SEARCH_FIELDS = [
 	{ name: "filename", value: (entry: FileSearchEntry) => entry.basename },
-	// Keep the file name in its own signal so a folder priority cannot reward the
-	// same basename a second time through the full Vault-relative path.
+	// ファイル名は独自のシグナルに残す。フォルダーの優先度が、同じ基本名を Vault 相対パス全体で
+	// 二度評価してしまわないように。
 	{ name: "folderPath", value: (entry: FileSearchEntry) => folderPath(entry.path) },
 	{ name: "text", value: (entry: FileSearchEntry) => entry.text },
 	{ name: "alias", value: (entry: FileSearchEntry) => entry.aliases.join(" ") },
@@ -96,10 +96,9 @@ function fieldScore(
 }
 
 /**
- * Normalize the flat match shape at the sorter boundary. Providers historically
- * only supplied `score`, so the filename fallback must stay here while new
- * ranking signals can be added without spreading compatibility checks through
- * every comparator.
+ * 並べ替えの境界で、平坦な一致の形を正規化する。提供元は歴史的に `score` だけを渡していたので、
+ * ファイル名のフォールバックはここに残す。新しい順位のシグナルは、すべての比較関数に互換性の確認を
+ * 散らさずに足せるようにする。
  */
 export function extractFileMatchSignals<T extends SortableFileEntry>(
 	match: FileMatch<T>,
@@ -127,9 +126,8 @@ export function extractFileMatchSignals<T extends SortableFileEntry>(
 }
 
 /**
- * Convert a fuzzy candidate into the metadata signals consumed by the sorter.
- * Keeping query-specific work here lets FileProvider assemble candidates while
- * the comparator remains unaware of tag syntax and fuzzy-key compatibility.
+ * あいまい候補を、並べ替えが使うメタデータのシグナルに変換する。クエリ固有の処理をここに置くことで、
+ * FileProvider は候補を組み立て、比較関数はタグの構文やあいまいなキーの互換性を知らないままでいられる。
  */
 export function createFileMatch(
 	match: FuzzyQueryFieldMatch<FileSearchEntry>,
@@ -144,8 +142,8 @@ export function createFileMatch(
 		: obj.keywords.filter((keyword) =>
 				terms.some((term) => fuzzysort.single(term, keyword) !== null),
 			);
-	// Count source values rather than the compatibility `text` key, which repeats
-	// filename, path, aliases, and keywords and would artificially boost rank.
+	// 互換用の `text` キーではなく、元の値を数える。`text` はファイル名・パス・別名・キーワードを
+	// 繰り返すので、順位を人為的に押し上げてしまうため。
 	const searchableValues = options.tagOnlyQuery
 		? obj.tags
 		: [obj.basename, obj.path, ...obj.aliases, ...obj.tags, ...obj.keywords];

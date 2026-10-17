@@ -2,8 +2,8 @@ import { TFile, type App } from "obsidian";
 import type { PaletteResult } from "src/palette/results";
 
 /**
- * Resolves a palette result to a file the vault indexes. Folders, Obsidian-excluded files,
- * Everything hits outside the vault and non-file rows (commands, plugins, ...) resolve to nothing.
+ * 結果を、Vault がインデックスしているファイルに解決する。フォルダー、Obsidian の除外ファイル、
+ * Vault の外の Everything の結果、ファイル以外の行(コマンド、プラグインなど)は、どれにも解決しない。
  */
 export function resolveVaultFile(app: App, result: PaletteResult): TFile | undefined {
 	switch (result.mode) {

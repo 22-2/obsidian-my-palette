@@ -26,8 +26,8 @@ export interface TagChoiceSource {
 	relatedNoteTags: readonly (readonly string[])[];
 }
 
-// Notes with many links would otherwise mark most tags as related, which makes
-// the related marker useless as a hint.
+// リンクが多いノートは大半のタグを関連ありに見せてしまい、
+// 関連マーカーがヒントとして役に立たなくなる。
 export const MAX_RELATED_TAGS = 10;
 
 /** Tags differ only by case in Obsidian, so comparisons use one key format. */
@@ -47,7 +47,7 @@ export function countTagsInNotes(noteTags: readonly (readonly string[])[]): Map<
 }
 
 /**
- * Orders candidates as recent → related → usage count, with registered tags last.
+ * 候補を 最近 → 関連 → 使用数 の順に並べる。登録済みのタグは最後に置く。
  */
 export function buildTagChoices(source: TagChoiceSource): TagChoice[] {
 	const registered = new Set([...source.registeredTags].map(tagKey));
@@ -56,8 +56,8 @@ export function buildTagChoices(source: TagChoiceSource): TagChoice[] {
 		const key = tagKey(tag);
 		if (!recentIndex.has(key)) recentIndex.set(key, index);
 	}
-	// Recent and registered tags are removed before taking the top entries so they
-	// do not consume the limited related slots.
+	// 上位の候補を取る前に、最近使ったタグと登録済みのタグを取り除く。
+	// そうしないと、限られた関連枠を使い切ってしまうため。
 	const relatedCounts = new Map(
 		[...countTagsInNotes(source.relatedNoteTags)]
 			.filter(([key]) => !recentIndex.has(key) && !registered.has(key))

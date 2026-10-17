@@ -16,19 +16,19 @@ import {
 } from "src/search/bookmark/bookmarks";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
+import { countLabel } from "src/shared/countLabel";
+import { t } from "src/i18n";
 
 interface BookmarkMenuOptions {
 	menu: PaletteMenu;
 	plugin: MyPalettePlugin;
-	/** The clicked result, or every selected result for a bulk menu. */
+	/** クリックされた結果。一括のメニューでは、選択されたすべての結果。 */
 	results: readonly PaletteResult[];
-	/** Re-runs the search so renamed, moved or removed bookmarks show their new state. */
+	/** 検索をやり直し、名前の変更・移動・削除を反映した状態を表示する。 */
 	onBookmarksChanged?: () => void;
-	/** Closes a modal palette once files were bookmarked from another mode. */
+	/** 別のモードからファイルをブックマークしたら、モーダルのパレットを閉じる。 */
 	onNoteActionDone?: () => void;
 }
-
-const plural = (count: number, noun: string): string => `${count} ${noun}${count === 1 ? "" : "s"}`;
 
 function bookmarkEntries(results: readonly PaletteResult[]): BookmarkEntry[] {
 	return results.flatMap((result) =>
@@ -36,11 +36,11 @@ function bookmarkEntries(results: readonly PaletteResult[]): BookmarkEntry[] {
 	);
 }
 
-/** Names the destination in a notice: the group's full path, or the top level. */
+/** 通知に移動先の名前を出す。グループの完全なパス、または最上位。 */
 function destinationName(chosen: BookmarkGroupItem): string {
 	switch (chosen.target.kind) {
 		case "top":
-			return "the top level";
+			return t("bookmark.topLevel");
 		case "group":
 			return chosen.description ?? chosen.label;
 		case "new":
@@ -49,9 +49,9 @@ function destinationName(chosen: BookmarkGroupItem): string {
 }
 
 /**
- * Adds the Bookmarks plugin's operations to a result menu. Bookmarks mode results can be
- * retitled, moved to another group and removed; files from any other mode can be bookmarked.
- * Nothing is added while the core Bookmarks plugin is off.
+ * ブックマークプラグインの操作を、結果のメニューに加える。ブックマークのモードの結果は、
+ * 名前を変えたり、別のグループへ移したり、削除したりできる。ほかのモードのファイルは、ブックマークに追加できる。
+ * コアのブックマークプラグインが無効なら、何も加えない。
  */
 export function addBookmarkMenuItems({
 	menu,
@@ -75,7 +75,7 @@ export function addBookmarkMenuItems({
 						onBookmarksChanged?.();
 					});
 					modal.open();
-					// Why: the current title is selected so typing replaces it.
+					// Why: 現在のタイトルを選択しておき、入力すると置き換わるようにする。
 					modal.inputEl.select();
 				}),
 			);
@@ -83,16 +83,21 @@ export function addBookmarkMenuItems({
 		menu.addItem((item) =>
 			withAction(item, MENU_ACTIONS.moveToBookmarkGroup).onClick(() =>
 				new BookmarkGroupModal(app, instance, {
-					placeholder: "Search bookmark groups",
-					footerText: `Moving: ${plural(entries.length, "bookmark")}`,
+					placeholder: t("bookmark.placeholder.groups"),
+					footerText: t("bookmark.footer.moving", {
+						what: countLabel(entries.length, "ブックマーク"),
+					}),
 					createGroup: (title) => createBookmarkGroup(instance, title),
 					onChoose: (parent, chosen) => {
 						const moved = moveBookmarks(instance, entries, parent);
 						const name = destinationName(chosen);
 						new Notice(
 							moved > 0
-								? `Moved ${plural(moved, "bookmark")} to ${name}`
-								: `Already in ${name}`,
+								? t("bookmark.moved", {
+										what: countLabel(moved, "ブックマーク"),
+										name,
+									})
+								: t("bookmark.alreadyIn", { name }),
 						);
 						onBookmarksChanged?.();
 					},
@@ -102,7 +107,7 @@ export function addBookmarkMenuItems({
 		menu.addItem((item) =>
 			withAction(item, MENU_ACTIONS.removeFromBookmarks).onClick(() => {
 				const removed = removeBookmarks(instance, entries);
-				new Notice(`Removed ${plural(removed, "bookmark")}`);
+				new Notice(t("bookmark.removed", { what: countLabel(removed, "ブックマーク") }));
 				onBookmarksChanged?.();
 			}),
 		);
@@ -116,20 +121,22 @@ export function addBookmarkMenuItems({
 	menu.addItem((item) =>
 		withAction(item, MENU_ACTIONS.addToBookmarks).onClick(() =>
 			new BookmarkGroupModal(app, instance, {
-				placeholder: "Search bookmark groups",
+				placeholder: t("bookmark.placeholder.groups"),
 				footerText:
 					paths.length === 1
-						? `Bookmarking: ${paths[0]}`
-						: `Bookmarking: ${plural(paths.length, "file")}`,
+						? t("bookmark.footer.bookmarkingOne", { path: paths[0] })
+						: t("bookmark.footer.bookmarking", {
+								what: countLabel(paths.length, "ファイル"),
+							}),
 				createGroup: (title) => createBookmarkGroup(instance, title),
 				onChoose: (parent, chosen) => {
 					const { added, skipped } = addFileBookmarks(instance, paths, parent);
 					const name = destinationName(chosen);
 					new Notice(
 						added > 0
-							? `Bookmarked ${plural(added, "file")} in ${name}` +
-									(skipped > 0 ? ` (${skipped} already there)` : "")
-							: `Already bookmarked in ${name}`,
+							? t("bookmark.added", { what: countLabel(added, "ファイル"), name }) +
+									(skipped > 0 ? t("bookmark.skipped", { count: skipped }) : "")
+							: t("bookmark.alreadyBookmarked", { name }),
 					);
 					if (added > 0) onNoteActionDone?.();
 				},

@@ -2,10 +2,11 @@ import type { CliData, CliFlags } from "obsidian";
 import { auditCliApi } from "src/audit/auditCli";
 import type MyPalettePlugin from "src/main";
 import { logger } from "src/shared/logger";
+import { t } from "src/i18n";
 
 /**
- * An API for the Obsidian CLI, registered as `obsidian my-palette:<action> ...`.
- * The value `run` returns is printed as JSON.
+ * Obsidian CLI の API。`obsidian my-palette:<action> ...` として登録される。
+ * `run` が返した値は JSON として出力する。
  */
 export interface CliApi {
 	action: string;
@@ -16,10 +17,10 @@ export interface CliApi {
 
 const CLI_APIS: readonly CliApi[] = [auditCliApi];
 
-/** The plugin ID alone lists the APIs, so a caller can find them without the README. */
+/** プラグイン ID だけで API の一覧を出せるので、README を見なくても呼び出し先を見つけられる。 */
 export function registerCli(plugin: MyPalettePlugin): void {
 	const pluginId = plugin.manifest.id;
-	plugin.registerCliHandler(pluginId, "List My Palette CLI APIs as JSON", null, () =>
+	plugin.registerCliHandler(pluginId, t("cli.listDescription"), null, () =>
 		toJson(
 			CLI_APIS.map(({ action, description, flags }) => ({
 				command: `${pluginId}:${action}`,
@@ -34,7 +35,7 @@ export function registerCli(plugin: MyPalettePlugin): void {
 			api.description,
 			api.flags,
 			async (params) => {
-				// Why: a thrown error reaches the caller without its message, so return it as JSON.
+				// Why: 投げられたエラーは呼び出し元にメッセージが届かないため、JSON で返す。
 				try {
 					return toJson(await api.run(plugin, params));
 				} catch (error) {

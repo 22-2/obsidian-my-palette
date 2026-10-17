@@ -23,13 +23,13 @@ export interface NewPaletteViewOptions {
 }
 
 /**
- * Opens the palette modal and persistent views. The modal palette keeps how it was
- * closed, so Open home can resume it within the Return to Home after time.
+ * パレットのモーダルと常駐ビューを開く。モーダルのパレットは閉じ方を覚えているので、
+ * 「ホームを開く」は Home に戻るまでの時間内なら前の状態から再開できる。
  */
 export class PaletteOpener {
 	private activeModal?: PaletteModal;
 	private lastClosed?: { closedAt: number; state: PaletteRestoreState };
-	/** Read for restore timing; tests replace it to move the clock. */
+	/** 復元の時間の判定に使う。テストでは差し替えて時計を進める。 */
 	now: () => number = () => Date.now();
 
 	constructor(
@@ -63,8 +63,8 @@ export class PaletteOpener {
 	}
 
 	async openPaletteTableView(initialInput = "", fixedMode?: FixedPaletteMode): Promise<void> {
-		// Why: reuse a center table without overwriting its query. A new tab keeps
-		// the current note intact and avoids reopening a restored sidebar table.
+		// Why: 中央の表は、クエリを上書きせず再利用する。新しいタブにすると、
+		// 現在のノートをそのまま残し、復元されたサイドバーの表を開き直さずに済む。
 		const existing = this.app.workspace
 			.getLeavesOfType(PALETTE_TABLE_VIEW_TYPE)
 			.find((leaf) => leaf.getRoot() === this.app.workspace.rootSplit);
@@ -90,8 +90,8 @@ export class PaletteOpener {
 			tableState,
 			viewType = PALETTE_VIEW_TYPE,
 		} = options;
-		// Why: duplicating a table needs a fresh center tab, while list palettes
-		// keep independent right-sidebar panes for simultaneous searches.
+		// Why: 表の複製には新しい中央のタブが要る。一覧のパレットは、同時に検索できるよう
+		// 右サイドバーのペインをそれぞれ独立に持つ。
 		const leaf =
 			viewType === PALETTE_TABLE_VIEW_TYPE
 				? this.app.workspace.getLeaf("tab")
@@ -100,8 +100,8 @@ export class PaletteOpener {
 		await leaf.setViewState({
 			type: viewType,
 			active: true,
-			// A duplicated palette starts with the same presentation, then persists
-			// its own sort state independently from the original pane.
+			// 複製したパレットは同じ表示で始まり、その後の並び順は元のペインとは
+			// 独立に保存する。
 			state: {
 				...this.viewState(input, fixedMode, sourcePath, sourcePinned),
 				includeIgnored,
@@ -121,13 +121,13 @@ export class PaletteOpener {
 		this.activeModal = undefined;
 	}
 
-	/** Open home: resumes the palette closed recently enough, otherwise starts at Home. */
+	/** ホームを開く: 最近閉じたパレットなら再開し、そうでなければ Home から始める。 */
 	openHomePalette(): void {
 		const state = this.restorableState();
 		this.openPalette(state?.input ?? "", undefined, { modeEntries: true, restore: state });
 	}
 
-	/** Called whenever a palette modal closes, so the next Open home can resume it. */
+	/** パレットのモーダルを閉じるたびに呼ぶ。次の「ホームを開く」で再開できるようにするため。 */
 	rememberClosedPalette(state: PaletteRestoreState): void {
 		this.lastClosed = { closedAt: this.now(), state };
 	}
@@ -140,8 +140,8 @@ export class PaletteOpener {
 	}
 
 	/**
-	 * Vault audit has many columns, so it opens as a table palette. A table already showing it
-	 * comes to the front; others keep their own queries.
+	 * Vault 監査は列が多いので、表のパレットで開く。すでにそれを表示している表は前面に出し、
+	 * ほかの表はそれぞれのクエリを保つ。
 	 */
 	async openAuditTable(): Promise<void> {
 		const input = `${paletteModeAlias("audit", this.plugin.settings.modes)} `;
@@ -159,7 +159,7 @@ export class PaletteOpener {
 		this.focusView(existing);
 	}
 
-	/** The command list opens at its alias, with nothing typed after it. */
+	/** コマンド一覧は、そのエイリアスだけを入力した状態で開く。 */
 	commandPaletteInitialInput(): string {
 		return `${paletteModeAlias("commands", this.plugin.settings.modes)} `;
 	}
@@ -169,14 +169,14 @@ export class PaletteOpener {
 		initialInput: string,
 		fixedMode?: FixedPaletteMode,
 	): Promise<void> {
-		// Why: reuse only the requested view type, so opening a table cannot replace
-		// the regular palette's query or its independently persisted sidebar pane.
+		// Why: 要求されたビューの種類だけを再利用する。表を開いたときに、通常のパレットの
+		// クエリや、独立に保存されたサイドバーのペインを置き換えないようにするため。
 		const hasRightSidebarPalette = this.app.workspace
 			.getLeavesOfType(viewType)
 			.some((leaf) => leaf.getRoot() === this.app.workspace.rightSplit);
-		// Why: PaletteView.getState() is stored independently by Obsidian for each
-		// leaf. Passing the plugin-wide remembered input every time would overwrite
-		// that leaf's own query when the sidebar command is invoked again.
+		// Why: PaletteView.getState() は Obsidian がリーフごとに独立して保存する。
+		// プラグイン全体で覚えた入力を毎回渡すと、サイドバーのコマンドを再実行したときに
+		// そのリーフ自身のクエリを上書きしてしまうため。
 		const options = {
 			active: true,
 			reveal: true,
@@ -206,8 +206,8 @@ export class PaletteOpener {
 	}
 
 	private focusView(leaf: WorkspaceLeaf): void {
-		// Focus is explicit for command-created views; restored views must not steal
-		// focus from the editor merely because Obsidian reopened their ItemView.
+		// コマンドが作ったビューはフォーカスを明示的に移す。復元されたビューは、Obsidian が
+		// ItemView を開き直しただけでエディターからフォーカスを奪ってはいけない。
 		if (leaf.view instanceof PaletteView) leaf.view.focusSearchInput();
 	}
 }

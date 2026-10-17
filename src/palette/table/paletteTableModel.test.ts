@@ -215,9 +215,9 @@ describe("column sets", () => {
 		model.toggleColumnVisibility("prior");
 		model.setColumnSet("broken-links");
 		expect(model.visibleColumns.map(({ id, label }) => [id, label])).toEqual([
-			["name", "Link"],
-			["linkedFrom", "Linked from"],
-			["firstSource", "First source"],
+			["name", "リンク"],
+			["linkedFrom", "リンク元"],
+			["firstSource", "最初の出所"],
 		]);
 		expect(model.sorting).toEqual([]);
 		model.toggleSorting("linkedFrom");

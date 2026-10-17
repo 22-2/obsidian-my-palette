@@ -3,8 +3,9 @@ import { PALETTE_MODES, paletteModeAlias } from "src/palette/modes";
 import type { ModeSettingsMap, PaletteSurface } from "src/settings/model";
 import { DEFAULT_HOTKEYS, formatHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
 import { ICONS } from "src/ui/icons";
+import { t } from "src/i18n";
 
-/** Shows the small, discoverable syntax guide instead of overloading the input placeholder. */
+/** 入力欄のプレースホルダーに詰め込まず、見つけやすい構文の案内を表示する。 */
 export class PaletteHelpModal extends Modal {
 	constructor(
 		app: App,
@@ -18,16 +19,14 @@ export class PaletteHelpModal extends Modal {
 	onOpen(): void {
 		this.modalEl.addClass("my-palette-help-modal");
 		this.contentEl.empty();
-		this.titleEl.setText("Palette help");
+		this.titleEl.setText(t("help.title"));
 
 		const enterMode = this.hotkeys.enterMode ? formatHotkey(this.hotkeys.enterMode) : undefined;
 		const intro = this.contentEl.createDiv("my-palette-help-modal__intro");
-		intro.setText(
-			`Home lists the modes: pick one with Enter, or type its alias followed by a space. Esc goes back.`,
-		);
+		intro.setText(t("help.intro"));
 
 		const modeSection = this.contentEl.createDiv("my-palette-help-modal__section");
-		modeSection.createEl("h3", { text: "Search modes" });
+		modeSection.createEl("h3", { text: t("help.modes") });
 		const modeRows = PALETTE_MODES.filter(({ id }) => this.modes[id].enabled).map(
 			(mode): [string, string, string] => [
 				paletteModeAlias(mode.id, this.modes),
@@ -43,57 +42,51 @@ export class PaletteHelpModal extends Modal {
 		}
 
 		const actions = this.contentEl.createDiv("my-palette-help-modal__section");
-		actions.createEl("h3", { text: "Actions" });
+		actions.createEl("h3", { text: t("help.actions") });
 		const actionRows: Array<[string, string]> = [
-			["Enter / numpad Enter / double-click", "Open or run the active result"],
-			["↑ / ↓", "Move through results"],
-			["Shift+↑ / Shift+↓", "Extend the result selection"],
-			["Ctrl+↑ / Ctrl+↓", "Move the active row without changing the selection"],
+			[t("help.row.enter"), t("help.row.enterDescription")],
+			["↑ / ↓", t("help.row.arrows")],
+			["Shift+↑ / Shift+↓", t("help.row.shiftArrows")],
+			["Ctrl+↑ / Ctrl+↓", t("help.row.ctrlArrows")],
 			...(this.surface === "palette"
 				? ([
-						[
-							formatHotkey(this.hotkeys.preview),
-							"Preview the active result without closing the palette",
-						],
-						["Home / End", "Move to the start or end of the search input"],
-						["Ctrl+Home / Ctrl+End", "Move to the first or last result"],
+						[formatHotkey(this.hotkeys.preview), t("help.row.preview")],
+						["Home / End", t("help.row.homeEnd")],
+						["Ctrl+Home / Ctrl+End", t("help.row.ctrlHomeEnd")],
 					] satisfies Array<[string, string]>)
 				: []),
 			[
 				this.hotkeys.hidePreview
-					? `Hold ${formatHotkey(this.hotkeys.hidePreview)}`
-					: "Disabled",
-				"Temporarily fade out the palette; release to restore",
+					? t("help.row.holdKey", { key: formatHotkey(this.hotkeys.hidePreview) })
+					: t("hotkey.disabled"),
+				t("help.row.fade"),
 			],
-			["Click / Ctrl+click", "Select one result or toggle several results"],
-			["Shift+click", "Select a range of results"],
-			["Middle-click", "Open the result in a background tab"],
-			["Right-click", "Show actions, including copy actions for a selection"],
+			[t("help.row.click"), t("help.row.clickDescription")],
+			[t("help.row.shiftClick"), t("help.row.shiftClickDescription")],
+			[t("help.row.middleClick"), t("help.row.middleClickDescription")],
+			[t("help.row.rightClick"), t("help.row.rightClickDescription")],
 			...(this.hotkeys.contextMenu
 				? ([
 						[
 							formatHotkey(this.hotkeys.contextMenu),
-							"Show actions for the active result",
+							t("help.row.contextMenuDescription"),
 						],
 					] satisfies Array<[string, string]>)
 				: []),
 			...(this.hotkeys.optionsMenu
 				? ([
-						[
-							formatHotkey(this.hotkeys.optionsMenu),
-							"Open the options menu: flip switches with Enter, then Esc",
-						],
+						[formatHotkey(this.hotkeys.optionsMenu), t("help.row.optionsDescription")],
 					] satisfies Array<[string, string]>)
 				: []),
-			[formatHotkey(this.hotkeys.history), "Open search history"],
-			[`Enter${enterMode ? ` / ${enterMode}` : ""} on a mode`, "Enter that mode"],
-			["Esc / Backspace in an empty field", "Return from a mode to Home"],
+			[formatHotkey(this.hotkeys.history), t("help.row.historyDescription")],
 			[
-				"Esc",
-				this.surface === "palette"
-					? "Close the palette at Home"
-					: "Clear the query, then focus the search field",
+				t("help.row.modeEnterKeys", {
+					keys: enterMode ? `Enter / ${enterMode}` : "Enter",
+				}),
+				t("help.row.modeEnterDescription"),
 			],
+			[t("help.row.escBackKeys"), t("help.row.escBackDescription")],
+			["Esc", this.surface === "palette" ? t("help.row.escHome") : t("help.row.escSelector")],
 		];
 		for (const [gesture, description] of actionRows) {
 			const row = actions.createDiv("my-palette-help-modal__row");
@@ -104,8 +97,6 @@ export class PaletteHelpModal extends Modal {
 		const note = this.contentEl.createDiv("my-palette-help-modal__note");
 		const icon = note.createSpan("my-palette-help-modal__note-icon");
 		setIcon(icon, ICONS.info);
-		note.createSpan({
-			text: "Include Obsidian-excluded files appears in the options menu only in File search and Everything.",
-		});
+		note.createSpan({ text: t("help.note") });
 	}
 }

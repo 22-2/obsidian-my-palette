@@ -8,10 +8,11 @@ import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 import { ICONS } from "src/ui/icons";
 import { logger } from "src/shared/logger";
 import { getGlobalSearch } from "src/platform/obsidianInternals";
+import { t } from "src/i18n";
 
 /**
- * The text copied for a property value. A list is copied one item per line, and a
- * nested value as JSON, so the copy keeps the structure a user would need.
+ * プロパティの値としてコピーされるテキスト。リストは1行に1項目ずつコピーし、入れ子の値は JSON として
+ * コピーする。ユーザーが必要とする構造をコピーの結果に残すため。
  */
 export function propertyValueText(kind: PropertyResult["kind"], value: unknown): string {
 	if (kind === "list" || kind === "tags") return readList(value).join("\n");
@@ -21,7 +22,7 @@ export function propertyValueText(kind: PropertyResult["kind"], value: unknown):
 	return JSON.stringify(value);
 }
 
-/** The right-click actions for a property row; Edit matches Enter. */
+/** プロパティの行の右クリック操作。「編集」は Enter と同じ。 */
 export function populatePropertyMenu(
 	menu: PaletteMenu,
 	plugin: MyPalettePlugin,
@@ -52,7 +53,7 @@ export function populatePropertyMenu(
 	}
 	menu.addItem((item) =>
 		withAction(item, MENU_ACTIONS.copyPropertyName).onClick(
-			() => void copyText(result.key, "Property name copied."),
+			() => void copyText(result.key, t("property.notice.nameCopied")),
 		),
 	);
 }
@@ -60,7 +61,7 @@ export function populatePropertyMenu(
 function openPropertySearch(app: App, key: string, beforeSearch?: () => void): void {
 	const search = getGlobalSearch(app);
 	if (!search) {
-		new Notice("Enable Obsidian's search core plugin to search properties.");
+		new Notice(t("property.error.noSearchPlugin"));
 		return;
 	}
 	beforeSearch?.();
@@ -72,7 +73,7 @@ async function copyValue(app: App, result: PropertyResult): Promise<void> {
 	const value: unknown = file
 		? app.metadataCache.getFileCache(file)?.frontmatter?.[result.key]
 		: undefined;
-	await copyText(propertyValueText(result.kind, value), "Property value copied.");
+	await copyText(propertyValueText(result.kind, value), t("property.notice.valueCopied"));
 }
 
 async function copyText(text: string, message: string): Promise<void> {
@@ -81,11 +82,11 @@ async function copyText(text: string, message: string): Promise<void> {
 		new Notice(message);
 	} catch (error) {
 		logger.error("Failed to copy to the clipboard", error);
-		new Notice("Could not copy to the clipboard.");
+		new Notice(t("property.error.copyFailed"));
 	}
 }
 
-/** Deleting a key from several notes cannot be undone, so it needs a second press. */
+/** 複数のノートからキーを削除するのは元に戻せないので、もう一度押す必要がある。 */
 function addBulkDeleteItem(
 	menu: PaletteMenu,
 	app: App,
@@ -93,14 +94,14 @@ function addBulkDeleteItem(
 	targetCount: number,
 ): void {
 	menu.addConfirmedItem({
-		title: `Delete property from ${targetCount} notes`,
-		confirmTitle: `Click again to delete from ${targetCount} notes`,
+		title: t("property.menu.deleteFromMany", { count: targetCount }),
+		confirmTitle: t("property.menu.confirmDeleteMany", { count: targetCount }),
 		icon: ICONS.delete,
 		run: () => void deleteProperties(app, result),
 	});
 }
 
-/** Removes the key from every note the list spans that has it; one failing note does not stop the rest. */
+/** 一覧が対象とするノートのうち、キーを持つすべてのノートからキーを削除する。1つのノートが失敗しても残りは続ける。 */
 export async function deleteProperties(app: App, result: PropertyResult): Promise<void> {
 	const files = propertyTargetPaths(result).flatMap((path) => {
 		const file: TFile | null = app.vault.getFileByPath(path);
@@ -124,17 +125,17 @@ export async function deleteProperties(app: App, result: PropertyResult): Promis
 		else failed += 1;
 	}
 	if (deleted > 0)
-		new Notice(`Deleted ${result.key} from ${deleted} ${deleted === 1 ? "note" : "notes"}.`);
-	if (failed > 0)
-		new Notice(`Could not update the properties of ${failed} notes. See the console.`);
-	if (deleted === 0 && failed === 0) new Notice(`No selected note has ${result.key}.`);
+		new Notice(t("property.notice.deletedFromMany", { key: result.key, count: deleted }));
+	if (failed > 0) new Notice(t("property.error.updateFailedMany", { count: failed }));
+	if (deleted === 0 && failed === 0)
+		new Notice(t("property.notice.noneHasKey", { key: result.key }));
 }
 
-/** Removes the key from the note the list was built from. */
+/** 一覧を作ったノートから、キーを削除する。 */
 async function deleteProperty(app: App, result: PropertyResult): Promise<void> {
 	const file: TFile | null = app.vault.getFileByPath(result.sourcePath);
 	if (!file) {
-		new Notice("The note for this property no longer exists.");
+		new Notice(t("property.error.noteGone"));
 		return;
 	}
 	const updated = await updateFrontmatter(
@@ -145,6 +146,7 @@ async function deleteProperty(app: App, result: PropertyResult): Promise<void> {
 			delete frontmatter[result.key];
 		},
 	);
-	if (updated) new Notice(`Deleted ${result.key} from ${file.basename}.`);
-	else new Notice(`Could not update the properties of ${file.basename}. See the console.`);
+	if (updated)
+		new Notice(t("property.notice.deletedFromOne", { key: result.key, name: file.basename }));
+	else new Notice(t("property.error.updateFailed", { name: file.basename }));
 }

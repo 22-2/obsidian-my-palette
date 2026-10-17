@@ -49,7 +49,7 @@ describe("PluginProvider", () => {
 			enabled: true,
 			hasSettings: true,
 		});
-		expect(results[1]?.secondary).toContain("(disabled)");
+		expect(results[1]?.secondary).toContain("(無効)");
 		expect(results[1]).toMatchObject({ enabled: false, hasSettings: false });
 	});
 

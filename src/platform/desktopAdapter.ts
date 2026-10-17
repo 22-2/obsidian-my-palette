@@ -10,8 +10,8 @@ export interface DesktopAdapter {
 	path: {
 		basename(path: string): string;
 		relative(from: string, to: string): string;
-		// Node's path adapter accepts a Vault root and a relative path together.
-		// Keep the type variadic so callers can use its actual resolution behavior.
+		// Node のパスのアダプターは、Vault のルートと相対パスを一緒に受け付ける。
+		// 呼び出し元が実際の解決の挙動を使えるように、型は可変長のままにする。
 		resolve(...paths: string[]): string;
 		sep: string;
 		isAbsolute(path: string): boolean;

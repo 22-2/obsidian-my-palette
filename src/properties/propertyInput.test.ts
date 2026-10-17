@@ -12,7 +12,7 @@ describe("checkPropertyInput", () => {
 		expect(checkPropertyInput("number", " 4.5 ")).toEqual({ ok: true, value: 4.5 });
 		expect(checkPropertyInput("number", "abc")).toEqual({
 			ok: false,
-			reason: "Enter a number.",
+			reason: "数値を入力してください。",
 		});
 	});
 
@@ -39,12 +39,12 @@ describe("propertyInputRows", () => {
 			vaultValues: ["hello world", "other"],
 		});
 		expect(rows[0]).toEqual({
-			label: 'Set to "hello"',
-			description: "Current: old",
+			label: '"hello" に設定',
+			description: "現在: old",
 			icon: "check",
 			value: "hello",
 		});
-		expect(rows.map((row) => row.label)).toEqual(['Set to "hello"', "hello world"]);
+		expect(rows.map((row) => row.label)).toEqual(['"hello" に設定', "hello world"]);
 	});
 
 	it("explains an invalid input instead of offering to set it", () => {
@@ -56,8 +56,8 @@ describe("propertyInputRows", () => {
 		});
 		expect(rows).toEqual([
 			{
-				label: "Enter a date as YYYY-MM-DD.",
-				description: "Current: Not set",
+				label: "日付は YYYY-MM-DD の形式で入力してください。",
+				description: "現在: 未設定",
 				icon: "alert-circle",
 			},
 		]);

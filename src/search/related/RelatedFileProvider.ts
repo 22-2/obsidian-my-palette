@@ -9,7 +9,7 @@ import type { PaletteProvider, PaletteSearchRequest } from "src/search/PalettePr
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 import { ICONS } from "src/ui/icons";
 
-/** Finds distinct outgoing destinations or incoming source notes for the active note. */
+/** アクティブなノートの、発リンクの重複しない行き先、または被リンクの元のノートを探す。 */
 export class RelatedFileProvider implements PaletteProvider<RelatedFileResult> {
 	constructor(
 		private readonly app: App,
@@ -27,8 +27,8 @@ export class RelatedFileProvider implements PaletteProvider<RelatedFileResult> {
 			occurrences,
 			({ file }) => file.path,
 		);
-		// The link's line lives in the note that contains it: the origin for
-		// outgoing links, the linking note for backlinks. Read each note once.
+		// リンクの行は、それを含むノートにある。発リンクは元のノート、被リンクはリンクしているノート。
+		// 各ノートは一度だけ読む。
 		const lines = new Map<string, Promise<string[]>>();
 		const linesOf = (file: TFile): Promise<string[]> => {
 			let pending = lines.get(file.path);
@@ -59,8 +59,8 @@ export class RelatedFileProvider implements PaletteProvider<RelatedFileResult> {
 					(result) => result.primary,
 					(result) => result.secondary,
 				]).map(({ obj }) => obj);
-		// Deduplicate after matching so every occurrence remains searchable and
-		// the best-matching line represents each related note.
+		// 一致の後で重複を除く。そうすると、どの出現箇所も検索できたままになり、
+		// 最も一致した行が、それぞれの関連するノートを代表する。
 		const seen = new Set<string>();
 		return ranked.filter(({ file }) => {
 			if (seen.has(file.path)) return false;

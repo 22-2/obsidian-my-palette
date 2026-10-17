@@ -1,29 +1,28 @@
-/** A row as the change rules see it: its identity, value, and whether the targets already have it. */
+/** 変更のルールから見た1行。その同一性、値、対象がすでに持っているかどうか。 */
 export interface ChangeRow<V> {
 	key: string;
 	value: V;
-	/** Applied to every target already; a row like this is checked from the start. */
+	/** すでにすべての対象に適用されている。このような行は最初からチェックされている。 */
 	applied?: boolean;
 }
 
-/** What a multi selector asks the host to do: values to apply and applied values to remove. */
+/** 複数選択のセレクターがホストに求める操作。適用する値と、適用済みで削除する値。 */
 export interface MultiSelectChanges<V> {
 	add: V[];
 	remove: V[];
 }
 
 /**
- * Whether a row is checked. An applied row starts checked and an unapplied row
- * starts unchecked; a toggled row has the opposite of its starting state.
+ * 行がチェックされているかどうか。適用済みの行は最初からチェックされ、未適用の行は
+ * 最初はチェックされていない。切り替えた行は、最初の状態の反対になる。
  */
 export function isCheckedRow<V>(row: ChangeRow<V>, toggledKeys: ReadonlySet<string>): boolean {
 	return Boolean(row.applied) !== toggledKeys.has(row.key);
 }
 
 /**
- * Changes for rows the user has pinned with checks: an unapplied row is added, and
- * an applied row is removed only when its check was cleared. Applied rows that are
- * merely highlighted are left alone.
+ * ユーザーがチェックで固定した行の変更。未適用の行は追加し、適用済みの行は、
+ * チェックを外したときだけ削除する。ただ強調表示されているだけの適用済みの行は、そのままにする。
  */
 export function pendingChanges<V>(
 	rows: readonly ChangeRow<V>[],
@@ -38,8 +37,8 @@ export function pendingChanges<V>(
 }
 
 /**
- * Changes for rows the user acts on directly (Enter, double-click): every unapplied
- * row is added and every applied row is removed.
+ * ユーザーが直接操作する行の変更(Enter、ダブルクリック)。未適用の行はすべて追加し、
+ * 適用済みの行はすべて削除する。
  */
 export function directChanges<V>(rows: readonly ChangeRow<V>[]): MultiSelectChanges<V> {
 	return {

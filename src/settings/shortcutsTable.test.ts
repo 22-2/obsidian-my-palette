@@ -19,23 +19,23 @@ vi.mock("obsidian", () => ({
 describe("hotkeyScopeLabel", () => {
 	it("names every place a shortcut works, collapsing palette and selectors", () => {
 		expect(hotkeyScopeLabel(HOTKEY_ACTIONS.hidePreview.scopes)).toBe(
-			"All palettes and selectors",
+			"すべてのパレットとセレクター",
 		);
 		expect(hotkeyScopeLabel(HOTKEY_ACTIONS.preview.scopes)).toBe(
-			"Palette, Tag insert selector, MOC insert selector",
+			"パレット, タグ挿入セレクター, MOC 挿入セレクター",
 		);
 		expect(hotkeyScopeLabel(HOTKEY_ACTIONS.focusInput.scopes)).toBe(
-			"Tag insert selector, MOC insert selector, MOC remove selector, Property value selector",
+			"タグ挿入セレクター, MOC 挿入セレクター, MOC 削除セレクター, プロパティの値セレクター",
 		);
-		expect(hotkeyScopeLabel(HOTKEY_ACTIONS.enterMode.scopes)).toBe("Palette");
+		expect(hotkeyScopeLabel(HOTKEY_ACTIONS.enterMode.scopes)).toBe("パレット");
 	});
 
 	it("lists places in one order, from the palette to the selectors", () => {
 		expect(hotkeyScopeLabel(["moc-remove-selector", "tag-insert-selector"])).toBe(
-			"Tag insert selector, MOC remove selector",
+			"タグ挿入セレクター, MOC 削除セレクター",
 		);
 		expect(hotkeyScopeLabel(["moc-insert-selector", "palette"])).toBe(
-			"Palette, MOC insert selector",
+			"パレット, MOC 挿入セレクター",
 		);
 	});
 });
@@ -46,14 +46,14 @@ describe("compareScopes", () => {
 			.sort((a, b) => compareScopes(a.scopes, b.scopes))
 			.map(({ name }) => name);
 		expect(names).toEqual([
-			"Hide palette or selector",
-			"Search history",
-			"Show options menu",
-			"Show result actions",
-			"Enter mode",
-			"Preview selected result",
-			"Return to input mode",
-			"Toggle selection",
+			"パレットまたはセレクターを隠す",
+			"検索履歴",
+			"オプションのメニューを表示",
+			"結果の操作を表示",
+			"モードに入る",
+			"選んだ結果をプレビュー",
+			"入力モードに戻る",
+			"選択を切り替え",
 		]);
 	});
 });
@@ -132,7 +132,7 @@ describe("renderShortcutsTable", () => {
 		const key = t.keyOf("optionsMenu");
 		expect(t.resetOf("optionsMenu").hidden).toBe(true);
 		key.click();
-		expect(key.textContent).toBe("Press a shortcut…");
+		expect(key.textContent).toBe("キーを押してください…");
 		press(key, "o", { ctrlKey: true, shiftKey: true });
 		await settle();
 		expect(t.settings.hotkeys.optionsMenu).toEqual({ key: "O", modifiers: ["Ctrl", "Shift"] });
@@ -153,7 +153,7 @@ describe("renderShortcutsTable", () => {
 		press(key, "k", { ctrlKey: true });
 		await settle();
 		expect(t.errorOf("history").textContent).toBe(
-			`Already assigned to ${HOTKEY_ACTIONS.contextMenu.name}.`,
+			`${HOTKEY_ACTIONS.contextMenu.name} に割り当て済みです。`,
 		);
 		expect(t.errorOf("history").hidden).toBe(false);
 		expect(t.settings.hotkeys.history).toEqual(DEFAULT_HOTKEYS.history);
@@ -172,7 +172,7 @@ describe("renderShortcutsTable", () => {
 		press(key, "Backspace");
 		await settle();
 		expect(t.settings.hotkeys.preview).toBeNull();
-		expect(key.textContent).toBe("Disabled");
+		expect(key.textContent).toBe("無効");
 	});
 
 	it("restores the previous shortcut and tells the user when saving fails", async () => {
@@ -183,8 +183,8 @@ describe("renderShortcutsTable", () => {
 		press(key, "p", { ctrlKey: true, altKey: true });
 		await settle();
 		expect(t.settings.hotkeys.optionsMenu).toEqual(DEFAULT_HOTKEYS.optionsMenu);
-		expect(notices).toEqual(["Could not save hotkey: disk full"]);
-		expect(key.textContent).toBe("Press a shortcut…");
+		expect(notices).toEqual(["ショートカットを保存できませんでした: disk full"]);
+		expect(key.textContent).toBe("キーを押してください…");
 	});
 
 	it("filters rows by command, keybinding or place", () => {
@@ -192,7 +192,7 @@ describe("renderShortcutsTable", () => {
 		t.filter.value = "ctrl+k";
 		t.filter.dispatchEvent(new Event("input"));
 		expect(visibleActions(t)).toEqual(["contextMenu"]);
-		t.filter.value = "palette enter";
+		t.filter.value = "モードに入る";
 		t.filter.dispatchEvent(new Event("input"));
 		expect(visibleActions(t)).toEqual(["enterMode"]);
 		t.filter.value = "";
@@ -211,19 +211,19 @@ describe("renderShortcutsTable", () => {
 		}));
 		expect(headings).toEqual([
 			{
-				name: "All palettes and selectors",
-				chips: ["All palettes and selectors"],
+				name: "すべてのパレットとセレクター",
+				chips: ["すべてのパレットとセレクター"],
 				rows: 4,
 			},
-			{ name: "Palette", chips: ["Palette"], rows: 1 },
+			{ name: "パレット", chips: ["パレット"], rows: 1 },
 			{
-				name: "Palette, Tag insert selector, MOC insert selector",
-				chips: ["Palette", "Tag", "MOC +"],
+				name: "パレット, タグ挿入セレクター, MOC 挿入セレクター",
+				chips: ["パレット", "タグ", "MOC +"],
 				rows: 1,
 			},
 			{
-				name: "Tag insert selector, MOC insert selector, MOC remove selector, Property value selector",
-				chips: ["Tag", "MOC +", "MOC −", "Property"],
+				name: "タグ挿入セレクター, MOC 挿入セレクター, MOC 削除セレクター, プロパティの値セレクター",
+				chips: ["タグ", "MOC +", "MOC −", "プロパティ"],
 				rows: 2,
 			},
 		]);

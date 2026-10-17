@@ -1,7 +1,8 @@
 import { PaletteView } from "src/palette/surfaces/PaletteView";
 import { PALETTE_TABLE_VIEW_TYPE } from "src/palette/surfaces/paletteViewTypes";
+import { t } from "src/i18n";
 
-/** Share search and result actions while keeping table panes independently addressable. */
+/** 検索と結果の操作は共有しつつ、表のペインは独立に指定できるままにする。 */
 export class PaletteTableView extends PaletteView {
 	protected override get tableView(): boolean {
 		return true;
@@ -12,7 +13,7 @@ export class PaletteTableView extends PaletteView {
 	}
 
 	override getDisplayText(): string {
-		return "Table palette";
+		return t("view.tablePalette");
 	}
 
 	override getIcon(): string {

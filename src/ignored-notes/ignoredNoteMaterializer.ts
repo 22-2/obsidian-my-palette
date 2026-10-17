@@ -8,6 +8,7 @@ import {
 } from "obsidian";
 import { getVaultNewFileFolderPath, isUserIgnoredPath } from "src/ignored-notes/ignoredPaths";
 import { logger } from "src/shared/logger";
+import { t } from "src/i18n";
 
 export const IMPORT_SOURCE_PROPERTY = "my-palette-source";
 export const IMPORTED_AT_PROPERTY = "my-palette-imported-at";
@@ -58,21 +59,20 @@ async function ensureFolder(app: App, folderPath: string): Promise<void> {
 		try {
 			stat = await adapter.stat(current);
 		} catch {
-			// A missing path is created below; adapters may report it by throwing
-			// instead of returning null.
+			// 存在しないパスは下で作成する。アダプターは null を返す代わりに例外を投げることがあるため。
 		}
 		if (stat?.type === "folder" || app.vault.getFolderByPath(current)) continue;
 		if (stat?.type === "file")
-			throw new Error(`Cannot create import folder because a file exists at ${current}.`);
+			throw new Error(t("ignored.importFolderConflict", { path: current }));
 		try {
 			await app.vault.createFolder(current);
 		} catch (error) {
-			// Hidden folders can be present on disk without a TFolder model entry;
-			// re-check the adapter so an idempotent import does not fail on them.
+			// 隠しフォルダーはディスクにあっても TFolder のモデルに登録されていないことがある。
+			// 取り込みを繰り返しても失敗しないよう、アダプターで確認し直す。
 			try {
 				if ((await adapter.stat(current))?.type === "folder") continue;
 			} catch {
-				// Preserve the original createFolder error when the path is still unknown.
+				// パスがまだ不明なときは、元の createFolder のエラーをそのまま残す。
 			}
 			throw error;
 		}
@@ -98,7 +98,7 @@ async function findAvailablePath(
 				if (sourceFromFrontmatter(await app.vault.read(existing)) === sourcePath)
 					return { path: candidate, existing };
 			} catch {
-				// A stale file is handled as a collision and receives a deterministic suffix.
+				// 古いファイルは衝突として扱い、決まった連番を付ける。
 			}
 			candidate = withSuffix(destination, suffix);
 			suffix += 1;
@@ -116,7 +116,7 @@ async function findAvailablePath(
 				continue;
 			}
 		} catch {
-			// A missing path is available; adapters may report it by throwing.
+			// 存在しないパスは使える。アダプターは例外で知らせることがあるため。
 		}
 		return { path: candidate };
 	}
@@ -139,25 +139,23 @@ function addImportFrontmatter(content: string, sourcePath: string, importedAt: s
 	);
 }
 
-/** Copies an Obsidian-excluded Markdown file into the configured new-note folder. */
+/** Obsidian の除外ファイルにある Markdown を、設定された新規ノートのフォルダーにコピーする。 */
 export async function materializeIgnoredNote(
 	app: App,
 	sourcePath: string,
 	log: IgnoredNoteMaterializerLogger = () => undefined,
 ): Promise<TFile> {
 	const normalizedSourcePath = normalizePath(sourcePath);
-	if (!isUserIgnoredPath(app, normalizedSourcePath))
-		throw new Error("Only notes under Excluded files can be imported.");
+	if (!isUserIgnoredPath(app, normalizedSourcePath)) throw new Error(t("ignored.onlyExcluded"));
 	if (!normalizedSourcePath.toLocaleLowerCase().endsWith(".md"))
-		throw new Error("Only Markdown notes can be imported.");
+		throw new Error(t("ignored.onlyMarkdown"));
 
 	const sourceContent = await app.vault.adapter.read(normalizedSourcePath);
-	// An empty newFileFolderPath means Vault root; use a dedicated fallback so an
-	// ignored source is never copied over itself when the setting is unset.
+	// 新規ノートのフォルダーが空なら Vault のルートを意味する。設定が未入力のときに、
+	// 除外されている元ファイルへ上書きコピーしないよう、専用の既定フォルダーを使う。
 	const destinationFolder = getVaultNewFileFolderPath(app) || "_Imported";
-	// MOC links should leave imported notes directly in the configured folder;
-	// mirroring the ignored source directories would create an unexpected nested
-	// tree beneath the user's default save destination.
+	// Why: MOC のリンクは、取り込んだノートを設定したフォルダーの直下に置くべき。除外元の
+	// フォルダー構造を写すと、ユーザーの既定の保存先の下に想定外の入れ子のフォルダーができるため。
 	const destination = visibleImportPath(
 		normalizePath(
 			[destinationFolder, fileName(normalizedSourcePath)].filter(Boolean).join("/"),

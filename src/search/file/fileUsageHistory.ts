@@ -7,9 +7,9 @@ const DATABASE_VERSION = 1;
 const MAX_TRACKED_FILES = 5_000;
 const MAX_USAGE_COUNT = 1_000;
 
-/** A two-week half-life keeps an old burst of activity from becoming permanent. */
+/** 半減期を2週間にすると、古い一時的な利用が恒久的な順位にならない。 */
 export const FILE_USAGE_RECENCY_HALF_LIFE_MS = 14 * 24 * 60 * 60 * 1_000;
-/** Frequency is useful, but it must saturate so one habitual note cannot dominate. */
+/** 利用の回数は役に立つが、1つの習慣的なノートが支配しないよう、頭打ちにする必要がある。 */
 export const FILE_USAGE_MAX_FREQUENCY = 20;
 
 export interface FileUsageRecord {
@@ -59,9 +59,8 @@ function toRecord(value: unknown): FileUsageRecord | undefined {
 }
 
 /**
- * Converts a persisted usage record into a bounded score for the sorter. The
- * recency decay and logarithmic frequency cap keep history as a small hint that
- * only matters after the configured match and metadata priorities tie.
+ * 保存された利用の記録を、並べ替えのための上限付きの得点に変換する。新しさの減衰と、対数の回数の上限が、
+ * 履歴を小さな手がかりに保つ。設定された一致とメタデータの優先度が同点になったときにだけ効く。
  */
 export function calculateFileUsageScore(record: FileUsageRecord, now: number): number {
 	const normalized = toRecord(record);
@@ -76,8 +75,8 @@ export function calculateFileUsageScore(record: FileUsageRecord, now: number): n
 }
 
 /**
- * Stores only Vault-relative paths and aggregate usage. The browser database is
- * a rebuildable cache, so an unavailable or corrupt store must never block search.
+ * Vault 相対のパスと、まとめた利用だけを保存する。ブラウザーのデータベースは作り直せるキャッシュなので、
+ * 利用できない、または壊れた保存先が検索を決して止めてはいけない。
  */
 export class FileUsageHistory implements FileUsageScoreSource {
 	private readonly current = new Map<string, FileUsageRecord>();
@@ -120,8 +119,8 @@ export class FileUsageHistory implements FileUsageScoreSource {
 			lastUsedAt: Math.max(previous?.lastUsedAt ?? 0, timestamp),
 		});
 		const removedPaths = this.prune();
-		// Queue writes because several quick palette actions can otherwise race in
-		// separate readwrite transactions and make the latest count disappear.
+		// 素早いパレットの操作が、別々の readwrite トランザクションで競合し、最新の回数が消えてしまわないように、
+		// 書き込みはキューに入れる。
 		this.writePromise = this.writePromise
 			.then(async () => {
 				await this.load();
@@ -138,7 +137,7 @@ export class FileUsageHistory implements FileUsageScoreSource {
 		try {
 			(await this.databasePromise).close();
 		} catch {
-			// Database initialization failures are already treated as an optional cache.
+			// データベースの初期化の失敗は、すでに任意のキャッシュとして扱っている。
 		}
 	}
 

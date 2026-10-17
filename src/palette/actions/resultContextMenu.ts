@@ -48,19 +48,19 @@ interface PaletteResultMenuOptions {
 	openInBackground: (result: PaletteResult) => void | Promise<void>;
 	openInMainWindow?: (result: PaletteResult) => void | Promise<void>;
 	applySearchHistory: (result: Extract<PaletteResult, { mode: "search-history" }>) => void;
-	/** Lets a modal palette close before an action that opens its own modal or edits notes. */
+	/** 独自のモーダルを開く、またはノートを編集する操作の前に、モーダルのパレットを閉じられるようにする。 */
 	onNoteActionSelected?: () => void;
 	/**
-	 * Closes a modal palette once an action that opens its own selector (tags, move, rename)
-	 * has finished. The palette stays open underneath, so cancelling returns to it.
+	 * 独自のセレクター(タグ、移動、名前の変更)を開く操作が終わったら、モーダルのパレットを閉じる。
+	 * パレットは下で開いたままになるので、キャンセルすると元に戻る。
 	 */
 	onNoteActionDone?: () => void;
 	getMocContext?: () => MocInsertionContext;
-	/** Re-runs the search after a tab or bookmark operation changed the listed results. */
+	/** タブまたはブックマークの操作で一覧の結果が変わったあと、検索をやり直す。 */
 	onResultsChanged?: () => void;
 }
 
-/** Populates the result menu shared by modal and persistent palette surfaces. */
+/** モーダルと常駐のパレットの両方が使う、結果のメニューを組み立てる。 */
 export function populatePaletteResultMenu({
 	app,
 	plugin,
@@ -76,10 +76,10 @@ export function populatePaletteResultMenu({
 	getMocContext,
 	onResultsChanged,
 }: PaletteResultMenuOptions): void {
-	// Why: typing in an open menu would otherwise go to the palette's search input.
+	// Why: 開いているメニューで入力すると、そうしないとパレットの検索欄に入ってしまうため。
 	menu.enableFilter(app);
-	// Tab results get their own menu; a mixed selection cannot happen because
-	// one search produces results of a single mode.
+	// タブの結果は独自のメニューを持つ。1回の検索は1つのモードの結果しか作らないので、
+	// 種類の混ざった選択は起こらない。
 	const targets = selectedItems.length > 1 ? selectedItems : [result];
 	if (targets.every(isTabResult)) {
 		populateTabMenu({
@@ -112,8 +112,8 @@ export function populatePaletteResultMenu({
 			Boolean(fileName || relativePath || absolutePath),
 		);
 	if (selectedPaths.length > 1) {
-		// Why: a multi-selection has no single result for navigation actions, so expose
-		// actions that can operate on all selected paths or notes.
+		// Why: 複数選択には移動の操作に使える結果が1つもないので、
+		// 選んだすべてのパスやノートに働く操作を出す。
 		addSelectionHeader(menu, selectedItems.length);
 		addCopyPathListMenuItems(
 			menu,
@@ -158,7 +158,7 @@ export function populatePaletteResultMenu({
 		return;
 	}
 
-	/** Opens the terminal and reports failures without leaving the palette behind. */
+	/** ターミナルを開き、失敗を報告する。パレットは閉じない。 */
 	const openTerminal = (absolutePath: string, isFolder: boolean): void => {
 		onNoteActionSelected?.();
 		void openDirectoryInTerminal(getTerminalDirectory(absolutePath, isFolder)).then((error) => {
@@ -167,9 +167,9 @@ export function populatePaletteResultMenu({
 	};
 
 	if (result.mode === "plugin" || result.mode === "snippet") {
-		// Why: plugin folders and snippet files have no Obsidian view, so skip leaf
-		// navigation and note actions (MOC, tags) and offer only external opening.
-		// Plugins additionally offer their settings tab when one exists.
+		// Why: プラグインのフォルダーとスニペットのファイルには Obsidian のビューがないので、リーフの
+		// 移動とノートの操作(MOC、タグ)を飛ばし、外部で開く操作だけを出す。
+		// プラグインは、設定タブがあればそれも出す。
 		const externalPath = isDesktopApp() ? getResultAbsolutePath(app, result) : undefined;
 		const externalFolder = isFolderResult(result);
 		addExternalAppMenuItems(menu, {
@@ -202,8 +202,8 @@ export function populatePaletteResultMenu({
 	const paths = getCopyablePaths(app, result);
 	addOpenMenuItems(menu, {
 		open: () => void activate("primary", result),
-		// Why: only popout hosts provide this action; ordinary palettes already open
-		// in the main window and should not offer a redundant navigation command.
+		// Why: この操作を出すのはポップアウトのホストだけ。通常のパレットはすでにメインウィンドウで開いており、
+		// 余分な移動のコマンドを出すべきではない。
 		...(openInMainWindow ? { openInMainWindow: () => void openInMainWindow(result) } : {}),
 		openInBackground: () => void openInBackground(result),
 		openSideBySide: () => void activate("vertical", result),
@@ -211,9 +211,9 @@ export function populatePaletteResultMenu({
 	});
 	const absolutePath = isDesktopApp() ? getResultAbsolutePath(app, result) : undefined;
 	if (absolutePath) {
-		// Why: external-app actions apply to every file result, not only Everything.
-		// "Show in system explorer" unifies the old Everything-only "Show in file explorer",
-		// which was confused with Obsidian's file explorer.
+		// Why: 外部アプリの操作は、Everything だけでなくすべてのファイルの結果に働く。
+		// 「システムのエクスプローラーで表示」は、以前の Everything だけの「ファイルエクスプローラーで表示」を統一したもの。
+		// これは Obsidian のファイルエクスプローラーと混同されていた。
 		const isFolder = isFolderResult(result);
 		menu.addSeparator();
 		addExternalAppMenuItems(menu, {
@@ -232,12 +232,12 @@ export function populatePaletteResultMenu({
 	addFileMoveMenuItem(menu, plugin, [result], onNoteActionDone);
 	addBulkRenameMenuItem(menu, plugin, [result], onNoteActionDone);
 	addPropertyEditMenuItem(menu, plugin, [result], onNoteActionSelected);
-	// Why: MOC insertion mutates multiple notes, so keep it after navigation and
-	// non-mutating copy actions in both palette surfaces.
+	// Why: MOC への挿入は複数のノートを書き換えるので、移動やコピーなど書き換えない操作の後に置く。
+	// 両方のパレットの外枠で、そうなるようにする。
 	addMocInsertionMenuItem(menu, plugin, result, onNoteActionSelected, getMocContext);
 	addTagInsertionMenuItems(menu, plugin, [result], onNoteActionDone);
-	// Why: a selection of search bookmarks has no paths, so it reaches this single-result
-	// menu; bookmark actions still apply to every selected bookmark.
+	// Why: 検索のブックマークの選択にはパスがないので、この1結果のメニューに届く。
+	// ブックマークの操作は、選んだすべてのブックマークに引き続き働く。
 	addBookmarkMenuItems({
 		menu,
 		plugin,

@@ -57,7 +57,7 @@ describe("applyListChanges", () => {
 			false,
 		);
 		expect(vi.mocked(Notice)).toHaveBeenCalledExactlyOnceWith(
-			"Could not update the properties of note. See the console.",
+			"note のプロパティを更新できませんでした。コンソールを確認してください。",
 		);
 	});
 });
@@ -166,7 +166,7 @@ describe("PropertyValueModal", () => {
 	it("offers a typed value that no list has yet and adds it on Enter", async () => {
 		const f = open(["a"], ["b"]);
 		await f.type("zeta");
-		expect(f.rows()[0].textContent).toContain("New value");
+		expect(f.rows()[0].textContent).toContain("新しい値");
 		f.key("Enter");
 		await expect(f.result).resolves.toEqual({ add: ["zeta"], remove: [] });
 	});
@@ -193,7 +193,7 @@ describe("PropertyValueModal", () => {
 		const rows = [...modal.modalEl.querySelectorAll<HTMLElement>(".suggestion-item")];
 		const text = (row: HTMLElement) => row.textContent ?? "";
 		expect(rows.find((row) => text(row).includes("only-first"))?.textContent).toContain(
-			"On 1/2 notes",
+			"1/2 件のノートにある",
 		);
 		const checked = rows
 			.filter((row) => row.classList.contains("is-checked"))

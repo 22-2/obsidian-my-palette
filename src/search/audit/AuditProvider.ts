@@ -6,12 +6,13 @@ import type { AuditResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 import { formatSize } from "src/shared/fileSize";
+import { countLabel } from "src/shared/countLabel";
 import type { MyPaletteSettings } from "src/settings/model";
+import { t } from "src/i18n";
 
 /**
- * Lists the kind chosen in the options menu. The rows are kept until the vault or the
- * metadata cache changes, so typing a query only filters them instead of auditing the
- * whole vault again on each keystroke.
+ * オプションのメニューで選んだ種類を一覧にする。行は、Vault かメタデータキャッシュが変わるまで保持する。
+ * そのため、クエリを打つと行を絞り込むだけで、キーを押すたびに Vault 全体を監査し直すことはない。
  */
 export class AuditProvider implements PaletteProvider<AuditResult> {
 	private readonly refs: EventRef[] = [];
@@ -25,8 +26,8 @@ export class AuditProvider implements PaletteProvider<AuditResult> {
 			this.cached = undefined;
 		};
 		const { vault, metadataCache } = app;
-		// Why: `modify` covers files the metadata cache does not parse, whose size decides
-		// whether they are empty; `resolved` follows link changes across the vault.
+		// Why: `modify` は、メタデータキャッシュが解析しないファイルを覆う。そのサイズで空かどうかが決まる。
+		// `resolved` は、Vault 全体のリンクの変更に追従する。
 		this.refs.push(
 			vault.on("create", invalidate),
 			vault.on("modify", invalidate),
@@ -50,13 +51,13 @@ export class AuditProvider implements PaletteProvider<AuditResult> {
 	async search({ query, includeIgnored = false }: PaletteSearchRequest): Promise<AuditResult[]> {
 		const results = await this.currentResults(includeIgnored);
 		if (!query.trim()) return results;
-		// Why: the path (or the link text) is what distinguishes rows; names repeat across folders.
+		// Why: 行を区別するのはパス(またはリンクの文字列)。名前はフォルダーをまたいで重複する。
 		return searchFuzzyQuery(query, results, [searchKey]).map(({ obj }) => obj);
 	}
 
 	/**
-	 * Audits again only when the vault changed or the settings did. The key holds the
-	 * resolved exclusions, so Obsidian's Excluded files and the core plugin folders count too.
+	 * Vault か設定が変わったときだけ、監査をやり直す。キーは解決済みの除外を保持するので、Obsidian の
+	 * 除外ファイルとコアプラグインのフォルダーも数に入る。
 	 */
 	private currentResults(includeIgnored: boolean): Promise<AuditResult[]> {
 		const settings = this.settings();
@@ -68,7 +69,7 @@ export class AuditProvider implements PaletteProvider<AuditResult> {
 		);
 		const cached = { key, results };
 		this.cached = cached;
-		// Why: a failed audit must not be served again; the next search tries afresh.
+		// Why: 失敗した監査を再び返してはいけない。次の検索が改めて試みる。
 		results.catch(() => {
 			if (this.cached === cached) this.cached = undefined;
 		});
@@ -76,7 +77,7 @@ export class AuditProvider implements PaletteProvider<AuditResult> {
 	}
 }
 
-/** Builds palette rows from a report; files that vanished since the snapshot are dropped. */
+/** 報告からパレットの行を作る。スナップショットのあとに消えたファイルは捨てる。 */
 export function toAuditResults(
 	report: AuditReport,
 	getFile: (path: string) => TFile | undefined,
@@ -110,7 +111,7 @@ export function toAuditResults(
 				mode: "audit",
 				kind: "broken-links",
 				primary: link,
-				secondary: `${countLabel(new Set(sources.map(({ path }) => path)).size, "note")} · ${sources[0].path}`,
+				secondary: `${countLabel(new Set(sources.map(({ path }) => path)).size, "ノート")} · ${sources[0].path}`,
 				icon,
 				link,
 				sources,
@@ -123,7 +124,7 @@ export function toAuditResults(
 				primary: path.split("/").at(-1) ?? path,
 				secondary:
 					foldersInside > 0
-						? `${path} · ${countLabel(foldersInside, "folder")} inside`
+						? `${path} · ${t("audit.provider.foldersInside", { count: foldersInside })}`
 						: path,
 				icon,
 				folderPath: path,
@@ -142,8 +143,4 @@ function searchKey(result: AuditResult): string {
 		case "empty-folders":
 			return result.folderPath;
 	}
-}
-
-function countLabel(count: number, noun: string): string {
-	return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }

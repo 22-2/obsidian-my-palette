@@ -10,17 +10,18 @@ import {
 import { storeReactivityBindings } from "@tanstack/table-core/store-reactivity-bindings";
 import { AUDIT_KINDS, type AuditKind } from "src/audit/vaultAudit";
 import type { PaletteResult } from "src/palette/results";
+import { t } from "src/i18n";
 
 const COLUMN_DEFINITIONS = {
-	name: { label: "Name", width: 30 },
-	path: { label: "Path", width: 38 },
-	modified: { label: "Modified", width: 23 },
-	prior: { label: "prior", width: 9 },
-	size: { label: "Size", width: 12 },
-	linkedFrom: { label: "Linked from", width: 14 },
-	firstSource: { label: "First source", width: 38 },
-	foldersInside: { label: "Folders inside", width: 14 },
-	content: { label: "Content", width: 12 },
+	name: { label: t("table.col.name"), width: 30 },
+	path: { label: t("table.col.path"), width: 38 },
+	modified: { label: t("table.col.modified"), width: 23 },
+	prior: { label: t("table.col.prior"), width: 9 },
+	size: { label: t("table.col.size"), width: 12 },
+	linkedFrom: { label: t("table.col.linkedFrom"), width: 14 },
+	firstSource: { label: t("table.col.firstSource"), width: 38 },
+	foldersInside: { label: t("table.col.foldersInside"), width: 14 },
+	content: { label: t("table.col.content"), width: 12 },
 } as const;
 
 export type PaletteTableColumnId = keyof typeof COLUMN_DEFINITIONS;
@@ -32,8 +33,8 @@ export interface PaletteTableColumn {
 }
 
 /**
- * The columns a table shows depend on what it lists: `files` for ordinary searches, and one
- * set per Vault audit kind. Each set keeps its own order, hidden columns and sorting.
+ * 表が示す列は、何を一覧にしているかで決まる。通常の検索では `files`、Vault 監査の種類ごとに1組ずつ。
+ * 組ごとに、列の順序、非表示の列、並べ替えを独立して保つ。
  */
 export type PaletteTableColumnSetId = "files" | AuditKind;
 
@@ -46,11 +47,11 @@ export const PALETTE_TABLE_COLUMN_SETS: Readonly<
 > = {
 	files: columnsOf("name", "path", "modified", "prior"),
 	"orphaned-files": columnsOf("name", "path", "size", "modified"),
-	// Why: Content tells blank notes from MOC-only ones, which the list marks the same way.
+	// Why: 内容の列で、空のノートと MOC だけのノートを区別する。一覧ではどちらも同じ印を付ける。
 	"empty-files": columnsOf("name", "path", "modified", "content"),
-	// Why: the Name column holds the link text here, so it is labeled for what it shows.
+	// Why: ここでは名前の列にリンクの文字列が入るので、表示する内容に合わせてラベルを付ける。
 	"broken-links": [
-		{ id: "name", label: "Link", width: COLUMN_DEFINITIONS.name.width },
+		{ id: "name", label: t("table.col.link"), width: COLUMN_DEFINITIONS.name.width },
 		...columnsOf("linkedFrom", "firstSource"),
 	],
 	"empty-folders": columnsOf("name", "path", "foldersInside"),
@@ -63,8 +64,8 @@ export interface PaletteTableLayout {
 }
 
 /**
- * The top-level layout is the `files` set, as stored before column sets existed, so older
- * workspace layouts keep working. The other sets are stored only once they have been shown.
+ * 最上位のレイアウトは `files` の組。列の組が生まれる前に保存されていた形のままなので、
+ * 古いワークスペースのレイアウトも動き続ける。ほかの組は、表示されてから初めて保存する。
  */
 export interface PaletteTableState extends PaletteTableLayout {
 	displayMode: "list" | "table";
@@ -118,8 +119,8 @@ export function normalizeLayout(
 		supported.includes(id as PaletteTableColumnId);
 	const seen = new Set<string>();
 	const sorting: SortingState = [];
-	// Workspace layouts can outlive column definitions. Ignore malformed or removed
-	// columns so restoring a pane never sends an unknown column to the row model.
+	// Why: ワークスペースのレイアウトは、列の定義より長く残ることがある。不正な列や削除された列は
+	// 無視し、ペインを復元しても未知の列が行のモデルに渡らないようにする。
 	if (Array.isArray(state.sorting)) {
 		for (const item of state.sorting as Array<{ id?: unknown; desc?: unknown } | null>) {
 			const id = item?.id;
@@ -130,12 +131,12 @@ export function normalizeLayout(
 	}
 	const savedOrder: unknown[] = Array.isArray(state.columnOrder) ? state.columnOrder : [];
 	const columnOrder = supported.filter((id) => savedOrder.includes(id));
-	// Why: preserve the saved order, discard removed/duplicate columns, and append
-	// new columns so older workspace layouts remain complete after an upgrade.
+	// Why: 保存された順序は保ち、削除された列や重複する列は捨て、新しい列は末尾に足す。
+	// アップグレード後も、古いワークスペースのレイアウトが完全なままになるように。
 	columnOrder.sort((a, b) => savedOrder.indexOf(a) - savedOrder.indexOf(b));
 	columnOrder.push(...supported.filter((id) => !columnOrder.includes(id)));
-	// Why: Name identifies selectable results and keeps a header available for
-	// restoring hidden columns, matching the Plugin Manager's visibility menu.
+	// Why: 名前は選択できる結果を特定し、非表示の列を戻すためのヘッダーを残す。
+	// プラグインマネージャーの表示メニューに合わせるため。
 	const hiddenColumns = supported.filter(
 		(id) =>
 			id !== "name" && Array.isArray(state.hiddenColumns) && state.hiddenColumns.includes(id),
@@ -166,8 +167,8 @@ function numberColumn(id: "modified" | "prior" | "size" | "linkedFrom" | "folder
 	});
 }
 
-// Why: the table knows every column; a column set only decides which ones are shown and
-// sortable, so switching sets never rebuilds the table.
+// Why: 表はすべての列を知っている。列の組は、どの列を表示し並べ替えられるかだけを決めるので、
+// 組を切り替えても表は作り直さない。
 const columns = helper.columns([
 	textColumn("name"),
 	textColumn("path"),
@@ -180,10 +181,10 @@ const columns = helper.columns([
 	textColumn("content"),
 ]);
 
-/** Keep search ranking as the unsorted order; explicit column sorts override it. */
+/** 並べ替えていない順序では検索の順位を保つ。列の明示的な並べ替えがそれを上書きする。 */
 export class PaletteTableModel {
 	private active: PaletteTableColumnSetId = "files";
-	/** Order and hidden columns of every set; sorting of the inactive ones. */
+	/** すべての組の列の順序と非表示の列。非アクティブな組の並べ替え。 */
 	private readonly layouts = new Map<PaletteTableColumnSetId, PaletteTableLayout>();
 	readonly table = constructTable({
 		features,
@@ -200,7 +201,7 @@ export class PaletteTableModel {
 		return this.active;
 	}
 
-	/** Switches to another set, keeping the current one's sorting for when it returns. */
+	/** 別の組に切り替える。現在の組の並べ替えは、戻ってきたときのために残す。 */
 	setColumnSet(columnSet: PaletteTableColumnSetId): void {
 		if (columnSet === this.active) return;
 		this.layouts.set(this.active, this.layoutOf(this.active));
@@ -208,7 +209,7 @@ export class PaletteTableModel {
 		this.table.setSorting(this.layoutOf(columnSet, false).sorting);
 	}
 
-	/** Every set's layout, as saved in the workspace. */
+	/** すべての組のレイアウト。ワークスペースに保存される形。 */
 	get state(): Omit<PaletteTableState, "displayMode"> {
 		const columnSets: Partial<Record<AuditKind, PaletteTableLayout>> = {};
 		for (const kind of AUDIT_KINDS) {
@@ -246,12 +247,12 @@ export class PaletteTableModel {
 
 	toggleSorting(id: PaletteTableColumnId): void {
 		if (!this.columns.some((column) => column.id === id)) return;
-		// Why: every header click cycles only that column while retaining the other
-		// priorities, so multi-column sorting never requires a modifier key.
+		// Why: ヘッダーをクリックするたびに、その列だけを切り替え、ほかの優先順位は保つ。
+		// そうすれば、複数列の並べ替えに修飾キーが要らない。
 		this.table.getColumn(id)?.toggleSorting(undefined, true);
 	}
 
-	/** The columns of the active set, in their definition order. */
+	/** アクティブな組の列を、定義の順で返す。 */
 	get columns(): readonly PaletteTableColumn[] {
 		return PALETTE_TABLE_COLUMN_SETS[this.active];
 	}
@@ -292,20 +293,19 @@ export class PaletteTableModel {
 		const next = hiddenColumns.includes(id)
 			? hiddenColumns.filter((column) => column !== id)
 			: [...hiddenColumns, id];
-		// Why: hiding a column changes presentation only; its active sort is
-		// preserved when the column is shown again.
+		// Why: 列を隠すのは表示の変更だけ。その列の並べ替えは、再び表示したときに保たれる。
 		this.setColumnLayout({ ...this.columnLayout, hiddenColumns: next });
 	}
 
 	sortedRows(): PaletteTableRow[] {
-		// Why: return every match in sort order; the panel applies the shared result
-		// limit, so a high-ranked value is never cut off before sorting.
+		// Why: 並べ替えた順に、一致したものをすべて返す。上位の値が並べ替えの前に切り捨てられないよう、
+		// 共通の件数の上限はパネルが適用する。
 		return this.table.getRowModel().rows.map((row) => row.original);
 	}
 
 	/**
-	 * A set's stored layout; the active set's sorting lives in the table, so it is read from
-	 * there unless the stored sorting is what the table is about to be set to.
+	 * 組の保存されたレイアウト。アクティブな組の並べ替えは表に入っているので、保存された並べ替えを
+	 * 表に設定しようとしているのでなければ、そこから読む。
 	 */
 	private layoutOf(columnSet: PaletteTableColumnSetId, liveSorting = true): PaletteTableLayout {
 		const stored = this.layouts.get(columnSet) ?? normalizeLayout({}, columnSet);

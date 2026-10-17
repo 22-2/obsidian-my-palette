@@ -62,10 +62,10 @@ describe("PropertyProvider", () => {
 		);
 		const results = await provider.search({ mode: "property", query: "", sourceFile: note });
 		expect(results.map((r) => [r.section, r.primary])).toEqual([
-			["This note", "status"],
-			["Reserved", "aliases"],
-			["Reserved", "tags"],
-			["Reserved", "cssclasses"],
+			["このノート", "status"],
+			["予約済み", "aliases"],
+			["予約済み", "tags"],
+			["予約済み", "cssclasses"],
 			["Vault", "project"],
 			["Vault", "area"],
 			["Vault", "rare"],
@@ -82,9 +82,9 @@ describe("PropertyProvider", () => {
 		);
 		const results = await provider.search({ mode: "property", query: "", sourceFile: note });
 		const byKey = Object.fromEntries(results.map((r) => [r.primary, r]));
-		expect(byKey.aliases).toMatchObject({ inNote: false, secondary: "Not set" });
-		expect(byKey.area.secondary).toBe("4 notes");
-		expect(byKey.project.secondary).toBe("1 note");
+		expect(byKey.aliases).toMatchObject({ inNote: false, secondary: "未設定" });
+		expect(byKey.area.secondary).toBe("4 件のノート");
+		expect(byKey.project.secondary).toBe("1 件のノート");
 	});
 
 	it("uses lowercase occurrence keys and counts each search only once", async () => {
@@ -101,8 +101,8 @@ describe("PropertyProvider", () => {
 				.filter((result) => result.section === "Vault")
 				.map((result) => [result.key, result.secondary]),
 		).toEqual([
-			["Project", "12 notes"],
-			["unused", "0 notes"],
+			["Project", "12 件のノート"],
+			["unused", "0 件のノート"],
 		]);
 		expect(getPropertyOccurrences).toHaveBeenCalledExactlyOnceWith();
 	});
@@ -163,7 +163,7 @@ describe("PropertyProvider", () => {
 		expect(results).toHaveLength(1);
 		expect(results[0]).toMatchObject({
 			kind: "new",
-			section: "New",
+			section: "新規",
 			key: "budget",
 			inNote: false,
 		});
@@ -204,13 +204,13 @@ describe("PropertyProvider", () => {
 				sourceFiles: [note, second, third],
 			});
 			expect(results.map((r) => [r.section, r.primary, r.secondary])).toEqual([
-				["These notes", "status", "3/3 notes"],
-				["These notes", "topic", "2/3 notes"],
-				["These notes", "rating", "1/3 notes"],
-				["Reserved", "aliases", "Not set"],
-				["Reserved", "tags", "1/3 notes"],
-				["Reserved", "cssclasses", "Not set"],
-				["Vault", "project", "4 notes"],
+				["これらのノート", "status", "3/3 件のノート"],
+				["これらのノート", "topic", "2/3 件のノート"],
+				["これらのノート", "rating", "1/3 件のノート"],
+				["予約済み", "aliases", "未設定"],
+				["予約済み", "tags", "1/3 件のノート"],
+				["予約済み", "cssclasses", "未設定"],
+				["Vault", "project", "4 件のノート"],
 			]);
 			expect(results.every((r) => r.sourcePaths?.length === 3)).toBe(true);
 			expect(results[0].sourcePath).toBe("note.md");
@@ -234,7 +234,7 @@ describe("PropertyProvider", () => {
 				query: "",
 				sourceFiles: [note],
 			});
-			expect(results[0]).toMatchObject({ section: "This note", primary: "status" });
+			expect(results[0]).toMatchObject({ section: "このノート", primary: "status" });
 			expect(results.every((r) => r.sourcePaths === undefined)).toBe(true);
 		});
 	});

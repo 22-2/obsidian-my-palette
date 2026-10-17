@@ -42,8 +42,8 @@ describe("propertyKindOf", () => {
 describe("formatPropertyValue", () => {
 	it("shows lists joined and missing values as Not set", () => {
 		expect(formatPropertyValue("list", ["a", "b"])).toBe("a, b");
-		expect(formatPropertyValue("text", undefined)).toBe("Not set");
-		expect(formatPropertyValue("text", "")).toBe("Not set");
+		expect(formatPropertyValue("text", undefined)).toBe("未設定");
+		expect(formatPropertyValue("text", "")).toBe("未設定");
 		expect(formatPropertyValue("number", 4)).toBe("4");
 	});
 

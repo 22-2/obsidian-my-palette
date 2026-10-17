@@ -91,7 +91,7 @@ describe("populatePropertyMenu for several notes", () => {
 			icon: "list",
 			key: "topic",
 			kind: "list",
-			section: "These notes",
+			section: "これらのノート",
 			inNote: true,
 			sourcePath: "a.md",
 			sourcePaths: ["a.md", "b.md", "c.md"],
@@ -104,10 +104,10 @@ describe("populatePropertyMenu for several notes", () => {
 	it("offers one confirmed delete instead of copy value and the single-note delete", () => {
 		const f = fixture();
 		expect(f.titles()).toEqual([
-			"Edit",
-			"Open in search",
-			"Delete property from 3 notes",
-			"Copy property name",
+			"編集",
+			"検索で開く",
+			"3 件のノートからプロパティを削除",
+			"プロパティ名をコピー",
 		]);
 	});
 
@@ -115,11 +115,11 @@ describe("populatePropertyMenu for several notes", () => {
 		const f = fixture();
 		const del = f.items[2];
 		del.click();
-		expect(del.title).toBe("Click again to delete from 3 notes");
+		expect(del.title).toBe("もう一度クリックして 3 件のノートから削除");
 		expect(f.written).toEqual([]);
 
 		f.selection(f.items[0]);
-		expect(del.title).toBe("Delete property from 3 notes");
+		expect(del.title).toBe("3 件のノートからプロパティを削除");
 		del.click();
 		expect(f.written).toEqual([]);
 	});
@@ -130,7 +130,9 @@ describe("populatePropertyMenu for several notes", () => {
 		const del = f.items[2];
 		del.click();
 		del.click();
-		await vi.waitFor(() => expect(notices).toEqual(["Deleted topic from 2 notes."]));
+		await vi.waitFor(() =>
+			expect(notices).toEqual(["topic を 2 件のノートから削除しました。"]),
+		);
 		expect(f.written).toEqual(["a.md", "c.md"]);
 	});
 });

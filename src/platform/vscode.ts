@@ -1,4 +1,5 @@
 import { logger } from "src/shared/logger";
+import { t } from "src/i18n";
 
 declare const electron: {
 	shell: { openExternal: (url: string) => Promise<void> };
@@ -10,6 +11,6 @@ export async function openPathInCode(absolutePath: string): Promise<string | nul
 		return null;
 	} catch (error) {
 		logger.error("Failed to open the file in VS Code", error);
-		return "Could not open the file in VS Code.";
+		return t("vscode.openFailed");
 	}
 }

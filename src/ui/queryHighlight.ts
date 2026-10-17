@@ -8,9 +8,8 @@ interface BranchHighlight {
 }
 
 /**
- * Return label positions matched by the most informative query branch.
- * Reads the same parsed query as search, so operators and excluded terms are
- * never highlighted as if they were literal text.
+ * 最も情報量のあるクエリの分岐が一致させた、ラベルの位置を返す。
+ * 検索と同じ解析済みのクエリを読むので、演算子や除外された語が、リテラルの文字のように強調されることはない。
  */
 export function matchedQueryIndexes(text: string, query: string): readonly number[] {
 	let best: BranchHighlight | undefined;
@@ -18,8 +17,8 @@ export function matchedQueryIndexes(text: string, query: string): readonly numbe
 		const matches = terms.flatMap((term) => {
 			const match = fuzzysort.single(term, text);
 			if (!match) return [];
-			// Fuzzysort reuses its internal index buffer between calls. Snapshot the
-			// positions before matching the next AND term or they will be overwritten.
+			// fuzzysort は呼び出しの間で内部のインデックスの領域を使い回す。次の AND の語を一致させる前に
+			// 位置を複製しておかないと、上書きされてしまう。
 			return [{ indexes: [...match.indexes], score: match.score }];
 		});
 		if (matches.length === 0) continue;
@@ -29,8 +28,8 @@ export function matchedQueryIndexes(text: string, query: string): readonly numbe
 			matchedTerms: matches.length,
 			score: matches.reduce((sum, match) => sum + match.score, 0) / matches.length,
 		};
-		// Prefer branches that explain more of an AND query; fuzzy quality breaks
-		// ties while preserving the user's left-to-right OR order as a final tie-break.
+		// AND のクエリをより多く説明する分岐を優先する。同点はあいまい一致の品質で決め、
+		// 最後はユーザーが書いた左から右の OR の順で決める。
 		if (
 			best === undefined ||
 			candidate.matchedTerms > best.matchedTerms ||

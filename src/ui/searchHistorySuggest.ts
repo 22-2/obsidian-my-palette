@@ -1,6 +1,7 @@
 import { setIcon } from "obsidian";
 import type { SearchHistoryResult } from "src/palette/results";
 import { ICONS } from "src/ui/icons";
+import { t } from "src/i18n";
 
 export class SearchHistorySuggest {
 	private readonly el: HTMLElement;
@@ -71,7 +72,7 @@ export class SearchHistorySuggest {
 		if (!results.length) {
 			this.el.createDiv({
 				cls: "my-palette-history-suggest__empty",
-				text: "No search history",
+				text: t("history.suggest.empty"),
 			});
 			return;
 		}

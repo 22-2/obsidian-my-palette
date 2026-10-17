@@ -1,4 +1,5 @@
 import type { IntegrationSettings, MyPaletteSettings } from "src/settings/model";
+import { t } from "src/i18n";
 
 export type IntegrationReadiness = Record<keyof IntegrationSettings, boolean>;
 export interface ConnectionResult {
@@ -15,11 +16,11 @@ function connectionKey(settings: MyPaletteSettings["everything"]): string {
 	]);
 }
 
-/** Checks external setup without blocking Home, and discards checks for obsolete settings. */
+/** Home を塞がずに外部連携の準備状態を確認し、古い設定への確認結果は捨てる。 */
 export class IntegrationAvailability {
 	private result: ConnectionResult = {
 		ok: false,
-		message: "Everything connection has not been checked.",
+		message: t("integration.notChecked"),
 	};
 	private verifiedKey?: string;
 	private checkedAt = 0;
@@ -94,7 +95,7 @@ export class IntegrationAvailability {
 		this.pending = undefined;
 		this.result = {
 			ok: false,
-			message: "Everything search failed. Check the connection in Integrations.",
+			message: t("integration.searchFailed"),
 		};
 		this.publish();
 	}

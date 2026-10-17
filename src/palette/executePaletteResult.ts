@@ -7,26 +7,26 @@ import { runResultAction, type ActionKind } from "src/palette/resultActions";
 import { openInExternalEditor } from "src/platform/externalOpen";
 import { editPropertyResult } from "src/properties/propertyActions";
 import { executeCommandById } from "src/platform/obsidianInternals";
+import { t } from "src/i18n";
 
 export interface PaletteResultExecutionOptions {
-	/** Keep the persistent panel alive after a successful action. */
+	/** 成功した操作のあとも、常駐のパネルを残す。 */
 	closeWhenDone: boolean;
-	/** The本文 leaf that a primary open should replace. */
+	/** 主な開く操作が置き換える本文のリーフ。 */
 	targetLeaf?: WorkspaceLeaf;
-	/** Explicit new-tab actions must bypass external Markdown tab reuse. */
+	/** 明示的な新しいタブの操作は、外部 Markdown のタブの再利用を迂回しなければならない。 */
 	reuseExternalMarkdownLeaf?: boolean;
-	/** Normal opens activate the destination; background actions remain separate. */
+	/** 通常の開く操作は移動先を有効にする。裏で開く操作は別に扱う。 */
 	active: boolean;
-	/** Modal's ArrowRight preview keeps the target active but avoids editor focus. */
+	/** モーダルの右矢印によるプレビューは、対象を有効にしつつエディターにフォーカスしない。 */
 	autoFocus?: boolean;
 	close: () => void;
 	showError: (message: string) => void;
 }
 
 /**
- * Routes every result mode through one host-neutral action path. A modal and a
- * persistent view differ only in whether they close and which target leaf they
- * supply; opening and validation rules stay identical.
+ * すべての結果のモードを、ホストに依存しない1つの操作の経路で処理する。モーダルと常駐のビューの違いは、
+ * 閉じるかどうかと、どの対象リーフを渡すかだけ。開く操作と検証のルールは同じまま。
  */
 export async function executePaletteResult(
 	plugin: MyPalettePlugin,
@@ -34,7 +34,7 @@ export async function executePaletteResult(
 	action: ActionKind,
 	options: PaletteResultExecutionOptions,
 ): Promise<void> {
-	// Hosts handle these before execution: they change the palette, not the workspace.
+	// これらはホストが実行の前に処理する。ワークスペースではなく、パレットを変えるため。
 	if (result.mode === "search-history" || result.mode === "mode-entry") return;
 	if (result.mode === "property") {
 		if (action !== "primary") return;
@@ -47,7 +47,7 @@ export async function executePaletteResult(
 			.getCommands()
 			.some(({ id }) => id === result.commandId);
 		if (!exists) {
-			options.showError("The selected command no longer exists.");
+			options.showError(t("palette.error.commandGone"));
 			return;
 		}
 		plugin.recordCommand(result.commandId);
@@ -67,11 +67,11 @@ export async function executePaletteResult(
 		return;
 	}
 	if (result.mode === "tab") {
-		// Switching tabs opens nothing, so every action simply activates the tab;
-		// the preview keeps editor focus out.
+		// タブを切り替えても何も開かないので、どの操作もタブを有効にするだけ。
+		// プレビューはエディターにフォーカスを渡さない。
 		const leaf = plugin.tabProvider.leafOf(result.id);
 		if (!leaf) {
-			options.showError("The selected tab no longer exists.");
+			options.showError(t("palette.error.tabGone"));
 			return;
 		}
 		plugin.app.workspace.setActiveLeaf(leaf, { focus: options.autoFocus ?? true });
@@ -87,8 +87,8 @@ export async function executePaletteResult(
 	if (result.mode === "link" || result.mode === "backlink") {
 		const openedLeaf = await openFileResult(plugin, result.file, action, options);
 		plugin.recordResultUsage(result);
-		// A pinned target may resolve to a fallback leaf; place the cursor on the
-		// leaf that actually received the related note, including split actions.
+		// 固定された対象は、予備のリーフに解決されることがある。分割する操作も含め、
+		// 関連するノートを実際に受け取ったリーフにカーソルを置く。
 		const editor = editorOf(openedLeaf);
 		if (editor) editor.setCursor({ line: result.line, ch: 0 });
 		finish(options);
@@ -99,8 +99,8 @@ export async function executePaletteResult(
 		return;
 	}
 	if (result.mode === "plugin" || result.mode === "snippet") {
-		// Why: plugin folders and snippet files have no Obsidian view; Enter hands
-		// them to the external editor like the quick-open flow did.
+		// Why: プラグインのフォルダーとスニペットのファイルには Obsidian のビューがないので、
+		// Enter で外部エディターに渡す。クイックオープンの流れと同じ。
 		const error = await openInExternalEditor(result.absolutePath);
 		if (error) {
 			options.showError(error);
@@ -141,7 +141,7 @@ export async function executePaletteResult(
 	if (outcome.close) {
 		plugin.recordResultUsage(result);
 		finish(options);
-	} else options.showError(outcome.message ?? "The action failed.");
+	} else options.showError(outcome.message ?? t("palette.error.actionFailed"));
 }
 
 async function executeBookmark(
@@ -159,7 +159,7 @@ async function executeBookmark(
 	return true;
 }
 
-/** Opens what an audit row points at; returns false when it no longer exists. */
+/** 監査の行が指すものを開く。存在しなければ false を返す。 */
 async function executeAuditResult(
 	plugin: MyPalettePlugin,
 	result: AuditResult,
@@ -173,11 +173,11 @@ async function executeAuditResult(
 			await openFileResult(plugin, result.file, action, options);
 			return true;
 		case "broken-links": {
-			// Why: the missing target cannot be opened, so go to where the link is written.
+			// Why: 存在しない先は開けないので、リンクが書かれている場所に移動する。
 			const [source] = result.sources;
 			const file = source ? vault.getFileByPath(source.path) : null;
 			if (!source || !file) {
-				options.showError("The note with this link no longer exists.");
+				options.showError(t("audit.error.linkNoteGone"));
 				return false;
 			}
 			const leaf = await openFileResult(plugin, file, action, options);
@@ -187,11 +187,11 @@ async function executeAuditResult(
 		case "empty-folders": {
 			const folder = vault.getFolderByPath(result.folderPath);
 			if (!folder) {
-				options.showError("The folder no longer exists.");
+				options.showError(t("audit.error.folderGone"));
 				return false;
 			}
 			if (revealInFileExplorer(plugin.app, folder)) return true;
-			options.showError("Enable Obsidian's file explorer core plugin to show the folder.");
+			options.showError(t("audit.error.enableExplorer"));
 			return false;
 		}
 	}

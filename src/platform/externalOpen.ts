@@ -11,14 +11,14 @@ declare const electron: {
 	};
 };
 
-/** External-app actions run only on desktop; mobile has no system explorer or VS Code URL. */
+/** 外部アプリの操作はデスクトップでだけ動く。モバイルにはシステムのエクスプローラーも VS Code の URL もない。 */
 export function isDesktopApp(): boolean {
 	return Platform.isDesktopApp;
 }
 
 /**
- * The filesystem path a result can hand to an external app, when it has one.
- * Used by the result menu to decide whether open actions apply.
+ * 結果が外部のアプリに渡せるファイルシステムのパス。持っている場合だけ。
+ * 結果のメニューが、開く操作を適用するかどうかを決めるために使う。
  */
 export function getResultAbsolutePath(app: App, result: PaletteResult): string | undefined {
 	switch (result.mode) {
@@ -50,7 +50,7 @@ export function getResultAbsolutePath(app: App, result: PaletteResult): string |
 	}
 }
 
-/** Whether the absolute path points to a folder, for the system explorer action. */
+/** システムのエクスプローラーの操作のために、絶対パスがフォルダーを指すかどうか。 */
 export function isFolderResult(result: PaletteResult): boolean {
 	if (result.mode === "plugin") return true;
 	if (result.mode === "snippet") return result.isFolder;
@@ -59,20 +59,19 @@ export function isFolderResult(result: PaletteResult): boolean {
 }
 
 /**
- * Opens a file or folder in the configured external editor.
- * Initially VS Code only, via its URL handler.
+ * ファイルまたはフォルダーを、設定された外部エディターで開く。当面は VS Code だけで、その URL ハンドラー経由。
  */
 export async function openInExternalEditor(absolutePath: string): Promise<string | null> {
 	return openPathInCode(absolutePath);
 }
 
-/** Reveals a file in its folder, or opens a folder, in the OS file manager. */
+/** ファイルは親のフォルダーで表示し、フォルダーは開く。OS のファイルマネージャーを使う。 */
 export function showInSystemExplorer(absolutePath: string, isFolder: boolean): void {
 	if (isFolder) void openWithSystemApplication(absolutePath);
 	else electron.shell.showItemInFolder(absolutePath);
 }
 
-/** Opens a path with its operating-system default application. */
+/** パスを OS の既定のアプリで開く。 */
 export async function openWithSystemApplication(absolutePath: string): Promise<void> {
 	await electron.shell.openPath(absolutePath);
 }

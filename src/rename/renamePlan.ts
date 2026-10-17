@@ -1,13 +1,13 @@
 export interface RenameOptions {
-	/** Reads the find part as a regular expression and the replacement as `$1`-style. */
+	/** 検索の部分を正規表現として、置換の部分を `$1` の形式として読む。 */
 	regex: boolean;
 	matchCase: boolean;
-	/** Replaces every match in a name, not just the first. */
+	/** 名前の中の一致を、最初の1つだけでなくすべて置き換える。 */
 	all: boolean;
 }
 
 export type RenameRule =
-	/** The input does not describe a rename yet, e.g. the `/` has not been typed. */
+	/** 入力がまだ名前の変更を表していない。例: `/` がまだ入力されていない。 */
 	| { kind: "none" }
 	| { kind: "error"; message: string }
 	| { kind: "rule"; apply: (name: string) => string };
@@ -22,7 +22,7 @@ export interface RenamePlanRow {
 	status: RenameStatus;
 }
 
-// Why: these are the characters Obsidian refuses in file names.
+// Why: これらは Obsidian がファイル名として拒否する文字。
 const ILLEGAL_NAME_CHARACTERS = /[\\/:*?"<>|]/;
 
 function escapeRegExp(text: string): string {
@@ -30,8 +30,8 @@ function escapeRegExp(text: string): string {
 }
 
 /**
- * Parses `find/replace`. A file name cannot contain `/`, so the first one safely splits
- * the input without any escaping; a regular expression therefore cannot contain `/`.
+ * `検索/置換` を解析する。ファイル名には `/` を含められないので、最初の `/` は、エスケープなしで
+ * 入力を安全に分けられる。そのため、正規表現にも `/` は含まれない。
  */
 export function parseRenameRule(input: string, options: RenameOptions): RenameRule {
 	const slash = input.indexOf("/");
@@ -46,7 +46,7 @@ export function parseRenameRule(input: string, options: RenameOptions): RenameRu
 	} catch (error) {
 		return { kind: "error", message: error instanceof Error ? error.message : String(error) };
 	}
-	// Why: a function replacer keeps `$&` and friends literal outside regex mode.
+	// Why: 関数の置換は、正規表現モード以外で `$&` などをリテラルのまま残す。
 	if (options.regex) return { kind: "rule", apply: (name) => name.replace(pattern, replacement) };
 	return { kind: "rule", apply: (name) => name.replace(pattern, () => replacement) };
 }
@@ -65,9 +65,9 @@ function isValidStem(stem: string): boolean {
 }
 
 /**
- * Applies the rule to each file name without its extension, then flags names that Obsidian
- * would reject or that collide with another file. `existingPaths` holds every vault path,
- * lower-cased, because most file systems treat names case-insensitively.
+ * 拡張子を除いた各ファイル名にルールを適用し、その後、Obsidian が拒否する名前や、ほかのファイルと
+ * 衝突する名前に印を付ける。`existingPaths` は小文字にした Vault のパスをすべて持つ。多くのファイルシステムは
+ * 名前の大文字・小文字を区別しないため。
  */
 export function planRename(
 	paths: readonly string[],
@@ -102,7 +102,7 @@ export function planRename(
 	);
 }
 
-/** Whether applying the plan would fail or overwrite something. */
+/** 計画を適用すると、失敗するか何かを上書きするかどうか。 */
 export function isBlocked(rows: readonly RenamePlanRow[]): boolean {
 	return rows.some(
 		(row) => row.status === "invalid" || row.status === "exists" || row.status === "duplicate",

@@ -1,6 +1,6 @@
 /**
- * Move an item to a gap in the original list. Insertion indexes describe the
- * gaps before item 0 through after the final item, matching the DnD indicator.
+ * 項目を、元のリストの隙間へ移す。挿入の番号は、先頭の項目の前から最後の項目の後までの隙間を表す。
+ * ドラッグ中の挿入位置の表示と一致させる。
  */
 export function moveByInsertionIndex<T>(
 	items: readonly T[],
@@ -9,8 +9,8 @@ export function moveByInsertionIndex<T>(
 ): readonly T[] {
 	if (sourceIndex < 0 || sourceIndex >= items.length) return items;
 	const boundedInsertionIndex = Math.max(0, Math.min(insertionIndex, items.length));
-	// The gaps immediately before and after the dragged item both preserve its
-	// position; recognizing both avoids a needless save and visual rerender.
+	// ドラッグした項目の直前と直後の隙間は、どちらも位置を変えない。両方を認識して、
+	// 不要な保存と描き直しを避ける。
 	if (boundedInsertionIndex === sourceIndex || boundedInsertionIndex === sourceIndex + 1)
 		return items;
 

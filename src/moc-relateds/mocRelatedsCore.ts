@@ -1,30 +1,33 @@
+import { t } from "src/i18n";
+
 const MOC_HEADER = "## MOC";
 const RELATEDS_ITEM = "- Relateds";
 
 type Located = { relatedsIndex: number } | { message: string };
 
 /**
- * Index of the `## MOC` header, searched from the bottom.
- * Why: the template puts the MOC section at the end of a note, so an earlier `## MOC`
- * (quoted or pasted from another note) must not be taken as the note's own.
+ * `## MOC` の見出しの位置を、末尾から探す。
+ * Why: テンプレートは MOC の節をノートの末尾に置く。そのため、ほかのノートから引用や貼り付けされた
+ * 先頭寄りの `## MOC` を、ノート自身のものと取り違えてはいけない。
  */
 function findMocHeaderIndex(lines: readonly string[]): number {
 	return lines.findLastIndex((line) => line.trim().startsWith(MOC_HEADER));
 }
 
-/** Finds the Relateds item inside the MOC section. */
+/** MOC の節の中にある Relateds の項目を探す。 */
 function locateRelateds(lines: readonly string[]): Located {
 	const mocHeaderIndex = findMocHeaderIndex(lines);
-	if (mocHeaderIndex === -1) return { message: `"${MOC_HEADER}" header not found.` };
+	if (mocHeaderIndex === -1)
+		return { message: t("moc.core.headerNotFound", { header: MOC_HEADER }) };
 	for (let index = mocHeaderIndex + 1; index < lines.length; index += 1) {
 		const trimmed = lines[index].trim();
 		if (trimmed.startsWith("##")) break;
 		if (trimmed.startsWith(RELATEDS_ITEM)) return { relatedsIndex: index };
 	}
-	return { message: `"${MOC_HEADER}" section does not contain "${RELATEDS_ITEM}".` };
+	return { message: t("moc.core.noRelatedsItem", { header: MOC_HEADER, item: RELATEDS_ITEM }) };
 }
 
-/** Line index after the last line nested under the Relateds item. */
+/** Relateds の下にネストされた最後の行の次の行番号。 */
 function relatedsChildrenEnd(lines: readonly string[], relatedsIndex: number): number {
 	const relatedsIndent = lines[relatedsIndex].match(/^\s*/)?.[0].length ?? 0;
 	let end = relatedsIndex + 1;
@@ -38,9 +41,9 @@ function relatedsChildrenEnd(lines: readonly string[], relatedsIndex: number): n
 }
 
 /**
- * Zero-based line range `[start, end)` of the items nested under Relateds, or
- * undefined when the note has no MOC Relateds item. Used to tell a Relateds link
- * from any other link in the body.
+ * Relateds の項目の下にネストされた行の、0始まりの行範囲 `[start, end)`。
+ * MOC の Relateds 項目がないノートでは undefined を返す。本文中の別のリンクと、
+ * Relateds のリンクを区別するために使う。
  */
 export function relatedsLineRange(content: string): [number, number] | undefined {
 	const lines = content.split("\n");
@@ -53,7 +56,7 @@ export type AddLinkResult =
 	| { success: true; newContent: string }
 	| { success: false; message: string };
 
-/** Adds a wiki link as a direct child of the MOC Relateds item. */
+/** MOC の Relateds 項目の直下の子として、ウィキリンクを追加する。 */
 export function addLinkToMocRelateds(
 	content: string,
 	linkBasename: string,
@@ -69,7 +72,8 @@ export function addLinkToMocRelateds(
 	let insertIndex = relatedsIndex + 1;
 	for (; insertIndex < lines.length; insertIndex += 1) {
 		const line = lines[insertIndex];
-		if (line.includes(wikiLink)) return { success: false, message: "Link already exists." };
+		if (line.includes(wikiLink))
+			return { success: false, message: t("moc.core.alreadyExists") };
 		if (line.trim().startsWith("##")) break;
 		if (line.trim() === "") continue;
 		const indent = line.match(/^\s*/)?.[0].length ?? 0;
@@ -92,7 +96,7 @@ export type RemoveLinkResult =
 	| { success: true; newContent: string }
 	| { success: false; message: string };
 
-/** Removes the direct child item linking to a note from the MOC Relateds item. */
+/** MOC の Relateds 項目の直下の子のうち、ノートへリンクしている項目を削除する。 */
 export function removeLinkFromMocRelateds(content: string, linkBasename: string): RemoveLinkResult {
 	const lines = content.split("\n");
 	const located = locateRelateds(lines);
@@ -108,14 +112,14 @@ export function removeLinkFromMocRelateds(content: string, linkBasename: string)
 		const indent = line.match(/^\s*/)?.[0].length ?? 0;
 		if (indent <= relatedsIndent) break;
 		if (!/^\s*[-*+]\s+/.test(line) || !wikiLink.test(line)) continue;
-		// Why: deleting a parent line would silently drop or re-parent its nested notes.
+		// Why: 親の行を削除すると、その下にネストされたノートが黙って消えるか、付け替わってしまうため。
 		const next = lines[index + 1];
 		if (next?.trim() && (next.match(/^\s*/)?.[0].length ?? 0) > indent)
-			return { success: false, message: "The link has nested items; remove it manually." };
+			return { success: false, message: t("moc.core.nestedItems") };
 		lines.splice(index, 1);
 		return { success: true, newContent: lines.join("\n") };
 	}
-	return { success: false, message: "Link not found." };
+	return { success: false, message: t("moc.core.notFound") };
 }
 
 function escapeRegExp(text: string): string {
@@ -123,9 +127,9 @@ function escapeRegExp(text: string): string {
 }
 
 /**
- * For Vault audit: a note made from a template often holds only its MOC section, which
- * links it to other notes but says nothing itself. The MOC section runs from `## MOC` to
- * the next heading; nothing but frontmatter and blank lines may be outside it.
+ * Vault 監査用: テンプレートから作ったノートは、MOC の節だけを持つことが多い。その節は
+ * ほかのノートへのリンクを持つが、ノート自身の内容は何も語らない。MOC の節は `## MOC` から
+ * 次の見出しまでで、その外にはフロントマターと空行しかあってはならない。
  */
 export function isMocOnly(content: string): boolean {
 	const lines = withoutFrontmatter(content).split(/\r?\n/);

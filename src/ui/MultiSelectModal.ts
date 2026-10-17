@@ -13,49 +13,51 @@ import {
 } from "src/ui/multiSelectChanges";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 import { ICONS } from "src/ui/icons";
+import { t } from "src/i18n";
 
-/** One selectable row. `value` is what the modal resolves with when the row is checked. */
+/** 1つの選択できる行。`value` は、行がチェックされたときにモーダルが返す値。 */
 export interface MultiSelectCandidate<V> {
-	/** Stable identity; checks are kept by key because the list is refiltered per query. */
+	/** 安定した識別子。一覧はクエリごとに絞り直されるので、チェックはキーで保持する。 */
 	key: string;
 	value: V;
-	/** Row content; the check icon is supplied by the modal. */
+	/** 行の内容。チェックのアイコンはモーダルが付ける。 */
 	item: SelectionItem;
 	/**
-	 * Already applied to every target (a tag all targets have, a note linked in both
-	 * directions). Such a row starts checked, and clearing its check removes it.
+	 * すでにすべての対象に適用されている(全対象が持つタグ、双方向にリンクされたノート)。
+	 * このような行は最初からチェックされ、チェックを外すと削除される。
 	 */
 	applied?: boolean;
-	/** Icon of an unchecked row; defaults to an empty box. */
+	/** チェックされていない行のアイコン。既定は空の四角。 */
 	uncheckedIcon?: string;
 	/**
-	 * Undoes what the row would apply, offered in its context menu for rows that
-	 * are already applied, fully or partly. The host updates its own
-	 * data in `run`; the list is refreshed afterwards.
+	 * 行が適用する内容を取り消す。すでに全部または一部が適用されている行の右クリックメニューに出す。
+	 * ホストは `run` で自分のデータを更新し、その後で一覧を描き直す。
 	 */
 	removal?: { label: string; run: () => void | Promise<void> };
 }
 
 export interface MultiSelectModalProps {
 	placeholder: string;
-	/** Target context shown in this selector's help. */
+	/** このセレクターのヘルプに出す、対象の文脈。 */
 	contextLabel: string;
-	/** Verb of the run action and of the Ctrl+Enter hint, such as "Add". */
+	/** 実行の操作と Ctrl+Enter の案内に使う動詞。例: 「追加」。 */
 	actionLabel: string;
 	controls: SelectorControls;
 }
 
-/** Menu title for a run; pure additions keep the familiar "Add 2 now" wording. */
+/** 実行のメニューの名前。追加だけなら、なじみのある「2 件を今すぐ追加」の言い方を保つ。 */
 function runTitle<V>(
 	changes: MultiSelectChanges<V>,
 	actionLabel: string,
 	state: "now" | "checked",
 ): string {
-	if (changes.remove.length > 0) return `Apply ${changeCount(changes)} changes`;
-	return `${actionLabel} ${changes.add.length} ${state}`;
+	if (changes.remove.length > 0) return t("multi.runChanges", { count: changeCount(changes) });
+	return state === "now"
+		? t("multi.runNow", { action: actionLabel, count: changes.add.length })
+		: t("multi.runChecked", { action: actionLabel, count: changes.add.length });
 }
 
-/** Footer text for pending changes, such as "+2 −1". */
+/** 保留中の変更の表示。「+2 −1」のように。 */
 function summarizeChanges<V>(changes: MultiSelectChanges<V>): string {
 	const parts: string[] = [];
 	if (changes.add.length > 0) parts.push(`+${changes.add.length}`);
@@ -64,13 +66,13 @@ function summarizeChanges<V>(changes: MultiSelectChanges<V>): string {
 }
 
 /**
- * Multi selector shared by the tag insert, MOC insert and MOC remove selectors so they behave and look alike.
- * Flow: run one row (Enter), or select/check rows (click, Ctrl, Shift, arrows,
- * Space, the check box or context menu) → run them with Ctrl+Enter
- * or the checked-list button. Checking keeps the modal open; any other close cancels.
+ * タグ挿入、MOC 挿入、MOC 削除のセレクターが共有する複数選択。動きと見た目をそろえるため。
+ * 流れ: 1行を実行する(Enter)、または行を選ぶ・チェックする(クリック、Ctrl、Shift、矢印、
+ * スペース、チェックボックス、右クリックメニュー) → Ctrl+Enter かチェック済みのボタンで実行する。
+ * チェックするとモーダルは開いたままになる。それ以外で閉じると取り消しになる。
  */
 export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCandidate<V>> {
-	/** Rows whose check differs from their starting state; these are the pending changes. */
+	/** 最初の状態から変わったチェックの行。これが保留中の変更になる。 */
 	private readonly toggled = new Map<string, MultiSelectCandidate<V>>();
 	private confirmedChanges?: MultiSelectChanges<V>;
 	private resolveResult?: (changes: MultiSelectChanges<V> | null) => void;
@@ -78,7 +80,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 	private checkedButtonEl?: HTMLElement;
 	private checkedCountEl?: HTMLElement;
 	private readonly candidateLimit = this.limit;
-	/** Keys in the order last listed, kept while checks change so rows do not jump. */
+	/** 最後に並んでいた順のキー。チェックが変わっても、行が飛ばないように保つ。 */
 	private listedOrder: string[] = [];
 	private keepListedOrder = false;
 
@@ -90,43 +92,42 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 			{
 				placeholder: multiSelect.placeholder,
 				controls: { ...multiSelect.controls, context: multiSelect.contextLabel },
-				// Same Explorer-style selection as the palette: pick rows with click,
-				// Ctrl and Shift, check them, then run the action.
+				// パレットと同じエクスプローラー風の選択: クリック、Ctrl、Shift で行を選び、チェックしてから操作を実行する。
 				selectionMode: "extended",
-				// Why: Space checks and f returns to input here, so these single keys need
-				// a selection mode that keeps them out of the query. The palette has no
-				// such commands and leaves modes off so Enter runs the top row at once.
+				// Why: ここではスペースでチェックし、f で入力に戻る。単独のキーが検索語に入らないように、
+				// それを守る選択モードが要る。パレットにはそのコマンドがなく、モードは off のままなので、
+				// Enter で先頭の行がすぐ実行される。
 				interactionModes: true,
 			},
 			app,
 		);
 	}
 
-	/** Candidates for the input, best match first. */
+	/** 入力に対する候補。一致の良いものが先。 */
 	protected abstract searchCandidates(
 		query: string,
 	): MultiSelectCandidate<V>[] | Promise<MultiSelectCandidate<V>[]>;
 
-	/** Text highlighted in rows; hosts strip syntax the user types around the match. */
+	/** 行で強調する文字列。ホストは一致の周りにユーザーが打った構文を取り除く。 */
 	protected matchQuery(query: string): string {
 		return query;
 	}
 
-	/** Lets hosts add their own items, such as open and copy actions, for the selected rows. */
+	/** ホストが、選んだ行に対する開く・コピーなどの操作を独自に加えられる。 */
 	protected populateSelectionMenu(
 		_menu: PaletteMenu,
 		_selected: readonly MultiSelectCandidate<V>[],
 		_close: () => void,
 	): void {}
 
-	/** Rows with a pending change, kept listed while the host rebuilds the list. */
+	/** 保留中の変更がある行。ホストが一覧を組み直している間も、一覧に残す。 */
 	private pendingCandidates(): MultiSelectCandidate<V>[] {
 		return [...this.toggled.values()];
 	}
 
 	/**
-	 * Opens the modal and resolves with the rows to add and the applied rows to
-	 * remove, or null when cancelled. Use this when some rows are already applied.
+	 * モーダルを開き、追加する行と、削除する適用済みの行を返す。キャンセルすると null。
+	 * 一部の行がすでに適用されているときに使う。
 	 */
 	openAndWaitChanges(): Promise<MultiSelectChanges<V> | null> {
 		return new Promise((resolve) => {
@@ -135,7 +136,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		});
 	}
 
-	/** Resolves with the rows to add; for selectors whose rows are never already applied. */
+	/** 追加する行を返す。行がすでに適用されていることがないセレクター向け。 */
 	async openAndWait(): Promise<V[] | null> {
 		return (await this.openAndWaitChanges())?.add ?? null;
 	}
@@ -144,14 +145,14 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		this.updateMatchQuery(this.matchQuery(query));
 		const found = await this.searchCandidates(query);
 		const foundByKey = new Map(found.map((candidate) => [candidate.key, candidate]));
-		// Pending changes stay visible across queries, even if the host no longer returns them.
+		// 保留中の変更は、ホストがもう返さなくなっても、クエリをまたいで見えたままにする。
 		const pending = this.pendingCandidates().map(
 			(candidate) => foundByKey.get(candidate.key) ?? candidate,
 		);
-		// Pinned rows must not use up the space for the next unchecked candidate.
+		// 固定された行が、次の未チェックの候補の場所を奪わないようにする。
 		this.limit = this.candidateLimit + pending.length;
 		const rest = found.filter(({ key }) => !this.toggled.has(key));
-		// Stable groups keep changed rows first, then rows to add, then applied rows.
+		// 安定したグループ: 変更した行が先、次に追加する行、最後に適用済みの行。
 		const grouped = [
 			...pending,
 			...rest.filter(({ applied }) => !applied),
@@ -165,9 +166,8 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 	}
 
 	/**
-	 * Why: checking a row would pin it at the top and pull the cursor along with it. Rows keep
-	 * their place until the next search; rows shown for the first time, as the limit grows
-	 * with each check, come after them.
+	 * Why: 行をチェックすると、その行は先頭に固定され、カーソルも一緒に動いてしまう。行は次の検索まで
+	 * 場所を保つ。限度がチェックのたびに増えて初めて表示される行は、それらの後に並ぶ。
 	 */
 	private inListedOrder(
 		candidates: readonly MultiSelectCandidate<V>[],
@@ -180,13 +180,13 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 	renderSuggestion(candidate: MultiSelectCandidate<V>, el: HTMLElement): void {
 		const checked = this.isChecked(candidate);
 		renderSelectionItem(this.toSelectionItem(candidate), el, this.query);
-		// Rows may be redrawn in place, so classes are set both ways.
+		// 行はその場で描き直されることがあるので、クラスは両方向に設定する。
 		el.classList.toggle("is-applied", Boolean(candidate.applied));
 		el.classList.toggle("is-pending-removal", Boolean(candidate.applied) && !checked);
 		el.classList.toggle("is-checked", checked);
 		el.setAttribute("aria-checked", String(checked));
-		// The check icon toggles its row on a single press, independently of the
-		// keyboard mode, so pointer users can also build a checked list.
+		// チェックのアイコンは、キーボードのモードとは別に、1回の押下でその行をチェックする。
+		// そのためポインターのユーザーも、チェックした一覧を作れる。
 		el.querySelector(".my-palette-suggestion__icon")?.setAttribute("data-row-toggle", "");
 	}
 
@@ -218,8 +218,8 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		candidate: MultiSelectCandidate<V>,
 		event: MouseEvent,
 	): void {
-		// The panel has already moved the selection to the clicked row unless the row was
-		// inside it, so the menu acts on the selected rows like the palette's own menu.
+		// パネルは、行が選択の内側になければクリックした行へ選択を動かしているので、
+		// メニューはパレット自身のメニューと同じく、選ばれた行に対して働く。
 		const selected = this.getSelectedItems();
 		const targets = selected.length > 0 ? selected : [candidate];
 		const menu = this.replaceActiveMenu(new PaletteMenu());
@@ -234,13 +234,13 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		return true;
 	}
 
-	/** Pressing a row's check icon toggles just that row without running anything. */
+	/** 行のチェックのアイコンを押すと、何も実行せずにその行だけを切り替える。 */
 	protected override onSuggestionRowToggle(candidate: MultiSelectCandidate<V>): void {
 		this.toggleChecks([candidate]);
 	}
 
-	// Why: the panel stops mousedown propagation on rows, so Obsidian cannot dismiss
-	// an open menu itself when the user clicks a row.
+	// Why: パネルは行の mousedown の伝播を止めるので、ユーザーが行をクリックしても、
+	// Obsidian 自身は開いたメニューを閉じられない。
 	protected override onResultFocus(): void {
 		this.activeMenu?.close();
 	}
@@ -254,7 +254,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		return true;
 	}
 
-	/** Space checks insertion candidates rather than changing the highlighted selection. */
+	/** スペースは、強調表示の選択を変える代わりに、挿入の候補をチェックする。 */
 	protected override onSelectionSpace(selected: MultiSelectCandidate<V>[]): void {
 		this.toggleChecks(selected);
 	}
@@ -269,12 +269,12 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		candidate: MultiSelectCandidate<V>,
 		event: Event,
 	): Promise<void> {
-		// Ctrl+Enter runs from any row, so the user need not leave the list.
+		// Ctrl+Enter はどの行からでも実行できるので、一覧から離れる必要がない。
 		const runShortcut =
 			event.type === "keydown" &&
 			((event as KeyboardEvent).ctrlKey || (event as KeyboardEvent).metaKey);
 		if (runShortcut) {
-			// Pending changes win; without any, the highlighted rows to add are run.
+			// 保留中の変更が優先する。なければ、強調表示の追加する行を実行する。
 			this.confirm(
 				this.toggled.size > 0
 					? pendingChanges(this.pendingCandidates(), this.toggledKeys())
@@ -288,17 +288,20 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 			this.confirm(directChanges(rows));
 			return;
 		}
-		// Warn before closing so a multi-selection can still be run with Ctrl+Enter.
+		// 閉じる前に警告する。複数選択は Ctrl+Enter でも実行できるままにするため。
 		if (this.toggled.size > 1 || this.getSelectedItems().length > 1) {
 			new Notice(
-				`Enter will only ${this.multiSelect.actionLabel.toLowerCase()} "${candidate.item.label}". Press Ctrl+Enter to ${this.multiSelect.actionLabel.toLowerCase()} multiple items, or select a single item and press Enter.`,
+				t("multi.enterWarning", {
+					action: this.multiSelect.actionLabel,
+					label: candidate.item.label,
+				}),
 			);
 			return;
 		}
 		this.confirm(directChanges([candidate]));
 	}
 
-	/** Closes with the given changes; nothing to apply keeps the modal open. */
+	/** 与えられた変更で閉じる。適用するものがなければ、モーダルは開いたままになる。 */
 	private confirm(changes: MultiSelectChanges<V>): void {
 		if (changeCount(changes) === 0) return;
 		this.commitSearchHistory();
@@ -306,26 +309,26 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		this.close();
 	}
 
-	/** Checks every given row, or unchecks them all when every one is already checked. */
+	/** 与えられたすべての行をチェックする。すでにすべてチェック済みなら、すべて外す。 */
 	private toggleChecks(candidates: readonly MultiSelectCandidate<V>[]): void {
 		if (candidates.length === 0) return;
 		const allChecked = candidates.every((candidate) => this.isChecked(candidate));
 		for (const candidate of candidates) {
 			if (this.isChecked(candidate) === allChecked) this.flip(candidate);
 		}
-		// Update icons immediately, then list again in the same order, retaining the cursor
-		// and selection by key rather than by their old row indexes.
+		// アイコンをすぐに更新し、同じ順序で一覧を組み直す。カーソルと選択は、古い行の番号ではなく
+		// キーで保つ。
 		this.rerenderVisibleSuggestions();
 		this.refreshKeepingSelection();
 	}
 
-	/** Toggles one row; a row back in its starting state leaves the pending changes. */
+	/** 1つの行を切り替える。開始時の状態に戻った行は、保留中の変更から外れる。 */
 	private flip(candidate: MultiSelectCandidate<V>): void {
 		if (this.toggled.has(candidate.key)) this.toggled.delete(candidate.key);
 		else this.toggled.set(candidate.key, candidate);
 	}
 
-	/** Drops every pending change; applied rows show as checked again. */
+	/** 保留中の変更をすべて捨てる。適用済みの行は、再びチェック済みとして表示される。 */
 	private clearPendingChanges(): void {
 		this.toggled.clear();
 		this.refreshKeepingSelection();
@@ -350,7 +353,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		menu: PaletteMenu,
 		targets: readonly MultiSelectCandidate<V>[],
 	): void {
-		// Highlighted rows join the pending ones, so checking several and running is one step.
+		// 強調表示の行は、保留中の行に加わる。複数をチェックして実行するのが1手で済むように。
 		const runSet = new Map(this.toggled);
 		for (const candidate of targets) runSet.set(candidate.key, candidate);
 		if (runSet.size === 0) return;
@@ -358,10 +361,11 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		menu.addSeparator();
 		if (targets.length > 0) {
 			const allChecked = targets.every((candidate) => this.isChecked(candidate));
-			const suffix = targets.length > 1 ? ` ${targets.length} selected` : "";
+			const suffix =
+				targets.length > 1 ? t("multi.suffixSelected", { count: targets.length }) : "";
 			menu.addItem((item) =>
 				item
-					.setTitle(`${allChecked ? "Uncheck" : "Check"}${suffix}`)
+					.setTitle(`${allChecked ? t("multi.uncheck") : t("multi.check")}${suffix}`)
 					.setIcon(allChecked ? ICONS.unchecked : ICONS.checked)
 					.onClick(() => this.toggleChecks(targets)),
 			);
@@ -392,14 +396,18 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		menu.addSeparator();
 		menu.addItem((item) =>
 			item
-				.setTitle(removable.length > 1 ? `${label} (${removable.length} selected)` : label)
+				.setTitle(
+					removable.length > 1
+						? t("multi.removalSelected", { label, count: removable.length })
+						: label,
+				)
 				.setIcon(ICONS.delete)
 				.onClick(() => {
 					void (async () => {
-						// Why: removals may rewrite the same note, so run them one at a time.
+						// Why: 削除は同じノートを書き換えることがあるので、1つずつ実行する。
 						for (const candidate of removable) {
 							await candidate.removal?.run();
-							// The removal is now real, so the row must not stay pending.
+							// 削除が実際に行われたので、その行を保留のままにしてはいけない。
 							this.toggled.delete(candidate.key);
 						}
 						this.refreshKeepingSelection();
@@ -408,20 +416,20 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		);
 	}
 
-	/** Button before the shared input controls that previews the checked rows and runs them. */
+	/** 入力欄の前に置くボタン。チェックした行をプレビューし、実行する。 */
 	private createCheckedButton(): void {
 		const container = this.inputEl.parentElement;
 		if (!container) return;
 		container.querySelector(".my-palette-checked-button")?.remove();
 		const button = container.createEl("button", {
 			cls: "clickable-icon my-palette-checked-button",
-			attr: { type: "button", title: "Checked items" },
+			attr: { type: "button", title: t("multi.checkedButton") },
 		});
 		container.insertBefore(button, container.querySelector(".my-palette-options-button"));
 		setIcon(button, ICONS.selection);
 		this.checkedCountEl = button.createSpan("my-palette-checked-button__count");
 		this.checkedButtonEl = button;
-		// Keep focus in the input so typing and keyboard selection continue after a click.
+		// クリックの後も、入力欄にフォーカスを保つ。入力とキーボードの選択を続けられるように。
 		this.registerSelectionDomEvent(button, "mousedown", (event) => {
 			event.preventDefault();
 			event.stopPropagation();
@@ -452,7 +460,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 				.onClick(() => this.confirm(changes)),
 		);
 		menu.addSeparator();
-		// Choosing a pending row here reverts it, so the list doubles as an editor.
+		// ここで保留中の行を選ぶと元に戻るので、この一覧は編集もできる。
 		for (const candidate of this.toggled.values()) {
 			menu.addItem((item) =>
 				item

@@ -61,7 +61,7 @@ it("renames distinct vault files of any type and skips everything else", () => {
 	const m = menu();
 	const onDone = vi.fn();
 	addBulkRenameMenuItem(m.instance, plugin, results, onDone);
-	expect(m.titles).toEqual(["Rename…"]);
+	expect(m.titles).toEqual(["名前を変更…"]);
 
 	m.click();
 	expect(BulkRenameModal).toHaveBeenCalledWith(

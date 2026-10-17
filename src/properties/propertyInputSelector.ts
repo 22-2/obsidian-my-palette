@@ -8,6 +8,7 @@ import {
 import { vaultValuesOf } from "src/properties/propertyValueSelector";
 import { SelectionModal } from "src/ui/selectionModal";
 import { updateFrontmatter } from "src/shared/frontmatter";
+import { t } from "src/i18n";
 
 interface PropertyInputOptions {
 	placeholder: string;
@@ -15,7 +16,7 @@ interface PropertyInputOptions {
 	rows: (query: string) => PropertyInputRow[];
 }
 
-/** A single-value input: the typed text is written by its first row, and Esc keeps the value. */
+/** 単一の値の入力。入力された文字列は最初の行が書き込み、Esc では値を保つ。 */
 class PropertyInputModal extends SelectionModal<PropertyInputRow> {
 	private chosen?: string | number;
 
@@ -34,7 +35,7 @@ class PropertyInputModal extends SelectionModal<PropertyInputRow> {
 		);
 	}
 
-	// Why: a row that cannot be written explains the problem and keeps the input open.
+	// Why: 書き込めない行は、問題を説明して入力欄を開いたままにする。
 	protected override async onItemActivated(row: PropertyInputRow): Promise<void> {
 		if (row.value === undefined) return;
 		this.chosen = row.value;
@@ -46,24 +47,24 @@ class PropertyInputModal extends SelectionModal<PropertyInputRow> {
 	}
 }
 
-/** Resolves with the value to write, or null when the input was dismissed. */
+/** 書き込む値で解決する。入力が閉じられたときは null。 */
 function chooseValue(app: App, options: PropertyInputOptions): Promise<string | number | null> {
 	return new Promise((resolve) => {
 		const modal = new PropertyInputModal(options, app, resolve);
 		modal.open();
-		// Why: the current value is selected so typing replaces it, as in a plain text field.
+		// Why: 現在の値を選択しておくと、通常のテキスト欄と同じく入力で置き換わる。
 		modal.inputEl.select();
 	});
 }
 
-/** Whether the editor was left with Esc (dismissed) or ended with a value (done). */
+/** エディターが Esc で閉じられた(dismissed)か、値を入れて終わった(done)か。 */
 export type EditResult = "dismissed" | "done";
 
 function initialText(value: unknown): string {
 	return typeof value === "string" || typeof value === "number" ? String(value) : "";
 }
 
-/** Opens the single-value input for a property of the note and writes the chosen value. */
+/** ノートのプロパティの単一値の入力を開き、選んだ値を書き込む。 */
 export async function editPropertyValue(
 	plugin: MyPalettePlugin,
 	file: TFile,
@@ -75,13 +76,13 @@ export async function editPropertyValue(
 	const current: unknown = frontmatter?.[key];
 	const vaultValues = vaultValuesOf(plugin.app, key);
 	const value = await chooseValue(plugin.app, {
-		placeholder: `Enter a value for ${key}`,
+		placeholder: t("property.placeholder.input", { key }),
 		initialInput: initialText(current),
 		rows: (query) => propertyInputRows({ kind, query, current, vaultValues }),
 	});
 	if (value === null) return "dismissed";
 	if (await writeValue(plugin.app, file, key, value))
-		new Notice(`Updated ${key} on ${file.basename}.`);
+		new Notice(t("property.notice.updatedOne", { key, name: file.basename }));
 	return "done";
 }
 
@@ -99,7 +100,6 @@ async function writeValue(
 			frontmatter[key] = value;
 		},
 	);
-	if (!updated)
-		new Notice(`Could not update the properties of ${file.basename}. See the console.`);
+	if (!updated) new Notice(t("property.error.updateFailed", { name: file.basename }));
 	return updated;
 }

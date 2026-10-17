@@ -6,6 +6,7 @@ import { compactPath } from "src/shared/pathDisplay";
 import type { PaletteResult } from "src/palette/results";
 import type { SelectionItem } from "src/ui/selectionModal";
 import type { CopyablePaths } from "src/platform/pathClipboard";
+import { t } from "src/i18n";
 
 export interface PaletteResultPresentationOptions {
 	openExternalMarkdownInObsidian: boolean;
@@ -13,7 +14,7 @@ export interface PaletteResultPresentationOptions {
 
 const MAX_VISIBLE_MATCHED_METADATA = 3;
 
-/** Shared so file selectors show the metadata explaining a search hit the same way. */
+/** ファイルのセレクターが、検索の一致を説明するメタデータを同じ形で表示するよう共有する。 */
 export function matchedMetadataPresentation(
 	tags: readonly string[],
 	keywords: readonly string[] = [],
@@ -25,7 +26,10 @@ export function matchedMetadataPresentation(
 		visible.push(`+${metadata.length - MAX_VISIBLE_MATCHED_METADATA}`);
 	const title =
 		keywords.length > 0
-			? [tags.length > 0 ? `Tags: ${tags.join(" ")}` : "", `Keywords: ${keywords.join(", ")}`]
+			? [
+					tags.length > 0 ? t("palette.matched.tags", { tags: tags.join(" ") }) : "",
+					t("palette.matched.keywords", { keywords: keywords.join(", ") }),
+				]
 					.filter(Boolean)
 					.join("\n")
 			: tags.join(" ");
@@ -33,8 +37,8 @@ export function matchedMetadataPresentation(
 }
 
 /**
- * Keeps result display policy outside the modal so formatting changes do not
- * have to touch search lifecycle and keyboard event handling at the same time.
+ * 検索結果の表示の方針をモーダルの外に置く。表示の書式を変えるたびに、検索のライフサイクルと
+ * キーボードのイベント処理まで触らなくて済むようにするため。
  */
 export function toPaletteSelectionItem(
 	app: App,
@@ -87,19 +91,19 @@ export function toPaletteSelectionItem(
 		badge:
 			isExternalMarkdown || isIgnoredMarkdown
 				? options.openExternalMarkdownInObsidian
-					? // Why: the important distinction here is that the file is outside
-						// the Vault, not which native view happens to render it.
-						"Outside Vault"
-					: "VS Code"
+					? // Why: ここで重要なのは、ファイルが Vault の外にあることであり、
+						// どのネイティブのビューがそれを描画するかではない。
+						t("palette.badge.outsideVault")
+					: t("palette.badge.externalEditor")
 				: result.mode === "smart"
 					? `${Math.round(result.score * 100)}%`
 					: result.mode === "file" && result.ignored
-						? "VS Code"
+						? t("palette.badge.externalEditor")
 						: everythingOpensInCode
-							? "VS Code"
+							? t("palette.badge.externalEditor")
 							: result.mode === "everything" && result.kind === "folder"
-								? "Folder"
-								: // Why: a badge beside the name stays visible; the path text is cut off.
+								? t("palette.badge.folder")
+								: // Why: 名前の横の印は見えたままになる。パスの文字列は切り詰められる。
 									result.mode === "audit" && result.kind === "empty-files"
 									? emptyFileLabel(result.mocOnly)
 									: undefined,
@@ -107,14 +111,14 @@ export function toPaletteSelectionItem(
 }
 
 /**
- * Path-copy actions are shared by palette menus and other file selectors, so
- * their path selection belongs beside the presentation policy, not the modal.
+ * パスのコピーの操作は、パレットのメニューとほかのファイルのセレクターで共有する。
+ * そのためパスの選び方は、モーダルではなく表示の方針のそばに置く。
  */
 export function getCopyablePaths(
 	app: App,
 	result: Exclude<PaletteResult, { mode: "command" | "search-history" | "mode-entry" }>,
 ): CopyablePaths {
-	// Everything folders are navigable results, but only file results should expose file-path actions.
+	// Everything のフォルダーは移動できる結果だが、ファイルのパス操作を出すのはファイルの結果だけ。
 	if (result.mode === "everything") {
 		return result.kind === "file"
 			? {

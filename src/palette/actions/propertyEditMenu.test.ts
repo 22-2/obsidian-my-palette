@@ -56,7 +56,7 @@ it("opens Properties for the selected note after closing the palette", () => {
 	const m = menu();
 	const onSelected = vi.fn();
 	addPropertyEditMenuItem(m.instance, plugin, [note], onSelected);
-	expect(m.titles).toEqual(["Edit properties…"]);
+	expect(m.titles).toEqual(["プロパティを編集…"]);
 
 	m.click();
 	expect(onSelected).toHaveBeenCalledOnce();
@@ -73,7 +73,7 @@ it("opens Properties for all the selected notes, skipping other files and repeat
 	const image: PaletteResult = { ...base, mode: "file", vaultPath: "image.png" };
 	openPalette.mockClear();
 	addPropertyEditMenuItem(m.instance, plugin, [note, second, image, note]);
-	expect(m.titles).toEqual(["Edit properties…"]);
+	expect(m.titles).toEqual(["プロパティを編集…"]);
 
 	m.click();
 	expect(openPalette).toHaveBeenCalledWith("pr ", undefined, {

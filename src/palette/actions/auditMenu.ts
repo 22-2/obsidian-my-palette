@@ -3,7 +3,6 @@ import {
 	canTrash,
 	describeAuditActionResults,
 	listsFiles,
-	plural,
 	trashAuditItems,
 } from "src/audit/auditActions";
 import type { AuditKind } from "src/audit/vaultAudit";
@@ -21,8 +20,10 @@ import {
 } from "src/platform/pathClipboard";
 import { ICONS } from "src/ui/icons";
 import type { PaletteMenu } from "src/ui/paletteMenu";
+import { countLabel } from "src/shared/countLabel";
+import { t } from "src/i18n";
 
-/** Enough to find a note in the menu; the rest is one search away in the note itself. */
+/** メニューでノートを見つけるのに十分な数。残りは、ノート自体の中で1回の検索で見つかる。 */
 const MAX_LINKED_NOTES = 20;
 
 export function isAuditResult(result: PaletteResult): result is AuditResult {
@@ -35,15 +36,15 @@ interface AuditMenuOptions {
 	menu: PaletteMenu;
 	results: readonly AuditResult[];
 	activate: (action: ActionKind, result: PaletteResult) => void | Promise<void>;
-	/** Lets a modal palette close before a linked note opens. */
+	/** リンク先のノートを開く前に、モーダルのパレットを閉じられるようにする。 */
 	onNoteActionSelected?: () => void;
-	/** Lists again after items were moved, for a palette that does not follow vault changes. */
+	/** 項目を移動したあとに一覧を作り直す。Vault の変更に追従しないパレット向け。 */
 	onResultsChanged?: () => void;
 }
 
 /**
- * Audit rows get their own menu: they list things to tidy up, so note actions such as
- * MOC and tags do not apply.
+ * 監査の行は独自のメニューを持つ。片付けるものの一覧なので、MOC やタグのような
+ * ノートの操作は当てはまらない。
  */
 export function populateAuditMenu(options: AuditMenuOptions): void {
 	const { app, menu, results, activate } = options;
@@ -77,22 +78,22 @@ function openTitle(result: AuditResult): string {
 	switch (result.kind) {
 		case "orphaned-files":
 		case "empty-files":
-			return "Open";
+			return t("menu.open");
 		case "broken-links":
-			return "Open linking note";
+			return t("audit.menu.openLinkingNote");
 		case "empty-folders":
-			return "Reveal in file explorer";
+			return t("menu.revealInSystemExplorer");
 	}
 }
 
-/** Every note with the broken link, each opening at the line of the link. */
+/** 壊れたリンクを持つすべてのノート。それぞれ、リンクのある行で開く。 */
 function addLinkedNoteItems(
 	{ app, menu, onNoteActionSelected }: AuditMenuOptions,
 	result: AuditBrokenLinkResult,
 ): void {
 	if (result.sources.length < 2) return;
 	menu.addSeparator();
-	menu.addHeading("Linked from");
+	menu.addHeading(t("audit.menu.linkedFrom"));
 	for (const source of result.sources.slice(0, MAX_LINKED_NOTES)) {
 		const line = source.line === undefined ? "" : `:${source.line + 1}`;
 		menu.addItem((item) =>
@@ -102,7 +103,7 @@ function addLinkedNoteItems(
 				.onClick(() => {
 					const file = app.vault.getFileByPath(source.path);
 					if (!file) {
-						new Notice("The note no longer exists.");
+						new Notice(t("audit.noteGone"));
 						return;
 					}
 					onNoteActionSelected?.();
@@ -114,34 +115,35 @@ function addLinkedNoteItems(
 	}
 	const rest = result.sources.length - MAX_LINKED_NOTES;
 	if (rest > 0)
-		menu.addItem((item) => item.setTitle(`${plural(rest, "more link")}`).setDisabled(true));
+		menu.addItem((item) =>
+			item.setTitle(t("audit.menu.moreLinks", { count: rest })).setDisabled(true),
+		);
 }
 
 function addMoveItems(options: AuditMenuOptions, kind: AuditKind): void {
 	const { menu, plugin, results, onResultsChanged } = options;
 	if (!canTrash(kind)) return;
 	menu.addSeparator();
-	// Why: files to keep go to a folder of the user's choice, as from any other mode; one left
-	// out by Excluded folders there stays out of these lists too.
+	// Why: 残すファイルは、ほかのモードと同じく、ユーザーが選んだフォルダーに移す。
+	// 除外フォルダーで外されたものは、ここの一覧にも入れない。
 	if (listsFiles(kind)) addFileMoveMenuItem(menu, plugin, results, onResultsChanged);
 	addTrashItem(options, kind);
 }
 
-/** Trashing several items at once is hard to undo, so the move needs a second press. */
+/** 複数の項目をまとめてゴミ箱に入れるのは元に戻しにくいので、移動には2回押しが必要。 */
 function addTrashItem(
 	{ app, menu, results, onResultsChanged }: AuditMenuOptions,
 	kind: AuditKind,
 ): void {
-	const what = plural(results.length, kind === "empty-folders" ? "folder" : "file");
+	const what = countLabel(results.length, kind === "empty-folders" ? "フォルダー" : "ファイル");
 	menu.addConfirmedItem({
-		title: "Move to trash",
-		confirmTitle: `Click again to move ${what} to trash`,
+		title: t("audit.menu.trash"),
+		confirmTitle: t("audit.menu.trashConfirm", { what }),
 		icon: ICONS.delete,
 		warning: true,
 		...(kind === "empty-folders"
 			? {
-					tooltip:
-						"Files Obsidian does not show, such as those starting with a dot, go with the folder.",
+					tooltip: t("audit.menu.trashFolderTooltip"),
 				}
 			: {}),
 		run: () =>

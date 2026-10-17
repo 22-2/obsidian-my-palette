@@ -14,6 +14,7 @@ import {
 import { addTagInsertionMenuItems } from "src/tags/tagInsertionMenu";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 import { ICONS } from "src/ui/icons";
+import { t } from "src/i18n";
 
 export function isTabResult(result: PaletteResult): result is TabResult {
 	return result.mode === "tab";
@@ -23,19 +24,17 @@ interface TabMenuOptions {
 	app: App;
 	plugin: MyPalettePlugin;
 	menu: PaletteMenu;
-	/** Every targeted tab: the one clicked, or the whole selection for a bulk menu. */
+	/** 対象のタブすべて。クリックされた1つ、または一括メニューの場合は選択全体。 */
 	tabs: readonly TabResult[];
 	activate: (action: ActionKind, result: PaletteResult) => void | Promise<void>;
-	/** Re-runs the search so closed or duplicated tabs show up in the list. */
+	/** 検索をやり直し、閉じたタブや複製したタブを一覧に出す。 */
 	onTabsChanged: () => void;
 	onNoteActionDone?: () => void;
 }
 
-const pluralTabs = (count: number): string => (count === 1 ? "tab" : "tabs");
-
 /**
- * Tab-mode menu. Tabs are not files to open, so navigation items are replaced by
- * tab operations; copy and tag actions still apply to the notes the tabs show.
+ * タブモードのメニュー。タブは開くファイルではないので、移動の項目はタブの操作に置き換える。
+ * コピーとタグの操作は、タブが表示するノートに対して引き続き働く。
  */
 export function populateTabMenu({
 	app,
@@ -47,7 +46,7 @@ export function populateTabMenu({
 	onNoteActionDone,
 }: TabMenuOptions): void {
 	const single = tabs.length === 1 ? tabs[0] : undefined;
-	// Resolve leaves when the item is clicked: the tabs may have changed since the menu opened.
+	// メニューを開いた後にタブが変わっているかもしれないので、リーフは項目をクリックしたときに解決する。
 	const leavesNow = (): WorkspaceLeaf[] =>
 		tabs.flatMap((tab) => plugin.tabProvider.leafOf(tab.id) ?? []);
 
@@ -72,7 +71,7 @@ export function populateTabMenu({
 	if (!allPinned) {
 		menu.addItem((item) =>
 			item
-				.setTitle(`Pin ${pluralTabs(tabs.length)}`)
+				.setTitle(t("tab.menu.pin"))
 				.setIcon(ICONS.pin)
 				.onClick(() => {
 					for (const leaf of leavesNow()) leaf.setPinned(true);
@@ -83,7 +82,7 @@ export function populateTabMenu({
 	if (!nonePinned) {
 		menu.addItem((item) =>
 			item
-				.setTitle(`Unpin ${pluralTabs(tabs.length)}`)
+				.setTitle(t("tab.menu.unpin"))
 				.setIcon(ICONS.unpin)
 				.onClick(() => {
 					for (const leaf of leavesNow()) leaf.setPinned(false);
@@ -93,7 +92,7 @@ export function populateTabMenu({
 	}
 	menu.addItem((item) =>
 		item
-			.setTitle(`Close ${pluralTabs(tabs.length)}`)
+			.setTitle(t("tab.menu.close"))
 			.setIcon(ICONS.close)
 			.onClick(() => {
 				for (const leaf of leavesNow()) leaf.detach();

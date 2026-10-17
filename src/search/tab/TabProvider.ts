@@ -3,7 +3,7 @@ import type { TabResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 
-/** Tabs in the main editor area, including those in pop-out windows; sidebars are excluded. */
+/** メインのエディター領域のタブ。ポップアウトのウィンドウ内のものも含む。サイドバーは除く。 */
 function getMainAreaLeaves(app: App): WorkspaceLeaf[] {
 	const { workspace } = app;
 	const leaves: WorkspaceLeaf[] = [];
@@ -15,16 +15,16 @@ function getMainAreaLeaves(app: App): WorkspaceLeaf[] {
 }
 
 /**
- * Lists open main-area tabs so the palette can switch to one instead of opening a file.
- * Results carry only a tab id: embedding WorkspaceLeaf in the result type makes the
- * table's row typing recurse through Obsidian's whole workspace model.
+ * 開いているメイン領域のタブを一覧にし、パレットがファイルを開く代わりにタブへ切り替えられるようにする。
+ * 結果はタブの ID だけを持つ。WorkspaceLeaf を結果の型に埋め込むと、表の行の型が Obsidian の
+ * ワークスペース全体のモデルを再帰的にたどってしまうため。
  */
 export class TabProvider implements PaletteProvider<TabResult> {
 	private leaves = new Map<string, WorkspaceLeaf>();
 
 	constructor(private readonly app: App) {}
 
-	/** The leaf behind a result from the latest search, if the tab is still open. */
+	/** 最新の検索の結果の背後にあるリーフ。タブがまだ開いていれば。 */
 	leafOf(tabId: string): WorkspaceLeaf | undefined {
 		const leaf = this.leaves.get(tabId);
 		return leaf && getMainAreaLeaves(this.app).includes(leaf) ? leaf : undefined;

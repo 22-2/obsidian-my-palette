@@ -8,8 +8,9 @@ import {
 } from "src/moc-relateds/mocRelateds";
 import { materializeIgnoredNote } from "src/ignored-notes/ignoredNoteMaterializer";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
+import { t } from "src/i18n";
 
-/** Resolves a palette result to a vault note for the shared MOC menu action. */
+/** パレットの結果を、共有の MOC メニュー操作のための Vault のノートに解決する。 */
 async function resolveMocTarget(
 	plugin: MyPalettePlugin,
 	result: PaletteResult,
@@ -19,11 +20,7 @@ async function resolveMocTarget(
 			try {
 				return await materializeIgnoredNote(plugin.app, result.vaultPath);
 			} catch (error) {
-				new Notice(
-					error instanceof Error
-						? error.message
-						: "Failed to import Obsidian-excluded file.",
-				);
+				new Notice(error instanceof Error ? error.message : t("moc.failedImport"));
 				return undefined;
 			}
 		}
@@ -101,15 +98,13 @@ export function addMocInsertionMenuItems(
 					else unavailableCount++;
 				}
 				if (unavailableCount === 1 && insertableResults.length === 1)
-					new Notice("This result is not an available vault note.");
+					new Notice(t("moc.notAvailableNote"));
 				else if (unavailableCount > 0)
-					new Notice(
-						`${unavailableCount} selected results are not available vault notes.`,
-					);
+					new Notice(t("moc.someNotAvailable", { count: unavailableCount }));
 				if (!targets.size) return;
 				const context = getContext?.();
-				// Why: each insertion reads and updates the shared MOC, so process targets
-				// serially to keep one selection from overwriting another's changes.
+				// Why: 挿入のたびに共有の MOC を読んで更新するので、対象を
+				// 順番に処理して、ある選択が別の選択の変更を上書きしないようにする。
 				for (const target of targets.values()) {
 					if (context)
 						await insertFileToMocRelateds(

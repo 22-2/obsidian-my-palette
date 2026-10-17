@@ -7,8 +7,9 @@ import {
 } from "src/search/bookmark/bookmarks";
 import type { SelectionItem } from "src/ui/selectionModal";
 import { ICONS } from "src/ui/icons";
+import { t } from "src/i18n";
 
-/** A destination row: the top level, an existing group, or a group to create from the input. */
+/** 移動先の行: 最上位、既存のグループ、または入力から作るグループ。 */
 export interface BookmarkGroupItem extends SelectionItem {
 	target:
 		| { kind: "top" }
@@ -16,7 +17,7 @@ export interface BookmarkGroupItem extends SelectionItem {
 		| { kind: "new"; title: string };
 }
 
-/** The rows for a query: matching groups, then a row that creates a group named by the input. */
+/** クエリに対する行: 一致するグループ、次に入力した名前のグループを作る行。 */
 export function bookmarkGroupRows(
 	items: readonly BookmarkEntry[],
 	query: string,
@@ -28,8 +29,8 @@ export function bookmarkGroupRows(
 		target: { kind: "group", group },
 	}));
 	const top: BookmarkGroupItem = {
-		label: "Top level",
-		description: "Outside any group",
+		label: t("bookmark.topLevel"),
+		description: t("bookmark.group.outside"),
 		icon: ICONS.bookmark,
 		target: { kind: "top" },
 	};
@@ -47,8 +48,8 @@ export function bookmarkGroupRows(
 	return [
 		...matches,
 		{
-			label: `New group: ${title}`,
-			description: "Create a group at the top level",
+			label: t("bookmark.group.createNew", { title }),
+			description: t("bookmark.group.createHint"),
 			icon: ICONS.newBookmarkGroup,
 			target: { kind: "new", title },
 		},

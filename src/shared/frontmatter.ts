@@ -28,9 +28,9 @@ export function setOrDeleteFrontmatterList(
 }
 
 /**
- * Normalize the only frontmatter value currently used by file ordering.
- * Invalid values are treated as absent so a malformed property cannot produce
- * NaN comparisons or move an otherwise ordinary note unpredictably.
+ * ファイルの並び順で現在使っている唯一のフロントマター値を正規化する。
+ * 不正な値は無いものとして扱い、NaN の比較を起こしたり、
+ * 普通のノートの順序を予測しにくくしたりしないようにする。
  */
 export function normalizeFrontmatterPrior(value: unknown): number | undefined {
 	return typeof value === "number" && Number.isFinite(value) ? value : undefined;
@@ -51,7 +51,7 @@ export function normalizeFrontmatterKeywords(value: unknown): string[] {
 
 /**
  * Read `tags` as a list. It may be written as `tags: foo` or `tags: a, b`, and
- * spreading such a string would split it into single characters.
+ * 文字列を展開すると 1 文字ずつに分かれてしまうため。
  */
 export function normalizeFrontmatterTags(value: unknown): string[] {
 	if (Array.isArray(value)) return value.map(String);
@@ -60,10 +60,10 @@ export function normalizeFrontmatterTags(value: unknown): string[] {
 }
 
 /**
- * Add tags to a frontmatter `tags` value and return the sorted list.
- * Duplicates are compared case-insensitively and the existing spelling wins,
- * because a multi-note insertion can offer a tag that some notes already have
- * in another case, and Obsidian treats those spellings as the same tag.
+ * フロントマターの `tags` 値にタグを追加し、ソート済みの一覧を返す。
+ * 重複は大文字小文字を区別せずに比べ、既存の表記を優先する。
+ * 複数ノートへの挿入では、一部のノートが別の大文字小文字で既に持つタグを提示することがあり、
+ * Obsidian はそれらを同じタグとして扱うため。
  */
 export function mergeFrontmatterTags(existing: unknown, added: readonly string[]): string[] {
 	const merged = new Map<string, string>();
@@ -75,8 +75,8 @@ export function mergeFrontmatterTags(existing: unknown, added: readonly string[]
 }
 
 /**
- * Remove tags from a frontmatter `tags` value, ignoring case and a leading `#`.
- * The remaining order is kept because removing a tag is not a reason to reorder.
+ * フロントマターの `tags` 値からタグを削除する。大文字小文字と先頭の `#` は無視する。
+ * タグを削除しても並び順を変える理由はないので、残りの順序は保つ。
  */
 export function removeFrontmatterTags(existing: unknown, removed: readonly string[]): string[] {
 	const removedKeys = new Set(removed.map((tag) => tag.replace(/^#/, "").toLowerCase()));

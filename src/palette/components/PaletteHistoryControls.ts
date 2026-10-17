@@ -12,6 +12,7 @@ import type { MenuChoice } from "src/ui/panelChoice";
 import type { PanelSwitch } from "src/ui/panelSwitch";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 import { ICONS } from "src/ui/icons";
+import { t } from "src/i18n";
 
 interface PaletteHistoryContext {
 	query: string;
@@ -32,31 +33,31 @@ export type PaletteControlsPlugin = Pick<
 interface PaletteHistoryControlsOptions {
 	plugin: PaletteControlsPlugin;
 	surface: PaletteSurface;
-	/** The categories "Clear search history" removes: the palette's own, or a selector's single one. */
+	/** 「検索履歴を消去」が削除するカテゴリ。パレット自身のもの、またはセレクターの1つ。 */
 	historyCategories: readonly SearchHistoryCategory[];
 	inputEl: HTMLInputElement;
 	containerEl: HTMLElement;
 	hostEl: HTMLElement;
 	getContext: (input: string) => PaletteHistoryContext;
 	apply: (result: Extract<PaletteResult, { mode: "search-history" }>) => void;
-	/** Only modal hosts can move their current search into a sidebar pane. */
+	/** 現在の検索をサイドバーのペインへ移せるのは、モーダルのホストだけ。 */
 	moveToSidebar?: () => void;
-	/** Selector hosts supply only actions that apply to their own candidates. */
+	/** セレクターのホストは、自分の候補に働く操作だけを渡す。 */
 	populateActions?: (menu: PaletteMenu, event: MouseEvent) => void;
 	showHelp?: () => void;
 	focusInput?: () => void;
-	/** The host's footer switches, read each time the menu opens, so the menu can flip them too. */
+	/** ホストのフッターのスイッチ。メニューを開くたびに読み、メニューからも切り替えられるようにする。 */
 	getSwitches?: () => readonly PanelSwitch[];
-	/** Pick-one options listed above the switches, each under its own heading. */
+	/** スイッチの上に並べる、1つだけ選ぶオプション。それぞれ独自の見出しを持つ。 */
 	getChoices?: () => readonly MenuChoice[];
 	/**
-	 * Whether the menu offers "Highlight search matches"; on by default. Palettes turn it off:
-	 * the preference is for the selectors, whose menu is the only place it is changed.
+	 * メニューに「検索の一致を強調」を出すかどうか。既定は on。パレットは off にする。
+	 * この設定はセレクター向けで、変更できるのはそのメニューだけだから。
 	 */
 	showHighlightOption?: boolean;
 }
 
-/** Shared search-history and options controls for both palette surfaces. */
+/** 両方のパレットの外枠で共有する、検索履歴とオプションの操作。 */
 export class PaletteHistoryControls {
 	private readonly unsubscribeDisplay: () => void;
 	private readonly suggest: SearchHistorySuggest;
@@ -81,8 +82,8 @@ export class PaletteHistoryControls {
 	}
 
 	destroy(): void {
-		// Why: sidebar surfaces can be rebuilt without unloading the plugin, so
-		// listeners owned by an old surface must be released at the same time.
+		// Why: サイドバーの外枠は、プラグインを解除せずに作り直されることがある。そのため、
+		// 古い外枠が持つリスナーは同時に解放しなければならない。
 		this.eventController.abort();
 		this.activeMenu?.close();
 		this.unsubscribeDisplay();
@@ -92,7 +93,7 @@ export class PaletteHistoryControls {
 	}
 
 	close(): void {
-		// Result presses stop propagation, so hosts explicitly dismiss both overlays.
+		// 結果の押下はイベントの伝播を止めるので、ホストは両方のオーバーレイを明示的に閉じる。
 		this.activeMenu?.close();
 		this.suggest.close();
 	}
@@ -101,8 +102,8 @@ export class PaletteHistoryControls {
 		this.updateHotkeyHint();
 		if (!this.suggest.isOpen) return;
 		const context = this.options.getContext(input);
-		// Why: the search history list is a separate browsing surface; typing a new
-		// search must not hide or reorder the saved entries shown in that list.
+		// Why: 検索履歴の一覧は独立した閲覧の画面である。新しい検索を打っても、
+		// その一覧に出ている保存済みの項目を隠したり並べ替えたりしてはいけない。
 		this.suggest.update(
 			this.options.plugin.getSearchHistorySuggestions(
 				"",
@@ -116,13 +117,13 @@ export class PaletteHistoryControls {
 		const { containerEl } = this.options;
 		const optionsButton = containerEl.createEl("button", {
 			cls: "clickable-icon my-palette-options-button",
-			attr: { type: "button", title: "Palette options" },
+			attr: { type: "button", title: t("palette.control.options") },
 		});
 		this.optionsButton = optionsButton;
-		// Why: the menu leads with options (switches and choices); the screen's actions follow.
+		// Why: メニューは先頭にオプション(スイッチと選択肢)を置き、その画面の操作が続く。
 		setIcon(optionsButton, ICONS.options);
-		// Why: the open menu may already be dismissed by the press itself before the
-		// click arrives, so its state is read at pointerdown, which fires first.
+		// Why: 開いているメニューは、クリックが届く前に押下そのもので閉じられてしまうことがある。
+		// そのため、最初に起きる pointerdown で状態を読む。
 		let menuWasOpen = false;
 		this.listen(optionsButton, "pointerdown", () => {
 			menuWasOpen = this.activeMenu !== undefined;
@@ -143,12 +144,12 @@ export class PaletteHistoryControls {
 			cls: "clickable-icon my-palette-history-button",
 			attr: {
 				type: "button",
-				"aria-label": "Search history",
+				"aria-label": t("palette.control.history"),
 			},
 		});
 		this.historyButton = historyButton;
 		this.updateHotkeyHint();
-		// Why: a clock identifies saved searches without suggesting a generic dropdown.
+		// Why: 時計のアイコンは、汎用のドロップダウンを連想させずに保存済みの検索を示す。
 		setIcon(historyButton, ICONS.history);
 		this.buttons.push(optionsButton, historyButton);
 		this.listen(historyButton, "mousedown", consumePointerEvent);
@@ -163,15 +164,17 @@ export class PaletteHistoryControls {
 		this.optionsButton?.setAttribute(
 			"title",
 			hotkeys.optionsMenu
-				? `Palette options (${formatHotkey(hotkeys.optionsMenu)})`
-				: "Palette options",
+				? t("palette.control.optionsHotkey", { hotkey: formatHotkey(hotkeys.optionsMenu) })
+				: t("palette.control.options"),
 		);
 		const hotkey = hotkeys.history;
 		if (!this.historyButton) return;
-		// Why: Obsidian shows aria-label as the tooltip, so a title as well would show two.
+		// Why: Obsidian は aria-label をツールチップとして出すので、title も付けると二重に出る。
 		this.historyButton.setAttribute(
 			"aria-label",
-			hotkey ? `Search history (${formatHotkey(hotkey)})` : "Search history",
+			hotkey
+				? t("palette.control.historyHotkey", { hotkey: formatHotkey(hotkey) })
+				: t("palette.control.history"),
 		);
 		if (!hotkey) {
 			this.historyButton.removeAttribute("aria-keyshortcuts");
@@ -185,8 +188,8 @@ export class PaletteHistoryControls {
 	}
 
 	/**
-	 * Opens the options menu just under its button, the same place every time, with its first
-	 * action selected so Enter works at once. Pressing the key again closes it.
+	 * オプションのメニューを、ボタンのすぐ下の、いつも同じ場所に開く。最初の操作が選ばれた状態になるので、
+	 * Enter ですぐ動く。もう一度キーを押すと閉じる。
 	 */
 	private toggleOptionsMenuFromKeyboard(): void {
 		if (this.activeMenu) {
@@ -211,8 +214,8 @@ export class PaletteHistoryControls {
 		menu.onHide(() => {
 			if (this.activeMenu === menu) this.activeMenu = undefined;
 		});
-		// Why: a choice changes what the palette lists, so it leads the menu. Choosing an item
-		// closes the menu, because the list behind it changes.
+		// Why: 選択肢はパレットに並ぶ一覧を変えるので、メニューの先頭に置く。項目を選ぶと、
+		// 後ろの一覧が変わるのでメニューを閉じる。
 		const choices = (this.options.getChoices?.() ?? []).filter(({ isHidden }) => !isHidden);
 		for (const choice of choices) {
 			menu.addHeading(choice.label);
@@ -226,12 +229,13 @@ export class PaletteHistoryControls {
 				);
 			menu.addSeparator();
 		}
-		// Why: the switches come first so they can be flipped with Enter, without remembering
-		// each one's shortcut. Each stays open so several can be flipped in a row.
+		// Why: スイッチは先に置く。Enter で、それぞれのショートカットを覚えなくても切り替えられるようにするため。
+		// 各項目は開いたままにし、続けていくつも切り替えられるようにする。
 		const switches = (this.options.getSwitches?.() ?? []).filter(({ isHidden }) => !isHidden);
 		const offersHighlight = this.options.showHighlightOption !== false;
-		// Why: a heading with nothing under it would only be noise.
-		if (switches.length > 0 || offersHighlight) menu.addHeading("Options");
+		// Why: 中身のない見出しは、ただのノイズになる。
+		if (switches.length > 0 || offersHighlight)
+			menu.addHeading(t("palette.control.optionsHeading"));
 		for (const toggle of switches) {
 			menu.addItem((item) =>
 				item
@@ -265,11 +269,11 @@ export class PaletteHistoryControls {
 							);
 					}),
 			);
-		// Why: each kind of item gets its own group, so options, this screen's actions,
-		// help and the destructive clear never read as one list.
+		// Why: 項目の種類ごとに独自のグループを持たせる。オプション、この画面の操作、ヘルプ、
+		// 破壊的な消去が、1つの一覧に見えないようにするため。
 		menu.addSeparator();
-		// Why: the shared controls also serve persistent views, which already
-		// live in the workspace and must not offer the modal's move action.
+		// Why: 共有の操作は、すでにワークスペースにある常駐のビューでも使われる。そこでは、
+		// モーダルの移動の操作を出してはいけない。
 		if (moveToSidebar)
 			menu.addItem((item) =>
 				withAction(item, MENU_ACTIONS.moveToRightSidebar).onClick(moveToSidebar),
@@ -278,7 +282,7 @@ export class PaletteHistoryControls {
 		menu.addSeparator();
 		menu.addItem((item) => withAction(item, MENU_ACTIONS.help).onClick(() => this.showHelp()));
 		menu.addSeparator();
-		// Why: the destructive clear comes last, so it is not the first thing a press reaches.
+		// Why: 破壊的な消去は最後に置き、押した瞬間に最初に届かないようにする。
 		this.addClearHistoryItem(menu);
 		menu.setParentElement(hostEl);
 		showMenuAtEvent(menu, event);
@@ -296,16 +300,16 @@ export class PaletteHistoryControls {
 			).open();
 	}
 
-	/** Clears only this screen's categories, on a second press. */
+	/** この画面のカテゴリだけを消去する。2回押しが必要。 */
 	private addClearHistoryItem(menu: PaletteMenu): void {
 		const { plugin, historyCategories } = this.options;
 		menu.addConfirmedItem({
-			title: "Clear search history",
-			confirmTitle: "Click again to clear",
+			title: t("palette.control.clearHistory"),
+			confirmTitle: t("palette.control.confirmClear"),
 			icon: ICONS.delete,
 			run: () => {
 				plugin.clearSearchHistoryCategories(historyCategories);
-				new Notice("Search history cleared.");
+				new Notice(t("palette.notice.historyCleared"));
 				this.update();
 			},
 		});
@@ -360,7 +364,7 @@ export class PaletteHistoryControls {
 	}
 
 	private handleKeyDown(event: KeyboardEvent): void {
-		// Composition keys belong to the IME, including Enter used to confirm text.
+		// IME の変換中のキーは IME のもの。文字を確定するための Enter も含む。
 		if (event.isComposing) return;
 		const hotkeys = this.options.plugin.settings.hotkeys ?? DEFAULT_HOTKEYS;
 		if (matchesHotkey(event, hotkeys.history)) {

@@ -78,9 +78,9 @@ function sameSearchHistoryEntry(a: SearchHistoryEntry | undefined, b: SearchHist
 }
 
 /**
- * Keeps search history responsive by reading IndexedDB once and queueing writes.
- * The data.json fallback remains available until the initial migration succeeds,
- * so a browser storage failure cannot erase the user's existing history.
+ * IndexedDB を一度だけ読み、書き込みをキューに入れて、検索履歴の応答を速く保つ。
+ * 最初の移行が成功するまで data.json の予備を残すので、ブラウザーの保存先の失敗でユーザーの
+ * 既存の履歴が消えることはない。
  */
 export class SearchHistoryStore {
 	private readonly current = new Map<string, SearchHistoryEntry>();
@@ -151,7 +151,7 @@ export class SearchHistoryStore {
 		this.queueWrite(changed, removed);
 	}
 
-	/** Removes the entries of the given categories only, so other screens keep their history. */
+	/** 指定したカテゴリの項目だけを削除する。ほかの画面の履歴は残す。 */
 	clearCategories(categories: readonly SearchHistoryCategory[]): void {
 		if (this.disposed) return;
 		const removed = [...this.current.entries()]
@@ -177,7 +177,7 @@ export class SearchHistoryStore {
 		try {
 			(await this.databasePromise).close();
 		} catch {
-			// Database initialization failures are optional and have already been logged.
+			// データベースの初期化の失敗は任意扱いで、すでに記録されている。
 		}
 	}
 
@@ -185,7 +185,7 @@ export class SearchHistoryStore {
 		this.current.clear();
 		for (const entry of entries) {
 			const key = getSearchHistoryEntryIdentity(entry);
-			// The newest copy wins if a legacy file contains duplicate identities.
+			// 古いファイルに同じ識別子が重複していたら、最新のものを残す。
 			if (!this.current.has(key)) this.current.set(key, { ...entry });
 		}
 	}

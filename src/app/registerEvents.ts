@@ -4,14 +4,14 @@ import { PaletteTableView } from "src/palette/surfaces/PaletteTableView";
 import { PALETTE_VIEW_TYPE, PALETTE_TABLE_VIEW_TYPE } from "src/palette/surfaces/paletteViewTypes";
 
 /**
- * Obsidian event and view registration lives here so `onload` remains a
- * readable lifecycle sequence instead of a collection of unrelated handlers.
- * Why: keep path-copy actions in My Palette menus without adding them to
- * Obsidian's native file menu.
+ * Obsidian のイベントとビューの登録はここに置く。`onload` を、関係のない
+ * ハンドラーの寄せ集めではなく、読みやすいライフサイクルの流れのままにするため。
+ * Why: パスのコピーは My Palette のメニューに置き、Obsidian の標準のファイルメニューには
+ * 追加しない。
  */
 export function registerPluginEvents(plugin: MyPalettePlugin): void {
 	plugin.registerView(PALETTE_VIEW_TYPE, (leaf) => new PaletteView(leaf, plugin));
-	// Why: separate types let each command reuse its own pane and Obsidian restore
-	// list and table searches independently in the same workspace.
+	// Why: 型を分けると、各コマンドが自分のペインを再利用でき、Obsidian は
+	// 一覧の検索と表の検索を同じワークスペース内で別々に復元できる。
 	plugin.registerView(PALETTE_TABLE_VIEW_TYPE, (leaf) => new PaletteTableView(leaf, plugin));
 }

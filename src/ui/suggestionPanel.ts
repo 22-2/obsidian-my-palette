@@ -10,6 +10,7 @@ import {
 import { markKeyboardMenuEvent } from "src/ui/menus";
 import { PanelSwitch, type PanelSwitchOptions } from "src/ui/panelSwitch";
 import { ICONS } from "src/ui/icons";
+import { t } from "src/i18n";
 
 export interface SuggestionPanelProps<T> {
 	getHotkeys?: () => PaletteHotkeys;
@@ -18,37 +19,37 @@ export interface SuggestionPanelProps<T> {
 	footerText?: string;
 	limit?: number;
 	surface?: "modal" | "view";
-	/** Modal hosts include the backdrop; workspace views hide only their panel. */
+	/** モーダルのホストは背景ごと含める。ワークスペースのビューは自分のパネルだけを隠す。 */
 	previewContainerEl?: HTMLElement;
 	selectionMode?: "single" | "extended";
 	/**
-	 * Separate input and selection modes. Only selectors with single-key list
-	 * commands opt in; elsewhere the first row stays highlighted while typing so
-	 * Enter runs it at once and the first arrow moves past it.
+	 * 入力と選択のモードを分ける。1キーの一覧操作(チェックのスペース、戻る f)を持つセレクターだけが
+	 * 有効にする。それ以外では、入力中も先頭の行を強調したままにし、Enter ですぐ実行でき、
+	 * 最初の矢印で先頭を飛び越えられるようにする。
 	 */
 	interactionModes?: boolean;
 	onInput: (input: string) => void;
 	renderSuggestion: (item: T, el: HTMLElement, query: string) => void;
 	onChoose: (item: T, event: MouseEvent | KeyboardEvent) => void | Promise<void>;
-	/** Navigation entries activate on a single click, even in an extended-selection list. */
+	/** ナビゲーションの項目は、拡張選択の一覧の中でも1回のクリックで有効になる。 */
 	activateOnClick?: (item: T) => boolean;
 	onResultFocus?: () => void;
 	onMiddleClick?: (item: T, event: MouseEvent) => void | Promise<void>;
-	/** Left press on an element marked `data-row-toggle` inside a row. */
+	/** 行の中で `data-row-toggle` を付けた要素を、左クリックしたとき。 */
 	onRowToggle?: (item: T, event: MouseEvent) => void;
-	/** Space in selection mode; without it Space toggles the extended selection. */
+	/** 選択モードのスペース。ない場合、スペースは拡張選択を切り替える。 */
 	onSelectionSpace?: (selectedItems: T[], event: KeyboardEvent) => void;
 	onContextMenu?: (item: T, event: MouseEvent, selectedItems: T[]) => void;
 	onEscape?: () => void;
-	/** The enter-mode key on the active row; returning true consumes the key (Home enters modes). */
+	/** 強調行でモードに入るキー。true を返すとキーを消費する(Home がモードに入る)。 */
 	onTab?: (item: T) => boolean;
-	/** Backspace in an empty input; returning true consumes the key. */
+	/** 空の入力での Backspace。true を返すとキーを消費する。 */
 	onEmptyBackspace?: () => boolean;
-	/** Click on the mode chip shown left of the input. */
+	/** 入力欄の左に出るモードのチップのクリック。 */
 	onModeChipClick?: () => void;
-	/** Rows with a different section from the previous row get a heading above them. */
+	/** 前の行と違うセクションの行には、その上に見出しを付ける。 */
 	sectionOf?: (item: T) => string | undefined;
-	/** Left click on the footer's context text, such as the source note's name. */
+	/** フッターの文脈テキスト(元のノートの名前など)の左クリック。 */
 	onFooterTextClick?: (event: MouseEvent) => void;
 	onFooterTextContextMenu?: (event: MouseEvent) => void;
 	onReady?: () => void;
@@ -58,7 +59,7 @@ export interface SuggestionPanelResults<T> {
 	items: T[];
 	total?: number;
 	error?: string;
-	/** Parsed search text when a host strips mode prefixes before matching. */
+	/** ホストが一致の前にモードの接頭辞を取り除くとき、解析済みの検索語。 */
 	query?: string;
 }
 
@@ -82,9 +83,9 @@ interface SuggestionChooser<T> {
 }
 
 /**
- * Reusable input/list surface shared by the modal and workspace view shells.
- * It deliberately knows nothing about Obsidian's Modal or ItemView lifecycle;
- * the host owns where the surface lives and what a successful action means.
+ * モーダルとワークスペースのビューの外枠が共有する、入力と一覧の面。
+ * Obsidian の Modal や ItemView のライフサイクルは、意図的に知らない。面がどこに置かれるかと、
+ * 操作の成功が何を意味するかは、ホストが決める。
  */
 export class SuggestionPanel<T> extends Component {
 	readonly inputEl: HTMLInputElement;
@@ -98,7 +99,7 @@ export class SuggestionPanel<T> extends Component {
 	limit: number;
 	selected: T | null = null;
 	query = "";
-	emptyStateText = "No suggestions";
+	emptyStateText = t("suggest.noSuggestions");
 
 	private readonly rootEl: HTMLElement;
 	private readonly previewContainerEl: HTMLElement;
@@ -124,8 +125,8 @@ export class SuggestionPanel<T> extends Component {
 		this.rootEl.empty();
 		const surface = props.surface ?? "modal";
 		this.rootEl.addClass("my-palette-panel", `my-palette-panel--${surface}`);
-		// Obsidian's `prompt` class imposes modal sizing. The persistent view gets
-		// its own shell so a narrow sidebar cannot inherit those width constraints.
+		// Obsidian の `prompt` クラスはモーダルの大きさを強制する。常設のビューには独自の外枠を与え、
+		// 狭いサイドバーがその幅の制約を引き継がないようにする。
 		if (surface === "modal") this.rootEl.addClass("prompt");
 		const inputContainer = this.rootEl.createDiv("prompt-input-container");
 		if (surface === "view") {
@@ -143,7 +144,7 @@ export class SuggestionPanel<T> extends Component {
 				spellcheck: "false",
 				enterkeyhint: "done",
 				type: "text",
-				placeholder: props.placeholder ?? "Search…",
+				placeholder: props.placeholder ?? t("modal.placeholderDefault"),
 			},
 		});
 		this.inputEl.value = this.initialInput;
@@ -198,7 +199,7 @@ export class SuggestionPanel<T> extends Component {
 		let held: PaletteHotkey | undefined;
 		container.addClass("my-palette-preview-surface");
 		const restore = (returnFocus = false) => {
-			// Other panels share this window: only the hidden panel restores focus.
+			// この窓の他のパネルも同じ窓を共有する。隠れているパネルだけがフォーカスを戻す。
 			if (!container.hasClass("is-preview-hidden")) return;
 			container.removeClass("is-preview-hidden");
 			held = undefined;
@@ -220,7 +221,7 @@ export class SuggestionPanel<T> extends Component {
 		);
 		const ownerWindow = this.rootEl.ownerDocument.defaultView;
 		if (!ownerWindow) return;
-		// Focus can leave the faded panel; release and app switching still restore it.
+		// フォーカスは、フェードしたパネルから離れることがある。キーを離すことと、アプリの切り替えでも戻す。
 		this.registerDomEvent(
 			ownerWindow,
 			"keyup",
@@ -246,12 +247,12 @@ export class SuggestionPanel<T> extends Component {
 		if (view) this.applyView(view);
 	}
 
-	/** Applies a view to the next results, so a reopened palette lands on the same row and scroll. */
+	/** 次の結果にビューを適用する。開き直したパレットが、同じ行とスクロール位置に着地するように。 */
 	restoreView(view: SuggestionPanelView): void {
 		this.pendingView = view;
 	}
 
-	/** The selected row and scroll position, for a palette that may be reopened. */
+	/** 選ばれた行とスクロール位置。開き直されるかもしれないパレットのために。 */
 	get currentView(): SuggestionPanelView {
 		return {
 			activeIndex: this.chooser.selectedItem,
@@ -271,8 +272,8 @@ export class SuggestionPanel<T> extends Component {
 		error,
 		query,
 	}: SuggestionPanelResults<T>): void {
-		this.emptyStateText = error ?? "No suggestions";
-		// Hosts may parse prefixes; highlighting must use the same text as matching.
+		this.emptyStateText = error ?? t("suggest.noSuggestions");
+		// ホストは接頭辞を解析するかもしれない。強調表示は、一致に使うのと同じ文字列を使う必要がある。
 		this.query = query ?? this.inputEl.value;
 		this.chooser.values = items.slice(0, this.limit);
 		this.chooser.selectedItem = this.chooser.values.length ? 0 : -1;
@@ -281,8 +282,8 @@ export class SuggestionPanel<T> extends Component {
 		this.updateResultCount(total);
 		this.resultContainerEl.empty();
 		if (this.resultsLayout) {
-			// The layout owns markup while this panel owns row indexes and selection.
-			// Both keyboard and pointer actions therefore use the displayed sort order.
+			// 描画の形は、このパネルではなくレイアウトが持つ。行の番号と選択はパネルが持つ。
+			// キーボードもポインターも、表示されている並び順で動くようにする。
 			this.resultsLayout.render(
 				this.resultContainerEl,
 				this.chooser.values,
@@ -302,8 +303,8 @@ export class SuggestionPanel<T> extends Component {
 		for (const [index, item] of this.chooser.values.entries()) {
 			const nextSection = this.props.sectionOf?.(item);
 			if (nextSection && nextSection !== section)
-				// Headings are not `.suggestion-item`, so row indexes and keyboard
-				// movement keep counting only selectable results.
+				// 見出しは `.suggestion-item` ではないので、行の番号と矢印の移動は、
+				// 選べる結果だけを数え続ける。
 				this.resultContainerEl.createDiv({
 					cls: "my-palette-section-heading",
 					text: nextSection,
@@ -317,9 +318,8 @@ export class SuggestionPanel<T> extends Component {
 	}
 
 	/**
-	 * Redraw the visible rows in place. Unlike setResults this keeps the cursor,
-	 * the extended selection and the scroll position, for hosts whose rows change
-	 * appearance (such as a check mark) without changing the list itself.
+	 * 見えている行をその場で描き直す。setResults と違い、カーソル、拡張選択、スクロール位置を保つ。
+	 * 一覧そのものは変えずに、チェックマークのように見た目だけが変わるホストのために。
 	 */
 	rerenderRows(): void {
 		if (this.resultsLayout) return;
@@ -350,14 +350,14 @@ export class SuggestionPanel<T> extends Component {
 	}
 
 	setInput(input: string, selection: "all" | "end" | "none" = "none"): void {
-		// History and source controls replace the query for further editing.
+		// 履歴と元のノートの操作は、続きの編集のために検索語を置き換える。
 		this.modes?.set("input");
 		this.inputEl.value = input;
 		if (selection === "all") this.inputEl.select();
 		if (selection === "end") this.inputEl.setSelectionRange(input.length, input.length);
 	}
 
-	/** Show which mode the input searches; omit to return to Home. */
+	/** 入力がどのモードを検索しているかを示す。Home に戻るときは省略する。 */
 	setModeChip(chip?: { icon: string; label: string; title: string }): void {
 		this.modeChipEl.empty();
 		this.modeChipEl.toggleAttribute("hidden", !chip);
@@ -365,7 +365,7 @@ export class SuggestionPanel<T> extends Component {
 		if (!chip) return;
 		setIcon(this.modeChipEl.createSpan("my-palette-mode-chip__icon"), chip.icon);
 		this.modeChipEl.createSpan({ cls: "my-palette-mode-chip__label", text: chip.label });
-		this.modeChipEl.setAttribute("title", `${chip.title} (Esc to go back)`);
+		this.modeChipEl.setAttribute("title", t("panel.modeChip.title", { title: chip.title }));
 	}
 
 	focusSearchInput(): void {
@@ -379,16 +379,14 @@ export class SuggestionPanel<T> extends Component {
 	}
 
 	/**
-	 * Why: after focus left the input, a press on empty list space moved focus to
-	 * nothing, so the arrow keys (handled on the input) went unheard until a row
-	 * was clicked. Hand focus back to the input, in selection mode (when modes are
-	 * on) so typing stays blocked, without committing history the way a result
-	 * press does.
+	 * Why: 入力欄からフォーカスが離れた後に、一覧の余白を押すとフォーカスが何にも移るため、
+	 * 入力欄で処理される矢印キーが、行をクリックするまで届かなくなっていた。フォーカスを入力欄に戻す。
+	 * モードがあれば選択モードにして、入力は止めたまま、結果の押下のように履歴は記録しない。
 	 */
 	private restoreFocusFromListSpace(event: MouseEvent): void {
 		if (event.button !== 0) return;
 		const target = event.target as Node | null;
-		// Controls such as table header buttons keep their own focus behavior.
+		// 表のヘッダーのボタンなどは、それ自身のフォーカスの挙動を保つ。
 		if (
 			target?.instanceOf(Element) &&
 			target.closest("button, input, select, textarea, a, [tabindex]")
@@ -414,8 +412,8 @@ export class SuggestionPanel<T> extends Component {
 		const { onFooterTextClick, onFooterTextContextMenu } = this.props;
 		if (!onFooterTextClick && !onFooterTextContextMenu) return;
 		this.statusTextEl.addClass("is-interactive");
-		// Why: a press on the footer must not pull focus out of the input, which
-		// would silence the arrow keys exactly like pressing empty list space did.
+		// Why: フッターの押下で入力欄からフォーカスが離れると、一覧の余白を押したときと同じく、
+		// 矢印キーが届かなくなってしまうため。
 		this.registerDomEvent(this.statusTextEl, "mousedown", (event) => event.preventDefault());
 		if (onFooterTextClick)
 			this.registerDomEvent(this.statusTextEl, "click", (event) => onFooterTextClick(event));
@@ -427,19 +425,19 @@ export class SuggestionPanel<T> extends Component {
 	}
 
 	/**
-	 * Adds an option the options menu lists and flips. Add it again after each load; one with
-	 * the same id replaces the earlier switch.
+	 * オプションのメニューに並び、切り替えられる項目を追加する。読み込みのたびに追加し直す。同じ id の
+	 * 項目があれば、前のスイッチを置き換える。
 	 */
 	addSwitch(options: PanelSwitchOptions): PanelSwitch {
-		// Modal footers are hidden by default; a panel with switches keeps its footer, which
-		// holds the source text and the result count.
+		// モーダルのフッターは既定で隠れる。スイッチのあるパネルは、元のテキストと件数を入れた
+		// フッターを残す。
 		this.rootEl.addClass("has-status-bar");
 		const panelSwitch = new PanelSwitch(options);
 		this.switches.set(options.id, panelSwitch);
 		return panelSwitch;
 	}
 
-	/** The switches in the order they were added, for the options menu. */
+	/** オプションのメニューのために、追加された順のスイッチ。 */
 	get switchList(): PanelSwitch[] {
 		return [...this.switches.values()];
 	}
@@ -463,7 +461,7 @@ export class SuggestionPanel<T> extends Component {
 			.filter((item): item is T => item !== undefined);
 	}
 
-	/** Runs the key's mode command, if any; true when the key was consumed. */
+	/** キーのモードの操作があれば実行する。キーが消費されたら true。 */
 	private handleModeCommand(event: KeyboardEvent): boolean {
 		const command = this.modes?.command(event, this.chooser.selectedItem <= 0);
 		if (command === "to-input") {
@@ -475,8 +473,7 @@ export class SuggestionPanel<T> extends Component {
 		if (command === "enter-list") {
 			event.preventDefault();
 			event.stopPropagation();
-			// The first arrow transfers focus to row zero without skipping a result
-			// or extending a selection retained from the previous interaction.
+			// 最初の矢印は、結果を飛ばさず、前の操作から残っている選択も広げずに、行0へフォーカスを移す。
 			this.focusResults();
 			this.extendedSelection.reset(this.chooser.values.length);
 			this.setSelectedIndex(0, true);
@@ -484,7 +481,7 @@ export class SuggestionPanel<T> extends Component {
 		}
 		if (command !== "selection-space") return false;
 		const { onSelectionSpace } = this.props;
-		// Single selection has nothing to toggle; the read-only input drops the key.
+		// 単一の選択には切り替えるものがないので、読み取り専用の入力がそのキーを捨てる。
 		if (!onSelectionSpace && this.selectionMode !== "extended") return false;
 		event.preventDefault();
 		event.stopImmediatePropagation();
@@ -538,8 +535,8 @@ export class SuggestionPanel<T> extends Component {
 			event.preventDefault();
 			event.stopPropagation();
 			if (!this.chooser.values.length) return;
-			// Keyboard selection uses the result list while focus remains in the input.
-			// Record that interaction just as we do for a pointer press on a result.
+			// 入力欄にフォーカスが残っている間も、キーボードの選択は結果の一覧を使う。
+			// 結果のポインター操作と同じく、その操作を記録する。
 			this.focusResults();
 			const next = Math.max(
 				0,
@@ -568,8 +565,8 @@ export class SuggestionPanel<T> extends Component {
 	}
 
 	private registerPointerActions(): void {
-		// Component unload removes every listener, so each load must register them
-		// again when the same modal instance is reopened.
+		// Component のアンロードは、すべてのリスナーを外す。そのため、同じモーダルを開き直すたびに、
+		// ここで登録し直す必要がある。
 		this.registerDomEvent(
 			this.resultContainerEl,
 			"pointermove",
@@ -586,10 +583,9 @@ export class SuggestionPanel<T> extends Component {
 			this.resultContainerEl,
 			"mousedown",
 			(event) => {
-				// Result clicks are the concrete browser event that moves the user's
-				// attention from typing to the result list.
-				// Modal list-space clicks historically commit the query too; views
-				// also contain table headers, so they commit only actual result rows.
+				// 結果のクリックは、ユーザーの注意を入力からの一覧へ移す、具体的なブラウザーのイベント。
+				// モーダルの一覧の余白のクリックも、昔から検索語を確定してきた。ビューにはテーブルの
+				// ヘッダーもあるので、実際の結果の行だけを確定する。
 				const modal = this.props.surface !== "view";
 				if (modal) this.focusResults();
 				const row = this.suggestionRowAtEvent(event);
@@ -597,18 +593,17 @@ export class SuggestionPanel<T> extends Component {
 					this.restoreFocusFromListSpace(event);
 					return;
 				}
-				// Sorting headers share the result container, but only interacting
-				// with an actual result should commit the search to usage history.
+				// 並べ替えのヘッダーも結果のコンテナを共有する。しかし、検索を利用履歴に記録するのは、
+				// 実際の結果とのやり取りだけにする。
 				if (!modal) this.focusResults();
 				const item = this.itemAtRow(row);
 				if (item === undefined) return;
-				// Why: keep the middle-click guard through click/auxclick, then reset
-				// it on the next press so one gesture cannot open the same note twice.
+				// Why: 中クリックの保護は click/auxclick までの間保ち、次の押下でリセットする。
+				// 1回のジェスチャーで同じノートを2回開かないようにするため。
 				this.middleClickRows.delete(row);
 				const index = Number(row.getAttribute("data-index"));
 				if (event.button === 0 && this.isRowToggleEvent(event)) {
-					// Why: a toggle control acts at once on its own row; letting the press
-					// fall through would also change the highlighted selection.
+					// Why: チェックの操作は、その行で即座に動く。押下をそのまま通すと、強調表示の選択も変わる。
 					event.preventDefault();
 					event.stopImmediatePropagation();
 					this.leftClickRows.add(row);
@@ -626,8 +621,8 @@ export class SuggestionPanel<T> extends Component {
 					this.setSelectedIndex(index, false);
 					void this.props.onChoose(item, event);
 				} else if (event.button === 0 && this.selectionMode === "extended") {
-					// Why: the sidebar can lose its click to Obsidian after mousedown;
-					// select now and leave opening exclusively to double-click/Enter.
+					// Why: サイドバーは、mousedown の後に Obsidian にクリックを奪われることがある。
+					// 今ここで選び、開く操作はダブルクリックと Enter だけに任せる。
 					event.preventDefault();
 					event.stopImmediatePropagation();
 					this.leftClickRows.add(row);
@@ -637,9 +632,9 @@ export class SuggestionPanel<T> extends Component {
 					});
 					this.setSelectedIndex(index, false);
 				} else if (event.button === 0 && this.props.surface === "view") {
-					// Sidebar clicks can be consumed by Obsidian after mousedown, so run
-					// the primary action here and let the later click only clear the guard.
-					// Single-choice modals retain normal click activation.
+					// サイドバーのクリックは、mousedown の後に Obsidian に消費されることがある。そのため、
+					// 主な操作はここで実行し、後のクリックはガードを外すだけにする。
+					// 単一選択のモーダルは、通常のクリックでの有効化を保つ。
 					event.preventDefault();
 					event.stopImmediatePropagation();
 					this.leftClickRows.add(row);
@@ -668,8 +663,8 @@ export class SuggestionPanel<T> extends Component {
 			"dblclick",
 			(event) => {
 				if (this.selectionMode !== "extended" || event.button !== 0) return;
-				// Two quick presses on a toggle already toggled twice; the dblclick that
-				// follows must not activate the row as well.
+				// チェックの上で素早く2回押すと、すでに2回切り替わっている。その後に続く dblclick で、
+				// さらに行を有効にしてはいけない。
 				if (this.isRowToggleEvent(event)) {
 					event.preventDefault();
 					event.stopImmediatePropagation();
@@ -695,8 +690,8 @@ export class SuggestionPanel<T> extends Component {
 				if (!row) return;
 				event.preventDefault();
 				event.stopImmediatePropagation();
-				// Why: an auxiliary right-click must never use the middle-click action,
-				// even when the host did not deliver its preceding mousedown.
+				// Why: 補助の右クリックは、ホストが先行する mousedown を届けなかったとしても、
+				// 決して中クリックの操作を使ってはいけない。
 				if (event.button === 1) this.handleMiddleClick(row, event);
 			},
 			true,
@@ -705,16 +700,15 @@ export class SuggestionPanel<T> extends Component {
 			this.resultContainerEl,
 			"click",
 			(event) => {
-				// 中・右クリック後に発火する click/auxclick の取りこぼしが
-				// primary 扱いで onChoose へ落ちてアクティブタブを上書きするため、
-				// 左クリック以外はここで確実に消費する。
-				// なぜこう書かれたか: Electron/Win では中クリックで click が、
-				// 右クリックで click が飛ぶ環境があり、ガード漏れが上書きの原因だった。
+				// 中・右クリックの後に発火する click/auxclick の取りこぼしが、主な操作として onChoose へ
+				// 落ちて、アクティブなタブを上書きしないよう、左クリック以外はここで確実に消費する。
+				// Why: Electron/Windows の環境では、中クリックで click が、右クリックで click が飛ぶことがあり、
+				// ガードの漏れが上書きの原因になっていた。
 				if (event.button !== 0) {
 					event.preventDefault();
 					event.stopImmediatePropagation();
-					// Why: some Electron hosts send click instead of auxclick for the
-					// middle button; share the guard with the normal mousedown route.
+					// Why: 一部の Electron のホストは、中ボタンに auxclick の代わりに click を出す。
+					// 通常の mousedown の経路とガードを共有する。
 					const row = this.suggestionRowAtEvent(event);
 					if (event.button === 1 && row) this.handleMiddleClick(row, event);
 					return;
@@ -768,7 +762,7 @@ export class SuggestionPanel<T> extends Component {
 		this.props.onContextMenu?.(item, event, this.getSelectedItems());
 	}
 
-	/** Opens the active row's menu below it, as the context-menu hotkey does. */
+	/** コンテキストメニューのホットキーと同じく、アクティブな行の下にその行のメニューを開く。 */
 	showActiveRowContextMenu(): void {
 		const index = this.chooser.selectedItem;
 		const item = this.getSelectedItem();
@@ -778,8 +772,8 @@ export class SuggestionPanel<T> extends Component {
 		if (item === undefined || !row) return;
 		row.scrollIntoView({ block: "nearest" });
 		const rect = row.getBoundingClientRect();
-		// Why: menu hosts position menus from a mouse event, so the keyboard path
-		// anchors a synthetic one just below the active row, like a dropdown.
+		// Why: メニューのホストはマウスのイベントから位置を決めるので、キーボードの経路は、
+		// アクティブな行のすぐ下に、ドロップダウンのように合成したイベントを置く。
 		const event = markKeyboardMenuEvent(
 			new MouseEvent("contextmenu", {
 				clientX: rect.left,
@@ -807,8 +801,8 @@ export class SuggestionPanel<T> extends Component {
 
 	private suggestionRowAtEvent(event: Event): Element | undefined {
 		const target = event.target as Node | null;
-		// Why: restored popout panes create nodes in another window, whose Element
-		// constructor differs from the plugin's window. Obsidian checks across realms.
+		// Why: 復元されたポップアウトのパネルは別の窓にノードを作る。その Element のコンストラクタは
+		// プラグインの窓のものと違う。Obsidian は窓をまたいで確認する。
 		if (!target?.instanceOf(Element)) return undefined;
 		const row = target.closest(".suggestion-item");
 		return row && this.resultContainerEl.contains(row) ? row : undefined;
@@ -819,14 +813,14 @@ export class SuggestionPanel<T> extends Component {
 		return Number.isInteger(index) && index >= 0 ? this.chooser.values[index] : undefined;
 	}
 
-	/** Index of the cursor row, or -1 when the list is empty. */
+	/** カーソルの行の番号。一覧が空なら -1。 */
 	get activeIndex(): number {
 		return this.chooser.selectedItem;
 	}
 
 	/**
-	 * Reinstates the selection and cursor after a rerender. Rows are given by index in
-	 * the new list because a rerender resets the selection to the first row.
+	 * 描き直しの後に、選択とカーソルを戻す。描き直すと選択が先頭の行に戻るので、行は新しい一覧の
+	 * 番号で与える。
 	 */
 	restoreSelection(indexes: readonly number[], activeIndex: number): void {
 		this.extendedSelection.restore(indexes, activeIndex, this.chooser.values.length);
