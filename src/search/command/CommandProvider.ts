@@ -19,7 +19,10 @@ export class CommandProvider implements PaletteProvider<CommandResult> {
 		const recent = new Map(this.recents().map((id, index) => [id, index]));
 		const matched = query
 			? sortCommandMatches(
-					searchFuzzyQuery(query, commands, [(command) => command.name]).map((match) => ({
+					searchFuzzyQuery(query, commands, [
+						(command) => command.name,
+						(command) => command.id,
+					]).map((match) => ({
 						command: match.obj,
 						fuzzyScore: match.score,
 					})),
