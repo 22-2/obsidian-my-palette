@@ -179,7 +179,7 @@ Vault audit lists what a vault collects over time. Choose what to list under **S
 | Empty files    | Files with no content; notes with only frontmatter count    | Name, Path, Modified            |
 | Empty folders  | The topmost folder of each tree holding no files            | Name, Path, Folders inside      |
 
-Nothing is written to the vault to show the list, so the list never changes what it judges. `Open vault audit list` opens it in a Table palette, where each kind keeps its own columns and sorting.
+Orphaned files and Empty files list only files Obsidian can open; config files such as `cog.toml`, shown when **Detect all file extensions** is on, are left out. Nothing is written to the vault to show the list, so the list never changes what it judges. `Open vault audit list` opens it in a Table palette, where each kind keeps its own columns and sorting.
 
 `Enter` opens a file, goes to the line of a broken link in the first note that has it, or reveals a folder in the file explorer. Broken links with several notes list them in the row menu. `Move to trash` (following Obsidian's **Deleted files** setting) and `Move to archive folder` work on the selection and need a second press. Each item is checked again just before it moves; items that were linked or edited since the list was made are skipped.
 

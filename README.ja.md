@@ -171,7 +171,7 @@ Vault audit は、保管庫にたまっていく片付けの対象を一覧に�
 | Empty files    | 中身のないファイル。フロントマターだけのノートも含む                                | Name, Path, Modified            |
 | Empty folders  | ファイルを1つも含まないフォルダーのうち、一番上のもの                               | Name, Path, Folders inside      |
 
-一覧を出すために保管庫へファイルを書き出さないので、一覧が判定に影響しません。`Open vault audit list` は Table palette で開き、種類ごとに列の並びと並べ替えを保ちます。
+Orphaned files と Empty files には、Obsidian で開けるファイルだけを出します。**Detect all file extensions** をオンにしたときに見える `cog.toml` のような設定ファイルは除きます。一覧を出すために保管庫へファイルを書き出さないので、一覧が判定に影響しません。`Open vault audit list` は Table palette で開き、種類ごとに列の並びと並べ替えを保ちます。
 
 `Enter` は、ファイルなら開き、壊れたリンクなら最初の参照元のその行へ移り、フォルダーならファイルエクスプローラーで表示します。参照元が複数ある壊れたリンクは、右クリックメニューに参照元を並べます。`Move to trash`（Obsidian の **Deleted files** の設定に従う）と `Move to archive folder` は選択した行に対して働き、2回押して実行します。移す直前に各項目をもう一度確かめ、一覧を作ってからリンクされたり編集されたりしたものは飛ばします。
 

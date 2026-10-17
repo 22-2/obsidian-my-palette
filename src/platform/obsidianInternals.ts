@@ -29,6 +29,9 @@ interface AppInternals {
 	vault?: {
 		getConfig?: (key: string) => unknown;
 	};
+	viewRegistry?: {
+		isExtensionRegistered?: (extension: string) => boolean;
+	};
 }
 
 interface AdapterInternals {
@@ -100,6 +103,15 @@ export function getCommunityPlugin<T = unknown>(app: App, id: string): T | undef
 /** The instance of an enabled core plugin, or undefined when it is off. */
 export function getEnabledCorePlugin<T = unknown>(app: App, id: string): T | undefined {
 	return (internals(app).internalPlugins?.getEnabledPluginById?.(id) as T | null) ?? undefined;
+}
+
+/**
+ * Whether Obsidian has a view for the extension (notes, canvases, images, PDF, audio...).
+ * Files such as `.toml` show up only with "Detect all file extensions" and cannot be opened.
+ * True when the API is missing, so nothing is hidden by a changed internal.
+ */
+export function isExtensionOpenable(app: App, extension: string): boolean {
+	return internals(app).viewRegistry?.isExtensionRegistered?.(extension) ?? true;
 }
 
 /** The folder setting of an enabled core plugin such as Daily notes or Templates. */

@@ -27,6 +27,11 @@ export interface AuditFile {
 	/** Tags without `#`, from the frontmatter and the body. */
 	tags: readonly string[];
 	/**
+	 * Whether Obsidian can open the file. Orphaned and empty files list only these: a
+	 * config file such as `cog.toml` is never linked and is not the user's to tidy here.
+	 */
+	openable: boolean;
+	/**
 	 * Markdown only: whether anything but frontmatter is in the note. Undefined when the
 	 * metadata cache has not indexed the note, so the size decides instead.
 	 */
@@ -160,7 +165,7 @@ export function findOrphanedFiles(
 	}
 	return sortByPath(
 		snapshot.files
-			.filter((file) => !linked.has(file.path))
+			.filter((file) => file.openable && !linked.has(file.path))
 			.filter((file) => !isExcludedFile(file, exclusions))
 			.filter((file) => !isUserIgnoredPathWithFilters(exclusions.orphanFolders, file.path))
 			.map(toFileItem),
@@ -191,7 +196,7 @@ export function findEmptyFiles(
 ): AuditFileItem[] {
 	return sortByPath(
 		snapshot.files
-			.filter(isEmptyFile)
+			.filter((file) => file.openable && isEmptyFile(file))
 			.filter((file) => !isExcludedFile(file, exclusions))
 			.map(toEmptyFileItem),
 	);

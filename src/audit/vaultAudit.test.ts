@@ -17,6 +17,7 @@ function file(path: string, overrides: Partial<AuditFile> = {}): AuditFile {
 		size: 10,
 		mtime: 0,
 		tags: [],
+		openable: true,
 		...(extension === "md" ? { hasContent: true } : {}),
 		...overrides,
 	};
@@ -230,5 +231,20 @@ describe("MOC-only notes", () => {
 		expect(report.items).toEqual([
 			{ path: "moc-only.md", size: 10, mtime: 0, mocOnly: { references: 1 } },
 		]);
+	});
+});
+
+describe("files Obsidian cannot open", () => {
+	it("are left out of orphaned and empty files but still keep their folder from being empty", () => {
+		const files = [
+			file("cog.toml", { openable: false }),
+			file("config/empty.cjs", { openable: false, size: 0 }),
+			file("note.md"),
+		];
+		const audit = (kind: Parameters<typeof runAudit>[0]) =>
+			paths(runAudit(kind, snapshot({ files, folders: ["config"] })));
+		expect(audit("orphaned-files")).toEqual(["note.md"]);
+		expect(audit("empty-files")).toEqual([]);
+		expect(audit("empty-folders")).toEqual([]);
 	});
 });
