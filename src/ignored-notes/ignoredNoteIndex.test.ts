@@ -1,25 +1,28 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+// The fake store only reads the key and vault id; the rest of each row is passed through.
+type StoredRow = { key: string; vaultId: string };
+
 const databaseState = vi.hoisted(() => ({
-	rows: new Map<string, any>(),
-	meta: new Map<string, any>(),
+	rows: new Map<string, StoredRow>(),
+	meta: new Map<string, unknown>(),
 }));
 const scanState = vi.hoisted(() => ({ filters: ["Excluded"], paths: ["Excluded/note.md"] }));
 
 vi.mock("idb", () => ({
 	openDB: vi.fn(
-		async (_name: string, _version: number, options: { upgrade: (db: any) => void }) => {
-			const db: any = {
+		async (_name: string, _version: number, options: { upgrade: (db: unknown) => void }) => {
+			const db = {
 				objectStoreNames: { contains: () => false },
 				createObjectStore: () => ({ createIndex: vi.fn() }),
 				getAllFromIndex: async (_store: string, _index: string, vaultId: string) =>
 					[...databaseState.rows.values()].filter((row) => row.vaultId === vaultId),
 				get: async (_store: string, key: string) => databaseState.meta.get(key),
-				put: async (_store: string, value: any, key: string) => {
+				put: async (_store: string, value: unknown, key: string) => {
 					databaseState.meta.set(key, value);
 				},
 				transaction: () => {
-					const store: any = {
+					const store = {
 						index: () => ({
 							getAll: async (vaultId: string) =>
 								[...databaseState.rows.values()].filter(
@@ -29,7 +32,7 @@ vi.mock("idb", () => ({
 						delete: async (key: string) => {
 							databaseState.rows.delete(key);
 						},
-						put: async (row: any) => {
+						put: async (row: StoredRow) => {
 							databaseState.rows.set(row.key, row);
 						},
 					};
