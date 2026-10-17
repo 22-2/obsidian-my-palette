@@ -1,22 +1,51 @@
-# Toolchain
+# 開発ツール
 
-This project uses pnpm scripts directly. The plugin is bundled with esbuild (`esbuild.config.mjs`), unit tests run on Vitest (`vitest.config.mts`), formatting uses oxfmt, and linting uses ESLint with the Obsidian plugin rules. Development details are in `docs/DEVELOPMENT.md`.
+このプロジェクトでは pnpm スクリプトを直接使う。プラグインのバンドルには esbuild (`esbuild.config.mjs`)、単体テストには Vitest (`vitest.config.mts`)、整形には oxfmt、静的解析には Obsidian プラグイン向けルールを適用した ESLint を使う。開発の詳細は `docs/DEVELOPMENT.md` を参照する。
 
-## Commands
+## コマンド
 
-- `pnpm install`: install dependencies and point Git at `.githooks/` (the pre-commit hook formats staged files with oxfmt).
-- `pnpm dev`: watch build into `dist/`.
-- `pnpm build`: production build into `dist/` (`main.js`, `styles.css`).
-- `pnpm format` / `pnpm format:check`: format with oxfmt, or only report unformatted files.
-- `pnpm lint`: ESLint.
-- `pnpm check-types`: TypeScript check.
-- `pnpm test`: unit tests (`src/**/*.test.ts`).
-- `pnpm e2e`: end-to-end tests in a real Obsidian through Playwright, wrapped with offstage-windows to use a hidden desktop on Windows.
-- `pnpm test:e2e:smoke`: build and run only the E2E smoke test through the same wrapper.
-- Use these scripts for E2E runs, including filtered specs; use `OFFSTAGE=0` only when visible windows are needed for interactive debugging.
+- `pnpm install`: 依存関係をインストールし、Git のフックの参照先を `.githooks/` に設定する。pre-commit フックはステージ済みファイルを oxfmt で整形する。
+- `pnpm dev`: 変更を監視し、`dist/` にビルドする。
+- `pnpm build`: 本番用にビルドし、`dist/` に `main.js` と `styles.css` を出力する。
+- `pnpm format` / `pnpm format:check`: oxfmt で整形する、または未整形のファイルだけを報告する。
+- `pnpm lint`: ESLint で静的解析する。
+- `pnpm check-types`: TypeScript の型をチェックする。
+- `pnpm test`: 単体テスト (`src/**/*.test.ts`) を実行する。
+- `pnpm e2e`: Playwright を使い、実際の Obsidian で E2E テストを実行する。Windows では offstage-windows を経由し、非表示デスクトップで実行する。
+- `pnpm test:e2e:smoke`: ビルド後、同じ仕組みで E2E のスモークテストだけを実行する。
+- 特定のテストに絞り込む場合も、E2E の実行にはこれらのスクリプトを使う。対話的なデバッグでウィンドウを表示する必要がある場合に限り、`OFFSTAGE=0` を使う。
 
-## Review Checklist
+## コミットのスコープ
 
-- [ ] Run `pnpm install` after pulling remote changes and before getting started.
-- [ ] Run `pnpm format:check`, `pnpm lint`, `pnpm check-types` and `pnpm test` before committing.
-- [ ] Use the terms in `docs/GLOSSARY.md` for any UI text.
+機能名を基本とし、共通の動作には専用のスコープを使う。スコープは任意とし、一般的な文書や CI の更新など、リポジトリ全体に関わる変更では省略する (`docs:`、`ci:`)。
+
+| スコープ                                                                                                                                            | 対象                                                           |
+| --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `file`, `command`, `everything`, `bookmark`, `related`, `tab`, `plugin`, `snippet`, `properties`, `audit`, `tags`, `moc`, `rename`, `ignored-notes` | 各機能に固有の検索・表示・操作。                               |
+| `palette`                                                                                                                                           | モード切り替え、結果操作、状態復元など、パレット共通の動作。   |
+| `view`                                                                                                                                              | サイドバーパレット固有の動作。                                 |
+| `table`                                                                                                                                             | 表形式パレット固有の動作。                                     |
+| `selector`                                                                                                                                          | 選択画面に共通する選択・確定・キャンセル。                     |
+| `menu`                                                                                                                                              | メニュー共通の絞り込み、確認、項目の動作。                     |
+| `search`                                                                                                                                            | 共通の検索構文とマッチング。                                   |
+| `settings`                                                                                                                                          | 設定画面、設定の保存・移行。                                   |
+| `i18n`                                                                                                                                              | 翻訳の仕組み、機能をまたぐ文言の変更。                         |
+| `platform`                                                                                                                                          | 外部アプリの起動、パス、クリップボード連携。                   |
+| `ui`                                                                                                                                                | より具体的なスコープに属さない共通 UI 部品、アイコン、見た目。 |
+| `e2e`                                                                                                                                               | E2E テストの実行基盤。                                         |
+| `deps`                                                                                                                                              | 依存関係の保守。                                               |
+| `lint`                                                                                                                                              | 静的解析の実行基盤。                                           |
+| `release`                                                                                                                                           | リリース用ツールとバージョンの管理。                           |
+
+- ファイルのパスではなく、変更の主目的で選ぶ。プロパティ固有のメニュー修正には `properties`、すべてのメニューに共通する修正には `menu` を使う。
+- 機能固有の動作には、その機能のスコープを優先する。コマンド検索だけの変更には `command`、共通の検索構文の変更には `search` を使う。
+- テストには、検証する動作のスコープを使う (例: `test(audit)`)。E2E の実行基盤自体の変更には `test(e2e)` を使う。
+- 表記は上の一覧に統一する。`tabs` ではなく `tab` を使い、`properties` と `tags` は機能名としてそのまま使う。
+- 1つのコミットに指定するスコープは1つとする。複数の機能にまたがる一体の変更では、共通する動作のスコープを選ぶか、スコープを省略する。独立した変更はコミットを分ける。
+- スコープ名はこの一覧を使う。新しい役割に専用のスコープが必要になったら、使う前に名前と対象範囲をここに追加する。
+
+## レビューチェックリスト
+
+- [ ] リモートの変更を取り込んだ後、および作業開始前に `pnpm install` を実行する。
+- [ ] コミット前に `pnpm format:check`、`pnpm lint`、`pnpm check-types`、`pnpm test` を実行する。
+- [ ] UI の文言には `docs/GLOSSARY.md` の用語を使う。
