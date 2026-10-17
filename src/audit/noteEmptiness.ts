@@ -25,10 +25,9 @@ export function emptinessBadge(emptiness: NoteEmptiness): string | undefined {
 	switch (emptiness.kind) {
 		case "empty":
 			return "Empty";
+		// Why: the mark only tells blank notes apart; References are counted in Vault audit.
 		case "moc-only":
-			return emptiness.references > 0
-				? `MOC only · ${emptiness.references} ref${emptiness.references === 1 ? "" : "s"}`
-				: "MOC only";
+			return "MOC only";
 		case "written":
 			return undefined;
 	}

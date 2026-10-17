@@ -377,7 +377,7 @@ test.describe("MOC-only notes", () => {
 		// The marks do not depend on the Vault audit option.
 		await expect(
 			rows.filter({ hasText: "blank" }).locator(".my-palette-suggestion__badge"),
-		).toHaveText("MOC only · 1 ref");
+		).toHaveText("MOC only");
 		await expect(
 			rows.filter({ hasText: "written" }).locator(".my-palette-suggestion__badge"),
 		).toHaveCount(0);
