@@ -23,6 +23,7 @@ export default defineConfig(
 		"obsidian-e2e-toolkit-assets",
 		"playwright-report",
 		"test-results",
+		"coverage",
 		"package.json",
 		"package-lock.json",
 		"tsconfig.json",
