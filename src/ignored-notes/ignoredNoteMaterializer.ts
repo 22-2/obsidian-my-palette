@@ -7,6 +7,7 @@ import {
 	normalizePath,
 } from "obsidian";
 import { getVaultNewFileFolderPath, isUserIgnoredPath } from "src/ignored-notes/ignoredPaths";
+import { logger } from "src/shared/logger";
 
 export const IMPORT_SOURCE_PROPERTY = "my-palette-source";
 export const IMPORTED_AT_PROPERTY = "my-palette-imported-at";
@@ -41,7 +42,8 @@ function sourceFromFrontmatter(content: string): string | undefined {
 	try {
 		const value = parseFrontMatterEntry(parseYaml(info.frontmatter), IMPORT_SOURCE_PROPERTY);
 		return typeof value === "string" ? value : undefined;
-	} catch {
+	} catch (error) {
+		logger.debug("Failed to read the import source of a copied note", error);
 		return undefined;
 	}
 }

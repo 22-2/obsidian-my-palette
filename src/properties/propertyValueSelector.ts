@@ -7,12 +7,7 @@ import { typedNewValue, type NewValueRules } from "src/shared/newValue";
 import { MultiSelectModal, type MultiSelectCandidate } from "src/ui/MultiSelectModal";
 import { changeCount, type MultiSelectChanges } from "src/ui/multiSelectChanges";
 import { setOrDeleteFrontmatterList, updateFrontmatter } from "src/shared/frontmatter";
-
-// Unofficial API: the values already used for a key anywhere in the vault. A
-// missing function leaves the list with only the note's own values.
-interface MetadataValuesSource {
-	getFrontmatterPropertyValuesForKey?: (key: string) => unknown;
-}
+import { getFrontmatterValuesForKey } from "src/platform/obsidianInternals";
 
 const VALUE_RULES: NewValueRules = {
 	normalize: (query) => query.trim(),
@@ -21,9 +16,8 @@ const VALUE_RULES: NewValueRules = {
 };
 
 export function vaultValuesOf(app: App, key: string): string[] {
-	const values = (
-		app.metadataCache as unknown as MetadataValuesSource
-	).getFrontmatterPropertyValuesForKey?.(key);
+	// A missing API leaves the list with only the note's own values.
+	const values = getFrontmatterValuesForKey(app, key);
 	return Array.isArray(values)
 		? values.filter((value): value is string => typeof value === "string")
 		: [];

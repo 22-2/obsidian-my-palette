@@ -3,6 +3,7 @@ import type { PaletteMenu } from "src/ui/paletteMenu";
 import type { PaletteResult } from "src/palette/results";
 import { insertTags } from "src/tags/insertTags";
 import type MyPalettePlugin from "src/main";
+import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 
 /**
  * Resolves a palette result to an indexed Markdown note. Obsidian-excluded files are
@@ -47,13 +48,10 @@ export function addTagInsertionMenuItems(
 	}
 	if (targets.size === 0) return;
 	menu.addItem((item) =>
-		item
-			.setTitle("Add tags…")
-			.setIcon("tags")
-			.onClick(() => {
-				void insertTags(plugin, [...targets.values()]).then((applied) => {
-					if (applied) onDone?.();
-				});
-			}),
+		withAction(item, MENU_ACTIONS.addTags).onClick(() => {
+			void insertTags(plugin, [...targets.values()]).then((applied) => {
+				if (applied) onDone?.();
+			});
+		}),
 	);
 }

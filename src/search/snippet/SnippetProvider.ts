@@ -3,17 +3,8 @@ import { getVaultFullPath } from "src/ignored-notes/ignoredPaths";
 import type { SnippetResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
-
-interface CustomCss {
-	snippets?: unknown;
-	enabledSnippets?: unknown;
-	getSnippetsFolder?: () => string;
-	getSnippetPath?: (snippet: string) => string;
-}
-
-function getCustomCss(app: App): CustomCss {
-	return (app as unknown as { customCss?: CustomCss }).customCss ?? {};
-}
+import { ICONS } from "src/ui/icons";
+import { getCustomCss } from "src/platform/obsidianInternals";
 
 function listSnippets(app: App): string[] {
 	const snippets = getCustomCss(app).snippets;
@@ -63,7 +54,7 @@ export class SnippetProvider implements PaletteProvider<SnippetResult> {
 						mode: "snippet",
 						primary: displayName(snippet),
 						secondary: enabled ? "Enabled" : "Disabled",
-						icon: "paintbrush",
+						icon: ICONS.snippet,
 						snippetName: snippet,
 						absolutePath,
 						vaultPath,
@@ -86,7 +77,7 @@ export class SnippetProvider implements PaletteProvider<SnippetResult> {
 				mode: "snippet",
 				primary: "snippets folder",
 				secondary: folderVaultPath,
-				icon: "folder",
+				icon: ICONS.folder,
 				snippetName: "",
 				absolutePath: folderAbsolutePath,
 				vaultPath: folderVaultPath,

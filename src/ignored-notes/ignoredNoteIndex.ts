@@ -12,10 +12,10 @@ import {
 } from "src/ignored-notes/ignoredNoteEntry";
 import { ignoredNotePathParts } from "src/ignored-notes/ignoredNotePath";
 import { collectVaultPaths, mapWithConcurrency } from "src/ignored-notes/ignoredNoteScanner";
+import { DATABASE_NAMES } from "src/shared/databaseNames";
 
 export type { IgnoredNoteIndexEntry } from "src/ignored-notes/ignoredNoteEntry";
 
-const DATABASE_NAME = "my-palette-ignored-notes";
 const DATABASE_VERSION = 1;
 const INDEX_SCHEMA_VERSION = 4;
 const INDEX_TTL_MS = 24 * 60 * 60 * 1000;
@@ -107,15 +107,20 @@ export class IgnoredNoteIndex {
 	}
 
 	private getDatabase(): Promise<IDBPDatabase<IgnoredNoteIndexDatabase>> {
-		this.databasePromise ??= openDB<IgnoredNoteIndexDatabase>(DATABASE_NAME, DATABASE_VERSION, {
-			upgrade(database) {
-				if (!database.objectStoreNames.contains("notes")) {
-					const store = database.createObjectStore("notes", { keyPath: "key" });
-					store.createIndex("byVault", "vaultId");
-				}
-				if (!database.objectStoreNames.contains("meta")) database.createObjectStore("meta");
+		this.databasePromise ??= openDB<IgnoredNoteIndexDatabase>(
+			DATABASE_NAMES.ignoredNotes,
+			DATABASE_VERSION,
+			{
+				upgrade(database) {
+					if (!database.objectStoreNames.contains("notes")) {
+						const store = database.createObjectStore("notes", { keyPath: "key" });
+						store.createIndex("byVault", "vaultId");
+					}
+					if (!database.objectStoreNames.contains("meta"))
+						database.createObjectStore("meta");
+				},
 			},
-		});
+		);
 		return this.databasePromise;
 	}
 

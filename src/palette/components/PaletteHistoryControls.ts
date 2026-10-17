@@ -10,6 +10,8 @@ import { SearchHistorySuggest } from "src/ui/searchHistorySuggest";
 import { DEFAULT_HOTKEYS, formatHotkey, matchesHotkey } from "src/ui/hotkeys";
 import type { MenuChoice } from "src/ui/panelChoice";
 import type { PanelSwitch } from "src/ui/panelSwitch";
+import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
+import { ICONS } from "src/ui/icons";
 
 interface PaletteHistoryContext {
 	query: string;
@@ -117,8 +119,8 @@ export class PaletteHistoryControls {
 			attr: { type: "button", title: "Palette options" },
 		});
 		this.optionsButton = optionsButton;
-		// Why: this menu contains actions as well as preferences.
-		setIcon(optionsButton, "ellipsis");
+		// Why: the menu leads with options (switches and choices); the screen's actions follow.
+		setIcon(optionsButton, ICONS.options);
 		// Why: the open menu may already be dismissed by the press itself before the
 		// click arrives, so its state is read at pointerdown, which fires first.
 		let menuWasOpen = false;
@@ -147,7 +149,7 @@ export class PaletteHistoryControls {
 		this.historyButton = historyButton;
 		this.updateHotkeyHint();
 		// Why: a clock identifies saved searches without suggesting a generic dropdown.
-		setIcon(historyButton, "clock");
+		setIcon(historyButton, ICONS.history);
 		this.buttons.push(optionsButton, historyButton);
 		this.listen(historyButton, "mousedown", consumePointerEvent);
 		this.listen(historyButton, "click", (event) => {
@@ -246,9 +248,7 @@ export class PaletteHistoryControls {
 		}
 		if (offersHighlight)
 			menu.addItem((item) =>
-				item
-					.setTitle("Highlight search matches")
-					.setIcon("highlighter")
+				withAction(item, MENU_ACTIONS.highlightSearchMatches)
 					.setSwitch(
 						plugin.paletteDisplaySettings.get(this.options.surface)
 							.highlightSearchMatches,
@@ -272,19 +272,11 @@ export class PaletteHistoryControls {
 		// live in the workspace and must not offer the modal's move action.
 		if (moveToSidebar)
 			menu.addItem((item) =>
-				item
-					.setTitle("Move to right sidebar")
-					.setIcon("panel-right")
-					.onClick(moveToSidebar),
+				withAction(item, MENU_ACTIONS.moveToRightSidebar).onClick(moveToSidebar),
 			);
 		this.options.populateActions?.(menu, event);
 		menu.addSeparator();
-		menu.addItem((item) =>
-			item
-				.setTitle("Help")
-				.setIcon("help-circle")
-				.onClick(() => this.showHelp()),
-		);
+		menu.addItem((item) => withAction(item, MENU_ACTIONS.help).onClick(() => this.showHelp()));
 		menu.addSeparator();
 		// Why: the destructive clear comes last, so it is not the first thing a press reaches.
 		this.addClearHistoryItem(menu);
@@ -314,7 +306,7 @@ export class PaletteHistoryControls {
 		let clearItem: PaletteMenuItem | undefined;
 		const render = (item: PaletteMenuItem) => {
 			item.setTitle(confirming ? "Click again to clear" : "Clear search history")
-				.setIcon(confirming ? "trash-2" : "trash")
+				.setIcon(ICONS.delete)
 				.setCta(confirming)
 				.setKeepOpen(confirming);
 		};

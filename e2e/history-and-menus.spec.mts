@@ -64,10 +64,10 @@ test("moves the current modal search into a fresh sidebar pane", async ({ obsidi
 	await openPaletteWith(obsidian, "alpha");
 	await expect(
 		page.locator(".my-palette-suggest-modal .my-palette-options-button svg"),
-	).toHaveClass(/lucide-ellipsis/);
+	).toHaveClass(/lucide-settings-2/);
 	await expect(
 		page.locator(".my-palette-suggest-modal .my-palette-history-button svg"),
-	).toHaveClass(/lucide-clock/);
+	).toHaveClass(/lucide-history/);
 	await page.locator(".my-palette-suggest-modal .my-palette-options-button").click();
 	await expect(menuItems(page)).toHaveText([
 		"Include Obsidian-excluded files",

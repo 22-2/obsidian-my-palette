@@ -15,6 +15,7 @@ import {
 	type BookmarkEntry,
 } from "src/search/bookmark/bookmarks";
 import type { PaletteMenu } from "src/ui/paletteMenu";
+import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 
 interface BookmarkMenuOptions {
 	menu: PaletteMenu;
@@ -68,51 +69,42 @@ export function addBookmarkMenuItems({
 		if (entries.length === 1) {
 			const [entry] = entries;
 			menu.addItem((item) =>
-				item
-					.setTitle("Rename bookmark…")
-					.setIcon("pencil")
-					.onClick(() => {
-						const modal = new BookmarkTitleModal(app, entry, (title) => {
-							setBookmarkTitle(instance, entry, title);
-							onBookmarksChanged?.();
-						});
-						modal.open();
-						// Why: the current title is selected so typing replaces it.
-						modal.inputEl.select();
-					}),
+				withAction(item, MENU_ACTIONS.renameBookmark).onClick(() => {
+					const modal = new BookmarkTitleModal(app, entry, (title) => {
+						setBookmarkTitle(instance, entry, title);
+						onBookmarksChanged?.();
+					});
+					modal.open();
+					// Why: the current title is selected so typing replaces it.
+					modal.inputEl.select();
+				}),
 			);
 		}
 		menu.addItem((item) =>
-			item
-				.setTitle("Move to bookmark group…")
-				.setIcon("folder-input")
-				.onClick(() =>
-					new BookmarkGroupModal(app, instance, {
-						placeholder: "Search bookmark groups",
-						footerText: `Moving: ${plural(entries.length, "bookmark")}`,
-						createGroup: (title) => createBookmarkGroup(instance, title),
-						onChoose: (parent, chosen) => {
-							const moved = moveBookmarks(instance, entries, parent);
-							const name = destinationName(chosen);
-							new Notice(
-								moved > 0
-									? `Moved ${plural(moved, "bookmark")} to ${name}`
-									: `Already in ${name}`,
-							);
-							onBookmarksChanged?.();
-						},
-					}).open(),
-				),
+			withAction(item, MENU_ACTIONS.moveToBookmarkGroup).onClick(() =>
+				new BookmarkGroupModal(app, instance, {
+					placeholder: "Search bookmark groups",
+					footerText: `Moving: ${plural(entries.length, "bookmark")}`,
+					createGroup: (title) => createBookmarkGroup(instance, title),
+					onChoose: (parent, chosen) => {
+						const moved = moveBookmarks(instance, entries, parent);
+						const name = destinationName(chosen);
+						new Notice(
+							moved > 0
+								? `Moved ${plural(moved, "bookmark")} to ${name}`
+								: `Already in ${name}`,
+						);
+						onBookmarksChanged?.();
+					},
+				}).open(),
+			),
 		);
 		menu.addItem((item) =>
-			item
-				.setTitle("Remove from bookmarks")
-				.setIcon("bookmark-minus")
-				.onClick(() => {
-					const removed = removeBookmarks(instance, entries);
-					new Notice(`Removed ${plural(removed, "bookmark")}`);
-					onBookmarksChanged?.();
-				}),
+			withAction(item, MENU_ACTIONS.removeFromBookmarks).onClick(() => {
+				const removed = removeBookmarks(instance, entries);
+				new Notice(`Removed ${plural(removed, "bookmark")}`);
+				onBookmarksChanged?.();
+			}),
 		);
 		return;
 	}
@@ -122,29 +114,26 @@ export function addBookmarkMenuItems({
 	];
 	if (paths.length === 0) return;
 	menu.addItem((item) =>
-		item
-			.setTitle("Add to bookmarks…")
-			.setIcon("bookmark-plus")
-			.onClick(() =>
-				new BookmarkGroupModal(app, instance, {
-					placeholder: "Search bookmark groups",
-					footerText:
-						paths.length === 1
-							? `Bookmarking: ${paths[0]}`
-							: `Bookmarking: ${plural(paths.length, "file")}`,
-					createGroup: (title) => createBookmarkGroup(instance, title),
-					onChoose: (parent, chosen) => {
-						const { added, skipped } = addFileBookmarks(instance, paths, parent);
-						const name = destinationName(chosen);
-						new Notice(
-							added > 0
-								? `Bookmarked ${plural(added, "file")} in ${name}` +
-										(skipped > 0 ? ` (${skipped} already there)` : "")
-								: `Already bookmarked in ${name}`,
-						);
-						if (added > 0) onNoteActionDone?.();
-					},
-				}).open(),
-			),
+		withAction(item, MENU_ACTIONS.addToBookmarks).onClick(() =>
+			new BookmarkGroupModal(app, instance, {
+				placeholder: "Search bookmark groups",
+				footerText:
+					paths.length === 1
+						? `Bookmarking: ${paths[0]}`
+						: `Bookmarking: ${plural(paths.length, "file")}`,
+				createGroup: (title) => createBookmarkGroup(instance, title),
+				onChoose: (parent, chosen) => {
+					const { added, skipped } = addFileBookmarks(instance, paths, parent);
+					const name = destinationName(chosen);
+					new Notice(
+						added > 0
+							? `Bookmarked ${plural(added, "file")} in ${name}` +
+									(skipped > 0 ? ` (${skipped} already there)` : "")
+							: `Already bookmarked in ${name}`,
+					);
+					if (added > 0) onNoteActionDone?.();
+				},
+			}).open(),
+		),
 	);
 }

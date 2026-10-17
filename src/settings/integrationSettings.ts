@@ -1,6 +1,8 @@
 import { Notice, Setting, setIcon, type App } from "obsidian";
 import type { SettingsHost } from "src/settings/settingsHost";
 import { DEFAULT_SETTINGS, SETTING_LIMITS } from "src/settings/model";
+import { ICONS } from "src/ui/icons";
+import { getCommunityPlugin } from "src/platform/obsidianInternals";
 
 /** The names inside the Everything modal, so the Integrations row is found by any of them. */
 export const EVERYTHING_MODAL_ITEMS = [
@@ -15,9 +17,10 @@ export const EVERYTHING_MODAL_ITEMS = [
 
 /** Whether Smart Connections is installed, under either of its plugin ids. */
 export function isSmartConnectionsInstalled(app: App): boolean {
-	const plugins = (app as unknown as { plugins: { plugins: Record<string, unknown> } }).plugins
-		.plugins;
-	return Boolean(plugins["smart-connections"] ?? plugins["smart-connect-pro"]);
+	return (
+		getCommunityPlugin(app, "smart-connections") !== undefined ||
+		getCommunityPlugin(app, "smart-connect-pro") !== undefined
+	);
 }
 
 function addSwitch(
@@ -44,7 +47,7 @@ export function renderEverythingIntegration(setting: Setting, plugin: SettingsHo
 		"aria-expanded": "false",
 		"aria-controls": panelId,
 	});
-	setIcon(setting.nameEl.createSpan("my-palette-accordion__chevron"), "chevron-right");
+	setIcon(setting.nameEl.createSpan("my-palette-accordion__chevron"), ICONS.expand);
 	const panel = setting.settingEl.createDiv({
 		cls: "my-palette-accordion__panel",
 		attr: { id: panelId },

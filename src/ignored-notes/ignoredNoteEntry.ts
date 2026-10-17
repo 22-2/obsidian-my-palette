@@ -6,6 +6,7 @@ import {
 } from "obsidian";
 import { normalizeTags } from "src/search/file/fileTags";
 import { normalizeFrontmatterKeywords, normalizeFrontmatterPrior } from "src/shared/frontmatter";
+import { logger } from "src/shared/logger";
 
 export interface IgnoredNoteIndexEntry {
 	path: string;
@@ -37,7 +38,9 @@ export function parseIgnoredNoteFrontmatter(
 			tags: normalizeTags(parseFrontMatterTags(frontmatter) ?? []),
 			prior: normalizeFrontmatterPrior(frontmatter?.prior),
 		};
-	} catch {
+	} catch (error) {
+		// Broken frontmatter still lists the note, just without its metadata.
+		logger.debug("Failed to read frontmatter of an Obsidian-excluded note", error);
 		return { aliases: [], keywords: [], tags: [] };
 	}
 }

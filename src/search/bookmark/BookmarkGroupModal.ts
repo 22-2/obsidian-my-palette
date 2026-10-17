@@ -6,6 +6,7 @@ import {
 	type BookmarksInstance,
 } from "src/search/bookmark/bookmarks";
 import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
+import { ICONS } from "src/ui/icons";
 
 interface BookmarkGroupOptions {
 	placeholder: string;
@@ -66,11 +67,11 @@ export class BookmarkTitleModal extends SelectionModal<SelectionItem> {
 				footerText: `Bookmark: ${entry.path ?? entry.query ?? fallback}`,
 				search: (query) => [
 					query.trim()
-						? { label: `Set title to ${query.trim()}`, icon: "pencil-line" }
+						? { label: `Set title to ${query.trim()}`, icon: ICONS.rename }
 						: {
 								label: "Use the default title",
 								description: fallback,
-								icon: "rotate-ccw",
+								icon: ICONS.reset,
 							},
 				],
 			},

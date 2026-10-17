@@ -4,6 +4,7 @@ import type { PaletteResult } from "src/palette/results";
 import { BulkRenameModal } from "src/rename/BulkRenameModal";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import type { TFile } from "obsidian";
+import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 
 /**
  * Adds one action that renames the selected files in the Rename selector. `onDone` runs once
@@ -23,9 +24,8 @@ export function addBulkRenameMenuItem(
 	}
 	if (targets.size === 0) return;
 	menu.addItem((item) =>
-		item
-			.setTitle("Rename…")
-			.setIcon("pencil-line")
-			.onClick(() => new BulkRenameModal(plugin, [...targets.values()], onDone).open()),
+		withAction(item, MENU_ACTIONS.rename).onClick(() =>
+			new BulkRenameModal(plugin, [...targets.values()], onDone).open(),
+		),
 	);
 }

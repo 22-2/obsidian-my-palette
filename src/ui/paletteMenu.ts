@@ -1,4 +1,5 @@
 import { Scope, setIcon, type App, type IconName } from "obsidian";
+import { ICONS } from "src/ui/icons";
 
 export interface PaletteMenuPosition {
 	x: number;
@@ -382,7 +383,7 @@ export class PaletteMenuItem {
 	setChecked(checked: boolean): this {
 		if (checked && !this.checkIconEl) {
 			this.checkIconEl = this.dom.createDiv("menu-item-icon mod-checked");
-			setIcon(this.checkIconEl, "check");
+			setIcon(this.checkIconEl, ICONS.check);
 		} else if (!checked && this.checkIconEl) {
 			this.checkIconEl.remove();
 			this.checkIconEl = null;

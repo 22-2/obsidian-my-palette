@@ -1,6 +1,7 @@
 import type { IntegrationSettings, ModeSettingsMap, MyPaletteSettings } from "src/settings/model";
 import type { PaletteMode } from "src/palette/results";
 import type { IntegrationReadiness } from "src/app/integrationAvailability";
+import { ICONS } from "src/ui/icons";
 
 export type PaletteModeId =
 	| "notes"
@@ -32,7 +33,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		mode: "file",
 		title: "Notes",
 		subtitle: "Obsidian",
-		icon: "files",
+		icon: ICONS.files,
 		placeholder: "Search notes",
 	},
 	{
@@ -40,7 +41,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		mode: "command",
 		title: "Commands",
 		subtitle: "Obsidian",
-		icon: "square-terminal",
+		icon: ICONS.command,
 		placeholder: "Search commands",
 	},
 	{
@@ -48,7 +49,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		mode: "everything",
 		title: "Everything",
 		subtitle: "All files",
-		icon: "search",
+		icon: ICONS.search,
 		placeholder: "Search vault files with Everything",
 	},
 	{
@@ -56,7 +57,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		mode: "link",
 		title: "Outgoing links",
 		subtitle: "Current note",
-		icon: "links-going-out",
+		icon: ICONS.outgoingLinks,
 		placeholder: "Search links in the active note",
 	},
 	{
@@ -64,7 +65,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		mode: "backlink",
 		title: "Backlinks",
 		subtitle: "Current note",
-		icon: "links-coming-in",
+		icon: ICONS.backlinks,
 		placeholder: "Search backlinks to the active note",
 	},
 	{
@@ -72,7 +73,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		mode: "bookmark",
 		title: "Bookmarks",
 		subtitle: "Obsidian",
-		icon: "bookmark",
+		icon: ICONS.bookmark,
 		placeholder: "Search bookmarks",
 	},
 	{
@@ -80,7 +81,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		mode: "smart",
 		title: "Related notes",
 		subtitle: "Smart Connections",
-		icon: "sparkles",
+		icon: ICONS.smartConnections,
 		placeholder: "Search Smart Connections",
 	},
 	{
@@ -88,7 +89,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		mode: "tab",
 		title: "Tabs",
 		subtitle: "Workspace",
-		icon: "panel-top",
+		icon: ICONS.tab,
 		placeholder: "Search open tabs",
 	},
 	{
@@ -96,7 +97,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		mode: "plugin",
 		title: "Plugins",
 		subtitle: "Installed",
-		icon: "puzzle",
+		icon: ICONS.plugin,
 		placeholder: "Search installed plugins",
 	},
 	{
@@ -104,7 +105,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		mode: "snippet",
 		title: "Snippets",
 		subtitle: "CSS",
-		icon: "paintbrush",
+		icon: ICONS.snippet,
 		placeholder: "Search CSS snippets",
 	},
 	{
@@ -112,7 +113,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		mode: "property",
 		title: "Properties",
 		subtitle: "Current note",
-		icon: "list-checks",
+		icon: ICONS.selection,
 		placeholder: "Search properties in the active note",
 	},
 	{

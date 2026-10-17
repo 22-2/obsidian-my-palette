@@ -1,8 +1,8 @@
 import type { App } from "obsidian";
 import { type DBSchema, type IDBPDatabase, openDB } from "idb";
 import { getVaultId, getVaultPathKey } from "src/shared/vaultIdentity";
+import { DATABASE_NAMES } from "src/shared/databaseNames";
 
-const DATABASE_NAME = "my-palette-file-usage";
 const DATABASE_VERSION = 1;
 const MAX_TRACKED_FILES = 5_000;
 const MAX_USAGE_COUNT = 1_000;
@@ -143,14 +143,18 @@ export class FileUsageHistory implements FileUsageScoreSource {
 	}
 
 	private getDatabase(): Promise<IDBPDatabase<FileUsageDatabase>> {
-		this.databasePromise ??= openDB<FileUsageDatabase>(DATABASE_NAME, DATABASE_VERSION, {
-			upgrade(database) {
-				if (!database.objectStoreNames.contains("usage")) {
-					const store = database.createObjectStore("usage", { keyPath: "key" });
-					store.createIndex("byVault", "vaultId");
-				}
+		this.databasePromise ??= openDB<FileUsageDatabase>(
+			DATABASE_NAMES.fileUsage,
+			DATABASE_VERSION,
+			{
+				upgrade(database) {
+					if (!database.objectStoreNames.contains("usage")) {
+						const store = database.createObjectStore("usage", { keyPath: "key" });
+						store.createIndex("byVault", "vaultId");
+					}
+				},
 			},
-		});
+		);
 		return this.databasePromise;
 	}
 

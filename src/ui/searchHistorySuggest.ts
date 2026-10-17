@@ -1,5 +1,6 @@
 import { setIcon } from "obsidian";
 import type { SearchHistoryResult } from "src/palette/results";
+import { ICONS } from "src/ui/icons";
 
 export class SearchHistorySuggest {
 	private readonly el: HTMLElement;
@@ -88,7 +89,7 @@ export class SearchHistorySuggest {
 				event.preventDefault();
 			});
 			const icon = item.createSpan("my-palette-history-suggest__icon");
-			setIcon(icon, "history");
+			setIcon(icon, ICONS.history);
 			item.createSpan({
 				cls: "my-palette-history-suggest__label",
 				text: result.primary,

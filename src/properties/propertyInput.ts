@@ -1,6 +1,7 @@
 import type { PropertyKind } from "src/palette/results";
 import { formatPropertyValue } from "src/properties/propertyKind";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { ICONS } from "src/ui/icons";
 
 /** The kinds edited by typing a single value. */
 export type InputPropertyKind = Extract<PropertyKind, "text" | "number" | "date" | "datetime">;
@@ -72,8 +73,8 @@ export function propertyInputRows(options: {
 	const description = `Current: ${formatPropertyValue(kind, current)}`;
 	const check = checkPropertyInput(kind, query);
 	const setRow: PropertyInputRow = check.ok
-		? { label: `Set to "${query}"`, description, icon: "check", value: check.value }
-		: { label: check.reason, description, icon: "alert-circle" };
+		? { label: `Set to "${query}"`, description, icon: ICONS.check, value: check.value }
+		: { label: check.reason, description, icon: ICONS.error };
 	const usable = vaultValues.flatMap((value) => {
 		const usableCheck = checkPropertyInput(kind, value);
 		return usableCheck.ok && usableCheck.value !== ""
@@ -81,7 +82,7 @@ export function propertyInputRows(options: {
 					{
 						label: value,
 						description: "Used in the vault",
-						icon: "list",
+						icon: ICONS.list,
 						value: usableCheck.value,
 					},
 				]

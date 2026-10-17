@@ -6,6 +6,7 @@ import { editListProperty } from "src/properties/propertyValueSelector";
 import { editPropertyValue } from "src/properties/propertyInputSelector";
 import { SelectionModal } from "src/ui/selectionModal";
 import { updateFrontmatter } from "src/shared/frontmatter";
+import { PROPERTY_KIND_ICONS } from "src/properties/propertyKind";
 
 /** Whether the palette should close once the edit has started. */
 export type PropertyEditOutcome = "close" | "stay";
@@ -93,12 +94,12 @@ interface NewKindItem {
 }
 
 const NEW_KIND_ITEMS: readonly NewKindItem[] = [
-	{ label: "Text", kind: "text", icon: "text" },
-	{ label: "List", kind: "list", icon: "list" },
-	{ label: "Number", kind: "number", icon: "binary" },
-	{ label: "Checkbox", kind: "checkbox", icon: "check-square" },
-	{ label: "Date", kind: "date", icon: "calendar" },
-	{ label: "Date & time", kind: "datetime", icon: "clock" },
+	{ label: "Text", kind: "text", icon: PROPERTY_KIND_ICONS.text },
+	{ label: "List", kind: "list", icon: PROPERTY_KIND_ICONS.list },
+	{ label: "Number", kind: "number", icon: PROPERTY_KIND_ICONS.number },
+	{ label: "Checkbox", kind: "checkbox", icon: PROPERTY_KIND_ICONS.checkbox },
+	{ label: "Date", kind: "date", icon: PROPERTY_KIND_ICONS.date },
+	{ label: "Date & time", kind: "datetime", icon: PROPERTY_KIND_ICONS.datetime },
 ];
 
 /** Picks a type; Esc resolves with null so nothing is added. */

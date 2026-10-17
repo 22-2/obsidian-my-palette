@@ -4,6 +4,10 @@ import { propertyTargetPaths, type PropertyResult } from "src/palette/results";
 import type { PaletteMenu, PaletteMenuItem } from "src/ui/paletteMenu";
 import { readList } from "src/properties/propertyList";
 import { updateFrontmatter } from "src/shared/frontmatter";
+import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
+import { ICONS } from "src/ui/icons";
+import { logger } from "src/shared/logger";
+import { getGlobalSearch } from "src/platform/obsidianInternals";
 
 /**
  * The text copied for a property value. A list is copied one item per line, and a
@@ -25,40 +29,36 @@ export function populatePropertyMenu(
 	edit: () => void,
 	beforeSearch?: () => void,
 ): void {
-	menu.addItem((item) => item.setTitle("Edit").setIcon("pencil").onClick(edit));
+	menu.addItem((item) => withAction(item, MENU_ACTIONS.editProperty).onClick(edit));
 	menu.addItem((item) =>
-		item
-			.setTitle("Open in search")
-			.setIcon("search")
-			.onClick(() => openPropertySearch(plugin.app, result.key, beforeSearch)),
+		withAction(item, MENU_ACTIONS.openPropertyInSearch).onClick(() =>
+			openPropertySearch(plugin.app, result.key, beforeSearch),
+		),
 	);
 	const targetCount = propertyTargetPaths(result).length;
 	if (result.inNote && targetCount > 1) {
 		addBulkDeleteItem(menu, plugin.app, result, targetCount);
 	} else if (result.inNote) {
 		menu.addItem((item) =>
-			item
-				.setTitle("Copy value")
-				.setIcon("clipboard-copy")
-				.onClick(() => void copyValue(plugin.app, result)),
+			withAction(item, MENU_ACTIONS.copyPropertyValue).onClick(
+				() => void copyValue(plugin.app, result),
+			),
 		);
 		menu.addItem((item) =>
-			item
-				.setTitle("Delete property")
-				.setIcon("trash-2")
-				.onClick(() => void deleteProperty(plugin.app, result)),
+			withAction(item, MENU_ACTIONS.deleteProperty).onClick(
+				() => void deleteProperty(plugin.app, result),
+			),
 		);
 	}
 	menu.addItem((item) =>
-		item
-			.setTitle("Copy property name")
-			.setIcon("clipboard-copy")
-			.onClick(() => void copyText(result.key, "Property name copied.")),
+		withAction(item, MENU_ACTIONS.copyPropertyName).onClick(
+			() => void copyText(result.key, "Property name copied."),
+		),
 	);
 }
 
 function openPropertySearch(app: App, key: string, beforeSearch?: () => void): void {
-	const search = app.internalPlugins.getEnabledPluginById("global-search");
+	const search = getGlobalSearch(app);
 	if (!search) {
 		new Notice("Enable Obsidian's search core plugin to search properties.");
 		return;
@@ -79,7 +79,8 @@ async function copyText(text: string, message: string): Promise<void> {
 	try {
 		await navigator.clipboard.writeText(text);
 		new Notice(message);
-	} catch {
+	} catch (error) {
+		logger.error("Failed to copy to the clipboard", error);
 		new Notice("Could not copy to the clipboard.");
 	}
 }
@@ -102,7 +103,7 @@ function addBulkDeleteItem(
 				? `Click again to delete from ${targetCount} notes`
 				: `Delete property from ${targetCount} notes`,
 		)
-			.setIcon("trash-2")
+			.setIcon(ICONS.delete)
 			.setWarning(true)
 			.setCta(confirming)
 			.setKeepOpen(confirming);

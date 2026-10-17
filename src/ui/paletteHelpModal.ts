@@ -2,6 +2,7 @@ import { App, Modal, setIcon } from "obsidian";
 import { PALETTE_MODES, paletteModeAlias } from "src/palette/modes";
 import type { ModeSettingsMap, PaletteSurface } from "src/settings/model";
 import { DEFAULT_HOTKEYS, formatHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
+import { ICONS } from "src/ui/icons";
 
 /** Shows the small, discoverable syntax guide instead of overloading the input placeholder. */
 export class PaletteHelpModal extends Modal {
@@ -102,7 +103,7 @@ export class PaletteHelpModal extends Modal {
 
 		const note = this.contentEl.createDiv("my-palette-help-modal__note");
 		const icon = note.createSpan("my-palette-help-modal__note-icon");
-		setIcon(icon, "info");
+		setIcon(icon, ICONS.info);
 		note.createSpan({
 			text: "Include Obsidian-excluded files appears in the options menu only in File search and Everything.",
 		});

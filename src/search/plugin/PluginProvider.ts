@@ -4,24 +4,11 @@ import type { PluginResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 import { hasPluginSettingsTab } from "src/search/plugin/pluginSettings";
-
-interface PluginManifest {
-	id: string;
-	name: string;
-	version: string;
-	dir?: string;
-}
-
-function getManifests(app: App): PluginManifest[] {
-	const manifests = (app.plugins as unknown as { manifests?: Record<string, PluginManifest> })
-		.manifests;
-	if (!manifests) return [];
-	return Object.values(manifests);
-}
+import { ICONS } from "src/ui/icons";
+import { getCommunityPlugin, getCommunityPluginManifests } from "src/platform/obsidianInternals";
 
 function isEnabled(app: App, pluginId: string): boolean {
-	const plugins = (app.plugins as unknown as { plugins?: Record<string, unknown> }).plugins;
-	return Boolean(plugins?.[pluginId]);
+	return getCommunityPlugin(app, pluginId) !== undefined;
 }
 
 /**
@@ -33,7 +20,7 @@ export class PluginProvider implements PaletteProvider<PluginResult> {
 
 	async search({ query }: PaletteSearchRequest): Promise<PluginResult[]> {
 		const results: PluginResult[] = [];
-		for (const manifest of getManifests(this.app)) {
+		for (const manifest of getCommunityPluginManifests(this.app)) {
 			if (!manifest?.id || !manifest.dir) continue;
 			const absolutePath = getVaultFullPath(this.app, manifest.dir);
 			if (!absolutePath) continue;
@@ -44,7 +31,7 @@ export class PluginProvider implements PaletteProvider<PluginResult> {
 				primary: manifest.name || manifest.id,
 				secondary:
 					`${manifest.id} ${manifest.version ?? ""}${enabled ? "" : " (disabled)"}`.trim(),
-				icon: "puzzle",
+				icon: ICONS.plugin,
 				pluginId: manifest.id,
 				absolutePath,
 				vaultPath: manifest.dir,

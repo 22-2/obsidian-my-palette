@@ -6,6 +6,7 @@ import {
 	type BookmarkEntry,
 } from "src/search/bookmark/bookmarks";
 import type { SelectionItem } from "src/ui/selectionModal";
+import { ICONS } from "src/ui/icons";
 
 /** A destination row: the top level, an existing group, or a group to create from the input. */
 export interface BookmarkGroupItem extends SelectionItem {
@@ -23,13 +24,13 @@ export function bookmarkGroupRows(
 	const groups: BookmarkGroupItem[] = listBookmarkGroups(items).map(({ group, path }) => ({
 		label: bookmarkLabel(group),
 		description: path.join(BOOKMARK_PATH_SEPARATOR),
-		icon: "folder",
+		icon: ICONS.folder,
 		target: { kind: "group", group },
 	}));
 	const top: BookmarkGroupItem = {
 		label: "Top level",
 		description: "Outside any group",
-		icon: "bookmark",
+		icon: ICONS.bookmark,
 		target: { kind: "top" },
 	};
 	const title = query.trim();
@@ -48,7 +49,7 @@ export function bookmarkGroupRows(
 		{
 			label: `New group: ${title}`,
 			description: "Create a group at the top level",
-			icon: "folder-plus",
+			icon: ICONS.newBookmarkGroup,
 			target: { kind: "new", title },
 		},
 	];

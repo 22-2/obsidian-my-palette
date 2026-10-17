@@ -1,5 +1,4 @@
 import { Plugin, type WorkspaceLeaf } from "obsidian";
-import log, { LogLevels } from "consola";
 import { DEFAULT_SETTINGS, MyPaletteSettingTab } from "src/settings";
 import type { LeafOpenAction } from "src/workspace/openLeaf";
 import type { MyPaletteSettings } from "src/settings/model";
@@ -34,9 +33,8 @@ import { IntegrationAvailability } from "src/app/integrationAvailability";
 import { getVaultRootPath } from "src/ignored-notes/ignoredPaths";
 import { openPluginSettings } from "src/search/plugin/pluginSettings";
 import "../styles.css";
-
-const logger = log.withTag("MyPalette");
-const debugLog = (message: string, detail?: unknown): void => logger.debug(message, detail);
+import { ICONS } from "src/ui/icons";
+import { debugLog, logger, setDebugLogging } from "src/shared/logger";
 
 export default class MyPalettePlugin extends Plugin {
 	settings: MyPaletteSettings = DEFAULT_SETTINGS;
@@ -162,7 +160,7 @@ export default class MyPalettePlugin extends Plugin {
 	}
 
 	initializeLogger(): void {
-		logger.level = this.settings.showLog ? LogLevels.debug : LogLevels.error;
+		setDebugLogging(this.settings.showLog);
 	}
 
 	async loadSettings(): Promise<LoadedPluginSettings> {
@@ -206,7 +204,7 @@ export default class MyPalettePlugin extends Plugin {
 			mode: "search-history",
 			primary: entry.input,
 			secondary: "Search history",
-			icon: "history",
+			icon: ICONS.history,
 			...entry,
 		}));
 	}

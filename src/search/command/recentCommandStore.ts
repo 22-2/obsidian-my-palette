@@ -5,8 +5,7 @@ import {
 	RecentIdStore,
 	type RecentIdStoreLogger,
 } from "src/shared/recentIdStore";
-
-export const RECENT_COMMAND_DATABASE_NAME = "my-palette-recent-commands";
+import { DATABASE_NAMES } from "src/shared/databaseNames";
 
 export type RecentCommandStoreLogger = RecentIdStoreLogger;
 
@@ -24,7 +23,7 @@ export class RecentCommandStore extends RecentIdStore {
 		super(
 			app,
 			{
-				databaseName: RECENT_COMMAND_DATABASE_NAME,
+				databaseName: DATABASE_NAMES.recentCommands,
 				idField: "commandId",
 				migrationName: "recent-commands",
 				maxEntries: MAX_RECENT_COMMAND_IDS,

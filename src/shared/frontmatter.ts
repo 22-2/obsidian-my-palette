@@ -1,6 +1,7 @@
 import type { App, TFile } from "obsidian";
+import { logger } from "src/shared/logger";
 
-/** Write a frontmatter change and report failures consistently to the console. */
+/** Write a frontmatter change and log any failure, so a "See the console" notice has detail. */
 export async function updateFrontmatter(
 	app: App,
 	file: TFile,
@@ -11,7 +12,7 @@ export async function updateFrontmatter(
 		await app.fileManager.processFrontMatter(file, update);
 		return true;
 	} catch (error) {
-		console.error(`Failed to ${operation} ${file.path}`, error);
+		logger.error(`Failed to ${operation} ${file.path}`, error);
 		return false;
 	}
 }

@@ -5,6 +5,7 @@ import { resolveVaultFile } from "src/palette/actions/resultFile";
 import { MoveFileModal, type MoveSource } from "src/palette/MoveFileModal";
 import type { PaletteResult } from "src/palette/results";
 import type { PaletteMenu } from "src/ui/paletteMenu";
+import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 
 /**
  * Resolves a palette result to something movable. Indexed files move directly;
@@ -41,9 +42,8 @@ export function addFileMoveMenuItem(
 	}
 	if (targets.size === 0) return;
 	menu.addItem((item) =>
-		item
-			.setTitle("Move to…")
-			.setIcon("folder-input")
-			.onClick(() => new MoveFileModal(plugin, [...targets.values()], onDone).open()),
+		withAction(item, MENU_ACTIONS.moveToFolder).onClick(() =>
+			new MoveFileModal(plugin, [...targets.values()], onDone).open(),
+		),
 	);
 }

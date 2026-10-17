@@ -1,5 +1,6 @@
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
+import { logger } from "src/shared/logger";
 
 const execAsync = promisify(exec);
 
@@ -43,7 +44,8 @@ export async function openDirectoryInTerminal(directory: string): Promise<string
 	try {
 		await execAsync(command);
 		return null;
-	} catch {
+	} catch (error) {
+		logger.error(`Failed to open a terminal at ${directory}`, error);
 		return `Could not open a terminal at "${directory}".`;
 	}
 }
