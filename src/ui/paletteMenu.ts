@@ -19,6 +19,8 @@ export type PaletteMenuActivation = MouseEvent | KeyboardEvent;
 /** 取り消しにくい操作。2回押したときだけ実行する。 */
 export interface ConfirmedMenuItemOptions {
 	title: string;
+	/** 表示名以外に検索できる操作 ID。 */
+	id?: string;
 	/** 1回目の押下のあとに出す。例: 「もう一度クリックして消去」。 */
 	confirmTitle: string;
 	icon: IconName;
@@ -94,6 +96,7 @@ export class PaletteMenu {
 	addConfirmedItem({
 		title,
 		confirmTitle,
+		id,
 		icon,
 		tooltip,
 		warning = true,
@@ -109,6 +112,7 @@ export class PaletteMenu {
 		this.addItem((item) => {
 			confirmedItem = item;
 			item.setIcon(icon).setWarning(warning);
+			if (id) item.setSearchTerms(id);
 			if (tooltip) item.setTooltip(tooltip);
 			render(item);
 			item.onClick(() => {
@@ -189,8 +193,8 @@ export class PaletteMenu {
 		const words = filter.inputEl.value.toLocaleLowerCase().split(/\s+/).filter(Boolean);
 		const filtering = words.length > 0;
 		for (const item of this.items) {
-			const title = item.title.toLocaleLowerCase();
-			item.setFiltered(filtering && !words.every((word) => title.includes(word)));
+			const searchText = `${item.title} ${item.searchTerms}`.toLocaleLowerCase();
+			item.setFiltered(filtering && !words.every((word) => searchText.includes(word)));
 		}
 		// Why: 両隣が消えると、グループの間の区切りは無関係な線に見えてしまう。
 		for (const separator of this.scrollEl.querySelectorAll(".menu-separator"))
@@ -399,6 +403,7 @@ export class PaletteMenuItem {
 	private filtered = false;
 	private keepOpen = false;
 	private callback: ((event: PaletteMenuActivation) => void) | null = null;
+	private searchText = "";
 
 	constructor(menu: PaletteMenu) {
 		this.menu = menu;
@@ -416,6 +421,16 @@ export class PaletteMenuItem {
 
 	get title(): string {
 		return this.titleEl.textContent ?? "";
+	}
+
+	get searchTerms(): string {
+		return this.searchText;
+	}
+
+	/** 表示名以外に絞り込みで使う語(操作 ID など)を設定する。 */
+	setSearchTerms(...terms: string[]): this {
+		this.searchText = terms.join(" ").toLocaleLowerCase();
+		return this;
 	}
 
 	/** メニューの絞り込みで、いまこの項目が隠れているかどうか。 */

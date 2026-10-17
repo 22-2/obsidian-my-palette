@@ -9,7 +9,11 @@ import { t } from "src/i18n";
 export function addSelectionHeader(menu: PaletteMenu, count: number): void {
 	if (count < 2) return;
 	menu.addItem((item) =>
-		item.setTitle(t("selection.header", { count })).setIcon(ICONS.selection).setDisabled(true),
+		item
+			.setTitle(t("selection.header", { count }))
+			.setIcon(ICONS.selection)
+			.setSearchTerms("selection-count")
+			.setDisabled(true),
 	);
 	menu.addSeparator();
 }

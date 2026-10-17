@@ -71,6 +71,7 @@ describe("populatePropertyMenu for several notes", () => {
 				const item = {
 					setTitle: (title: string) => ((entry.title = title), item),
 					setIcon: () => item,
+					setSearchTerms: () => item,
 					setWarning: () => item,
 					setCta: () => item,
 					setKeepOpen: () => item,

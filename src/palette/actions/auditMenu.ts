@@ -55,6 +55,7 @@ export function populateAuditMenu(options: AuditMenuOptions): void {
 			item
 				.setTitle(openTitle(first))
 				.setIcon(first.kind === "empty-folders" ? ICONS.revealInFileExplorer : ICONS.open)
+				.setSearchTerms("open-audit-result")
 				.onClick(() => void activate("primary", first)),
 		);
 		if (first.kind === "broken-links") addLinkedNoteItems(options, first);
@@ -100,6 +101,7 @@ function addLinkedNoteItems(
 			item
 				.setTitle(`${source.path}${line}`)
 				.setIcon(ICONS.note)
+				.setSearchTerms("open-linking-note")
 				.onClick(() => {
 					const file = app.vault.getFileByPath(source.path);
 					if (!file) {
@@ -139,6 +141,7 @@ function addTrashItem(
 	menu.addConfirmedItem({
 		title: t("audit.menu.trash"),
 		confirmTitle: t("audit.menu.trashConfirm", { what }),
+		id: "move-to-trash",
 		icon: ICONS.delete,
 		warning: true,
 		...(kind === "empty-folders"

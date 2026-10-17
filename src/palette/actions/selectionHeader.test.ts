@@ -11,6 +11,7 @@ function menu() {
 			const item = {
 				setTitle: (title: string) => (titles.push(title), item),
 				setIcon: () => item,
+				setSearchTerms: () => item,
 				setDisabled: (value: boolean) => (disabled.push(value), item),
 			};
 			configure(item);

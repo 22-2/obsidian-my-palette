@@ -7,6 +7,8 @@ import { t } from "src/i18n";
 export interface MenuAction {
 	readonly title: string;
 	readonly icon: IconName;
+	/** 日本語 UI でも操作を検索できる、安定した英語 ID。 */
+	readonly id?: string;
 }
 
 /**
@@ -14,57 +16,135 @@ export interface MenuAction {
  * どこに出しても同じ名前と見た目になる。
  */
 export const MENU_ACTIONS = {
-	open: { title: t("menu.open"), icon: ICONS.open },
-	openInMainWindow: { title: t("menu.openInMainWindow"), icon: ICONS.openInMainWindow },
-	openInBackground: { title: t("menu.openInBackground"), icon: ICONS.openInBackground },
-	openSideBySide: { title: t("menu.openSideBySide"), icon: ICONS.openSideBySide },
-	openBelow: { title: t("menu.openBelow"), icon: ICONS.openBelow },
+	open: { title: t("menu.open"), icon: ICONS.open, id: "open" },
+	openInMainWindow: {
+		title: t("menu.openInMainWindow"),
+		icon: ICONS.openInMainWindow,
+		id: "open-in-main-window",
+	},
+	openInBackground: {
+		title: t("menu.openInBackground"),
+		icon: ICONS.openInBackground,
+		id: "open-in-background",
+	},
+	openSideBySide: {
+		title: t("menu.openSideBySide"),
+		icon: ICONS.openSideBySide,
+		id: "open-side-by-side",
+	},
+	openBelow: { title: t("menu.openBelow"), icon: ICONS.openBelow, id: "open-below" },
 	openInExternalEditor: {
 		title: t("menu.openInExternalEditor"),
 		icon: ICONS.openInExternalEditor,
+		id: "open-in-external-editor",
 	},
 	showInSystemExplorer: {
 		title: t("menu.revealInSystemExplorer"),
 		icon: ICONS.showInSystemExplorer,
+		id: "show-in-system-explorer",
 	},
-	openInTerminal: { title: t("menu.openInTerminal"), icon: ICONS.openInTerminal },
-	openPluginSettings: { title: t("menu.openPluginSettings"), icon: ICONS.openSettings },
+	openInTerminal: {
+		title: t("menu.openInTerminal"),
+		icon: ICONS.openInTerminal,
+		id: "open-in-terminal",
+	},
+	openPluginSettings: {
+		title: t("menu.openPluginSettings"),
+		icon: ICONS.openSettings,
+		id: "open-plugin-settings",
+	},
 
-	copyFileName: { title: t("menu.copyFileName"), icon: ICONS.copy },
-	copyRelativePath: { title: t("menu.copyRelativePath"), icon: ICONS.copy },
-	copyAbsolutePath: { title: t("menu.copyAbsolutePath"), icon: ICONS.copy },
-	copyFileNames: { title: t("menu.copyFileNames"), icon: ICONS.copy },
-	copyRelativePaths: { title: t("menu.copyRelativePaths"), icon: ICONS.copy },
-	copyAbsolutePaths: { title: t("menu.copyAbsolutePaths"), icon: ICONS.copy },
+	copyFileName: { title: t("menu.copyFileName"), icon: ICONS.copy, id: "copy-file-name" },
+	copyRelativePath: {
+		title: t("menu.copyRelativePath"),
+		icon: ICONS.copy,
+		id: "copy-relative-path",
+	},
+	copyAbsolutePath: {
+		title: t("menu.copyAbsolutePath"),
+		icon: ICONS.copy,
+		id: "copy-absolute-path",
+	},
+	copyFileNames: { title: t("menu.copyFileNames"), icon: ICONS.copy, id: "copy-file-names" },
+	copyRelativePaths: {
+		title: t("menu.copyRelativePaths"),
+		icon: ICONS.copy,
+		id: "copy-relative-paths",
+	},
+	copyAbsolutePaths: {
+		title: t("menu.copyAbsolutePaths"),
+		icon: ICONS.copy,
+		id: "copy-absolute-paths",
+	},
 
-	moveToFolder: { title: t("menu.moveToFolder"), icon: ICONS.move },
-	rename: { title: t("menu.rename"), icon: ICONS.rename },
-	editProperties: { title: t("menu.editProperties"), icon: ICONS.editProperties },
-	addTags: { title: t("menu.addTags"), icon: ICONS.addTags },
-	insertIntoMoc: { title: t("menu.insertIntoMoc"), icon: ICONS.insertIntoMoc },
+	moveToFolder: { title: t("menu.moveToFolder"), icon: ICONS.move, id: "move-to-folder" },
+	rename: { title: t("menu.rename"), icon: ICONS.rename, id: "rename" },
+	editProperties: {
+		title: t("menu.editProperties"),
+		icon: ICONS.editProperties,
+		id: "edit-properties",
+	},
+	addTags: { title: t("menu.addTags"), icon: ICONS.addTags, id: "add-tags" },
+	insertIntoMoc: {
+		title: t("menu.insertIntoMoc"),
+		icon: ICONS.insertIntoMoc,
+		id: "insert-into-moc",
+	},
 
-	addToBookmarks: { title: t("menu.addToBookmarks"), icon: ICONS.addBookmark },
-	renameBookmark: { title: t("menu.renameBookmark"), icon: ICONS.rename },
-	moveToBookmarkGroup: { title: t("menu.moveToBookmarkGroup"), icon: ICONS.move },
-	removeFromBookmarks: { title: t("menu.removeFromBookmarks"), icon: ICONS.removeBookmark },
+	addToBookmarks: {
+		title: t("menu.addToBookmarks"),
+		icon: ICONS.addBookmark,
+		id: "add-to-bookmarks",
+	},
+	renameBookmark: { title: t("menu.renameBookmark"), icon: ICONS.rename, id: "rename-bookmark" },
+	moveToBookmarkGroup: {
+		title: t("menu.moveToBookmarkGroup"),
+		icon: ICONS.move,
+		id: "move-to-bookmark-group",
+	},
+	removeFromBookmarks: {
+		title: t("menu.removeFromBookmarks"),
+		icon: ICONS.removeBookmark,
+		id: "remove-from-bookmarks",
+	},
 
-	editProperty: { title: t("menu.editProperty"), icon: ICONS.edit },
-	openPropertyInSearch: { title: t("menu.openPropertyInSearch"), icon: ICONS.search },
-	copyPropertyValue: { title: t("menu.copyPropertyValue"), icon: ICONS.copy },
-	copyPropertyName: { title: t("menu.copyPropertyName"), icon: ICONS.copy },
-	deleteProperty: { title: t("menu.deleteProperty"), icon: ICONS.delete },
+	editProperty: { title: t("menu.editProperty"), icon: ICONS.edit, id: "edit-property" },
+	openPropertyInSearch: {
+		title: t("menu.openPropertyInSearch"),
+		icon: ICONS.search,
+		id: "open-property-in-search",
+	},
+	copyPropertyValue: {
+		title: t("menu.copyPropertyValue"),
+		icon: ICONS.copy,
+		id: "copy-property-value",
+	},
+	copyPropertyName: {
+		title: t("menu.copyPropertyName"),
+		icon: ICONS.copy,
+		id: "copy-property-name",
+	},
+	deleteProperty: { title: t("menu.deleteProperty"), icon: ICONS.delete, id: "delete-property" },
 
-	focusTab: { title: t("menu.focusTab"), icon: ICONS.focusTab },
-	duplicateTab: { title: t("menu.duplicateTab"), icon: ICONS.duplicateTab },
+	focusTab: { title: t("menu.focusTab"), icon: ICONS.focusTab, id: "focus-tab" },
+	duplicateTab: { title: t("menu.duplicateTab"), icon: ICONS.duplicateTab, id: "duplicate-tab" },
 
-	runCommand: { title: t("menu.runCommand"), icon: ICONS.run },
-	enterMode: { title: t("menu.enterMode"), icon: ICONS.confirm },
-	useSearch: { title: t("menu.useSearch"), icon: ICONS.history },
-	clearChanges: { title: t("menu.clearChanges"), icon: ICONS.unchecked },
+	runCommand: { title: t("menu.runCommand"), icon: ICONS.run, id: "run-command" },
+	enterMode: { title: t("menu.enterMode"), icon: ICONS.confirm, id: "enter-mode" },
+	useSearch: { title: t("menu.useSearch"), icon: ICONS.history, id: "use-search" },
+	clearChanges: { title: t("menu.clearChanges"), icon: ICONS.unchecked, id: "clear-changes" },
 
-	highlightSearchMatches: { title: t("menu.highlightSearchMatches"), icon: ICONS.highlight },
-	moveToRightSidebar: { title: t("menu.moveToRightSidebar"), icon: ICONS.moveToSidebar },
-	help: { title: t("menu.help"), icon: ICONS.help },
+	highlightSearchMatches: {
+		title: t("menu.highlightSearchMatches"),
+		icon: ICONS.highlight,
+		id: "highlight-search-matches",
+	},
+	moveToRightSidebar: {
+		title: t("menu.moveToRightSidebar"),
+		icon: ICONS.moveToSidebar,
+		id: "move-to-right-sidebar",
+	},
+	help: { title: t("menu.help"), icon: ICONS.help, id: "help" },
 } as const satisfies Record<string, MenuAction>;
 
 interface MenuItemLike<T> {
@@ -74,7 +154,10 @@ interface MenuItemLike<T> {
 
 /** 1つの操作から、項目のタイトルとアイコンを設定する。PaletteMenu と Obsidian の Menu の両方で使う。 */
 export function withAction<T extends MenuItemLike<T>>(item: T, action: MenuAction): T {
-	return item.setTitle(action.title).setIcon(action.icon);
+	item.setTitle(action.title).setIcon(action.icon);
+	if (action.id && "setSearchTerms" in item)
+		(item as T & { setSearchTerms: (...terms: string[]) => T }).setSearchTerms(action.id);
+	return item;
 }
 
 /** 操作の項目を1つ加える。 */

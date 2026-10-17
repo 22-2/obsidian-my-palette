@@ -394,6 +394,21 @@ function visibleTitles(): string[] {
 }
 
 describe("PaletteMenu filter", () => {
+	it("matches Japanese titles and English action IDs together, ignoring case", () => {
+		const menu = new PaletteMenu().enableFilter({ keymap } as unknown as App, 1);
+		const run = vi.fn();
+		menu.addItem((item) =>
+			item.setTitle("名前をコピー").setSearchTerms("copy-file-name").onClick(run),
+		);
+		menu.addItem((item) => item.setTitle("開く").setSearchTerms("open"));
+		menu.showAtPosition({ x: 0, y: 0 });
+
+		type("名前 COPY-FILE");
+		expect(visibleTitles()).toEqual(["名前をコピー"]);
+		press("Enter", filterInput());
+		expect(run).toHaveBeenCalledOnce();
+	});
+
 	it("takes focus when opened, so typing never reaches the palette input", () => {
 		const { menu } = filterMenu();
 		menu.showAtPosition({ x: 0, y: 0 });
