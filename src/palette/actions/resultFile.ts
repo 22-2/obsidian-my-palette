@@ -18,6 +18,8 @@ export function resolveVaultFile(app: App, result: PaletteResult): TFile | undef
 		case "bookmark":
 		case "smart":
 			return result.file;
+		case "audit":
+			return "file" in result ? result.file : undefined;
 		default:
 			return undefined;
 	}

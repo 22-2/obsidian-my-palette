@@ -20,7 +20,7 @@ const COLUMN_DEFINITIONS = {
 	linkedFrom: { label: "Linked from", width: 14 },
 	firstSource: { label: "First source", width: 38 },
 	foldersInside: { label: "Folders inside", width: 14 },
-	references: { label: "References", width: 12 },
+	content: { label: "Content", width: 12 },
 } as const;
 
 export type PaletteTableColumnId = keyof typeof COLUMN_DEFINITIONS;
@@ -46,8 +46,8 @@ export const PALETTE_TABLE_COLUMN_SETS: Readonly<
 > = {
 	files: columnsOf("name", "path", "modified", "prior"),
 	"orphaned-files": columnsOf("name", "path", "size", "modified"),
-	// Why: References is filled only for MOC-only notes, so it also tells them apart.
-	"empty-files": columnsOf("name", "path", "modified", "references"),
+	// Why: Content tells blank notes from MOC-only ones, which the list marks the same way.
+	"empty-files": columnsOf("name", "path", "modified", "content"),
 	// Why: the Name column holds the link text here, so it is labeled for what it shows.
 	"broken-links": [
 		{ id: "name", label: "Link", width: COLUMN_DEFINITIONS.name.width },
@@ -81,7 +81,7 @@ export interface PaletteTableRow {
 	linkedFrom?: number;
 	firstSource?: string;
 	foldersInside?: number;
-	references?: number;
+	content?: string;
 }
 
 interface RawLayout {
@@ -151,16 +151,14 @@ const features = tableFeatures({
 });
 const helper = createColumnHelper<typeof features, PaletteTableRow>();
 
-function textColumn(id: "name" | "path" | "firstSource") {
+function textColumn(id: "name" | "path" | "firstSource" | "content") {
 	return helper.accessor(id, {
 		sortFn: (a, b) => collator.compare(a.original[id] ?? "", b.original[id] ?? ""),
 		sortDescFirst: false,
 	});
 }
 
-function numberColumn(
-	id: "modified" | "prior" | "size" | "linkedFrom" | "foldersInside" | "references",
-) {
+function numberColumn(id: "modified" | "prior" | "size" | "linkedFrom" | "foldersInside") {
 	return helper.accessor(id, {
 		sortFn: sortFn_basic,
 		sortDescFirst: true,
@@ -179,7 +177,7 @@ const columns = helper.columns([
 	numberColumn("linkedFrom"),
 	textColumn("firstSource"),
 	numberColumn("foldersInside"),
-	numberColumn("references"),
+	textColumn("content"),
 ]);
 
 /** Keep search ranking as the unsorted order; explicit column sorts override it. */

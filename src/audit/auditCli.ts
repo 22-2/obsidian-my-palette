@@ -1,13 +1,7 @@
 import type { CliData } from "obsidian";
 import picomatch from "picomatch";
 import type { CliApi } from "src/app/registerCli";
-import {
-	applyAuditAction,
-	canArchive,
-	canTrash,
-	type AuditAction,
-	type AuditActionResult,
-} from "src/audit/auditActions";
+import { canTrash, trashAuditItems, type AuditActionResult } from "src/audit/auditActions";
 import { auditExclusions, collectAuditSnapshot } from "src/audit/auditSnapshot";
 import {
 	AUDIT_KINDS,
@@ -21,7 +15,7 @@ import {
 export const auditCliApi: CliApi = {
 	action: "audit",
 	description:
-		"List orphaned files, broken links, empty files or empty folders as JSON. Lists only, unless trash or archive is passed.",
+		"List orphaned files, broken links, empty files or empty folders as JSON. Lists only, unless trash is passed.",
 	flags: {
 		kind: {
 			value: `<${AUDIT_KINDS.join("|")}>`,
@@ -31,25 +25,21 @@ export const auditCliApi: CliApi = {
 		glob: {
 			value: "<pattern>",
 			description:
-				"Keep results whose vault-relative path matches (for broken links, the path of the linking note). Required with trash or archive",
+				"Keep results whose vault-relative path matches (for broken links, the path of the linking note). Required with trash",
 		},
 		trash: {
 			description:
 				"Move the listed files or folders to the trash (Obsidian's Deleted files setting). Not for broken-links",
-		},
-		archive: {
-			description:
-				"Move the listed files into the archive folder, keeping their paths. Only orphaned-files and empty-files",
 		},
 	},
 	run: async (plugin, params) => {
 		const { kind, glob } = params;
 		if (!isAuditKind(kind))
 			throw new Error(`Specify kind as one of: ${AUDIT_KINDS.join(", ")}.`);
-		const action = requestedAction(params, kind);
+		const trash = requestsTrash(params, kind);
 		const report = runAudit(
 			kind,
-			await collectAuditSnapshot(plugin.app, plugin.settings.audit),
+			await collectAuditSnapshot(plugin.app),
 			auditExclusions(plugin.app, plugin.settings),
 		);
 		const filtered =
@@ -57,16 +47,13 @@ export const auditCliApi: CliApi = {
 				? report
 				: filterAuditReport(report, picomatch(glob.replaceAll("\\", "/")));
 		const items = toCliItems(filtered);
-		if (!action || filtered.kind === "broken-links")
-			return { kind, count: items.length, items };
-		const results = await applyAuditAction(
+		if (!trash || filtered.kind === "broken-links") return { kind, count: items.length, items };
+		const results = await trashAuditItems(
 			plugin.app,
-			action,
 			kind,
 			filtered.items.map(({ path }) => path),
-			plugin.settings.audit,
 		);
-		return { kind, action, count: items.length, items: withResults(items, results) };
+		return { kind, action: "trash", count: items.length, items: withResults(items, results) };
 	},
 };
 
@@ -75,17 +62,11 @@ export const auditCliApi: CliApi = {
  * Why: a missing glob would act on every result in the vault, which an AI should not do
  * by accident.
  */
-function requestedAction(params: CliData, kind: AuditKind): AuditAction | undefined {
-	const trash = params.trash === "true";
-	const archive = params.archive === "true";
-	if (trash && archive) throw new Error("Pass either trash or archive, not both.");
-	const action = trash ? "trash" : archive ? "archive" : undefined;
-	if (!action) return undefined;
-	if (params.glob === undefined) throw new Error(`Pass glob to choose what to ${action}.`);
-	if (action === "trash" && !canTrash(kind)) throw new Error(`${kind} cannot be moved to trash.`);
-	if (action === "archive" && !canArchive(kind))
-		throw new Error("archive works only with orphaned-files and empty-files.");
-	return action;
+function requestsTrash(params: CliData, kind: AuditKind): boolean {
+	if (params.trash !== "true") return false;
+	if (params.glob === undefined) throw new Error("Pass glob to choose what to trash.");
+	if (!canTrash(kind)) throw new Error(`${kind} cannot be moved to trash.`);
+	return true;
 }
 
 /** Lines are one-based in the CLI, as editors show them. */

@@ -17,7 +17,7 @@ export function ignoredToggleOptions(
 	};
 }
 
-/** The option is shown in File search and Everything, where it changes the search scope. */
+/** The option is shown in File search, Everything and Vault audit, where it changes the scope. */
 export function syncIgnoredToggle(toggle: PanelSwitch | undefined, mode: PaletteMode): void {
 	toggle?.setHidden(!supportsIncludeIgnored(mode));
 }

@@ -31,7 +31,7 @@ Another Quick Switcher、標準の Quick Switcher、Quick Switcher++、Omnisearc
 - **コマンド・ブックマーク・リンク・バックリンク・Smart Connections の検索**を同じウィンドウで行えます。
 - **複数選択**: ファイルマネージャーと同じ操作で選び、選択したノートへまとめてパスのコピー、タグ追加、MOC リンク挿入ができます。
 - **3つの表示面**: モーダルの Palette、右サイドバーの Sidebar palette、センタータブでソートできる Table palette。
-- **Vault audit**: 孤立ファイル・壊れたリンク・空ファイル・空フォルダーを1つのモードで一覧にし、Table palette では種類ごとの列で表示します。ゴミ箱やアーカイブ用フォルダーへの移動もでき、Obsidian CLI からも使えます。
+- **Vault audit**: 孤立ファイル・壊れたリンク・空ファイル・空フォルダーを1つのモードで一覧にし、Table palette では種類ごとの列で表示します。ゴミ箱や別のフォルダーへの移動もでき、Obsidian CLI からも使えます。
 - **Obsidian-excluded files は必要なときだけ**: Obsidian の「Excluded files」で除外されたファイル（Obsidian-excluded files）は普段は出さず、`Include Obsidian-excluded files` オプション（オプションメニュー、`Ctrl+O`）をオンにしたときだけ検索対象にできます。
 - デスクトップ専用です（主な対象は Windows）。
 
@@ -169,24 +169,24 @@ Vault audit は、保管庫にたまっていく片付けの対象を一覧に�
 | -------------- | ----------------------------------------------------------------------------------- | ------------------------------- |
 | Orphaned files | どのノートからもリンク・埋め込みされていないファイル（Canvas からのリンクも数える） | Name, Path, Size, Modified      |
 | Broken links   | 存在しないリンク先と、そこへリンクしているノート                                    | Link, Linked from, First source |
-| Empty files    | 中身のないファイル。フロントマターだけのノートも含む                                | Name, Path, Modified            |
+| Empty files    | 中身のないファイル。フロントマターだけのノートも含む                                | Name, Path, Modified, Content   |
 | Empty folders  | ファイルを1つも含まないフォルダーのうち、一番上のもの                               | Name, Path, Folders inside      |
 
 Orphaned files と Empty files には、Obsidian で開けるファイルだけを出します。**Detect all file extensions** をオンにしたときに見える `cog.toml` のような設定ファイルは除きます。一覧を出すために保管庫へファイルを書き出さないので、一覧が判定に影響しません。`Open vault audit list` は Table palette で開き、種類ごとに列の並びと並べ替えを保ちます。
 
-`Enter` は、ファイルなら開き、壊れたリンクなら最初の参照元のその行へ移り、フォルダーならファイルエクスプローラーで表示します。参照元が複数ある壊れたリンクは、右クリックメニューに参照元を並べます。`Move to trash`（Obsidian の **Deleted files** の設定に従う）と `Move to archive folder` は選択した行に対して働き、2回押して実行します。移す直前に各項目をもう一度確かめ、一覧を作ってからリンクされたり編集されたりしたものは飛ばします。
+`Enter` は、ファイルなら開き、壊れたリンクなら最初の参照元のその行へ移り、フォルダーならファイルエクスプローラーで表示します。参照元が複数ある壊れたリンクは、右クリックメニューに参照元を並べます。`Move to trash`（Obsidian の **Deleted files** の設定に従う）は選択した行に対して働き、2回押して実行します。移す直前に各項目をもう一度確かめ、一覧を作ってからリンクされたり編集されたりしたものは飛ばします。残しておきたいファイルは、ほかのモードと同じく `Move to…` で別のフォルダーへ移せます。
 
-**設定 → My Palette → Vault audit** で、アーカイブ用フォルダー（元のパスを保って移し、一覧からは除く）と、除外するフォルダー・タグ・拡張子を設定します。Obsidian の Excluded files と、このプラグインの Excluded folders は常に除外します。Daily notes と Templates のフォルダーは、オフにしない限り Orphaned files から除きます。
+Vault audit に専用の設定はありません。File search と同じく、Obsidian の Excluded files と、このプラグインの Excluded folders を除外します。オプションメニューの **Include Obsidian-excluded files** をオンにすると、それらも一覧に含めます。残しておくファイルを入れたフォルダーも、こうして点検できます。Daily notes と Templates のフォルダーは、リンクされないのが普通なので、Orphaned files から常に除きます。
 
-**Count MOC-only notes as empty**（既定はオフ）をオンにすると、テンプレートから作って書かずに残ったノートのような、フロントマターと `## MOC` の節しかないノートも Empty files に含めます。MOC の References にある項目の数は References の列に出すので、残しておきたいリンクがあれば消す前に気づけます。ゴミ箱へ移すと、そのノートへリンクしているノートの Relateds からもリンクを外すので、相手側のリンクが壊れません。
+Empty files には、テンプレートから作って書かずに残ったノートのような、フロントマターと `## MOC` の節しかないノートも含めます。各行には `Empty` か `MOC only` の印が付きます（Table palette では Content の列）。MOC だけのノートをゴミ箱へ移すと、そのノートへリンクしているノートの Relateds からもリンクを外すので、相手側のリンクが壊れません。
 
-MOC remove selector も、同じ判定でつながっているノートに印（`Empty`、`MOC only`）を付けます。オプションのオン・オフには関係なく表示します。ブランクノートのまとめ（ハブ）を片付けるときは、書かれたノートを selector でハブから外し、まだ空のノートを Vault audit からゴミ箱へ移す、という2段階になります。
+MOC remove selector も、同じ判定でつながっているノートに印（`Empty`、`MOC only`）を付けます。ブランクノートのまとめ（ハブ）を片付けるときは、書かれたノートを selector でハブから外し、まだ空のノートを Vault audit からゴミ箱へ移す、という2段階になります。
 
 ### Obsidian CLI
 
 `obsidian my-palette:audit kind=<kind>` で同じ一覧を JSON で出力します。スクリプトや AI エージェントから使うためのものです。`kind` は `orphaned-files`・`broken-links`・`empty-files`・`empty-folders` のどれかで、`glob=<pattern>` で一致するパス（壊れたリンクでは参照元のノート）だけに絞ります。壊れたリンクの行番号は1から数えます。
 
-`trash` か `archive` を付けない限り一覧を出すだけです。どちらも `glob` が必須なので、指定を忘れて保管庫全体を動かすことはありません。そのときは各項目に `trashed`・`archived`・`skipped`・`failed` の結果が付きます。`obsidian my-palette` で使える CLI コマンドの一覧を出します。
+`trash` を付けない限り一覧を出すだけです。`trash` には `glob` が必須なので、指定を忘れて保管庫全体を動かすことはありません。そのときは各項目に `trashed`・`skipped`・`failed` の結果が付きます。`obsidian my-palette` で使える CLI コマンドの一覧を出します。
 
 ## ビュー
 
@@ -228,7 +228,7 @@ Table palette では次の操作ができます。
 
 ## 設定
 
-設定は6ページに分かれています。**General**（Home に戻るまでの時間、検索履歴、ハイライト、デバッグメッセージ）、**Modes**（各モードのエイリアスと有効/無効）、**File search**（対象拡張子、Excluded folders、Obsidian-excluded files のインデックス、ソート）、**Vault audit**（アーカイブ用フォルダーと除外するもの）、**Shortcuts**（ホットキーの表）、**Integrations**（Everything、Smart Connections、VS Code）です。
+設定は5ページに分かれています。**General**（Home に戻るまでの時間、検索履歴、ハイライト、デバッグメッセージ）、**Modes**（各モードのエイリアスと有効/無効）、**File search**（対象拡張子、Excluded folders、Obsidian-excluded files のインデックス、ソート）、**Shortcuts**（ホットキーの表）、**Integrations**（Everything、Smart Connections、VS Code）です。
 
 ### ショートカット
 

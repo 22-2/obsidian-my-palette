@@ -17,7 +17,7 @@ const RETURN_TO_HOME_LABELS: Record<string, string> = {
 	"60": "After 60 seconds",
 	"90": "After 90 seconds",
 };
-import { excludedFolders, extensions, tagList } from "src/settings/mergeSettings";
+import { excludedFolders, extensions } from "src/settings/mergeSettings";
 import { renderFileSortPriorityControl } from "src/settings/fileSortPriorityControl";
 import { renderShortcutsTable } from "src/settings/shortcutsTable";
 import {
@@ -82,7 +82,6 @@ export function createSettingPages(plugin: SettingsHost): SettingDefinitionItem[
 		createGeneralPage(plugin, helpers),
 		createModesPage(plugin, helpers),
 		createFileSearchPage(plugin, helpers),
-		createVaultAuditPage(plugin, helpers),
 		createShortcutsPage(plugin, helpers),
 		createIntegrationsPage(plugin, helpers),
 	];
@@ -183,106 +182,6 @@ function createFileSearchPage(plugin: SettingsHost, helpers: SettingPageHelpers)
 							() => plugin.saveSettings(),
 						);
 					},
-				),
-			]),
-		],
-	);
-}
-
-function createVaultAuditPage(plugin: SettingsHost, helpers: SettingPageHelpers): PageItem {
-	return helpers.page(
-		"Vault audit",
-		"What Vault audit leaves out of its lists, and where Move to archive folder puts files. Obsidian's Excluded files and this plugin's Excluded folders are always left out.",
-		[
-			helpers.group("Archive", [
-				helpers.render(
-					"Archive folder",
-					"Move to archive folder puts files here, keeping their paths. Vault audit does not list what is in this folder. Leave empty to turn the action off.",
-					(setting) =>
-						setting.addText((text) =>
-							text
-								.setPlaceholder("Example: Archive/audit")
-								.setValue(plugin.settings.audit.archiveFolder)
-								.onChange((value) => {
-									plugin.settings.audit.archiveFolder =
-										excludedFolders([value])[0] ?? "";
-									void plugin.saveSettings();
-								}),
-						),
-				),
-			]),
-			helpers.group("Empty files", [
-				helpers.render(
-					"Count MOC-only notes as empty",
-					"Also list notes with nothing but frontmatter and a ## MOC section, such as notes made from a template and never written. Moving one to the trash removes its links from other notes' Relateds.",
-					(setting) =>
-						setting.addToggle((toggle) =>
-							toggle
-								.setValue(plugin.settings.audit.mocOnlyAsEmpty)
-								.onChange((value) => {
-									plugin.settings.audit.mocOnlyAsEmpty = value;
-									void plugin.saveSettings();
-								}),
-						),
-				),
-			]),
-			helpers.group("Left out of Vault audit", [
-				helpers.render(
-					"Folders",
-					"Folder paths to leave out, one per line. Subfolders are also left out.",
-					(setting) =>
-						setting.addTextArea((text) =>
-							text
-								.setPlaceholder("Attachments\nreference")
-								.setValue(plugin.settings.audit.excludedFolders.join("\n"))
-								.onChange((value) => {
-									plugin.settings.audit.excludedFolders = excludedFolders(value);
-									void plugin.saveSettings();
-								}),
-						),
-				),
-				helpers.render(
-					"Tags",
-					"Notes with these tags are left out, separated by commas or spaces. A tag also covers its nested tags.",
-					(setting) =>
-						setting.addText((text) =>
-							text
-								.setPlaceholder("Example: keep, template")
-								.setValue(plugin.settings.audit.excludedTags.join(", "))
-								.onChange((value) => {
-									plugin.settings.audit.excludedTags = tagList(value);
-									void plugin.saveSettings();
-								}),
-						),
-				),
-				helpers.render(
-					"Extensions",
-					"Comma-separated extensions to leave out.",
-					(setting) =>
-						setting.addText((text) =>
-							text
-								.setPlaceholder("Example: pdf, excalidraw")
-								.setValue(plugin.settings.audit.excludedExtensions.join(", "))
-								.onChange((value) => {
-									plugin.settings.audit.excludedExtensions = extensions(
-										value.split(","),
-									);
-									void plugin.saveSettings();
-								}),
-						),
-				),
-				helpers.render(
-					"Daily notes and templates",
-					"Leave the Daily notes and Templates folders out of Orphaned files, since such notes are rarely linked. Read from the core plugins' settings.",
-					(setting) =>
-						setting.addToggle((toggle) =>
-							toggle
-								.setValue(plugin.settings.audit.excludeDailyNotesAndTemplates)
-								.onChange((value) => {
-									plugin.settings.audit.excludeDailyNotesAndTemplates = value;
-									void plugin.saveSettings();
-								}),
-						),
 				),
 			]),
 		],

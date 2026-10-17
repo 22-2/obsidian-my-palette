@@ -1,13 +1,17 @@
 import { expect, test, type ObsidianAPI } from "./fixtures.mts";
 import type { Page } from "@playwright/test";
 import {
+	IGNORED_OPTION,
 	MODAL_INPUT,
 	PLUGIN_ID,
+	flipOption,
+	menuItems,
 	openHomeWith,
 	optionMenuTitles,
 	pluginVaultOptions,
 	rowLabels,
 	runPaletteCommand,
+	setIgnoreFilters,
 	waitForResolvedLinks,
 	writeRaw,
 } from "./support.mts";
@@ -196,6 +200,14 @@ test("the table palette shows the columns of the chosen kind", async ({ obsidian
 	await expect(table.locator('td[data-column="firstSource"]')).toHaveText("notes/source.md");
 });
 
+test("Include Obsidian-excluded files lists what Excluded files hides", async ({ obsidian }) => {
+	await setIgnoreFilters(obsidian, ["notes"]);
+	const page = await openHomeWith(obsidian, "a orphan");
+	await expect.poll(() => rowLabels(page)).toEqual([]);
+	await flipOption(page, IGNORED_OPTION);
+	await expect.poll(() => rowLabels(page)).toEqual(["orphan.md"]);
+});
+
 test.describe("moving items", () => {
 	test.beforeEach(async ({ obsidian }) => {
 		// Why: keep trashed files inside the test vault instead of the system trash.
@@ -207,20 +219,10 @@ test.describe("moving items", () => {
 		);
 	});
 
-	test("the CLI refuses to move without a glob and with both actions", async ({ obsidian }) => {
+	test("the CLI refuses to move without a glob or for broken links", async ({ obsidian }) => {
 		expect(
 			(await runAuditCli(obsidian, { kind: "orphaned-files", trash: "true" })).error,
 		).toContain("glob");
-		expect(
-			(
-				await runAuditCli(obsidian, {
-					kind: "orphaned-files",
-					glob: "**",
-					trash: "true",
-					archive: "true",
-				})
-			).error,
-		).toContain("not both");
 		expect(
 			(await runAuditCli(obsidian, { kind: "broken-links", glob: "**", trash: "true" }))
 				.error,
@@ -241,28 +243,20 @@ test.describe("moving items", () => {
 		expect(await obsidian.exists("notes/source.md")).toBe(true);
 	});
 
-	test("the CLI archives files under the archive folder, keeping their paths", async ({
-		obsidian,
-	}) => {
-		await obsidian.evaluateApp(async () => {
-			const plugin = app.plugins.plugins["my-palette"] as unknown as {
-				settings: { audit: { archiveFolder: string } };
-				saveSettings(): Promise<void>;
-			};
-			plugin.settings.audit.archiveFolder = "Archive";
-			await plugin.saveSettings();
-		});
-		const report = await runAuditCli(obsidian, {
-			kind: "empty-files",
-			glob: "notes/**",
-			archive: "true",
-		});
-		expect(report.items).toEqual([
-			expect.objectContaining({ path: "notes/frontmatter-only.md", result: "archived" }),
-		]);
-		expect(await obsidian.exists("Archive/notes/frontmatter-only.md")).toBe(true);
-		// Archived files are not listed again.
-		expect((await runAuditCli(obsidian, { kind: "empty-files" })).items).toEqual([]);
+	test("the row menu offers Move to… for files only", async ({ obsidian }) => {
+		const page = await openHomeWith(obsidian, "a orphan");
+		await expect.poll(() => rowLabels(page)).toEqual(["orphan.md"]);
+		const row = page.locator(".my-palette-suggest-modal .suggestion-item").first();
+		await row.click({ button: "right" });
+		await expect(menuItems(page)).toContainText(["Move to…", "Move to trash"]);
+		await page.keyboard.press("Escape");
+
+		await chooseKind(page, "Empty folders");
+		await page.locator(MODAL_INPUT).fill("");
+		await expect.poll(() => rowLabels(page)).toEqual(["empty"]);
+		await row.click({ button: "right" });
+		await expect(menuItems(page).filter({ hasText: "Move to trash" })).toHaveCount(1);
+		await expect(menuItems(page).filter({ hasText: "Move to…" })).toHaveCount(0);
 	});
 
 	test("moves a multi-selection to the trash at once", async ({ obsidian }) => {
@@ -342,32 +336,23 @@ test.describe("MOC-only notes", () => {
 		});
 	});
 
-	async function setMocOnlyAsEmpty(obsidian: ObsidianAPI, value: boolean): Promise<void> {
-		await obsidian.evaluateApp(async (value) => {
-			const plugin = app.plugins.plugins["my-palette"] as unknown as {
-				settings: { audit: { mocOnlyAsEmpty: boolean } };
-				saveSettings(): Promise<void>;
-			};
-			plugin.settings.audit.mocOnlyAsEmpty = value;
-			await plugin.saveSettings();
-		}, value);
-	}
-
-	test("are listed as empty files only when the option is on", async ({ obsidian }) => {
-		expect(
-			(await runAuditCli(obsidian, { kind: "empty-files", glob: "moc/**" })).items,
-		).toEqual([]);
-		await setMocOnlyAsEmpty(obsidian, true);
+	test("are listed as empty files, marked as MOC only", async ({ obsidian }) => {
 		const report = await runAuditCli(obsidian, { kind: "empty-files", glob: "moc/**" });
 		expect(report.items).toEqual([
-			expect.objectContaining({ path: "moc/blank.md", mocOnly: { references: 1 } }),
-			// A hub that only lists links is MOC-only too; a tag can leave it out.
-			expect.objectContaining({ path: "moc/hub.md", mocOnly: { references: 0 } }),
+			expect.objectContaining({ path: "moc/blank.md", mocOnly: true }),
+			// A hub that only lists links is MOC-only too.
+			expect.objectContaining({ path: "moc/hub.md", mocOnly: true }),
 		]);
+
+		const page = await openHomeWith(obsidian, "a ");
+		await chooseKind(page, "Empty files");
+		await page.locator(MODAL_INPUT).fill("blank");
+		await expect(
+			page.locator(".my-palette-suggest-modal .suggestion-item").first(),
+		).toContainText("MOC only");
 	});
 
 	test("moving one to the trash removes it from its partners' Relateds", async ({ obsidian }) => {
-		await setMocOnlyAsEmpty(obsidian, true);
 		const report = await runAuditCli(obsidian, {
 			kind: "empty-files",
 			glob: "moc/blank.md",
@@ -387,7 +372,6 @@ test.describe("MOC-only notes", () => {
 		await runPaletteCommand(obsidian, "open-moc-remove-selector");
 		const rows = obsidian.page.locator(".my-palette-suggest-modal .suggestion-item");
 		await expect(rows).toHaveCount(2);
-		// The marks do not depend on the Vault audit option.
 		await expect(
 			rows.filter({ hasText: "blank" }).locator(".my-palette-suggestion__badge"),
 		).toHaveText("MOC only");
