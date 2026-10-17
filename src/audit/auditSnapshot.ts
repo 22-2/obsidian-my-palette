@@ -1,21 +1,45 @@
 import { getLinkpath, normalizePath, type App, type CachedMetadata } from "obsidian";
-import type {
-	AuditExclusions,
-	AuditFile,
-	AuditSnapshot,
-	UnresolvedLinkOccurrence,
+import {
+	runAudit,
+	type AuditExclusions,
+	type AuditFile,
+	type AuditKind,
+	type AuditReport,
+	type AuditSnapshot,
+	type UnresolvedLinkOccurrence,
 } from "src/audit/vaultAudit";
 import { isMocOnly } from "src/moc-relateds/mocRelatedsCore";
 import { getUserIgnoreFilters } from "src/ignored-notes/ignoredPaths";
 import { getCorePluginFolder, isExtensionOpenable } from "src/platform/obsidianInternals";
 import type { MyPaletteSettings } from "src/settings/model";
 
-/** Reads what `vaultAudit.ts` judges from the vault and the metadata cache. */
-export async function collectAuditSnapshot(app: App): Promise<AuditSnapshot> {
+/** Runs one kind of audit on the vault as it is now, with the exclusions from the settings. */
+export async function auditVault(
+	app: App,
+	kind: AuditKind,
+	settings: MyPaletteSettings,
+	includeExcluded = false,
+): Promise<AuditReport> {
+	return runAudit(
+		kind,
+		await collectAuditSnapshot(app, kind),
+		auditExclusions(app, settings, includeExcluded),
+	);
+}
+
+/**
+ * Reads what `vaultAudit.ts` judges from the vault and the metadata cache. Only what `kind`
+ * needs is read; the rest stays empty, so pass the snapshot to `runAudit` with the same kind.
+ */
+export async function collectAuditSnapshot(app: App, kind: AuditKind): Promise<AuditSnapshot> {
 	const { metadataCache, vault } = app;
+	// Why: an empty folder holds no file of any kind, so whether files open does not matter.
+	const judgesFiles = kind !== "empty-folders";
+	const judgesContent = kind === "empty-files";
+	const openable = openableExtensions(app);
 	const files = await Promise.all(
 		vault.getFiles().map(async (file): Promise<AuditFile> => {
-			const cache = metadataCache.getFileCache(file);
+			const cache = judgesContent ? metadataCache.getFileCache(file) : null;
 			const written = file.extension === "md" && cache ? hasContent(cache) : undefined;
 			// Why: only notes with a MOC heading are read, so this stays cheap on large vaults.
 			const mocOnly =
@@ -27,7 +51,7 @@ export async function collectAuditSnapshot(app: App): Promise<AuditSnapshot> {
 				extension: file.extension.toLocaleLowerCase(),
 				size: file.stat.size,
 				mtime: file.stat.mtime,
-				openable: isExtensionOpenable(app, file.extension),
+				openable: judgesFiles && openable(file.extension),
 				...(written === undefined ? {} : { hasContent: written }),
 				...(mocOnly ? { mocOnly } : {}),
 			};
@@ -35,9 +59,9 @@ export async function collectAuditSnapshot(app: App): Promise<AuditSnapshot> {
 	);
 	return {
 		files,
-		folders: vault.getAllFolders(false).map((folder) => folder.path),
-		resolvedLinks: metadataCache.resolvedLinks,
-		unresolvedLinks: collectUnresolvedLinks(app),
+		folders: judgesFiles ? [] : vault.getAllFolders(false).map((folder) => folder.path),
+		resolvedLinks: kind === "orphaned-files" ? metadataCache.resolvedLinks : {},
+		unresolvedLinks: kind === "broken-links" ? collectUnresolvedLinks(app) : [],
 	};
 }
 
@@ -72,7 +96,8 @@ function hasContent(cache: CachedMetadata): boolean {
 
 /**
  * `unresolvedLinks` only counts links per note, so the notes it names are read again for
- * the line of each link.
+ * the line of each link. Its keys are the link paths as written, so a link is broken when
+ * its path is one of them; nothing has to be resolved again.
  */
 function collectUnresolvedLinks(app: App): UnresolvedLinkOccurrence[] {
 	const { metadataCache } = app;
@@ -88,7 +113,7 @@ function collectUnresolvedLinks(app: App): UnresolvedLinkOccurrence[] {
 		return references.flatMap((reference): UnresolvedLinkOccurrence[] => {
 			const link = getLinkpath(reference.link);
 			// Why: a link to a heading in the same note (`[[#heading]]`) has no file to find.
-			if (!link || metadataCache.getFirstLinkpathDest(link, source)) return [];
+			if (!link || !(link in links)) return [];
 			return [
 				"position" in reference
 					? { source, link, line: reference.position.start.line }
@@ -96,6 +121,18 @@ function collectUnresolvedLinks(app: App): UnresolvedLinkOccurrence[] {
 			];
 		});
 	});
+}
+
+/** Asks Obsidian once per extension; a vault holds many files of few extensions. */
+function openableExtensions(app: App): (extension: string) => boolean {
+	const known = new Map<string, boolean>();
+	return (extension) => {
+		const cached = known.get(extension);
+		if (cached !== undefined) return cached;
+		const openable = isExtensionOpenable(app, extension);
+		known.set(extension, openable);
+		return openable;
+	};
 }
 
 /** The folders of the Daily notes and Templates core plugins, when they are on. */

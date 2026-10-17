@@ -74,6 +74,7 @@ export default class MyPalettePlugin extends Plugin {
 	tabProvider!: PaletteProviderInstances["tabProvider"];
 	pluginProvider!: PaletteProviderInstances["pluginProvider"];
 	snippetProvider!: PaletteProviderInstances["snippetProvider"];
+	auditProvider!: PaletteProviderInstances["auditProvider"];
 	providers!: PaletteProviderInstances["providers"];
 	private fileUsageHistory?: FileUsageHistory;
 	private searchHistory?: SearchHistoryService;
@@ -119,6 +120,7 @@ export default class MyPalettePlugin extends Plugin {
 		this.tabProvider = providers.tabProvider;
 		this.pluginProvider = providers.pluginProvider;
 		this.snippetProvider = providers.snippetProvider;
+		this.auditProvider = providers.auditProvider;
 		this.providers = providers.providers;
 		this.addSettingTab(new MyPaletteSettingTab(this));
 		registerPluginCommands(this);
@@ -152,6 +154,7 @@ export default class MyPalettePlugin extends Plugin {
 		this.integrationAvailability.dispose();
 		this.paletteDisplaySettings.dispose();
 		this.fileProvider?.dispose();
+		this.auditProvider?.dispose();
 		void this.searchHistory?.dispose();
 		void this.recentCommands?.dispose();
 		void this.recentTagStore?.dispose();

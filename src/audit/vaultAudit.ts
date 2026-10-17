@@ -1,4 +1,4 @@
-import { isUserIgnoredPathWithFilters } from "src/ignored-notes/ignoredPathMatching";
+import { createUserIgnoredPathMatcher } from "src/ignored-notes/ignoredPathMatching";
 
 /**
  * Vault audit judgement, kept free of Obsidian so the palette mode and the CLI share one
@@ -145,6 +145,8 @@ export function findOrphanedFiles(
 	snapshot: AuditSnapshot,
 	exclusions: AuditExclusions,
 ): AuditFileItem[] {
+	const isExcluded = createUserIgnoredPathMatcher(exclusions.folders);
+	const isOrphanFolder = createUserIgnoredPathMatcher(exclusions.orphanFolders);
 	const linked = new Set<string>();
 	for (const [source, targets] of Object.entries(snapshot.resolvedLinks)) {
 		for (const target of Object.keys(targets)) {
@@ -155,8 +157,7 @@ export function findOrphanedFiles(
 	return sortByPath(
 		snapshot.files
 			.filter((file) => file.openable && !linked.has(file.path))
-			.filter((file) => !isExcludedFile(file, exclusions))
-			.filter((file) => !isUserIgnoredPathWithFilters(exclusions.orphanFolders, file.path))
+			.filter((file) => !isExcluded(file.path) && !isOrphanFolder(file.path))
 			.map(toFileItem),
 	);
 }
@@ -165,11 +166,12 @@ export function findBrokenLinks(
 	snapshot: AuditSnapshot,
 	exclusions: AuditExclusions,
 ): BrokenLinkItem[] {
+	const isExcluded = createUserIgnoredPathMatcher(exclusions.folders);
 	const filesByPath = new Map(snapshot.files.map((file) => [file.path, file]));
 	const sourcesByLink = new Map<string, BrokenLinkSource[]>();
 	for (const { source, link, line } of snapshot.unresolvedLinks) {
 		const file = filesByPath.get(source);
-		if (!file || isExcludedFile(file, exclusions)) continue;
+		if (!file || isExcluded(file.path)) continue;
 		const sources = sourcesByLink.get(link) ?? [];
 		sources.push(line === undefined ? { path: source } : { path: source, line });
 		sourcesByLink.set(link, sources);
@@ -183,10 +185,10 @@ export function findEmptyFiles(
 	snapshot: AuditSnapshot,
 	exclusions: AuditExclusions,
 ): AuditFileItem[] {
+	const isExcluded = createUserIgnoredPathMatcher(exclusions.folders);
 	return sortByPath(
 		snapshot.files
-			.filter((file) => file.openable && isEmptyFile(file))
-			.filter((file) => !isExcludedFile(file, exclusions))
+			.filter((file) => file.openable && isEmptyFile(file) && !isExcluded(file.path))
 			.map(toEmptyFileItem),
 	);
 }
@@ -199,9 +201,10 @@ export function findEmptyFolders(
 	const holdingFiles = new Set(snapshot.files.flatMap((file) => ancestorFolders(file.path)));
 	const empty = snapshot.folders.filter((folder) => !holdingFiles.has(folder));
 	const emptySet = new Set(empty);
+	const isExcluded = createUserIgnoredPathMatcher(exclusions.folders);
 	return empty
 		.filter((folder) => !emptySet.has(parentFolder(folder)))
-		.filter((folder) => !isUserIgnoredPathWithFilters(exclusions.folders, folder))
+		.filter((folder) => !isExcluded(folder))
 		.map((path) => ({
 			path,
 			foldersInside: empty.filter((other) => other.startsWith(`${path}/`)).length,
@@ -213,10 +216,6 @@ function isEmptyFile(file: AuditFile): boolean {
 	if (file.mocOnly) return true;
 	if (file.extension === "md" && file.hasContent !== undefined) return !file.hasContent;
 	return file.size === 0;
-}
-
-function isExcludedFile(file: AuditFile, exclusions: AuditExclusions): boolean {
-	return isUserIgnoredPathWithFilters(exclusions.folders, file.path);
 }
 
 function ancestorFolders(path: string): string[] {

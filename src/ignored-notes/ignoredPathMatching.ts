@@ -15,15 +15,29 @@ export function isUserIgnoredPathWithFilters(
 	filters: readonly string[],
 	vaultPath: string,
 ): boolean {
-	const normalizedPath = normalizePath(vaultPath);
-	return filters.some((ignored) => {
-		if (isUserIgnoreFilterRegex(ignored)) {
-			try {
-				return new RegExp(ignored.slice(1, -1)).test(normalizedPath);
-			} catch {
-				return false;
-			}
+	return createUserIgnoredPathMatcher(filters)(vaultPath);
+}
+
+/**
+ * Compiles the filters once, for callers that test many paths against the same filters.
+ * An invalid regular expression matches nothing.
+ */
+export function createUserIgnoredPathMatcher(
+	filters: readonly string[],
+): (vaultPath: string) => boolean {
+	const matchers = filters.flatMap((ignored): ((path: string) => boolean)[] => {
+		if (!isUserIgnoreFilterRegex(ignored))
+			return [(path) => path === ignored || path.startsWith(`${ignored}/`)];
+		try {
+			const pattern = new RegExp(ignored.slice(1, -1));
+			return [(path) => pattern.test(path)];
+		} catch {
+			return [];
 		}
-		return normalizedPath === ignored || normalizedPath.startsWith(`${ignored}/`);
 	});
+	if (matchers.length === 0) return () => false;
+	return (vaultPath) => {
+		const normalizedPath = normalizePath(vaultPath);
+		return matchers.some((matches) => matches(normalizedPath));
+	};
 }
