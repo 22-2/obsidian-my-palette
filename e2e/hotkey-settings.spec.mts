@@ -19,8 +19,9 @@ test("the Shortcuts table records changes, rejects conflicts and restores defaul
 	await expect(hidePreview).toContainText("All palettes and selectors");
 	await expect(hidePreview.locator(".my-palette-shortcuts__dot")).toHaveCount(0);
 	const preview = row("Preview selected result");
-	await expect(preview.locator(".my-palette-shortcuts__dot")).toHaveCount(4);
-	await expect(preview.getByRole("img", { name: "MOC remove selector" })).toBeVisible();
+	await expect(preview.locator(".my-palette-shortcuts__dot")).toHaveCount(3);
+	await expect(preview.getByRole("img", { name: "MOC insert selector" })).toBeVisible();
+	const toggleSelection = row("Toggle selection");
 	await expect(key).toHaveText("Alt+H");
 	await expect(hidePreview.getByRole("button", { name: "Reset" })).toBeHidden();
 
@@ -60,7 +61,9 @@ test("the Shortcuts table records changes, rejects conflicts and restores defaul
 	await scroller.evaluate((element) => {
 		element.scrollLeft = element.scrollWidth;
 	});
-	await expect(preview.getByRole("img", { name: "MOC remove selector" })).toBeInViewport();
+	await expect(
+		toggleSelection.getByRole("img", { name: "Property value selector" }),
+	).toBeInViewport();
 	await body.screenshot({ path: testInfo.outputPath("shortcuts-narrow.png") });
 	await resizeTable(570);
 	await scroller.evaluate((element) => {

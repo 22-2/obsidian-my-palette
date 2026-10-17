@@ -13,7 +13,6 @@ import {
 
 const SCOPE_NAMES: Record<HotkeyScope, string> = {
 	palette: "Palette",
-	"file-search": "File search",
 	selector: "Selectors",
 	"tag-insert-selector": "Tag insert selector",
 	"moc-insert-selector": "MOC insert selector",
@@ -24,7 +23,6 @@ const SCOPE_NAMES: Record<HotkeyScope, string> = {
 /** The order places are listed in a When cell and, by that list, the rows of the table. */
 const SCOPE_ORDER: readonly HotkeyScope[] = [
 	"palette",
-	"file-search",
 	"selector",
 	"tag-insert-selector",
 	"moc-insert-selector",
@@ -72,7 +70,6 @@ export function compareScopes(a: readonly HotkeyScope[], b: readonly HotkeyScope
  */
 const MATRIX_COLUMNS: readonly { scope: HotkeyScope; header: string; name: string }[] = [
 	{ scope: "palette", header: "Palette", name: "Palette" },
-	{ scope: "file-search", header: "File search", name: "File search" },
 	{ scope: "tag-insert-selector", header: "Tag", name: "Tag insert selector" },
 	{ scope: "moc-insert-selector", header: "MOC +", name: "MOC insert selector" },
 	{ scope: "moc-remove-selector", header: "MOC −", name: "MOC remove selector" },

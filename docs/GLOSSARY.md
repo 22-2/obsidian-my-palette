@@ -155,7 +155,7 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 
 ### ショートカット表
 
-- When列は、場所ごとの列に分けて、使える場所に●を付ける。列は「Palette、File search、Tag、MOC +、MOC −」の順。見出しの短い名前は、Tagが「Tag insert selector」、MOC +が「MOC insert selector」、MOC −が「MOC remove selector」で、ツールチップとアクセシブルネームには正式名を使う。
+- When列は、場所ごとの列に分けて、使える場所に●を付ける。列は「Palette、Tag、MOC +、MOC −、Property」の順。Paletteの列はファイル検索などすべてのモードを含むので、モードごとの列は作らない。見出しの短い名前は、Tagが「Tag insert selector」、MOC +が「MOC insert selector」、MOC −が「MOC remove selector」、Propertyが「Property value selector」で、ツールチップとアクセシブルネームには正式名を使う。
 - PaletteとSelectorの両方で使えるものは、列をまたぐ1つのセルに「All palettes and selectors」と書く(Folder move selectorには専用の列がないため)。
 - 行はWhenの順に並べる。「All palettes and selectors」を先頭にし、あとは上の列の順で比べ、同じ書き出しなら短い方を先にする。同じWhenの行は、`HOTKEY_ACTIONS`の定義順。
 - 並び順と列は`src/settings/shortcutsTable.ts`の`SCOPE_ORDER`、`MATRIX_COLUMNS`、`compareScopes`が決める。
@@ -171,7 +171,6 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 
 - **大文字・小文字**: モード名とコマンド名はSentence caseにした。それ以外のUI文言(設定の見出しなど)も揃えるか。ObsidianのガイドラインはSentence case。Homeは固有名として例外にする。
 - **優先度を下げるフォルダー**: 「Lower prior folders」は英語として不自然。識別子`demotedPriorFolders`と意味を揃えた名前(例: 「Lower-ranked folders」)にするか。
-- **ショートカットの範囲「File search」**: Paletteのうちファイルを検索する状態を指す。Palette側の用語として残すか、別の名前にするか。
 
 ## 文言を直すときの確認先
 

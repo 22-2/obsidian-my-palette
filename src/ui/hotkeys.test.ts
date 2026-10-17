@@ -85,8 +85,7 @@ describe("custom hotkeys", () => {
 		// The palette and the tag insert selector are separate places, so they can share a key.
 		expect(scopesOverlap(["palette"], ["tag-insert-selector"])).toBe(false);
 		expect(scopesOverlap(["moc-insert-selector"], ["tag-insert-selector"])).toBe(false);
-		// File search is part of the palette, and every selector is part of the selector group.
-		expect(scopesOverlap(["palette"], ["file-search"])).toBe(true);
+		// Every selector is part of the selector group.
 		expect(scopesOverlap(["selector"], ["moc-insert-selector"])).toBe(true);
 		// The selectors sit inside the "all palettes and selectors" scope, so the hide shortcut clashes with them.
 		expect(

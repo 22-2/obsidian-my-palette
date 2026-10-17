@@ -5,12 +5,12 @@ export interface PaletteHotkey {
 }
 
 /**
- * A place where a shortcut can be pressed. A place inside another one (file search inside
- * the palette, a MOC insert selector inside selectors) overlaps it, so the two cannot share a key.
+ * A place where a shortcut can be pressed. A place inside another one (a MOC insert selector
+ * inside selectors) overlaps it, so the two cannot share a key. Palette modes such as file
+ * search are all part of "palette", so a palette shortcut works in every mode.
  */
 export type HotkeyScope =
 	| "palette"
-	| "file-search"
 	| "selector"
 	| "tag-insert-selector"
 	| "moc-insert-selector"
@@ -18,7 +18,6 @@ export type HotkeyScope =
 	| "property-value-selector";
 
 const SCOPE_PARENT: Partial<Record<HotkeyScope, HotkeyScope>> = {
-	"file-search": "palette",
 	"tag-insert-selector": "selector",
 	"moc-insert-selector": "selector",
 	"moc-remove-selector": "selector",
@@ -35,7 +34,8 @@ export const HOTKEY_ACTIONS = {
 		name: "Preview selected result",
 		description:
 			"Preview in a modal without closing it. Plain Right Arrow requires the cursor at the end of the input.",
-		scopes: ["palette", "tag-insert-selector", "moc-insert-selector", "moc-remove-selector"],
+		// The MOC remove selector lists only notes already linked, and has no preview.
+		scopes: ["palette", "tag-insert-selector", "moc-insert-selector"],
 	},
 	history: {
 		name: "Search history",

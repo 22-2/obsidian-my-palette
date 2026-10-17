@@ -22,7 +22,7 @@ describe("hotkeyScopeLabel", () => {
 			"All palettes and selectors",
 		);
 		expect(hotkeyScopeLabel(HOTKEY_ACTIONS.preview.scopes)).toBe(
-			"Palette, Tag insert selector, MOC insert selector, MOC remove selector",
+			"Palette, Tag insert selector, MOC insert selector",
 		);
 		expect(hotkeyScopeLabel(HOTKEY_ACTIONS.focusInput.scopes)).toBe(
 			"Tag insert selector, MOC insert selector, MOC remove selector, Property value selector",
@@ -34,8 +34,8 @@ describe("hotkeyScopeLabel", () => {
 		expect(hotkeyScopeLabel(["moc-remove-selector", "tag-insert-selector"])).toBe(
 			"Tag insert selector, MOC remove selector",
 		);
-		expect(hotkeyScopeLabel(["moc-insert-selector", "file-search"])).toBe(
-			"File search, MOC insert selector",
+		expect(hotkeyScopeLabel(["moc-insert-selector", "palette"])).toBe(
+			"Palette, MOC insert selector",
 		);
 	});
 });
