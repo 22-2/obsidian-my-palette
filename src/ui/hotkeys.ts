@@ -91,6 +91,11 @@ export function scopesOverlap(a: readonly HotkeyScope[], b: readonly HotkeyScope
 	);
 }
 
+/** Whether a shortcut with these scopes can be pressed in `place`. */
+export function worksIn(scopes: readonly HotkeyScope[], place: HotkeyScope): boolean {
+	return scopes.some((scope) => scopeWithin(place, scope));
+}
+
 /** Whether `scope` is `outer` or sits inside it. */
 function scopeWithin(scope: HotkeyScope, outer: HotkeyScope): boolean {
 	for (let current: HotkeyScope | undefined = scope; current; current = SCOPE_PARENT[current]) {

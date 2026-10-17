@@ -155,10 +155,13 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 
 ### ショートカット表
 
-- When列は、場所ごとの列に分けて、使える場所に●を付ける。列は「Palette、Tag、MOC +、MOC −、Property」の順。Paletteの列はファイル検索などすべてのモードを含むので、モードごとの列は作らない。見出しの短い名前は、Tagが「Tag insert selector」、MOC +が「MOC insert selector」、MOC −が「MOC remove selector」、Propertyが「Property value selector」で、ツールチップとアクセシブルネームには正式名を使う。
-- PaletteとSelectorの両方で使えるものは、列をまたぐ1つのセルに「All palettes and selectors」と書く(Folder move selectorには専用の列がないため)。
-- 行はWhenの順に並べる。「All palettes and selectors」を先頭にし、あとは上の列の順で比べ、同じ書き出しなら短い方を先にする。同じWhenの行は、`HOTKEY_ACTIONS`の定義順。
-- 並び順と列は`src/settings/shortcutsTable.ts`の`SCOPE_ORDER`、`MATRIX_COLUMNS`、`compareScopes`が決める。
+- ショートカットは、使える場所の組み合わせごとにまとめる。まとまりごとに見出しの行を置き、使える場所を短い名前のチップで並べる。各ショートカットは1つのまとまりにだけ出る。場所が増えてもチップが増えるだけで、列は増やさない。
+- チップの短い名前は、Paletteが「Palette」、Tag insert selectorが「Tag」、MOC insert selectorが「MOC +」、MOC remove selectorが「MOC −」、Property value selectorが「Property」。見出しのツールチップとアクセシブルネームには、正式名を並べた文言(例: 「Palette, Tag insert selector, MOC insert selector」)を使う。
+- PaletteとSelectorの両方で使えるものは、1つのチップに「All palettes and selectors」と書く(Folder move selectorには専用の場所がないため)。
+- Paletteはファイル検索などすべてのモードを含むので、モードごとの場所は作らない。
+- 絞り込みの入力欄の横に場所のドロップダウン(「All places」と各場所)を置く。場所を選ぶと、その場所で使えるショートカットだけを残し、選んだ場所のチップを強調する。「All palettes and selectors」のものはどの場所でも残る。
+- まとまりはWhenの順に並べる。「All palettes and selectors」を先頭にし、あとはPalette、Tag、MOC +、MOC −、Propertyの順で比べ、同じ書き出しなら短い方を先にする。まとまりの中は、`HOTKEY_ACTIONS`の定義順。
+- 並び順、チップの名前、まとめ方は`src/settings/shortcutsTable.ts`の`SCOPE_ORDER`、`SCOPE_SHORT_NAMES`、`compareScopes`、`scopeGroupKey`が決める。
 
 ### ツールチップ
 

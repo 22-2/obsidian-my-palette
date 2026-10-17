@@ -9,6 +9,7 @@ import {
 	type HotkeyAction,
 	type HotkeyScope,
 	type PaletteHotkey,
+	worksIn,
 } from "src/ui/hotkeys";
 
 const SCOPE_NAMES: Record<HotkeyScope, string> = {
@@ -64,42 +65,65 @@ export function compareScopes(a: readonly HotkeyScope[], b: readonly HotkeyScope
 }
 
 /**
- * The When columns. A dot marks where a shortcut works; the header is short, and its full
- * name is the tooltip and the accessible name. Shortcuts that work in every palette and
- * selector span these columns instead, because the folder move selector has none of its own.
+ * Short names for the place chips in a group heading. The heading's tooltip and accessible
+ * name list the full names, so the chips stay short as more places are added.
  */
-const MATRIX_COLUMNS: readonly { scope: HotkeyScope; header: string; name: string }[] = [
-	{ scope: "palette", header: "Palette", name: "Palette" },
-	{ scope: "tag-insert-selector", header: "Tag", name: "Tag insert selector" },
-	{ scope: "moc-insert-selector", header: "MOC +", name: "MOC insert selector" },
-	{ scope: "moc-remove-selector", header: "MOC −", name: "MOC remove selector" },
-	{ scope: "property-value-selector", header: "Property", name: "Property value selector" },
-];
-const FIXED_COLUMNS = 3;
-const TABLE_COLUMNS = FIXED_COLUMNS + MATRIX_COLUMNS.length;
+const SCOPE_SHORT_NAMES: Record<HotkeyScope, string> = {
+	palette: "Palette",
+	selector: "Selectors",
+	"tag-insert-selector": "Tag",
+	"moc-insert-selector": "MOC +",
+	"moc-remove-selector": "MOC −",
+	"property-value-selector": "Property",
+};
+
+/** Places offered by the place filter. "selector" is the group of every selector, not one place. */
+const FILTER_PLACES = SCOPE_ORDER.filter((scope) => scope !== "selector");
+
+const TABLE_COLUMNS = 3;
 
 const HOTKEY_ACTION_LIST = (Object.keys(HOTKEY_ACTIONS) as HotkeyAction[]).sort((a, b) =>
 	compareScopes(HOTKEY_ACTIONS[a].scopes, HOTKEY_ACTIONS[b].scopes),
 );
 
-/** One dot per place the shortcut works, or a single cell when it works everywhere. */
-function renderWhenCells(row: HTMLTableRowElement, scopes: readonly HotkeyScope[]): void {
+/** Shortcuts used in the same places share a group, so each one is listed once. */
+function scopeGroupKey(scopes: readonly HotkeyScope[]): string {
+	return coversPalettesAndSelectors(scopes) ? "*" : orderedScopes(scopes).join(" ");
+}
+
+interface ShortcutGroup {
+	body: HTMLTableSectionElement;
+	chips: HTMLElement[];
+	actions: HotkeyAction[];
+}
+
+/** A group's own tbody, headed by chips for the places its shortcuts work in. */
+function createGroup(table: HTMLTableElement, scopes: readonly HotkeyScope[]): ShortcutGroup {
+	const body = table.createEl("tbody", { cls: "my-palette-shortcuts__group" });
+	const heading = body.createEl("tr").createEl("th", {
+		cls: "my-palette-shortcuts__group-heading",
+		attr: {
+			colspan: String(TABLE_COLUMNS),
+			scope: "rowgroup",
+			"aria-label": hotkeyScopeLabel(scopes),
+		},
+	});
+	const places = heading.createDiv("my-palette-shortcuts__places");
 	if (coversPalettesAndSelectors(scopes)) {
-		row.createEl("td", {
+		places.createSpan({
 			text: hotkeyScopeLabel(scopes),
-			cls: "my-palette-shortcuts__when is-everywhere",
-			attr: { colspan: String(MATRIX_COLUMNS.length) },
+			cls: "my-palette-shortcuts__place is-everywhere",
 		});
-		return;
+		return { body, chips: [], actions: [] };
 	}
-	for (const { scope, name } of MATRIX_COLUMNS) {
-		const cell = row.createEl("td", { cls: "my-palette-shortcuts__when" });
-		if (scopes.includes(scope))
-			cell.createSpan({
-				cls: "my-palette-shortcuts__dot",
-				attr: { role: "img", "aria-label": name },
-			});
-	}
+	const chips = orderedScopes(scopes).map((scope) =>
+		places.createSpan({
+			text: SCOPE_SHORT_NAMES[scope],
+			cls: "my-palette-shortcuts__place",
+			attr: { "data-scope": scope },
+		}),
+	);
+	return { body, chips, actions: [] };
 }
 
 interface ShortcutRow {
@@ -110,14 +134,16 @@ interface ShortcutRow {
 
 /**
  * The Shortcuts table: one row per action, with a keybinding that is recorded by
- * clicking it. The table is drawn by hand, so its events use the elements
- * themselves and work in a popout settings window too.
+ * clicking it. Rows are grouped by the places they work in, so a new place adds a chip
+ * to a heading instead of a column. The table is drawn by hand, so its events use the
+ * elements themselves and work in a popout settings window too.
  */
 export function renderShortcutsTable(setting: Setting, plugin: SettingsHost): void {
 	setting.settingEl.addClass("my-palette-shortcuts");
 	const root = setting.controlEl.createDiv("my-palette-shortcuts__body");
 
-	const filter = root.createEl("input", {
+	const controls = root.createDiv("my-palette-shortcuts__controls");
+	const filter = controls.createEl("input", {
 		cls: "my-palette-shortcuts__filter",
 		attr: {
 			type: "search",
@@ -125,33 +151,41 @@ export function renderShortcutsTable(setting: Setting, plugin: SettingsHost): vo
 			"aria-label": "Filter shortcuts",
 		},
 	});
+	const placeFilter = controls.createEl("select", {
+		cls: "dropdown my-palette-shortcuts__place-filter",
+		attr: { "aria-label": "Filter by place" },
+	});
+	placeFilter.createEl("option", { text: "All places", attr: { value: "" } });
+	for (const scope of FILTER_PLACES)
+		placeFilter.createEl("option", { text: SCOPE_NAMES[scope], attr: { value: scope } });
+
 	const scroller = root.createDiv("my-palette-shortcuts__scroller");
 	const table = scroller.createEl("table", { cls: "my-palette-shortcuts__table" });
 	const columns = table.createEl("colgroup");
 	columns.createEl("col");
 	columns.createEl("col", { cls: "my-palette-shortcuts__key-column" });
-	for (let index = 0; index < MATRIX_COLUMNS.length; index++)
-		columns.createEl("col", { cls: "my-palette-shortcuts__when-column" });
 	columns.createEl("col", { cls: "my-palette-shortcuts__reset-column" });
 	const head = table.createEl("thead").createEl("tr");
 	for (const label of ["Command", "Keybinding"]) head.createEl("th", { text: label });
-	for (const { header, name } of MATRIX_COLUMNS) {
-		head.createEl("th", {
-			text: header,
-			cls: "my-palette-shortcuts__when",
-			attr: name === header ? {} : { "aria-label": name },
-		});
-	}
 	head.createEl("th", { attr: { "aria-label": "Reset" } });
-	const tbody = table.createEl("tbody");
 
 	const rows = new Map<HotkeyAction, ShortcutRow>();
+	const groups = new Map<string, ShortcutGroup>();
 	const renderAll = () => {
 		for (const entry of rows.values()) entry.render();
 	};
 
 	for (const action of HOTKEY_ACTION_LIST) {
 		const definition = HOTKEY_ACTIONS[action];
+		// The list is sorted by place, so each group's rows come together.
+		const groupKey = scopeGroupKey(definition.scopes);
+		let group = groups.get(groupKey);
+		if (!group) {
+			group = createGroup(table, definition.scopes);
+			groups.set(groupKey, group);
+		}
+		group.actions.push(action);
+		const tbody = group.body;
 		const row = tbody.createEl("tr", { cls: "my-palette-shortcuts__row" });
 		const nameId = `my-palette-shortcut-${action}-name`;
 		const keyId = `my-palette-shortcut-${action}-key`;
@@ -173,7 +207,6 @@ export function renderShortcutsTable(setting: Setting, plugin: SettingsHost): vo
 				"aria-labelledby": `${nameId} ${keyId}`,
 			},
 		});
-		renderWhenCells(row, definition.scopes);
 		const resetCell = row.createEl("td");
 		const reset = resetCell.createEl("button", {
 			text: "Reset",
@@ -213,15 +246,27 @@ export function renderShortcutsTable(setting: Setting, plugin: SettingsHost): vo
 		);
 	}
 
-	filter.addEventListener("input", () => {
+	const applyFilters = () => {
 		const query = filter.value.trim().toLocaleLowerCase();
+		const place = (placeFilter.value || undefined) as HotkeyScope | undefined;
 		for (const [action, entry] of rows) {
-			const visible = matchesQuery(action, query, plugin);
+			const visible =
+				matchesQuery(action, query, plugin) &&
+				(!place || worksIn(HOTKEY_ACTIONS[action].scopes, place));
 			entry.row.toggleAttribute("hidden", !visible);
 			// Why: an error belongs to its row, so it hides with the row.
 			entry.errorRow.toggleAttribute("hidden", !visible || !entry.errorRow.textContent);
 		}
-	});
+		// A group with no rows left hides its heading too; the chosen place is marked in the rest.
+		for (const group of groups.values()) {
+			const empty = group.actions.every((action) => rows.get(action)?.row.hidden);
+			group.body.toggleAttribute("hidden", empty);
+			for (const chip of group.chips)
+				chip.toggleClass("is-match", chip.dataset.scope === place);
+		}
+	};
+	filter.addEventListener("input", applyFilters);
+	placeFilter.addEventListener("change", applyFilters);
 	renderAll();
 }
 

@@ -92,7 +92,29 @@ describe("renderShortcutsTable", () => {
 		const resetOf = (action: HotkeyAction) =>
 			rowOf(action).querySelector<HTMLButtonElement>(".my-palette-shortcuts__reset")!;
 		const filter = controlEl.querySelector<HTMLInputElement>(".my-palette-shortcuts__filter")!;
-		return { settings, saveSettings, keyOf, rowOf, errorOf, resetOf, filter };
+		const placeFilter = controlEl.querySelector<HTMLSelectElement>(
+			".my-palette-shortcuts__place-filter",
+		)!;
+		const groups = () => [
+			...controlEl.querySelectorAll<HTMLElement>(".my-palette-shortcuts__group"),
+		];
+		return {
+			settings,
+			saveSettings,
+			keyOf,
+			rowOf,
+			errorOf,
+			resetOf,
+			filter,
+			placeFilter,
+			groups,
+		};
+	}
+
+	function visibleActions(t: ReturnType<typeof render>): HotkeyAction[] {
+		return (Object.keys(HOTKEY_ACTIONS) as HotkeyAction[]).filter(
+			(action) => !t.rowOf(action).hidden,
+		);
 	}
 
 	function press(el: HTMLElement, key: string, options: KeyboardEventInit = {}) {
@@ -167,18 +189,70 @@ describe("renderShortcutsTable", () => {
 
 	it("filters rows by command, keybinding or place", () => {
 		const t = render();
-		const visible = () =>
-			(Object.keys(HOTKEY_ACTIONS) as HotkeyAction[]).filter(
-				(action) => !t.rowOf(action).hidden,
-			);
 		t.filter.value = "ctrl+k";
 		t.filter.dispatchEvent(new Event("input"));
-		expect(visible()).toEqual(["contextMenu"]);
+		expect(visibleActions(t)).toEqual(["contextMenu"]);
 		t.filter.value = "palette enter";
 		t.filter.dispatchEvent(new Event("input"));
-		expect(visible()).toEqual(["enterMode"]);
+		expect(visibleActions(t)).toEqual(["enterMode"]);
 		t.filter.value = "";
 		t.filter.dispatchEvent(new Event("input"));
-		expect(visible()).toHaveLength(Object.keys(HOTKEY_ACTIONS).length);
+		expect(visibleActions(t)).toHaveLength(Object.keys(HOTKEY_ACTIONS).length);
+	});
+
+	it("lists each shortcut once, under a heading for the places it works in", () => {
+		const t = render();
+		const headings = t.groups().map((group) => ({
+			name: group.querySelector("th")!.getAttribute("aria-label"),
+			chips: [...group.querySelectorAll(".my-palette-shortcuts__place")].map(
+				(chip) => chip.textContent,
+			),
+			rows: group.querySelectorAll(".my-palette-shortcuts__row").length,
+		}));
+		expect(headings).toEqual([
+			{
+				name: "All palettes and selectors",
+				chips: ["All palettes and selectors"],
+				rows: 4,
+			},
+			{ name: "Palette", chips: ["Palette"], rows: 1 },
+			{
+				name: "Palette, Tag insert selector, MOC insert selector",
+				chips: ["Palette", "Tag", "MOC +"],
+				rows: 1,
+			},
+			{
+				name: "Tag insert selector, MOC insert selector, MOC remove selector, Property value selector",
+				chips: ["Tag", "MOC +", "MOC −", "Property"],
+				rows: 2,
+			},
+		]);
+	});
+
+	it("narrows to one place, keeping shortcuts that work everywhere", () => {
+		const t = render();
+		t.placeFilter.value = "moc-remove-selector";
+		t.placeFilter.dispatchEvent(new Event("change"));
+		expect(visibleActions(t)).toEqual([
+			"hidePreview",
+			"history",
+			"optionsMenu",
+			"contextMenu",
+			"focusInput",
+			"toggleSelection",
+		]);
+		// Groups left with no rows hide their heading, and the chosen place is marked.
+		expect(t.groups().map((group) => group.hidden)).toEqual([false, true, true, false]);
+		expect(
+			[...t.groups()[3].querySelectorAll(".my-palette-shortcuts__place.is-match")].map(
+				(chip) => chip.textContent,
+			),
+		).toEqual(["MOC −"]);
+
+		// The text filter applies within the chosen place.
+		t.filter.value = "space";
+		t.filter.dispatchEvent(new Event("input"));
+		expect(visibleActions(t)).toEqual(["toggleSelection"]);
+		expect(t.groups()[0].hidden).toBe(true);
 	});
 });

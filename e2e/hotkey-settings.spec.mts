@@ -15,12 +15,15 @@ test("the Shortcuts table records changes, rejects conflicts and restores defaul
 		});
 	const hidePreview = row("Hide palette or selector");
 	const key = hidePreview.locator(".my-palette-shortcuts__key");
-	// Everywhere reads as one cell; a narrower shortcut marks each place with a dot.
-	await expect(hidePreview).toContainText("All palettes and selectors");
-	await expect(hidePreview.locator(".my-palette-shortcuts__dot")).toHaveCount(0);
-	const preview = row("Preview selected result");
-	await expect(preview.locator(".my-palette-shortcuts__dot")).toHaveCount(3);
-	await expect(preview.getByRole("img", { name: "MOC insert selector" })).toBeVisible();
+	// Rows are grouped by the places they work in, and each heading names those places.
+	const groups = settingsPage.locator("tbody.my-palette-shortcuts__group");
+	const groupHeading = (name: string) =>
+		settingsPage.getByRole("rowheader", { name, exact: true });
+	await expect(groups).toHaveCount(4);
+	await expect(groupHeading("All palettes and selectors")).toBeVisible();
+	await expect(groupHeading("Palette, Tag insert selector, MOC insert selector")).toContainText(
+		"MOC +",
+	);
 	const toggleSelection = row("Toggle selection");
 	await expect(key).toHaveText("Alt+H");
 	await expect(hidePreview.getByRole("button", { name: "Reset" })).toBeHidden();
@@ -44,29 +47,9 @@ test("the Shortcuts table records changes, rejects conflicts and restores defaul
 		}));
 		expect(widths.content).toBeLessThanOrEqual(widths.width + 1);
 	};
-	// Each place header fits its own column instead of running into the next one. A table
-	// cell does not report overflowing text in scrollWidth, so measure the text itself.
-	const expectHeadersFit = async () => {
-		const overflowing = await settingsPage
-			.locator("th.my-palette-shortcuts__when")
-			.evaluateAll((headers) =>
-				headers
-					.filter((header) => {
-						const range = document.createRange();
-						range.selectNodeContents(header);
-						const style = getComputedStyle(header);
-						const contentWidth =
-							header.clientWidth -
-							parseFloat(style.paddingLeft) -
-							parseFloat(style.paddingRight);
-						return range.getBoundingClientRect().width > contentWidth + 0.5;
-					})
-					.map((header) => header.textContent),
-			);
-		expect(overflowing).toEqual([]);
-	};
 	// Test the content width independently of Obsidian's settings navigation sidebar.
-	for (const width of [570, 640]) {
+	// Places live in group headings, so even a narrow table fits without scrolling.
+	for (const width of [320, 570, 640]) {
 		await resizeTable(width);
 		await expectContained();
 		const widths = await scroller.evaluate((element) => ({
@@ -74,24 +57,21 @@ test("the Shortcuts table records changes, rejects conflicts and restores defaul
 			content: element.scrollWidth,
 		}));
 		expect(widths.content).toBeLessThanOrEqual(widths.width + 1);
-		await expectHeadersFit();
+		await expect(toggleSelection.locator(".my-palette-shortcuts__key")).toBeInViewport();
 		await body.screenshot({ path: testInfo.outputPath(`shortcuts-${width}.png`) });
 	}
-	// At smaller widths, only the table scrolls, including its last scope and Reset column.
-	await resizeTable(320);
-	await expectContained();
-	await expectHeadersFit();
-	await scroller.evaluate((element) => {
-		element.scrollLeft = element.scrollWidth;
-	});
-	await expect(
-		toggleSelection.getByRole("img", { name: "Property value selector" }),
-	).toBeInViewport();
-	await body.screenshot({ path: testInfo.outputPath("shortcuts-narrow.png") });
 	await resizeTable(570);
-	await scroller.evaluate((element) => {
-		element.scrollLeft = 0;
-	});
+
+	// The place filter keeps the groups that work there, with shortcuts used everywhere.
+	const placeFilter = settingsPage.getByRole("combobox", { name: "Filter by place" });
+	await placeFilter.selectOption("MOC remove selector");
+	await expect(groups.filter({ visible: true })).toHaveCount(2);
+	await expect(row("Preview selected result")).toBeHidden();
+	await expect(toggleSelection).toBeVisible();
+	await expect(settingsPage.locator(".my-palette-shortcuts__place.is-match")).toHaveText("MOC −");
+	await body.screenshot({ path: testInfo.outputPath("shortcuts-moc-remove.png") });
+	await placeFilter.selectOption("All places");
+	await expect(groups.filter({ visible: true })).toHaveCount(4);
 
 	// Recording starts on click; Escape cancels and keeps the binding.
 	await key.click();

@@ -1129,8 +1129,21 @@
 	min-width: 0;
 }
 
+/* The place dropdown sits beside the filter and drops below it when space runs out. */
+.my-palette-shortcuts__controls {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
 .my-palette-shortcuts__filter {
-	width: 100%;
+	flex: 1 1 12rem;
+	min-width: 0;
+}
+
+.my-palette-shortcuts__place-filter {
+	flex: 0 1 auto;
+	max-width: 100%;
 }
 
 /* Keep very narrow settings windows scrollable without pushing the page sideways. */
@@ -1141,20 +1154,15 @@
 
 .my-palette-shortcuts__table {
 	width: 100%;
-	/* Fits the Settings content at 570px; anything narrower scrolls inside the scroller. */
-	min-width: 35rem;
+	/* Places live in group headings, so only very narrow windows need the scroller. */
+	min-width: 18rem;
 	table-layout: fixed;
 	border-collapse: collapse;
 	font-size: var(--font-ui-small);
 }
 
 .my-palette-shortcuts__key-column {
-	width: 20%;
-}
-
-/* Sized to the longest header ("Property"), not a share of the table, so headers never clip. */
-.my-palette-shortcuts__when-column {
-	width: 4rem;
+	width: 30%;
 }
 
 .my-palette-shortcuts__reset-column {
@@ -1206,29 +1214,41 @@
 	box-shadow: 0 0 0 2px var(--interactive-accent);
 }
 
-/* Scope headings can wrap while their dots stay aligned in fixed columns. */
-.my-palette-shortcuts__table .my-palette-shortcuts__when {
-	padding-inline: 2px;
-	text-align: center;
-	color: var(--text-muted);
-	font-size: var(--font-ui-smaller);
+/* Each group starts with a heading row of the places its shortcuts work in. */
+.my-palette-shortcuts__table .my-palette-shortcuts__group-heading {
+	padding: 14px 4px 4px;
 }
 
-.my-palette-shortcuts__table td.my-palette-shortcuts__when.is-everywhere {
+.my-palette-shortcuts__places {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+
+.my-palette-shortcuts__place {
+	padding: 0 6px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-l);
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-normal);
+	line-height: 18px;
+	white-space: nowrap;
+}
+
+.my-palette-shortcuts__place.is-everywhere {
+	border-style: dashed;
 	color: var(--text-faint);
+}
+
+.my-palette-shortcuts__place.is-match {
+	border-color: var(--interactive-accent);
+	color: var(--text-normal);
 }
 
 .my-palette-shortcuts__reset {
 	max-width: 100%;
 	padding-inline: 4px;
-}
-
-.my-palette-shortcuts__dot {
-	display: inline-block;
-	width: 8px;
-	height: 8px;
-	border-radius: 50%;
-	background: var(--interactive-accent);
 }
 
 .my-palette-shortcuts__error-row td {
