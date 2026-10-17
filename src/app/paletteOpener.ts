@@ -139,6 +139,26 @@ export class PaletteOpener {
 		return restorable ? this.lastClosed.state : undefined;
 	}
 
+	/**
+	 * Vault audit has many columns, so it opens as a table palette. A table already showing it
+	 * comes to the front; others keep their own queries.
+	 */
+	async openAuditTable(): Promise<void> {
+		const input = `${paletteModeAlias("audit", this.plugin.settings.modes)} `;
+		const existing = this.app.workspace
+			.getLeavesOfType(PALETTE_TABLE_VIEW_TYPE)
+			.find((leaf) => {
+				const state = leaf.view instanceof PaletteView ? leaf.view.getState() : undefined;
+				return typeof state?.input === "string" && state.input.startsWith(input);
+			});
+		if (!existing) {
+			await this.openNewPaletteView({ input, viewType: PALETTE_TABLE_VIEW_TYPE });
+			return;
+		}
+		await this.app.workspace.revealLeaf(existing);
+		this.focusView(existing);
+	}
+
 	/** The command list opens at its alias, with nothing typed after it. */
 	commandPaletteInitialInput(): string {
 		return `${paletteModeAlias("commands", this.plugin.settings.modes)} `;

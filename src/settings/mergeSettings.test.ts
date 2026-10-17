@@ -423,13 +423,28 @@ describe("audit settings", () => {
 				excludedTags: ["#draft", "draft", " ", 3],
 				excludedExtensions: [".CSV", "bad ext"],
 				excludeDailyNotesAndTemplates: false,
+				kind: "unknown-kind",
 			},
 		});
 		expect(settings.audit).toEqual({
+			kind: "orphaned-files",
 			excludedFolders: ["Archive"],
 			excludedTags: ["draft"],
 			excludedExtensions: ["csv"],
 			excludeDailyNotesAndTemplates: false,
 		});
+	});
+});
+
+describe("audit mode alias", () => {
+	it("uses `a`, or moves to `audit` when another mode already uses `a`", () => {
+		expect(mergeSettings({}).modes.audit).toEqual({ alias: "a", enabled: true });
+		expect(
+			mergeSettings({ modes: { tabs: { alias: "a", enabled: true } } }).modes.audit.alias,
+		).toBe("audit");
+	});
+
+	it("keeps the stored kind", () => {
+		expect(mergeSettings({ audit: { kind: "broken-links" } }).audit.kind).toBe("broken-links");
 	});
 });

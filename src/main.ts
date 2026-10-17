@@ -108,6 +108,7 @@ export default class MyPalettePlugin extends Plugin {
 			demotedPriorFolders: () => this.settings.file.demotedPriorFolders,
 			recentCommandIds: () => this.recentCommands?.getIds() ?? [],
 			everythingSettings: () => this.settings.everything,
+			settings: () => this.settings,
 			fileUsageHistory: this.fileUsageHistory,
 			log: debugLog,
 		});

@@ -37,6 +37,11 @@ export function getResultAbsolutePath(app: App, result: PaletteResult): string |
 		case "plugin":
 		case "snippet":
 			return result.absolutePath;
+		case "audit":
+			if (result.kind === "empty-folders")
+				return getVaultFullPath(app, result.folderPath) ?? undefined;
+			if (result.kind === "broken-links") return undefined;
+			return getVaultFullPath(app, result.file.path) ?? undefined;
 		case "command":
 		case "property":
 		case "search-history":
@@ -49,6 +54,7 @@ export function getResultAbsolutePath(app: App, result: PaletteResult): string |
 export function isFolderResult(result: PaletteResult): boolean {
 	if (result.mode === "plugin") return true;
 	if (result.mode === "snippet") return result.isFolder;
+	if (result.mode === "audit") return result.kind === "empty-folders";
 	return result.mode === "everything" && result.kind === "folder";
 }
 

@@ -16,7 +16,7 @@ Paletteには、TanStack Tableを使ったTable palette、ファイルマネー�
 | ---------------- | --------------------------------------------------------------------------------------------------- |
 | 置き場所         | Paletteのモード。判定・表示・CLIをすべてMy Paletteに置く                                            |
 | モードの数       | 1つ。4種類をそれぞれモードにするとHomeに並びすぎるため                                              |
-| 種類の切り替え   | オプションメニュー(`Ctrl+O`、`…`ボタン)で1つを選ぶ。今の種類はフッターに出す                        |
+| 種類の切り替え   | オプションメニュー(`Ctrl+O`、`…`ボタン)で1つを選ぶ。今の種類は入力欄の案内に出す                    |
 | 表示             | Palette・Sidebar palette・Table paletteのどれでも使える。列が多いので主にTable paletteで使う想定    |
 | 結果の書き出し   | しない。ファイルを作らないので、一覧が判定に影響しない                                              |
 | 一括操作         | 「Move to trash」と「Move to archive folder」。複数選択に対して右クリックで行う                     |
@@ -115,8 +115,8 @@ Options
 - `PanelChoice`は`PanelSwitch`と同じく、状態だけを持つ。メニューでは`PaletteMenu`の`setChecked`で今の値を示し、`setKeepOpen`は付けない(選んだら一覧が変わるので閉じる)。
 - Vault auditモードの間だけ出す(`setHidden`。`syncIgnoredToggle`と同じ作り)。
 - 選んだ種類は設定`audit.kind`に保存し、次に開いたときも同じ種類にする。Table paletteとPaletteで分けない。
-- フッターの左に「Orphaned files」のように今の種類を出す。クリックするとオプションメニューを開く。
-- 入力欄の案内も種類に合わせる(「Search orphaned files」など)。
+- 今の種類は入力欄の案内で示す(「Search orphaned files」など)。フッターは参照元のノートの表示に使っているので使わない。
+- `PanelChoice`はパネルに持たせず、PaletteとSidebar・Table paletteがそれぞれ持ってオプションメニューに渡す(`getChoices`)。
 
 ### 列
 
@@ -256,9 +256,9 @@ My PaletteにはまだCLIが無いので、`registerCliHandler`で足す(`minApp
 1段目だけでも使えるように、表示の部品より先に判定とCLIを作る。
 
 1. **判定とCLI**: `vaultAudit.ts`と単体テスト、`my-palette:audit`(判定だけ)。AIから結果を見て、判定の妥当さを実際の保管庫で確かめる。
-2. **モード(一覧だけ)**: `AuditResult`、`AuditProvider`、`PanelChoice`、フッターの表示。列はまだ今の4列のまま。
+2. **モード(一覧だけ)**: `AuditResult`、`AuditProvider`、`PanelChoice`、入力欄の案内、Enter、右クリックの「開く」とパスのコピー、Open vault audit list。列はまだ今の4列のまま。
 3. **列の組**: Table paletteの列をモードごとに持てるようにし、Vault auditの列を足す。保存済みのワークスペースの状態の移行をテストする。
-4. **操作**: Enter、右クリック、ゴミ箱・アーカイブ、確認、CLIの`trash`・`archive`。
+4. **操作**: 右クリックの残り(参照元の一覧など)、ゴミ箱・アーカイブ、確認、CLIの`trash`・`archive`。
 5. **仕上げ**: 設定画面、README、E2E(モードに入る→種類を変える→複数選択してゴミ箱)。
 
 各段の終わりに`pnpm format:check`・`pnpm lint`・`pnpm check-types`・`pnpm test`を通す。

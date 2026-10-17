@@ -1,4 +1,6 @@
 import type { TFile } from "obsidian";
+import { auditPlaceholder } from "src/audit/auditKinds";
+import type { AuditKind } from "src/audit/vaultAudit";
 import {
 	supportsIncludeIgnored,
 	type EverythingScope,
@@ -365,11 +367,16 @@ export function paletteRouteChrome(
 	state: Pick<PaletteSearchState, "route" | "mode">,
 	alias: string | undefined,
 	modeEntries: boolean,
+	auditKind?: AuditKind,
 ): PaletteRouteChrome {
 	if (state.route.kind === "mode") {
 		const definition = getPaletteMode(state.route.modeId);
 		return {
-			placeholder: definition.placeholder,
+			// Why: Vault audit switches its kind in the options menu, so the input names it.
+			placeholder:
+				definition.id === "audit" && auditKind
+					? auditPlaceholder(auditKind)
+					: definition.placeholder,
 			chip: { icon: definition.icon, label: alias ?? "", title: definition.title },
 		};
 	}

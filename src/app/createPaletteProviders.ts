@@ -12,6 +12,7 @@ import { TabProvider } from "src/search/tab/TabProvider";
 import { PluginProvider } from "src/search/plugin/PluginProvider";
 import { SnippetProvider } from "src/search/snippet/SnippetProvider";
 import { PropertyProvider } from "src/search/property/PropertyProvider";
+import { AuditProvider } from "src/search/audit/AuditProvider";
 import type { PaletteProvider } from "src/search/PaletteProvider";
 import {
 	EMPTY_EXCLUDED_FOLDER_SOURCE,
@@ -39,6 +40,8 @@ interface ProviderFactoryOptions {
 	demotedPriorFolders?: ExcludedFolderSource;
 	recentCommandIds: () => string[];
 	everythingSettings: () => MyPaletteSettings["everything"];
+	/** Vault audit reads its kind and exclusions, and this plugin's Excluded folders. */
+	settings: () => MyPaletteSettings;
 	fileUsageHistory?: FileUsageScoreSource;
 	log: (message: string, detail?: unknown) => void;
 }
@@ -97,6 +100,7 @@ export function createPaletteProviders(
 			plugin: pluginProvider,
 			snippet: snippetProvider,
 			property: new PropertyProvider(app),
+			audit: new AuditProvider(app, options.settings),
 		},
 	};
 }

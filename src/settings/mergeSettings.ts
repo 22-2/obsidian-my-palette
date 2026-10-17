@@ -1,3 +1,4 @@
+import { isAuditKind } from "src/audit/vaultAudit";
 import type { PaletteModeId } from "src/palette/modes";
 import type {
 	AuditSettings,
@@ -178,6 +179,7 @@ function normalizeAudit(source: Record<string, unknown>): AuditSettings {
 			? (source.audit as Record<string, unknown>)
 			: {};
 	return {
+		kind: isAuditKind(raw.kind) ? raw.kind : DEFAULT_SETTINGS.audit.kind,
 		excludedFolders: excludedFolders(raw.excludedFolders),
 		excludedTags: Array.isArray(raw.excludedTags)
 			? [
@@ -295,6 +297,16 @@ function normalizeModes(source: Record<string, unknown>): ModeSettingsMap {
 			DEFAULT_SETTINGS.modes.properties.alias,
 			"properties",
 			"properties",
+			modeIds,
+			modes,
+		);
+	}
+	// Vault audit arrived after Properties; a user may already type `a` for another mode.
+	if (!rawModes.audit) {
+		modes.audit.alias = unusedAlias(
+			DEFAULT_SETTINGS.modes.audit.alias,
+			"audit",
+			"audit",
 			modeIds,
 			modes,
 		);

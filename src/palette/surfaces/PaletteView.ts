@@ -32,6 +32,9 @@ import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryCon
 import { PALETTE_HISTORY_CATEGORIES } from "src/palette/searchHistory";
 import { ignoredToggleOptions, syncIgnoredToggle } from "src/palette/ignoredToggle";
 import type { PanelSwitch } from "src/ui/panelSwitch";
+import { createAuditKindChoice, syncAuditKindChoice } from "src/palette/auditKindChoice";
+import type { AuditKind } from "src/audit/vaultAudit";
+import type { PanelChoice } from "src/ui/panelChoice";
 import { PaletteTableControls } from "src/palette/table/PaletteTableControls";
 import {
 	normalizePaletteTableState,
@@ -71,6 +74,7 @@ export class PaletteView extends ItemView {
 	private historyControls?: PaletteHistoryControls;
 	private tableControls?: PaletteTableControls;
 	private ignoredToggle?: PanelSwitch;
+	private auditKindChoice?: PanelChoice<AuditKind>;
 	private activeMenu?: PaletteMenu;
 	private readonly leafTracker: PaletteLeafTracker;
 	private readonly fileListRefresh = new FileListRefresh(
@@ -205,6 +209,7 @@ export class PaletteView extends ItemView {
 		if (this.tableControls) this.removeChild(this.tableControls);
 		this.tableControls = undefined;
 		this.ignoredToggle = undefined;
+		this.auditKindChoice = undefined;
 		this.session?.dispose();
 		this.session = undefined;
 		if (this.panel) this.removeChild(this.panel);
@@ -325,6 +330,11 @@ export class PaletteView extends ItemView {
 		this.ignoredToggle = this.panel.addSwitch(
 			ignoredToggleOptions(state.includeIgnored, (value) => this.setIgnoredScope(value)),
 		);
+		this.auditKindChoice = createAuditKindChoice(this.plugin, () => {
+			if (!this.session) return;
+			this.renderState(this.session.current);
+			void this.session.search(this.session.input);
+		});
 		this.registerTargetLeafTracking();
 		this.fileListRefresh.register();
 		this.renderState(this.session.current);
@@ -345,13 +355,19 @@ export class PaletteView extends ItemView {
 		if (!this.panel || !this.session) return;
 		// `alias + Space` moves into a mode and leaves only the query behind.
 		if (this.panel.inputEl.value !== state.input) this.panel.setInput(state.input, "end");
-		const chrome = paletteRouteChrome(state, this.session.modeAlias, !this.tableView);
+		const chrome = paletteRouteChrome(
+			state,
+			this.session.modeAlias,
+			!this.tableView,
+			this.plugin.settings.audit.kind,
+		);
 		this.panel.updatePlaceholder(chrome.placeholder);
 		this.panel.setModeChip(chrome.chip);
 		this.panel.setAttribute("data-route", state.route.kind);
 		this.panel.setAttribute("data-mode", state.mode);
 		this.panel.setAttribute("data-everything-scope", state.everythingScope);
 		syncIgnoredToggle(this.ignoredToggle, state.mode);
+		syncAuditKindChoice(this.auditKindChoice, state.mode, this.plugin.settings.audit.kind);
 		this.renderFooter(this.actionMessage);
 		const results = {
 			items: state.results,
@@ -470,6 +486,7 @@ export class PaletteView extends ItemView {
 			apply: (result) => this.applySearchHistory(result),
 			focusInput: () => this.panel?.focusSearchInput(),
 			getSwitches: () => this.panel?.switchList ?? [],
+			getChoices: () => (this.auditKindChoice ? [this.auditKindChoice] : []),
 			showHighlightOption: false,
 		});
 	}

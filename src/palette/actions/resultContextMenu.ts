@@ -4,6 +4,7 @@ import type { PaletteMenu } from "src/ui/paletteMenu";
 import type MyPalettePlugin from "src/main";
 import type { MocInsertionContext } from "src/moc-relateds/mocInsertion";
 import { addMocInsertionMenuItem, addMocInsertionMenuItems } from "src/moc-relateds/mocInsertion";
+import { isAuditResult, populateAuditMenu } from "src/palette/actions/auditMenu";
 import { addBookmarkMenuItems } from "src/palette/actions/bookmarkMenu";
 import { addBulkRenameMenuItem } from "src/palette/actions/bulkRenameMenu";
 import { addPropertyEditMenuItem } from "src/palette/actions/propertyEditMenu";
@@ -84,6 +85,10 @@ export function populatePaletteResultMenu({
 			onTabsChanged: onResultsChanged ?? (() => {}),
 			onNoteActionDone,
 		});
+		return;
+	}
+	if (targets.every(isAuditResult)) {
+		populateAuditMenu({ app, menu, results: targets, activate });
 		return;
 	}
 	const selectedPaths = selectedItems

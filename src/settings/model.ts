@@ -1,3 +1,4 @@
+import type { AuditKind } from "src/audit/vaultAudit";
 import type { PaletteModeId } from "src/palette/modes";
 import { DEFAULT_HOTKEYS, type PaletteHotkeys } from "src/ui/hotkeys";
 
@@ -26,6 +27,7 @@ export type SearchHistoryCategory =
 	| "plugin"
 	| "snippet"
 	| "property"
+	| "audit"
 	| "everything"
 	| "everything-directory"
 	| "link"
@@ -326,6 +328,8 @@ export interface MyPaletteSettings {
 
 /** Applied on top of Obsidian's Excluded files and this plugin's Excluded folders. */
 export interface AuditSettings {
+	/** The kind Vault audit lists, chosen in the options menu and shared by every surface. */
+	kind: AuditKind;
 	excludedFolders: string[];
 	/** Without `#`. A tag also excludes its nested tags. */
 	excludedTags: string[];
@@ -367,6 +371,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		plugins: { alias: "p", enabled: true },
 		snippets: { alias: "sn", enabled: true },
 		properties: { alias: "pr", enabled: true },
+		audit: { alias: "a", enabled: true },
 	},
 	file: {
 		// Start both states identically so the split adds control without changing
@@ -390,6 +395,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		vaultExtensions: ["md", "canvas", "base"],
 	},
 	audit: {
+		kind: "orphaned-files",
 		excludedFolders: [],
 		excludedTags: [],
 		excludedExtensions: [],

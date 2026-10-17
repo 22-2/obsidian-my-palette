@@ -1,5 +1,16 @@
 import { expect, test, type ObsidianAPI } from "./fixtures.mts";
-import { PLUGIN_ID, pluginVaultOptions, waitForResolvedLinks, writeRaw } from "./support.mts";
+import type { Page } from "@playwright/test";
+import {
+	MODAL_INPUT,
+	PLUGIN_ID,
+	openHomeWith,
+	optionMenuTitles,
+	pluginVaultOptions,
+	rowLabels,
+	runPaletteCommand,
+	waitForResolvedLinks,
+	writeRaw,
+} from "./support.mts";
 
 test.use({ vaultOptions: pluginVaultOptions() });
 
@@ -87,4 +98,73 @@ test("lists only the topmost empty folder", async ({ obsidian }) => {
 test("returns an error for an unknown kind", async ({ obsidian }) => {
 	const report = await runAuditCli(obsidian, { kind: "orphans" });
 	expect(report.error).toContain("orphaned-files");
+});
+
+/** Picks a kind in the options menu; choosing closes the menu because the list changes. */
+async function chooseKind(page: Page, label: string): Promise<void> {
+	await page.locator(".my-palette-suggest-modal .my-palette-options-button").click();
+	await page.locator(".menu .menu-item").filter({ hasText: label }).first().click();
+	await page.locator(".menu").waitFor({ state: "detached" });
+}
+
+test("lists the chosen kind in the palette and switches it from the options menu", async ({
+	obsidian,
+}) => {
+	const page = await openHomeWith(obsidian, "a ");
+	await expect(page.locator(MODAL_INPUT)).toHaveAttribute("placeholder", "Search orphaned files");
+	await expect.poll(() => rowLabels(page)).toContain("orphan.md");
+
+	await chooseKind(page, "Broken links");
+	await expect(page.locator(MODAL_INPUT)).toHaveAttribute("placeholder", "Search broken links");
+	await expect.poll(() => rowLabels(page)).toEqual(["Missing note"]);
+	await expect
+		.poll(() =>
+			obsidian.evaluateApp(
+				() =>
+					(
+						app.plugins.plugins["my-palette"] as unknown as {
+							settings: { audit: { kind: string } };
+						}
+					).settings.audit.kind,
+			),
+		)
+		.toBe("broken-links");
+});
+
+test("offers the kinds only in Vault audit", async ({ obsidian }) => {
+	const page = await openHomeWith(obsidian, "");
+	expect(await optionMenuTitles(page)).not.toContain("Broken links");
+});
+
+test("opens the note with a broken link at the link's line", async ({ obsidian }) => {
+	const page = await openHomeWith(obsidian, "a ");
+	await chooseKind(page, "Broken links");
+	await expect.poll(() => rowLabels(page)).toEqual(["Missing note"]);
+	await page.locator(MODAL_INPUT).press("Enter");
+	await expect
+		.poll(() =>
+			obsidian.evaluateApp(() => {
+				const editor = app.workspace.activeEditor?.editor;
+				return [app.workspace.getActiveFile()?.path, editor?.getCursor().line];
+			}),
+		)
+		.toEqual(["notes/source.md", 2]);
+});
+
+test("Open vault audit list opens a table palette in Vault audit", async ({ obsidian }) => {
+	await runPaletteCommand(obsidian, "open-vault-audit-list");
+	await expect
+		.poll(() =>
+			obsidian.evaluateApp(() =>
+				app.workspace
+					.getLeavesOfType("my-palette-table")
+					.map((leaf) => leaf.view.getState().input),
+			),
+		)
+		.toEqual(["a "]);
+	// A second run brings the same table to the front instead of opening another.
+	await runPaletteCommand(obsidian, "open-vault-audit-list");
+	expect(
+		await obsidian.evaluateApp(() => app.workspace.getLeavesOfType("my-palette-table").length),
+	).toBe(1);
 });
