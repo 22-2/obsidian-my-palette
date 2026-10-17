@@ -44,6 +44,27 @@ test("the Shortcuts table records changes, rejects conflicts and restores defaul
 		}));
 		expect(widths.content).toBeLessThanOrEqual(widths.width + 1);
 	};
+	// Each place header fits its own column instead of running into the next one. A table
+	// cell does not report overflowing text in scrollWidth, so measure the text itself.
+	const expectHeadersFit = async () => {
+		const overflowing = await settingsPage
+			.locator("th.my-palette-shortcuts__when")
+			.evaluateAll((headers) =>
+				headers
+					.filter((header) => {
+						const range = document.createRange();
+						range.selectNodeContents(header);
+						const style = getComputedStyle(header);
+						const contentWidth =
+							header.clientWidth -
+							parseFloat(style.paddingLeft) -
+							parseFloat(style.paddingRight);
+						return range.getBoundingClientRect().width > contentWidth + 0.5;
+					})
+					.map((header) => header.textContent),
+			);
+		expect(overflowing).toEqual([]);
+	};
 	// Test the content width independently of Obsidian's settings navigation sidebar.
 	for (const width of [570, 640]) {
 		await resizeTable(width);
@@ -53,11 +74,13 @@ test("the Shortcuts table records changes, rejects conflicts and restores defaul
 			content: element.scrollWidth,
 		}));
 		expect(widths.content).toBeLessThanOrEqual(widths.width + 1);
+		await expectHeadersFit();
 		await body.screenshot({ path: testInfo.outputPath(`shortcuts-${width}.png`) });
 	}
 	// At smaller widths, only the table scrolls, including its last scope and Reset column.
 	await resizeTable(320);
 	await expectContained();
+	await expectHeadersFit();
 	await scroller.evaluate((element) => {
 		element.scrollLeft = element.scrollWidth;
 	});

@@ -1141,7 +1141,8 @@
 
 .my-palette-shortcuts__table {
 	width: 100%;
-	min-width: 32rem;
+	/* Fits the Settings content at 570px; anything narrower scrolls inside the scroller. */
+	min-width: 35rem;
 	table-layout: fixed;
 	border-collapse: collapse;
 	font-size: var(--font-ui-small);
@@ -1151,8 +1152,9 @@
 	width: 20%;
 }
 
+/* Sized to the longest header ("Property"), not a share of the table, so headers never clip. */
 .my-palette-shortcuts__when-column {
-	width: 9%;
+	width: 4rem;
 }
 
 .my-palette-shortcuts__reset-column {
