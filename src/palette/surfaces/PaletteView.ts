@@ -2,7 +2,7 @@ import { ItemView, Menu, TFile, type WorkspaceLeaf } from "obsidian";
 import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
 import type MyPalettePlugin from "src/main";
-import type { PaletteResult } from "src/palette/results";
+import { choosingOpensMenu, type PaletteResult } from "src/palette/results";
 import { openFileInLeaf, revealOpenedLeaf } from "src/workspace/openLeaf";
 import {
 	executePaletteResult,
@@ -275,7 +275,10 @@ export class PaletteView extends ItemView {
 					el,
 					query,
 				),
-			onChoose: (result) => this.execute(result, "primary"),
+			onChoose: (result) => {
+				if (choosingOpensMenu(result)) this.panel?.showActiveRowContextMenu();
+				else void this.execute(result, "primary");
+			},
 			onMiddleClick: (result) => this.openInBackground(result),
 			onContextMenu: (result, event, selectedItems) =>
 				this.showContextMenu(result, event, selectedItems),

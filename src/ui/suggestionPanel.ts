@@ -768,7 +768,8 @@ export class SuggestionPanel<T> extends Component {
 		this.props.onContextMenu?.(item, event, this.getSelectedItems());
 	}
 
-	private showActiveRowContextMenu(): void {
+	/** Opens the active row's menu below it, as the context-menu hotkey does. */
+	showActiveRowContextMenu(): void {
 		const index = this.chooser.selectedItem;
 		const item = this.getSelectedItem();
 		const row = this.resultContainerEl.querySelector<HTMLElement>(

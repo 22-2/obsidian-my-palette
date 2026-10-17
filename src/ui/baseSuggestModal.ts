@@ -377,6 +377,9 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	protected getSelectedItems(): T[] {
 		return this.panel.getSelectedItems();
 	}
+	protected showActiveRowContextMenu(): void {
+		this.panel.showActiveRowContextMenu();
+	}
 	protected getSelectedItem(): T | undefined {
 		return this.panel.getSelectedItem();
 	}

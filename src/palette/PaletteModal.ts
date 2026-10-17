@@ -2,7 +2,12 @@ import type { App, TFile } from "obsidian";
 import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
 import type MyPalettePlugin from "src/main";
-import type { EverythingScope, PaletteMode, PaletteResult } from "src/palette/results";
+import {
+	choosingOpensMenu,
+	type EverythingScope,
+	type PaletteMode,
+	type PaletteResult,
+} from "src/palette/results";
 import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
 import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
 import { executePaletteResult } from "src/palette/executePaletteResult";
@@ -147,6 +152,10 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override async onItemActivated(result: PaletteResult, _event: Event): Promise<void> {
+		if (choosingOpensMenu(result)) {
+			this.showActiveRowContextMenu();
+			return;
+		}
 		await this.activatePaletteResult("primary", result);
 	}
 

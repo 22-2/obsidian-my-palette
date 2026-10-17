@@ -170,6 +170,15 @@ export type PaletteResult =
 	| PropertyResult
 	| ModeEntryResult;
 
+/**
+ * Choosing (Enter, double-click) a plugin or snippet row opens its menu instead of the
+ * external editor: such rows have several equally likely actions (editor, explorer,
+ * terminal, plugin settings), so none is the default.
+ */
+export function choosingOpensMenu(result: PaletteResult): boolean {
+	return result.mode === "plugin" || result.mode === "snippet";
+}
+
 /** The vault file a result opens, when it has one; used to record file usage. */
 export function getResultFilePath(result: PaletteResult): string | undefined {
 	switch (result.mode) {
