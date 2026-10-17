@@ -1,4 +1,5 @@
 import fuzzysort from "fuzzysort";
+import { positiveTermBranches } from "src/search/query/searchQuery";
 
 interface BranchHighlight {
 	indexes: Set<number>;
@@ -8,14 +9,12 @@ interface BranchHighlight {
 
 /**
  * Return label positions matched by the most informative query branch.
- * Search treats whitespace as AND and `|` as OR, so passing the raw expression
- * to fuzzysort would make both operators part of the literal search string.
+ * Reads the same parsed query as search, so operators and excluded terms are
+ * never highlighted as if they were literal text.
  */
 export function matchedQueryIndexes(text: string, query: string): readonly number[] {
 	let best: BranchHighlight | undefined;
-	for (const rawBranch of query.split("|")) {
-		const terms = rawBranch.trim().split(/\s+/).filter(Boolean);
-		if (terms.length === 0) continue;
+	for (const terms of positiveTermBranches(query)) {
 		const matches = terms.flatMap((term) => {
 			const match = fuzzysort.single(term, text);
 			if (!match) return [];

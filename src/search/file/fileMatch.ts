@@ -1,7 +1,7 @@
 import type { TFile } from "obsidian";
 import fuzzysort from "fuzzysort";
-import { queryTerms } from "src/search/fuzzyQuery";
 import { matchingTags } from "src/search/file/fileTags";
+import { positiveQueryTerms } from "src/search/query/searchQuery";
 import {
 	fuzzyMatchCoverage,
 	hasContiguousQueryMatch,
@@ -138,7 +138,7 @@ export function createFileMatch(
 ): FileMatch<FileSearchEntry> {
 	const { obj, score, fieldScores } = match;
 	const matchedTags = matchingTags(obj.tags, query);
-	const terms = queryTerms(query);
+	const terms = positiveQueryTerms(query);
 	const matchedKeywords = options.tagOnlyQuery
 		? []
 		: obj.keywords.filter((keyword) =>

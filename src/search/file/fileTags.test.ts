@@ -14,6 +14,10 @@ describe("file tags", () => {
 		expect(isTagOnlyQuery("#project #todo | #archive")).toBe(true);
 		expect(isTagOnlyQuery("project #todo")).toBe(false);
 		expect(isTagOnlyQuery("#")).toBe(true);
+		expect(isTagOnlyQuery("#project !#done")).toBe(true);
+		// Excluding a name or folder needs every field, not only tags.
+		expect(isTagOnlyQuery("#project !archive")).toBe(false);
+		expect(isTagOnlyQuery("!#done")).toBe(false);
 	});
 
 	it("finds tags with the same fuzzy matching used by file search", () => {
@@ -23,5 +27,6 @@ describe("file tags", () => {
 			"#todo",
 		]);
 		expect(matchingTags(["#project", "#writing"], "#")).toEqual(["#project", "#writing"]);
+		expect(matchingTags(["#project", "#done"], "#project !#done")).toEqual(["#project"]);
 	});
 });

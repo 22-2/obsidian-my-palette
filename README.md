@@ -25,7 +25,8 @@ Other sources (commands, Everything, bookmarks, …) are modes one step away fro
 
 ## Features
 
-- **Vault file search** with AND / OR terms, aliases, frontmatter `keywords`, frontmatter and inline tags, and fully configurable sort priorities.
+- **Everything-style search syntax** in every palette and selector: a space for AND, `|` for OR (it binds tighter than AND, so `a b|c` is `a <b|c>`), `!` for NOT, `< >` for grouping and `"..."` for literal text. Plain words work as before without any of it.
+- **Vault file search** with aliases, frontmatter `keywords`, frontmatter and inline tags, and fully configurable sort priorities.
 - **Everything 1.5a search** for files outside the Vault, opened in Obsidian (Markdown) or in the OS default app.
 - **Command, bookmark, link, backlink and Smart Connections search** in the same window.
 - **Multi-select** with the same gestures as a file manager, then copy paths, add tags or insert MOC links to all selected notes at once.

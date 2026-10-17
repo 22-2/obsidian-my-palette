@@ -25,7 +25,8 @@ Another Quick Switcher、標準の Quick Switcher、Quick Switcher++、Omnisearc
 
 ## 機能
 
-- **Vault のファイル検索**: AND / OR 検索、alias、frontmatter の `keywords`、frontmatter とインラインのタグに対応し、並び順を細かく設定できます。
+- **Everything 風の検索構文**: すべてのパレットと selector で、スペースが AND、`|` が OR（AND より強く結びつくので `a b|c` は `a <b|c>`）、`!` が NOT、`< >` がグループ、`"..."` が文字どおりの検索です。使わなければ普通の検索のままです。
+- **Vault のファイル検索**: alias、frontmatter の `keywords`、frontmatter とインラインのタグに対応し、並び順を細かく設定できます。
 - **Everything 1.5a 検索**: Vault 外のファイルも検索でき、Markdown は Obsidian で、それ以外は OS の関連付けアプリで開きます。
 - **コマンド・ブックマーク・リンク・バックリンク・Smart Connections の検索**を同じウィンドウで行えます。
 - **複数選択**: ファイルマネージャーと同じ操作で選び、選択したノートへまとめてパスのコピー、タグ追加、MOC リンク挿入ができます。

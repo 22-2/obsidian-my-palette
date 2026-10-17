@@ -78,6 +78,21 @@ describe("file provider vault event handling", () => {
 		provider.dispose();
 	});
 
+	it("lists what remains in the empty-query order for a query with only exclusions", async () => {
+		files = [tfile("notes/alpha.md", 1), tfile("archive/beta.md", 3), tfile("gamma.md", 2)];
+		const provider = createProvider();
+		const request = { includeIgnored: false, mode: "file" as const };
+		const blank = (await provider.search({ ...request, query: "" })).map(
+			({ vaultPath }) => vaultPath,
+		);
+		expect(
+			(await provider.search({ ...request, query: "!archive" })).map(
+				({ vaultPath }) => vaultPath,
+			),
+		).toEqual(blank.filter((path) => !path.startsWith("archive/")));
+		provider.dispose();
+	});
+
 	it("finds the file by its new name after a vault rename event", async () => {
 		const provider = createProvider();
 		expect(

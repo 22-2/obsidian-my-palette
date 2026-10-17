@@ -1,5 +1,5 @@
 import { App, setIcon } from "obsidian";
-import fuzzysort from "fuzzysort";
+import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 import { BaseSuggestModal, type SuggestModalProps } from "src/ui/baseSuggestModal";
 import { matchedQueryIndexes } from "src/ui/queryHighlight";
 
@@ -66,10 +66,12 @@ export class SelectionModal<T> extends BaseSuggestModal<T> {
 			this.updateResultCount(this.items.length);
 			return this.items;
 		}
-		const results = fuzzysort.go(query, this.items, {
-			key: (item) => this.toSelectionItem(item).label,
-		});
-		this.updateResultCount(results.total);
+		// The label highlight already reads the shared syntax; filtering with it too
+		// keeps `!` and `|` from highlighting one thing and matching another.
+		const results = searchFuzzyQuery(query, this.items, [
+			(item) => this.toSelectionItem(item).label,
+		]);
+		this.updateResultCount(results.length);
 		return results.map(({ obj }) => obj);
 	}
 

@@ -11,6 +11,7 @@ import {
 	type SortableFileEntry,
 } from "src/search/file/fileMatch";
 import { isUserIgnoredPathWithFilters } from "src/ignored-notes/ignoredPathMatching";
+import { positiveTermBranches } from "src/search/query/searchQuery";
 
 // Keep the existing module exports stable while the match data model lives
 // outside the comparator, so future providers can create signals without
@@ -49,9 +50,11 @@ function hasPrefixMatch(
 	query: string,
 	field: "filename" | "alias",
 ): boolean {
-	const needle = normalized(query);
+	// Each OR branch is a phrase the user could have meant; operators and
+	// excluded terms are not part of any name and would defeat the prefix check.
+	const needles = positiveTermBranches(query).map((terms) => normalized(terms.join(" ")));
 	const values = field === "filename" ? [entry.basename] : entry.aliases;
-	return values.some((value) => normalized(value).startsWith(needle));
+	return values.some((value) => needles.some((needle) => normalized(value).startsWith(needle)));
 }
 
 function compareNumber(a: number, b: number, order: "asc" | "desc" = "asc"): number {

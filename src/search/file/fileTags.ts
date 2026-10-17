@@ -1,5 +1,5 @@
 import fuzzysort from "fuzzysort";
-import { queryTerms } from "src/search/fuzzyQuery";
+import { allQueryTerms, positiveQueryTerms } from "src/search/query/searchQuery";
 
 function normalizedTag(value: unknown): string | undefined {
 	if (typeof value !== "string") return undefined;
@@ -27,10 +27,14 @@ export function normalizeTags(values: readonly unknown[]): string[] {
 /**
  * A hash-prefixed query is intentionally tag-only. This lets `#project` find
  * a tagged note even when its filename and aliases do not contain "project".
+ * Excluded terms count too: `#project !archive` means the folder or name
+ * "archive", which only a full-field search can exclude.
  */
 export function isTagOnlyQuery(query: string): boolean {
-	const terms = queryTerms(query);
-	return terms.length > 0 && terms.every((term) => term.startsWith("#"));
+	return (
+		positiveQueryTerms(query).length > 0 &&
+		allQueryTerms(query).every((term) => term.startsWith("#"))
+	);
 }
 
 /**
@@ -39,7 +43,7 @@ export function isTagOnlyQuery(query: string): boolean {
  * useful as a quick way to list tagged notes.
  */
 export function matchingTags(tags: readonly string[], query: string): string[] {
-	const terms = queryTerms(query);
+	const terms = positiveQueryTerms(query);
 	return tags.filter((tag) =>
 		terms.some((term) => {
 			const needle = term.startsWith("#") ? term.slice(1) : term;

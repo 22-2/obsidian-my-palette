@@ -23,7 +23,11 @@ import { createFileMatch, fileSearchKeys, type FileSearchEntry } from "src/searc
 import { sortFileMatches, sortFilesWithoutQuery } from "src/search/file/fileSorting";
 import { isTagOnlyQuery, normalizeTags } from "src/search/file/fileTags";
 import type { FileUsageScoreSource } from "src/search/file/fileUsageHistory";
-import { searchFuzzyQueryWithFieldScores } from "src/search/fuzzyQuery";
+import {
+	hasPositiveQueryTerms,
+	searchFuzzyQuery,
+	searchFuzzyQueryWithFieldScores,
+} from "src/search/fuzzyQuery";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { fileIcon } from "src/ui/icons";
 
@@ -196,11 +200,16 @@ export class FileProvider implements PaletteProvider<FileResult> {
 				entries.push(entry);
 			}
 		}
-		if (!query.trim()) {
+		if (!hasPositiveQueryTerms(query)) {
 			// Empty and typed searches serve different browsing intents, so each
 			// reads its own priority sequence at search time for live settings edits.
+			// A query with only exclusions has nothing to rank by, so it browses
+			// what remains in the empty-query order.
+			const remaining = searchFuzzyQuery(query, entries, fileSearchKeys(false)).map(
+				({ obj }) => obj,
+			);
 			const files = sortFilesWithoutQuery(
-				entries,
+				remaining,
 				recent,
 				this.fileSortPriorities().blank,
 				usageScores,
