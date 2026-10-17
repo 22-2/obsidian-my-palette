@@ -167,6 +167,8 @@ export interface AuditFileResult extends AuditResultBase {
 	kind: "orphaned-files" | "empty-files";
 	file: TFile;
 	size: number;
+	/** Empty files only: a note holding nothing but its MOC section. */
+	mocOnly?: { references: number };
 }
 
 /** A link target that does not exist, with every note that links to it. */

@@ -288,3 +288,84 @@ test.describe("moving items", () => {
 		await expect.poll(() => rowLabels(page)).toEqual([]);
 	});
 });
+
+test.describe("MOC-only notes", () => {
+	const frontmatter = ["---", "createdAt: 2026-10-08T16:21:43", "---"];
+
+	test.beforeEach(async ({ obsidian }) => {
+		await obsidian.evaluateApp(() =>
+			(app.vault as unknown as { setConfig(key: string, value: unknown): void }).setConfig(
+				"trashOption",
+				"local",
+			),
+		);
+		await writeRaw(
+			obsidian,
+			"moc/hub.md",
+			["## MOC", "- Relateds", "    - [[blank]]", "    - [[written]]", "- References"].join(
+				"\n",
+			),
+		);
+		await writeRaw(
+			obsidian,
+			"moc/blank.md",
+			[
+				...frontmatter,
+				"## MOC",
+				"- Relateds",
+				"    - [[hub]]",
+				"- References",
+				"    - [Chat](https://chatgpt.com/c/1)",
+			].join("\n"),
+		);
+		await writeRaw(
+			obsidian,
+			"moc/written.md",
+			[...frontmatter, "A thought.", "", "## MOC", "- Relateds", "    - [[hub]]"].join("\n"),
+		);
+		await waitForResolvedLinks(obsidian, {
+			"moc/hub.md": ["moc/blank.md", "moc/written.md"],
+			"moc/blank.md": ["moc/hub.md"],
+		});
+	});
+
+	async function setMocOnlyAsEmpty(obsidian: ObsidianAPI, value: boolean): Promise<void> {
+		await obsidian.evaluateApp(async (value) => {
+			const plugin = app.plugins.plugins["my-palette"] as unknown as {
+				settings: { audit: { mocOnlyAsEmpty: boolean } };
+				saveSettings(): Promise<void>;
+			};
+			plugin.settings.audit.mocOnlyAsEmpty = value;
+			await plugin.saveSettings();
+		}, value);
+	}
+
+	test("are listed as empty files only when the option is on", async ({ obsidian }) => {
+		expect(
+			(await runAuditCli(obsidian, { kind: "empty-files", glob: "moc/**" })).items,
+		).toEqual([]);
+		await setMocOnlyAsEmpty(obsidian, true);
+		const report = await runAuditCli(obsidian, { kind: "empty-files", glob: "moc/**" });
+		expect(report.items).toEqual([
+			expect.objectContaining({ path: "moc/blank.md", mocOnly: { references: 1 } }),
+			// A hub that only lists links is MOC-only too; a tag can leave it out.
+			expect.objectContaining({ path: "moc/hub.md", mocOnly: { references: 0 } }),
+		]);
+	});
+
+	test("moving one to the trash removes it from its partners' Relateds", async ({ obsidian }) => {
+		await setMocOnlyAsEmpty(obsidian, true);
+		const report = await runAuditCli(obsidian, {
+			kind: "empty-files",
+			glob: "moc/blank.md",
+			trash: "true",
+		});
+		expect(report.items).toEqual([
+			expect.objectContaining({ result: "trashed", unlinkedFrom: ["moc/hub.md"] }),
+		]);
+		expect(await obsidian.exists("moc/blank.md")).toBe(false);
+		const hub = await obsidian.read("moc/hub.md");
+		expect(hub).not.toContain("[[blank]]");
+		expect(hub).toContain("[[written]]");
+	});
+});

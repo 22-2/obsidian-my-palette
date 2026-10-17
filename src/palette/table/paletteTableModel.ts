@@ -20,6 +20,7 @@ const COLUMN_DEFINITIONS = {
 	linkedFrom: { label: "Linked from", width: 14 },
 	firstSource: { label: "First source", width: 38 },
 	foldersInside: { label: "Folders inside", width: 14 },
+	references: { label: "References", width: 12 },
 } as const;
 
 export type PaletteTableColumnId = keyof typeof COLUMN_DEFINITIONS;
@@ -45,7 +46,8 @@ export const PALETTE_TABLE_COLUMN_SETS: Readonly<
 > = {
 	files: columnsOf("name", "path", "modified", "prior"),
 	"orphaned-files": columnsOf("name", "path", "size", "modified"),
-	"empty-files": columnsOf("name", "path", "modified"),
+	// Why: References is filled only for MOC-only notes, so it also tells them apart.
+	"empty-files": columnsOf("name", "path", "modified", "references"),
 	// Why: the Name column holds the link text here, so it is labeled for what it shows.
 	"broken-links": [
 		{ id: "name", label: "Link", width: COLUMN_DEFINITIONS.name.width },
@@ -79,6 +81,7 @@ export interface PaletteTableRow {
 	linkedFrom?: number;
 	firstSource?: string;
 	foldersInside?: number;
+	references?: number;
 }
 
 interface RawLayout {
@@ -155,7 +158,9 @@ function textColumn(id: "name" | "path" | "firstSource") {
 	});
 }
 
-function numberColumn(id: "modified" | "prior" | "size" | "linkedFrom" | "foldersInside") {
+function numberColumn(
+	id: "modified" | "prior" | "size" | "linkedFrom" | "foldersInside" | "references",
+) {
 	return helper.accessor(id, {
 		sortFn: sortFn_basic,
 		sortDescFirst: true,
@@ -174,6 +179,7 @@ const columns = helper.columns([
 	numberColumn("linkedFrom"),
 	textColumn("firstSource"),
 	numberColumn("foldersInside"),
+	numberColumn("references"),
 ]);
 
 /** Keep search ranking as the unsorted order; explicit column sorts override it. */

@@ -176,7 +176,7 @@ function addConfirmedMoveItem(
 					action,
 					kind,
 					results.map(itemPath),
-					plugin.settings.audit.archiveFolder,
+					plugin.settings.audit,
 				);
 				new Notice(describeAuditActionResults(action, kind, outcome));
 				onResultsChanged?.();

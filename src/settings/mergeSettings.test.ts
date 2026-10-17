@@ -424,6 +424,7 @@ describe("audit settings", () => {
 				excludedExtensions: [".CSV", "bad ext"],
 				excludeDailyNotesAndTemplates: false,
 				kind: "unknown-kind",
+				mocOnlyAsEmpty: true,
 				archiveFolder: "/Archive\\audit/",
 			},
 		});
@@ -434,6 +435,7 @@ describe("audit settings", () => {
 			excludedTags: ["draft"],
 			excludedExtensions: ["csv"],
 			excludeDailyNotesAndTemplates: false,
+			mocOnlyAsEmpty: true,
 		});
 	});
 });

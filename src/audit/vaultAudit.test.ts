@@ -218,3 +218,17 @@ describe("filterAuditReport", () => {
 		expect(report.items).toEqual([{ link: "A", sources: [{ path: "notes/x.md", line: 1 }] }]);
 	});
 });
+
+describe("MOC-only notes", () => {
+	it("lists them as empty files with their References count", () => {
+		const report = runAudit(
+			"empty-files",
+			snapshot({
+				files: [file("moc-only.md", { mocOnly: { references: 1 } }), file("written.md")],
+			}),
+		);
+		expect(report.items).toEqual([
+			{ path: "moc-only.md", size: 10, mtime: 0, mocOnly: { references: 1 } },
+		]);
+	});
+});

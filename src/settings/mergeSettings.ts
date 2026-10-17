@@ -204,6 +204,10 @@ function normalizeAudit(source: Record<string, unknown>): AuditSettings {
 			typeof raw.excludeDailyNotesAndTemplates === "boolean"
 				? raw.excludeDailyNotesAndTemplates
 				: DEFAULT_SETTINGS.audit.excludeDailyNotesAndTemplates,
+		mocOnlyAsEmpty:
+			typeof raw.mocOnlyAsEmpty === "boolean"
+				? raw.mocOnlyAsEmpty
+				: DEFAULT_SETTINGS.audit.mocOnlyAsEmpty,
 	};
 }
 

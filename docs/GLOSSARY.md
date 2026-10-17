@@ -132,6 +132,7 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 | Empty files    | 中身のないファイル。フロントマターだけのノートも含む | `empty-files`       |
 | Empty folders  | ファイルを1つも含まないフォルダー                    | `empty-folders`     |
 
+- MOC-only notes: フロントマターと`## MOC`の節しかないノート。設定「Count MOC-only notes as empty」でEmpty filesに含める(識別子`audit.mocOnlyAsEmpty`)。
 - 種類はオプションメニューの見出し「Show」の下から1つを選ぶ。設定`audit.kind`に保存し、すべての表示場所で共有する。
 - 入力欄の案内は「Search」+ 種類名の小文字(「Search orphaned files」)。今の種類はここで示す。
 

@@ -1,26 +1,45 @@
 import { getAllTags, getLinkpath, normalizePath, type App, type CachedMetadata } from "obsidian";
 import type {
 	AuditExclusions,
+	AuditFile,
 	AuditSnapshot,
 	UnresolvedLinkOccurrence,
 } from "src/audit/vaultAudit";
+import { analyzeMocOnly } from "src/moc-relateds/mocRelatedsCore";
 import { getUserIgnoreFilters } from "src/ignored-notes/ignoredPaths";
 import type { MyPaletteSettings } from "src/settings/model";
 
+export interface AuditSnapshotOptions {
+	/** Read notes with a MOC section to find those holding nothing else. */
+	mocOnlyAsEmpty: boolean;
+}
+
 /** Reads what `vaultAudit.ts` judges from the vault and the metadata cache. */
-export function collectAuditSnapshot(app: App): AuditSnapshot {
+export async function collectAuditSnapshot(
+	app: App,
+	{ mocOnlyAsEmpty }: AuditSnapshotOptions,
+): Promise<AuditSnapshot> {
 	const { metadataCache, vault } = app;
-	const files = vault.getFiles().map((file) => {
-		const cache = metadataCache.getFileCache(file);
-		return {
-			path: file.path,
-			extension: file.extension.toLocaleLowerCase(),
-			size: file.stat.size,
-			mtime: file.stat.mtime,
-			tags: cache ? (getAllTags(cache) ?? []).map((tag) => tag.replace(/^#/, "")) : [],
-			...(file.extension === "md" && cache ? { hasContent: hasContent(cache) } : {}),
-		};
-	});
+	const files = await Promise.all(
+		vault.getFiles().map(async (file): Promise<AuditFile> => {
+			const cache = metadataCache.getFileCache(file);
+			const written = file.extension === "md" && cache ? hasContent(cache) : undefined;
+			// Why: only notes with a MOC heading are read, so the option stays cheap on large vaults.
+			const moc =
+				mocOnlyAsEmpty && written && cache && hasMocHeading(cache)
+					? analyzeMocOnly(await vault.cachedRead(file))
+					: undefined;
+			return {
+				path: file.path,
+				extension: file.extension.toLocaleLowerCase(),
+				size: file.stat.size,
+				mtime: file.stat.mtime,
+				tags: cache ? (getAllTags(cache) ?? []).map((tag) => tag.replace(/^#/, "")) : [],
+				...(written === undefined ? {} : { hasContent: written }),
+				...(moc?.mocOnly ? { mocOnly: { references: moc.references } } : {}),
+			};
+		}),
+	);
 	return {
 		files,
 		folders: vault.getAllFolders(false).map((folder) => folder.path),
@@ -44,6 +63,13 @@ export function auditExclusions(app: App, settings: MyPaletteSettings): AuditExc
 			? dailyNoteAndTemplateFolders(app)
 			: [],
 	};
+}
+
+/** The `## MOC` heading that `analyzeMocOnly` looks for. */
+export function hasMocHeading(cache: CachedMetadata): boolean {
+	return (cache.headings ?? []).some(
+		({ level, heading }) => level === 2 && heading.trim().startsWith("MOC"),
+	);
 }
 
 function hasContent(cache: CachedMetadata): boolean {

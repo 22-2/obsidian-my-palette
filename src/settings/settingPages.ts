@@ -211,6 +211,21 @@ function createVaultAuditPage(plugin: SettingsHost, helpers: SettingPageHelpers)
 						),
 				),
 			]),
+			helpers.group("Empty files", [
+				helpers.render(
+					"Count MOC-only notes as empty",
+					"Also list notes with nothing but frontmatter and a ## MOC section, such as notes made from a template and never written. Moving one to the trash removes its links from other notes' Relateds.",
+					(setting) =>
+						setting.addToggle((toggle) =>
+							toggle
+								.setValue(plugin.settings.audit.mocOnlyAsEmpty)
+								.onChange((value) => {
+									plugin.settings.audit.mocOnlyAsEmpty = value;
+									void plugin.saveSettings();
+								}),
+						),
+				),
+			]),
 			helpers.group("Left out of Vault audit", [
 				helpers.render(
 					"Folders",

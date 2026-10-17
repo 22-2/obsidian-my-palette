@@ -49,7 +49,7 @@ export const auditCliApi: CliApi = {
 		const action = requestedAction(params, kind);
 		const report = runAudit(
 			kind,
-			collectAuditSnapshot(plugin.app),
+			await collectAuditSnapshot(plugin.app, plugin.settings.audit),
 			auditExclusions(plugin.app, plugin.settings),
 		);
 		const filtered =
@@ -64,7 +64,7 @@ export const auditCliApi: CliApi = {
 			action,
 			kind,
 			filtered.items.map(({ path }) => path),
-			plugin.settings.audit.archiveFolder,
+			plugin.settings.audit,
 		);
 		return { kind, action, count: items.length, items: withResults(items, results) };
 	},
@@ -101,7 +101,12 @@ function toCliItems(report: AuditReport): object[] {
 
 function withResults(items: readonly object[], results: readonly AuditActionResult[]) {
 	return items.map((item, index) => {
-		const { outcome, reason } = results[index];
-		return { ...item, result: outcome, ...(reason ? { reason } : {}) };
+		const { outcome, reason, unlinkedFrom } = results[index];
+		return {
+			...item,
+			result: outcome,
+			...(reason ? { reason } : {}),
+			...(unlinkedFrom ? { unlinkedFrom } : {}),
+		};
 	});
 }

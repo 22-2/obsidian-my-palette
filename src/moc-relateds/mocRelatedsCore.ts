@@ -112,3 +112,50 @@ export function removeLinkFromMocRelateds(content: string, linkBasename: string)
 function escapeRegExp(text: string): string {
 	return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
+
+export interface MocOnlyInfo {
+	/** Nothing but frontmatter, blank lines and the MOC section is in the note. */
+	mocOnly: boolean;
+	/** Entries with text under the MOC's References item. */
+	references: number;
+}
+
+/**
+ * For Vault audit: a note made from a template often holds only its MOC section, which
+ * links it to other notes but says nothing itself. The MOC section runs from `## MOC` to
+ * the next heading.
+ */
+export function analyzeMocOnly(content: string): MocOnlyInfo {
+	const lines = withoutFrontmatter(content).split(/\r?\n/);
+	const mocIndex = lines.findIndex((line) => line.trim().startsWith(MOC_HEADER));
+	if (mocIndex === -1) return { mocOnly: false, references: 0 };
+	const nextHeading = lines.findIndex(
+		(line, index) => index > mocIndex && /^#{1,6}\s/.test(line.trim()),
+	);
+	const end = nextHeading === -1 ? lines.length : nextHeading;
+	const outside = [...lines.slice(0, mocIndex), ...lines.slice(end)];
+	return {
+		mocOnly: outside.every((line) => line.trim() === ""),
+		references: countReferences(lines.slice(mocIndex + 1, end)),
+	};
+}
+
+function countReferences(section: readonly string[]): number {
+	const referencesIndex = section.findIndex((line) => line.trim().startsWith("- References"));
+	if (referencesIndex === -1) return 0;
+	const indent = (line: string) => line.match(/^\s*/)?.[0].length ?? 0;
+	const parentIndent = indent(section[referencesIndex]);
+	let count = 0;
+	for (const line of section.slice(referencesIndex + 1)) {
+		if (line.trim() === "") continue;
+		if (indent(line) <= parentIndent) break;
+		// Why: a template leaves an empty `- ` under References; only entries with text count.
+		if (/^\s*[-*+]\s+\S/.test(line)) count += 1;
+	}
+	return count;
+}
+
+function withoutFrontmatter(content: string): string {
+	const match = /^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/.exec(content);
+	return match ? content.slice(match[0].length) : content;
+}

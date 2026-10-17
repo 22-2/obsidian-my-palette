@@ -22,7 +22,7 @@ export class AuditProvider implements PaletteProvider<AuditResult> {
 		const settings = this.settings();
 		const report = runAudit(
 			settings.audit.kind,
-			collectAuditSnapshot(this.app),
+			await collectAuditSnapshot(this.app, settings.audit),
 			auditExclusions(this.app, settings),
 		);
 		const results = toAuditResults(report, (path) => {
@@ -45,19 +45,22 @@ export function toAuditResults(
 		case "orphaned-files":
 		case "empty-files": {
 			const kind: Extract<AuditKind, "orphaned-files" | "empty-files"> = report.kind;
-			return report.items.flatMap(({ path, size }): AuditResult[] => {
+			return report.items.flatMap(({ path, size, mocOnly }): AuditResult[] => {
 				const file = getFile(path);
 				if (!file) return [];
+				const details = [path, formatSize(size)];
+				if (mocOnly) details.push(mocOnlyLabel(mocOnly.references));
 				return [
 					{
 						id: `audit:${kind}:${path}`,
 						mode: "audit",
 						kind,
 						primary: file.name,
-						secondary: `${path} · ${formatSize(size)}`,
+						secondary: details.join(" · "),
 						icon,
 						file,
 						size,
+						...(mocOnly ? { mocOnly } : {}),
 					},
 				];
 			});
@@ -100,6 +103,10 @@ function searchKey(result: AuditResult): string {
 		case "empty-folders":
 			return result.folderPath;
 	}
+}
+
+function mocOnlyLabel(references: number): string {
+	return references > 0 ? `MOC only, ${countLabel(references, "reference")}` : "MOC only";
 }
 
 function countLabel(count: number, noun: string): string {

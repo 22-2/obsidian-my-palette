@@ -177,6 +177,8 @@ Vault audit は、保管庫にたまっていく片付けの対象を一覧に�
 
 **設定 → My Palette → Vault audit** で、アーカイブ用フォルダー（元のパスを保って移し、一覧からは除く）と、除外するフォルダー・タグ・拡張子を設定します。Obsidian の Excluded files と、このプラグインの Excluded folders は常に除外します。Daily notes と Templates のフォルダーは、オフにしない限り Orphaned files から除きます。
 
+**Count MOC-only notes as empty**（既定はオフ）をオンにすると、テンプレートから作って書かずに残ったノートのような、フロントマターと `## MOC` の節しかないノートも Empty files に含めます。MOC の References にある項目の数は References の列に出すので、残しておきたいリンクがあれば消す前に気づけます。ゴミ箱へ移すと、そのノートへリンクしているノートの Relateds からもリンクを外すので、相手側のリンクが壊れません。
+
 ### Obsidian CLI
 
 `obsidian my-palette:audit kind=<kind>` で同じ一覧を JSON で出力します。スクリプトや AI エージェントから使うためのものです。`kind` は `orphaned-files`・`broken-links`・`empty-files`・`empty-folders` のどれかで、`glob=<pattern>` で一致するパス（壊れたリンクでは参照元のノート）だけに絞ります。壊れたリンクの行番号は1から数えます。

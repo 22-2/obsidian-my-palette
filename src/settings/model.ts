@@ -338,6 +338,8 @@ export interface AuditSettings {
 	excludedExtensions: string[];
 	/** Daily notes and templates are rarely linked, so they would crowd the orphaned files. */
 	excludeDailyNotesAndTemplates: boolean;
+	/** Empty files also lists notes with nothing but frontmatter and a MOC section. */
+	mocOnlyAsEmpty: boolean;
 }
 
 export const DEFAULT_SETTINGS: MyPaletteSettings = {
@@ -403,5 +405,6 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		excludedTags: [],
 		excludedExtensions: [],
 		excludeDailyNotesAndTemplates: true,
+		mocOnlyAsEmpty: false,
 	},
 };

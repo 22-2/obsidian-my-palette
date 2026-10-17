@@ -31,6 +31,11 @@ export interface AuditFile {
 	 * metadata cache has not indexed the note, so the size decides instead.
 	 */
 	hasContent?: boolean;
+	/**
+	 * Set only when MOC-only notes count as empty: the note holds nothing but frontmatter
+	 * and its MOC section, whose References has this many entries.
+	 */
+	mocOnly?: { references: number };
 }
 
 /** One link or embed whose target does not exist. */
@@ -73,6 +78,8 @@ export interface AuditFileItem {
 	path: string;
 	size: number;
 	mtime: number;
+	/** Empty files only: the note has a MOC section, with this many References entries. */
+	mocOnly?: { references: number };
 }
 
 export interface BrokenLinkSource {
@@ -186,7 +193,7 @@ export function findEmptyFiles(
 		snapshot.files
 			.filter(isEmptyFile)
 			.filter((file) => !isExcludedFile(file, exclusions))
-			.map(toFileItem),
+			.map(toEmptyFileItem),
 	);
 }
 
@@ -209,6 +216,7 @@ export function findEmptyFolders(
 }
 
 function isEmptyFile(file: AuditFile): boolean {
+	if (file.mocOnly) return true;
 	if (file.extension === "md" && file.hasContent !== undefined) return !file.hasContent;
 	return file.size === 0;
 }
@@ -241,6 +249,10 @@ function parentFolder(path: string): string {
 
 function toFileItem({ path, size, mtime }: AuditFile): AuditFileItem {
 	return { path, size, mtime };
+}
+
+function toEmptyFileItem(file: AuditFile): AuditFileItem {
+	return file.mocOnly ? { ...toFileItem(file), mocOnly: file.mocOnly } : toFileItem(file);
 }
 
 function sortByPath<T extends { path: string }>(items: T[]): T[] {

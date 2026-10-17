@@ -175,6 +175,7 @@ export class PaletteTableControls extends Component {
 					path: result.file.path,
 					size: result.size,
 					modified: result.file.stat.mtime,
+					references: result.mocOnly?.references,
 				};
 			case "broken-links":
 				return {
@@ -288,7 +289,8 @@ export class PaletteTableControls extends Component {
 				return;
 			case "prior":
 			case "linkedFrom":
-			case "foldersInside": {
+			case "foldersInside":
+			case "references": {
 				const value = data?.[column];
 				cell.setText(value === undefined ? "—" : String(value));
 				return;

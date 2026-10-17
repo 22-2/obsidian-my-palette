@@ -64,6 +64,7 @@ describe("settings page layout", () => {
 			pages.filter(isPage);
 		expect(groupsOf(vaultAudit).map((group) => group.heading)).toEqual([
 			"Archive",
+			"Empty files",
 			"Left out of Vault audit",
 		]);
 		expect(groupsOf(modes).map((group) => group.heading)).toEqual(["Search modes"]);
