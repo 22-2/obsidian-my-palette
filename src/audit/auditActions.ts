@@ -1,13 +1,7 @@
-import {
-	TFile,
-	TFolder,
-	getFrontMatterInfo,
-	normalizePath,
-	type App,
-	type TAbstractFile,
-} from "obsidian";
+import { TFile, TFolder, normalizePath, type App, type TAbstractFile } from "obsidian";
+import { noteEmptiness } from "src/audit/noteEmptiness";
 import type { AuditKind } from "src/audit/vaultAudit";
-import { analyzeMocOnly, removeLinkFromMocRelateds } from "src/moc-relateds/mocRelatedsCore";
+import { removeLinkFromMocRelateds } from "src/moc-relateds/mocRelatedsCore";
 import type { AuditSettings } from "src/settings/model";
 
 export type AuditAction = "trash" | "archive";
@@ -111,7 +105,7 @@ async function currentState(
 			return isLinkedFromOtherFile(app, target.path) ? "Now linked from a note." : listed;
 		case "empty-files": {
 			if (!(target instanceof TFile)) return "Not a file.";
-			const emptiness = await emptinessOf(app, target);
+			const { kind: emptiness } = await noteEmptiness(app, target);
 			if (emptiness === "empty") return listed;
 			return emptiness === "moc-only" && mocOnlyAsEmpty
 				? { mocOnly: true }
@@ -149,14 +143,6 @@ function isLinkedFromOtherFile(app: App, path: string): boolean {
 	return Object.entries(app.metadataCache.resolvedLinks).some(
 		([source, targets]) => source !== path && path in targets,
 	);
-}
-
-async function emptinessOf(app: App, file: TFile): Promise<"empty" | "moc-only" | "written"> {
-	if (file.extension !== "md") return file.stat.size === 0 ? "empty" : "written";
-	// Why: read the file itself; the metadata cache may not have caught up with an edit yet.
-	const content = await app.vault.cachedRead(file);
-	if (content.slice(getFrontMatterInfo(content).contentStart).trim() === "") return "empty";
-	return analyzeMocOnly(content).mocOnly ? "moc-only" : "written";
 }
 
 function holdsFiles(folder: TFolder): boolean {

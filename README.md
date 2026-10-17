@@ -187,6 +187,8 @@ Nothing is written to the vault to show the list, so the list never changes what
 
 **Count MOC-only notes as empty** (off by default) adds notes with nothing but frontmatter and a `## MOC` section to Empty files, such as notes made from a template and never written. Entries under the MOC's References are shown in the References column, since such a note may still keep a useful link. Moving one to the trash also removes it from the Relateds of the notes linking to it, so their links do not break.
 
+The MOC remove selector marks linked notes the same way (`Empty`, `MOC only`), whether or not the option is on. Tidying a hub of blank notes then takes two steps: unlink the notes that have since been written with the selector, and move the ones still blank to the trash from Vault audit.
+
 ### Obsidian CLI
 
 `obsidian my-palette:audit kind=<kind>` prints the same lists as JSON, for scripts and AI agents. `kind` is `orphaned-files`, `broken-links`, `empty-files` or `empty-folders`; `glob=<pattern>` keeps the matching paths (for broken links, the linking notes). Broken links report one-based line numbers.

@@ -368,4 +368,18 @@ test.describe("MOC-only notes", () => {
 		expect(hub).not.toContain("[[blank]]");
 		expect(hub).toContain("[[written]]");
 	});
+
+	test("the MOC remove selector marks notes that are still blank", async ({ obsidian }) => {
+		await obsidian.open("moc/hub.md");
+		await runPaletteCommand(obsidian, "open-moc-remove-selector");
+		const rows = obsidian.page.locator(".my-palette-suggest-modal .suggestion-item");
+		await expect(rows).toHaveCount(2);
+		// The marks do not depend on the Vault audit option.
+		await expect(
+			rows.filter({ hasText: "blank" }).locator(".my-palette-suggestion__badge"),
+		).toHaveText("MOC only · 1 ref");
+		await expect(
+			rows.filter({ hasText: "written" }).locator(".my-palette-suggestion__badge"),
+		).toHaveCount(0);
+	});
 });

@@ -179,6 +179,8 @@ Vault audit は、保管庫にたまっていく片付けの対象を一覧に�
 
 **Count MOC-only notes as empty**（既定はオフ）をオンにすると、テンプレートから作って書かずに残ったノートのような、フロントマターと `## MOC` の節しかないノートも Empty files に含めます。MOC の References にある項目の数は References の列に出すので、残しておきたいリンクがあれば消す前に気づけます。ゴミ箱へ移すと、そのノートへリンクしているノートの Relateds からもリンクを外すので、相手側のリンクが壊れません。
 
+MOC remove selector も、同じ判定でつながっているノートに印（`Empty`、`MOC only`）を付けます。オプションのオン・オフには関係なく表示します。ブランクノートのまとめ（ハブ）を片付けるときは、書かれたノートを selector でハブから外し、まだ空のノートを Vault audit からゴミ箱へ移す、という2段階になります。
+
 ### Obsidian CLI
 
 `obsidian my-palette:audit kind=<kind>` で同じ一覧を JSON で出力します。スクリプトや AI エージェントから使うためのものです。`kind` は `orphaned-files`・`broken-links`・`empty-files`・`empty-folders` のどれかで、`glob=<pattern>` で一致するパス（壊れたリンクでは参照元のノート）だけに絞ります。壊れたリンクの行番号は1から数えます。
