@@ -1214,9 +1214,14 @@
 	box-shadow: 0 0 0 2px var(--interactive-accent);
 }
 
-/* Each group starts with a heading row of the places its shortcuts work in. */
+/*
+ * Each group starts with a heading row of the places its shortcuts work in. Space above and
+ * a stronger rule below make it read as a section break rather than one more shortcut. A
+ * background band is avoided because some themes paint settings in the same color.
+ */
 .my-palette-shortcuts__table .my-palette-shortcuts__group-heading {
-	padding: 14px 4px 4px;
+	padding: 18px 4px 6px;
+	border-bottom: 2px solid var(--text-faint);
 }
 
 .my-palette-shortcuts__places {
@@ -1225,25 +1230,30 @@
 	gap: 4px;
 }
 
+/* Chips use the button surface and normal text so headings stand apart from the rows below. */
 .my-palette-shortcuts__place {
-	padding: 0 6px;
-	border: 1px solid var(--background-modifier-border);
+	padding: 1px 8px;
+	border: 1px solid var(--background-modifier-border-hover);
 	border-radius: var(--radius-l);
-	color: var(--text-muted);
+	background: var(--interactive-normal);
+	color: var(--text-normal);
 	font-size: var(--font-ui-smaller);
-	font-weight: var(--font-normal);
+	font-weight: var(--font-medium);
 	line-height: 18px;
 	white-space: nowrap;
 }
 
+/* Everywhere is not one place, so it reads as a lighter outline. */
 .my-palette-shortcuts__place.is-everywhere {
 	border-style: dashed;
-	color: var(--text-faint);
+	background: transparent;
+	color: var(--text-muted);
 }
 
 .my-palette-shortcuts__place.is-match {
 	border-color: var(--interactive-accent);
-	color: var(--text-normal);
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
 }
 
 .my-palette-shortcuts__reset {
