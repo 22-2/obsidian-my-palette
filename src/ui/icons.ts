@@ -58,7 +58,7 @@ export const ICONS = {
 	// Palette controls
 	search: "search",
 	history: "history",
-	options: "ellipsis",
+	options: "settings-2",
 	highlight: "highlighter",
 	includeExcluded: "eye",
 	help: "help-circle",

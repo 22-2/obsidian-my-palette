@@ -116,7 +116,7 @@ export class PaletteHistoryControls {
 			attr: { type: "button", title: "Palette options" },
 		});
 		this.optionsButton = optionsButton;
-		// Why: this menu contains actions as well as preferences.
+		// Why: the menu leads with options (switches and choices); the screen's actions follow.
 		setIcon(optionsButton, ICONS.options);
 		// Why: the open menu may already be dismissed by the press itself before the
 		// click arrives, so its state is read at pointerdown, which fires first.
