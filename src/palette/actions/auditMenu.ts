@@ -19,6 +19,7 @@ import {
 	copyPathListToClipboard,
 	copyPathToClipboard,
 } from "src/platform/pathClipboard";
+import { ICONS } from "src/ui/icons";
 import type { PaletteMenu, PaletteMenuItem } from "src/ui/paletteMenu";
 
 /** Enough to find a note in the menu; the rest is one search away in the note itself. */
@@ -52,7 +53,7 @@ export function populateAuditMenu(options: AuditMenuOptions): void {
 		menu.addItem((item) =>
 			item
 				.setTitle(openTitle(first))
-				.setIcon(first.kind === "empty-folders" ? "folder-open" : "file-input")
+				.setIcon(first.kind === "empty-folders" ? ICONS.revealInFileExplorer : ICONS.open)
 				.onClick(() => void activate("primary", first)),
 		);
 		if (first.kind === "broken-links") addLinkedNoteItems(options, first);
@@ -97,7 +98,7 @@ function addLinkedNoteItems(
 		menu.addItem((item) =>
 			item
 				.setTitle(`${source.path}${line}`)
-				.setIcon("file-text")
+				.setIcon(ICONS.note)
 				.onClick(() => {
 					const file = app.vault.getFileByPath(source.path);
 					if (!file) {
@@ -129,7 +130,7 @@ function addMoveItems(options: AuditMenuOptions, kind: AuditKind): void {
 	menu.addItem((item) =>
 		item
 			.setTitle("Move to archive folder")
-			.setIcon("archive")
+			.setIcon(ICONS.archive)
 			.setTooltip("Set an archive folder in the settings.")
 			.setDisabled(true),
 	);
@@ -152,7 +153,7 @@ function addConfirmedMoveItem(
 		item.setTitle(
 			confirming ? `Click again to move ${what} to ${destination}` : `Move to ${destination}`,
 		)
-			.setIcon(action === "trash" ? "trash-2" : "archive")
+			.setIcon(action === "trash" ? ICONS.delete : ICONS.archive)
 			.setWarning(action === "trash")
 			.setCta(confirming)
 			.setKeepOpen(confirming);

@@ -1,6 +1,7 @@
 import type { CliData, CliFlags } from "obsidian";
 import { auditCliApi } from "src/audit/auditCli";
 import type MyPalettePlugin from "src/main";
+import { logger } from "src/shared/logger";
 
 /**
  * An API for the Obsidian CLI, registered as `obsidian my-palette:<action> ...`.
@@ -37,7 +38,7 @@ export function registerCli(plugin: MyPalettePlugin): void {
 				try {
 					return toJson(await api.run(plugin, params));
 				} catch (error) {
-					console.error(`[my-palette] CLI ${api.action}`, error);
+					logger.error(`CLI ${api.action}`, error);
 					return toJson({
 						error: error instanceof Error ? error.message : String(error),
 					});

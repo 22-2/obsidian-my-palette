@@ -121,7 +121,7 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		mode: "audit",
 		title: "Vault audit",
 		subtitle: "Vault",
-		icon: "scan-search",
+		icon: ICONS.vaultAudit,
 		// Replaced by the kind shown (see auditKindChoice.ts); kept for the mode's own definition.
 		placeholder: "Search audit results",
 	},

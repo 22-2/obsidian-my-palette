@@ -1,4 +1,5 @@
 import type { TFile, WorkspaceLeaf } from "obsidian";
+import { revealInFileExplorer } from "src/platform/obsidianInternals";
 import { openFileInLeaf } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
 import type { AuditResult, PaletteResult } from "src/palette/results";
@@ -185,17 +186,13 @@ async function executeAuditResult(
 		}
 		case "empty-folders": {
 			const folder = vault.getFolderByPath(result.folderPath);
-			const explorer = plugin.app.internalPlugins.getEnabledPluginById("file-explorer");
-			if (!folder || !explorer) {
-				options.showError(
-					folder
-						? "Enable Obsidian's file explorer core plugin to show the folder."
-						: "The folder no longer exists.",
-				);
+			if (!folder) {
+				options.showError("The folder no longer exists.");
 				return false;
 			}
-			explorer.revealInFolder(folder);
-			return true;
+			if (revealInFileExplorer(plugin.app, folder)) return true;
+			options.showError("Enable Obsidian's file explorer core plugin to show the folder.");
+			return false;
 		}
 	}
 }

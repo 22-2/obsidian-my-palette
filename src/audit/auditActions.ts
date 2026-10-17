@@ -1,5 +1,6 @@
 import { TFile, TFolder, normalizePath, type App, type TAbstractFile } from "obsidian";
 import { noteEmptiness } from "src/audit/noteEmptiness";
+import { logger } from "src/shared/logger";
 import type { AuditKind } from "src/audit/vaultAudit";
 import { removeLinkFromMocRelateds } from "src/moc-relateds/mocRelatedsCore";
 import type { AuditSettings } from "src/settings/model";
@@ -52,7 +53,7 @@ export async function applyAuditAction(
 		try {
 			results.push(await applyToItem(app, action, kind, path, settings));
 		} catch (error) {
-			console.error(`[my-palette] Vault audit could not ${action} ${path}`, error);
+			logger.error(`Vault audit could not ${action} ${path}`, error);
 			results.push({
 				path,
 				outcome: "failed",

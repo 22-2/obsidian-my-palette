@@ -7,6 +7,7 @@ import type {
 } from "src/audit/vaultAudit";
 import { analyzeMocOnly } from "src/moc-relateds/mocRelatedsCore";
 import { getUserIgnoreFilters } from "src/ignored-notes/ignoredPaths";
+import { getCorePluginFolder } from "src/platform/obsidianInternals";
 import type { MyPaletteSettings } from "src/settings/model";
 
 export interface AuditSnapshotOptions {
@@ -104,21 +105,11 @@ function collectUnresolvedLinks(app: App): UnresolvedLinkOccurrence[] {
 	});
 }
 
-/** Only the part of a core plugin instance read here; the settings are not public API. */
-interface FolderOptionPlugin {
-	options?: { folder?: unknown };
-}
-
 /** The folders of the Daily notes and Templates core plugins, when they are on. */
 function dailyNoteAndTemplateFolders(app: App): string[] {
-	const plugins = app.internalPlugins as unknown as {
-		getEnabledPluginById(id: string): FolderOptionPlugin | null;
-	};
-	const folders = ["daily-notes", "templates"].map(
-		(id) => plugins.getEnabledPluginById(id)?.options?.folder,
-	);
+	const folders = ["daily-notes", "templates"].map((id) => getCorePluginFolder(app, id));
 	return folders.flatMap((folder) => {
-		const normalized = typeof folder === "string" && folder ? normalizePath(folder) : "";
+		const normalized = folder ? normalizePath(folder) : "";
 		// Why: an unset folder means the vault root, and excluding the root would hide everything.
 		return normalized && normalized !== "/" ? [normalized] : [];
 	});

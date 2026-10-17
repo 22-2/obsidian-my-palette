@@ -1,4 +1,4 @@
-import type { App, KeymapEventHandler, Scope } from "obsidian";
+import type { App, KeymapEventHandler, Scope, TAbstractFile } from "obsidian";
 
 /*
  * Every Obsidian API that is not in the public `obsidian` typings goes through this
@@ -100,6 +100,24 @@ export function getCommunityPlugin<T = unknown>(app: App, id: string): T | undef
 /** The instance of an enabled core plugin, or undefined when it is off. */
 export function getEnabledCorePlugin<T = unknown>(app: App, id: string): T | undefined {
 	return (internals(app).internalPlugins?.getEnabledPluginById?.(id) as T | null) ?? undefined;
+}
+
+/** The folder setting of an enabled core plugin such as Daily notes or Templates. */
+export function getCorePluginFolder(app: App, id: string): string | undefined {
+	const folder = getEnabledCorePlugin<{ options?: { folder?: unknown } }>(app, id)?.options
+		?.folder;
+	return typeof folder === "string" ? folder : undefined;
+}
+
+/** Shows a file or folder in the file explorer; false when that core plugin is off. */
+export function revealInFileExplorer(app: App, file: TAbstractFile): boolean {
+	const explorer = getEnabledCorePlugin<{ revealInFolder?: (file: TAbstractFile) => void }>(
+		app,
+		"file-explorer",
+	);
+	if (!explorer?.revealInFolder) return false;
+	explorer.revealInFolder(file);
+	return true;
 }
 
 export function getGlobalSearch(app: App): GlobalSearchInternals | undefined {
