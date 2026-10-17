@@ -95,6 +95,19 @@ test("lists only the topmost empty folder", async ({ obsidian }) => {
 	expect(report.items).toEqual([{ path: "empty", foldersInside: 1 }]);
 });
 
+test("leaves out files Obsidian cannot open, such as config files", async ({ obsidian }) => {
+	await writeRaw(obsidian, "cog.toml", "[changelog]");
+	await writeRaw(obsidian, "empty.cjs", "");
+	await expect
+		.poll(() => obsidian.evaluateApp(() => app.vault.getFileByPath("cog.toml") !== null))
+		.toBe(true);
+	const orphans = await runAuditCli(obsidian, { kind: "orphaned-files" });
+	expect(orphans.items).not.toContainEqual(expect.objectContaining({ path: "cog.toml" }));
+	expect(orphans.items).toContainEqual(expect.objectContaining({ path: "notes/orphan.md" }));
+	const empty = await runAuditCli(obsidian, { kind: "empty-files" });
+	expect(empty.items).not.toContainEqual(expect.objectContaining({ path: "empty.cjs" }));
+});
+
 test("returns an error for an unknown kind", async ({ obsidian }) => {
 	const report = await runAuditCli(obsidian, { kind: "orphans" });
 	expect(report.error).toContain("orphaned-files");

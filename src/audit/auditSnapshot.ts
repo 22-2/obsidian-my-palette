@@ -7,7 +7,7 @@ import type {
 } from "src/audit/vaultAudit";
 import { analyzeMocOnly } from "src/moc-relateds/mocRelatedsCore";
 import { getUserIgnoreFilters } from "src/ignored-notes/ignoredPaths";
-import { getCorePluginFolder } from "src/platform/obsidianInternals";
+import { getCorePluginFolder, isExtensionOpenable } from "src/platform/obsidianInternals";
 import type { MyPaletteSettings } from "src/settings/model";
 
 export interface AuditSnapshotOptions {
@@ -36,6 +36,7 @@ export async function collectAuditSnapshot(
 				size: file.stat.size,
 				mtime: file.stat.mtime,
 				tags: cache ? (getAllTags(cache) ?? []).map((tag) => tag.replace(/^#/, "")) : [],
+				openable: isExtensionOpenable(app, file.extension),
 				...(written === undefined ? {} : { hasContent: written }),
 				...(moc?.mocOnly ? { mocOnly: { references: moc.references } } : {}),
 			};
