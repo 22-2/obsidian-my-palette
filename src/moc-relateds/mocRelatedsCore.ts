@@ -3,9 +3,18 @@ const RELATEDS_ITEM = "- Relateds";
 
 type Located = { relatedsIndex: number } | { message: string };
 
+/**
+ * Index of the `## MOC` header, searched from the bottom.
+ * Why: the template puts the MOC section at the end of a note, so an earlier `## MOC`
+ * (quoted or pasted from another note) must not be taken as the note's own.
+ */
+function findMocHeaderIndex(lines: readonly string[]): number {
+	return lines.findLastIndex((line) => line.trim().startsWith(MOC_HEADER));
+}
+
 /** Finds the Relateds item inside the MOC section. */
 function locateRelateds(lines: readonly string[]): Located {
-	const mocHeaderIndex = lines.findIndex((line) => line.trim().startsWith(MOC_HEADER));
+	const mocHeaderIndex = findMocHeaderIndex(lines);
 	if (mocHeaderIndex === -1) return { message: `"${MOC_HEADER}" header not found.` };
 	for (let index = mocHeaderIndex + 1; index < lines.length; index += 1) {
 		const trimmed = lines[index].trim();
@@ -127,7 +136,7 @@ export interface MocOnlyInfo {
  */
 export function analyzeMocOnly(content: string): MocOnlyInfo {
 	const lines = withoutFrontmatter(content).split(/\r?\n/);
-	const mocIndex = lines.findIndex((line) => line.trim().startsWith(MOC_HEADER));
+	const mocIndex = findMocHeaderIndex(lines);
 	if (mocIndex === -1) return { mocOnly: false, references: 0 };
 	const nextHeading = lines.findIndex(
 		(line, index) => index > mocIndex && /^#{1,6}\s/.test(line.trim()),

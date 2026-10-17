@@ -24,6 +24,24 @@ describe("addLinkToMocRelateds", () => {
 		});
 	});
 
+	it("adds to the last MOC section when the note has more than one", () => {
+		const content = [
+			"## MOC",
+			"- Relateds",
+			"    - [[Quoted]]",
+			"## Body",
+			"## MOC",
+			"- Relateds",
+			"    - [[Own]]",
+		].join("\n");
+
+		const result = addLinkToMocRelateds(content, "New note", 4);
+		expect(result).toEqual({
+			success: true,
+			newContent: `${content}\n    - [[New note]]`,
+		});
+	});
+
 	it("does not add the same link twice", () => {
 		const content = "## MOC\n- Relateds\n    - [[Existing note]]";
 		expect(addLinkToMocRelateds(content, "Existing note", 4)).toEqual({
