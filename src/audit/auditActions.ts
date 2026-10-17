@@ -48,10 +48,13 @@ export async function applyAuditAction(
 		throw new Error(`${kind} cannot be moved to the archive folder.`);
 	if (action === "archive" && !settings.archiveFolder)
 		throw new Error("Set an archive folder first.");
+	// Why: built once for the batch rather than scanning every link per item. Moving files
+	// only takes links away, so a stale set can skip an item but never moves a linked one.
+	const linked = kind === "orphaned-files" ? linkedFromOtherFiles(app) : new Set<string>();
 	const results: AuditActionResult[] = [];
 	for (const path of paths) {
 		try {
-			results.push(await applyToItem(app, action, kind, path, settings));
+			results.push(await applyToItem(app, action, kind, path, settings, linked));
 		} catch (error) {
 			logger.error(`Vault audit could not ${action} ${path}`, error);
 			results.push({
@@ -70,10 +73,11 @@ async function applyToItem(
 	kind: AuditKind,
 	path: string,
 	settings: AuditActionSettings,
+	linked: ReadonlySet<string>,
 ): Promise<AuditActionResult> {
 	const target = app.vault.getAbstractFileByPath(path);
 	if (!target) return { path, outcome: "skipped", reason: "No longer exists." };
-	const state = await currentState(app, kind, target, settings.mocOnlyAsEmpty);
+	const state = await currentState(app, kind, target, settings.mocOnlyAsEmpty, linked);
 	if (typeof state === "string") return { path, outcome: "skipped", reason: state };
 	if (action === "trash") {
 		// Why: a MOC-only note is linked back from its partners' Relateds; trashing it alone
@@ -98,12 +102,13 @@ async function currentState(
 	kind: AuditKind,
 	target: TAbstractFile,
 	mocOnlyAsEmpty: boolean,
+	linked: ReadonlySet<string>,
 ): Promise<{ mocOnly: boolean } | string> {
 	const listed = { mocOnly: false };
 	switch (kind) {
 		case "orphaned-files":
 			if (!(target instanceof TFile)) return "Not a file.";
-			return isLinkedFromOtherFile(app, target.path) ? "Now linked from a note." : listed;
+			return linked.has(target.path) ? "Now linked from a note." : listed;
 		case "empty-files": {
 			if (!(target instanceof TFile)) return "Not a file.";
 			const { kind: emptiness } = await noteEmptiness(app, target);
@@ -140,10 +145,13 @@ async function unlinkFromRelateds(app: App, note: TFile): Promise<string[]> {
 	return unlinked;
 }
 
-function isLinkedFromOtherFile(app: App, path: string): boolean {
-	return Object.entries(app.metadataCache.resolvedLinks).some(
-		([source, targets]) => source !== path && path in targets,
-	);
+/** Every file that another file links to; a link to itself does not count. */
+function linkedFromOtherFiles(app: App): Set<string> {
+	const linked = new Set<string>();
+	for (const [source, targets] of Object.entries(app.metadataCache.resolvedLinks)) {
+		for (const target of Object.keys(targets)) if (target !== source) linked.add(target);
+	}
+	return linked;
 }
 
 function holdsFiles(folder: TFolder): boolean {

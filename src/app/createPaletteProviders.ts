@@ -30,6 +30,7 @@ export interface PaletteProviderInstances {
 	tabProvider: TabProvider;
 	pluginProvider: PluginProvider;
 	snippetProvider: SnippetProvider;
+	auditProvider: AuditProvider;
 	providers: Record<PaletteMode, PaletteProvider>;
 }
 
@@ -78,6 +79,7 @@ export function createPaletteProviders(
 	const tabProvider = new TabProvider(app);
 	const pluginProvider = new PluginProvider(app);
 	const snippetProvider = new SnippetProvider(app);
+	const auditProvider = new AuditProvider(app, options.settings);
 	return {
 		fileProvider,
 		commandProvider,
@@ -88,6 +90,7 @@ export function createPaletteProviders(
 		tabProvider,
 		pluginProvider,
 		snippetProvider,
+		auditProvider,
 		providers: {
 			file: fileProvider,
 			command: commandProvider,
@@ -100,7 +103,7 @@ export function createPaletteProviders(
 			plugin: pluginProvider,
 			snippet: snippetProvider,
 			property: new PropertyProvider(app),
-			audit: new AuditProvider(app, options.settings),
+			audit: auditProvider,
 		},
 	};
 }

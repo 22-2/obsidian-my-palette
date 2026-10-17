@@ -8,12 +8,11 @@ import {
 	type AuditAction,
 	type AuditActionResult,
 } from "src/audit/auditActions";
-import { auditExclusions, collectAuditSnapshot } from "src/audit/auditSnapshot";
+import { auditVault } from "src/audit/auditSnapshot";
 import {
 	AUDIT_KINDS,
 	filterAuditReport,
 	isAuditKind,
-	runAudit,
 	type AuditKind,
 	type AuditReport,
 } from "src/audit/vaultAudit";
@@ -47,11 +46,7 @@ export const auditCliApi: CliApi = {
 		if (!isAuditKind(kind))
 			throw new Error(`Specify kind as one of: ${AUDIT_KINDS.join(", ")}.`);
 		const action = requestedAction(params, kind);
-		const report = runAudit(
-			kind,
-			await collectAuditSnapshot(plugin.app, plugin.settings.audit),
-			auditExclusions(plugin.app, plugin.settings),
-		);
+		const report = await auditVault(plugin.app, kind, plugin.settings);
 		const filtered =
 			glob === undefined
 				? report

@@ -1,4 +1,4 @@
-import { isUserIgnoredPathWithFilters } from "src/ignored-notes/ignoredPathMatching";
+import { createUserIgnoredPathMatcher } from "src/ignored-notes/ignoredPathMatching";
 
 /**
  * Vault audit judgement, kept free of Obsidian so the palette mode and the CLI share one
@@ -156,6 +156,8 @@ export function findOrphanedFiles(
 	snapshot: AuditSnapshot,
 	exclusions: AuditExclusions,
 ): AuditFileItem[] {
+	const isExcluded = fileExclusionMatcher(exclusions);
+	const isOrphanFolder = createUserIgnoredPathMatcher(exclusions.orphanFolders);
 	const linked = new Set<string>();
 	for (const [source, targets] of Object.entries(snapshot.resolvedLinks)) {
 		for (const target of Object.keys(targets)) {
@@ -166,8 +168,7 @@ export function findOrphanedFiles(
 	return sortByPath(
 		snapshot.files
 			.filter((file) => file.openable && !linked.has(file.path))
-			.filter((file) => !isExcludedFile(file, exclusions))
-			.filter((file) => !isUserIgnoredPathWithFilters(exclusions.orphanFolders, file.path))
+			.filter((file) => !isExcluded(file) && !isOrphanFolder(file.path))
 			.map(toFileItem),
 	);
 }
@@ -176,11 +177,12 @@ export function findBrokenLinks(
 	snapshot: AuditSnapshot,
 	exclusions: AuditExclusions,
 ): BrokenLinkItem[] {
+	const isExcluded = fileExclusionMatcher(exclusions);
 	const filesByPath = new Map(snapshot.files.map((file) => [file.path, file]));
 	const sourcesByLink = new Map<string, BrokenLinkSource[]>();
 	for (const { source, link, line } of snapshot.unresolvedLinks) {
 		const file = filesByPath.get(source);
-		if (!file || isExcludedFile(file, exclusions)) continue;
+		if (!file || isExcluded(file)) continue;
 		const sources = sourcesByLink.get(link) ?? [];
 		sources.push(line === undefined ? { path: source } : { path: source, line });
 		sourcesByLink.set(link, sources);
@@ -194,10 +196,10 @@ export function findEmptyFiles(
 	snapshot: AuditSnapshot,
 	exclusions: AuditExclusions,
 ): AuditFileItem[] {
+	const isExcluded = fileExclusionMatcher(exclusions);
 	return sortByPath(
 		snapshot.files
-			.filter((file) => file.openable && isEmptyFile(file))
-			.filter((file) => !isExcludedFile(file, exclusions))
+			.filter((file) => file.openable && isEmptyFile(file) && !isExcluded(file))
 			.map(toEmptyFileItem),
 	);
 }
@@ -210,9 +212,10 @@ export function findEmptyFolders(
 	const holdingFiles = new Set(snapshot.files.flatMap((file) => ancestorFolders(file.path)));
 	const empty = snapshot.folders.filter((folder) => !holdingFiles.has(folder));
 	const emptySet = new Set(empty);
+	const isExcludedFolder = createUserIgnoredPathMatcher(exclusions.folders);
 	return empty
 		.filter((folder) => !emptySet.has(parentFolder(folder)))
-		.filter((folder) => !isUserIgnoredPathWithFilters(exclusions.folders, folder))
+		.filter((folder) => !isExcludedFolder(folder))
 		.map((path) => ({
 			path,
 			foldersInside: empty.filter((other) => other.startsWith(`${path}/`)).length,
@@ -226,20 +229,20 @@ function isEmptyFile(file: AuditFile): boolean {
 	return file.size === 0;
 }
 
-function isExcludedFile(file: AuditFile, exclusions: AuditExclusions): boolean {
-	return (
-		isUserIgnoredPathWithFilters(exclusions.folders, file.path) ||
+/** Compiles the exclusions once; the audit tests every file in the vault against them. */
+function fileExclusionMatcher(exclusions: AuditExclusions): (file: AuditFile) => boolean {
+	const isExcludedPath = createUserIgnoredPathMatcher(exclusions.folders);
+	const excludedTags = exclusions.tags.map((tag) => tag.toLocaleLowerCase());
+	const hasExcludedTag = (tag: string): boolean => {
+		const normalized = tag.toLocaleLowerCase();
+		return excludedTags.some(
+			(target) => normalized === target || normalized.startsWith(`${target}/`),
+		);
+	};
+	return (file) =>
+		isExcludedPath(file.path) ||
 		exclusions.extensions.includes(file.extension) ||
-		file.tags.some((tag) => hasExcludedTag(tag, exclusions.tags))
-	);
-}
-
-function hasExcludedTag(tag: string, excluded: readonly string[]): boolean {
-	const normalized = tag.toLocaleLowerCase();
-	return excluded.some((value) => {
-		const target = value.toLocaleLowerCase();
-		return normalized === target || normalized.startsWith(`${target}/`);
-	});
+		(excludedTags.length > 0 && file.tags.some(hasExcludedTag));
 }
 
 function ancestorFolders(path: string): string[] {
