@@ -180,6 +180,9 @@ function normalizeAudit(source: Record<string, unknown>): AuditSettings {
 			: {};
 	return {
 		kind: isAuditKind(raw.kind) ? raw.kind : DEFAULT_SETTINGS.audit.kind,
+		archiveFolder:
+			excludedFolders(typeof raw.archiveFolder === "string" ? [raw.archiveFolder] : [])[0] ??
+			"",
 		excludedFolders: excludedFolders(raw.excludedFolders),
 		excludedTags: Array.isArray(raw.excludedTags)
 			? [

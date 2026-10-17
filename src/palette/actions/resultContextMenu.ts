@@ -88,7 +88,15 @@ export function populatePaletteResultMenu({
 		return;
 	}
 	if (targets.every(isAuditResult)) {
-		populateAuditMenu({ app, menu, results: targets, activate });
+		populateAuditMenu({
+			app,
+			plugin,
+			menu,
+			results: targets,
+			activate,
+			onNoteActionSelected,
+			onResultsChanged,
+		});
 		return;
 	}
 	const selectedPaths = selectedItems

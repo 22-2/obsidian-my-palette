@@ -35,6 +35,8 @@ export function auditExclusions(app: App, settings: MyPaletteSettings): AuditExc
 			...getUserIgnoreFilters(app),
 			...settings.file.excludedFolders,
 			...settings.audit.excludedFolders,
+			// Why: archived files are kept on purpose; listing them again would undo the archive.
+			...(settings.audit.archiveFolder ? [settings.audit.archiveFolder] : []),
 		],
 		tags: settings.audit.excludedTags,
 		extensions: settings.audit.excludedExtensions,

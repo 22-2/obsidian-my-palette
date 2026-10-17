@@ -424,10 +424,12 @@ describe("audit settings", () => {
 				excludedExtensions: [".CSV", "bad ext"],
 				excludeDailyNotesAndTemplates: false,
 				kind: "unknown-kind",
+				archiveFolder: "/Archive\\audit/",
 			},
 		});
 		expect(settings.audit).toEqual({
 			kind: "orphaned-files",
+			archiveFolder: "Archive/audit",
 			excludedFolders: ["Archive"],
 			excludedTags: ["draft"],
 			excludedExtensions: ["csv"],

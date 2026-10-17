@@ -330,6 +330,8 @@ export interface MyPaletteSettings {
 export interface AuditSettings {
 	/** The kind Vault audit lists, chosen in the options menu and shared by every surface. */
 	kind: AuditKind;
+	/** Where "Move to archive folder" puts files, keeping their paths; empty until set. */
+	archiveFolder: string;
 	excludedFolders: string[];
 	/** Without `#`. A tag also excludes its nested tags. */
 	excludedTags: string[];
@@ -396,6 +398,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 	},
 	audit: {
 		kind: "orphaned-files",
+		archiveFolder: "",
 		excludedFolders: [],
 		excludedTags: [],
 		excludedExtensions: [],

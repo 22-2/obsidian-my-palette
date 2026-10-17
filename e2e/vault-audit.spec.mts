@@ -182,3 +182,90 @@ test("the table palette shows the columns of the chosen kind", async ({ obsidian
 	await expect(table.locator("table.my-palette-results-table tbody tr")).toHaveCount(1);
 	await expect(table.locator('td[data-column="firstSource"]')).toHaveText("notes/source.md");
 });
+
+test.describe("moving items", () => {
+	test.beforeEach(async ({ obsidian }) => {
+		// Why: keep trashed files inside the test vault instead of the system trash.
+		await obsidian.evaluateApp(() =>
+			(app.vault as unknown as { setConfig(key: string, value: unknown): void }).setConfig(
+				"trashOption",
+				"local",
+			),
+		);
+	});
+
+	test("the CLI refuses to move without a glob and with both actions", async ({ obsidian }) => {
+		expect(
+			(await runAuditCli(obsidian, { kind: "orphaned-files", trash: "true" })).error,
+		).toContain("glob");
+		expect(
+			(
+				await runAuditCli(obsidian, {
+					kind: "orphaned-files",
+					glob: "**",
+					trash: "true",
+					archive: "true",
+				})
+			).error,
+		).toContain("not both");
+		expect(
+			(await runAuditCli(obsidian, { kind: "broken-links", glob: "**", trash: "true" }))
+				.error,
+		).toContain("cannot be moved");
+		expect(await obsidian.exists("notes/orphan.md")).toBe(true);
+	});
+
+	test("the CLI moves only the matching items to the trash", async ({ obsidian }) => {
+		const report = await runAuditCli(obsidian, {
+			kind: "orphaned-files",
+			glob: "notes/orphan.md",
+			trash: "true",
+		});
+		expect(report.items).toEqual([
+			expect.objectContaining({ path: "notes/orphan.md", result: "trashed" }),
+		]);
+		expect(await obsidian.exists("notes/orphan.md")).toBe(false);
+		expect(await obsidian.exists("notes/source.md")).toBe(true);
+	});
+
+	test("the CLI archives files under the archive folder, keeping their paths", async ({
+		obsidian,
+	}) => {
+		await obsidian.evaluateApp(async () => {
+			const plugin = app.plugins.plugins["my-palette"] as unknown as {
+				settings: { audit: { archiveFolder: string } };
+				saveSettings(): Promise<void>;
+			};
+			plugin.settings.audit.archiveFolder = "Archive";
+			await plugin.saveSettings();
+		});
+		const report = await runAuditCli(obsidian, {
+			kind: "empty-files",
+			glob: "notes/**",
+			archive: "true",
+		});
+		expect(report.items).toEqual([
+			expect.objectContaining({ path: "notes/frontmatter-only.md", result: "archived" }),
+		]);
+		expect(await obsidian.exists("Archive/notes/frontmatter-only.md")).toBe(true);
+		// Archived files are not listed again.
+		expect((await runAuditCli(obsidian, { kind: "empty-files" })).items).toEqual([]);
+	});
+
+	test("Move to trash in the row menu needs a second press", async ({ obsidian }) => {
+		const page = await openHomeWith(obsidian, "a orphan");
+		await expect.poll(() => rowLabels(page)).toEqual(["orphan.md"]);
+		await page
+			.locator(".my-palette-suggest-modal .suggestion-item")
+			.first()
+			.click({ button: "right" });
+		await page.locator(".menu .menu-item").filter({ hasText: "Move to trash" }).click();
+		await expect(page.locator(".menu .menu-item.mod-cta")).toContainText(
+			"Click again to move 1 file to trash",
+		);
+		expect(await obsidian.exists("notes/orphan.md")).toBe(true);
+		await page.locator(".menu .menu-item.mod-cta").click();
+		await expect.poll(() => obsidian.exists("notes/orphan.md")).toBe(false);
+		await expect.poll(() => rowLabels(page)).toEqual([]);
+	});
+});

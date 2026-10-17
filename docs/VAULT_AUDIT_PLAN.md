@@ -157,19 +157,21 @@ Options
 
 ### 右クリック
 
-| 操作                    | 対象                                                             | 複数選択 |
-| ----------------------- | ---------------------------------------------------------------- | -------- |
-| Open                    | Broken links以外                                                 | —        |
-| Open linked notes…      | Broken links。参照元を選ぶ一覧を出し、選んだノートのその行へ移る | —        |
-| Reveal in file explorer | すべて                                                           | —        |
-| Copy path               | すべて(既存の`addCopyPathMenuItems`)                             | ○        |
-| Move to trash           | Broken links以外                                                 | ○        |
-| Move to archive folder  | Orphaned files、Empty files                                      | ○        |
+| 操作                    | 対象                                                                                                      | 複数選択 |
+| ----------------------- | --------------------------------------------------------------------------------------------------------- | -------- |
+| Open                    | Broken links以外                                                                                          | —        |
+| Linked from(見出し)     | Broken links。参照元が2つ以上あるとき、参照元ごとの項目を並べる(20件まで)。選ぶとそのノートのその行へ移る | —        |
+| Reveal in file explorer | すべて                                                                                                    | —        |
+| Copy path               | すべて(既存の`addCopyPathMenuItems`)                                                                      | ○        |
+| Move to trash           | Broken links以外                                                                                          | ○        |
+| Move to archive folder  | Orphaned files、Empty files                                                                               | ○        |
 
 - 複数選択では、既存の`addSelectionHeader`で件数を先頭に出す。
-- 「Move to trash」「Move to archive folder」は、実行前に確認を出す。件数と、最初の数件のパスを並べる。Empty foldersでは「Hidden files inside these folders are also removed.」を足す。
+- 「Move to trash」「Move to archive folder」は、Delete propertyと同じく1回目の押下で「Click again to move 3 files to trash」に変わり、2回目で実行する。別の項目へ移ると取り消す。Empty foldersでは、Obsidianに見えないファイルもフォルダーと一緒に消えることをツールチップで示す。
+- 実行の直前に、各項目がまだ一覧の条件に当てはまるか確かめ直す(リンクされた・空でなくなった・無くなった項目は飛ばし、通知に数を出す)。
 - アーカイブは、元のパスを保ってArchive folderの下へ移す(`notes/a.md`→`<Archive folder>/notes/a.md`)。途中のフォルダーが無ければ作る。同じパスにファイルがあれば、そのファイルは飛ばして通知に数を出す。移動は`fileManager.renameFile`で行い、ほかのノートからのリンクも更新させる(孤立ファイルには無いが、Empty filesにはありうる)。
 - Archive folderが未設定なら、「Move to archive folder」は無効にして、説明に「Set an archive folder in the settings.」と出す。
+- Archive folderは、すべての種類の判定から除く。アーカイブしたファイルがまた並ばないようにするため。
 - 失敗は1件ずつ数え、最後に1回だけ通知する(「Moved 12 files to trash. 1 failed; see the console.」)。
 
 ## CLI
