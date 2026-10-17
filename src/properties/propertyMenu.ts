@@ -1,7 +1,7 @@
 import { Notice, type App, type TFile } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import { propertyTargetPaths, type PropertyResult } from "src/palette/results";
-import type { PaletteMenu, PaletteMenuItem } from "src/ui/paletteMenu";
+import type { PaletteMenu } from "src/ui/paletteMenu";
 import { readList } from "src/properties/propertyList";
 import { updateFrontmatter } from "src/shared/frontmatter";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
@@ -85,48 +85,18 @@ async function copyText(text: string, message: string): Promise<void> {
 	}
 }
 
-/**
- * Deleting a key from several notes cannot be undone, so the first press turns the item into a
- * confirmation that keeps the menu open; the second press deletes and closes.
- */
+/** Deleting a key from several notes cannot be undone, so it needs a second press. */
 function addBulkDeleteItem(
 	menu: PaletteMenu,
 	app: App,
 	result: PropertyResult,
 	targetCount: number,
 ): void {
-	let confirming = false;
-	let deleteItem: PaletteMenuItem | undefined;
-	const render = (item: PaletteMenuItem) => {
-		item.setTitle(
-			confirming
-				? `Click again to delete from ${targetCount} notes`
-				: `Delete property from ${targetCount} notes`,
-		)
-			.setIcon(ICONS.delete)
-			.setWarning(true)
-			.setCta(confirming)
-			.setKeepOpen(confirming);
-	};
-	menu.addItem((item) => {
-		deleteItem = item;
-		render(item);
-		item.onClick(() => {
-			if (!confirming) {
-				confirming = true;
-				render(item);
-				return;
-			}
-			// Why: the first press kept the menu open for the confirmation; this one runs and closes it.
-			item.setKeepOpen(false);
-			void deleteProperties(app, result);
-		});
-	});
-	// Why: moving to another item cancels the confirmation, so a later press starts over.
-	menu.onSelectionChange((selected) => {
-		if (!confirming || !deleteItem || selected === deleteItem) return;
-		confirming = false;
-		render(deleteItem);
+	menu.addConfirmedItem({
+		title: `Delete property from ${targetCount} notes`,
+		confirmTitle: `Click again to delete from ${targetCount} notes`,
+		icon: ICONS.delete,
+		run: () => void deleteProperties(app, result),
 	});
 }
 

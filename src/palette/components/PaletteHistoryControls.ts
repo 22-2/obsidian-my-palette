@@ -1,5 +1,5 @@
 import { Notice, setIcon } from "obsidian";
-import { PaletteMenu, type PaletteMenuItem } from "src/ui/paletteMenu";
+import { PaletteMenu } from "src/ui/paletteMenu";
 import { markKeyboardMenuEvent, showMenuAtEvent } from "src/ui/menus";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
@@ -296,41 +296,18 @@ export class PaletteHistoryControls {
 			).open();
 	}
 
-	/**
-	 * Clears only this screen's categories. The first press turns the item into a
-	 * confirmation that keeps the menu open; the second press clears and closes.
-	 */
+	/** Clears only this screen's categories, on a second press. */
 	private addClearHistoryItem(menu: PaletteMenu): void {
 		const { plugin, historyCategories } = this.options;
-		let confirming = false;
-		let clearItem: PaletteMenuItem | undefined;
-		const render = (item: PaletteMenuItem) => {
-			item.setTitle(confirming ? "Click again to clear" : "Clear search history")
-				.setIcon(ICONS.delete)
-				.setCta(confirming)
-				.setKeepOpen(confirming);
-		};
-		menu.addItem((item) => {
-			clearItem = item;
-			item.setWarning(true);
-			render(item);
-			item.onClick(() => {
-				if (!confirming) {
-					confirming = true;
-					render(item);
-					return;
-				}
+		menu.addConfirmedItem({
+			title: "Clear search history",
+			confirmTitle: "Click again to clear",
+			icon: ICONS.delete,
+			run: () => {
 				plugin.clearSearchHistoryCategories(historyCategories);
 				new Notice("Search history cleared.");
-				menu.close();
 				this.update();
-			});
-		});
-		// Why: moving to another item cancels the confirmation, so a later press starts over.
-		menu.onSelectionChange((selected) => {
-			if (!confirming || !clearItem || selected === clearItem) return;
-			confirming = false;
-			render(clearItem);
+			},
 		});
 	}
 

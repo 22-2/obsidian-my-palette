@@ -20,7 +20,7 @@ import {
 	copyPathToClipboard,
 } from "src/platform/pathClipboard";
 import { ICONS } from "src/ui/icons";
-import type { PaletteMenu, PaletteMenuItem } from "src/ui/paletteMenu";
+import type { PaletteMenu } from "src/ui/paletteMenu";
 
 /** Enough to find a note in the menu; the rest is one search away in the note itself. */
 const MAX_LINKED_NOTES = 20;
@@ -136,10 +136,7 @@ function addMoveItems(options: AuditMenuOptions, kind: AuditKind): void {
 	);
 }
 
-/**
- * Moving several items at once is hard to undo, so the first press turns the item into a
- * confirmation that keeps the menu open, as Delete property does; the second press moves.
- */
+/** Moving several items at once is hard to undo, so the move needs a second press. */
 function addConfirmedMoveItem(
 	{ app, plugin, menu, results, onResultsChanged }: AuditMenuOptions,
 	kind: AuditKind,
@@ -147,32 +144,18 @@ function addConfirmedMoveItem(
 ): void {
 	const what = plural(results.length, kind === "empty-folders" ? "folder" : "file");
 	const destination = action === "trash" ? "trash" : "archive folder";
-	let confirming = false;
-	let moveItem: PaletteMenuItem | undefined;
-	const render = (item: PaletteMenuItem) => {
-		item.setTitle(
-			confirming ? `Click again to move ${what} to ${destination}` : `Move to ${destination}`,
-		)
-			.setIcon(action === "trash" ? ICONS.delete : ICONS.archive)
-			.setWarning(action === "trash")
-			.setCta(confirming)
-			.setKeepOpen(confirming);
-		if (kind === "empty-folders")
-			item.setTooltip(
-				"Files Obsidian does not show, such as those starting with a dot, go with the folder.",
-			);
-	};
-	menu.addItem((item) => {
-		moveItem = item;
-		render(item);
-		item.onClick(() => {
-			if (!confirming) {
-				confirming = true;
-				render(item);
-				return;
-			}
-			// Why: the first press kept the menu open for the confirmation; this one runs and closes it.
-			item.setKeepOpen(false);
+	menu.addConfirmedItem({
+		title: `Move to ${destination}`,
+		confirmTitle: `Click again to move ${what} to ${destination}`,
+		icon: action === "trash" ? ICONS.delete : ICONS.archive,
+		warning: action === "trash",
+		...(kind === "empty-folders"
+			? {
+					tooltip:
+						"Files Obsidian does not show, such as those starting with a dot, go with the folder.",
+				}
+			: {}),
+		run: () =>
 			void (async () => {
 				const outcome = await applyAuditAction(
 					app,
@@ -183,14 +166,7 @@ function addConfirmedMoveItem(
 				);
 				new Notice(describeAuditActionResults(action, kind, outcome));
 				onResultsChanged?.();
-			})();
-		});
-	});
-	// Why: moving to another item cancels the confirmation, so a later press starts over.
-	menu.onSelectionChange((selected) => {
-		if (!confirming || !moveItem || selected === moveItem) return;
-		confirming = false;
-		render(moveItem);
+			})(),
 	});
 }
 

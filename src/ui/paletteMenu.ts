@@ -15,6 +15,18 @@ export interface PaletteMenuShowOptions {
 
 export type PaletteMenuActivation = MouseEvent | KeyboardEvent;
 
+/** An action that is hard to undo, run only on a second press. */
+export interface ConfirmedMenuItemOptions {
+	title: string;
+	/** Shown after the first press, e.g. "Click again to clear". */
+	confirmTitle: string;
+	icon: IconName;
+	tooltip?: string;
+	/** Red, for actions that destroy something. Defaults to true. */
+	warning?: boolean;
+	run: () => void;
+}
+
 const GAP = 2;
 
 /**
@@ -72,6 +84,49 @@ export class PaletteMenu {
 		this.group.appendChild(item.dom);
 		build(item);
 		return this;
+	}
+
+	/**
+	 * The first press turns the item into a confirmation that keeps the menu open, and the
+	 * second press runs it and closes the menu. Moving to another item cancels the confirmation,
+	 * so a later press starts over. A menu holds at most one such item.
+	 */
+	addConfirmedItem({
+		title,
+		confirmTitle,
+		icon,
+		tooltip,
+		warning = true,
+		run,
+	}: ConfirmedMenuItemOptions): this {
+		let confirming = false;
+		let confirmedItem: PaletteMenuItem | undefined;
+		const render = (item: PaletteMenuItem) =>
+			item
+				.setTitle(confirming ? confirmTitle : title)
+				.setCta(confirming)
+				.setKeepOpen(confirming);
+		this.addItem((item) => {
+			confirmedItem = item;
+			item.setIcon(icon).setWarning(warning);
+			if (tooltip) item.setTooltip(tooltip);
+			render(item);
+			item.onClick(() => {
+				if (!confirming) {
+					confirming = true;
+					render(item);
+					return;
+				}
+				// Why: the first press kept the menu open; leaving that on would keep it open now.
+				item.setKeepOpen(false);
+				run();
+			});
+		});
+		return this.onSelectionChange((selected) => {
+			if (!confirming || !confirmedItem || selected === confirmedItem) return;
+			confirming = false;
+			render(confirmedItem);
+		});
 	}
 
 	/**
