@@ -17,6 +17,7 @@ Requirements: Node.js and pnpm.
 - `pnpm check-types`: run the TypeScript check.
 - `pnpm build`: build a production bundle.
 - `pnpm e2e`: run the end-to-end tests (see below).
+- `pnpm test:e2e:smoke`: build and run only the E2E smoke test.
 - `pnpm ui:shots`: capture the palette and settings screens into a new `run-*` folder under `UI_SHOT_DIR` (default: the OS temp folder). The VS Code task "My Palette: Capture UI screenshots" runs it and opens the folder.
 
 Formatting, linting, type checking and tests are separate so they can be run independently while refactoring.
@@ -33,6 +34,11 @@ Formatting, linting, type checking and tests are separate so they can be run ind
 
 `pnpm e2e` builds the plugin, installs it into a temporary Vault and drives a real Obsidian with Playwright through [obsidian-e2e-toolkit](https://github.com/22-2/obsidian-e2e-toolkit). The specs live in `e2e/`; Vitest only runs `src/**/*.test.ts`.
 
+- Tests run through `pnpx offstage-windows playwright test`. On Windows, [offstage-windows](https://github.com/LippInc/offstage-windows) puts the test runner and Obsidian on a hidden desktop so they do not take keyboard focus. On other platforms, the command passes through unchanged. The first run downloads the CLI through pnpx.
+- Windows uses one Playwright worker because the CLI wrapper shares one hidden desktop per run; other platforms retain parallel workers.
+- Run `pnpm test:e2e:smoke` for a quick plugin-load check, or `pnpm e2e file-search.spec.mts` to build and run a specific spec. Extra Playwright arguments such as `--shard=1/2` pass through `pnpm e2e`.
+- `pnpm test:e2e` runs the wrapped tests without building or preparing the plugin. E2E coverage uses this same wrapper after preparing its instrumented build.
+- For visible windows or interactive modes (`--debug`, `--ui`), set `$env:OFFSTAGE = '0'` in PowerShell before running the script. Restore hidden runs with `Remove-Item Env:OFFSTAGE` afterwards. Check the hidden-desktop helper with `pnpx offstage-windows --check`.
 - Node.js 23 or later is required by the toolkit.
 - `pnpm e2e` first runs Electron's `install.js`, which downloads the Electron binary on the first run; a plain `pnpm install` does not fetch it.
 - On a machine without a display (Linux servers, containers), run `xvfb-run -a pnpm e2e`.

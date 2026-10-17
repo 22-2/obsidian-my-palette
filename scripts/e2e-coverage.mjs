@@ -29,7 +29,7 @@ try {
 	exitCode = await run(["build"], coverageEnv);
 	if (exitCode === 0)
 		exitCode = await run(["exec", "node", "e2e/prepare-plugin.mjs"], coverageEnv);
-	if (exitCode === 0) exitCode = await run(["exec", "playwright", "test"], coverageEnv);
+	if (exitCode === 0) exitCode = await run(["run", "test:e2e"], coverageEnv);
 } finally {
 	try {
 		await generateCoverageReport({ outputDir });

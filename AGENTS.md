@@ -11,7 +11,9 @@ This project uses pnpm scripts directly. The plugin is bundled with esbuild (`es
 - `pnpm lint`: ESLint.
 - `pnpm check-types`: TypeScript check.
 - `pnpm test`: unit tests (`src/**/*.test.ts`).
-- `pnpm e2e`: end-to-end tests in a real Obsidian through Playwright.
+- `pnpm e2e`: end-to-end tests in a real Obsidian through Playwright, wrapped with offstage-windows to use a hidden desktop on Windows.
+- `pnpm test:e2e:smoke`: build and run only the E2E smoke test through the same wrapper.
+- Use these scripts for E2E runs, including filtered specs; use `OFFSTAGE=0` only when visible windows are needed for interactive debugging.
 
 ## Review Checklist
 

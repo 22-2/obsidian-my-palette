@@ -22,7 +22,9 @@
 		"test:coverage": "vitest run --coverage",
 		"test:coverage:e2e": "node scripts/e2e-coverage.mjs",
 		"test:coverage:combined": "pnpm test:coverage && pnpm test:coverage:e2e && node scripts/merge-coverage.mjs",
-		"e2e": "node node_modules/electron/install.js && pnpm build && node e2e/prepare-plugin.mjs && playwright test",
+		"e2e": "node node_modules/electron/install.js && pnpm build && node e2e/prepare-plugin.mjs && pnpm run test:e2e",
+		"test:e2e": "pnpx offstage-windows playwright test",
+		"test:e2e:smoke": "pnpm e2e smoke.spec.mts",
 		"ui:shots": "node scripts/screenshots/capture-screenshots.mjs",
 		"prepare": "git config core.hooksPath .githooks"
 	},
