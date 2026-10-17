@@ -24,8 +24,6 @@ export interface AuditFile {
 	extension: string;
 	size: number;
 	mtime: number;
-	/** Tags without `#`, from the frontmatter and the body. */
-	tags: readonly string[];
 	/**
 	 * Whether Obsidian can open the file. Orphaned and empty files list only these: a
 	 * config file such as `cog.toml` is never linked and is not the user's to tidy here.
@@ -36,11 +34,8 @@ export interface AuditFile {
 	 * metadata cache has not indexed the note, so the size decides instead.
 	 */
 	hasContent?: boolean;
-	/**
-	 * Set only when MOC-only notes count as empty: the note holds nothing but frontmatter
-	 * and its MOC section, whose References has this many entries.
-	 */
-	mocOnly?: { references: number };
+	/** Markdown only: the note holds nothing but frontmatter and its MOC section. */
+	mocOnly?: boolean;
 }
 
 /** One link or embed whose target does not exist. */
@@ -64,18 +59,12 @@ export interface AuditSnapshot {
 export interface AuditExclusions {
 	/** Path filters in Obsidian's Excluded files format (folder paths or `/regex/`). */
 	folders: readonly string[];
-	/** Tags without `#`. A tag also excludes its nested tags. */
-	tags: readonly string[];
-	/** Lower case, without the dot. */
-	extensions: readonly string[];
 	/** Extra path filters applied only to orphaned files (Daily notes, Templates). */
 	orphanFolders: readonly string[];
 }
 
 export const NO_AUDIT_EXCLUSIONS: AuditExclusions = {
 	folders: [],
-	tags: [],
-	extensions: [],
 	orphanFolders: [],
 };
 
@@ -83,8 +72,8 @@ export interface AuditFileItem {
 	path: string;
 	size: number;
 	mtime: number;
-	/** Empty files only: the note has a MOC section, with this many References entries. */
-	mocOnly?: { references: number };
+	/** Empty files only: the note holds its MOC section, so it is not blank. */
+	mocOnly?: true;
 }
 
 export interface BrokenLinkSource {
@@ -227,19 +216,7 @@ function isEmptyFile(file: AuditFile): boolean {
 }
 
 function isExcludedFile(file: AuditFile, exclusions: AuditExclusions): boolean {
-	return (
-		isUserIgnoredPathWithFilters(exclusions.folders, file.path) ||
-		exclusions.extensions.includes(file.extension) ||
-		file.tags.some((tag) => hasExcludedTag(tag, exclusions.tags))
-	);
-}
-
-function hasExcludedTag(tag: string, excluded: readonly string[]): boolean {
-	const normalized = tag.toLocaleLowerCase();
-	return excluded.some((value) => {
-		const target = value.toLocaleLowerCase();
-		return normalized === target || normalized.startsWith(`${target}/`);
-	});
+	return isUserIgnoredPathWithFilters(exclusions.folders, file.path);
 }
 
 function ancestorFolders(path: string): string[] {
@@ -257,7 +234,7 @@ function toFileItem({ path, size, mtime }: AuditFile): AuditFileItem {
 }
 
 function toEmptyFileItem(file: AuditFile): AuditFileItem {
-	return file.mocOnly ? { ...toFileItem(file), mocOnly: file.mocOnly } : toFileItem(file);
+	return file.mocOnly ? { ...toFileItem(file), mocOnly: true } : toFileItem(file);
 }
 
 function sortByPath<T extends { path: string }>(items: T[]): T[] {

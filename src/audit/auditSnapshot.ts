@@ -1,44 +1,35 @@
-import { getAllTags, getLinkpath, normalizePath, type App, type CachedMetadata } from "obsidian";
+import { getLinkpath, normalizePath, type App, type CachedMetadata } from "obsidian";
 import type {
 	AuditExclusions,
 	AuditFile,
 	AuditSnapshot,
 	UnresolvedLinkOccurrence,
 } from "src/audit/vaultAudit";
-import { analyzeMocOnly } from "src/moc-relateds/mocRelatedsCore";
+import { isMocOnly } from "src/moc-relateds/mocRelatedsCore";
 import { getUserIgnoreFilters } from "src/ignored-notes/ignoredPaths";
 import { getCorePluginFolder, isExtensionOpenable } from "src/platform/obsidianInternals";
 import type { MyPaletteSettings } from "src/settings/model";
 
-export interface AuditSnapshotOptions {
-	/** Read notes with a MOC section to find those holding nothing else. */
-	mocOnlyAsEmpty: boolean;
-}
-
 /** Reads what `vaultAudit.ts` judges from the vault and the metadata cache. */
-export async function collectAuditSnapshot(
-	app: App,
-	{ mocOnlyAsEmpty }: AuditSnapshotOptions,
-): Promise<AuditSnapshot> {
+export async function collectAuditSnapshot(app: App): Promise<AuditSnapshot> {
 	const { metadataCache, vault } = app;
 	const files = await Promise.all(
 		vault.getFiles().map(async (file): Promise<AuditFile> => {
 			const cache = metadataCache.getFileCache(file);
 			const written = file.extension === "md" && cache ? hasContent(cache) : undefined;
-			// Why: only notes with a MOC heading are read, so the option stays cheap on large vaults.
-			const moc =
-				mocOnlyAsEmpty && written && cache && hasMocHeading(cache)
-					? analyzeMocOnly(await vault.cachedRead(file))
-					: undefined;
+			// Why: only notes with a MOC heading are read, so this stays cheap on large vaults.
+			const mocOnly =
+				written && cache && hasMocHeading(cache)
+					? isMocOnly(await vault.cachedRead(file))
+					: false;
 			return {
 				path: file.path,
 				extension: file.extension.toLocaleLowerCase(),
 				size: file.stat.size,
 				mtime: file.stat.mtime,
-				tags: cache ? (getAllTags(cache) ?? []).map((tag) => tag.replace(/^#/, "")) : [],
 				openable: isExtensionOpenable(app, file.extension),
 				...(written === undefined ? {} : { hasContent: written }),
-				...(moc?.mocOnly ? { mocOnly: { references: moc.references } } : {}),
+				...(mocOnly ? { mocOnly } : {}),
 			};
 		}),
 	);
@@ -50,20 +41,21 @@ export async function collectAuditSnapshot(
 	};
 }
 
-export function auditExclusions(app: App, settings: MyPaletteSettings): AuditExclusions {
+/**
+ * Obsidian's Excluded files and this plugin's Excluded folders, lifted together by
+ * "Include Obsidian-excluded files" as in File search. Daily notes and Templates stay out of
+ * Orphaned files either way: they are rarely linked by nature, not hidden by the user.
+ */
+export function auditExclusions(
+	app: App,
+	settings: MyPaletteSettings,
+	includeExcluded = false,
+): AuditExclusions {
 	return {
-		folders: [
-			...getUserIgnoreFilters(app),
-			...settings.file.excludedFolders,
-			...settings.audit.excludedFolders,
-			// Why: archived files are kept on purpose; listing them again would undo the archive.
-			...(settings.audit.archiveFolder ? [settings.audit.archiveFolder] : []),
-		],
-		tags: settings.audit.excludedTags,
-		extensions: settings.audit.excludedExtensions,
-		orphanFolders: settings.audit.excludeDailyNotesAndTemplates
-			? dailyNoteAndTemplateFolders(app)
-			: [],
+		folders: includeExcluded
+			? []
+			: [...getUserIgnoreFilters(app), ...settings.file.excludedFolders],
+		orphanFolders: dailyNoteAndTemplateFolders(app),
 	};
 }
 

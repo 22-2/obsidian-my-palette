@@ -16,7 +16,6 @@ function file(path: string, overrides: Partial<AuditFile> = {}): AuditFile {
 		extension,
 		size: 10,
 		mtime: 0,
-		tags: [],
 		openable: true,
 		...(extension === "md" ? { hasContent: true } : {}),
 		...overrides,
@@ -63,24 +62,13 @@ describe("orphaned files", () => {
 		expect(paths(report)).toEqual(["self.md"]);
 	});
 
-	it("skips excluded folders, extensions, tags and the orphan-only folders", () => {
+	it("skips excluded folders and the orphan-only folders", () => {
 		const report = runAudit(
 			"orphaned-files",
 			snapshot({
-				files: [
-					file("keep.md"),
-					file("Archive/old.md"),
-					file("data.csv"),
-					file("tagged.md", { tags: ["project/done"] }),
-					file("Daily/2026-10-17.md"),
-				],
+				files: [file("keep.md"), file("Archive/old.md"), file("Daily/2026-10-17.md")],
 			}),
-			exclusions({
-				folders: ["Archive"],
-				extensions: ["csv"],
-				tags: ["Project"],
-				orphanFolders: ["Daily"],
-			}),
+			exclusions({ folders: ["Archive"], orphanFolders: ["Daily"] }),
 		);
 		expect(paths(report)).toEqual(["keep.md"]);
 	});
@@ -221,16 +209,12 @@ describe("filterAuditReport", () => {
 });
 
 describe("MOC-only notes", () => {
-	it("lists them as empty files with their References count", () => {
+	it("lists them as empty files, marked as MOC-only", () => {
 		const report = runAudit(
 			"empty-files",
-			snapshot({
-				files: [file("moc-only.md", { mocOnly: { references: 1 } }), file("written.md")],
-			}),
+			snapshot({ files: [file("moc-only.md", { mocOnly: true }), file("written.md")] }),
 		);
-		expect(report.items).toEqual([
-			{ path: "moc-only.md", size: 10, mtime: 0, mocOnly: { references: 1 } },
-		]);
+		expect(report.items).toEqual([{ path: "moc-only.md", size: 10, mtime: 0, mocOnly: true }]);
 	});
 });
 

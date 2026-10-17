@@ -18,12 +18,12 @@ export class AuditProvider implements PaletteProvider<AuditResult> {
 		private readonly settings: () => MyPaletteSettings,
 	) {}
 
-	async search({ query }: PaletteSearchRequest): Promise<AuditResult[]> {
+	async search({ query, includeIgnored = false }: PaletteSearchRequest): Promise<AuditResult[]> {
 		const settings = this.settings();
 		const report = runAudit(
 			settings.audit.kind,
-			await collectAuditSnapshot(this.app, settings.audit),
-			auditExclusions(this.app, settings),
+			await collectAuditSnapshot(this.app),
+			auditExclusions(this.app, settings, includeIgnored),
 		);
 		const results = toAuditResults(report, (path) => {
 			const file = this.app.vault.getAbstractFileByPath(path);
@@ -48,15 +48,13 @@ export function toAuditResults(
 			return report.items.flatMap(({ path, size, mocOnly }): AuditResult[] => {
 				const file = getFile(path);
 				if (!file) return [];
-				const details = [path, formatSize(size)];
-				if (mocOnly) details.push(mocOnlyLabel(mocOnly.references));
 				return [
 					{
 						id: `audit:${kind}:${path}`,
 						mode: "audit",
 						kind,
 						primary: file.name,
-						secondary: details.join(" · "),
+						secondary: `${path} · ${formatSize(size)}`,
 						icon,
 						file,
 						size,
@@ -103,10 +101,6 @@ function searchKey(result: AuditResult): string {
 		case "empty-folders":
 			return result.folderPath;
 	}
-}
-
-function mocOnlyLabel(references: number): string {
-	return references > 0 ? `MOC only, ${countLabel(references, "reference")}` : "MOC only";
 }
 
 function countLabel(count: number, noun: string): string {
