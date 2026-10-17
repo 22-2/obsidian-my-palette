@@ -102,7 +102,7 @@ Between Modes and Files, Home's **Settings** section lists **General**, **Modes*
 | `sn`  | Snippets       | Open CSS snippets in an external editor                                 |
 | `pr`  | Properties     | Find and edit the properties of the current note                        |
 
-Plugins lists every installed plugin by name, with disabled ones marked; Snippets lists the snippets folder first, then each snippet with its enabled state. `Enter` opens the folder or file in the external editor (VS Code for now). The menu also offers show in system explorer and open in terminal, plus path copying. Plugin rows with a settings tab offer open plugin settings.
+Plugins lists every installed plugin by name, with disabled ones marked; Snippets lists the snippets folder first, then each snippet with its enabled state. `Enter` (or a double-click) opens the row's menu, since no single action fits every time: open in the external editor (VS Code for now), show in system explorer, open in terminal, and path copying. Plugin rows with a settings tab also offer open plugin settings.
 
 Properties lists the current note's properties under **This note**, the reserved `aliases`, `tags` and `cssclasses` under **Reserved**, and the other keys used in the vault under **Vault**. `Enter` edits a value by its type: tags open the tag insert selector, lists open a selector of their values, checkboxes flip in place, and text, number, date and date-time values are typed into an input. Typing a key that nothing matches offers to add it, after choosing a type. Nested values are edited in source mode. The menu also offers copy value, delete property and copy property name. The type is read from the vault and never changed from here.
 

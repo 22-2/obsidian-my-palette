@@ -55,6 +55,22 @@ test("the > prefix searches commands", async ({ obsidian }) => {
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Open outgoing link list");
 });
 
+for (const { mode, input, row } of [
+	{ mode: "Plugins", input: "p my palette", row: "My Palette" },
+	{ mode: "Snippets", input: "sn ", row: "snippets" },
+]) {
+	test(`Enter opens the row menu in ${mode}`, async ({ obsidian }) => {
+		const page = await openHomeWith(obsidian, input);
+		await expect(page.locator(MODAL_ROW).first()).toContainText(row, { ignoreCase: true });
+		await page.locator(MODAL_INPUT).press("Enter");
+		await expect(
+			page.locator(".menu .menu-item").filter({ hasText: "Open in external editor" }),
+		).toBeVisible();
+		// The palette stays open behind the menu, so Esc returns to the list.
+		await expect(page.locator(MODAL_INPUT)).toBeAttached();
+	});
+}
+
 test("bk searches core bookmarks", async ({ obsidian }) => {
 	await obsidian.createNote("Pinned topic.md", "# pinned");
 	await obsidian.evaluateApp(() => {
