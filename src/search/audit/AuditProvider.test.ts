@@ -1,6 +1,6 @@
 import type { TFile } from "obsidian";
 import { describe, expect, it, vi } from "vitest";
-import { formatSize, toAuditResults } from "src/search/audit/AuditProvider";
+import { toAuditResults } from "src/search/audit/AuditProvider";
 
 vi.mock("obsidian", () => ({ TFile: class {} }));
 
@@ -67,15 +67,5 @@ describe("toAuditResults", () => {
 			["empty", "a/empty"],
 			["tree", "tree · 1 folder inside"],
 		]);
-	});
-});
-
-describe("formatSize", () => {
-	it("uses bytes below 1 KB and one decimal below 10 units", () => {
-		expect(formatSize(0)).toBe("0 B");
-		expect(formatSize(1023)).toBe("1023 B");
-		expect(formatSize(1536)).toBe("1.5 KB");
-		expect(formatSize(20 * 1024)).toBe("20 KB");
-		expect(formatSize(3 * 1024 * 1024)).toBe("3.0 MB");
 	});
 });

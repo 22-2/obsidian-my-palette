@@ -316,6 +316,11 @@ export class PaletteView extends ItemView {
 						openExternalMarkdownInObsidian:
 							this.plugin.settings.openExternalMarkdownInObsidian,
 					}),
+				// Why: Vault audit lists different things per kind, each with its own columns.
+				columnSet: () =>
+					this.session?.current.mode === "audit"
+						? this.plugin.settings.audit.kind
+						: "files",
 				onChange: (tableState) => {
 					// The same query can have different sort priorities in separate panes.
 					// Save presentation in the leaf layout rather than global file settings.

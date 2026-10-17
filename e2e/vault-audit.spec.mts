@@ -168,3 +168,17 @@ test("Open vault audit list opens a table palette in Vault audit", async ({ obsi
 		await obsidian.evaluateApp(() => app.workspace.getLeavesOfType("my-palette-table").length),
 	).toBe(1);
 });
+
+test("the table palette shows the columns of the chosen kind", async ({ obsidian }) => {
+	await runPaletteCommand(obsidian, "open-vault-audit-list");
+	const page = obsidian.page;
+	const table = page.locator('.workspace-leaf-content[data-type="my-palette-table"]');
+	const headers = table.locator("table.my-palette-results-table th");
+	await expect(headers).toHaveText(["Name", "Path", "Size", "Modified"]);
+
+	await table.locator(".my-palette-options-button").click();
+	await page.locator(".menu .menu-item").filter({ hasText: "Broken links" }).first().click();
+	await expect(headers).toHaveText(["Link", "Linked from", "First source"]);
+	await expect(table.locator("table.my-palette-results-table tbody tr")).toHaveCount(1);
+	await expect(table.locator('td[data-column="firstSource"]')).toHaveText("notes/source.md");
+});

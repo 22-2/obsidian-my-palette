@@ -5,6 +5,7 @@ import { runAudit, type AuditKind, type AuditReport } from "src/audit/vaultAudit
 import type { AuditResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { formatSize } from "src/shared/fileSize";
 import type { MyPaletteSettings } from "src/settings/model";
 
 /**
@@ -103,16 +104,4 @@ function searchKey(result: AuditResult): string {
 
 function countLabel(count: number, noun: string): string {
 	return `${count} ${noun}${count === 1 ? "" : "s"}`;
-}
-
-export function formatSize(bytes: number): string {
-	if (bytes < 1024) return `${bytes} B`;
-	const units = ["KB", "MB", "GB"];
-	let value = bytes / 1024;
-	let unit = 0;
-	while (value >= 1024 && unit < units.length - 1) {
-		value /= 1024;
-		unit++;
-	}
-	return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
 }

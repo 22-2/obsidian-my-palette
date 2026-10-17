@@ -127,10 +127,11 @@ Options
 | Orphaned files | Name、Path、Size、Modified                                                  | Pathの昇順        |
 | Broken links   | Link(リンク先の文字列)、Linked from(件数)、First source(最初の参照元のパス) | Linked fromの降順 |
 | Empty files    | Name、Path、Modified                                                        | Pathの昇順        |
-| Empty folders  | Path、Folders inside(中にある空のフォルダーの数)                            | Pathの昇順        |
+| Empty folders  | Name、Path、Folders inside(中にある空のフォルダーの数)                      | Pathの昇順        |
 
-- 列の定義(`PALETTE_TABLE_COLUMNS`と`columns`)を、列の組のIDごとに持つ形にする。今の4列は`files`の組とし、Vault audit以外のモードはこれまでどおりそれを使う。
-- 列の並び・非表示・並べ替えの状態は、列の組ごとに保存する。保存済みのワークスペースの状態は`files`の組として読む(`normalizePaletteTableState`で移行する)。
+- 列の定義を、列の組(`PALETTE_TABLE_COLUMN_SETS`)ごとに持つ形にした。今の4列は`files`の組とし、Vault audit以外のモードはこれまでどおりそれを使う。Nameは全部の組の先頭にあり、Broken linksでは見出しを「Link」にする。
+- 列の並び・非表示・並べ替えの状態は、列の組ごとに保存する。`files`の組はこれまでと同じく最上位(`sorting`・`columnOrder`・`hiddenColumns`)に置き、ほかの組は`columnSets`に表示したものだけを置く。保存済みのワークスペースの状態はそのまま読める。
+- 既定の並べ替えは列では指定しない。並べ替えが無いときは`AuditProvider`の並び(上の「既定の並び」)になる。
 - Sidebar paletteとPaletteでは、今と同じく1行目・2行目の表示にする。1行目は名前、2行目はパスとSize(Broken linksでは「3 notes」のような件数)。
 
 ### 入力
