@@ -1,4 +1,4 @@
-import { ItemView, Menu, TFile, type WorkspaceLeaf } from "obsidian";
+import { ItemView, Menu, Scope, TFile, type WorkspaceLeaf } from "obsidian";
 import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
 import type MyPalettePlugin from "src/main";
@@ -45,6 +45,13 @@ import { FileListRefresh } from "src/palette/surfaces/fileListRefresh";
 import { PaletteLeafTracker } from "src/palette/surfaces/paletteLeafTracker";
 import { PALETTE_VIEW_TYPE, type PaletteViewType } from "src/palette/surfaces/paletteViewTypes";
 import { ICONS } from "src/ui/icons";
+import {
+	DEFAULT_HOTKEYS,
+	HOTKEY_ACTIONS,
+	matchesHotkey,
+	worksIn,
+	type HotkeyAction,
+} from "src/ui/hotkeys";
 
 interface PaletteViewState extends Record<string, unknown> {
 	input?: unknown;
@@ -190,6 +197,24 @@ export class PaletteView extends ItemView {
 	}
 
 	async onOpen(): Promise<void> {
+		this.scope = new Scope(this.app.scope);
+		this.scope.register(null, null, (event) => {
+			const panel = this.panel;
+			if (!panel || event.isComposing) return;
+			const hotkeys = this.plugin.settings.hotkeys ?? DEFAULT_HOTKEYS;
+			const ownsShortcut = (Object.keys(HOTKEY_ACTIONS) as HotkeyAction[]).some(
+				(action) =>
+					worksIn(HOTKEY_ACTIONS[action].scopes, "palette") &&
+					matchesHotkey(event, hotkeys[action]) &&
+					(event.target === panel.inputEl ||
+						(action === "hidePreview" &&
+							event.targetNode &&
+							this.contentEl.contains(event.targetNode))),
+			);
+			// Obsidian checks its scope during window capture, before the panel's DOM handlers.
+			// Returning true skips global shortcuts while still letting those handlers run.
+			if (ownsShortcut) return true;
+		});
 		this.createSurface(this.pendingState);
 	}
 
