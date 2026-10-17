@@ -1,6 +1,5 @@
 import { TFile, type App } from "obsidian";
 import { AUDIT_KIND_ICONS } from "src/audit/auditKinds";
-import { emptyFileLabel } from "src/audit/noteEmptiness";
 import { auditExclusions, collectAuditSnapshot } from "src/audit/auditSnapshot";
 import { runAudit, type AuditKind, type AuditReport } from "src/audit/vaultAudit";
 import type { AuditResult } from "src/palette/results";
@@ -49,16 +48,13 @@ export function toAuditResults(
 			return report.items.flatMap(({ path, size, mocOnly }): AuditResult[] => {
 				const file = getFile(path);
 				if (!file) return [];
-				const details = [path, formatSize(size)];
-				// Why: Empty files mixes blank notes with MOC-only ones; the mark tells them apart.
-				if (kind === "empty-files") details.push(emptyFileLabel(mocOnly));
 				return [
 					{
 						id: `audit:${kind}:${path}`,
 						mode: "audit",
 						kind,
 						primary: file.name,
-						secondary: details.join(" · "),
+						secondary: `${path} · ${formatSize(size)}`,
 						icon,
 						file,
 						size,

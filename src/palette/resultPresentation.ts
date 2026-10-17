@@ -1,4 +1,5 @@
 import { TFile, type App } from "obsidian";
+import { emptyFileLabel } from "src/audit/noteEmptiness";
 import { getVaultFullPath, isAbsolutePathUserIgnored } from "src/ignored-notes/ignoredPaths";
 import { isMarkdownPath } from "src/shared/externalFiles";
 import { compactPath } from "src/shared/pathDisplay";
@@ -98,7 +99,10 @@ export function toPaletteSelectionItem(
 							? "VS Code"
 							: result.mode === "everything" && result.kind === "folder"
 								? "Folder"
-								: undefined,
+								: // Why: a badge beside the name stays visible; the path text is cut off.
+									result.mode === "audit" && result.kind === "empty-files"
+									? emptyFileLabel(result.mocOnly)
+									: undefined,
 	};
 }
 

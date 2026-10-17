@@ -348,8 +348,11 @@ test.describe("MOC-only notes", () => {
 		await chooseKind(page, "Empty files");
 		await page.locator(MODAL_INPUT).fill("blank");
 		await expect(
-			page.locator(".my-palette-suggest-modal .suggestion-item").first(),
-		).toContainText("MOC only");
+			page
+				.locator(".my-palette-suggest-modal .suggestion-item")
+				.first()
+				.locator(".my-palette-suggestion__badge"),
+		).toHaveText("MOC only");
 	});
 
 	test("moving one to the trash removes it from its partners' Relateds", async ({ obsidian }) => {
