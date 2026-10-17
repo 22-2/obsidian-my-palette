@@ -291,6 +291,7 @@ test.describe("moving items", () => {
 		);
 		expect(await obsidian.exists("notes/orphan.md")).toBe(true);
 		await page.locator(".menu .menu-item.mod-cta").click();
+		await expect(page.locator(".menu")).toHaveCount(0);
 		await expect.poll(() => obsidian.exists("notes/orphan.md")).toBe(false);
 		await expect.poll(() => rowLabels(page)).toEqual([]);
 	});

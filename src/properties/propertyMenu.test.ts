@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
 import type { PropertyResult } from "src/palette/results";
 import { populatePropertyMenu, propertyValueText } from "src/properties/propertyMenu";
-import type { PaletteMenu } from "src/ui/paletteMenu";
+import { PaletteMenu } from "src/ui/paletteMenu";
 
 const notices = vi.hoisted(() => [] as string[]);
 
@@ -80,6 +80,8 @@ describe("populatePropertyMenu for several notes", () => {
 				items.push(entry);
 			},
 			onSelectionChange: (listener: (selected: unknown) => void) => (selection = listener),
+			// Why: the real confirmation builds on the fake addItem and onSelectionChange above.
+			addConfirmedItem: PaletteMenu.prototype.addConfirmedItem,
 		} as unknown as PaletteMenu;
 		const result: PropertyResult = {
 			id: "property:topic",

@@ -172,6 +172,45 @@ describe("PaletteMenu clicks", () => {
 		expect(titleOf(document.querySelector(".menu"))).toBe("Click again to clear");
 	});
 
+	it("runs a confirmed item on the second press, then closes the menu", () => {
+		const menu = new PaletteMenu();
+		const run = vi.fn();
+		menu.addConfirmedItem({
+			title: "Move to trash",
+			confirmTitle: "Click again to move 2 files to trash",
+			icon: "trash-2",
+			run,
+		});
+		menu.showAtPosition({ x: 0, y: 0 });
+
+		itemNamed("Move to trash").click();
+		expect(run).not.toHaveBeenCalled();
+		expect(document.querySelector(".menu .menu-item.mod-cta.is-warning")).not.toBeNull();
+
+		itemNamed("Click again to move 2 files to trash").click();
+		expect(run).toHaveBeenCalledTimes(1);
+		expect(document.querySelector(".menu")).toBeNull();
+	});
+
+	it("cancels a confirmation when another item is selected", () => {
+		const menu = new PaletteMenu();
+		const run = vi.fn();
+		menu.addItem((item) => item.setTitle("Open").onClick(vi.fn()));
+		menu.addConfirmedItem({
+			title: "Clear search history",
+			confirmTitle: "Click again to clear",
+			icon: "trash-2",
+			run,
+		});
+		menu.showAtPosition({ x: 0, y: 0 });
+
+		itemNamed("Clear search history").click();
+		press("ArrowDown");
+		expect(document.querySelector(".menu .mod-cta")).toBeNull();
+		itemNamed("Clear search history").click();
+		expect(run).not.toHaveBeenCalled();
+	});
+
 	it("ignores clicks on a disabled item", () => {
 		const { menu, run } = sample();
 		const onHide = vi.fn();
