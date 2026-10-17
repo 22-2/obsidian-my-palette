@@ -28,7 +28,7 @@ export interface ParsedInput {
 
 /** File search and Everything can include files hidden by Obsidian. */
 export function supportsIncludeIgnored(mode: PaletteMode): boolean {
-	return mode === "file" || mode === "everything";
+	return mode === "file" || mode === "everything" || mode === "audit";
 }
 
 export interface BaseResult {
@@ -168,7 +168,7 @@ export interface AuditFileResult extends AuditResultBase {
 	file: TFile;
 	size: number;
 	/** Empty files only: a note holding nothing but its MOC section. */
-	mocOnly?: { references: number };
+	mocOnly?: true;
 }
 
 /** A link target that does not exist, with every note that links to it. */

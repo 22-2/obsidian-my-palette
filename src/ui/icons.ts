@@ -30,7 +30,6 @@ export const ICONS = {
 	rename: "pencil-line",
 	reset: "rotate-ccw",
 	delete: "trash-2",
-	archive: "archive",
 	copy: "copy",
 	move: "folder-input",
 	editProperties: "text-cursor-input",

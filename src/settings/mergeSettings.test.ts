@@ -412,31 +412,26 @@ describe("Return to Home after", () => {
 });
 
 describe("audit settings", () => {
-	it("defaults to no extra exclusions with daily notes and templates excluded", () => {
+	it("defaults to orphaned files", () => {
 		expect(mergeSettings({}).audit).toEqual(DEFAULT_SETTINGS.audit);
 	});
 
-	it("normalizes stored folders, tags and extensions", () => {
+	it("keeps a stored kind and drops the removed options", () => {
 		const settings = mergeSettings({
 			audit: {
-				excludedFolders: ["/Archive/", "Archive", ""],
-				excludedTags: ["#draft", "draft", " ", 3],
-				excludedExtensions: [".CSV", "bad ext"],
+				kind: "empty-files",
+				excludedFolders: ["Archive"],
+				excludedTags: ["draft"],
+				excludedExtensions: ["csv"],
 				excludeDailyNotesAndTemplates: false,
-				kind: "unknown-kind",
 				mocOnlyAsEmpty: true,
-				archiveFolder: "/Archive\\audit/",
+				archiveFolder: "Archive/audit",
 			},
 		});
-		expect(settings.audit).toEqual({
-			kind: "orphaned-files",
-			archiveFolder: "Archive/audit",
-			excludedFolders: ["Archive"],
-			excludedTags: ["draft"],
-			excludedExtensions: ["csv"],
-			excludeDailyNotesAndTemplates: false,
-			mocOnlyAsEmpty: true,
-		});
+		expect(settings.audit).toEqual({ kind: "empty-files" });
+		expect(mergeSettings({ audit: { kind: "unknown-kind" } }).audit.kind).toBe(
+			"orphaned-files",
+		);
 	});
 });
 

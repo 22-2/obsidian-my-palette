@@ -1,38 +1,26 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-	archivePath,
-	canArchive,
-	canTrash,
-	describeAuditActionResults,
-} from "src/audit/auditActions";
+import { canTrash, describeAuditActionResults, listsFiles } from "src/audit/auditActions";
 
 vi.mock("obsidian", () => ({
 	TFile: class {},
 	TFolder: class {},
 	getFrontMatterInfo: () => ({ contentStart: 0 }),
-	normalizePath: (path: string) => path.replace(/\/+/g, "/").replace(/^\/|\/$/g, ""),
 }));
 
 describe("which kinds can be moved", () => {
-	it("trashes everything but broken links and archives files only", () => {
+	it("trashes everything but broken links and moves elsewhere files only", () => {
 		expect(canTrash("broken-links")).toBe(false);
 		expect(canTrash("empty-folders")).toBe(true);
-		expect(canArchive("orphaned-files")).toBe(true);
-		expect(canArchive("empty-files")).toBe(true);
-		expect(canArchive("empty-folders")).toBe(false);
-	});
-});
-
-describe("archivePath", () => {
-	it("keeps the vault path under the archive folder", () => {
-		expect(archivePath("Archive", "notes/a.md")).toBe("Archive/notes/a.md");
+		expect(listsFiles("orphaned-files")).toBe(true);
+		expect(listsFiles("empty-files")).toBe(true);
+		expect(listsFiles("empty-folders")).toBe(false);
 	});
 });
 
 describe("describeAuditActionResults", () => {
 	it("reports what moved, then what was skipped or failed", () => {
 		expect(
-			describeAuditActionResults("trash", "orphaned-files", [
+			describeAuditActionResults("orphaned-files", [
 				{ path: "a.md", outcome: "trashed" },
 				{ path: "b.md", outcome: "trashed" },
 				{ path: "c.md", outcome: "skipped", reason: "Now linked from a note." },
@@ -43,16 +31,9 @@ describe("describeAuditActionResults", () => {
 		);
 	});
 
-	it("names folders and the archive folder", () => {
+	it("names folders", () => {
 		expect(
-			describeAuditActionResults("trash", "empty-folders", [
-				{ path: "x", outcome: "trashed" },
-			]),
+			describeAuditActionResults("empty-folders", [{ path: "x", outcome: "trashed" }]),
 		).toBe("Moved 1 folder to trash.");
-		expect(
-			describeAuditActionResults("archive", "empty-files", [
-				{ path: "x.md", outcome: "archived" },
-			]),
-		).toBe("Moved 1 file to the archive folder.");
 	});
 });

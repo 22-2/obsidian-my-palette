@@ -1,10 +1,7 @@
 import { getFrontMatterInfo, type App, type TFile } from "obsidian";
-import { analyzeMocOnly } from "src/moc-relateds/mocRelatedsCore";
+import { isMocOnly } from "src/moc-relateds/mocRelatedsCore";
 
-export type NoteEmptiness =
-	| { kind: "empty" }
-	| { kind: "moc-only"; references: number }
-	| { kind: "written" };
+export type NoteEmptiness = { kind: "empty" } | { kind: "moc-only" } | { kind: "written" };
 
 /**
  * Whether a file says anything, read from the file itself: the metadata cache may not have
@@ -16,19 +13,20 @@ export async function noteEmptiness(app: App, file: TFile): Promise<NoteEmptines
 	const content = await app.vault.cachedRead(file);
 	if (content.slice(getFrontMatterInfo(content).contentStart).trim() === "")
 		return { kind: "empty" };
-	const { mocOnly, references } = analyzeMocOnly(content);
-	return mocOnly ? { kind: "moc-only", references } : { kind: "written" };
+	return isMocOnly(content) ? { kind: "moc-only" } : { kind: "written" };
 }
 
 /** The short mark a list shows beside a note that is empty or holds only its MOC. */
+export const EMPTINESS_LABELS = {
+	empty: "Empty",
+	"moc-only": "MOC only",
+} as const satisfies Record<Exclude<NoteEmptiness["kind"], "written">, string>;
+
 export function emptinessBadge(emptiness: NoteEmptiness): string | undefined {
-	switch (emptiness.kind) {
-		case "empty":
-			return "Empty";
-		// Why: the mark only tells blank notes apart; References are counted in Vault audit.
-		case "moc-only":
-			return "MOC only";
-		case "written":
-			return undefined;
-	}
+	return emptiness.kind === "written" ? undefined : EMPTINESS_LABELS[emptiness.kind];
+}
+
+/** The mark of a row in Vault audit's Empty files, the same as the MOC remove selector's. */
+export function emptyFileLabel(mocOnly: true | undefined): string {
+	return EMPTINESS_LABELS[mocOnly ? "moc-only" : "empty"];
 }

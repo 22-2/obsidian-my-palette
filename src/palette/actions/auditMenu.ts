@@ -1,14 +1,14 @@
 import { Notice, type App } from "obsidian";
 import {
-	applyAuditAction,
-	canArchive,
 	canTrash,
 	describeAuditActionResults,
+	listsFiles,
 	plural,
-	type AuditAction,
+	trashAuditItems,
 } from "src/audit/auditActions";
 import type { AuditKind } from "src/audit/vaultAudit";
 import type MyPalettePlugin from "src/main";
+import { addFileMoveMenuItem } from "src/palette/actions/fileMoveMenu";
 import { addSelectionHeader } from "src/palette/actions/selectionHeader";
 import type { ActionKind } from "src/palette/resultActions";
 import { getCopyablePaths } from "src/palette/resultPresentation";
@@ -20,7 +20,7 @@ import {
 	copyPathToClipboard,
 } from "src/platform/pathClipboard";
 import { ICONS } from "src/ui/icons";
-import type { PaletteMenu, PaletteMenuItem } from "src/ui/paletteMenu";
+import type { PaletteMenu } from "src/ui/paletteMenu";
 
 /** Enough to find a note in the menu; the rest is one search away in the note itself. */
 const MAX_LINKED_NOTES = 20;
@@ -118,77 +118,38 @@ function addLinkedNoteItems(
 }
 
 function addMoveItems(options: AuditMenuOptions, kind: AuditKind): void {
-	const { menu, plugin } = options;
+	const { menu, plugin, results, onResultsChanged } = options;
 	if (!canTrash(kind)) return;
 	menu.addSeparator();
-	addConfirmedMoveItem(options, kind, "trash");
-	if (!canArchive(kind)) return;
-	if (plugin.settings.audit.archiveFolder) {
-		addConfirmedMoveItem(options, kind, "archive");
-		return;
-	}
-	menu.addItem((item) =>
-		item
-			.setTitle("Move to archive folder")
-			.setIcon(ICONS.archive)
-			.setTooltip("Set an archive folder in the settings.")
-			.setDisabled(true),
-	);
+	// Why: files to keep go to a folder of the user's choice, as from any other mode; one left
+	// out by Excluded folders there stays out of these lists too.
+	if (listsFiles(kind)) addFileMoveMenuItem(menu, plugin, results, onResultsChanged);
+	addTrashItem(options, kind);
 }
 
-/**
- * Moving several items at once is hard to undo, so the first press turns the item into a
- * confirmation that keeps the menu open, as Delete property does; the second press moves.
- */
-function addConfirmedMoveItem(
-	{ app, plugin, menu, results, onResultsChanged }: AuditMenuOptions,
+/** Trashing several items at once is hard to undo, so the move needs a second press. */
+function addTrashItem(
+	{ app, menu, results, onResultsChanged }: AuditMenuOptions,
 	kind: AuditKind,
-	action: AuditAction,
 ): void {
 	const what = plural(results.length, kind === "empty-folders" ? "folder" : "file");
-	const destination = action === "trash" ? "trash" : "archive folder";
-	let confirming = false;
-	let moveItem: PaletteMenuItem | undefined;
-	const render = (item: PaletteMenuItem) => {
-		item.setTitle(
-			confirming ? `Click again to move ${what} to ${destination}` : `Move to ${destination}`,
-		)
-			.setIcon(action === "trash" ? ICONS.delete : ICONS.archive)
-			.setWarning(action === "trash")
-			.setCta(confirming)
-			.setKeepOpen(confirming);
-		if (kind === "empty-folders")
-			item.setTooltip(
-				"Files Obsidian does not show, such as those starting with a dot, go with the folder.",
-			);
-	};
-	menu.addItem((item) => {
-		moveItem = item;
-		render(item);
-		item.onClick(() => {
-			if (!confirming) {
-				confirming = true;
-				render(item);
-				return;
-			}
+	menu.addConfirmedItem({
+		title: "Move to trash",
+		confirmTitle: `Click again to move ${what} to trash`,
+		icon: ICONS.delete,
+		warning: true,
+		...(kind === "empty-folders"
+			? {
+					tooltip:
+						"Files Obsidian does not show, such as those starting with a dot, go with the folder.",
+				}
+			: {}),
+		run: () =>
 			void (async () => {
-				const outcome = await applyAuditAction(
-					app,
-					action,
-					kind,
-					results.map(itemPath),
-					plugin.settings.audit,
-				);
-				new Notice(describeAuditActionResults(action, kind, outcome));
+				const outcome = await trashAuditItems(app, kind, results.map(itemPath));
+				new Notice(describeAuditActionResults(kind, outcome));
 				onResultsChanged?.();
-			})();
-		});
-	});
-	// Why: moving to another item cancels the confirmation, so a later press starts over.
-	menu.onSelectionChange((selected) => {
-		if (!confirming || !moveItem || selected === moveItem) return;
-		confirming = false;
-		render(moveItem);
+			})(),
 	});
 }
 

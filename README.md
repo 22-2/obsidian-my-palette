@@ -31,7 +31,7 @@ Other sources (commands, Everything, bookmarks, …) are modes one step away fro
 - **Command, bookmark, link, backlink and Smart Connections search** in the same window.
 - **Multi-select** with the same gestures as a file manager, then copy paths, add tags or insert MOC links to all selected notes at once.
 - **Three surfaces**: the modal Palette, the Sidebar palette in the right sidebar, and the sortable Table palette in a center tab.
-- **Vault audit**: orphaned files, broken links, empty files and empty folders in one mode, with columns per kind in the Table palette, and moving to the trash or an archive folder. Also available from the Obsidian CLI.
+- **Vault audit**: orphaned files, broken links, empty files and empty folders in one mode, with columns per kind in the Table palette, and moving to the trash or another folder. Also available from the Obsidian CLI.
 - **Obsidian-excluded files on demand**: files hidden by Obsidian's Excluded files setting stay out of the way until you turn on the `Include Obsidian-excluded files` option in the options menu (`Ctrl+O`).
 - Desktop only (Windows is the primary target).
 
@@ -177,24 +177,24 @@ Vault audit lists what a vault collects over time. Choose what to list under **S
 | -------------- | ----------------------------------------------------------- | ------------------------------- |
 | Orphaned files | Files no other note links to or embeds, canvases included   | Name, Path, Size, Modified      |
 | Broken links   | Link targets that do not exist, with the notes linking them | Link, Linked from, First source |
-| Empty files    | Files with no content; notes with only frontmatter count    | Name, Path, Modified            |
+| Empty files    | Files with no content; notes with only frontmatter count    | Name, Path, Modified, Content   |
 | Empty folders  | The topmost folder of each tree holding no files            | Name, Path, Folders inside      |
 
 Orphaned files and Empty files list only files Obsidian can open; config files such as `cog.toml`, shown when **Detect all file extensions** is on, are left out. Nothing is written to the vault to show the list, so the list never changes what it judges. `Open vault audit list` opens it in a Table palette, where each kind keeps its own columns and sorting.
 
-`Enter` opens a file, goes to the line of a broken link in the first note that has it, or reveals a folder in the file explorer. Broken links with several notes list them in the row menu. `Move to trash` (following Obsidian's **Deleted files** setting) and `Move to archive folder` work on the selection and need a second press. Each item is checked again just before it moves; items that were linked or edited since the list was made are skipped.
+`Enter` opens a file, goes to the line of a broken link in the first note that has it, or reveals a folder in the file explorer. Broken links with several notes list them in the row menu. `Move to trash` (following Obsidian's **Deleted files** setting) works on the selection and needs a second press. Each item is checked again just before it moves; items that were linked or edited since the list was made are skipped. Files to keep go elsewhere with `Move to…`, as in other modes.
 
-**Settings → My Palette → Vault audit** sets the archive folder (files keep their paths under it, and it is left out of the lists) and the folders, tags and extensions to leave out. Obsidian's Excluded files and this plugin's Excluded folders are always left out. The Daily notes and Templates folders are left out of Orphaned files unless turned off.
+Vault audit has no settings of its own. Obsidian's Excluded files and this plugin's Excluded folders are left out, as in File search, and **Include Obsidian-excluded files** in the options menu lists them too; a folder of files kept for later can be checked that way. The Daily notes and Templates folders are always left out of Orphaned files, since such notes are rarely linked.
 
-**Count MOC-only notes as empty** (off by default) adds notes with nothing but frontmatter and a `## MOC` section to Empty files, such as notes made from a template and never written. Entries under the MOC's References are shown in the References column, since such a note may still keep a useful link. Moving one to the trash also removes it from the Relateds of the notes linking to it, so their links do not break.
+Empty files also lists notes with nothing but frontmatter and a `## MOC` section, such as notes made from a template and never written. Each row is marked `Empty` or `MOC only` (the Content column in a Table palette). Moving a MOC-only note to the trash also removes it from the Relateds of the notes linking to it, so their links do not break.
 
-The MOC remove selector marks linked notes the same way (`Empty`, `MOC only`), whether or not the option is on. Tidying a hub of blank notes then takes two steps: unlink the notes that have since been written with the selector, and move the ones still blank to the trash from Vault audit.
+The MOC remove selector marks linked notes the same way (`Empty`, `MOC only`). Tidying a hub of blank notes then takes two steps: unlink the notes that have since been written with the selector, and move the ones still blank to the trash from Vault audit.
 
 ### Obsidian CLI
 
 `obsidian my-palette:audit kind=<kind>` prints the same lists as JSON, for scripts and AI agents. `kind` is `orphaned-files`, `broken-links`, `empty-files` or `empty-folders`; `glob=<pattern>` keeps the matching paths (for broken links, the linking notes). Broken links report one-based line numbers.
 
-It only lists unless `trash` or `archive` is passed, and both require `glob`, so a missing pattern never moves the whole vault. Each item then reports `trashed`, `archived`, `skipped` or `failed`. `obsidian my-palette` lists the available CLI commands.
+It only lists unless `trash` is passed, which requires `glob`, so a missing pattern never moves the whole vault. Each item then reports `trashed`, `skipped` or `failed`. `obsidian my-palette` lists the available CLI commands.
 
 ## Views
 
@@ -236,7 +236,7 @@ Notes without a `prior` sort last. Complete contiguous matches on a name, path, 
 
 ## Settings
 
-Settings are split into six pages: **General** (Return to Home after, search history, highlighting and diagnostics), **Modes** (each mode's alias and switch), **File search** (file types, excluded folders, Obsidian-excluded index, sort priorities), **Vault audit** (archive folder and what to leave out), **Shortcuts** (the table described above) and **Integrations** (Everything, Smart Connections and VS Code).
+Settings are split into five pages: **General** (Return to Home after, search history, highlighting and diagnostics), **Modes** (each mode's alias and switch), **File search** (file types, excluded folders, Obsidian-excluded index, sort priorities), **Shortcuts** (the table described above) and **Integrations** (Everything, Smart Connections and VS Code).
 
 ### Everything setup
 

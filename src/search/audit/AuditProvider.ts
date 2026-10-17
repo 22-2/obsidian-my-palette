@@ -47,8 +47,8 @@ export class AuditProvider implements PaletteProvider<AuditResult> {
 		this.cached = undefined;
 	}
 
-	async search({ query }: PaletteSearchRequest): Promise<AuditResult[]> {
-		const results = await this.currentResults();
+	async search({ query, includeIgnored = false }: PaletteSearchRequest): Promise<AuditResult[]> {
+		const results = await this.currentResults(includeIgnored);
 		if (!query.trim()) return results;
 		// Why: the path (or the link text) is what distinguishes rows; names repeat across folders.
 		return searchFuzzyQuery(query, results, [searchKey]).map(({ obj }) => obj);
@@ -58,12 +58,12 @@ export class AuditProvider implements PaletteProvider<AuditResult> {
 	 * Audits again only when the vault changed or the settings did. The key holds the
 	 * resolved exclusions, so Obsidian's Excluded files and the core plugin folders count too.
 	 */
-	private currentResults(): Promise<AuditResult[]> {
+	private currentResults(includeIgnored: boolean): Promise<AuditResult[]> {
 		const settings = this.settings();
-		const { kind, mocOnlyAsEmpty } = settings.audit;
-		const key = JSON.stringify([kind, mocOnlyAsEmpty, auditExclusions(this.app, settings)]);
+		const { kind } = settings.audit;
+		const key = JSON.stringify([kind, auditExclusions(this.app, settings, includeIgnored)]);
 		if (this.cached?.key === key) return this.cached.results;
-		const results = auditVault(this.app, kind, settings).then((report) =>
+		const results = auditVault(this.app, kind, settings, includeIgnored).then((report) =>
 			toAuditResults(report, (path) => this.app.vault.getFileByPath(path) ?? undefined),
 		);
 		const cached = { key, results };
@@ -89,15 +89,13 @@ export function toAuditResults(
 			return report.items.flatMap(({ path, size, mocOnly }): AuditResult[] => {
 				const file = getFile(path);
 				if (!file) return [];
-				const details = [path, formatSize(size)];
-				if (mocOnly) details.push(mocOnlyLabel(mocOnly.references));
 				return [
 					{
 						id: `audit:${kind}:${path}`,
 						mode: "audit",
 						kind,
 						primary: file.name,
-						secondary: details.join(" · "),
+						secondary: `${path} · ${formatSize(size)}`,
 						icon,
 						file,
 						size,
@@ -144,10 +142,6 @@ function searchKey(result: AuditResult): string {
 		case "empty-folders":
 			return result.folderPath;
 	}
-}
-
-function mocOnlyLabel(references: number): string {
-	return references > 0 ? `MOC only, ${countLabel(references, "reference")}` : "MOC only";
 }
 
 function countLabel(count: number, noun: string): string {

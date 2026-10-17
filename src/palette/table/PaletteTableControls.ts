@@ -2,6 +2,7 @@ import { Component, TFile, type App } from "obsidian";
 import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
 import type { AuditResult, PaletteResult } from "src/palette/results";
+import { emptyFileLabel } from "src/audit/noteEmptiness";
 import {
 	PaletteTableModel,
 	normalizePaletteTableState,
@@ -175,7 +176,9 @@ export class PaletteTableControls extends Component {
 					path: result.file.path,
 					size: result.size,
 					modified: result.file.stat.mtime,
-					references: result.mocOnly?.references,
+					...(result.kind === "empty-files"
+						? { content: emptyFileLabel(result.mocOnly) }
+						: {}),
 				};
 			case "broken-links":
 				return {
@@ -273,7 +276,8 @@ export class PaletteTableControls extends Component {
 				return;
 			}
 			case "path":
-			case "firstSource": {
+			case "firstSource":
+			case "content": {
 				const text = data?.[column] ?? "—";
 				cell.setText(text);
 				cell.setAttribute("title", text);
@@ -289,8 +293,7 @@ export class PaletteTableControls extends Component {
 				return;
 			case "prior":
 			case "linkedFrom":
-			case "foldersInside":
-			case "references": {
+			case "foldersInside": {
 				const value = data?.[column];
 				cell.setText(value === undefined ? "—" : String(value));
 				return;

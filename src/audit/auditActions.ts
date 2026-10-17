@@ -1,62 +1,46 @@
-import { TFile, TFolder, normalizePath, type App, type TAbstractFile } from "obsidian";
+import { TFile, TFolder, type App, type TAbstractFile } from "obsidian";
 import { noteEmptiness } from "src/audit/noteEmptiness";
 import { logger } from "src/shared/logger";
 import type { AuditKind } from "src/audit/vaultAudit";
 import { removeLinkFromMocRelateds } from "src/moc-relateds/mocRelatedsCore";
-import type { AuditSettings } from "src/settings/model";
-
-export type AuditAction = "trash" | "archive";
 
 export interface AuditActionResult {
 	path: string;
-	outcome: "trashed" | "archived" | "skipped" | "failed";
+	outcome: "trashed" | "skipped" | "failed";
 	reason?: string;
 	/** Notes whose MOC Relateds no longer link to a trashed MOC-only note. */
 	unlinkedFrom?: string[];
 }
-
-export type AuditActionSettings = Pick<AuditSettings, "archiveFolder" | "mocOnlyAsEmpty">;
 
 /** Kinds whose items are files or folders that can be moved; broken links are not. */
 export function canTrash(kind: AuditKind): boolean {
 	return kind !== "broken-links";
 }
 
-/** Archiving keeps a file for later; an empty folder has nothing to keep. */
-export function canArchive(kind: AuditKind): boolean {
+/** Kinds whose items are files, which the palette's Move to… can take elsewhere. */
+export function listsFiles(kind: AuditKind): boolean {
 	return kind === "orphaned-files" || kind === "empty-files";
 }
 
-/** Keeps the vault path under the archive folder, so the original place is not lost. */
-export function archivePath(archiveFolder: string, path: string): string {
-	return normalizePath(`${archiveFolder}/${path}`);
-}
-
 /**
- * Moves the items to the trash or the archive folder, one at a time. Each item is checked
- * again first, because the vault may have changed since the list was made.
+ * Moves the items to the trash, one at a time. Each item is checked again first, because
+ * the vault may have changed since the list was made.
  */
-export async function applyAuditAction(
+export async function trashAuditItems(
 	app: App,
-	action: AuditAction,
 	kind: AuditKind,
 	paths: readonly string[],
-	settings: AuditActionSettings,
 ): Promise<AuditActionResult[]> {
-	if (action === "trash" && !canTrash(kind)) throw new Error(`${kind} cannot be moved to trash.`);
-	if (action === "archive" && !canArchive(kind))
-		throw new Error(`${kind} cannot be moved to the archive folder.`);
-	if (action === "archive" && !settings.archiveFolder)
-		throw new Error("Set an archive folder first.");
-	// Why: built once for the batch rather than scanning every link per item. Moving files
-	// only takes links away, so a stale set can skip an item but never moves a linked one.
+	if (!canTrash(kind)) throw new Error(`${kind} cannot be moved to trash.`);
+	// Why: built once for the batch rather than scanning every link per item. Trashing files
+	// only takes links away, so a stale set can skip an item but never trashes a linked one.
 	const linked = kind === "orphaned-files" ? linkedFromOtherFiles(app) : new Set<string>();
 	const results: AuditActionResult[] = [];
 	for (const path of paths) {
 		try {
-			results.push(await applyToItem(app, action, kind, path, settings, linked));
+			results.push(await trashItem(app, kind, path, linked));
 		} catch (error) {
-			logger.error(`Vault audit could not ${action} ${path}`, error);
+			logger.error(`Vault audit could not trash ${path}`, error);
 			results.push({
 				path,
 				outcome: "failed",
@@ -67,33 +51,22 @@ export async function applyAuditAction(
 	return results;
 }
 
-async function applyToItem(
+async function trashItem(
 	app: App,
-	action: AuditAction,
 	kind: AuditKind,
 	path: string,
-	settings: AuditActionSettings,
 	linked: ReadonlySet<string>,
 ): Promise<AuditActionResult> {
 	const target = app.vault.getAbstractFileByPath(path);
 	if (!target) return { path, outcome: "skipped", reason: "No longer exists." };
-	const state = await currentState(app, kind, target, settings.mocOnlyAsEmpty, linked);
+	const state = await currentState(app, kind, target, linked);
 	if (typeof state === "string") return { path, outcome: "skipped", reason: state };
-	if (action === "trash") {
-		// Why: a MOC-only note is linked back from its partners' Relateds; trashing it alone
-		// would leave those links broken.
-		const unlinkedFrom =
-			state.mocOnly && target instanceof TFile ? await unlinkFromRelateds(app, target) : [];
-		await app.fileManager.trashFile(target);
-		return { path, outcome: "trashed", ...(unlinkedFrom.length > 0 ? { unlinkedFrom } : {}) };
-	}
-	const destination = archivePath(settings.archiveFolder, path);
-	if (app.vault.getAbstractFileByPath(destination))
-		return { path, outcome: "skipped", reason: "Already exists in the archive folder." };
-	await ensureFolder(app, destination.split("/").slice(0, -1).join("/"));
-	// Why: renameFile also updates links to the file, which an empty note may still have.
-	await app.fileManager.renameFile(target, destination);
-	return { path, outcome: "archived" };
+	// Why: a MOC-only note is linked back from its partners' Relateds; trashing it alone
+	// would leave those links broken.
+	const unlinkedFrom =
+		state.mocOnly && target instanceof TFile ? await unlinkFromRelateds(app, target) : [];
+	await app.fileManager.trashFile(target);
+	return { path, outcome: "trashed", ...(unlinkedFrom.length > 0 ? { unlinkedFrom } : {}) };
 }
 
 /** Whether the item still belongs in the list; a string says why it no longer does. */
@@ -101,7 +74,6 @@ async function currentState(
 	app: App,
 	kind: AuditKind,
 	target: TAbstractFile,
-	mocOnlyAsEmpty: boolean,
 	linked: ReadonlySet<string>,
 ): Promise<{ mocOnly: boolean } | string> {
 	const listed = { mocOnly: false };
@@ -113,9 +85,7 @@ async function currentState(
 			if (!(target instanceof TFile)) return "Not a file.";
 			const { kind: emptiness } = await noteEmptiness(app, target);
 			if (emptiness === "empty") return listed;
-			return emptiness === "moc-only" && mocOnlyAsEmpty
-				? { mocOnly: true }
-				: "No longer empty.";
+			return emptiness === "moc-only" ? { mocOnly: true } : "No longer empty.";
 		}
 		case "empty-folders":
 			if (!(target instanceof TFolder)) return "Not a folder.";
@@ -160,27 +130,15 @@ function holdsFiles(folder: TFolder): boolean {
 	);
 }
 
-async function ensureFolder(app: App, path: string): Promise<void> {
-	if (!path) return;
-	const parts = path.split("/");
-	for (let index = 1; index <= parts.length; index++) {
-		const folder = parts.slice(0, index).join("/");
-		if (!app.vault.getAbstractFileByPath(folder)) await app.vault.createFolder(folder);
-	}
-}
-
 /** One notice for the whole batch: what moved, and how many were skipped or failed. */
 export function describeAuditActionResults(
-	action: AuditAction,
 	kind: AuditKind,
 	results: readonly AuditActionResult[],
 ): string {
 	const count = (outcome: AuditActionResult["outcome"]) =>
 		results.filter((result) => result.outcome === outcome).length;
 	const noun = kind === "empty-folders" ? "folder" : "file";
-	const moved = count(action === "trash" ? "trashed" : "archived");
-	const destination = action === "trash" ? "trash" : "the archive folder";
-	const parts = [`Moved ${plural(moved, noun)} to ${destination}.`];
+	const parts = [`Moved ${plural(count("trashed"), noun)} to trash.`];
 	const skipped = count("skipped");
 	if (skipped > 0) parts.push(`Skipped ${skipped} that changed since the list was made.`);
 	const unlinked = new Set(results.flatMap((result) => result.unlinkedFrom ?? [])).size;

@@ -6,7 +6,7 @@ import { DEFAULT_SETTINGS, type MyPaletteSettings } from "src/settings/model";
 
 vi.mock("obsidian", () => ({ TFile: class {} }));
 vi.mock("src/audit/auditSnapshot", () => ({
-	auditExclusions: (_app: App, settings: MyPaletteSettings) => settings.audit.excludedFolders,
+	auditExclusions: (_app: App, settings: MyPaletteSettings) => settings.file.excludedFolders,
 	auditVault: vi.fn(),
 }));
 
@@ -118,7 +118,7 @@ describe("AuditProvider", () => {
 		await provider.search({ mode: "audit", query: "" });
 		expect(auditVault).toHaveBeenCalledTimes(2);
 
-		settings.audit.excludedFolders = ["Archive"];
+		settings.file.excludedFolders = ["Archive"];
 		await provider.search({ mode: "audit", query: "" });
 		expect(auditVault).toHaveBeenCalledTimes(3);
 	});

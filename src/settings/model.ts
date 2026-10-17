@@ -326,20 +326,9 @@ export interface MyPaletteSettings {
 	audit: AuditSettings;
 }
 
-/** Applied on top of Obsidian's Excluded files and this plugin's Excluded folders. */
 export interface AuditSettings {
 	/** The kind Vault audit lists, chosen in the options menu and shared by every surface. */
 	kind: AuditKind;
-	/** Where "Move to archive folder" puts files, keeping their paths; empty until set. */
-	archiveFolder: string;
-	excludedFolders: string[];
-	/** Without `#`. A tag also excludes its nested tags. */
-	excludedTags: string[];
-	excludedExtensions: string[];
-	/** Daily notes and templates are rarely linked, so they would crowd the orphaned files. */
-	excludeDailyNotesAndTemplates: boolean;
-	/** Empty files also lists notes with nothing but frontmatter and a MOC section. */
-	mocOnlyAsEmpty: boolean;
 }
 
 export const DEFAULT_SETTINGS: MyPaletteSettings = {
@@ -398,13 +387,5 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		requestTimeoutMs: SETTING_DEFAULTS.everything.requestTimeoutMs,
 		vaultExtensions: ["md", "canvas", "base"],
 	},
-	audit: {
-		kind: "orphaned-files",
-		archiveFolder: "",
-		excludedFolders: [],
-		excludedTags: [],
-		excludedExtensions: [],
-		excludeDailyNotesAndTemplates: true,
-		mocOnlyAsEmpty: false,
-	},
+	audit: { kind: "orphaned-files" },
 };
