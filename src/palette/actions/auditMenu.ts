@@ -171,6 +171,8 @@ function addConfirmedMoveItem(
 				render(item);
 				return;
 			}
+			// Why: the first press kept the menu open for the confirmation; this one runs and closes it.
+			item.setKeepOpen(false);
 			void (async () => {
 				const outcome = await applyAuditAction(
 					app,

@@ -117,6 +117,8 @@ function addBulkDeleteItem(
 				render(item);
 				return;
 			}
+			// Why: the first press kept the menu open for the confirmation; this one runs and closes it.
+			item.setKeepOpen(false);
 			void deleteProperties(app, result);
 		});
 	});
