@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	addLinkToMocRelateds,
+	analyzeMocOnly,
 	relatedsLineRange,
 	removeLinkFromMocRelateds,
 } from "src/moc-relateds/mocRelatedsCore";
@@ -82,5 +83,40 @@ describe("relatedsLineRange", () => {
 	it("is undefined without a MOC Relateds item", () => {
 		expect(relatedsLineRange("## MOC\n- References")).toBeUndefined();
 		expect(relatedsLineRange("plain note")).toBeUndefined();
+	});
+});
+
+describe("analyzeMocOnly", () => {
+	const frontmatter = ["---", "createdAt: 2026-10-08T16:21:43", "---"];
+	const moc = ["## MOC", "- Relateds", "    - [[Hub]]", "- References"];
+
+	it("treats a note with only frontmatter and its MOC as MOC-only", () => {
+		const content = [...frontmatter, "", ...moc, "    - "].join("\n");
+		expect(analyzeMocOnly(content)).toEqual({ mocOnly: true, references: 0 });
+	});
+
+	it("counts References entries with text, leaving out empty template bullets", () => {
+		const content = [
+			...frontmatter,
+			...moc,
+			"    - [Chat](https://chatgpt.com/c/1)",
+			"    - ",
+			"    - [Thread](codex://threads/2)",
+		].join("\r\n");
+		expect(analyzeMocOnly(content)).toEqual({ mocOnly: true, references: 2 });
+	});
+
+	it("is not MOC-only when text is written outside the MOC section", () => {
+		expect(analyzeMocOnly([...frontmatter, "A thought.", "", ...moc].join("\n")).mocOnly).toBe(
+			false,
+		);
+		expect(analyzeMocOnly([...moc, "## Notes", "More."].join("\n")).mocOnly).toBe(false);
+	});
+
+	it("is not MOC-only without a MOC section", () => {
+		expect(analyzeMocOnly([...frontmatter, ""].join("\n"))).toEqual({
+			mocOnly: false,
+			references: 0,
+		});
 	});
 });

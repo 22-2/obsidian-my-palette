@@ -8,6 +8,7 @@ import { PaletteHelpModal } from "src/ui/paletteHelpModal";
 import { availableModes } from "src/palette/modes";
 import { SearchHistorySuggest } from "src/ui/searchHistorySuggest";
 import { DEFAULT_HOTKEYS, formatHotkey, matchesHotkey } from "src/ui/hotkeys";
+import type { MenuChoice } from "src/ui/panelChoice";
 import type { PanelSwitch } from "src/ui/panelSwitch";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 import { ICONS } from "src/ui/icons";
@@ -46,6 +47,8 @@ interface PaletteHistoryControlsOptions {
 	focusInput?: () => void;
 	/** The host's footer switches, read each time the menu opens, so the menu can flip them too. */
 	getSwitches?: () => readonly PanelSwitch[];
+	/** Pick-one options listed above the switches, each under its own heading. */
+	getChoices?: () => readonly MenuChoice[];
 	/**
 	 * Whether the menu offers "Highlight search matches"; on by default. Palettes turn it off:
 	 * the preference is for the selectors, whose menu is the only place it is changed.
@@ -208,6 +211,21 @@ export class PaletteHistoryControls {
 		menu.onHide(() => {
 			if (this.activeMenu === menu) this.activeMenu = undefined;
 		});
+		// Why: a choice changes what the palette lists, so it leads the menu. Choosing an item
+		// closes the menu, because the list behind it changes.
+		const choices = (this.options.getChoices?.() ?? []).filter(({ isHidden }) => !isHidden);
+		for (const choice of choices) {
+			menu.addHeading(choice.label);
+			for (const option of choice.items)
+				menu.addItem((item) =>
+					item
+						.setTitle(option.label)
+						.setIcon(option.icon ?? null)
+						.setChecked(option.value === choice.value)
+						.onClick(() => choice.choose(option.value)),
+				);
+			menu.addSeparator();
+		}
 		// Why: the switches come first so they can be flipped with Enter, without remembering
 		// each one's shortcut. Each stays open so several can be flipped in a row.
 		const switches = (this.options.getSwitches?.() ?? []).filter(({ isHidden }) => !isHidden);

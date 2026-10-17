@@ -1,15 +1,16 @@
 import { Component, TFile, type App } from "obsidian";
 import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
-import type { PaletteResult } from "src/palette/results";
+import type { AuditResult, PaletteResult } from "src/palette/results";
 import {
-	PALETTE_TABLE_COLUMNS,
 	PaletteTableModel,
 	normalizePaletteTableState,
+	type PaletteTableColumnSetId,
 	type PaletteTableRow,
 	type PaletteTableState,
 	type PaletteTableColumnId,
 } from "src/palette/table/paletteTableModel";
+import { formatSize } from "src/shared/fileSize";
 import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
 import { renderSelectionItem, type SelectionItem } from "src/ui/selectionModal";
 import type { SuggestionPanel, SuggestionPanelResults } from "src/ui/suggestionPanel";
@@ -18,6 +19,8 @@ interface PaletteTableControlsOptions {
 	initialState: PaletteTableState;
 	presentation: (result: PaletteResult) => SelectionItem;
 	onChange: (state: PaletteTableState) => void;
+	/** Which columns the current results need; read whenever new results arrive. */
+	columnSet: () => PaletteTableColumnSetId;
 }
 
 /** A per-pane table presentation; search providers continue to own matching. */
@@ -39,8 +42,8 @@ export class PaletteTableControls extends Component {
 		private readonly options: PaletteTableControlsOptions,
 	) {
 		super();
-		this.model = new PaletteTableModel(options.initialState.sorting);
-		this.model.setColumnLayout(normalizePaletteTableState(options.initialState));
+		this.model = new PaletteTableModel();
+		this.model.setState(normalizePaletteTableState(options.initialState));
 	}
 
 	onload(): void {
@@ -52,7 +55,7 @@ export class PaletteTableControls extends Component {
 			// Why: some hosts emit a pointer click after a native drag. Do not let
 			// reordering accidentally cycle sorting; keyboard activation still works.
 			if (event.detail > 0 && Date.now() - this.dragEndedAt < 250) return;
-			const column = PALETTE_TABLE_COLUMNS.find(({ id }) => id === button.dataset.column);
+			const column = this.model.columns.find(({ id }) => id === button.dataset.column);
 			if (!column) return;
 			this.model.toggleSorting(column.id);
 			this.changed();
@@ -68,7 +71,7 @@ export class PaletteTableControls extends Component {
 		});
 		this.registerDomEvent(this.panel.resultContainerEl, "dragstart", (event) => {
 			const header = this.headerAtEvent(event);
-			const column = PALETTE_TABLE_COLUMNS.find(({ id }) => id === header?.dataset.column);
+			const column = this.model.columns.find(({ id }) => id === header?.dataset.column);
 			if (!header || !column || !event.dataTransfer) return;
 			this.draggedColumn = column.id;
 			this.columnMenu?.close();
@@ -95,7 +98,7 @@ export class PaletteTableControls extends Component {
 		});
 		this.registerDomEvent(this.panel.resultContainerEl, "drop", (event) => {
 			const header = this.headerAtEvent(event);
-			const target = PALETTE_TABLE_COLUMNS.find(({ id }) => id === header?.dataset.column);
+			const target = this.model.columns.find(({ id }) => id === header?.dataset.column);
 			if (!this.draggedColumn || !header || !target) return;
 			event.preventDefault();
 			event.stopPropagation();
@@ -112,21 +115,16 @@ export class PaletteTableControls extends Component {
 	}
 
 	getState(): PaletteTableState {
-		return {
-			displayMode: "table",
-			sorting: this.model.sorting.map((sort) => ({ ...sort })),
-			...this.model.columnLayout,
-		};
+		return { displayMode: "table", ...structuredClone(this.model.state) };
 	}
 
 	setState(state: PaletteTableState): void {
-		const next = normalizePaletteTableState(state);
-		this.model.setSorting(next.sorting);
-		this.model.setColumnLayout(next);
+		this.model.setState(normalizePaletteTableState(state));
 		this.render();
 	}
 
 	setResults(results: SuggestionPanelResults<PaletteResult>): void {
+		this.model.setColumnSet(this.options.columnSet());
 		if (results.items !== this.results.items) {
 			const rows = results.items.map((result) => this.toRow(result));
 			this.rowsByResult = new Map(rows.map((row) => [row.result, row]));
@@ -137,6 +135,7 @@ export class PaletteTableControls extends Component {
 	}
 
 	private toRow(result: PaletteResult): PaletteTableRow {
+		if (result.mode === "audit") return this.toAuditRow(result);
 		const candidate =
 			"file" in result
 				? result.file
@@ -164,6 +163,29 @@ export class PaletteTableControls extends Component {
 				typeof modified === "number" && Number.isFinite(modified) ? modified : undefined,
 			prior,
 		};
+	}
+
+	private toAuditRow(result: AuditResult): PaletteTableRow {
+		const row = { result, name: result.primary };
+		switch (result.kind) {
+			case "orphaned-files":
+			case "empty-files":
+				return {
+					...row,
+					path: result.file.path,
+					size: result.size,
+					modified: result.file.stat.mtime,
+					references: result.mocOnly?.references,
+				};
+			case "broken-links":
+				return {
+					...row,
+					linkedFrom: new Set(result.sources.map(({ path }) => path)).size,
+					firstSource: result.sources[0]?.path,
+				};
+			case "empty-folders":
+				return { ...row, path: result.folderPath, foldersInside: result.foldersInside };
+		}
 	}
 
 	private render(): void {
@@ -232,17 +254,46 @@ export class PaletteTableControls extends Component {
 			// moving a column cannot leave another column's values beneath its label.
 			for (const column of visibleColumns) {
 				const cell = row.createEl("td", { attr: { "data-column": column.id } });
-				if (column.id === "name") {
-					const presentation = this.options.presentation(result);
-					renderSelectionItem({ ...presentation, description: undefined }, cell, query);
-				} else if (column.id === "path") {
-					cell.setText(data?.path ?? result.secondary);
-					cell.setAttribute("title", data?.path ?? result.secondary);
-				} else if (column.id === "modified") {
-					cell.setText(
-						data?.modified === undefined ? "—" : this.dateFormat.format(data.modified),
-					);
-				} else cell.setText(data?.prior === undefined ? "—" : String(data.prior));
+				this.renderCell(cell, column.id, result, data, query);
+			}
+		}
+	}
+
+	private renderCell(
+		cell: HTMLElement,
+		column: PaletteTableColumnId,
+		result: PaletteResult,
+		data: PaletteTableRow | undefined,
+		query: string,
+	): void {
+		switch (column) {
+			case "name": {
+				const presentation = this.options.presentation(result);
+				renderSelectionItem({ ...presentation, description: undefined }, cell, query);
+				return;
+			}
+			case "path":
+			case "firstSource": {
+				const text = data?.[column] ?? "—";
+				cell.setText(text);
+				cell.setAttribute("title", text);
+				return;
+			}
+			case "modified":
+				cell.setText(
+					data?.modified === undefined ? "—" : this.dateFormat.format(data.modified),
+				);
+				return;
+			case "size":
+				cell.setText(data?.size === undefined ? "—" : formatSize(data.size));
+				return;
+			case "prior":
+			case "linkedFrom":
+			case "foldersInside":
+			case "references": {
+				const value = data?.[column];
+				cell.setText(value === undefined ? "—" : String(value));
+				return;
 			}
 		}
 	}
@@ -252,7 +303,7 @@ export class PaletteTableControls extends Component {
 		const menu = new PaletteMenu();
 		this.columnMenu = menu;
 		const { hiddenColumns } = this.model.columnLayout;
-		for (const column of PALETTE_TABLE_COLUMNS) {
+		for (const column of this.model.columns) {
 			menu.addItem((item) =>
 				item
 					.setTitle(column.label)

@@ -14,7 +14,8 @@ export type PaletteModeId =
 	| "tabs"
 	| "plugins"
 	| "snippets"
-	| "properties";
+	| "properties"
+	| "audit";
 
 export interface PaletteModeDefinition {
 	id: PaletteModeId;
@@ -114,6 +115,15 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		subtitle: "Current note",
 		icon: ICONS.selection,
 		placeholder: "Search properties in the active note",
+	},
+	{
+		id: "audit",
+		mode: "audit",
+		title: "Vault audit",
+		subtitle: "Vault",
+		icon: ICONS.vaultAudit,
+		// Replaced by the kind shown (see auditKindChoice.ts); kept for the mode's own definition.
+		placeholder: "Search audit results",
 	},
 ];
 

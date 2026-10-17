@@ -410,3 +410,45 @@ describe("Return to Home after", () => {
 		expect(settings).not.toHaveProperty("launcher");
 	});
 });
+
+describe("audit settings", () => {
+	it("defaults to no extra exclusions with daily notes and templates excluded", () => {
+		expect(mergeSettings({}).audit).toEqual(DEFAULT_SETTINGS.audit);
+	});
+
+	it("normalizes stored folders, tags and extensions", () => {
+		const settings = mergeSettings({
+			audit: {
+				excludedFolders: ["/Archive/", "Archive", ""],
+				excludedTags: ["#draft", "draft", " ", 3],
+				excludedExtensions: [".CSV", "bad ext"],
+				excludeDailyNotesAndTemplates: false,
+				kind: "unknown-kind",
+				mocOnlyAsEmpty: true,
+				archiveFolder: "/Archive\\audit/",
+			},
+		});
+		expect(settings.audit).toEqual({
+			kind: "orphaned-files",
+			archiveFolder: "Archive/audit",
+			excludedFolders: ["Archive"],
+			excludedTags: ["draft"],
+			excludedExtensions: ["csv"],
+			excludeDailyNotesAndTemplates: false,
+			mocOnlyAsEmpty: true,
+		});
+	});
+});
+
+describe("audit mode alias", () => {
+	it("uses `a`, or moves to `audit` when another mode already uses `a`", () => {
+		expect(mergeSettings({}).modes.audit).toEqual({ alias: "a", enabled: true });
+		expect(
+			mergeSettings({ modes: { tabs: { alias: "a", enabled: true } } }).modes.audit.alias,
+		).toBe("audit");
+	});
+
+	it("keeps the stored kind", () => {
+		expect(mergeSettings({ audit: { kind: "broken-links" } }).audit.kind).toBe("broken-links");
+	});
+});

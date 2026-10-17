@@ -71,27 +71,28 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 
 コマンド名は「Open + 開くものの名前」にそろえる。`id`は名前を小文字のケバブケースにしたもの(例: 「Open outgoing link list」→ `open-outgoing-link-list`)。ObsidianのガイドラインとLintに従い、名前とidに「command」を入れない(コマンド一覧は「Open run list」)。`pnpm lint`が名前の接頭辞とidの対応を検査する(`eslint-rules/command-naming.mts`)。
 
-| 名前                        | id                            | 開くもの             |
-| --------------------------- | ----------------------------- | -------------------- |
-| Open home                   | `open-home`                   | Home                 |
-| Open note list              | `open-note-list`              | ノートのモード       |
-| Open run list               | `open-run-list`               | Run Commandモード    |
-| Open Everything list        | `open-everything-list`        | Everythingモード     |
-| Open sidebar palette        | `open-sidebar-palette`        | Sidebar palette      |
-| Open table palette          | `open-table-palette`          | Table palette        |
-| Open outgoing link list     | `open-outgoing-link-list`     | 発リンクのモード     |
-| Open backlink list          | `open-backlink-list`          | 被リンクのモード     |
-| Open bookmark list          | `open-bookmark-list`          | ブックマークのモード |
-| Open Smart Connections list | `open-smart-connections-list` | 関連ノートのモード   |
-| Open tab list               | `open-tab-list`               | タブのモード         |
-| Open plugin list            | `open-plugin-list`            | Pluginsモード        |
-| Open snippet list           | `open-snippet-list`           | Snippetsモード       |
-| Open property list          | `open-property-list`          | Propertiesモード     |
-| Open folder move selector   | `open-folder-move-selector`   | Folder move selector |
-| Open rename selector        | `open-rename-selector`        | Rename selector      |
-| Open tag insert selector    | `open-tag-insert-selector`    | Tag insert selector  |
-| Open MOC insert selector    | `open-moc-insert-selector`    | MOC insert selector  |
-| Open MOC remove selector    | `open-moc-remove-selector`    | MOC remove selector  |
+| 名前                        | id                            | 開くもの                         |
+| --------------------------- | ----------------------------- | -------------------------------- |
+| Open home                   | `open-home`                   | Home                             |
+| Open note list              | `open-note-list`              | ノートのモード                   |
+| Open run list               | `open-run-list`               | Run Commandモード                |
+| Open Everything list        | `open-everything-list`        | Everythingモード                 |
+| Open sidebar palette        | `open-sidebar-palette`        | Sidebar palette                  |
+| Open table palette          | `open-table-palette`          | Table palette                    |
+| Open outgoing link list     | `open-outgoing-link-list`     | 発リンクのモード                 |
+| Open backlink list          | `open-backlink-list`          | 被リンクのモード                 |
+| Open bookmark list          | `open-bookmark-list`          | ブックマークのモード             |
+| Open Smart Connections list | `open-smart-connections-list` | 関連ノートのモード               |
+| Open tab list               | `open-tab-list`               | タブのモード                     |
+| Open plugin list            | `open-plugin-list`            | Pluginsモード                    |
+| Open snippet list           | `open-snippet-list`           | Snippetsモード                   |
+| Open property list          | `open-property-list`          | Propertiesモード                 |
+| Open vault audit list       | `open-vault-audit-list`       | Vault auditモード(Table palette) |
+| Open folder move selector   | `open-folder-move-selector`   | Folder move selector             |
+| Open rename selector        | `open-rename-selector`        | Rename selector                  |
+| Open tag insert selector    | `open-tag-insert-selector`    | Tag insert selector              |
+| Open MOC insert selector    | `open-moc-insert-selector`    | MOC insert selector              |
+| Open MOC remove selector    | `open-moc-remove-selector`    | MOC remove selector              |
 
 - idを変えると、Obsidianのホットキー設定(`hotkeys.json`)の割り当てが外れる。改名したら、保管庫の`hotkeys.json`のキーも置き換える。
 
@@ -112,11 +113,28 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 | Plugins        | `p`        | Open plugin list            |
 | Snippets       | `sn`       | Open snippet list           |
 | Properties     | `pr`       | Open property list          |
+| Vault audit    | `a`        | Open vault audit list       |
 
 - コマンド名には「command」を入れられない(Obsidianのlint)ので、コマンド一覧だけは、モード名「Commands」とコマンド名「Open run list」が対応する。
 - Everythingは1つのモード。Obsidian-excludedがOFFならObsidianで利用できる設定済み拡張子のファイル、ONなら保管庫フォルダー内の全ファイルを検索する。従来のVault notesとAll vault filesを統合し、`esdir`は保存済み履歴の読み取りだけで扱う。
 - `sn`は`sc`と先頭が同じだが、エイリアスは`alias + Space`で照合するので共存できる。
+- Vault auditは保管庫の片付けに要るものを一覧にする。列が多いので、Open vault audit listはTable paletteで開く。種類と識別子は下の「Vault audit」の節。
 - Propertiesは現在のノートのプロパティを検索して編集する。Property value inputは、候補を選ぶSelectorではなく値を打つ入力欄なので、識別子`property-value-input`で範囲を分けず、ショートカットの範囲には入れない(Selectorの名前には`selector`を付けない)。
+
+### Vault audit
+
+計画は`docs/VAULT_AUDIT_PLAN.md`。
+
+| 正式名         | 意味                                                 | 識別子(`AuditKind`) |
+| -------------- | ---------------------------------------------------- | ------------------- |
+| Orphaned files | どのノートからもリンク・埋め込みされていないファイル | `orphaned-files`    |
+| Broken links   | リンク先のファイルが存在しないリンク                 | `broken-links`      |
+| Empty files    | 中身のないファイル。フロントマターだけのノートも含む | `empty-files`       |
+| Empty folders  | ファイルを1つも含まないフォルダー                    | `empty-folders`     |
+
+- MOC-only notes: フロントマターと`## MOC`の節しかないノート。設定「Count MOC-only notes as empty」でEmpty filesに含める(識別子`audit.mocOnlyAsEmpty`)。
+- 種類はオプションメニューの見出し「Show」の下から1つを選ぶ。設定`audit.kind`に保存し、すべての表示場所で共有する。
+- 入力欄の案内は「Search」+ 種類名の小文字(「Search orphaned files」)。今の種類はここで示す。
 
 ### 開き方の操作名
 

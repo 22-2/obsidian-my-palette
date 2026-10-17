@@ -139,6 +139,12 @@ export function getCopyablePaths(
 			relativePath: result.vaultPath,
 			absolutePath: result.absolutePath,
 		};
+	if (result.mode === "audit" && result.kind === "empty-folders")
+		return {
+			fileName: fileNameOf(result.folderPath),
+			relativePath: result.folderPath,
+			absolutePath: getVaultFullPath(app, result.folderPath) ?? undefined,
+		};
 	if (!file) return {};
 	return {
 		fileName: fileNameOf(file.path),

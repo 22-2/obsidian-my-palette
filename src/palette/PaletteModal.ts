@@ -25,6 +25,9 @@ import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryCon
 import type { PaletteRestoreState } from "src/palette/restoreState";
 import { PALETTE_HISTORY_CATEGORIES } from "src/palette/searchHistory";
 import { ignoredToggleOptions, syncIgnoredToggle } from "src/palette/ignoredToggle";
+import { createAuditKindChoice, syncAuditKindChoice } from "src/palette/auditKindChoice";
+import type { AuditKind } from "src/audit/vaultAudit";
+import type { PanelChoice } from "src/ui/panelChoice";
 import type { PanelSwitch } from "src/ui/panelSwitch";
 
 export interface PaletteModalOptions {
@@ -49,6 +52,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private activeMenu?: PaletteMenu;
 	private historyControls?: PaletteHistoryControls;
 	private ignoredToggle?: PanelSwitch;
+	private auditKindChoice?: PanelChoice<AuditKind>;
 	private mode: PaletteMode = "file";
 	private everythingScope: EverythingScope = "vault";
 	private state?: PaletteSearchState;
@@ -112,7 +116,12 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			focusInput: () => this.focusSearchInput(),
 			moveToSidebar: () => this.moveToSidebar(),
 			getSwitches: () => this.switches,
+			getChoices: () => (this.auditKindChoice ? [this.auditKindChoice] : []),
 			showHighlightOption: false,
+		});
+		this.auditKindChoice = createAuditKindChoice(this.plugin, () => {
+			this.updateMode();
+			this.refreshSuggestions();
 		});
 		this.ignoredToggle = this.addSwitch(
 			ignoredToggleOptions(this.session.current.ignoredScope, (value) => {
@@ -143,6 +152,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.historyControls?.destroy();
 		this.historyControls = undefined;
 		this.ignoredToggle = undefined;
+		this.auditKindChoice = undefined;
 	}
 
 	protected override toSelectionItem(result: PaletteResult): SelectionItem {
@@ -218,12 +228,18 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private updateMode(): void {
 		const state = this.state ?? this.session.current;
 		this.modalEl.setAttribute("data-route", state.route.kind);
-		const chrome = paletteRouteChrome(state, this.session.modeAlias, this.modeEntries);
+		const chrome = paletteRouteChrome(
+			state,
+			this.session.modeAlias,
+			this.modeEntries,
+			this.plugin.settings.audit.kind,
+		);
 		this.updatePlaceholder(chrome.placeholder);
 		this.setModeChip(chrome.chip);
 		this.modalEl.setAttribute("data-mode", this.mode);
 		this.modalEl.setAttribute("data-everything-scope", this.everythingScope);
 		syncIgnoredToggle(this.ignoredToggle, this.mode);
+		syncAuditKindChoice(this.auditKindChoice, this.mode, this.plugin.settings.audit.kind);
 	}
 
 	protected override sectionOf(result: PaletteResult): string | undefined {

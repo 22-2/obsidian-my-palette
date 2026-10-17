@@ -117,6 +117,11 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		callback: () => openWithHome(`${plugin.settings.modes.properties.alias} `),
 	});
 	plugin.addCommand({
+		id: "open-vault-audit-list",
+		name: "Open vault audit list",
+		callback: () => void plugin.paletteOpener.openAuditTable(),
+	});
+	plugin.addCommand({
 		id: "open-tag-insert-selector",
 		name: "Open tag insert selector",
 		checkCallback: (checking) => {

@@ -1,4 +1,5 @@
 import { Notice, TFile, type App, type WorkspaceLeaf } from "obsidian";
+import { emptinessBadge, noteEmptiness } from "src/audit/noteEmptiness";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import type MyPalettePlugin from "src/main";
 import type { FileResult } from "src/palette/results";
@@ -463,6 +464,8 @@ class MocUnlinkModal extends MocRelatedsModal {
 		protected readonly plugin: MyPalettePlugin,
 		private readonly notes: readonly TFile[],
 		mocFile: TFile,
+		/** Marks notes that are empty or hold only their MOC; Vault audit judges them the same way. */
+		private readonly badges: ReadonlyMap<string, string | undefined> = new Map(),
 	) {
 		super(
 			{
@@ -499,7 +502,12 @@ class MocUnlinkModal extends MocRelatedsModal {
 		return matched.map((file) => ({
 			key: file.path,
 			value: file.path,
-			item: { label: file.basename, description: file.path, value: file.path },
+			item: {
+				label: file.basename,
+				description: file.path,
+				value: file.path,
+				badge: this.badges.get(file.path),
+			},
 		}));
 	}
 }
@@ -522,7 +530,17 @@ export async function removeLinkInMocRelateds(plugin: MyPalettePlugin): Promise<
 		return;
 	}
 
-	const modal = new MocUnlinkModal(plugin, notes, mocFile);
+	// Why: a hub of blank notes is tidied in two ways: written notes leave the hub here, while
+	// notes still empty go to the trash from Vault audit. The marks tell the two apart.
+	const badges = new Map(
+		await Promise.all(
+			notes.map(
+				async (file) =>
+					[file.path, emptinessBadge(await noteEmptiness(plugin.app, file))] as const,
+			),
+		),
+	);
+	const modal = new MocUnlinkModal(plugin, notes, mocFile, badges);
 	const paths = await modal.openAndWait();
 	if (!paths?.length) return;
 	const targets = notes.filter((file) => paths.includes(file.path));

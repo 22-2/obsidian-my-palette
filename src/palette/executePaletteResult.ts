@@ -1,7 +1,8 @@
 import type { TFile, WorkspaceLeaf } from "obsidian";
+import { revealInFileExplorer } from "src/platform/obsidianInternals";
 import { openFileInLeaf } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
-import type { PaletteResult } from "src/palette/results";
+import type { AuditResult, PaletteResult } from "src/palette/results";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
 import { openInExternalEditor } from "src/platform/externalOpen";
 import { editPropertyResult } from "src/properties/propertyActions";
@@ -93,6 +94,10 @@ export async function executePaletteResult(
 		finish(options);
 		return;
 	}
+	if (result.mode === "audit") {
+		if (await executeAuditResult(plugin, result, action, options)) finish(options);
+		return;
+	}
 	if (result.mode === "plugin" || result.mode === "snippet") {
 		// Why: plugin folders and snippet files have no Obsidian view; Enter hands
 		// them to the external editor like the quick-open flow did.
@@ -152,6 +157,44 @@ async function executeBookmark(
 	if (!result.file) return false;
 	await openFileResult(plugin, result.file, action, options);
 	return true;
+}
+
+/** Opens what an audit row points at; returns false when it no longer exists. */
+async function executeAuditResult(
+	plugin: MyPalettePlugin,
+	result: AuditResult,
+	action: ActionKind,
+	options: PaletteResultExecutionOptions,
+): Promise<boolean> {
+	const { vault } = plugin.app;
+	switch (result.kind) {
+		case "orphaned-files":
+		case "empty-files":
+			await openFileResult(plugin, result.file, action, options);
+			return true;
+		case "broken-links": {
+			// Why: the missing target cannot be opened, so go to where the link is written.
+			const [source] = result.sources;
+			const file = source ? vault.getFileByPath(source.path) : null;
+			if (!source || !file) {
+				options.showError("The note with this link no longer exists.");
+				return false;
+			}
+			const leaf = await openFileResult(plugin, file, action, options);
+			if (source.line !== undefined) editorOf(leaf)?.setCursor({ line: source.line, ch: 0 });
+			return true;
+		}
+		case "empty-folders": {
+			const folder = vault.getFolderByPath(result.folderPath);
+			if (!folder) {
+				options.showError("The folder no longer exists.");
+				return false;
+			}
+			if (revealInFileExplorer(plugin.app, folder)) return true;
+			options.showError("Enable Obsidian's file explorer core plugin to show the folder.");
+			return false;
+		}
+	}
 }
 
 async function openFileResult(

@@ -1,5 +1,7 @@
+import { isAuditKind } from "src/audit/vaultAudit";
 import type { PaletteModeId } from "src/palette/modes";
 import type {
+	AuditSettings,
 	IntegrationSettings,
 	ModeSettingsMap,
 	MyPaletteSettings,
@@ -48,6 +50,17 @@ export function excludedFolders(value: unknown): string[] {
 		.filter((item): item is string => typeof item === "string")
 		.map((item) => item.trim().replace(/\\/g, "/").replace(/^\/+/, "").replace(/\/+$/, ""))
 		.filter((item) => item.length > 0 && item !== "/" && !item.startsWith(".."));
+	return [...new Set(normalized)];
+}
+
+/** Tags without `#`, from a stored list or from text separated by commas, spaces or lines. */
+export function tagList(value: unknown): string[] {
+	if (typeof value === "string") value = value.split(/[\s,]+/);
+	if (!Array.isArray(value)) return [];
+	const normalized = value
+		.filter((tag): tag is string => typeof tag === "string")
+		.map((tag) => tag.trim().replace(/^#/, ""))
+		.filter((tag) => tag.length > 0);
 	return [...new Set(normalized)];
 }
 
@@ -167,6 +180,34 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 			),
 			vaultExtensions: extensions(rawEverything.vaultExtensions),
 		},
+		audit: normalizeAudit(source),
+	};
+}
+
+function normalizeAudit(source: Record<string, unknown>): AuditSettings {
+	const raw =
+		source.audit && typeof source.audit === "object"
+			? (source.audit as Record<string, unknown>)
+			: {};
+	return {
+		kind: isAuditKind(raw.kind) ? raw.kind : DEFAULT_SETTINGS.audit.kind,
+		archiveFolder:
+			excludedFolders(typeof raw.archiveFolder === "string" ? [raw.archiveFolder] : [])[0] ??
+			"",
+		excludedFolders: excludedFolders(raw.excludedFolders),
+		excludedTags: tagList(raw.excludedTags),
+		// Why: unlike Everything's list, an empty list is the default here, not a missing value.
+		excludedExtensions: Array.isArray(raw.excludedExtensions)
+			? extensions(raw.excludedExtensions)
+			: [],
+		excludeDailyNotesAndTemplates:
+			typeof raw.excludeDailyNotesAndTemplates === "boolean"
+				? raw.excludeDailyNotesAndTemplates
+				: DEFAULT_SETTINGS.audit.excludeDailyNotesAndTemplates,
+		mocOnlyAsEmpty:
+			typeof raw.mocOnlyAsEmpty === "boolean"
+				? raw.mocOnlyAsEmpty
+				: DEFAULT_SETTINGS.audit.mocOnlyAsEmpty,
 	};
 }
 
@@ -265,6 +306,16 @@ function normalizeModes(source: Record<string, unknown>): ModeSettingsMap {
 			DEFAULT_SETTINGS.modes.properties.alias,
 			"properties",
 			"properties",
+			modeIds,
+			modes,
+		);
+	}
+	// Vault audit arrived after Properties; a user may already type `a` for another mode.
+	if (!rawModes.audit) {
+		modes.audit.alias = unusedAlias(
+			DEFAULT_SETTINGS.modes.audit.alias,
+			"audit",
+			"audit",
 			modeIds,
 			modes,
 		);

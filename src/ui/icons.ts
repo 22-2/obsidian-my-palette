@@ -15,6 +15,7 @@ export const ICONS = {
 	openInExternalEditor: "code",
 	showInSystemExplorer: "folder-open",
 	openInTerminal: "terminal",
+	revealInFileExplorer: "folder-open",
 	openSettings: "settings",
 	openNewPalette: "plus",
 	moveToSidebar: "panel-right",
@@ -29,6 +30,7 @@ export const ICONS = {
 	rename: "pencil-line",
 	reset: "rotate-ccw",
 	delete: "trash-2",
+	archive: "archive",
 	copy: "copy",
 	move: "folder-input",
 	editProperties: "text-cursor-input",
@@ -84,6 +86,10 @@ export const ICONS = {
 	tab: "panel-top",
 	plugin: "puzzle",
 	snippet: "paintbrush",
+	vaultAudit: "scan-search",
+	orphanedFile: "file-question",
+	brokenLink: "unlink",
+	emptyFolder: "folder-x",
 
 	// Kinds of property value
 	text: "text",

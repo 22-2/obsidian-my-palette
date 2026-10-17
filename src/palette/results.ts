@@ -1,4 +1,5 @@
 import type { TFile } from "obsidian";
+import type { BrokenLinkSource } from "src/audit/vaultAudit";
 import type { PaletteModeId } from "src/palette/modes";
 import type { BookmarkEntry } from "src/search/bookmark/bookmarks";
 import type { SearchHistoryEntry } from "src/settings/model";
@@ -14,7 +15,8 @@ export type PaletteMode =
 	| "tab"
 	| "plugin"
 	| "snippet"
-	| "property";
+	| "property"
+	| "audit";
 export type EverythingScope = "vault" | "directory";
 
 export interface ParsedInput {
@@ -156,6 +158,35 @@ export function propertyTargetPaths(result: PropertyResult): readonly string[] {
 	return result.sourcePaths ?? [result.sourcePath];
 }
 
+interface AuditResultBase extends BaseResult {
+	mode: "audit";
+}
+
+/** An orphaned or empty file in Vault audit. */
+export interface AuditFileResult extends AuditResultBase {
+	kind: "orphaned-files" | "empty-files";
+	file: TFile;
+	size: number;
+	/** Empty files only: a note holding nothing but its MOC section. */
+	mocOnly?: { references: number };
+}
+
+/** A link target that does not exist, with every note that links to it. */
+export interface AuditBrokenLinkResult extends AuditResultBase {
+	kind: "broken-links";
+	link: string;
+	sources: readonly BrokenLinkSource[];
+}
+
+/** The topmost folder of an empty folder tree. */
+export interface AuditFolderResult extends AuditResultBase {
+	kind: "empty-folders";
+	folderPath: string;
+	foldersInside: number;
+}
+
+export type AuditResult = AuditFileResult | AuditBrokenLinkResult | AuditFolderResult;
+
 export type PaletteResult =
 	| FileResult
 	| CommandResult
@@ -168,6 +199,7 @@ export type PaletteResult =
 	| PluginResult
 	| SnippetResult
 	| PropertyResult
+	| AuditResult
 	| ModeEntryResult;
 
 /**
@@ -197,6 +229,7 @@ export function getResultFilePath(result: PaletteResult): string | undefined {
 		case "plugin":
 		case "snippet":
 		case "property":
+		case "audit":
 		case "search-history":
 		case "mode-entry":
 			return undefined;

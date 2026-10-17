@@ -65,8 +65,9 @@ describe("matchPaletteModes", () => {
 
 	test("lists Plugins after Tabs and enters it by alias", () => {
 		const order = ids("");
-		expect(order.at(-2)).toBe("snippets");
-		expect(order.at(-1)).toBe("properties");
+		expect(order.at(-3)).toBe("snippets");
+		expect(order.at(-2)).toBe("properties");
+		expect(order.at(-1)).toBe("audit");
 		expect(order.indexOf("tabs")).toBeLessThan(order.indexOf("plugins"));
 		expect(order.indexOf("plugins")).toBeLessThan(order.indexOf("snippets"));
 		expect(parseDirectModeEntry("pr status", modes)).toEqual({

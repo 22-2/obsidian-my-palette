@@ -208,3 +208,79 @@ describe("normalizePaletteTableState", () => {
 		});
 	});
 });
+
+describe("column sets", () => {
+	it("shows each set's own columns and keeps each set's sorting and layout", () => {
+		const model = new PaletteTableModel([{ id: "modified", desc: true }]);
+		model.toggleColumnVisibility("prior");
+		model.setColumnSet("broken-links");
+		expect(model.visibleColumns.map(({ id, label }) => [id, label])).toEqual([
+			["name", "Link"],
+			["linkedFrom", "Linked from"],
+			["firstSource", "First source"],
+		]);
+		expect(model.sorting).toEqual([]);
+		model.toggleSorting("linkedFrom");
+		// A column of another set is not sortable here.
+		model.toggleSorting("prior");
+		expect(model.sorting).toEqual([{ id: "linkedFrom", desc: true }]);
+
+		model.setColumnSet("files");
+		expect(model.sorting).toEqual([{ id: "modified", desc: true }]);
+		expect(model.columnLayout.hiddenColumns).toEqual(["prior"]);
+		model.setColumnSet("broken-links");
+		expect(model.sorting).toEqual([{ id: "linkedFrom", desc: true }]);
+	});
+
+	it("saves the files set at the top level and the shown sets under columnSets", () => {
+		const model = new PaletteTableModel();
+		expect(model.state).not.toHaveProperty("columnSets");
+		model.setColumnSet("empty-folders");
+		model.moveColumn("foldersInside", "name", "before");
+		expect(model.state).toEqual({
+			sorting: [],
+			columnOrder: ["name", "path", "modified", "prior"],
+			hiddenColumns: [],
+			columnSets: {
+				"empty-folders": {
+					sorting: [],
+					columnOrder: ["foldersInside", "name", "path"],
+					hiddenColumns: [],
+				},
+			},
+		});
+
+		const restored = new PaletteTableModel();
+		restored.setState(model.state);
+		restored.setColumnSet("empty-folders");
+		expect(restored.visibleColumns.map(({ id }) => id)).toEqual([
+			"foldersInside",
+			"name",
+			"path",
+		]);
+	});
+
+	it("normalizes stored sets and drops columns a set does not have", () => {
+		expect(
+			normalizePaletteTableState({
+				columnSets: {
+					"orphaned-files": {
+						sorting: [
+							{ id: "size", desc: true },
+							{ id: "prior", desc: true },
+						],
+						columnOrder: ["size", "prior"],
+						hiddenColumns: ["modified", "linkedFrom"],
+					},
+					removed: { sorting: [] },
+				},
+			}).columnSets,
+		).toEqual({
+			"orphaned-files": {
+				sorting: [{ id: "size", desc: true }],
+				columnOrder: ["size", "name", "path", "modified"],
+				hiddenColumns: ["modified"],
+			},
+		});
+	});
+});
