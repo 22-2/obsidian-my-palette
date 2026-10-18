@@ -222,7 +222,7 @@ class MocTargetModal extends MocRelatedsModal {
 			{
 				// このセレクターはアクティブな MOC にリンクするノートを選ぶので、挿入先を説明する。
 				placeholder: t("moc.placeholder.insert"),
-				contextLabel: t("moc.source", { path: activeFile.path }),
+				contextLabel: t("view.source", { source: activeFile.path }),
 				actionLabel: t("moc.action.insert"),
 				controls: {
 					plugin,
@@ -467,7 +467,7 @@ class MocUnlinkModal extends MocRelatedsModal {
 		super(
 			{
 				placeholder: t("moc.placeholder.remove"),
-				contextLabel: t("moc.source", { path: mocFile.path }),
+				contextLabel: t("view.source", { source: mocFile.path }),
 				actionLabel: t("moc.action.remove"),
 				controls: {
 					plugin,
