@@ -1,7 +1,7 @@
 import type { TFile } from "obsidian";
 import fuzzysort from "fuzzysort";
 import { matchingTags } from "src/search/file/fileTags";
-import { foldKana } from "src/search/kana";
+import { matchPreparer } from "src/search/kana";
 import { positiveQueryTerms } from "src/search/query/searchQuery";
 import {
 	fuzzyMatchCoverage,
@@ -140,7 +140,7 @@ export function createFileMatch(
 	const { obj, score, fieldScores } = match;
 	// Why: 検索本体と同じ形の文字列で数え直す。そうしないと、ひらがなで見つけたファイルの
 	// 一致の強さや一致したタグが、0 や空に見えてしまう。
-	const prepare = options.foldKana ? foldKana : (value: string) => value;
+	const prepare = matchPreparer(options.foldKana);
 	const preparedQuery = prepare(query);
 	const matchedTags = matchingTags(obj.tags, query, prepare);
 	const terms = positiveQueryTerms(preparedQuery);

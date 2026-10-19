@@ -10,3 +10,11 @@ export function foldKana(value: string): string {
 		String.fromCharCode(char.charCodeAt(0) + HIRAGANA_TO_KATAKANA_OFFSET),
 	);
 }
+
+/**
+ * 照合の前にクエリと検索対象へかける変換を返す。オプションがオフのときは何もしない。
+ * 照合の入口はすべてこれを使い、変換の決まりを1か所に置く。
+ */
+export function matchPreparer(foldKanaEnabled: boolean | undefined): (value: string) => string {
+	return foldKanaEnabled ? foldKana : (value) => value;
+}

@@ -1,5 +1,5 @@
 import fuzzysort from "fuzzysort";
-import { foldKana } from "src/search/kana";
+import { matchPreparer } from "src/search/kana";
 import {
 	parseSearchQuery,
 	positiveTermBranches,
@@ -177,7 +177,7 @@ export function searchFuzzyQueryWithFieldScores<T>(
 	options: FuzzyQueryOptions = {},
 ): FuzzyQueryFieldMatch<T>[] {
 	// Why: 変換は入口で一度だけかける。以降の照合は、クエリと値の両方が同じ形の文字列を比べる。
-	const prepare = options.foldKana ? foldKana : (value: string) => value;
+	const prepare = matchPreparer(options.foldKana);
 	const node = parseSearchQuery(prepare(query));
 	if (!node)
 		return items.map((obj) => ({ obj, score: 0, fieldScores: keys.map(() => undefined) }));
