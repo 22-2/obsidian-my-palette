@@ -38,6 +38,7 @@ export const ICONS = {
 	mutualLinks: "arrow-left-right",
 	regex: "regex",
 	matchCase: "case-sensitive",
+	kana: "languages",
 	replaceAll: "replace-all",
 	addBookmark: "bookmark-plus",
 	removeBookmark: "bookmark-minus",

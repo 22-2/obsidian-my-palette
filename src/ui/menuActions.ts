@@ -139,6 +139,11 @@ export const MENU_ACTIONS = {
 		icon: ICONS.highlight,
 		id: "highlight-search-matches",
 	},
+	foldKana: {
+		title: t("menu.foldKana"),
+		icon: ICONS.kana,
+		id: "fold-kana",
+	},
 	moveToRightSidebar: {
 		title: t("menu.moveToRightSidebar"),
 		icon: ICONS.moveToSidebar,

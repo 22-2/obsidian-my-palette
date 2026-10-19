@@ -41,12 +41,16 @@ export function isTagOnlyQuery(query: string): boolean {
  * 2行目の結果のために、現在のクエリに寄与したタグを返す。あいまい一致はファイル検索と同じ。
  * ハッシュの後が空なら、`#` だけでタグ付きのノートを一覧にできる簡便な方法になる。
  */
-export function matchingTags(tags: readonly string[], query: string): string[] {
-	const terms = positiveQueryTerms(query);
+export function matchingTags(
+	tags: readonly string[],
+	query: string,
+	prepare: (value: string) => string = (value) => value,
+): string[] {
+	const terms = positiveQueryTerms(prepare(query));
 	return tags.filter((tag) =>
 		terms.some((term) => {
 			const needle = term.startsWith("#") ? term.slice(1) : term;
-			const candidate = tag.startsWith("#") ? tag.slice(1) : tag;
+			const candidate = prepare(tag.startsWith("#") ? tag.slice(1) : tag);
 			return needle.length === 0 || fuzzysort.single(needle, candidate) !== null;
 		}),
 	);

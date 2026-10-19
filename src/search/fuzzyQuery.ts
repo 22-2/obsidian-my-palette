@@ -1,4 +1,5 @@
 import fuzzysort from "fuzzysort";
+import { foldKana } from "src/search/kana";
 import {
 	parseSearchQuery,
 	positiveTermBranches,
@@ -159,6 +160,11 @@ export function fuzzyMatchCoverage(query: string, values: readonly string[]): nu
 	}, 0);
 }
 
+export interface FuzzyQueryOptions {
+	/** ひらがなとカタカナを同じ文字として扱う。クエリと検索対象の両方に同じ変換をかける。 */
+	foldKana?: boolean;
+}
+
 /**
  * 検索しつつ、各キーの寄与を保持する。ファイル名とエイリアスのように、そうしないと区別できない
  * 一致を、呼び出し元が見分けるために使う。正の項がないクエリは入力の順序を保つので、除外だけが、
@@ -168,8 +174,11 @@ export function searchFuzzyQueryWithFieldScores<T>(
 	query: string,
 	items: readonly T[],
 	keys: readonly ((item: T) => string)[],
+	options: FuzzyQueryOptions = {},
 ): FuzzyQueryFieldMatch<T>[] {
-	const node = parseSearchQuery(query);
+	// Why: 変換は入口で一度だけかける。以降の照合は、クエリと値の両方が同じ形の文字列を比べる。
+	const prepare = options.foldKana ? foldKana : (value: string) => value;
+	const node = parseSearchQuery(prepare(query));
 	if (!node)
 		return items.map((obj) => ({ obj, score: 0, fieldScores: keys.map(() => undefined) }));
 
@@ -177,7 +186,7 @@ export function searchFuzzyQueryWithFieldScores<T>(
 		.flatMap((obj) => {
 			const match = matchNode(
 				node,
-				keys.map((key) => key(obj)),
+				keys.map((key) => prepare(key(obj))),
 			);
 			return match ? [{ obj, ...match }] : [];
 		})
@@ -189,8 +198,9 @@ export function searchFuzzyQuery<T>(
 	query: string,
 	items: readonly T[],
 	keys: readonly ((item: T) => string)[],
+	options: FuzzyQueryOptions = {},
 ): FuzzyQueryMatch<T>[] {
-	return searchFuzzyQueryWithFieldScores(query, items, keys).map(({ obj, score }) => ({
+	return searchFuzzyQueryWithFieldScores(query, items, keys, options).map(({ obj, score }) => ({
 		obj,
 		score,
 	}));

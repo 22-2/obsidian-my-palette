@@ -39,6 +39,8 @@ interface ProviderFactoryOptions {
 	fileSortPriorities: () => FileSortPriorities;
 	excludedFolders?: ExcludedFolderSource;
 	demotedPriorFolders?: ExcludedFolderSource;
+	/** ファイル検索で、ひらがなとカタカナを同じ文字として扱うかどうか。 */
+	foldKana?: () => boolean;
 	recentCommandIds: () => string[];
 	everythingSettings: () => MyPaletteSettings["everything"];
 	/** Vault 監査は対象の種類と除外設定を読み、このプラグインの除外フォルダーも使う。 */
@@ -65,6 +67,7 @@ export function createPaletteProviders(
 		options.fileUsageHistory,
 		excludedFolders,
 		options.demotedPriorFolders,
+		options.foldKana,
 	);
 	const commandProvider = new CommandProvider(app, options.recentCommandIds);
 	const everythingProvider = new EverythingProvider(

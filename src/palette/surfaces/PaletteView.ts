@@ -521,6 +521,7 @@ export class PaletteView extends ItemView {
 			getSwitches: () => this.panel?.switchList ?? [],
 			getChoices: () => (this.auditKindChoice ? [this.auditKindChoice] : []),
 			showHighlightOption: false,
+			showKanaOption: true,
 		});
 	}
 

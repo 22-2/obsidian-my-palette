@@ -1,6 +1,7 @@
 import type { TFile } from "obsidian";
 import fuzzysort from "fuzzysort";
 import { matchingTags } from "src/search/file/fileTags";
+import { foldKana } from "src/search/kana";
 import { positiveQueryTerms } from "src/search/query/searchQuery";
 import {
 	fuzzyMatchCoverage,
@@ -54,6 +55,8 @@ export interface FileSearchEntry extends SortableFileEntry {
 export interface FileMatchOptions {
 	tagOnlyQuery: boolean;
 	usesMatchCoverage: boolean;
+	/** 検索と同じく、ひらがなとカタカナを同じ文字として数える。 */
+	foldKana?: boolean;
 }
 
 // 候補の生成とシグナルの取り出しは、この記述子を共有する。項目を足したり並べ替えたりしても、
@@ -135,21 +138,26 @@ export function createFileMatch(
 	options: FileMatchOptions,
 ): FileMatch<FileSearchEntry> {
 	const { obj, score, fieldScores } = match;
-	const matchedTags = matchingTags(obj.tags, query);
-	const terms = positiveQueryTerms(query);
+	// Why: 検索本体と同じ形の文字列で数え直す。そうしないと、ひらがなで見つけたファイルの
+	// 一致の強さや一致したタグが、0 や空に見えてしまう。
+	const prepare = options.foldKana ? foldKana : (value: string) => value;
+	const preparedQuery = prepare(query);
+	const matchedTags = matchingTags(obj.tags, query, prepare);
+	const terms = positiveQueryTerms(preparedQuery);
 	const matchedKeywords = options.tagOnlyQuery
 		? []
 		: obj.keywords.filter((keyword) =>
-				terms.some((term) => fuzzysort.single(term, keyword) !== null),
+				terms.some((term) => fuzzysort.single(term, prepare(keyword)) !== null),
 			);
 	// 互換用の `text` キーではなく、元の値を数える。`text` はファイル名・パス・別名・キーワードを
 	// 繰り返すので、順位を人為的に押し上げてしまうため。
 	const searchableValues = options.tagOnlyQuery
 		? obj.tags
 		: [obj.basename, obj.path, ...obj.aliases, ...obj.tags, ...obj.keywords];
-	const contiguousMatch = hasContiguousQueryMatch(query, searchableValues);
+	const preparedValues = searchableValues.map(prepare);
+	const contiguousMatch = hasContiguousQueryMatch(preparedQuery, preparedValues);
 	const matchCoverage = options.usesMatchCoverage
-		? fuzzyMatchCoverage(query, searchableValues)
+		? fuzzyMatchCoverage(preparedQuery, preparedValues)
 		: undefined;
 
 	return {

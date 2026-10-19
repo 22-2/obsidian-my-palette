@@ -28,6 +28,7 @@ export type PaletteControlsPlugin = Pick<
 	| "paletteDisplaySettings"
 	| "getSearchHistorySuggestions"
 	| "clearSearchHistoryCategories"
+	| "saveSettings"
 >;
 
 interface PaletteHistoryControlsOptions {
@@ -55,6 +56,8 @@ interface PaletteHistoryControlsOptions {
 	 * この設定はセレクター向けで、変更できるのはそのメニューだけだから。
 	 */
 	showHighlightOption?: boolean;
+	/** メニューに「ひらがなとカタカナを区別しない」を出すかどうか。既定は出さない。パレット本体だけが出す。 */
+	showKanaOption?: boolean;
 }
 
 /** 両方のパレットの外枠で共有する、検索履歴とオプションの操作。 */
@@ -233,8 +236,9 @@ export class PaletteHistoryControls {
 		// 各項目は開いたままにし、続けていくつも切り替えられるようにする。
 		const switches = (this.options.getSwitches?.() ?? []).filter(({ isHidden }) => !isHidden);
 		const offersHighlight = this.options.showHighlightOption !== false;
+		const offersKana = this.options.showKanaOption === true;
 		// Why: 中身のない見出しは、ただのノイズになる。
-		if (switches.length > 0 || offersHighlight)
+		if (switches.length > 0 || offersHighlight || offersKana)
 			menu.addHeading(t("palette.control.optionsHeading"));
 		for (const toggle of switches) {
 			menu.addItem((item) =>
@@ -267,6 +271,20 @@ export class PaletteHistoryControls {
 										.highlightSearchMatches,
 								),
 							);
+					}),
+			);
+		if (offersKana)
+			menu.addItem((item) =>
+				withAction(item, MENU_ACTIONS.foldKana)
+					.setSwitch(plugin.settings.file.foldKana)
+					.setKeepOpen()
+					.onClick(() => {
+						plugin.settings.file.foldKana = !plugin.settings.file.foldKana;
+						void plugin.saveSettings().then(() => {
+							item.setSwitch(plugin.settings.file.foldKana);
+							// Why: 入力し直したときと同じ経路で、結果を検索し直させる。
+							this.options.inputEl.dispatchEvent(new Event("input"));
+						});
 					}),
 			);
 		// Why: 項目の種類ごとに独自のグループを持たせる。オプション、この画面の操作、ヘルプ、

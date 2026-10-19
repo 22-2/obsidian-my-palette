@@ -288,6 +288,7 @@
 	"menu.useSearch": "この検索を使う",
 	"menu.clearChanges": "変更を取り消す",
 	"menu.highlightSearchMatches": "検索の一致を強調",
+	"menu.foldKana": "ひらがなとカタカナを区別しない",
 	"menu.moveToRightSidebar": "右サイドバーへ移動",
 	"menu.help": "ヘルプ",
 	"hotkey.disabled": "無効",

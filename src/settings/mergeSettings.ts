@@ -140,6 +140,10 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 			sortPriorities,
 			excludedFolders: excludedFolders(rawFile.excludedFolders),
 			demotedPriorFolders,
+			foldKana:
+				typeof rawFile.foldKana === "boolean"
+					? rawFile.foldKana
+					: DEFAULT_SETTINGS.file.foldKana,
 		},
 		everything: {
 			httpUrl:

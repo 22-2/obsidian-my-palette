@@ -313,6 +313,8 @@ export interface MyPaletteSettings {
 		sortPriorities: FileSortPriorities;
 		excludedFolders: string[];
 		demotedPriorFolders: string[];
+		/** ファイル検索で、ひらがなとカタカナを同じ文字として扱う。オプションのメニューで切り替える。 */
+		foldKana: boolean;
 	};
 	everything: {
 		httpUrl: string;
@@ -377,6 +379,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		excludedFolders: [],
 		// フォルダーの優先度低下はフロントマターとは別に保ち、ユーザーが順位の位置を選べるようにする。
 		demotedPriorFolders: [],
+		foldKana: false,
 	},
 	everything: {
 		httpUrl: "http://127.0.0.1:51361/",

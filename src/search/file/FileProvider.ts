@@ -60,6 +60,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		private readonly usageHistory?: FileUsageScoreSource,
 		private readonly excludedFolders: ExcludedFolderSource = EMPTY_EXCLUDED_FOLDER_SOURCE,
 		private readonly demotedPriorFolders: () => readonly string[] = () => [],
+		private readonly foldKana: () => boolean = () => false,
 	) {
 		this.updateAllowedExtensions();
 		this.rebuild();
@@ -197,13 +198,17 @@ export class FileProvider implements PaletteProvider<FileResult> {
 				entries.push(entry);
 			}
 		}
+		const matchOptions = { foldKana: this.foldKana() };
 		if (!hasPositiveQueryTerms(query)) {
 			// 空の検索と入力した検索は、閲覧の目的が違う。そのため、それぞれが検索時に独自の優先度の
 			// 並びを読み、設定の編集をすぐ反映できるようにする。除外だけのクエリは、順位付けの
 			// 手がかりがないので、残りのものを空のクエリの並びで閲覧する。
-			const remaining = searchFuzzyQuery(query, entries, fileSearchKeys(false)).map(
-				({ obj }) => obj,
-			);
+			const remaining = searchFuzzyQuery(
+				query,
+				entries,
+				fileSearchKeys(false),
+				matchOptions,
+			).map(({ obj }) => obj);
 			const files = sortFilesWithoutQuery(
 				remaining,
 				recent,
@@ -226,7 +231,10 @@ export class FileProvider implements PaletteProvider<FileResult> {
 			query,
 			candidates,
 			fileSearchKeys(tagOnlyQuery),
-		).map((match) => createFileMatch(match, query, { tagOnlyQuery, usesMatchCoverage }));
+			matchOptions,
+		).map((match) =>
+			createFileMatch(match, query, { tagOnlyQuery, usesMatchCoverage, ...matchOptions }),
+		);
 		const matchesByPath = new Map(matches.map((match) => [match.obj.path, match]));
 		return sortFileMatches(
 			matches,

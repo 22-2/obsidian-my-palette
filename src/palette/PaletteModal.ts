@@ -122,6 +122,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			getSwitches: () => this.switches,
 			getChoices: () => (this.auditKindChoice ? [this.auditKindChoice] : []),
 			showHighlightOption: false,
+			showKanaOption: true,
 		});
 		this.auditKindChoice = createAuditKindChoice(this.plugin, () => {
 			this.updateMode();
