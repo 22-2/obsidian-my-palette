@@ -2,6 +2,7 @@ import { App, setIcon } from "obsidian";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 import { BaseSuggestModal, type SuggestModalProps } from "src/ui/baseSuggestModal";
 import { matchedQueryIndexes } from "src/ui/queryHighlight";
+import { matchPreparer } from "src/search/kana";
 
 export interface SelectionItem {
 	label: string;
@@ -14,11 +15,17 @@ export interface SelectionItem {
 	value?: unknown;
 }
 
+/** 行の強調の設定。検索でひらがなとカタカナを同じ文字として扱うなら、強調も同じように扱う。 */
+export interface SelectionHighlightOptions {
+	foldKana?: boolean;
+}
+
 /** SuggestModal の外枠を必要とせずに、選択の行を描く。 */
 export function renderSelectionItem(
 	result: SelectionItem,
 	container: HTMLElement,
 	query = "",
+	highlight: SelectionHighlightOptions = {},
 ): void {
 	const row = container.createDiv("my-palette-suggestion");
 	if (result.icon) {
@@ -28,7 +35,7 @@ export function renderSelectionItem(
 	const body = row.createDiv("my-palette-suggestion__body");
 	const main = body.createDiv("my-palette-suggestion__main");
 	const label = main.createSpan("my-palette-suggestion__label");
-	renderMatchedLabel(label, result.label, query);
+	renderMatchedLabel(label, result.label, query, matchPreparer(highlight.foldKana));
 	if (result.description) {
 		const description = main.createSpan({
 			cls: "my-palette-suggestion__description",
@@ -77,7 +84,12 @@ export class SelectionModal<T> extends BaseSuggestModal<T> {
 
 	renderSuggestion(item: T, el: HTMLElement): void {
 		const result = this.toSelectionItem(item);
-		renderSelectionItem(result, el, this.query);
+		renderSelectionItem(result, el, this.query, this.highlightOptions());
+	}
+
+	/** 行の強調の設定。検索と同じ設定を持つ画面だけが上書きする。 */
+	protected highlightOptions(): SelectionHighlightOptions {
+		return {};
 	}
 
 	protected toSelectionItem(item: T): SelectionItem {
@@ -86,8 +98,13 @@ export class SelectionModal<T> extends BaseSuggestModal<T> {
 	}
 }
 
-function renderMatchedLabel(container: HTMLElement, text: string, query: string): void {
-	const indexes = new Set(matchedQueryIndexes(text, query));
+function renderMatchedLabel(
+	container: HTMLElement,
+	text: string,
+	query: string,
+	prepare: (value: string) => string,
+): void {
+	const indexes = new Set(matchedQueryIndexes(text, query, prepare));
 	if (indexes.size === 0) {
 		container.createSpan({ text });
 		return;

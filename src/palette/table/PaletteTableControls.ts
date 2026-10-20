@@ -20,6 +20,8 @@ import { t } from "src/i18n";
 interface PaletteTableControlsOptions {
 	initialState: PaletteTableState;
 	presentation: (result: PaletteResult) => SelectionItem;
+	/** 名前の列の強調で、ひらがなとカタカナを同じ文字として扱うかどうか。 */
+	foldKana: () => boolean;
 	onChange: (state: PaletteTableState) => void;
 	/** 現在の結果に必要な列。新しい結果が届くたびに読む。 */
 	columnSet: () => PaletteTableColumnSetId;
@@ -272,7 +274,9 @@ export class PaletteTableControls extends Component {
 		switch (column) {
 			case "name": {
 				const presentation = this.options.presentation(result);
-				renderSelectionItem({ ...presentation, description: undefined }, cell, query);
+				renderSelectionItem({ ...presentation, description: undefined }, cell, query, {
+					foldKana: this.options.foldKana(),
+				});
 				return;
 			}
 			case "path":

@@ -10,12 +10,18 @@ interface BranchHighlight {
 /**
  * 最も情報量のあるクエリの分岐が一致させた、ラベルの位置を返す。
  * 検索と同じ解析済みのクエリを読むので、演算子や除外された語が、リテラルの文字のように強調されることはない。
+ * `prepare` は検索と同じ変換で、ラベルと語の両方にかける。変換は文字数を変えないので、返す位置は元のラベルにそのまま使える。
  */
-export function matchedQueryIndexes(text: string, query: string): readonly number[] {
+export function matchedQueryIndexes(
+	text: string,
+	query: string,
+	prepare: (value: string) => string = (value) => value,
+): readonly number[] {
+	const preparedText = prepare(text);
 	let best: BranchHighlight | undefined;
 	for (const terms of positiveTermBranches(query)) {
 		const matches = terms.flatMap((term) => {
-			const match = fuzzysort.single(term, text);
+			const match = fuzzysort.single(prepare(term), preparedText);
 			if (!match) return [];
 			// fuzzysort は呼び出しの間で内部のインデックスの領域を使い回す。次の AND の語を一致させる前に
 			// 位置を複製しておかないと、上書きされてしまう。

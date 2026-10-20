@@ -303,6 +303,7 @@ export class PaletteView extends ItemView {
 					}),
 					el,
 					query,
+					{ foldKana: this.plugin.settings.file.foldKana },
 				),
 			onChoose: (result) => {
 				if (choosingOpensMenu(result)) this.panel?.showActiveRowContextMenu();
@@ -344,6 +345,7 @@ export class PaletteView extends ItemView {
 						openExternalMarkdownInObsidian:
 							this.plugin.settings.openExternalMarkdownInObsidian,
 					}),
+				foldKana: () => this.plugin.settings.file.foldKana,
 				// Why: Vault 監査は種類ごとに別のものを一覧にし、それぞれ列が異なる。
 				columnSet: () =>
 					this.session?.current.mode === "audit"

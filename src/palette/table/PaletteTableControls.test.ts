@@ -45,6 +45,7 @@ function fixture() {
 		{
 			initialState: normalizePaletteTableState({ sorting: [{ id: "name", desc: true }] }),
 			presentation: (result) => ({ label: result.primary }),
+			foldKana: () => false,
 			onChange: vi.fn(),
 			columnSet: () => "files",
 		},

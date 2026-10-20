@@ -8,7 +8,11 @@ import {
 	type PaletteMode,
 	type PaletteResult,
 } from "src/palette/results";
-import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
+import {
+	SelectionModal,
+	type SelectionHighlightOptions,
+	type SelectionItem,
+} from "src/ui/selectionModal";
 import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
 import { executePaletteResult } from "src/palette/executePaletteResult";
 import type { ActionKind } from "src/palette/resultActions";
@@ -158,6 +162,10 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.historyControls = undefined;
 		this.ignoredToggle = undefined;
 		this.auditKindChoice = undefined;
+	}
+
+	protected override highlightOptions(): SelectionHighlightOptions {
+		return { foldKana: this.plugin.settings.file.foldKana };
 	}
 
 	protected override toSelectionItem(result: PaletteResult): SelectionItem {
