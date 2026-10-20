@@ -39,6 +39,7 @@ export const ICONS = {
 	regex: "regex",
 	matchCase: "case-sensitive",
 	kana: "languages",
+	openableFilesOnly: "file-x",
 	replaceAll: "replace-all",
 	addBookmark: "bookmark-plus",
 	removeBookmark: "bookmark-minus",

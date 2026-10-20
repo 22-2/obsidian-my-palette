@@ -106,6 +106,7 @@ export default class MyPalettePlugin extends Plugin {
 			excludedFolders: () => this.settings.file.excludedFolders,
 			demotedPriorFolders: () => this.settings.file.demotedPriorFolders,
 			foldKana: () => this.settings.file.foldKana,
+			openableFilesOnly: () => this.settings.file.openableFilesOnly,
 			recentCommandIds: () => this.recentCommands?.getIds() ?? [],
 			everythingSettings: () => this.settings.everything,
 			settings: () => this.settings,

@@ -25,7 +25,7 @@ describe("file provider vault event handling", () => {
 		frontmatter = {};
 	});
 
-	function createProvider(): FileProvider {
+	function createProvider(openableFilesOnly = false): FileProvider {
 		const app = {
 			vault: {
 				getFiles: () => [...files],
@@ -51,8 +51,22 @@ describe("file provider vault event handling", () => {
 			workspace: {
 				getLastOpenFiles: () => [],
 			},
+			viewRegistry: {
+				isExtensionRegistered: (extension: string) => extension === "md",
+			},
 		} as unknown as App;
-		return new FileProvider(app, () => []);
+		// 引数は既定値のままにし、最後の引数だけでオプションを渡す。
+		return new FileProvider(
+			app,
+			() => [],
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			() => openableFilesOnly,
+		);
 	}
 
 	it("searches keywords and refreshes matching evidence after property edits", async () => {
@@ -91,6 +105,27 @@ describe("file provider vault event handling", () => {
 			),
 		).toEqual(blank.filter((path) => !path.startsWith("archive/")));
 		provider.dispose();
+	});
+
+	it("hides files Obsidian cannot open only when the openable filter is on", async () => {
+		files = [
+			tfile("note.md"),
+			{
+				path: "config.toml",
+				basename: "config",
+				extension: "toml",
+				stat: { mtime: 1 },
+			} as unknown as TFile,
+		];
+		const request = { query: "", includeIgnored: false, mode: "file" as const };
+		const visiblePaths = async (openableFilesOnly: boolean): Promise<string[]> => {
+			const provider = createProvider(openableFilesOnly);
+			const paths = (await provider.search(request)).map(({ vaultPath }) => vaultPath);
+			provider.dispose();
+			return paths;
+		};
+		expect(await visiblePaths(false)).toEqual(["note.md", "config.toml"].sort());
+		expect(await visiblePaths(true)).toEqual(["note.md"]);
 	});
 
 	it("finds the file by its new name after a vault rename event", async () => {

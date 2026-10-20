@@ -144,6 +144,11 @@ export const MENU_ACTIONS = {
 		icon: ICONS.kana,
 		id: "fold-kana",
 	},
+	openableFilesOnly: {
+		title: t("menu.openableFilesOnly"),
+		icon: ICONS.openableFilesOnly,
+		id: "openable-files-only",
+	},
 	moveToRightSidebar: {
 		title: t("menu.moveToRightSidebar"),
 		icon: ICONS.moveToSidebar,

@@ -41,6 +41,8 @@ interface ProviderFactoryOptions {
 	demotedPriorFolders?: ExcludedFolderSource;
 	/** ファイル検索で、ひらがなとカタカナを同じ文字として扱うかどうか。 */
 	foldKana?: () => boolean;
+	/** Obsidian で開けない拡張子のファイルを、ファイル検索から除くかどうか。 */
+	openableFilesOnly?: () => boolean;
 	recentCommandIds: () => string[];
 	everythingSettings: () => MyPaletteSettings["everything"];
 	/** Vault 監査は対象の種類と除外設定を読み、このプラグインの除外フォルダーも使う。 */
@@ -68,6 +70,7 @@ export function createPaletteProviders(
 		excludedFolders,
 		options.demotedPriorFolders,
 		options.foldKana,
+		options.openableFilesOnly,
 	);
 	const commandProvider = new CommandProvider(app, options.recentCommandIds);
 	const everythingProvider = new EverythingProvider(

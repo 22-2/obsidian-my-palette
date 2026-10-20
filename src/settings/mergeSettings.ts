@@ -144,6 +144,10 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 				typeof rawFile.foldKana === "boolean"
 					? rawFile.foldKana
 					: DEFAULT_SETTINGS.file.foldKana,
+			openableFilesOnly:
+				typeof rawFile.openableFilesOnly === "boolean"
+					? rawFile.openableFilesOnly
+					: DEFAULT_SETTINGS.file.openableFilesOnly,
 		},
 		everything: {
 			httpUrl:

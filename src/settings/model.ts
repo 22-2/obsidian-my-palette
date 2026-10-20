@@ -315,6 +315,8 @@ export interface MyPaletteSettings {
 		demotedPriorFolders: string[];
 		/** ファイル検索で、ひらがなとカタカナを同じ文字として扱う。オプションのメニューで切り替える。 */
 		foldKana: boolean;
+		/** Obsidian で開けない拡張子のファイルを、ファイル検索の一覧から除く。除外フォルダーとは別の判定。 */
+		openableFilesOnly: boolean;
 	};
 	everything: {
 		httpUrl: string;
@@ -380,6 +382,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		// フォルダーの優先度低下はフロントマターとは別に保ち、ユーザーが順位の位置を選べるようにする。
 		demotedPriorFolders: [],
 		foldKana: false,
+		openableFilesOnly: false,
 	},
 	everything: {
 		httpUrl: "http://127.0.0.1:51361/",

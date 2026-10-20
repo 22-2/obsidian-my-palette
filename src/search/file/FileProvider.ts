@@ -19,6 +19,7 @@ import {
 	isExcludedFolder,
 	type ExcludedFolderSource,
 } from "src/search/excludedFolders";
+import { isExtensionOpenable } from "src/platform/obsidianInternals";
 import { createFileMatch, fileSearchKeys, type FileSearchEntry } from "src/search/file/fileMatch";
 import { sortFileMatches, sortFilesWithoutQuery } from "src/search/file/fileSorting";
 import { isTagOnlyQuery, normalizeTags } from "src/search/file/fileTags";
@@ -61,6 +62,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		private readonly excludedFolders: ExcludedFolderSource = EMPTY_EXCLUDED_FOLDER_SOURCE,
 		private readonly demotedPriorFolders: () => readonly string[] = () => [],
 		private readonly foldKana: () => boolean = () => false,
+		private readonly openableFilesOnly: () => boolean = () => false,
 	) {
 		this.updateAllowedExtensions();
 		this.rebuild();
@@ -171,12 +173,14 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		].filter(
 			(entry) =>
 				!isUserIgnoredPathWithFilters(ignoreFilters, entry.path) &&
-				(includeIgnored || !isExcludedFolder(this.excludedFolders, entry.path)),
+				(includeIgnored || !isExcludedFolder(this.excludedFolders, entry.path)) &&
+				this.isVisibleExtension(entry.extension),
 		);
 		if (includeIgnored) {
 			// 明示的な接頭辞は、空のクエリの一覧も許可する。パレットの結果の上限が UI を有限に保ち、
 			// 並べ替えが Obsidian の除外ファイルを通常の Vault の項目の前に置く。
 			for (const ignored of await this.ignoredIndex.getEntries()) {
+				if (!this.isVisibleExtension(ignored.extension)) continue;
 				const entry: FileSearchEntry = {
 					path: ignored.path,
 					basename: ignored.basename,
@@ -290,6 +294,11 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		this.allowedExtensions = new Set(
 			this.vaultExtensions().map((extension) => extension.toLocaleLowerCase()),
 		);
+	}
+
+	/** Obsidian で開けない拡張子を、設定が有効なときだけ隠す。 */
+	private isVisibleExtension(extension: string): boolean {
+		return !this.openableFilesOnly() || isExtensionOpenable(this.app, extension);
 	}
 
 	private isAllowedExtension(extension: string): boolean {
