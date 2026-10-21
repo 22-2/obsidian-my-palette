@@ -29,6 +29,7 @@
 	"moc.added": "{moc}: {file} を Relateds に追加しました。",
 	"moc.alreadyLinked": "{moc} はすでに {file} にリンクしています。",
 	"moc.removed": "{moc}: {file} を Relateds から削除しました。",
+	"moc.notice.enterKeepsLink": "Enter では「{label}」のリンクを外しません。リンクを外すには Ctrl+Enter を押してください。",
 	"moc.prefixed": "{moc}: {message}",
 	"moc.noActiveMoc": "アクティブな MOC ファイルがありません。",
 	"moc.noActiveFile": "アクティブなファイルがありません。",

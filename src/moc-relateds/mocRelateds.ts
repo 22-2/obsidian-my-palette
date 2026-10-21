@@ -209,6 +209,17 @@ abstract class MocRelatedsModal extends MultiSelectModal<string> {
 	}
 }
 
+/** 相互にリンク済みの行を Enter で実行しようとしたか。Ctrl+Enter だけが、この行のリンクを外せる。 */
+function isPlainEnterOnApplied(candidate: MultiSelectCandidate<string>, event: Event): boolean {
+	const keyboard = event as KeyboardEvent;
+	return (
+		event.type === "keydown" &&
+		candidate.applied === true &&
+		!keyboard.ctrlKey &&
+		!keyboard.metaKey
+	);
+}
+
 /** アクティブな MOC の MOC 挿入セレクター。リンク済みのノートは右クリックメニューから削除できる。 */
 class MocTargetModal extends MocRelatedsModal {
 	private relations?: ReturnType<typeof relatedsRelations>;
@@ -331,6 +342,18 @@ class MocTargetModal extends MocRelatedsModal {
 			close: () => this.close(),
 			showError: (message) => new Notice(message),
 		});
+	}
+
+	protected override async onItemActivated(
+		candidate: MultiSelectCandidate<string>,
+		event: Event,
+	): Promise<void> {
+		// Why: 登録済みのノートは Enter で外すと、挿入の操作と取り違えて消してしまうため。外すのは Ctrl+Enter だけにする。
+		if (isPlainEnterOnApplied(candidate, event)) {
+			new Notice(t("moc.notice.enterKeepsLink", { label: candidate.item.label }));
+			return;
+		}
+		await super.onItemActivated(candidate, event);
 	}
 
 	/** メタデータキャッシュは編集に遅れるため、表示中の関係をその場で更新する。 */
