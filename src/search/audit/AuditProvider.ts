@@ -10,32 +10,49 @@ import { countLabel } from "src/shared/countLabel";
 import type { MyPaletteSettings } from "src/settings/model";
 import { t } from "src/i18n";
 
+/** Vault のどの変化が監査結果を変えうるか。種類ごとの依存は `AUDIT_DEPENDENCIES` で決める。 */
+type AuditChange = "structure" | "modify" | "metadata" | "resolved";
+
+const AUDIT_DEPENDENCIES: Record<AuditKind, readonly AuditChange[]> = {
+	// Why: 浮いたファイルは、ファイルの増減とリンクの解決だけで決まる。本文の保存では変わらない。
+	"orphaned-files": ["structure", "resolved"],
+	// Why: 壊れたリンクは、ノートのリンクが書き換わったときにも変わる。
+	"broken-links": ["structure", "metadata", "resolved"],
+	// Why: 空かどうかは、サイズ(modify)とフロントマター以外の中身(metadata)で決まる。
+	"empty-files": ["structure", "modify", "metadata"],
+	// Why: 空のフォルダーは、ファイルとフォルダーの増減だけで決まる。
+	"empty-folders": ["structure"],
+};
+
 /**
  * オプションのメニューで選んだ種類を一覧にする。行は、Vault かメタデータキャッシュが変わるまで保持する。
  * そのため、クエリを打つと行を絞り込むだけで、キーを押すたびに Vault 全体を監査し直すことはない。
  */
 export class AuditProvider implements PaletteProvider<AuditResult> {
 	private readonly refs: EventRef[] = [];
-	private cached?: { key: string; results: Promise<AuditResult[]> };
+	private cached?: { key: string; kind: AuditKind; results: Promise<AuditResult[]> };
 
 	constructor(
 		private readonly app: App,
 		private readonly settings: () => MyPaletteSettings,
 	) {
-		const invalidate = (): void => {
-			this.cached = undefined;
+		// Why: 今の結果に関係ない変化では捨てない。保存のたびに全件の監査をやり直さないため。
+		const invalidate = (change: AuditChange) => (): void => {
+			if (this.cached && AUDIT_DEPENDENCIES[this.cached.kind].includes(change)) {
+				this.cached = undefined;
+			}
 		};
 		const { vault, metadataCache } = app;
 		// Why: `modify` は、メタデータキャッシュが解析しないファイルを覆う。そのサイズで空かどうかが決まる。
 		// `resolved` は、Vault 全体のリンクの変更に追従する。
 		this.refs.push(
-			vault.on("create", invalidate),
-			vault.on("modify", invalidate),
-			vault.on("delete", invalidate),
-			vault.on("rename", invalidate),
-			metadataCache.on("changed", invalidate),
-			metadataCache.on("deleted", invalidate),
-			metadataCache.on("resolved", invalidate),
+			vault.on("create", invalidate("structure")),
+			vault.on("modify", invalidate("modify")),
+			vault.on("delete", invalidate("structure")),
+			vault.on("rename", invalidate("structure")),
+			metadataCache.on("changed", invalidate("metadata")),
+			metadataCache.on("deleted", invalidate("metadata")),
+			metadataCache.on("resolved", invalidate("resolved")),
 		);
 	}
 
@@ -67,7 +84,7 @@ export class AuditProvider implements PaletteProvider<AuditResult> {
 		const results = auditVault(this.app, kind, settings, includeIgnored).then((report) =>
 			toAuditResults(report, (path) => this.app.vault.getFileByPath(path) ?? undefined),
 		);
-		const cached = { key, results };
+		const cached = { key, kind, results };
 		this.cached = cached;
 		// Why: 失敗した監査を再び返してはいけない。次の検索が改めて試みる。
 		results.catch(() => {

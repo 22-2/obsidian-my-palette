@@ -123,6 +123,20 @@ describe("AuditProvider", () => {
 		expect(auditVault).toHaveBeenCalledTimes(3);
 	});
 
+	it("keeps the result when the change cannot affect its kind", async () => {
+		const { provider, handlers, settings } = fixture();
+		settings.audit.kind = "orphaned-files";
+		await provider.search({ mode: "audit", query: "" });
+		// Why: 本文の保存(modify)は浮いたファイルの判定を変えない。
+		handlers[1]?.();
+		await provider.search({ mode: "audit", query: "" });
+		expect(auditVault).toHaveBeenCalledTimes(1);
+
+		handlers[0]?.();
+		await provider.search({ mode: "audit", query: "" });
+		expect(auditVault).toHaveBeenCalledTimes(2);
+	});
+
 	it("does not keep a failed audit", async () => {
 		const { provider } = fixture();
 		vi.mocked(auditVault).mockRejectedValueOnce(new Error("boom"));
