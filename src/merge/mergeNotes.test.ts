@@ -66,7 +66,7 @@ describe("planMerge", () => {
 		const { app, a, b } = scenario();
 		const plan = await planMerge(app, [a.file], b.file);
 
-		expect(plan.body).toBe("%b.md%\n\nB body\n\n%a.md%\n\nA body [[c]]\n");
+		expect(plan.body).toBe("%%b.md%%\n\nB body\n\n%%a.md%%\n\nA body [[c]]\n");
 		expect(plan.conflicts).toEqual(["status"]);
 		expect(plan.retargets.map((entry) => [entry.file.path, entry.count])).toEqual([
 			["c.md", 1],
@@ -82,7 +82,7 @@ describe("executeMerge", () => {
 		const result = await executeMerge(app, plan);
 
 		expect(result).toEqual({ trashed: 1, retargeted: 2, failures: [] });
-		expect(byPath.get("b.md")!.body).toBe("%b.md%\n\nB body\n\n%a.md%\n\nA body [[c]]\n");
+		expect(byPath.get("b.md")!.body).toBe("%%b.md%%\n\nB body\n\n%%a.md%%\n\nA body [[c]]\n");
 		expect(byPath.get("b.md")!.frontmatter).toEqual({
 			status: "done",
 			tags: ["x"],

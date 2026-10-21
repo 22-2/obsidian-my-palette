@@ -134,7 +134,7 @@ function unlinkGroup(
 }
 
 /**
- * 統合するノートの本文を、`%パス%` の区切りで縦に並べる。マージ先の本文を一番上に置き、統合元を続ける。
+ * 統合するノートの本文を、`%%パス%%` の区切りで縦に並べる。マージ先の本文を一番上に置き、統合元を続ける。
  * 並べ方の微調整は、統合のあとにユーザーが行う。
  */
 export function buildMergedBody(
@@ -145,7 +145,7 @@ export function buildMergedBody(
 ): string {
 	const blocks = [target, ...sources].map((part) => {
 		const body = unlinkGroup(part.body.trim(), part.path, group, resolve).trim();
-		return `%${part.path}%\n\n${body}`;
+		return `%%${part.path}%%\n\n${body}`;
 	});
 	return `${blocks.join("\n\n")}\n`;
 }

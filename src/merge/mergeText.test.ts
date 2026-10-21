@@ -78,7 +78,7 @@ describe("buildMergedBody", () => {
 			new Set(["a.md", "b.md"]),
 			resolve,
 		);
-		expect(body).toBe("%b.md%\n\nbbb\n\n%a.md%\n\naaa\n");
+		expect(body).toBe("%%b.md%%\n\nbbb\n\n%%a.md%%\n\naaa\n");
 	});
 	it("removes links between merged notes and keeps other links", () => {
 		const body = buildMergedBody(
@@ -87,7 +87,7 @@ describe("buildMergedBody", () => {
 			new Set(["a.md", "b.md"]),
 			resolve,
 		);
-		expect(body).toBe("%b.md%\n\nself a\n\n%a.md%\n\nsee bee and [[c]]\n");
+		expect(body).toBe("%%b.md%%\n\nself a\n\n%%a.md%%\n\nsee bee and [[c]]\n");
 	});
 });
 
