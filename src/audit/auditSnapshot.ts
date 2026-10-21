@@ -67,7 +67,7 @@ export async function collectAuditSnapshot(app: App, kind: AuditKind): Promise<A
 
 /**
  * Obsidian の除外ファイルと、このプラグインの除外フォルダーをまとめて扱う。ファイル検索と同じく
- * 「Obsidian の除外ファイルを含める」で両方とも外せる。デイリーノートとテンプレートは、どちらの場合も
+ * 「Obsidian の除外ファイルを表示」で両方とも外せる。デイリーノートとテンプレートは、どちらの場合も
  * 「浮いたファイル」から外す。これらは性質上リンクされないことが多く、ユーザーが隠したわけではないため。
  */
 export function auditExclusions(

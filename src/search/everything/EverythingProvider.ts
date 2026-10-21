@@ -54,11 +54,17 @@ export class EverythingProvider implements PaletteProvider<EverythingResult> {
 					if (
 						!(file instanceof TFile) ||
 						(vaultExtensions.size > 0 &&
-							!vaultExtensions.has(file.extension.toLocaleLowerCase())) ||
-						(this.openableFilesOnly() && !isExtensionOpenable(this.app, file.extension))
+							!vaultExtensions.has(file.extension.toLocaleLowerCase()))
 					)
 						return [];
 				}
+				// Why: 「除外ファイルを表示」はフォルダー範囲の検索に切り替わるので、開けない
+				// 拡張子の判定は範囲によらず行う。拡張子の一覧は、フォルダー範囲では使わない。
+				if (
+					this.openableFilesOnly() &&
+					!isExtensionOpenable(this.app, extensionOf(vaultPath))
+				)
+					return [];
 				return [{ ...result, vaultPath, scope }];
 			})
 			.slice(0, settings.maxResults);
@@ -67,4 +73,11 @@ export class EverythingProvider implements PaletteProvider<EverythingResult> {
 
 function hasHiddenSegment(vaultPath: string): boolean {
 	return vaultPath.split("/").some((segment) => segment.startsWith("."));
+}
+
+/** パスの最後の名前から拡張子を取る。先頭だけのドットと拡張子のない名前は空になる。 */
+function extensionOf(vaultPath: string): string {
+	const name = vaultPath.split("/").at(-1) ?? "";
+	const dot = name.lastIndexOf(".");
+	return dot > 0 ? name.slice(dot + 1) : "";
 }

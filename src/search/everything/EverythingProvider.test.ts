@@ -143,4 +143,33 @@ describe("EverythingProvider", () => {
 			(await on.search({ mode: "everything", query: "x" })).map((r) => r.vaultPath),
 		).toEqual(["one.md"]);
 	});
+
+	it("applies the openable filter in folder scope too, since the ignored switch uses it", async () => {
+		const settings = structuredClone(DEFAULT_SETTINGS.everything);
+		const search = vi
+			.fn()
+			.mockResolvedValue([result("C:\\Vault\\data.json"), result("C:\\Vault\\image.png")]);
+		const app = {
+			vault: {
+				adapter: { getBasePath: () => "C:\\Vault", path: win32 },
+				getConfig: () => [],
+			},
+			viewRegistry: {
+				isExtensionRegistered: (extension: string) => extension !== "json",
+			},
+		};
+		const provider = new EverythingProvider(
+			app as never,
+			{ search } as never,
+			() => settings,
+			undefined,
+			() => true,
+		);
+		const found = await provider.search({
+			mode: "everything",
+			query: "x",
+			everythingScope: "directory",
+		});
+		expect(found.map((item) => item.vaultPath)).toEqual(["image.png"]);
+	});
 });

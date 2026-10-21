@@ -10,7 +10,7 @@ export interface PanelSwitchOptions {
 }
 
 /**
- * パレットやセレクターのオン/オフのオプション。Obsidian の除外ファイルを含めるなど。
+ * パレットやセレクターのオン/オフのオプション。Obsidian の除外ファイルを表示するなど。
  * 状態だけを持つ。オプションのメニューがそれを並べ、切り替える。
  */
 export class PanelSwitch {
