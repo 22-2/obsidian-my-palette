@@ -79,6 +79,7 @@ export const MENU_ACTIONS = {
 
 	moveToFolder: { title: t("menu.moveToFolder"), icon: ICONS.move, id: "move-to-folder" },
 	rename: { title: t("menu.rename"), icon: ICONS.rename, id: "rename" },
+	merge: { title: t("menu.merge"), icon: ICONS.merge, id: "merge-notes" },
 	editProperties: {
 		title: t("menu.editProperties"),
 		icon: ICONS.editProperties,

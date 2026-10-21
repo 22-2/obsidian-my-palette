@@ -20,6 +20,9 @@ vi.mock("src/palette/actions/selectionHeader", () => ({
 vi.mock("src/palette/actions/bulkRenameMenu", () => ({
 	addBulkRenameMenuItem: vi.fn(),
 }));
+vi.mock("src/palette/actions/mergeMenu", () => ({
+	addMergeMenuItem: vi.fn(),
+}));
 vi.mock("src/palette/actions/propertyEditMenu", () => ({
 	addPropertyEditMenuItem: vi.fn(),
 }));

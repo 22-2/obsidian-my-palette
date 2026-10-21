@@ -32,6 +32,7 @@ export const ICONS = {
 	delete: "trash-2",
 	copy: "copy",
 	move: "folder-input",
+	merge: "git-merge",
 	editProperties: "text-cursor-input",
 	addTags: "tags",
 	insertIntoMoc: "list-plus",

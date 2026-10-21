@@ -10,6 +10,7 @@ import { addBulkRenameMenuItem } from "src/palette/actions/bulkRenameMenu";
 import { addPropertyEditMenuItem } from "src/palette/actions/propertyEditMenu";
 import { addSelectionHeader } from "src/palette/actions/selectionHeader";
 import { addFileMoveMenuItem } from "src/palette/actions/fileMoveMenu";
+import { addMergeMenuItem } from "src/palette/actions/mergeMenu";
 import { isTabResult, populateTabMenu } from "src/palette/actions/tabMenu";
 import type { ActionKind } from "src/palette/resultActions";
 import { getCopyablePaths, isCopyablePaletteResult } from "src/palette/resultPresentation";
@@ -125,6 +126,8 @@ export function populatePaletteResultMenu({
 		addPropertyEditMenuItem(menu, plugin, selectedItems, onNoteActionSelected);
 		addMocInsertionMenuItems(menu, plugin, selectedItems, onNoteActionSelected, getMocContext);
 		addTagInsertionMenuItems(menu, plugin, selectedItems, onNoteActionDone);
+		// Why: 統合は統合元をゴミ箱に移すので、ほかの書き換えの後ろに置く。
+		addMergeMenuItem(menu, plugin, selectedItems, onNoteActionDone);
 		addBookmarkMenuItems({
 			menu,
 			plugin,
@@ -236,6 +239,7 @@ export function populatePaletteResultMenu({
 	// 両方のパレットの外枠で、そうなるようにする。
 	addMocInsertionMenuItem(menu, plugin, result, onNoteActionSelected, getMocContext);
 	addTagInsertionMenuItems(menu, plugin, [result], onNoteActionDone);
+	addMergeMenuItem(menu, plugin, [result], onNoteActionDone);
 	// Why: 検索のブックマークの選択にはパスがないので、この1結果のメニューに届く。
 	// ブックマークの操作は、選んだすべてのブックマークに引き続き働く。
 	addBookmarkMenuItems({

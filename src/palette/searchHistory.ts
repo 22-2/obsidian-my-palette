@@ -41,6 +41,7 @@ function isSelectorHistoryCategory(value: unknown): value is SelectorHistoryCate
 		value === "moc-insertion" ||
 		value === "folder-move" ||
 		value === "bulk-rename" ||
+		value === "merge-target" ||
 		value === "property-value"
 	);
 }
@@ -299,6 +300,7 @@ function historyCategoryMode(category: SearchHistoryCategory): PaletteModeId | u
 		case "moc-insertion":
 		case "folder-move":
 		case "bulk-rename":
+		case "merge-target":
 		case "property-value":
 			return undefined;
 	}

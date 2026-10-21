@@ -15,6 +15,7 @@ export type SelectorHistoryCategory =
 	| "moc-insertion"
 	| "folder-move"
 	| "bulk-rename"
+	| "merge-target"
 	| "property-value";
 
 export type SearchHistoryCategory =

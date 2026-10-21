@@ -2,6 +2,7 @@ import type MyPalettePlugin from "src/main";
 import { insertLinkToMocRelateds, removeLinkInMocRelateds } from "src/moc-relateds/mocRelateds";
 import { MoveFileModal } from "src/palette/MoveFileModal";
 import { BulkRenameModal } from "src/rename/BulkRenameModal";
+import { MergeTargetModal } from "src/merge/MergeTargetModal";
 import type { FixedPaletteMode } from "src/palette/PaletteSearchSession";
 import { insertTags } from "src/tags/insertTags";
 import { t } from "src/i18n";
@@ -95,6 +96,15 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 			const file = plugin.app.workspace.getActiveFile();
 			if (checking) return Boolean(file);
 			if (file) new BulkRenameModal(plugin, [file]).open();
+		},
+	});
+	plugin.addCommand({
+		id: "open-merge-selector",
+		name: t("command.openMergeSelector"),
+		checkCallback: (checking) => {
+			const file = plugin.app.workspace.getActiveFile();
+			if (checking) return Boolean(file && file.extension === "md");
+			if (file && file.extension === "md") new MergeTargetModal(plugin, [file]).open();
 		},
 	});
 	plugin.addCommand({

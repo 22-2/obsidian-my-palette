@@ -52,6 +52,7 @@ Obsidian のコマンドパレットから次のコマンドを実行します�
 | `My Palette: Open vault audit list`       | Vault audit を Table palette で開く                      |
 | `My Palette: Open folder move selector`   | 現在のファイルを別フォルダーへ移動                       |
 | `My Palette: Open rename selector`        | 現在のファイルの名前を変更                               |
+| `My Palette: Open merge selector`         | 現在のノートを、選んだマージ先のノートに統合             |
 | `My Palette: Open tag insert selector`    | 現在のノートにタグを追加                                 |
 | `My Palette: Open MOC insert selector`    | アクティブな MOC に相互 Relateds リンクを追加            |
 | `My Palette: Open MOC remove selector`    | アクティブな MOC から Relateds リンクを削除              |
@@ -156,6 +157,10 @@ MOC insert selector も同じ入力／選択モードと操作です。相互に
 ### ファイル名の変更
 
 パレットでファイルを選んで右クリックし、`Rename…` を選びます（現在のファイルだけなら `Open rename selector`）。入力欄に `置換前/置換後` を打つと、一覧に各ファイルの新しい名前をプレビューします。たとえば `_/-` は `2026_01_02.md` を `2026-01-02.md` に、`draft/` は `draft` を削除します。ファイル名に `/` は使えないため、最初の `/` で2つに分かれ、エスケープは要りません。フッターのスイッチで `Regex`（置換前を正規表現として読み、`$1` でグループを挿入できます。そのため `/` は含められません）、`Match case`、`All occurrences` を切り替えます。
+
+### ノートのマージ
+
+パレットでノートを選んで右クリックし、`Merge…` を選ぶか、現在のノートだけなら `Open merge selector` を実行します。マージ先のノートを選び、`Ctrl+Enter` で変更予定を開きます。変更予定の画面で `Ctrl+Enter` を押すと実行します。統合元の本文はマージ先の本文の前に、`%パス%` の区切りで縦に並びます。統合元へのリンクはマージ先へ付け替え、統合元はゴミ箱に移します。プロパティは、マージ先の値を残して足りないキーを足します。統合元の名前を `aliases` に加えるかどうかは、変更予定の画面のスイッチで切り替えられます（既定でオン）。
 
 変わるのは保管庫内のファイル名だけで、フォルダー、拡張子、Obsidian-excluded や保管庫外のファイルは対象外です。名前が不正、すでに存在する、複数のファイルに同じ名前がつく行には印が付き、すべて解消するまで実行できません。`Enter` はショートカットの案内を出すだけで、`Ctrl+Enter` で、名前が変わる一覧のファイルをすべて変更します。ファイルへのリンクは Obsidian が更新します。
 
