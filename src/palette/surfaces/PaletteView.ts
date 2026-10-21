@@ -20,7 +20,7 @@ import type { PaletteModeId } from "src/palette/modes";
 import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
 import { toPaletteSelectionItem } from "src/palette/resultPresentation";
 import { renderSelectionItem } from "src/ui/selectionModal";
-import { SuggestionPanel } from "src/ui/suggestionPanel";
+import { SuggestionPanel, type SuggestionPanelResults } from "src/ui/suggestionPanel";
 import type { ActionKind } from "src/palette/resultActions";
 import type { MocInsertionContext } from "src/moc-relateds/mocInsertion";
 import { populatePaletteResultMenu } from "src/palette/actions/resultContextMenu";
@@ -409,10 +409,30 @@ export class PaletteView extends ItemView {
 			total: state.resultCount,
 			error: state.error,
 		};
-		if (this.tableControls) this.tableControls.setResults(results);
-		else this.panel.setResults(results);
+		this.setResultsKeepingSelection(results);
 		this.actionMessage = undefined;
 		this.historyControls?.update(state.input);
+	}
+
+	/**
+	 * 結果を描き直しても、選んでいた項目とスクロール位置を保つ。ノートを開いた後や、メタデータの
+	 * 変更で再検索されたときに、選択が先頭の行へ戻ってしまうのを防ぐため。
+	 */
+	private setResultsKeepingSelection(results: SuggestionPanelResults<PaletteResult>): void {
+		if (!this.panel) return;
+		const selected = this.panel.getSelectedItems();
+		const active = this.panel.getSelectedItem();
+		const scrollTop = this.panel.currentView.scrollTop;
+		if (this.tableControls) this.tableControls.setResults(results);
+		else this.panel.setResults(results);
+		if (!active) return;
+		const { values } = this.panel.chooser;
+		const indexOf = (item: PaletteResult) => values.findIndex(({ id }) => id === item.id);
+		this.panel.restoreSelection(
+			selected.map(indexOf).filter((index) => index >= 0),
+			indexOf(active),
+		);
+		this.panel.resultContainerEl.scrollTop = scrollTop;
 	}
 
 	private renderFooter(message?: string): void {

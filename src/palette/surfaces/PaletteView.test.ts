@@ -190,6 +190,29 @@ describe("PaletteView", () => {
 		expect(f.root.textContent).toContain("元ファイル: Notes/Second.md");
 	});
 
+	it("keeps the selected row when the active note changes", async () => {
+		const f = await mount(false, { input: "a" });
+		// 先頭はモードの行なので、ArrowDown で選ばれるのは最初のファイル(Alpha)。
+		key(f.input, "ArrowDown");
+		const active = () => f.root.querySelector(".suggestion-item.is-active")?.textContent;
+		expect(active()).toContain("Alpha");
+		f.switchTo("Notes/Second.md");
+		expect(active()).toContain("Alpha");
+	});
+
+	it("keeps the double-clicked row selected after its note opens", async () => {
+		const f = await mount(false, { input: "a" });
+		const beta = [...f.root.querySelectorAll<HTMLElement>(".suggestion-item")].find((el) =>
+			el.textContent?.includes("Beta"),
+		)!;
+		beta.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, button: 0, detail: 2 }));
+		await settle();
+		const active = () => f.root.querySelector(".suggestion-item.is-active")?.textContent;
+		expect(active()).toContain("Beta");
+		f.switchTo("Beta.md");
+		expect(active()).toContain("Beta");
+	});
+
 	it("keeps a pinned source when the active note changes", async () => {
 		const f = await mount(false, { sourcePath: "Pinned.md", sourcePinned: true });
 		f.switchTo("Notes/Second.md");
