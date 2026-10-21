@@ -32,6 +32,13 @@ export interface ConfirmedMenuItemOptions {
 
 const GAP = 2;
 
+/** 全角スペース(U+3000)。日本語の入力では半角と同じく、スイッチの切り替えに使えるようにする。 */
+const FULL_WIDTH_SPACE = "　";
+
+function isSpaceKey(key: string): boolean {
+	return key === " " || key === FULL_WIDTH_SPACE;
+}
+
 /**
  * メニューをポインターの位置に置き、表示領域から出そうなら反対側に寄せる。
  * Obsidian の Menu と同じく、右端や下端からはみ出すメニューはポインターの左や上に移る。
@@ -311,8 +318,11 @@ export class PaletteMenu {
 
 	private readonly onKeyDown = (event: KeyboardEvent): void => {
 		if (event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return;
-		// 絞り込みが開いているとき、スペースとカーソルキーは入力欄のものになる。
-		if (this.filter?.active && [" ", "Home", "End"].includes(event.key)) return;
+		// 絞り込みの欄に語が入っているとき、スペースとカーソルキーは入力欄のものになる。
+		// Why: 欄が空なら、スペースは選ばれた項目(スイッチ)を切り替える。語の区切りとして打つ必要がないため。
+		if (this.filter?.active && this.filter.inputEl.value !== "" && isSpaceKey(event.key))
+			return;
+		if (this.filter?.active && ["Home", "End"].includes(event.key)) return;
 		switch (event.key) {
 			case "ArrowDown":
 				this.focusEnabled(this.selected + 1, 1);
@@ -333,7 +343,8 @@ export class PaletteMenu {
 				this.items[this.selected]?.activate(event);
 				break;
 			case " ":
-				if (this.selected < 0) return;
+			case FULL_WIDTH_SPACE:
+				// Why: 何も選ばれていなくても、メニューが開いている間はスペースを背後の入力欄に渡さない。
 				this.items[this.selected]?.activate(event);
 				break;
 			case "Escape":

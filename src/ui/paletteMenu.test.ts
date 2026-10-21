@@ -478,6 +478,33 @@ describe("PaletteMenu filter", () => {
 		expect(runs.open).not.toHaveBeenCalled();
 	});
 
+	it("uses Space to activate the selected item while the field is empty", () => {
+		const { menu, runs } = filterMenu();
+		menu.showAtPosition({ x: 0, y: 0 });
+		press("ArrowDown", filterInput());
+
+		expect(press(" ", filterInput()).defaultPrevented).toBe(true);
+		expect(runs.open).toHaveBeenCalledOnce();
+	});
+
+	it("treats a full-width space the same as Space", () => {
+		const { menu, runs } = filterMenu();
+		menu.showAtPosition({ x: 0, y: 0 });
+		press("ArrowDown", filterInput());
+
+		expect(press("　", filterInput()).defaultPrevented).toBe(true);
+		expect(runs.open).toHaveBeenCalledOnce();
+	});
+
+	it("keeps Space away from the field even when nothing is selected", () => {
+		const { menu, runs } = filterMenu();
+		menu.showAtPosition({ x: 0, y: 0 });
+
+		expect(press(" ", filterInput()).defaultPrevented).toBe(true);
+		expect(filterInput().value).toBe("");
+		expect(runs.open).not.toHaveBeenCalled();
+	});
+
 	it("clears the words when the menu is shown again", () => {
 		const { menu } = filterMenu();
 		menu.showAtPosition({ x: 0, y: 0 });
