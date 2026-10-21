@@ -3,6 +3,7 @@ import type { SelectorControls } from "src/ui/selectorControls";
 import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
 import { ICONS } from "src/ui/icons";
 import { countLabel } from "src/shared/countLabel";
+import { logger } from "src/shared/logger";
 import { executeMerge, type MergePlan } from "src/merge/mergeNotes";
 import { openFileInLeaf } from "src/workspace/openLeaf";
 import { t } from "src/i18n";
@@ -117,10 +118,17 @@ export class MergePlanModal extends SelectionModal<SelectionItem> {
 				}),
 			);
 		}
+		// Why: パレットと同じく、閉じる前に開く。閉じたあとに開くと、画面を閉じる処理が
+		// 元のノートへフォーカスを戻し、マージ先が前面に来ないことがある。
+		if (result.merged) {
+			try {
+				await this.openTarget();
+			} catch (error) {
+				logger.error(`Failed to open ${this.plan.target.path}`, error);
+			}
+		}
 		this.close();
 		if (result.trashed > 0 || result.retargeted > 0) this.onDone?.();
-		// Why: パレットを閉じたあとに開く。先に開くと、閉じる操作が元のノートへフォーカスを戻す。
-		if (result.merged) await this.openTarget();
 	}
 
 	private async openTarget(): Promise<void> {
