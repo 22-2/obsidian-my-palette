@@ -94,4 +94,41 @@ describe("EverythingProvider", () => {
 			"解決できません",
 		);
 	});
+
+	it("hides vault files Obsidian cannot open only when the openable filter is on", async () => {
+		const files = [new TFile(), new TFile()];
+		files[0].path = "one.md";
+		files[0].extension = "md";
+		files[1].path = "two.toml";
+		files[1].extension = "toml";
+		const settings = {
+			...structuredClone(DEFAULT_SETTINGS.everything),
+			vaultExtensions: ["md", "toml"],
+		};
+		const search = vi
+			.fn()
+			.mockResolvedValue([result("C:\\Vault\\one.md"), result("C:\\Vault\\two.toml")]);
+		const app = {
+			vault: {
+				adapter: { getBasePath: () => "C:\\Vault", path: win32 },
+				getConfig: () => [],
+				getAbstractFileByPath: (p: string) => files.find((f) => f.path === p),
+			},
+			viewRegistry: { isExtensionRegistered: (extension: string) => extension === "md" },
+		};
+		const off = new EverythingProvider(app as never, { search } as never, () => settings);
+		expect(
+			(await off.search({ mode: "everything", query: "x" })).map((r) => r.vaultPath),
+		).toEqual(["one.md", "two.toml"]);
+		const on = new EverythingProvider(
+			app as never,
+			{ search } as never,
+			() => settings,
+			undefined,
+			() => true,
+		);
+		expect(
+			(await on.search({ mode: "everything", query: "x" })).map((r) => r.vaultPath),
+		).toEqual(["one.md"]);
+	});
 });

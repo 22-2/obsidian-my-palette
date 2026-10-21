@@ -14,6 +14,7 @@ import type { EverythingResult } from "src/palette/results";
 import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { buildEverythingQuery } from "src/search/everything/everythingQuery";
+import { isExtensionOpenable } from "src/platform/obsidianInternals";
 import { t } from "src/i18n";
 
 export class EverythingProvider implements PaletteProvider<EverythingResult> {
@@ -22,6 +23,7 @@ export class EverythingProvider implements PaletteProvider<EverythingResult> {
 		private readonly client: EverythingHttpClient,
 		private readonly settings: () => MyPaletteSettings["everything"],
 		private readonly excludedFolders: ExcludedFolderSource = EMPTY_EXCLUDED_FOLDER_SOURCE,
+		private readonly openableFilesOnly: () => boolean = () => false,
 	) {}
 	async search({
 		query,
@@ -52,7 +54,8 @@ export class EverythingProvider implements PaletteProvider<EverythingResult> {
 					if (
 						!(file instanceof TFile) ||
 						(vaultExtensions.size > 0 &&
-							!vaultExtensions.has(file.extension.toLocaleLowerCase()))
+							!vaultExtensions.has(file.extension.toLocaleLowerCase())) ||
+						(this.openableFilesOnly() && !isExtensionOpenable(this.app, file.extension))
 					)
 						return [];
 				}

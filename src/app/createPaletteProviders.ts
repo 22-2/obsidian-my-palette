@@ -78,6 +78,7 @@ export function createPaletteProviders(
 		everythingClient,
 		options.everythingSettings,
 		excludedFolders,
+		options.openableFilesOnly,
 	);
 	const relatedFileProvider = new RelatedFileProvider(app, excludedFolders);
 	const bookmarkProvider = new BookmarkProvider(app, excludedFolders);
