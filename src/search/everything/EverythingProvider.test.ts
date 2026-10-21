@@ -101,25 +101,37 @@ describe("EverythingProvider", () => {
 		files[0].extension = "md";
 		files[1].path = "two.toml";
 		files[1].extension = "toml";
+		const extensionless = new TFile();
+		extensionless.path = "LICENSE";
+		extensionless.extension = "";
+		files.push(extensionless);
 		const settings = {
 			...structuredClone(DEFAULT_SETTINGS.everything),
-			vaultExtensions: ["md", "toml"],
+			vaultExtensions: ["md", "toml", ""],
 		};
 		const search = vi
 			.fn()
-			.mockResolvedValue([result("C:\\Vault\\one.md"), result("C:\\Vault\\two.toml")]);
+			.mockResolvedValue([
+				result("C:\\Vault\\one.md"),
+				result("C:\\Vault\\two.toml"),
+				result("C:\\Vault\\LICENSE"),
+			]);
 		const app = {
 			vault: {
 				adapter: { getBasePath: () => "C:\\Vault", path: win32 },
 				getConfig: () => [],
 				getAbstractFileByPath: (p: string) => files.find((f) => f.path === p),
 			},
-			viewRegistry: { isExtensionRegistered: (extension: string) => extension === "md" },
+			// 空の拡張子でも登録ありと答える内部を想定し、拡張子なしが除外されることを確かめる。
+			viewRegistry: {
+				isExtensionRegistered: (extension: string) =>
+					extension === "md" || extension === "",
+			},
 		};
 		const off = new EverythingProvider(app as never, { search } as never, () => settings);
 		expect(
 			(await off.search({ mode: "everything", query: "x" })).map((r) => r.vaultPath),
-		).toEqual(["one.md", "two.toml"]);
+		).toEqual(["one.md", "two.toml", "LICENSE"]);
 		const on = new EverythingProvider(
 			app as never,
 			{ search } as never,

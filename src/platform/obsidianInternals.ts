@@ -108,9 +108,11 @@ export function getEnabledCorePlugin<T = unknown>(app: App, id: string): T | und
 /**
  * Obsidian がその拡張子のビュー(ノート、キャンバス、画像、PDF、音声など)を持つかどうか。
  * `.toml` のようなファイルは「すべてのファイル拡張子を検出」の設定でのみ現れ、開けない。
+ * 拡張子のないファイル(`LICENSE` など)は、登録の有無によらず開けないものとして扱う。
  * API がなければ true。変わった内部のせいで、何も隠れないようにするため。
  */
 export function isExtensionOpenable(app: App, extension: string): boolean {
+	if (extension === "") return false;
 	return internals(app).viewRegistry?.isExtensionRegistered?.(extension) ?? true;
 }
 
