@@ -2,7 +2,11 @@ import { Notice, setIcon, type App } from "obsidian";
 import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
 import { BaseSuggestModal } from "src/ui/baseSuggestModal";
-import { renderSelectionItem, type SelectionItem } from "src/ui/selectionModal";
+import {
+	renderSelectionItem,
+	type SelectionHighlightOptions,
+	type SelectionItem,
+} from "src/ui/selectionModal";
 import type { SelectorControls } from "src/ui/selectorControls";
 import {
 	changeCount,
@@ -179,7 +183,12 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 
 	renderSuggestion(candidate: MultiSelectCandidate<V>, el: HTMLElement): void {
 		const checked = this.isChecked(candidate);
-		renderSelectionItem(this.toSelectionItem(candidate), el, this.query);
+		renderSelectionItem(
+			this.toSelectionItem(candidate),
+			el,
+			this.query,
+			this.highlightOptions(),
+		);
 		// 行はその場で描き直されることがあるので、クラスは両方向に設定する。
 		el.classList.toggle("is-applied", Boolean(candidate.applied));
 		el.classList.toggle("is-pending-removal", Boolean(candidate.applied) && !checked);
@@ -188,6 +197,11 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		// チェックのアイコンは、キーボードのモードとは別に、1回の押下でその行をチェックする。
 		// そのためポインターのユーザーも、チェックした一覧を作れる。
 		el.querySelector(".my-palette-suggestion__icon")?.setAttribute("data-row-toggle", "");
+	}
+
+	/** 行の強調の設定。検索と同じ「かな無視」の設定を使い、絞り込みと強調がずれないようにする。 */
+	private highlightOptions(): SelectionHighlightOptions {
+		return { foldKana: this.multiSelect.controls.plugin.settings.file.foldKana };
 	}
 
 	private isChecked(candidate: MultiSelectCandidate<V>): boolean {
