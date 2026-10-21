@@ -349,11 +349,11 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		return undefined;
 	}
 	/**
-	 * 一覧をすぐに空にする。遅いプロバイダー(Everything)は、答えるまで前の画面の行を残してしまい、
-	 * 間違った画面に見えるため。
+	 * 一覧をすぐに空にして、検索中のスピナーを出す。遅いプロバイダー(Everything)は、答えるまで前の画面の行を
+	 * 残してしまい、間違った画面に見えるため。
 	 */
-	protected clearSuggestions(text: string): void {
-		this.panel.setResults({ items: [], total: 0, error: text });
+	protected clearSuggestions(): void {
+		this.panel.setResults({ items: [], total: 0, loading: true });
 	}
 	protected setModeChip(chip?: { icon: string; label: string; title: string }): void {
 		this.panel.setModeChip(chip);

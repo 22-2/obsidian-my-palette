@@ -105,6 +105,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				this.updateMode();
 				this.updateResultCount(state.resultCount);
 				if (state.error) this.emptyStateText = state.error;
+				// Why: 残す結果がない検索は、古い行の代わりにスピナーを出す。背景の再読み込みは結果を残す。
+				if (state.loading && !state.results.length) this.clearSuggestions();
 			},
 		});
 	}
@@ -283,7 +285,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private enterMode(result: Extract<PaletteResult, { mode: "mode-entry" }>): void {
 		this.session.enterMode(result.modeId);
 		this.panelInput("");
-		this.clearSuggestions(t("view.searching"));
+		this.clearSuggestions();
 		this.refreshSuggestions();
 		this.focusSearchInput();
 	}

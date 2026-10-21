@@ -133,6 +133,43 @@
 	text-align: center;
 }
 
+/* 検索中の一覧の空の状態。スピナーは、すぐ終わる検索で点滅しないように 200ms 遅れて現れる。 */
+.suggestion-empty.my-palette-loading {
+	display: flex;
+	justify-content: center;
+	padding: 18px 10px;
+}
+
+.my-palette-spinner {
+	width: 16px;
+	height: 16px;
+	border: 2px solid var(--background-modifier-border);
+	border-top-color: var(--interactive-accent);
+	border-radius: 50%;
+	opacity: 0;
+	animation:
+		my-palette-spinner-spin 0.8s linear infinite,
+		my-palette-spinner-appear 0s linear 200ms forwards;
+}
+
+@keyframes my-palette-spinner-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes my-palette-spinner-appear {
+	to {
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.my-palette-spinner {
+		animation: my-palette-spinner-appear 0s linear 200ms forwards;
+	}
+}
+
 /* A table can be wider than a sidebar. Keep scrolling inside the results so
    search, sort priorities, and source controls remain reachable at any width. */
 .my-palette-panel--view[data-result-layout="table"] .prompt-results {

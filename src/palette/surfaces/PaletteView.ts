@@ -408,6 +408,7 @@ export class PaletteView extends ItemView {
 			items: state.results,
 			total: state.resultCount,
 			error: state.error,
+			loading: state.loading,
 		};
 		this.setResultsKeepingSelection(results);
 		this.actionMessage = undefined;
@@ -687,7 +688,7 @@ export class PaletteView extends ItemView {
 		this.session.enterMode(modeId);
 		this.panel.setInput("", "end");
 		// 一覧は今すぐ空にする。遅いプロバイダーだと、Home の行が見えてしまうため。
-		this.panel.setResults({ items: [], total: 0, error: t("view.searching") });
+		this.panel.setResults({ items: [], total: 0, loading: true });
 		this.updateInput("", "end");
 		this.panel.focusSearchInput();
 	}

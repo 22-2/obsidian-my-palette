@@ -117,6 +117,31 @@ describe("PaletteSearchSession search lifecycle", () => {
 		session.dispose();
 	});
 
+	it("reports loading from the start of a search until the provider answers", async () => {
+		const { plugin, file } = await host();
+		let answer!: (results: FileResult[]) => void;
+		plugin.providers.file = {
+			search: () => new Promise<FileResult[]>((resolve) => (answer = resolve)),
+		};
+		const session = new PaletteSearchSession(plugin);
+		const pending = session.search("needle");
+		expect(session.current.loading).toBe(true);
+		answer([file]);
+		await pending;
+		expect(session.current.loading).toBe(false);
+		session.dispose();
+	});
+
+	it("clears loading when the provider fails", async () => {
+		const { plugin } = await host();
+		plugin.providers.file = { search: vi.fn().mockRejectedValue(new Error("offline")) };
+		const session = new PaletteSearchSession(plugin);
+		await session.search("needle");
+		expect(session.current.error).toBe("offline");
+		expect(session.current.loading).toBe(false);
+		session.dispose();
+	});
+
 	it("returns no record for blank input and does not search after disposal", async () => {
 		const { plugin } = await host();
 		const session = new PaletteSearchSession(plugin);

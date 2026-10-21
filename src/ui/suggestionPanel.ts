@@ -59,6 +59,8 @@ export interface SuggestionPanelResults<T> {
 	items: T[];
 	total?: number;
 	error?: string;
+	/** 検索中。一覧が空のあいだは、エラーや「候補がありません」の代わりにスピナーを出す。 */
+	loading?: boolean;
 	/** ホストが一致の前にモードの接頭辞を取り除くとき、解析済みの検索語。 */
 	query?: string;
 }
@@ -241,6 +243,11 @@ export class SuggestionPanel<T> extends Component {
 	}
 
 	setResults(results: SuggestionPanelResults<T>): void {
+		// Why: 検索中の空の一覧は、開き直したビューを消費しない。最初の結果が届いてから適用する。
+		if (results.loading) {
+			this.renderResults(results);
+			return;
+		}
 		const view = this.pendingView;
 		this.pendingView = undefined;
 		this.renderResults(results);
@@ -271,6 +278,7 @@ export class SuggestionPanel<T> extends Component {
 		total = items.length,
 		error,
 		query,
+		loading = false,
 	}: SuggestionPanelResults<T>): void {
 		this.emptyStateText = error ?? t("suggest.noSuggestions");
 		// ホストは接頭辞を解析するかもしれない。強調表示は、一致に使うのと同じ文字列を使う必要がある。
@@ -292,10 +300,12 @@ export class SuggestionPanel<T> extends Component {
 			);
 		}
 		if (!this.chooser.values.length) {
-			this.resultContainerEl.createDiv({
-				cls: "suggestion-empty",
-				text: this.emptyStateText,
-			});
+			if (loading) this.renderLoadingState();
+			else
+				this.resultContainerEl.createDiv({
+					cls: "suggestion-empty",
+					text: this.emptyStateText,
+				});
 			return;
 		}
 		if (this.resultsLayout) return;
@@ -315,6 +325,15 @@ export class SuggestionPanel<T> extends Component {
 			this.decorateRow(el, index);
 			this.props.renderSuggestion(item, el, this.query);
 		}
+	}
+
+	/** 検索中の空の一覧。すぐ終わる検索で点滅しないよう、スピナーは CSS で少し遅れて現れる。 */
+	private renderLoadingState(): void {
+		const loadingEl = this.resultContainerEl.createDiv({
+			cls: "suggestion-empty my-palette-loading",
+			attr: { role: "status", "aria-label": t("view.searching") },
+		});
+		loadingEl.createDiv({ cls: "my-palette-spinner", attr: { "aria-hidden": "true" } });
 	}
 
 	/**

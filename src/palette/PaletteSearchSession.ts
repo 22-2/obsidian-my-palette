@@ -51,6 +51,8 @@ export interface PaletteSearchState {
 	results: PaletteResult[];
 	resultCount: number;
 	error?: string;
+	/** プロバイダーの検索が進行中かどうか。モードによらず、結果が届くまで true。 */
+	loading: boolean;
 	route: PaletteRoute;
 }
 
@@ -116,6 +118,7 @@ export class PaletteSearchSession {
 			includeIgnored: includeIgnored && supportsIncludeIgnored(parsed.mode),
 			results: [],
 			resultCount: 0,
+			loading: false,
 			route: this.route,
 		};
 		this.stopReadinessUpdates = plugin.integrationAvailability.subscribe(() => {
@@ -216,9 +219,10 @@ export class PaletteSearchSession {
 			includeIgnored,
 			...(keepResults ? {} : { results: [], resultCount: 0 }),
 			error: undefined,
+			loading: true,
 			route: this.route,
 		};
-		if (!keepResults) this.emit();
+		this.emit();
 
 		// 履歴は、結果の一覧がフォーカスを受け取ったときに記録する。検索の流れから外しておくと、
 		// 入力するだけでは履歴が作られないようにできる。
@@ -240,7 +244,13 @@ export class PaletteSearchSession {
 			});
 			const results = [...this.modeEntries(input), ...providerResults];
 			if (this.disposed || generation !== this.generation) return [];
-			this.state = { ...this.state, results, resultCount: results.length, error: undefined };
+			this.state = {
+				...this.state,
+				results,
+				resultCount: results.length,
+				error: undefined,
+				loading: false,
+			};
 			this.emit();
 			return results;
 		} catch (error) {
@@ -257,6 +267,7 @@ export class PaletteSearchSession {
 				results: [],
 				resultCount: 0,
 				error: error instanceof Error ? error.message : String(error),
+				loading: false,
 			};
 			this.emit();
 			return [];
