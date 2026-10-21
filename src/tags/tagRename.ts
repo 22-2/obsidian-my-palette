@@ -112,3 +112,63 @@ export function renameInlineTags(
 	}
 	return { text: result, count };
 }
+
+/** 名前のどれかに当たるタグを、本文から消す。消すタグの前の空白も一緒に消し、文が詰まるようにする。 */
+export function deleteInlineTags(
+	text: string,
+	positions: readonly InlineTagPosition[],
+	names: readonly string[],
+): { text: string; count: number } | undefined {
+	const matching = positions.filter((position) => matchesAnyName(position.tag.slice(1), names));
+	for (const { tag, start, end } of matching) {
+		if (text.slice(start, end) !== tag) return undefined;
+	}
+	let result = text;
+	// Why: 後ろから消すと、まだ消していない前のタグの位置はずれない。
+	for (const { start, end } of [...matching].sort((a, b) => b.start - a.start)) {
+		const [from, to] = spanWithLeadingBlank(result, start, end);
+		result = result.slice(0, from) + result.slice(to);
+	}
+	return { text: result, count: matching.length };
+}
+
+/** フロントマターの `tags` から、名前のどれかに当たるタグを消す。残りの順序は保つ。 */
+export function deleteFrontmatterTags(value: unknown, names: readonly string[]): RenamedList {
+	const list = readTagList(value);
+	if (!list) return { values: [], changed: false };
+	const values = list.filter((item) => !matchesAnyName(item.replace(/^#/, ""), names));
+	return { values, changed: values.length !== list.length };
+}
+
+/** フロントマターの `aliases` から、`#` で始まるタグのエイリアスのうち名前に当たるものを消す。 */
+export function deleteAliasTags(values: unknown[], names: readonly string[]): RenamedList {
+	const kept = values.filter(
+		(value) =>
+			!(
+				typeof value === "string" &&
+				value.startsWith("#") &&
+				matchesAnyName(value.slice(1), names)
+			),
+	);
+	return { values: kept, changed: kept.length !== values.length };
+}
+
+function matchesAnyName(name: string, names: readonly string[]): boolean {
+	return names.some((from) => isTagOrChild(name, from));
+}
+
+function isBlank(char: string | undefined): boolean {
+	return char === " " || char === "	";
+}
+
+/** タグの範囲を、前に空白があればそれも含めて広げる。前がなければ後ろの空白を含める。 */
+function spanWithLeadingBlank(text: string, start: number, end: number): [number, number] {
+	if (isBlank(text[start - 1])) {
+		let from = start;
+		while (isBlank(text[from - 1])) from--;
+		return [from, end];
+	}
+	let to = end;
+	while (isBlank(text[to])) to++;
+	return [start, to];
+}

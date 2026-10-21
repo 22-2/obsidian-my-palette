@@ -1,12 +1,14 @@
 import type { App } from "obsidian";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { TagResult } from "src/palette/results";
+import { confirmDeleteTags } from "src/tags/tagDelete";
 import { populateTagMenu } from "src/tags/tagMenu";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 
 const { modalArgs } = vi.hoisted(() => ({ modalArgs: [] as unknown[][] }));
 
 vi.mock("obsidian", () => ({ Notice: vi.fn(), TFile: class {} }));
+vi.mock("src/tags/tagDelete", () => ({ confirmDeleteTags: vi.fn() }));
 vi.mock("src/tags/TagRenameModal", () => ({
 	TagRenameModal: class {
 		constructor(...args: unknown[]) {
@@ -85,6 +87,7 @@ describe("populateTagMenu", () => {
 			expect.stringContaining("検索"),
 			expect.stringContaining("現在のノート"),
 			expect.stringContaining("変更"),
+			expect.stringContaining("全削除"),
 		]);
 		items[0].click?.();
 		expect(activate).toHaveBeenCalledWith(
@@ -102,7 +105,25 @@ describe("populateTagMenu", () => {
 			tags: [tag("a"), tag("b")],
 			activate: vi.fn(),
 		});
-		expect(items.map((item) => item.title)).toEqual([expect.stringContaining("現在のノート")]);
+		expect(items.map((item) => item.title)).toEqual([
+			expect.stringContaining("現在のノート"),
+			expect.stringContaining("全削除"),
+		]);
+	});
+
+	it("asks before deleting the selected tags everywhere", () => {
+		const { menu, items } = recordingMenu();
+		const onDone = vi.fn();
+		populateTagMenu({
+			app,
+			plugin: {} as never,
+			menu,
+			tags: [tag("a"), tag("b")],
+			activate: vi.fn(),
+			onNoteActionDone: onDone,
+		});
+		items.find((item) => item.title?.includes("全削除"))?.click?.();
+		expect(confirmDeleteTags).toHaveBeenCalledExactlyOnceWith(app, ["a", "b"], onDone);
 	});
 
 	it("inserts the selected tags into the active note's frontmatter", async () => {

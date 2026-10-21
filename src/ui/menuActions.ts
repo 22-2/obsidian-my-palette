@@ -140,6 +140,7 @@ export const MENU_ACTIONS = {
 		id: "tag-insert-active-note",
 	},
 	renameTag: { title: t("menu.tag.rename"), icon: ICONS.rename, id: "tag-rename" },
+	deleteTags: { title: t("menu.tag.delete"), icon: ICONS.delete, id: "tag-delete" },
 	clearChanges: { title: t("menu.clearChanges"), icon: ICONS.unchecked, id: "clear-changes" },
 
 	highlightSearchMatches: {

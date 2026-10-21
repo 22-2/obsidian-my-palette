@@ -4,6 +4,7 @@ import type { ActionKind } from "src/palette/resultActions";
 import type { PaletteResult, TagResult } from "src/palette/results";
 import { t } from "src/i18n";
 import { mergeFrontmatterTags, updateFrontmatter } from "src/shared/frontmatter";
+import { confirmDeleteTags } from "src/tags/tagDelete";
 import { TagRenameModal } from "src/tags/TagRenameModal";
 import { addMenuAction, MENU_ACTIONS } from "src/ui/menuActions";
 import type { PaletteMenu } from "src/ui/paletteMenu";
@@ -33,7 +34,8 @@ async function insertTagsIntoActiveNote(app: App, tagNames: readonly string[]): 
 
 /**
  * タグの結果の右クリックメニュー。タグの操作だけを出す。
- * 検索は1つ選んだときだけ（複数のタグは1つの検索にまとめられないため）。名前の変更も1つだけ。
+ * 検索と名前の変更は1つ選んだときだけ（複数のタグは1つの検索にまとめられず、名前も1つしか変えられないため）。
+ * 挿入と削除は、選んだすべてのタグに働く。
  */
 export function populateTagMenu({
 	app,
@@ -43,8 +45,9 @@ export function populateTagMenu({
 	onNoteActionDone,
 }: TagMenuOptions): void {
 	const [single] = tags;
+	const isSingle = tags.length === 1;
 	const tagNames = tags.map((tag) => tag.tagName);
-	if (single && tags.length === 1) {
+	if (single && isSingle) {
 		addMenuAction(menu, MENU_ACTIONS.searchTag, () => void activate("primary", single));
 	}
 	addMenuAction(menu, MENU_ACTIONS.insertTagIntoActiveNote, () => {
@@ -52,10 +55,14 @@ export function populateTagMenu({
 			if (applied) onNoteActionDone?.();
 		});
 	});
-	if (single && tags.length === 1) {
-		menu.addSeparator();
+	menu.addSeparator();
+	if (single && isSingle) {
 		addMenuAction(menu, MENU_ACTIONS.renameTag, () => {
 			new TagRenameModal(app, single.tagName, onNoteActionDone).open();
 		});
 	}
+	// Why: 削除は元に戻せないので、名前の変更と同じく確認を挟む。
+	addMenuAction(menu, MENU_ACTIONS.deleteTags, () => {
+		confirmDeleteTags(app, tagNames, onNoteActionDone);
+	});
 }
