@@ -35,6 +35,9 @@ vi.mock("src/palette/actions/fileMoveMenu", () => ({
 vi.mock("src/tags/tagInsertionMenu", () => ({
 	addTagInsertionMenuItems: vi.fn(),
 }));
+vi.mock("src/tags/tagMenu", () => ({
+	populateTagMenu: vi.fn(),
+}));
 vi.mock("src/platform/pathClipboard", () => ({
 	addCopyPathListMenuItems: vi.fn(),
 	addCopyPathMenuItems: vi.fn(),

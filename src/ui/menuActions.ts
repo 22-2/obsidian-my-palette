@@ -133,6 +133,13 @@ export const MENU_ACTIONS = {
 	runCommand: { title: t("menu.runCommand"), icon: ICONS.run, id: "run-command" },
 	enterMode: { title: t("menu.enterMode"), icon: ICONS.confirm, id: "enter-mode" },
 	useSearch: { title: t("menu.useSearch"), icon: ICONS.history, id: "use-search" },
+	searchTag: { title: t("menu.tag.search"), icon: ICONS.search, id: "tag-search" },
+	insertTagIntoActiveNote: {
+		title: t("menu.tag.insertIntoActiveNote"),
+		icon: ICONS.addTags,
+		id: "tag-insert-active-note",
+	},
+	renameTag: { title: t("menu.tag.rename"), icon: ICONS.rename, id: "tag-rename" },
 	clearChanges: { title: t("menu.clearChanges"), icon: ICONS.unchecked, id: "clear-changes" },
 
 	highlightSearchMatches: {

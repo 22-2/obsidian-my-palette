@@ -30,6 +30,7 @@ import {
 	copyPathToClipboard,
 } from "src/platform/pathClipboard";
 import { addTagInsertionMenuItems } from "src/tags/tagInsertionMenu";
+import { populateTagMenu } from "src/tags/tagMenu";
 import { populatePropertyMenu } from "src/properties/propertyMenu";
 import { openPluginSettings } from "src/search/plugin/pluginSettings";
 import {
@@ -103,6 +104,17 @@ export function populatePaletteResultMenu({
 			activate,
 			onNoteActionSelected,
 			onResultsChanged,
+		});
+		return;
+	}
+	if (targets.every((item) => item.mode === "tag")) {
+		populateTagMenu({
+			app,
+			plugin,
+			menu,
+			tags: targets,
+			activate,
+			onNoteActionDone,
 		});
 		return;
 	}

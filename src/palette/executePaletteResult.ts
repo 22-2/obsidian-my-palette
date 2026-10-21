@@ -8,7 +8,7 @@ import { openInExternalEditor } from "src/platform/externalOpen";
 import { editPropertyResult } from "src/properties/propertyActions";
 import { executeCommandById } from "src/platform/obsidianInternals";
 import { t } from "src/i18n";
-import { TagRenameModal } from "src/tags/TagRenameModal";
+import { openTagSearch } from "src/tags/tagSearch";
 
 export interface PaletteResultExecutionOptions {
 	/** 成功した操作のあとも、常駐のパネルを残す。 */
@@ -100,8 +100,7 @@ export async function executePaletteResult(
 		return;
 	}
 	if (result.mode === "tag") {
-		finish(options);
-		new TagRenameModal(plugin.app, result.tagName).open();
+		if (openTagSearch(plugin.app, result.tagName, true)) finish(options);
 		return;
 	}
 	if (result.mode === "plugin" || result.mode === "snippet") {
