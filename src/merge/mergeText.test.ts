@@ -71,14 +71,14 @@ describe("retargetLinks", () => {
 });
 
 describe("buildMergedBody", () => {
-	it("places sources first and the target last, each under a path marker", () => {
+	it("places the target first and the sources after it, each under a path marker", () => {
 		const body = buildMergedBody(
 			[{ path: "a.md", body: "aaa\n" }],
 			{ path: "b.md", body: "bbb\n" },
 			new Set(["a.md", "b.md"]),
 			resolve,
 		);
-		expect(body).toBe("%a.md%\n\naaa\n\n%b.md%\n\nbbb\n");
+		expect(body).toBe("%b.md%\n\nbbb\n\n%a.md%\n\naaa\n");
 	});
 	it("removes links between merged notes and keeps other links", () => {
 		const body = buildMergedBody(
@@ -87,7 +87,7 @@ describe("buildMergedBody", () => {
 			new Set(["a.md", "b.md"]),
 			resolve,
 		);
-		expect(body).toBe("%a.md%\n\nsee bee and [[c]]\n\n%b.md%\n\nself a\n");
+		expect(body).toBe("%b.md%\n\nself a\n\n%a.md%\n\nsee bee and [[c]]\n");
 	});
 });
 

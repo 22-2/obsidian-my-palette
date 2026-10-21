@@ -20,7 +20,7 @@ export interface MergePlan {
 	target: TFile;
 	/** パス順に並んだ統合元。マージ先は含まない。 */
 	sources: TFile[];
-	/** マージ先に書く、統合後の本文全体。 */
+	/** マージ先に書く、統合後の本文全体。マージ先の本文が一番上。 */
 	body: string;
 	sourceProperties: MergeSourceProperties[];
 	/** マージ先と統合元で値が違い、マージ先の値を残すキー。 */
