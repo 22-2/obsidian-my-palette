@@ -4,6 +4,7 @@ import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
 import { ICONS } from "src/ui/icons";
 import { countLabel } from "src/shared/countLabel";
 import { executeMerge, type MergePlan } from "src/merge/mergeNotes";
+import { openFileInLeaf } from "src/workspace/openLeaf";
 import { t } from "src/i18n";
 
 /** 変更予定の1行。ファイルごとに、何が変わるかを縦に並べる。 */
@@ -118,5 +119,16 @@ export class MergePlanModal extends SelectionModal<SelectionItem> {
 		}
 		this.close();
 		if (result.trashed > 0 || result.retargeted > 0) this.onDone?.();
+		// Why: パレットを閉じたあとに開く。先に開くと、閉じる操作が元のノートへフォーカスを戻す。
+		if (result.merged) await this.openTarget();
+	}
+
+	private async openTarget(): Promise<void> {
+		await openFileInLeaf(this.app, this.plan.target, {
+			action: "primary",
+			active: true,
+			autoFocus: true,
+			focusExisting: this.plugin.settings.focusExistingTab,
+		});
 	}
 }

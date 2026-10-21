@@ -32,6 +32,8 @@ export interface MergePlan {
 }
 
 export interface MergeResult {
+	/** マージ先を書き終えたか。失敗したときは、ほかのノートに触れていない。 */
+	merged: boolean;
 	/** 統合元をゴミ箱に移した数。 */
 	trashed: number;
 	/** リンクを付け替えたノートの数。 */
@@ -120,7 +122,7 @@ export async function planMerge(
  */
 export async function executeMerge(app: App, plan: MergePlan): Promise<MergeResult> {
 	const failures: string[] = [];
-	const result: MergeResult = { trashed: 0, retargeted: 0, failures };
+	const result: MergeResult = { merged: false, trashed: 0, retargeted: 0, failures };
 	const { target } = plan;
 	try {
 		await app.fileManager.processFrontMatter(target, (frontmatter: Record<string, unknown>) => {
@@ -137,6 +139,7 @@ export async function executeMerge(app: App, plan: MergePlan): Promise<MergeResu
 		failures.push(`${target.basename}: ${errorMessage(error)}`);
 		return result;
 	}
+	result.merged = true;
 
 	const moved = new Set(plan.sources.map((file) => file.path));
 	const resolve = resolverFor(app);

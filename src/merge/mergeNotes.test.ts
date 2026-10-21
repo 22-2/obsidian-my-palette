@@ -81,7 +81,7 @@ describe("executeMerge", () => {
 		const plan = await planMerge(app, [a.file], b.file);
 		const result = await executeMerge(app, plan);
 
-		expect(result).toEqual({ trashed: 1, retargeted: 2, failures: [] });
+		expect(result).toEqual({ merged: true, trashed: 1, retargeted: 2, failures: [] });
 		expect(byPath.get("b.md")!.body).toBe("%%b.md%%\n\nB body\n\n%%a.md%%\n\nA body [[c]]\n");
 		expect(byPath.get("b.md")!.frontmatter).toEqual({
 			status: "done",
@@ -111,6 +111,7 @@ describe("executeMerge", () => {
 		const result = await executeMerge(app, plan);
 
 		expect(result.failures).toEqual(["b: locked"]);
+		expect(result.merged).toBe(false);
 		expect(result.trashed).toBe(0);
 		expect(trashed).toEqual([]);
 		expect(vi.mocked(app.vault.process)).not.toHaveBeenCalled();
