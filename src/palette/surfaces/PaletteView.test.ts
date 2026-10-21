@@ -185,15 +185,15 @@ describe("PaletteView", () => {
 	it("searches on open and follows the active note in its footer", async () => {
 		const f = await mount();
 		expect(f.labels()).toEqual(expect.arrayContaining(["Alpha", "Beta"]));
-		expect(f.root.textContent).toContain("元: Notes/First.md");
+		expect(f.root.textContent).toContain("元ファイル: Notes/First.md");
 		f.switchTo("Notes/Second.md");
-		expect(f.root.textContent).toContain("元: Notes/Second.md");
+		expect(f.root.textContent).toContain("元ファイル: Notes/Second.md");
 	});
 
 	it("keeps a pinned source when the active note changes", async () => {
 		const f = await mount(false, { sourcePath: "Pinned.md", sourcePinned: true });
 		f.switchTo("Notes/Second.md");
-		expect(f.root.textContent).toContain("元: Pinned.md");
+		expect(f.root.textContent).toContain("元ファイル: Pinned.md");
 		expect(f.view.getState()).toMatchObject({ sourcePath: "Pinned.md", sourcePinned: true });
 	});
 

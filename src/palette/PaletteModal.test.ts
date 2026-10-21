@@ -145,7 +145,7 @@ describe("PaletteModal", () => {
 		const f = await open();
 		expect(f.labels()).toContain("Alpha");
 		expect(f.labels()).toContain("Beta");
-		expect(f.modal.modalEl.textContent).toContain("元: Active.md");
+		expect(f.modal.modalEl.textContent).toContain("元ファイル: Active.md");
 		expect(f.modal.modalEl.getAttribute("data-route")).toBe("home");
 	});
 
