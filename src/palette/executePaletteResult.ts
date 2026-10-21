@@ -8,6 +8,7 @@ import { openInExternalEditor } from "src/platform/externalOpen";
 import { editPropertyResult } from "src/properties/propertyActions";
 import { executeCommandById } from "src/platform/obsidianInternals";
 import { t } from "src/i18n";
+import { TagRenameModal } from "src/tags/TagRenameModal";
 
 export interface PaletteResultExecutionOptions {
 	/** 成功した操作のあとも、常駐のパネルを残す。 */
@@ -96,6 +97,11 @@ export async function executePaletteResult(
 	}
 	if (result.mode === "audit") {
 		if (await executeAuditResult(plugin, result, action, options)) finish(options);
+		return;
+	}
+	if (result.mode === "tag") {
+		finish(options);
+		new TagRenameModal(plugin.app, result.tagName).open();
 		return;
 	}
 	if (result.mode === "plugin" || result.mode === "snippet") {

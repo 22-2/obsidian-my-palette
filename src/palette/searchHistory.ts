@@ -26,6 +26,7 @@ export const PALETTE_HISTORY_CATEGORIES: readonly SearchHistoryCategory[] = [
 	"plugin",
 	"snippet",
 	"property",
+	"tag",
 	"audit",
 	"everything",
 	"everything-directory",
@@ -56,6 +57,7 @@ function isSearchHistoryCategory(value: unknown): value is SearchHistoryCategory
 		value === "plugin" ||
 		value === "snippet" ||
 		value === "property" ||
+		value === "tag" ||
 		value === "audit" ||
 		value === "everything" ||
 		value === "everything-directory" ||
@@ -286,6 +288,8 @@ function historyCategoryMode(category: SearchHistoryCategory): PaletteModeId | u
 			return "snippets";
 		case "property":
 			return "properties";
+		case "tag":
+			return "tags";
 		case "audit":
 			return "audit";
 		case "everything":

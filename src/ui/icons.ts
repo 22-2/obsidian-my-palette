@@ -88,6 +88,7 @@ export const ICONS = {
 	tab: "panel-top",
 	plugin: "puzzle",
 	snippet: "paintbrush",
+	tagMode: "hash",
 	vaultAudit: "scan-search",
 	orphanedFile: "file-question",
 	brokenLink: "unlink",

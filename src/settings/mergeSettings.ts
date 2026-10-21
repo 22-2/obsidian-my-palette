@@ -278,6 +278,16 @@ function normalizeModes(source: Record<string, unknown>): ModeSettingsMap {
 			modes,
 		);
 	}
+	// タグは後から来た。`tg` が空いていなければ、空いている代わりのエイリアスへ移す。
+	if (!rawModes.tags) {
+		modes.tags.alias = unusedAlias(
+			DEFAULT_SETTINGS.modes.tags.alias,
+			"tags",
+			"tags",
+			modeIds,
+			modes,
+		);
+	}
 	// プロパティは最後に来た。`pr` は `p`(プラグイン)と先頭の文字が同じだが、
 	// エイリアスは「エイリアス + Space」で照合するので問題ない。
 	if (!rawModes.properties) {

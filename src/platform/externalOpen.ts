@@ -44,6 +44,7 @@ export function getResultAbsolutePath(app: App, result: PaletteResult): string |
 			return getVaultFullPath(app, result.file.path) ?? undefined;
 		case "command":
 		case "property":
+		case "tag":
 		case "search-history":
 		case "mode-entry":
 			return undefined;

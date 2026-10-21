@@ -16,6 +16,7 @@ export type PaletteModeId =
 	| "plugins"
 	| "snippets"
 	| "properties"
+	| "tags"
 	| "audit";
 
 export interface PaletteModeDefinition {
@@ -139,6 +140,15 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		icon: ICONS.vaultAudit,
 		// 表示中の種類に置き換わる(auditKindChoice.ts を参照)。モード自身の定義として残す。
 		placeholder: t("mode.audit.placeholder"),
+	},
+	{
+		id: "tags",
+		mode: "tag",
+		englishName: "Tags",
+		title: t("mode.tags.title"),
+		subtitle: t("mode.subtitle.vault"),
+		icon: ICONS.tagMode,
+		placeholder: t("mode.tags.placeholder"),
 	},
 ];
 

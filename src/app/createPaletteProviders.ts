@@ -11,6 +11,7 @@ import { SmartConnectionProvider } from "src/search/smart/SmartConnectionProvide
 import { TabProvider } from "src/search/tab/TabProvider";
 import { PluginProvider } from "src/search/plugin/PluginProvider";
 import { SnippetProvider } from "src/search/snippet/SnippetProvider";
+import { TagProvider } from "src/search/tag/TagProvider";
 import { PropertyProvider } from "src/search/property/PropertyProvider";
 import { AuditProvider } from "src/search/audit/AuditProvider";
 import type { PaletteProvider } from "src/search/PaletteProvider";
@@ -30,6 +31,7 @@ export interface PaletteProviderInstances {
 	tabProvider: TabProvider;
 	pluginProvider: PluginProvider;
 	snippetProvider: SnippetProvider;
+	tagProvider: TagProvider;
 	auditProvider: AuditProvider;
 	providers: Record<PaletteMode, PaletteProvider>;
 }
@@ -86,6 +88,7 @@ export function createPaletteProviders(
 	const tabProvider = new TabProvider(app);
 	const pluginProvider = new PluginProvider(app);
 	const snippetProvider = new SnippetProvider(app);
+	const tagProvider = new TagProvider(app);
 	const auditProvider = new AuditProvider(app, options.settings);
 	return {
 		fileProvider,
@@ -97,6 +100,7 @@ export function createPaletteProviders(
 		tabProvider,
 		pluginProvider,
 		snippetProvider,
+		tagProvider,
 		auditProvider,
 		providers: {
 			file: fileProvider,
@@ -109,6 +113,7 @@ export function createPaletteProviders(
 			tab: tabProvider,
 			plugin: pluginProvider,
 			snippet: snippetProvider,
+			tag: tagProvider,
 			property: new PropertyProvider(app),
 			audit: auditProvider,
 		},

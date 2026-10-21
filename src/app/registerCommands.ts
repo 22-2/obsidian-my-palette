@@ -2,6 +2,7 @@ import type MyPalettePlugin from "src/main";
 import { insertLinkToMocRelateds, removeLinkInMocRelateds } from "src/moc-relateds/mocRelateds";
 import { MoveFileModal } from "src/palette/MoveFileModal";
 import { BulkRenameModal } from "src/rename/BulkRenameModal";
+import { TagRenameModal } from "src/tags/TagRenameModal";
 import { MergeTargetModal } from "src/merge/MergeTargetModal";
 import type { FixedPaletteMode } from "src/palette/PaletteSearchSession";
 import { insertTags } from "src/tags/insertTags";
@@ -99,6 +100,11 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		},
 	});
 	plugin.addCommand({
+		id: "open-tag-rename",
+		name: t("command.openTagRename"),
+		callback: () => new TagRenameModal(plugin.app).open(),
+	});
+	plugin.addCommand({
 		id: "open-merge-selector",
 		name: t("command.openMergeSelector"),
 		checkCallback: (checking) => {
@@ -121,6 +127,11 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		id: "open-snippet-list",
 		name: t("command.openSnippetList"),
 		callback: () => openWithHome(`${plugin.settings.modes.snippets.alias} `),
+	});
+	plugin.addCommand({
+		id: "open-tag-list",
+		name: t("command.openTagList"),
+		callback: () => openWithHome(`${plugin.settings.modes.tags.alias} `),
 	});
 	plugin.addCommand({
 		id: "open-property-list",

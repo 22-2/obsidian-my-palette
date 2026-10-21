@@ -426,5 +426,7 @@ export function palettePlaceholder(mode: PaletteMode): string {
 								? t("palette.placeholder.snippet")
 								: mode === "property"
 									? t("palette.placeholder.property")
-									: t("palette.placeholder.files");
+									: mode === "tag"
+										? t("palette.placeholder.tag")
+										: t("palette.placeholder.files");
 }

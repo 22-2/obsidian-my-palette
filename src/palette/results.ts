@@ -16,6 +16,7 @@ export type PaletteMode =
 	| "plugin"
 	| "snippet"
 	| "property"
+	| "tag"
 	| "audit";
 export type EverythingScope = "vault" | "directory";
 
@@ -127,6 +128,13 @@ export interface SnippetResult extends BaseResult {
 	enabled: boolean;
 }
 
+/** タグの一覧の行。選ぶと、そのタグの一括変更を開く。 */
+export interface TagResult extends BaseResult {
+	mode: "tag";
+	tagName: string;
+	count: number;
+}
+
 /** プロパティの行が編集できる値の種類。`unsupported` の値はソースモードで編集する。 */
 export type PropertyKind =
 	| "text"
@@ -199,6 +207,7 @@ export type PaletteResult =
 	| PluginResult
 	| SnippetResult
 	| PropertyResult
+	| TagResult
 	| AuditResult
 	| ModeEntryResult;
 

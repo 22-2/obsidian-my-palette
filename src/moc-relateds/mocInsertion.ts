@@ -37,6 +37,7 @@ async function resolveMocTarget(
 		result.mode === "plugin" ||
 		result.mode === "snippet" ||
 		result.mode === "property" ||
+		result.mode === "tag" ||
 		result.mode === "audit" ||
 		result.mode === "search-history" ||
 		result.mode === "mode-entry"

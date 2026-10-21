@@ -28,6 +28,7 @@ export type SearchHistoryCategory =
 	| "plugin"
 	| "snippet"
 	| "property"
+	| "tag"
 	| "audit"
 	| "everything"
 	| "everything-directory"
@@ -369,6 +370,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		plugins: { alias: "p", enabled: true },
 		snippets: { alias: "sn", enabled: true },
 		properties: { alias: "pr", enabled: true },
+		tags: { alias: "tg", enabled: true },
 		audit: { alias: "a", enabled: true },
 	},
 	file: {
