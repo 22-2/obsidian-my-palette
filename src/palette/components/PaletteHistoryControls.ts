@@ -60,11 +60,16 @@ interface PaletteHistoryControlsOptions {
 	showFileSearchOptions?: boolean;
 }
 
-/** ファイル検索の設定を切り替える項目。切り替えを増やすときは、ここに1行足す。 */
+/**
+ * ファイル検索の設定を切り替える項目。切り替えを増やすときは、ここに1行足す。
+ * `leading` は除外ファイルのスイッチより前に、`trailing` は後ろに並べる。
+ */
 const FILE_SEARCH_TOGGLES = [
-	{ key: "foldKana", action: MENU_ACTIONS.foldKana },
-	{ key: "openableFilesOnly", action: MENU_ACTIONS.openableFilesOnly },
+	{ key: "foldKana", action: MENU_ACTIONS.foldKana, placement: "leading" },
+	{ key: "openableFilesOnly", action: MENU_ACTIONS.openableFilesOnly, placement: "trailing" },
 ] as const;
+
+type FileSearchToggle = (typeof FILE_SEARCH_TOGGLES)[number];
 
 /** 両方のパレットの外枠で共有する、検索履歴とオプションの操作。 */
 export class PaletteHistoryControls {
@@ -246,6 +251,25 @@ export class PaletteHistoryControls {
 		// Why: 中身のない見出しは、ただのノイズになる。
 		if (switches.length > 0 || offersHighlight || offersFileSearch)
 			menu.addHeading(t("palette.control.optionsHeading"));
+		const addFileSearchToggle = ({ key, action }: FileSearchToggle): void => {
+			menu.addItem((item) =>
+				withAction(item, action)
+					.setSwitch(plugin.settings.file[key])
+					.setKeepOpen()
+					.onClick(() => {
+						plugin.settings.file[key] = !plugin.settings.file[key];
+						void plugin.saveSettings().then(() => {
+							item.setSwitch(plugin.settings.file[key]);
+							// Why: 入力し直したときと同じ経路で、結果を検索し直させる。
+							this.options.inputEl.dispatchEvent(new Event("input"));
+						});
+					}),
+			);
+		};
+		const fileSearchToggles = offersFileSearch ? FILE_SEARCH_TOGGLES : [];
+		// Why: 「ひらがなとカタカナ」は除外ファイルのスイッチより前、「拡張子除外」は後ろに置く。
+		for (const toggle of fileSearchToggles.filter(({ placement }) => placement === "leading"))
+			addFileSearchToggle(toggle);
 		for (const toggle of switches) {
 			menu.addItem((item) =>
 				item
@@ -279,21 +303,8 @@ export class PaletteHistoryControls {
 							);
 					}),
 			);
-		if (offersFileSearch)
-			for (const { key, action } of FILE_SEARCH_TOGGLES)
-				menu.addItem((item) =>
-					withAction(item, action)
-						.setSwitch(plugin.settings.file[key])
-						.setKeepOpen()
-						.onClick(() => {
-							plugin.settings.file[key] = !plugin.settings.file[key];
-							void plugin.saveSettings().then(() => {
-								item.setSwitch(plugin.settings.file[key]);
-								// Why: 入力し直したときと同じ経路で、結果を検索し直させる。
-								this.options.inputEl.dispatchEvent(new Event("input"));
-							});
-						}),
-				);
+		for (const toggle of fileSearchToggles.filter(({ placement }) => placement === "trailing"))
+			addFileSearchToggle(toggle);
 		// Why: 項目の種類ごとに独自のグループを持たせる。オプション、この画面の操作、ヘルプ、
 		// 破壊的な消去が、1つの一覧に見えないようにするため。
 		menu.addSeparator();
