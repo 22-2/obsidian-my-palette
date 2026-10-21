@@ -47,7 +47,9 @@ export class TagRenameModal extends Modal {
 				this.refresh();
 			});
 			text.inputEl.addEventListener("keydown", (event) => {
-				if (event.key === "Enter") void this.apply();
+				// Why: 同じキー入力の中で確認を開くと、開いた直後の確認にフォーカスが移り、
+				// 続く Enter がその「キャンセル」を押してしまう。確認は次の処理で開く。
+				if (event.key === "Enter") window.setTimeout(() => this.apply());
 			});
 		});
 
