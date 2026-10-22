@@ -1,6 +1,6 @@
 {
 	"id": "my-palette",
-	"name": "My Palette (22-2)",
+	"name": "My Palette",
 	"version": "0.2.0",
 	"minAppVersion": "1.13.0",
 	"description": "A VS Code-style palette for Obsidian: find files first, then decide how to open or act on them. Optional Everything 1.5a search.",
