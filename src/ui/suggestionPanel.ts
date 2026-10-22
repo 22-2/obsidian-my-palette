@@ -1,4 +1,4 @@
-import { Component, setIcon } from "obsidian";
+import { Component, Notice, setIcon } from "obsidian";
 import { ExtendedSelection } from "src/ui/extendedSelection";
 import { InteractionModes } from "src/ui/interactionModes";
 import {
@@ -10,6 +10,7 @@ import {
 import { markKeyboardMenuEvent } from "src/ui/menus";
 import { PanelSwitch, type PanelSwitchOptions } from "src/ui/panelSwitch";
 import { ICONS } from "src/ui/icons";
+import { logger } from "src/shared/logger";
 import { t } from "src/i18n";
 
 export interface SuggestionPanelProps<T> {
@@ -43,6 +44,11 @@ export interface SuggestionPanelProps<T> {
 	onEscape?: () => void;
 	/** 強調行でモードに入るキー。true を返すとキーを消費する(Home がモードに入る)。 */
 	onTab?: (item: T) => boolean;
+	/**
+	 * プレビューのキーで選んだ行を見せる。ホストが対象外と判断した行は、何もせずに返す。
+	 * 入力欄のフォーカスは、終わったあとにパネルが戻す。
+	 */
+	onPreview?: (item: T) => Promise<void> | void;
 	/** 空の入力での Backspace。true を返すとキーを消費する。 */
 	onEmptyBackspace?: () => boolean;
 	/** 入力欄の左に出るモードのチップのクリック。 */
@@ -115,6 +121,8 @@ export class SuggestionPanel<T> extends Component {
 	private resultsLayout?: SuggestionPanelResultsLayout<T>;
 	private readonly modes?: InteractionModes;
 	private readonly switches = new Map<string, PanelSwitch>();
+	private previewGeneration = 0;
+	private previewPending = false;
 
 	constructor(rootEl: HTMLElement, props: SuggestionPanelProps<T>) {
 		super();
@@ -189,6 +197,8 @@ export class SuggestionPanel<T> extends Component {
 
 	onunload(): void {
 		this.switches.clear();
+		// 閉じた後に終わったプレビューは、入力欄へフォーカスを戻さない。
+		this.previewGeneration += 1;
 		this.previewContainerEl.removeClass("my-palette-preview-surface", "is-preview-hidden");
 	}
 
@@ -517,8 +527,54 @@ export class SuggestionPanel<T> extends Component {
 		return true;
 	}
 
+	/**
+	 * プレビューのキー。モーダルと常設のビューで同じ判定にし、フォーカスは入力欄に残す。
+	 * 右矢印は入力欄の末尾にカーソルがあるときだけ使い、途中の編集を奪わない。
+	 */
+	private handlePreviewKey(event: KeyboardEvent): boolean {
+		const { onPreview } = this.props;
+		const hotkey = this.hotkeys.preview;
+		if (!onPreview || !matchesHotkey(event, hotkey)) return false;
+		const cursorIsAtEnd =
+			this.inputEl.selectionStart === this.inputEl.value.length &&
+			this.inputEl.selectionEnd === this.inputEl.value.length;
+		const usesCursorKey = hotkey?.key === "ArrowRight" && hotkey.modifiers.length === 0;
+		if (usesCursorKey && !this.inputEl.readOnly && !cursorIsAtEnd) return false;
+		event.preventDefault();
+		event.stopImmediatePropagation();
+		const item = this.getSelectedItem();
+		if (item === undefined || event.repeat || this.previewPending) return true;
+		void this.previewItem(item);
+		return true;
+	}
+
+	private async previewItem(item: T): Promise<void> {
+		this.previewPending = true;
+		const generation = this.previewGeneration;
+		const selectionStart = this.inputEl.selectionStart;
+		const selectionEnd = this.inputEl.selectionEnd;
+		const restoreFocus = () => {
+			if (generation !== this.previewGeneration || !this.inputEl.isConnected) return;
+			// DOM の入力欄に直接フォーカスする。入力モードに切り替えると、プレビューのたびに
+			// セレクターの読み取り専用の選択モードが失われてしまうため。
+			this.inputEl.focus({ preventScroll: true });
+			this.inputEl.setSelectionRange(selectionStart, selectionEnd);
+		};
+		try {
+			await this.props.onPreview?.(item);
+		} catch (error) {
+			logger.error("Failed to preview selection", error);
+			new Notice(error instanceof Error ? error.message : t("modal.error.previewFailed"));
+		} finally {
+			this.previewPending = false;
+			restoreFocus();
+			window.setTimeout(restoreFocus, 0);
+		}
+	}
+
 	private handleInputKeyDown(event: KeyboardEvent): void {
 		if (event.isComposing) return;
+		if (this.handlePreviewKey(event)) return;
 		if (this.handleModeCommand(event)) return;
 		if (this.props.onContextMenu && matchesHotkey(event, this.hotkeys.contextMenu)) {
 			event.preventDefault();

@@ -3,6 +3,7 @@ import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
 import type MyPalettePlugin from "src/main";
 import { choosingOpensMenu, type PaletteResult } from "src/palette/results";
+import { canPreviewResult } from "src/palette/resultPreview";
 import { openFileInLeaf, revealOpenedLeaf } from "src/workspace/openLeaf";
 import {
 	executePaletteResult,
@@ -327,6 +328,7 @@ export class PaletteView extends ItemView {
 				this.enterMode(result.modeId);
 				return true;
 			},
+			onPreview: (result) => this.preview(result),
 			sectionOf: (result) => paletteSectionOf(this.session?.current, result),
 			// Why: ピン留めはめったに切り替えないので、常設のフッターボタンではなく元のノート名の
 			// メニューに置く。通常のクリックはノートに移動する。
@@ -567,11 +569,22 @@ export class PaletteView extends ItemView {
 		this.panel?.focusSearchInput();
 	}
 
+	/**
+	 * 右矢印のプレビューは、結果を見せるが、フォーカスはこのビューの入力欄に残す。
+	 * モーダル版と同じ判定と操作で、タブのモードも同じように切り替えて見せる。
+	 */
+	private async preview(result: PaletteResult): Promise<void> {
+		if (!canPreviewResult(result)) return;
+		this.session?.commitCurrentSearch();
+		await this.execute(result, "primary", undefined, true, false);
+	}
+
 	private async execute(
 		result: PaletteResult,
 		action: ActionKind,
 		targetOverride?: WorkspaceLeaf,
 		reuseExternalMarkdownLeaf = true,
+		autoFocus = true,
 	): Promise<void> {
 		if (result.mode === "mode-entry") {
 			this.enterMode(result.modeId);
@@ -591,6 +604,7 @@ export class PaletteView extends ItemView {
 			// ノートを開くのはナビゲーションなので、開き終えた後にこのパレットの入力へ戻るのではなく、
 			// 移動先にフォーカスを当てる。
 			active: true,
+			autoFocus,
 			close: () => undefined,
 			showError: (message) => {
 				this.actionMessage = message;

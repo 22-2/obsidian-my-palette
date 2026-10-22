@@ -233,6 +233,31 @@ describe("PaletteView", () => {
 		expect(f.root.isConnected).toBe(true);
 	});
 
+	it("previews the highlighted result with ArrowRight and keeps focus in the input", async () => {
+		const f = await mount(false, { input: "a" });
+		key(f.input, "ArrowDown");
+		vi.mocked(executePaletteResult).mockClear();
+		key(f.input, "ArrowRight");
+		await settle();
+		expect(executePaletteResult).toHaveBeenCalledExactlyOnceWith(
+			f.plugin,
+			expect.objectContaining({ id: "file:Alpha.md" }),
+			"primary",
+			expect.objectContaining({ closeWhenDone: false, autoFocus: false }),
+		);
+		expect(f.input.isConnected).toBe(true);
+		expect(document.activeElement).toBe(f.input);
+	});
+
+	it("does not run a preview for a result that cannot be shown", async () => {
+		const f = await mount(false, { input: "> build" });
+		vi.mocked(executePaletteResult).mockClear();
+		key(f.input, "ArrowDown");
+		key(f.input, "ArrowRight");
+		await settle();
+		expect(executePaletteResult).not.toHaveBeenCalled();
+	});
+
 	it("restores a mode from its alias, persists it, and clears the query before Home", async () => {
 		const f = await mount(false, { input: "> build" });
 		expect(f.panel().getAttribute("data-mode")).toBe("command");

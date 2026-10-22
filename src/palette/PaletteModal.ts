@@ -15,6 +15,7 @@ import {
 } from "src/ui/selectionModal";
 import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
 import { executePaletteResult } from "src/palette/executePaletteResult";
+import { canPreviewResult } from "src/palette/resultPreview";
 import type { ActionKind } from "src/palette/resultActions";
 import {
 	PaletteSearchSession,
@@ -373,7 +374,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override async onSuggestionPreview(result: PaletteResult): Promise<void> {
-		if (result.mode === "command" || result.mode === "mode-entry") return;
+		if (!canPreviewResult(result)) return;
 		this.session.commitCurrentSearch();
 		await this.activatePaletteResult("primary", result, false);
 	}

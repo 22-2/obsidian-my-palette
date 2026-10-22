@@ -1,12 +1,11 @@
-import { App, Modal, Notice } from "obsidian";
+import { App, Modal } from "obsidian";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 import { SelectorHelpModal, type SelectorControls } from "src/ui/selectorControls";
 import { SuggestionPanel, type SuggestionPanelView } from "src/ui/suggestionPanel";
 import type { PanelSwitch, PanelSwitchOptions } from "src/ui/panelSwitch";
-import { DEFAULT_HOTKEYS, matchesHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
+import { DEFAULT_HOTKEYS, type PaletteHotkeys } from "src/ui/hotkeys";
 import { ICONS } from "src/ui/icons";
-import { logger } from "src/shared/logger";
 import { getScopeHandlers } from "src/platform/obsidianInternals";
 import { t } from "src/i18n";
 
@@ -43,8 +42,6 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	private selectorHistoryControls?: PaletteHistoryControls;
 	private historyTimer?: number;
 	private historyCommitted = false;
-	private previewGeneration = 0;
-	private previewPending = false;
 	private readonly getHotkeys: () => PaletteHotkeys;
 
 	constructor(
@@ -112,6 +109,9 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			onEscape: () => this.onSuggestionEscape(),
 			onEmptyBackspace: () => this.onEmptyBackspace(),
 			onTab: (item) => this.onSuggestionTab(item),
+			onPreview: this.handlesSuggestionPreview()
+				? (item) => this.previewSuggestion(item)
+				: undefined,
 			onModeChipClick: () => this.onModeChipClick(),
 			sectionOf: (item) => this.sectionOf(item),
 		});
@@ -166,13 +166,6 @@ export abstract class BaseSuggestModal<T> extends Modal {
 		// 同じインスタンスを再度開いても、フッターやハンドラを増やさない。
 		this.panel.load();
 		this.containerEl.addClass("my-palette-modal-container");
-		if (this.handlesSuggestionPreview())
-			this.registerSelectionDomEvent(
-				this.inputEl,
-				"keydown",
-				(event) => this.handlePreviewKey(event),
-				true,
-			);
 		this.historyCommitted = false;
 		if (this.controls) {
 			const controls = this.controls;
@@ -221,7 +214,6 @@ export abstract class BaseSuggestModal<T> extends Modal {
 
 	onClose(): void {
 		this.containerEl.removeClass("my-palette-modal-container", "is-preview-hidden");
-		this.previewGeneration += 1;
 		this.refreshGeneration += 1;
 		this.cancelHistoryTimer();
 		this.selectorHistoryControls?.destroy();
@@ -248,47 +240,10 @@ export abstract class BaseSuggestModal<T> extends Modal {
 
 	protected async onSuggestionPreview(_item: T): Promise<void> {}
 
-	private handlePreviewKey(event: KeyboardEvent): void {
-		const cursorIsAtEnd =
-			this.inputEl.selectionStart === this.inputEl.value.length &&
-			this.inputEl.selectionEnd === this.inputEl.value.length;
-		const hotkey = this.getHotkeys().preview;
-		const usesCursorKey = hotkey?.key === "ArrowRight" && hotkey.modifiers.length === 0;
-		if (
-			!matchesHotkey(event, hotkey) ||
-			(usesCursorKey && !this.inputEl.readOnly && !cursorIsAtEnd)
-		)
-			return;
-		event.preventDefault();
-		event.stopImmediatePropagation();
-		const item = this.getSelectedItem();
-		if (item === undefined || event.repeat || this.previewPending) return;
+	/** プレビューのキーの判定と、フォーカスを戻す処理は SuggestionPanel が持つ。 */
+	private previewSuggestion(item: T): Promise<void> {
 		this.commitSearchHistory();
-		void this.previewSuggestion(item);
-	}
-
-	private async previewSuggestion(item: T): Promise<void> {
-		this.previewPending = true;
-		const generation = this.previewGeneration;
-		const selectionStart = this.inputEl.selectionStart;
-		const selectionEnd = this.inputEl.selectionEnd;
-		const restoreFocus = () => {
-			if (generation !== this.previewGeneration || !this.inputEl.isConnected) return;
-			// DOM の入力欄に直接フォーカスする。入力モードに切り替えると、プレビューのたびに
-			// セレクターの読み取り専用の選択モードが失われてしまうため。
-			this.inputEl.focus({ preventScroll: true });
-			this.inputEl.setSelectionRange(selectionStart, selectionEnd);
-		};
-		try {
-			await this.onSuggestionPreview(item);
-		} catch (error) {
-			logger.error("Failed to preview selection", error);
-			new Notice(error instanceof Error ? error.message : t("modal.error.previewFailed"));
-		} finally {
-			this.previewPending = false;
-			restoreFocus();
-			window.setTimeout(restoreFocus, 0);
-		}
+		return this.onSuggestionPreview(item);
 	}
 
 	protected populateSelectorActions(menu: PaletteMenu, event: MouseEvent): void {
