@@ -150,6 +150,11 @@ export function mergeSettings(data: unknown): MyPaletteSettings {
 					: DEFAULT_SETTINGS.file.openableFilesOnly,
 		},
 		everything: {
+			backend: rawEverything.backend === "http" ? "http" : "es",
+			esPath:
+				typeof rawEverything.esPath === "string" && rawEverything.esPath.trim()
+					? rawEverything.esPath.trim()
+					: DEFAULT_SETTINGS.everything.esPath,
 			httpUrl:
 				typeof rawEverything.httpUrl === "string" && rawEverything.httpUrl.trim()
 					? rawEverything.httpUrl.trim()

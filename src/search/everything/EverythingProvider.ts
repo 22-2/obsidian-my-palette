@@ -11,7 +11,7 @@ import {
 } from "src/search/excludedFolders";
 import type { MyPaletteSettings } from "src/settings/model";
 import type { EverythingResult } from "src/palette/results";
-import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
+import { EverythingClient } from "src/search/everything/EverythingClient";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { buildEverythingQuery } from "src/search/everything/everythingQuery";
 import { isExtensionOpenable } from "src/platform/obsidianInternals";
@@ -20,7 +20,7 @@ import { t } from "src/i18n";
 export class EverythingProvider implements PaletteProvider<EverythingResult> {
 	constructor(
 		private readonly app: App,
-		private readonly client: EverythingHttpClient,
+		private readonly client: EverythingClient,
 		private readonly settings: () => MyPaletteSettings["everything"],
 		private readonly excludedFolders: ExcludedFolderSource = EMPTY_EXCLUDED_FOLDER_SOURCE,
 		private readonly openableFilesOnly: () => boolean = () => false,

@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
 
 const settings = {
+	backend: "http" as const,
+	esPath: "es.exe",
 	httpUrl: "http://127.0.0.1:51361/",
 	username: "",
 	password: "",

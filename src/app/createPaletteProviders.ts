@@ -1,7 +1,7 @@
 import type { App } from "obsidian";
 import type { FileSortPriorities, MyPaletteSettings } from "src/settings/model";
 import type { PaletteMode } from "src/palette/results";
-import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
+import { EverythingClient } from "src/search/everything/EverythingClient";
 import { EverythingProvider } from "src/search/everything/EverythingProvider";
 import { FileProvider } from "src/search/file/FileProvider";
 import { CommandProvider } from "src/search/command/CommandProvider";
@@ -59,7 +59,7 @@ interface ProviderFactoryOptions {
  */
 export function createPaletteProviders(
 	app: App,
-	everythingClient: EverythingHttpClient,
+	everythingClient: EverythingClient,
 	options: ProviderFactoryOptions,
 ): PaletteProviderInstances {
 	const excludedFolders = options.excludedFolders ?? EMPTY_EXCLUDED_FOLDER_SOURCE;

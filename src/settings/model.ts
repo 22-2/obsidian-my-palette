@@ -321,6 +321,9 @@ export interface MyPaletteSettings {
 		openableFilesOnly: boolean;
 	};
 	everything: {
+		/** 検索の手段。es は es.exe、http は Everything の HTTP サーバー。 */
+		backend: EverythingBackend;
+		esPath: string;
 		httpUrl: string;
 		username: string;
 		password: string;
@@ -331,6 +334,8 @@ export interface MyPaletteSettings {
 	};
 	audit: AuditSettings;
 }
+
+export type EverythingBackend = "es" | "http";
 
 export interface AuditSettings {
 	/** Vault 監査が一覧にする種類。オプションのメニューで選び、すべての画面で共有する。 */
@@ -388,6 +393,8 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		openableFilesOnly: false,
 	},
 	everything: {
+		backend: "es",
+		esPath: "es.exe",
 		httpUrl: "http://127.0.0.1:51361/",
 		username: "",
 		password: "",

@@ -7,6 +7,8 @@ import { t } from "src/i18n";
 
 /** Everything のモーダルの中の名前。連携の行は、このどれからでも見つけられる。 */
 export const EVERYTHING_MODAL_ITEMS = [
+	t("settings.everything.item.backend"),
+	t("settings.everything.item.esPath"),
 	t("settings.everything.item.url"),
 	t("settings.everything.item.username"),
 	t("settings.everything.item.password"),
@@ -106,6 +108,31 @@ function renderEverythingFields(containerEl: HTMLElement, plugin: SettingsHost):
 	const { everything } = plugin.settings;
 
 	new Setting(containerEl).setName(t("settings.everything.connection")).setHeading();
+	new Setting(containerEl)
+		.setName(t("settings.everything.item.backend"))
+		.setDesc(t("settings.everything.backendDesc"))
+		.addDropdown((dropdown) =>
+			dropdown
+				.addOption("es", t("settings.everything.backendEs"))
+				.addOption("http", t("settings.everything.backendHttp"))
+				.setValue(everything.backend)
+				.onChange(async (value) => {
+					everything.backend = value === "http" ? "http" : "es";
+					await plugin.saveSettings();
+				}),
+		);
+	new Setting(containerEl)
+		.setName(t("settings.everything.item.esPath"))
+		.setDesc(t("settings.everything.esPathDesc"))
+		.addText((text) =>
+			text
+				.setPlaceholder(DEFAULT_SETTINGS.everything.esPath)
+				.setValue(everything.esPath)
+				.onChange(async (value) => {
+					everything.esPath = value.trim() || DEFAULT_SETTINGS.everything.esPath;
+					await plugin.saveSettings();
+				}),
+		);
 	const url = new Setting(containerEl)
 		.setName(t("settings.everything.item.url"))
 		.setDesc(t("settings.everything.urlDesc"));

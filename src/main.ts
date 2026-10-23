@@ -11,7 +11,7 @@ import { registerCli } from "src/app/registerCli";
 import { registerPluginCommands } from "src/app/registerCommands";
 import { registerPluginEvents } from "src/app/registerEvents";
 import { openExternalMarkdown } from "src/workspace/external-markdown/openExternalMarkdown";
-import { EverythingHttpClient } from "src/search/everything/EverythingHttpClient";
+import { EverythingClient } from "src/search/everything/EverythingClient";
 import {
 	getResultFilePath,
 	type PaletteResult,
@@ -43,7 +43,7 @@ export default class MyPalettePlugin extends Plugin {
 		() => this.settings,
 		() => this.saveSettings(),
 	);
-	readonly everythingClient = new EverythingHttpClient(debugLog);
+	readonly everythingClient = new EverythingClient(debugLog);
 	readonly integrationAvailability = new IntegrationAvailability(
 		() => this.settings,
 		async (settings, signal) => {

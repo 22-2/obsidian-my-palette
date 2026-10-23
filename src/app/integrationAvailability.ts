@@ -9,6 +9,8 @@ export interface ConnectionResult {
 
 function connectionKey(settings: MyPaletteSettings["everything"]): string {
 	return JSON.stringify([
+		settings.backend,
+		settings.esPath,
 		settings.httpUrl,
 		settings.username,
 		settings.password,
