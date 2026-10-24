@@ -368,6 +368,7 @@ class MocTargetModal extends MocRelatedsModal {
 async function resolveInsertTarget(
 	plugin: MyPalettePlugin,
 	path: string,
+	onFailure?: (message: string) => void,
 ): Promise<TFile | undefined> {
 	const file = plugin.app.vault.getAbstractFileByPath(path);
 	if (file instanceof TFile && !isUserIgnoredPath(plugin.app, path)) return file;
@@ -375,29 +376,53 @@ async function resolveInsertTarget(
 		return await materializeIgnoredNote(plugin.app, path);
 	} catch (error) {
 		logger.error("Failed to import Obsidian-excluded file", error);
-		new Notice(error instanceof Error ? error.message : t("moc.failedImport"));
+		const message = error instanceof Error ? error.message : t("moc.failedImport");
+		if (onFailure) onFailure(message);
+		else new Notice(message);
 		return undefined;
 	}
 }
 
-async function addLink(app: App, mocFile: TFile, fileToLink: TFile): Promise<void> {
+type MocLinkInsertionOutcome = {
+	status: "added" | "already-linked" | "failed";
+	message?: string;
+};
+
+async function addLink(
+	app: App,
+	mocFile: TFile,
+	fileToLink: TFile,
+	notify = true,
+): Promise<MocLinkInsertionOutcome> {
+	const showNotice = (message: string): void => {
+		if (notify) new Notice(message);
+	};
 	try {
 		const content = await app.vault.read(mocFile);
 		const tabSize = Number(app.vault.getConfig("tabSize")) || 4;
 		const result = addLinkToMocRelateds(content, fileToLink.basename, tabSize);
 		if (result.success) {
 			await app.vault.modify(mocFile, result.newContent);
-			new Notice(t("moc.added", { moc: mocFile.basename, file: fileToLink.basename }));
+			const message = t("moc.added", { moc: mocFile.basename, file: fileToLink.basename });
+			showNotice(message);
+			return { status: "added", message };
 		} else if (result.message === t("moc.core.alreadyExists")) {
-			new Notice(
-				t("moc.alreadyLinked", { moc: mocFile.basename, file: fileToLink.basename }),
-			);
+			const message = t("moc.alreadyLinked", {
+				moc: mocFile.basename,
+				file: fileToLink.basename,
+			});
+			showNotice(message);
+			return { status: "already-linked", message };
 		} else {
-			new Notice(t("moc.prefixed", { moc: mocFile.basename, message: result.message }));
+			const message = t("moc.prefixed", { moc: mocFile.basename, message: result.message });
+			showNotice(message);
+			return { status: "failed", message };
 		}
 	} catch (error) {
 		logger.error("Failed to insert link to MOC", error);
-		new Notice(t("moc.insertFailed"));
+		const message = t("moc.insertFailed");
+		showNotice(message);
+		return { status: "failed", message };
 	}
 }
 
@@ -443,18 +468,29 @@ export async function removeFileFromMocRelateds(
 	return false;
 }
 
-/** 既知のノートをアクティブな MOC に挿入し、既存の相互リンクの挙動を保つ。 */
-export async function insertFileToActiveMocRelateds(
-	plugin: MyPalettePlugin,
-	fileToLink: TFile,
-): Promise<void> {
+export interface MocInsertionContext {
+	mocFile: TFile | null;
+	mocLeaf?: WorkspaceLeaf;
+}
+
+/** アクティブなノートと、そのノートを表示しているリーフを一緒に取得する。 */
+export function getActiveMocInsertionContext(plugin: MyPalettePlugin): MocInsertionContext {
 	const mocFile = plugin.app.workspace.getActiveFile();
 	const activeLeaf = plugin.app.workspace.getMostRecentLeaf();
 	// 実際のファイルのリーフだけを開き直す。常駐のパレットがアクティブなリーフでも、
 	// 元のノートは workspace.getActiveFile() で取れるため。
 	const mocLeaf =
 		activeLeaf && (activeLeaf.view as { file?: unknown }).file ? activeLeaf : undefined;
-	await insertFileToMocRelateds(plugin, mocFile, fileToLink, mocLeaf ?? undefined);
+	return { mocFile, mocLeaf };
+}
+
+/** 既知のノートをアクティブな MOC に挿入する。 */
+export async function insertFileToActiveMocRelateds(
+	plugin: MyPalettePlugin,
+	fileToLink: TFile,
+): Promise<void> {
+	const { mocFile, mocLeaf } = getActiveMocInsertionContext(plugin);
+	await insertFileToMocRelateds(plugin, mocFile, fileToLink, mocLeaf);
 }
 
 /** 明示的な MOC のリーフへ挿入する。常駐のパレットが自分自身を置き換えないようにするため。 */
@@ -465,17 +501,99 @@ export async function insertFileToMocRelateds(
 	mocLeaf?: WorkspaceLeaf,
 	mutual = true,
 ): Promise<void> {
+	const summary = await insertFilesToMocRelateds(plugin, mocFile, [fileToLink], mocLeaf, mutual);
+	showMocBatchInsertionNotice(mocFile, summary);
+}
+
+export interface MocBatchInsertionSummary {
+	noActiveMoc: boolean;
+	attemptedTargets: number;
+	addedLinks: number;
+	alreadyLinked: number;
+	failedLinks: number;
+	selfTargets: number;
+	failureMessages: string[];
+}
+
+/** MOC と対象ノートを順番に更新し、操作の結果を返す。 */
+export async function insertFilesToMocRelateds(
+	plugin: MyPalettePlugin,
+	mocFile: TFile | null,
+	files: readonly TFile[],
+	mocLeaf?: WorkspaceLeaf,
+	mutual = true,
+): Promise<MocBatchInsertionSummary> {
+	const summary: MocBatchInsertionSummary = {
+		noActiveMoc: false,
+		attemptedTargets: 0,
+		addedLinks: 0,
+		alreadyLinked: 0,
+		failedLinks: 0,
+		selfTargets: 0,
+		failureMessages: [],
+	};
+	if (!files.length) return summary;
 	if (!(mocFile instanceof TFile)) {
-		new Notice(t("moc.noActiveMoc"));
-		return;
+		summary.noActiveMoc = true;
+		return summary;
 	}
-	if (mocFile.path === fileToLink.path) {
-		new Notice(t("moc.selfInsert"));
-		return;
+
+	const record = (outcome: MocLinkInsertionOutcome): void => {
+		if (outcome.status === "added") summary.addedLinks++;
+		else if (outcome.status === "already-linked") summary.alreadyLinked++;
+		else {
+			summary.failedLinks++;
+			if (outcome.message) summary.failureMessages.push(outcome.message);
+		}
+	};
+
+	for (const file of files) {
+		if (mocFile.path === file.path) {
+			summary.selfTargets++;
+			continue;
+		}
+		summary.attemptedTargets++;
+		// Why: 対象ごとに共有の MOC を読み直す。まとめて書くと、後の対象が前の更新を上書きする。
+		record(await addLink(plugin.app, mocFile, file, false));
+		if (mutual) record(await addLink(plugin.app, file, mocFile, false));
 	}
-	await addLink(plugin.app, mocFile, fileToLink);
-	if (mutual) await addLink(plugin.app, fileToLink, mocFile);
-	await mocLeaf?.openFile(mocFile);
+	if (summary.attemptedTargets > 0) await mocLeaf?.openFile(mocFile);
+	return summary;
+}
+
+export function showMocBatchInsertionNotice(
+	mocFile: TFile | null,
+	summary: MocBatchInsertionSummary,
+	{
+		unavailableCount = 0,
+		details = [],
+	}: { unavailableCount?: number; details?: readonly string[] } = {},
+): void {
+	const messages: string[] = [];
+	if (summary.noActiveMoc) messages.push(t("moc.noActiveMoc"));
+	else if (mocFile && summary.attemptedTargets > 0)
+		messages.push(
+			t("moc.batchSummary", {
+				moc: mocFile.basename,
+				added: summary.addedLinks,
+				alreadyLinked: summary.alreadyLinked,
+				failed: summary.failedLinks,
+			}),
+		);
+	if (summary.selfTargets > 0)
+		messages.push(
+			summary.selfTargets === 1
+				? t("moc.selfInsert")
+				: t("moc.batchSelfInsert", { count: summary.selfTargets }),
+		);
+	if (unavailableCount > 0)
+		messages.push(
+			unavailableCount === 1
+				? t("moc.notAvailableNote")
+				: t("moc.someNotAvailable", { count: unavailableCount }),
+		);
+	messages.push(...new Set([...details, ...summary.failureMessages]));
+	if (messages.length > 0) new Notice(messages.join("\n"));
 }
 
 /** アクティブな MOC にリンクされたノートの MOC 削除セレクター。チェックしたノートのリンクを外す。 */
@@ -587,10 +705,19 @@ export async function insertLinkToMocRelateds(plugin: MyPalettePlugin): Promise<
 		const file = plugin.app.vault.getFileByPath(path);
 		if (file) await removeFileFromMocRelateds(plugin, activeFile, file, modal.mutual);
 	}
+	const targets: TFile[] = [];
+	const failures: string[] = [];
 	for (const path of changes.add) {
 		// Obsidian の除外ファイルは今この時点で初めて取り込むので、キャンセルしても Vault には触れない。
-		const target = await resolveInsertTarget(plugin, path);
-		if (target)
-			await insertFileToMocRelateds(plugin, activeFile, target, mocLeaf, modal.mutual);
+		const target = await resolveInsertTarget(plugin, path, (message) => failures.push(message));
+		if (target) targets.push(target);
 	}
+	const summary = await insertFilesToMocRelateds(
+		plugin,
+		activeFile,
+		targets,
+		mocLeaf,
+		modal.mutual,
+	);
+	showMocBatchInsertionNotice(activeFile, summary, { details: failures });
 }

@@ -2,6 +2,7 @@ import { expect, test } from "./fixtures.mts";
 import {
 	MODAL_INPUT,
 	MODAL_ROW,
+	menuItems,
 	openHomeWith,
 	PLUGIN_ID,
 	pluginVaultOptions,
@@ -118,4 +119,47 @@ test("an unavailable Smart Connections mode is absent and its alias does not ent
 	await expect(page.locator(".my-palette-mode-chip")).toBeHidden();
 	await expect(page.locator(MODAL_INPUT)).toHaveValue("sc ");
 	await expect(page.locator(MODAL_ROW).filter({ hasText: "Related notes" })).toHaveCount(0);
+});
+
+test("a Home mode can be hidden and restored from its settings page", async ({ obsidian }) => {
+	const page = await openHomeWith(obsidian, "ノート");
+	const notesRow = page.locator(MODAL_ROW).filter({ hasText: "ノート" }).first();
+	await expect(notesRow).toBeVisible();
+	await notesRow.click({ button: "right" });
+	await menuItems(page).filter({ hasText: "モードを非表示にする" }).click();
+	await expect(page.locator(MODAL_ROW).filter({ hasText: "ノート" })).toHaveCount(0);
+
+	const input = page.locator(MODAL_INPUT);
+	await input.fill("n ");
+	await expect(page.locator(".my-palette-mode-chip")).toBeHidden();
+	await expect(input).toHaveValue("n ");
+
+	await page.locator(".my-palette-options-button").click();
+	await menuItems(page).filter({ hasText: "プラグインの設定を開く" }).click();
+	await expect(input).toHaveCount(0);
+	await expect
+		.poll(() =>
+			obsidian.evaluateApp(
+				() =>
+					(app as unknown as { setting: { activeTab?: { id?: string } } }).setting
+						.activeTab?.id,
+			),
+		)
+		.toBe(PLUGIN_ID);
+	await obsidian.closeSettings();
+
+	const settingsPage = await obsidian.openSettings(PLUGIN_ID, { subPage: "モード" });
+	const notesSetting = settingsPage
+		.locator(".setting-item")
+		.filter({ has: settingsPage.getByText("ノート", { exact: true }) });
+	await notesSetting.locator(".checkbox-container").click();
+	await expect
+		.poll(() => obsidian.pluginSettings<{ modes: { notes: { enabled: boolean } } }>(PLUGIN_ID))
+		.toMatchObject({ modes: { notes: { enabled: true } } });
+	await obsidian.closeSettings();
+
+	await runPaletteCommand(obsidian, "open-home");
+	const restoredPage = obsidian.page;
+	await restoredPage.locator(MODAL_INPUT).pressSequentially("n ");
+	await expect(restoredPage.locator(".my-palette-mode-chip")).toHaveText("n");
 });

@@ -124,6 +124,10 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			hostEl: this.modalEl,
 			getContext: (input) => this.session.getSearchHistoryContext(input),
 			apply: (result) => this.applySearchHistory(result),
+			openSettings: () => {
+				this.close();
+				this.plugin.openSettings();
+			},
 			focusInput: () => this.focusSearchInput(),
 			moveToSidebar: () => this.moveToSidebar(),
 			getSwitches: () => this.switches,

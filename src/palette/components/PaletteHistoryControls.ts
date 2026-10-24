@@ -28,11 +28,13 @@ export type PaletteControlsPlugin = Pick<
 	| "paletteDisplaySettings"
 	| "getSearchHistorySuggestions"
 	| "clearSearchHistoryCategories"
+	| "openSettings"
 	| "saveSettings"
 >;
 
 interface PaletteHistoryControlsOptions {
 	plugin: PaletteControlsPlugin;
+	openSettings: () => void;
 	surface: PaletteSurface;
 	/** 「検索履歴を消去」が削除するカテゴリ。パレット自身のもの、またはセレクターの1つ。 */
 	historyCategories: readonly SearchHistoryCategory[];
@@ -315,6 +317,10 @@ export class PaletteHistoryControls {
 				withAction(item, MENU_ACTIONS.moveToRightSidebar).onClick(moveToSidebar),
 			);
 		this.options.populateActions?.(menu, event);
+		menu.addSeparator();
+		menu.addItem((item) =>
+			withAction(item, MENU_ACTIONS.openPluginSettings).onClick(this.options.openSettings),
+		);
 		menu.addSeparator();
 		menu.addItem((item) => withAction(item, MENU_ACTIONS.help).onClick(() => this.showHelp()));
 		menu.addSeparator();

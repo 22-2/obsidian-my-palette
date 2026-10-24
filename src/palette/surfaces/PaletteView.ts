@@ -542,6 +542,7 @@ export class PaletteView extends ItemView {
 					includeIgnored: false,
 				},
 			apply: (result) => this.applySearchHistory(result),
+			openSettings: () => this.plugin.openSettings(),
 			focusInput: () => this.panel?.focusSearchInput(),
 			getSwitches: () => this.panel?.switchList ?? [],
 			getChoices: () => (this.auditKindChoice ? [this.auditKindChoice] : []),

@@ -23,6 +23,7 @@ export function createSelectorPlugin(app = {} as App): SelectorControls["plugin"
 			async () => {},
 		),
 		saveSettings: async () => {},
+		openSettings: () => {},
 		clearSearchHistoryCategories: (categories) => {
 			entries = entries.filter((entry) => !categories.includes(entry.category));
 		},

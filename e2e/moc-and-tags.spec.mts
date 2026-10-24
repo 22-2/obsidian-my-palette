@@ -45,6 +45,129 @@ test("a result can be inserted into the active note's MOC Relateds", async ({ ob
 		.toMatch(/- Relateds\n\s+- \[\[Child note\]\]/);
 });
 
+test("one note's mutual MOC insertion reports both link outcomes in one notice", async ({
+	obsidian,
+}) => {
+	await obsidian.createNote("Topic MOC.md", "## MOC\n- Relateds\n\n");
+	await obsidian.createNote("Beta child.md", "## MOC\n- Relateds\n    - [[Topic MOC]]\n");
+	await obsidian.open("Topic MOC.md");
+
+	const page = await openPaletteWith(obsidian, "Beta child");
+	await page.locator(MODAL_ROW).first().click({ button: "right" });
+	await menuItems(page).filter({ hasText: "MOC の Relateds に挿入" }).click();
+
+	const notices = page.locator(".notice");
+	await expect(notices).toHaveCount(1);
+	await expect(notices.first()).toContainText("リンクを追加 1 件");
+	await expect(notices.first()).toContainText("すでにあるリンク 1 件");
+	await expect.poll(() => obsidian.read("Topic MOC.md")).toContain("[[Beta child]]");
+});
+
+test("multiple result insertions update every note in order and report once", async ({
+	obsidian,
+}) => {
+	await obsidian.createNote("Topic MOC.md", "## MOC\n- Relateds\n\n");
+	await obsidian.createNote("Alpha child.md", "## MOC\n- Relateds\n");
+	await obsidian.createNote("Beta child.md", "## MOC\n- Relateds\n");
+	await obsidian.open("Topic MOC.md");
+
+	const page = await openPaletteWith(obsidian, "child");
+	const rows = page.locator(MODAL_ROW);
+	await expect(rows).toHaveCount(2);
+	await rows.nth(0).click();
+	await rows.nth(1).click({ modifiers: ["Shift"] });
+	await rows.nth(1).click({ button: "right" });
+	await menuItems(page).filter({ hasText: "MOC の Relateds に挿入" }).click();
+
+	await expect(page.locator(".notice")).toHaveCount(1);
+	await expect(page.locator(".notice")).toContainText("リンクを追加 4 件");
+	await expect.poll(() => obsidian.read("Topic MOC.md")).toContain("[[Alpha child]]");
+	await expect.poll(() => obsidian.read("Topic MOC.md")).toContain("[[Beta child]]");
+	await expect.poll(() => obsidian.read("Alpha child.md")).toContain("[[Topic MOC]]");
+	await expect.poll(() => obsidian.read("Beta child.md")).toContain("[[Topic MOC]]");
+});
+
+test("a failed reverse MOC link remains visible beside the successful forward link", async ({
+	obsidian,
+}) => {
+	await obsidian.createNote("Topic MOC.md", "## MOC\n- Relateds\n\n");
+	await obsidian.createNote("Beta child.md", "## MOC\n- Relateds\n");
+	await obsidian.open("Topic MOC.md");
+	await obsidian.evaluateApp(() => {
+		interface FilePath {
+			path: string;
+		}
+		interface MutableVault {
+			modify(file: FilePath, data: string): Promise<void>;
+		}
+		const vault = app.vault as unknown as MutableVault;
+		const originalModify = vault.modify.bind(vault);
+		vault.modify = async (file, data) => {
+			if (file.path === "Beta child.md") throw new Error("forced reverse-link failure");
+			await originalModify(file, data);
+		};
+	});
+
+	const page = await openPaletteWith(obsidian, "Beta child");
+	await page.locator(MODAL_ROW).first().click({ button: "right" });
+	await menuItems(page).filter({ hasText: "MOC の Relateds に挿入" }).click();
+
+	const notice = page.locator(".notice");
+	await expect(notice).toHaveCount(1);
+	await expect(notice).toContainText("リンクを追加 1 件");
+	await expect(notice).toContainText("失敗 1 件");
+	await expect(notice).toContainText("MOC へのリンクを挿入できませんでした。");
+	await expect.poll(() => obsidian.read("Topic MOC.md")).toContain("[[Beta child]]");
+	expect(await obsidian.read("Beta child.md")).not.toContain("[[Topic MOC]]");
+});
+
+test("a self-target insertion keeps its existing warning in one notice", async ({ obsidian }) => {
+	await obsidian.createNote("Topic MOC.md", "## MOC\n- Relateds\n\n");
+	await obsidian.open("Topic MOC.md");
+
+	const page = await openPaletteWith(obsidian, "Topic MOC");
+	await page.locator(MODAL_ROW).first().click({ button: "right" });
+	await menuItems(page).filter({ hasText: "MOC の Relateds に挿入" }).click();
+
+	await expect(page.locator(".notice")).toHaveCount(1);
+	await expect(page.locator(".notice")).toContainText("自分自身に挿入することはできません");
+	await expect.poll(() => obsidian.read("Topic MOC.md")).not.toContain("[[Topic MOC]]");
+});
+
+test("an excluded-note import failure is included in the insertion notice", async ({
+	obsidian,
+}) => {
+	await obsidian.createNote("Topic MOC.md", "## MOC\n- Relateds\n\n");
+	await obsidian.createNote("Hidden child.md", "hidden");
+	await setIgnoreFilters(obsidian, ["Hidden child.md"]);
+	await obsidian.open("Topic MOC.md");
+	const page = await openPaletteWith(obsidian, "Hidden child");
+	await page.locator(".my-palette-options-button").click();
+	await menuItems(page).filter({ hasText: "Obsidian の除外ファイルを表示" }).click();
+	await page.keyboard.press("Escape");
+	await page.locator(".menu").waitFor({ state: "detached" });
+	await expect(page.locator(MODAL_ROW).first()).toContainText("Hidden child");
+	await obsidian.evaluateApp(() => {
+		interface MutableAdapter {
+			read(path: string): Promise<string>;
+		}
+		const adapter = app.vault.adapter as unknown as MutableAdapter;
+		const originalRead = adapter.read.bind(adapter);
+		adapter.read = async (path) => {
+			if (path === "Hidden child.md") throw new Error("forced excluded-note import failure");
+			return originalRead(path);
+		};
+	});
+	await page.locator(MODAL_ROW).first().click({ button: "right" });
+	await menuItems(page).filter({ hasText: "MOC の Relateds に挿入" }).click();
+
+	await expect(page.locator(".notice")).toHaveCount(1);
+	await expect(page.locator(".notice")).toContainText("forced excluded-note import failure");
+	await expect(page.locator(".notice")).toContainText(
+		"この結果は利用できる Vault のノートではありません。",
+	);
+});
+
 test("checked MOC notes stay above results from a different query", async ({ obsidian }) => {
 	await obsidian.createNote("Topic MOC.md", "## MOC\n- Relateds\n");
 	await obsidian.createNote("Alpha child.md", "alpha");

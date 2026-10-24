@@ -145,6 +145,7 @@ describe("selector controls", () => {
 		expect(paletteMenuTitles()).toEqual([
 			"検索の一致を強調",
 			"選択中をMove to",
+			"プラグインの設定を開く",
 			"ヘルプ",
 			"検索履歴を消去",
 		]);

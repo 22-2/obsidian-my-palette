@@ -17,6 +17,7 @@ export const ICONS = {
 	openInTerminal: "terminal",
 	revealInFileExplorer: "folder-open",
 	openSettings: "settings",
+	hide: "eye-off",
 	openNewPalette: "plus",
 	moveToSidebar: "panel-right",
 

@@ -158,6 +158,11 @@ export function populatePaletteResultMenu({
 	}
 	if (result.mode === "mode-entry") {
 		addMenuAction(menu, MENU_ACTIONS.enterMode, () => void activate("primary", result));
+		menu.addSeparator();
+		addMenuAction(menu, MENU_ACTIONS.hideMode, () => {
+			plugin.settings.modes[result.modeId].enabled = false;
+			void plugin.saveSettings().then(() => onResultsChanged?.());
+		});
 		return;
 	}
 	if (result.mode === "property") {

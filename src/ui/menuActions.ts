@@ -132,6 +132,7 @@ export const MENU_ACTIONS = {
 
 	runCommand: { title: t("menu.runCommand"), icon: ICONS.run, id: "run-command" },
 	enterMode: { title: t("menu.enterMode"), icon: ICONS.confirm, id: "enter-mode" },
+	hideMode: { title: t("menu.hideMode"), icon: ICONS.hide, id: "hide-mode" },
 	useSearch: { title: t("menu.useSearch"), icon: ICONS.history, id: "use-search" },
 	searchTag: { title: t("menu.tag.search"), icon: ICONS.search, id: "tag-search" },
 	insertTagIntoActiveNote: {

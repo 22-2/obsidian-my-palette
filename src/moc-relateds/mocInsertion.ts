@@ -1,11 +1,13 @@
-import { Notice, TFile, type WorkspaceLeaf } from "obsidian";
+import { Notice, TFile } from "obsidian";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
 import {
-	insertFileToActiveMocRelateds,
-	insertFileToMocRelateds,
+	getActiveMocInsertionContext,
+	insertFilesToMocRelateds,
+	showMocBatchInsertionNotice,
 } from "src/moc-relateds/mocRelateds";
+import type { MocInsertionContext } from "src/moc-relateds/mocRelateds";
 import { materializeIgnoredNote } from "src/ignored-notes/ignoredNoteMaterializer";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 import { t } from "src/i18n";
@@ -14,13 +16,16 @@ import { t } from "src/i18n";
 async function resolveMocTarget(
 	plugin: MyPalettePlugin,
 	result: PaletteResult,
+	onFailure?: (message: string) => void,
 ): Promise<TFile | undefined> {
 	if (result.mode === "file") {
 		if (result.ignored) {
 			try {
 				return await materializeIgnoredNote(plugin.app, result.vaultPath);
 			} catch (error) {
-				new Notice(error instanceof Error ? error.message : t("moc.failedImport"));
+				const message = error instanceof Error ? error.message : t("moc.failedImport");
+				if (onFailure) onFailure(message);
+				else new Notice(message);
 				return undefined;
 			}
 		}
@@ -46,10 +51,7 @@ async function resolveMocTarget(
 	return result.file;
 }
 
-export interface MocInsertionContext {
-	mocFile: TFile | null;
-	mocLeaf?: WorkspaceLeaf;
-}
+export type { MocInsertionContext } from "src/moc-relateds/mocRelateds";
 
 /** Adds the same MOC insertion action to both the modal and persistent palette menus. */
 export function addMocInsertionMenuItem(
@@ -93,29 +95,29 @@ export function addMocInsertionMenuItems(
 			void (async () => {
 				const targets = new Map<string, TFile>();
 				let unavailableCount = 0;
+				const failures: string[] = [];
 				for (const result of insertableResults) {
-					const target = await resolveMocTarget(plugin, result);
+					const target = await resolveMocTarget(plugin, result, (message) =>
+						failures.push(message),
+					);
 					if (target) targets.set(target.path, target);
 					else unavailableCount++;
 				}
-				if (unavailableCount === 1 && insertableResults.length === 1)
-					new Notice(t("moc.notAvailableNote"));
-				else if (unavailableCount > 0)
-					new Notice(t("moc.someNotAvailable", { count: unavailableCount }));
-				if (!targets.size) return;
-				const context = getContext?.();
-				// Why: 挿入のたびに共有の MOC を読んで更新するので、対象を
-				// 順番に処理して、ある選択が別の選択の変更を上書きしないようにする。
-				for (const target of targets.values()) {
-					if (context)
-						await insertFileToMocRelateds(
-							plugin,
-							context.mocFile,
-							target,
-							context.mocLeaf,
-						);
-					else await insertFileToActiveMocRelateds(plugin, target);
-				}
+				const context =
+					targets.size > 0
+						? (getContext?.() ?? getActiveMocInsertionContext(plugin))
+						: undefined;
+				const mocFile = context?.mocFile ?? null;
+				const summary = await insertFilesToMocRelateds(
+					plugin,
+					mocFile,
+					[...targets.values()],
+					context?.mocLeaf,
+				);
+				showMocBatchInsertionNotice(mocFile, summary, {
+					unavailableCount,
+					details: failures,
+				});
 			})();
 		}),
 	);

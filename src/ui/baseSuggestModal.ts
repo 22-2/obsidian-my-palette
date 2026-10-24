@@ -191,6 +191,10 @@ export abstract class BaseSuggestModal<T> extends Modal {
 					this.focusSearchInput();
 					this.refreshSuggestions();
 				},
+				openSettings: () => {
+					this.close();
+					controls.plugin.openSettings();
+				},
 				populateActions: (menu, event) => this.populateSelectorActions(menu, event),
 				showHelp: () => new SelectorHelpModal(this.app, controls).open(),
 				getSwitches: () => this.switches,
