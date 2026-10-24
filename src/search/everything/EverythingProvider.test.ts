@@ -22,8 +22,8 @@ const result = (absolutePath: string, kind: "file" | "folder" = "file"): Everyth
 	kind,
 });
 
-describe("EverythingProvider", () => {
-	it("filters vault results and applies extension and result limits", async () => {
+describe("すべてのプロバイダー", () => {
+	it("Vault の結果をフィルタし、拡張機能と結果の制限を適用します", async () => {
 		const files = [new TFile(), new TFile()];
 		files[0].path = "one.md";
 		files[0].extension = "md";
@@ -56,7 +56,7 @@ describe("EverythingProvider", () => {
 		expect(found.map((item) => item.vaultPath)).toEqual(["one.md"]);
 	});
 
-	it("allows non-Markdown directory results and excludes configured folders", async () => {
+	it("非 Markdown ディレクトリの結果を許可し、構成されたフォルダーを除外します", async () => {
 		const settings = structuredClone(DEFAULT_SETTINGS.everything);
 		const search = vi
 			.fn()
@@ -84,7 +84,7 @@ describe("EverythingProvider", () => {
 		expect(found.map((item) => item.vaultPath)).toEqual(["image.png"]);
 	});
 
-	it("reports unsupported vault adapters", async () => {
+	it("サポートされていない Vault アダプタを報告します", async () => {
 		const provider = new EverythingProvider(
 			{ vault: { adapter: {} } } as never,
 			{} as never,
@@ -95,7 +95,7 @@ describe("EverythingProvider", () => {
 		);
 	});
 
-	it("hides vault files Obsidian cannot open only when the openable filter is on", async () => {
+	it("ボールト ファイルを非表示にします Obsidian は、開くことができるフィルターがオンになっている場合にのみ開くことができません", async () => {
 		const files = [new TFile(), new TFile()];
 		files[0].path = "one.md";
 		files[0].extension = "md";
@@ -144,7 +144,7 @@ describe("EverythingProvider", () => {
 		).toEqual(["one.md"]);
 	});
 
-	it("applies the openable filter in folder scope too, since the ignored switch uses it", async () => {
+	it("無視されたスイッチがそれを使用するため、フォルダースコープにも開くことができるフィルターを適用します", async () => {
 		const settings = structuredClone(DEFAULT_SETTINGS.everything);
 		const search = vi
 			.fn()

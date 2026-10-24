@@ -62,8 +62,8 @@ function press(key: string, target: EventTarget = document.body): KeyboardEvent 
 	return event;
 }
 
-describe("PaletteMenu markup", () => {
-	it("uses Obsidian's menu classes and separates groups", () => {
+describe("パレットメニューのマークアップ", () => {
+	it("Obsidian のメニュー クラスを使用し、グループを分離します", () => {
 		const { menu } = sample();
 		menu.showAtPosition({ x: 10, y: 20 });
 
@@ -73,7 +73,7 @@ describe("PaletteMenu markup", () => {
 		expect(itemNamed("Disabled").classList.contains("is-disabled")).toBe(true);
 	});
 
-	it("drops a separator that has no item before it", () => {
+	it("前に項目がないセパレータを削除します", () => {
 		const menu = new PaletteMenu();
 		menu.addSeparator();
 		menu.addItem((item) => item.setTitle("Only"));
@@ -84,7 +84,7 @@ describe("PaletteMenu markup", () => {
 		expect(document.querySelectorAll(".menu-separator")).toHaveLength(1);
 	});
 
-	it("shows the checked and warning states on the item", () => {
+	it("アイテムのチェック済み状態と警告状態を示します", () => {
 		const menu = new PaletteMenu();
 		menu.addItem((item) => item.setTitle("On").setChecked(true));
 		menu.addItem((item) => item.setTitle("Remove").setWarning(true));
@@ -95,7 +95,7 @@ describe("PaletteMenu markup", () => {
 		expect(itemNamed("Remove").classList.contains("is-warning")).toBe(true);
 	});
 
-	it("draws a switch in both states and keeps headings out of keyboard selection", () => {
+	it("両方の状態でスイッチを描画し、キーボードの選択から見出しを除外します。", () => {
 		const menu = new PaletteMenu();
 		menu.addHeading("Options");
 		menu.addItem((item) => item.setTitle("Off").setSwitch(false));
@@ -112,7 +112,7 @@ describe("PaletteMenu markup", () => {
 		expect(itemNamed("On").getAttribute("title")).toBe("Explains it");
 	});
 
-	it("exposes menu roles and the checked and disabled states to assistive tech", () => {
+	it("メニューの役割とチェックされた状態と無効な状態を支援技術に公開します", () => {
 		const menu = new PaletteMenu();
 		menu.addItem((item) => item.setTitle("Plain"));
 		menu.addItem((item) => item.setTitle("Checked").setChecked(false).setDisabled(true));
@@ -128,7 +128,7 @@ describe("PaletteMenu markup", () => {
 		expect(document.querySelector(".menu-separator")?.getAttribute("role")).toBe("separator");
 	});
 
-	it("marks an item as a call to action only while asked to", () => {
+	it("要求されている間のみ項目を行動喚起としてマークします。", () => {
 		const menu = new PaletteMenu();
 		menu.addItem((item) => item.setTitle("Clear").setWarning(true).setCta());
 		menu.showAtPosition({ x: 0, y: 0 });
@@ -140,8 +140,8 @@ describe("PaletteMenu markup", () => {
 	});
 });
 
-describe("PaletteMenu clicks", () => {
-	it("runs an item and closes the menu", () => {
+describe("パレットメニューのクリック数", () => {
+	it("項目を実行してメニューを閉じます", () => {
 		const { menu, run } = sample();
 		const onHide = vi.fn();
 		menu.onHide(onHide);
@@ -154,7 +154,7 @@ describe("PaletteMenu clicks", () => {
 		expect(onHide).toHaveBeenCalledTimes(1);
 	});
 
-	it("keeps the menu open for a keep-open item and updates its title", () => {
+	it("開いたままにする項目のメニューを開いたままにし、そのタイトルを更新します", () => {
 		const menu = new PaletteMenu();
 		let clear!: { setTitle(title: string): unknown };
 		menu.addItem((item) => {
@@ -172,7 +172,7 @@ describe("PaletteMenu clicks", () => {
 		expect(titleOf(document.querySelector(".menu"))).toBe("Click again to clear");
 	});
 
-	it("runs a confirmed item on the second press, then closes the menu", () => {
+	it("2 回目に押すと確認済みの項目が実行され、メニューが閉じます", () => {
 		const menu = new PaletteMenu();
 		const run = vi.fn();
 		menu.addConfirmedItem({
@@ -192,7 +192,7 @@ describe("PaletteMenu clicks", () => {
 		expect(document.querySelector(".menu")).toBeNull();
 	});
 
-	it("cancels a confirmation when another item is selected", () => {
+	it("別の項目が選択されると確認をキャンセルします", () => {
 		const menu = new PaletteMenu();
 		const run = vi.fn();
 		menu.addItem((item) => item.setTitle("Open").onClick(vi.fn()));
@@ -211,7 +211,7 @@ describe("PaletteMenu clicks", () => {
 		expect(run).not.toHaveBeenCalled();
 	});
 
-	it("ignores clicks on a disabled item", () => {
+	it("無効なアイテムのクリックを無視します", () => {
 		const { menu, run } = sample();
 		const onHide = vi.fn();
 		menu.onHide(onHide);
@@ -224,7 +224,7 @@ describe("PaletteMenu clicks", () => {
 		expect(run).not.toHaveBeenCalled();
 	});
 
-	it("closes on a press outside, and keeps focus on the press inside", () => {
+	it("外側のプレスにクローズし、内側のプレスに集中し続ける", () => {
 		const { menu } = sample();
 		menu.showAtPosition({ x: 0, y: 0 });
 
@@ -238,8 +238,8 @@ describe("PaletteMenu clicks", () => {
 	});
 });
 
-describe("PaletteMenu keyboard", () => {
-	it("moves with the arrows past disabled items and wraps around", () => {
+describe("パレットメニューキーボード", () => {
+	it("矢印で無効な項目を通過して回り込みます", () => {
 		const { menu } = sample();
 		menu.showAtPosition({ x: 0, y: 0 });
 
@@ -253,7 +253,7 @@ describe("PaletteMenu keyboard", () => {
 		expect(selectedTitle()).toBe("Help");
 	});
 
-	it("jumps to the first and last enabled items with Home and End", () => {
+	it("Home と End を使用して最初と最後の有効な項目にジャンプします", () => {
 		const { menu } = sample();
 		menu.showAtPosition({ x: 0, y: 0 });
 
@@ -263,7 +263,7 @@ describe("PaletteMenu keyboard", () => {
 		expect(selectedTitle()).toBe("Open");
 	});
 
-	it("runs the selected item on Enter, and stops the key", () => {
+	it("Enter キーで選択した項目を実行し、キーを停止します", () => {
 		const { menu, run } = sample();
 		menu.showAtPosition({ x: 0, y: 0 });
 		press("ArrowDown");
@@ -275,7 +275,7 @@ describe("PaletteMenu keyboard", () => {
 		expect(document.querySelector(".menu")).toBeNull();
 	});
 
-	it("keeps the menu open after Enter on a keep-open item", () => {
+	it("開いたままにする項目で Enter を押した後もメニューを開いたままにします", () => {
 		const menu = new PaletteMenu();
 		const run = vi.fn();
 		menu.addItem((item) => item.setTitle("Toggle").setKeepOpen().onClick(run));
@@ -289,7 +289,7 @@ describe("PaletteMenu keyboard", () => {
 		expect(document.querySelector(".menu")).not.toBeNull();
 	});
 
-	it("closes on Escape and keeps the key from the palette input", () => {
+	it("Escape で閉じてパレット入力からキーを保持します", () => {
 		const { menu } = sample();
 		const input = document.body.appendChild(createEl("input"));
 		input.focus();
@@ -304,7 +304,7 @@ describe("PaletteMenu keyboard", () => {
 		expect(seen).not.toHaveBeenCalled();
 	});
 
-	it("selects the first enabled item only when opened with selectFirst", () => {
+	it("selectFirst で開いた場合にのみ、最初の有効な項目を選択します", () => {
 		const { menu } = sample();
 		menu.showAtPosition({ x: 0, y: 0 });
 		expect(selectedTitle()).toBeNull();
@@ -314,7 +314,7 @@ describe("PaletteMenu keyboard", () => {
 		expect(selectedTitle()).toBe("Open");
 	});
 
-	it("selects an enabled item under the pointer, but not a disabled one", () => {
+	it("ポインタの下で有効な項目は選択されますが、無効な項目は選択されません", () => {
 		const { menu } = sample();
 		menu.showAtPosition({ x: 0, y: 0 });
 
@@ -325,15 +325,15 @@ describe("PaletteMenu keyboard", () => {
 	});
 });
 
-describe("PaletteMenu hiding", () => {
-	it("close() hides the menu the same way hide() does", () => {
+describe("パレットメニューの非表示", () => {
+	it("close() は、 hide() と同じ方法でメニューを非表示にします。", () => {
 		const { menu } = sample();
 		menu.showAtPosition({ x: 0, y: 0 });
 		menu.close();
 		expect(document.querySelector(".menu")).toBeNull();
 	});
 
-	it("calls onHide once when closed, and not when reopened", () => {
+	it("onHide は閉じたときに 1 回呼び出されますが、再度開いたときは呼び出されません", () => {
 		const { menu } = sample();
 		const onHide = vi.fn();
 		menu.onHide(onHide);
@@ -349,8 +349,8 @@ describe("PaletteMenu hiding", () => {
 	});
 });
 
-describe("PaletteMenu selection", () => {
-	it("reports the item that becomes selected, and none when the menu closes", () => {
+describe("パレットメニュー選択", () => {
+	it("選択された項目は報告しますが、メニューが閉じたときは何も報告しません", () => {
 		const { menu } = sample();
 		const selected: Array<string | undefined> = [];
 		menu.onSelectionChange((item) => selected.push(item ? titleOfItem(item) : undefined));
@@ -393,8 +393,8 @@ function visibleTitles(): string[] {
 	);
 }
 
-describe("PaletteMenu filter", () => {
-	it("matches Japanese titles and English action IDs together, ignoring case", () => {
+describe("パレットメニューフィルター", () => {
+	it("日本語のタイトルと英語のアクション ID を大文字と小文字を区別せずに一致させます。", () => {
 		const menu = new PaletteMenu().enableFilter({ keymap } as unknown as App, 1);
 		const run = vi.fn();
 		menu.addItem((item) =>
@@ -409,14 +409,14 @@ describe("PaletteMenu filter", () => {
 		expect(run).toHaveBeenCalledOnce();
 	});
 
-	it("takes focus when opened, so typing never reaches the palette input", () => {
+	it("開いたときにフォーカスが取得されるため、入力がパレット入力に到達することはありません", () => {
 		const { menu } = filterMenu();
 		menu.showAtPosition({ x: 0, y: 0 });
 
 		expect(document.activeElement).toBe(filterInput());
 	});
 
-	it("holds its own keymap scope while open, so a modal cannot pull focus back", () => {
+	it("開いている間は独自のキーマップ スコープを保持するため、モーダルはフォーカスを戻すことができません", () => {
 		keymap.pushScope.mockClear();
 		keymap.popScope.mockClear();
 		const { menu } = filterMenu();
@@ -427,14 +427,14 @@ describe("PaletteMenu filter", () => {
 		expect(keymap.popScope).toHaveBeenCalledExactlyOnceWith(keymap.pushScope.mock.calls[0][0]);
 	});
 
-	it("pushes no scope for a menu too short to show the field", () => {
+	it("フィールドを表示するには短すぎるメニューのスコープをプッシュしません", () => {
 		keymap.pushScope.mockClear();
 		const { menu } = filterMenu(4);
 		menu.showAtPosition({ x: 0, y: 0 });
 		expect(keymap.pushScope).not.toHaveBeenCalled();
 	});
 
-	it("hides actions missing any typed word, ignoring case", () => {
+	it("大文字と小文字を無視して、入力された単語が欠落しているアクションを非表示にします", () => {
 		const { menu } = filterMenu();
 		menu.showAtPosition({ x: 0, y: 0 });
 
@@ -444,7 +444,7 @@ describe("PaletteMenu filter", () => {
 		expect(visibleTitles()).toEqual(["Open in terminal", "Copy file name", "Rename…"]);
 	});
 
-	it("selects the first match, and Enter runs it", () => {
+	it("最初の一致を選択し、Enter でそれを実行します", () => {
 		const { menu, runs } = filterMenu();
 		menu.showAtPosition({ x: 0, y: 0 });
 
@@ -457,7 +457,7 @@ describe("PaletteMenu filter", () => {
 		expect(document.querySelector(".menu")).toBeNull();
 	});
 
-	it("shows an empty message when nothing matches", () => {
+	it("何も一致しない場合は空のメッセージを表示します", () => {
 		const { menu } = filterMenu();
 		menu.showAtPosition({ x: 0, y: 0 });
 
@@ -468,7 +468,7 @@ describe("PaletteMenu filter", () => {
 		expect(document.querySelector(".my-palette-menu-empty.is-visible")).toBeNull();
 	});
 
-	it("lets Space and Home reach the text field instead of acting on the menu", () => {
+	it("Space と Home がメニューで動作するのではなく、テキスト フィールドにアクセスできるようにします。", () => {
 		const { menu, runs } = filterMenu();
 		menu.showAtPosition({ x: 0, y: 0 });
 		type("e");
@@ -478,7 +478,7 @@ describe("PaletteMenu filter", () => {
 		expect(runs.open).not.toHaveBeenCalled();
 	});
 
-	it("uses Space to activate the selected item while the field is empty", () => {
+	it("フィールドが空のときにスペースを使用して選択した項目をアクティブにします", () => {
 		const { menu, runs } = filterMenu();
 		menu.showAtPosition({ x: 0, y: 0 });
 		press("ArrowDown", filterInput());
@@ -487,7 +487,7 @@ describe("PaletteMenu filter", () => {
 		expect(runs.open).toHaveBeenCalledOnce();
 	});
 
-	it("treats a full-width space the same as Space", () => {
+	it("全角スペースをスペースと同じように扱います", () => {
 		const { menu, runs } = filterMenu();
 		menu.showAtPosition({ x: 0, y: 0 });
 		press("ArrowDown", filterInput());
@@ -496,7 +496,7 @@ describe("PaletteMenu filter", () => {
 		expect(runs.open).toHaveBeenCalledOnce();
 	});
 
-	it("keeps Space away from the field even when nothing is selected", () => {
+	it("何も選択されていない場合でも、スペースをフィールドから遠ざけます", () => {
 		const { menu, runs } = filterMenu();
 		menu.showAtPosition({ x: 0, y: 0 });
 
@@ -505,7 +505,7 @@ describe("PaletteMenu filter", () => {
 		expect(runs.open).not.toHaveBeenCalled();
 	});
 
-	it("clears the words when the menu is shown again", () => {
+	it("メニューが再度表示されると単語をクリアします", () => {
 		const { menu } = filterMenu();
 		menu.showAtPosition({ x: 0, y: 0 });
 		type("rename");
@@ -516,7 +516,7 @@ describe("PaletteMenu filter", () => {
 		expect(visibleTitles()).toHaveLength(3);
 	});
 
-	it("skips the field when the menu has fewer actions than the minimum", () => {
+	it("メニューのアクションが最小値よりも少ない場合、フィールドをスキップします。", () => {
 		const { menu } = filterMenu(4);
 		menu.showAtPosition({ x: 0, y: 0 });
 
@@ -524,7 +524,7 @@ describe("PaletteMenu filter", () => {
 		expect(document.activeElement).not.toBe(filterInput());
 	});
 
-	it("keeps a click on the field from stealing or losing focus", () => {
+	it("フィールドをクリックしてもフォーカスが盗まれたり失われないようにします", () => {
 		const { menu } = filterMenu();
 		menu.showAtPosition({ x: 0, y: 0 });
 		const press = new MouseEvent("mousedown", { bubbles: true, cancelable: true, button: 0 });
@@ -534,8 +534,8 @@ describe("PaletteMenu filter", () => {
 	});
 });
 
-describe("PaletteMenu focus and placement", () => {
-	it("gives focus back to the element it had before opening", () => {
+describe("パレットメニューのフォーカスと配置", () => {
+	it("開く前に持っていた要素にフォーカスを戻します", () => {
 		const { menu } = sample();
 		const input = document.body.appendChild(createEl("input"));
 		input.focus();
@@ -547,7 +547,7 @@ describe("PaletteMenu focus and placement", () => {
 		expect(document.activeElement).toBe(input);
 	});
 
-	it("keeps the focus the user moved to another input", () => {
+	it("ユーザーが別の入力に移動したフォーカスを維持します", () => {
 		const { menu } = sample();
 		const input = document.body.appendChild(createEl("input"));
 		const other = document.body.appendChild(createEl("input"));
@@ -560,7 +560,7 @@ describe("PaletteMenu focus and placement", () => {
 		expect(document.activeElement).toBe(other);
 	});
 
-	it("opens in the document it is given", () => {
+	it("与えられたドキュメントを開きます", () => {
 		const { menu } = sample();
 		const popout = new Window();
 		menu.showAtPosition({ x: 0, y: 0 }, { doc: popout.document as unknown as Document });
@@ -570,23 +570,23 @@ describe("PaletteMenu focus and placement", () => {
 	});
 });
 
-describe("placeMenu", () => {
+describe("場所メニュー", () => {
 	const viewport = { width: 500, height: 500 };
 	const size = { width: 100, height: 50 };
 
-	it("opens just below and to the right of the pointer when it fits", () => {
+	it("ポインタがぴったりと合うと、そのすぐ下と右が開きます", () => {
 		expect(placeMenu({ x: 10, y: 20 }, size, viewport)).toEqual({ left: 12, top: 22 });
 	});
 
-	it("flips to the left of the pointer near the right edge", () => {
+	it("右端近くでポインタの左側に反転します", () => {
 		expect(placeMenu({ x: 450, y: 20 }, size, viewport).left).toBe(348);
 	});
 
-	it("flips above the pointer near the bottom edge", () => {
+	it("下端付近でポインタの上を反転します", () => {
 		expect(placeMenu({ x: 10, y: 470 }, size, viewport).top).toBe(418);
 	});
 
-	it("never goes past the top or left edge", () => {
+	it("上端または左端を越えることはありません", () => {
 		expect(
 			placeMenu({ x: 10, y: 10 }, { width: 300, height: 300 }, { width: 100, height: 100 }),
 		).toEqual({

@@ -19,8 +19,8 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-describe("EverythingHttpClient", () => {
-	it("builds a bounded JSON request and parses files and folders", async () => {
+describe("すべてHTTPクライアント", () => {
+	it("制限された JSON リクエストを構築し、ファイルとフォルダーを解析します", async () => {
 		const requestUrl = vi.fn().mockResolvedValue({
 			status: 200,
 			arrayBuffer: new ArrayBuffer(4),
@@ -50,7 +50,7 @@ describe("EverythingHttpClient", () => {
 		]);
 	});
 
-	it("rejects invalid settings, failed responses, and oversized or malformed bodies", async () => {
+	it("無効な設定、失敗した応答、サイズが大きすぎるボディや形式が不正なボディを拒否します。", async () => {
 		const client = new EverythingHttpClient();
 		await expect(client.search("x", { ...settings, httpUrl: "bad url" })).rejects.toThrow(
 			"有効な",
@@ -76,7 +76,7 @@ describe("EverythingHttpClient", () => {
 		}
 	});
 
-	it("propagates aborts and cancels all active requests", async () => {
+	it("中止を伝播し、すべてのアクティブなリクエストをキャンセルします", async () => {
 		const resolvers = new Map<string, (value: EverythingResponse) => void>();
 		const requestUrl = vi.fn(
 			({ url }: { url: string }) =>
@@ -97,7 +97,7 @@ describe("EverythingHttpClient", () => {
 		await expect(second).rejects.toMatchObject({ name: "AbortError" });
 	});
 
-	it("keeps concurrent requests from separate palette views independent", async () => {
+	it("別々のパレットビューからの同時リクエストを独立させます", async () => {
 		const pending = new Map<string, (response: EverythingResponse) => void>();
 		const requestUrl = vi.fn(({ url }: { url: string }) => {
 			const query = new URL(url).searchParams.get("search") ?? "";

@@ -92,8 +92,8 @@ function makeApp() {
 	return { app: app as never, read, stat };
 }
 
-describe("IgnoredNoteIndex", () => {
-	it("scans ignored files, persists metadata, and reuses a fresh cached index", async () => {
+describe("無視されたメモインデックス", () => {
+	it("無視されたファイルをスキャンし、メタデータを永続化し、キャッシュされた新しいインデックスを再利用します。", async () => {
 		const { app, read } = makeApp();
 		const first = new IgnoredNoteIndex(app);
 		const entries = await first.getEntries();
@@ -114,7 +114,7 @@ describe("IgnoredNoteIndex", () => {
 		await second.dispose();
 	});
 
-	it("rebuilds after filter changes, removes stale paths, and retains cached entries on read errors", async () => {
+	it("フィルタ変更後に再構築し、古いパスを削除し、読み取りエラー時にキャッシュされたエントリを保持します。", async () => {
 		const { app, stat } = makeApp();
 		const index = new IgnoredNoteIndex(app);
 		await index.getEntries();
@@ -126,7 +126,7 @@ describe("IgnoredNoteIndex", () => {
 		await index.dispose();
 	});
 
-	it("handles empty filter scans and repeated rebuild calls", async () => {
+	it("空のフィルター スキャンと繰り返しの再構築呼び出しを処理します。", async () => {
 		const { app } = makeApp();
 		scanState.filters = [];
 		scanState.paths = [];

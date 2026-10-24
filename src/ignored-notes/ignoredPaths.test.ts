@@ -4,23 +4,23 @@ import {
 	isUserIgnoredPathWithFilters,
 } from "src/ignored-notes/ignoredPathMatching";
 
-describe("ignored path filters", () => {
-	it("recognizes slash-delimited regular expressions", () => {
+describe("無視されたパスフィルター", () => {
+	it("スラッシュ区切りの正規表現を認識します", () => {
 		expect(isUserIgnoreFilterRegex("/archive-.*/")).toBe(true);
 		expect(isUserIgnoreFilterRegex("archive")).toBe(false);
 	});
 
-	it("matches a literal folder and its descendants without matching a sibling", () => {
+	it("兄弟には一致せず、リテラルのフォルダーとその子孫に一致します。", () => {
 		expect(isUserIgnoredPathWithFilters(["archive"], "archive/note.md")).toBe(true);
 		expect(isUserIgnoredPathWithFilters(["archive"], "archive-old/note.md")).toBe(false);
 	});
 
-	it("matches regular-expression filters against normalized paths", () => {
+	it("正規化されたパスに対して正規表現フィルターを照合します", () => {
 		expect(isUserIgnoredPathWithFilters(["/\\.private\\//"], ".private/note.md")).toBe(true);
 		expect(isUserIgnoredPathWithFilters(["/\\.private\\//"], "notes/note.md")).toBe(false);
 	});
 
-	it("ignores invalid regular expressions instead of rejecting the search", () => {
+	it("検索を拒否するのではなく、無効な正規表現を無視します。", () => {
 		expect(isUserIgnoredPathWithFilters(["/[invalid/", "archive"], "notes/note.md")).toBe(
 			false,
 		);

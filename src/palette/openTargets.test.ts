@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { resolveExternalOpenTarget } from "src/palette/openTargets";
 
-describe("resolveExternalOpenTarget", () => {
-	it("uses the native Markdown target when the in-app viewer is enabled", () => {
+describe("解決外部オープンターゲット", () => {
+	it("アプリ内ビューアが有効な場合、ネイティブの Markdown ターゲットを使用します", () => {
 		expect(
 			resolveExternalOpenTarget("C:\\vault\\ignored\\note.md", {
 				openMarkdownInObsidian: true,
@@ -10,7 +10,7 @@ describe("resolveExternalOpenTarget", () => {
 		).toEqual({ kind: "markdown", absolutePath: "C:\\vault\\ignored\\note.md" });
 	});
 
-	it("uses the system handler for Markdown when the in-app viewer is disabled", () => {
+	it("アプリ内ビューアが無効になっている場合は、Markdown のシステム ハンドラーを使用します。", () => {
 		expect(
 			resolveExternalOpenTarget("C:\\vault\\ignored\\note.md", {
 				openMarkdownInObsidian: false,
@@ -18,7 +18,7 @@ describe("resolveExternalOpenTarget", () => {
 		).toEqual({ kind: "system", absolutePath: "C:\\vault\\ignored\\note.md" });
 	});
 
-	it("opens an ordinary external non-Markdown path with the system handler", () => {
+	it("システム ハンドラーを使用して、通常の非 Markdown 外部パスを開きます。", () => {
 		expect(
 			resolveExternalOpenTarget("C:\\vault\\assets\\image.png", {
 				openMarkdownInObsidian: true,

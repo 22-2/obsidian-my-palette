@@ -140,8 +140,8 @@ function type(input: HTMLInputElement, value: string) {
 	input.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-describe("PaletteModal", () => {
-	it("lists file results and names the source note in the footer", async () => {
+describe("パレットモーダル", () => {
+	it("ファイルの結果をリストし、フッター内のソースノートに名前を付けます", async () => {
 		const f = await open();
 		expect(f.labels()).toContain("Alpha");
 		expect(f.labels()).toContain("Beta");
@@ -149,13 +149,13 @@ describe("PaletteModal", () => {
 		expect(f.modal.modalEl.getAttribute("data-route")).toBe("home");
 	});
 
-	it("counts several source notes instead of naming one", async () => {
+	it("ソースノートに名前を付けるのではなく、いくつかのソースノートを数えます", async () => {
 		const sourceFiles = [{ path: "A.md" }, { path: "B.md" }] as TFile[];
 		const f = await open("", { sourceFiles });
 		expect(f.modal.modalEl.textContent).toContain("元: 2 件のノート");
 	});
 
-	it("opens the chosen file with Enter and lets the action close the palette", async () => {
+	it("Enter キーを押して選択したファイルを開き、パレットを閉じるアクションを実行します。", async () => {
 		const f = await open("alpha");
 		key(f.modal.inputEl, "Enter");
 		await settle();
@@ -167,7 +167,7 @@ describe("PaletteModal", () => {
 		);
 	});
 
-	it("enters a mode from its alias and steps back to Home with Escape before closing", async () => {
+	it("エイリアスからモードに入り、閉じる前に Escape でホームに戻ります。", async () => {
 		const f = await open("> build");
 		expect(f.modal.modalEl.getAttribute("data-route")).toBe("mode");
 		expect(f.modal.modalEl.getAttribute("data-mode")).toBe("command");
@@ -184,7 +184,7 @@ describe("PaletteModal", () => {
 		expect(f.modal.modalEl.isConnected).toBe(false);
 	});
 
-	it("returns to Home with Backspace in an empty mode query", async () => {
+	it("空モードのクエリで Backspace キーを押して Home に戻る", async () => {
 		const f = await open("> ");
 		expect(f.modal.modalEl.getAttribute("data-route")).toBe("mode");
 		key(f.modal.inputEl, "Backspace");
@@ -192,7 +192,7 @@ describe("PaletteModal", () => {
 		expect(f.modal.modalEl.getAttribute("data-route")).toBe("home");
 	});
 
-	it("hands its state to the next palette and releases itself when closed", async () => {
+	it("状態を次のパレットに渡し、閉じると自分自身を解放します", async () => {
 		const f = await open("> build");
 		f.modal.close();
 		expect(f.paletteOpener.releaseModal).toHaveBeenCalledWith(f.modal);
@@ -201,7 +201,7 @@ describe("PaletteModal", () => {
 		);
 	});
 
-	it("opens a middle-clicked file in the background and keeps the previous tab active", async () => {
+	it("中クリックしたファイルをバックグラウンドで開き、前のタブをアクティブなままにします", async () => {
 		const f = await open("beta");
 		const otherLeaf = { id: "background" };
 		vi.mocked(openPaletteResultInBackground).mockImplementationOnce(async () => {
@@ -219,7 +219,7 @@ describe("PaletteModal", () => {
 		expect(f.modal.modalEl.isConnected).toBe(true);
 	});
 
-	it("builds the context menu for the right-clicked row and the current selection", async () => {
+	it("右クリックした行と現在の選択内容のコンテキスト メニューを作成します", async () => {
 		const f = await open();
 		const row = f.rows().find((el) => el.textContent?.includes("Beta"));
 		mouse(row!, "mousedown", { button: 2 });
@@ -232,7 +232,7 @@ describe("PaletteModal", () => {
 		);
 	});
 
-	it("applies a search history entry instead of opening it", async () => {
+	it("検索履歴エントリを開く代わりに適用します", async () => {
 		const f = await open();
 		const history: SearchHistoryResult = {
 			id: "search-history:command:> deploy",
@@ -253,7 +253,7 @@ describe("PaletteModal", () => {
 		expect(f.commandSearch).toHaveBeenCalledWith(expect.objectContaining({ query: "deploy" }));
 	});
 
-	it("moves the live search into a new sidebar palette", async () => {
+	it("ライブ検索を新しいサイドバー パレットに移動します", async () => {
 		const f = await open("> build");
 		type(f.modal.inputEl, "deploy");
 		await settle();

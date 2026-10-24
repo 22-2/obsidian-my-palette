@@ -53,7 +53,7 @@ function menu() {
 
 const base = { id: "", primary: "", secondary: "", icon: "" };
 
-it("offers a merge of the distinct markdown notes only", () => {
+it("個別のマークダウンノートのみのマージを提供します", () => {
 	const results: PaletteResult[] = [
 		{ ...base, mode: "file", vaultPath: "a.md" },
 		{ ...base, mode: "link", file: files.get("a.md")!, line: 0 },
@@ -69,7 +69,7 @@ it("offers a merge of the distinct markdown notes only", () => {
 	expect(MergeTargetModal).toHaveBeenCalledWith(plugin, [files.get("a.md")], onDone);
 });
 
-it("adds nothing when no result is a markdown note", () => {
+it("結果がマークダウンノートでない場合は何も追加しません", () => {
 	const m = menu();
 	addMergeMenuItem(m.instance, plugin, [{ ...base, mode: "file", vaultPath: "image.png" }]);
 	expect(m.titles).toEqual([]);

@@ -55,8 +55,8 @@ function makeApp(notes: FakeNote[]) {
 	return app as unknown as App;
 }
 
-describe("findTagRenameTargets", () => {
-	it("finds notes with the tag inline, in frontmatter tags, or in aliases", () => {
+describe("findTagターゲットの名前変更", () => {
+	it("インライン、frontmatter タグ、またはエイリアスのタグを持つノートを検索します", () => {
 		const notes = [
 			note("inline.md", "text #old"),
 			note("fm.md", "text", { tags: ["old/child"] }),
@@ -72,8 +72,8 @@ describe("findTagRenameTargets", () => {
 	});
 });
 
-describe("applyTagRename", () => {
-	it("rewrites inline tags and frontmatter together", async () => {
+describe("applyタグ名の変更", () => {
+	it("インラインタグとフロントマターを一緒に書き換えます", async () => {
 		const item = note("a.md", "Body #old and #old/x", { tags: ["old"], aliases: ["#old"] });
 		const app = makeApp([item]);
 		const outcome = await applyTagRename(app, item.file, "old", "new");
@@ -82,14 +82,14 @@ describe("applyTagRename", () => {
 		expect(item.frontmatter).toEqual({ tags: ["new"], aliases: ["#new"] });
 	});
 
-	it("reports unchanged when nothing matches the tag", async () => {
+	it("タグに一致するものがない場合は変更なしでレポートします", async () => {
 		const item = note("a.md", "Body #keep", { tags: ["keep"] });
 		const app = makeApp([item]);
 		expect(await applyTagRename(app, item.file, "old", "new")).toBe("unchanged");
 		expect(item.text).toBe("Body #keep");
 	});
 
-	it("skips the note without frontmatter changes when the body moved since it was read", async () => {
+	it("読み取られてから本文が移動したときに、前付を変更せずにノートをスキップします。", async () => {
 		const item = note("a.md", "Body #old", { tags: ["old"] });
 		const app = makeApp([item]);
 		item.text = "Edited #other text";

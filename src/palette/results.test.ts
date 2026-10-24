@@ -5,7 +5,7 @@ import { getResultFilePath, type PaletteResult } from "src/palette/results";
 const file = { path: "notes/a.md" } as TFile;
 const base = { id: "id", primary: "p", secondary: "s", icon: "i" };
 
-describe("getResultFilePath", () => {
+describe("結果のファイルパス取得", () => {
 	const cases: Array<[string, PaletteResult, string | undefined]> = [
 		["file", { ...base, mode: "file", vaultPath: "a.md" }, "a.md"],
 		[

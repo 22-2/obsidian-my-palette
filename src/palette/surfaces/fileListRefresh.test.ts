@@ -38,15 +38,15 @@ function fixture(active = true, visible = true) {
 	return { subject, handlers, workspaceHandlers, registerEvent, refresh, state };
 }
 
-describe("file list refresh", () => {
-	it("registers its events only once", () => {
+describe("ファイルリストの更新", () => {
+	it("イベントを 1 回だけ登録します", () => {
 		const f = fixture();
 		f.subject.register();
 		f.subject.register();
 		expect(f.registerEvent).toHaveBeenCalledTimes(10);
 	});
 
-	it("debounces bursts of changes into one refresh", () => {
+	it("バースト変更を 1 回の更新でデバウンスします", () => {
 		const f = fixture();
 		f.subject.register();
 		f.handlers[0]?.();
@@ -58,7 +58,7 @@ describe("file list refresh", () => {
 		expect(f.refresh).toHaveBeenCalledTimes(1);
 	});
 
-	it("skips scheduling when inactive and supports cancel", () => {
+	it("非アクティブな場合はスケジュールをスキップし、キャンセルをサポートします", () => {
 		const f = fixture(false);
 		f.subject.register();
 		f.handlers[0]?.();
@@ -72,7 +72,7 @@ describe("file list refresh", () => {
 		expect(f.refresh).not.toHaveBeenCalled();
 	});
 
-	it("waits while hidden and searches once when shown again", () => {
+	it("非表示の間待機し、再度表示されるときに一度検索します", () => {
 		const f = fixture(true, false);
 		f.subject.register();
 		f.handlers[0]?.();

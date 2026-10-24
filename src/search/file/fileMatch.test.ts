@@ -17,8 +17,8 @@ function entry(overrides: Partial<FileSearchEntry> = {}): FileSearchEntry {
 	};
 }
 
-describe("file match signal construction", () => {
-	it("matches keywords across AND / OR terms and includes them in ranking evidence", () => {
+describe("ファイル一致シグナルの構造", () => {
+	it("AND / OR 用語全体でキーワードを照合し、ランキングの証拠に含めます。", () => {
 		const note = entry({ keywords: ["宇宙", "星空観察", "unrelated"] });
 		const [candidate] = searchFuzzyQueryWithFieldScores(
 			"宇宙 星空 | missing",
@@ -43,7 +43,7 @@ describe("file match signal construction", () => {
 		);
 	});
 
-	it("does not present keywords as evidence for tag-only queries", () => {
+	it("タグのみのクエリの証拠としてキーワードを提示しません", () => {
 		const note = entry({ tags: ["#宇宙"], keywords: ["#宇宙"] });
 		const [candidate] = searchFuzzyQueryWithFieldScores("#宇宙", [note], fileSearchKeys(true));
 		expect(candidate).toBeDefined();
@@ -53,7 +53,7 @@ describe("file match signal construction", () => {
 		).toMatchObject({ matchedKeywords: [], matchedTags: ["#宇宙"], matchCoverage: 3 });
 	});
 
-	it("maps shared search keys back to their named field signals", () => {
+	it("共有検索キーを名前付きフィールド信号にマッピングし直す", () => {
 		const [candidate] = searchFuzzyQueryWithFieldScores(
 			"roadmap",
 			[entry()],
@@ -73,7 +73,7 @@ describe("file match signal construction", () => {
 		expect(match.matchCoverage).toBeUndefined();
 	});
 
-	it("keeps field scores and derived query signals together", () => {
+	it("フィールドスコアと派生クエリ信号を一緒に保持します", () => {
 		const match = createFileMatch(
 			{
 				obj: entry(),
@@ -96,7 +96,7 @@ describe("file match signal construction", () => {
 		expect(match.matchCoverage).toBeGreaterThan(0);
 	});
 
-	it("keeps filename-only matches out of the folder path signal", () => {
+	it("ファイル名のみの一致をフォルダー パス信号から除外します", () => {
 		const [candidate] = searchFuzzyQueryWithFieldScores(
 			"project-plan",
 			[entry()],
@@ -108,7 +108,7 @@ describe("file match signal construction", () => {
 		expect(candidate.fieldScores[1]).toBeUndefined();
 	});
 
-	it("keeps tag-only queries out of filename, path, and alias signals", () => {
+	it("タグのみのクエリをファイル名、パス、エイリアス信号から除外します", () => {
 		const match = createFileMatch(
 			{
 				obj: entry({ basename: "unrelated" }),

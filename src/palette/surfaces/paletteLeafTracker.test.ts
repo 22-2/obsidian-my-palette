@@ -20,8 +20,8 @@ function fixture() {
 	return { tracker, workspace, leaf, own, created, rootSplit };
 }
 
-describe("palette leaf tracker", () => {
-	it("never treats its own leaf, other palettes, or sidebar leaves as targets", () => {
+describe("パレットリーフトラッカー", () => {
+	it("自身のリーフ、他のパレット、サイドバーのリーフをターゲットとして扱うことはありません。", () => {
 		const f = fixture();
 		expect(f.tracker.isCenterLeaf(f.own)).toBe(false);
 		expect(f.tracker.isCenterLeaf(f.leaf({ palette: true }))).toBe(false);
@@ -29,7 +29,7 @@ describe("palette leaf tracker", () => {
 		expect(f.tracker.isCenterLeaf(f.leaf())).toBe(true);
 	});
 
-	it("prefers the active center leaf, then the tracked one, then a new tab", () => {
+	it("アクティブな中央のリーフ、次に追跡されたリーフ、次に新しいタブを優先します", () => {
 		const f = fixture();
 		const tracked = f.leaf();
 		const active = f.leaf();
@@ -43,7 +43,7 @@ describe("palette leaf tracker", () => {
 		expect(f.tracker.resolveTargetLeaf()).toBe(active);
 	});
 
-	it("allocates one tab when no center leaf exists", () => {
+	it("中央のリーフが存在しない場合に 1 つのタブを割り当てます", () => {
 		const f = fixture();
 		expect(f.tracker.resolveTargetLeaf()).toBe(f.created);
 		expect(f.workspace.getLeaf).toHaveBeenCalledWith("tab");

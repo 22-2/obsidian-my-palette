@@ -20,14 +20,14 @@ const event = (key: string, extra: Partial<KeyboardEvent> = {}) =>
 		...extra,
 	}) as KeyboardEvent;
 
-describe("custom hotkeys", () => {
-	it("loads existing settings with independent default bindings", () => {
+describe("カスタムホットキー", () => {
+	it("独立したデフォルトバインディングを使用して既存の設定をロードします", () => {
 		const settings = mergeSettings({});
 		expect(settings.hotkeys).toEqual(DEFAULT_HOTKEYS);
 		settings.hotkeys.hidePreview!.modifiers.push("Ctrl");
 		expect(DEFAULT_HOTKEYS.hidePreview!.modifiers).toEqual(["Alt"]);
 	});
-	it("retains changed and disabled bindings across persistence", () => {
+	it("変更および無効化されたバインディングを永続化全体にわたって保持します", () => {
 		const settings = mergeSettings({
 			hotkeys: {
 				hidePreview: { key: "n", modifiers: ["Shift", "Alt", "Alt"] },
@@ -39,7 +39,7 @@ describe("custom hotkeys", () => {
 			settings.hotkeys,
 		);
 	});
-	it("rejects basic navigation, malformed data and query-consuming bindings", () => {
+	it("基本的なナビゲーション、不正なデータ、クエリを消費するバインディングを拒否します。", () => {
 		expect(
 			normalizeHotkeys({
 				hidePreview: { key: "h", modifiers: [] },
@@ -52,7 +52,7 @@ describe("custom hotkeys", () => {
 		expect(hotkeyFromEvent(event("Alt", { altKey: true }))).toBeUndefined();
 		expect(hotkeyFromEvent(event("h", { altKey: true, isComposing: true }))).toBeUndefined();
 	});
-	it("detects collisions including Shift range shortcuts", () => {
+	it("Shift 範囲のショートカットを含む衝突を検出します", () => {
 		expect(hotkeyError("hidePreview", DEFAULT_HOTKEYS.history, DEFAULT_HOTKEYS)).toContain(
 			"検索履歴",
 		);
@@ -62,7 +62,7 @@ describe("custom hotkeys", () => {
 		expect(hotkeyError("hidePreview", null, DEFAULT_HOTKEYS)).toBeUndefined();
 		expect(normalizeHotkeys({ hidePreview: DEFAULT_HOTKEYS.history })).toEqual(DEFAULT_HOTKEYS);
 	});
-	it("binds Tab to enter a mode alone, and requires a modifier for the switch keys", () => {
+	it("Tab をバインドして単独でモードに入り、スイッチ キーの修飾子が必要です", () => {
 		expect(normalizeHotkeys({ enterMode: { key: "Tab", modifiers: [] } }).enterMode).toEqual({
 			key: "Tab",
 			modifiers: [],
@@ -81,7 +81,7 @@ describe("custom hotkeys", () => {
 		).toBeUndefined();
 	});
 
-	it("treats a shared key as a collision only where both shortcuts can be used", () => {
+	it("両方のショートカットが使用できる場合にのみ、共有キーを衝突として扱います。", () => {
 		// The palette and the tag insert selector are separate places, so they can share a key.
 		expect(scopesOverlap(["palette"], ["tag-insert-selector"])).toBe(false);
 		expect(scopesOverlap(["moc-insert-selector"], ["tag-insert-selector"])).toBe(false);
@@ -93,7 +93,7 @@ describe("custom hotkeys", () => {
 		).toContain("パレットまたはセレクターを隠す");
 	});
 
-	it("matches exact modifiers and allows range Shift only for selection", () => {
+	it("修飾子と完全に一致し、選択範囲のみをシフトできます。", () => {
 		expect(matchesHotkey(event("h", { altKey: true }), DEFAULT_HOTKEYS.hidePreview)).toBe(true);
 		expect(
 			matchesHotkey(

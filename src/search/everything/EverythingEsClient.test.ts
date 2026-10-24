@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { parseEsJson } from "src/search/everything/EverythingEsClient";
 
-describe("parseEsJson", () => {
-	it("returns no results for empty output", () => {
+describe("解析EsJson", () => {
+	it("空の出力の場合は結果を返しません", () => {
 		expect(parseEsJson("")).toEqual([]);
 	});
 
-	it("classifies files and folders by the directory attribute", () => {
+	it("ファイルとフォルダーをディレクトリ属性によって分類します", () => {
 		const results = parseEsJson(
 			JSON.stringify([
 				{ filename: "C:\\Vault\\note.md", attributes: 32 },
@@ -21,7 +21,7 @@ describe("parseEsJson", () => {
 		]);
 	});
 
-	it("rejects output that is not a JSON array", () => {
+	it("JSON 配列ではない出力を拒否します", () => {
 		expect(() => parseEsJson("{}")).toThrow();
 		expect(() => parseEsJson("not json")).toThrow();
 	});

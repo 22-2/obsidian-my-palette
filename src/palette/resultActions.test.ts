@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { isMarkdownPath } from "src/shared/externalFiles";
 
-describe("isMarkdownPath", () => {
-	it("recognizes Markdown paths without case sensitivity", () => {
+describe("Markdownパスの判定", () => {
+	it("大文字と小文字を区別せずに Markdown パスを認識します", () => {
 		expect(isMarkdownPath("C:\\notes\\outside.md")).toBe(true);
 		expect(isMarkdownPath("C:\\notes\\outside.MD")).toBe(true);
 	});
 
-	it("does not treat Markdown-looking suffixes as Markdown files", () => {
+	it("Markdown のように見えるサフィックスを Markdown ファイルとして扱いません", () => {
 		expect(isMarkdownPath("C:\\notes\\outside.md.txt")).toBe(false);
 		expect(isMarkdownPath("C:\\notes\\outside.canvas")).toBe(false);
 	});

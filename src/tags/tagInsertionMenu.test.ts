@@ -51,7 +51,7 @@ function menu() {
 
 const base = { id: "", primary: "", secondary: "", icon: "" };
 
-it("adds tags only to distinct indexed Markdown notes", async () => {
+it("個別のインデックス付き Markdown ノートにのみタグを追加します", async () => {
 	const results: PaletteResult[] = [
 		{ ...base, mode: "file", vaultPath: "a.md" },
 		{
@@ -81,7 +81,7 @@ it("adds tags only to distinct indexed Markdown notes", async () => {
 	expect(insertTags).toHaveBeenCalledWith(plugin, [files.get("a.md"), files.get("b.md")]);
 });
 
-it("does not report done when the tag selector was cancelled", async () => {
+it("タグセレクターがキャンセルされたときに完了を報告しません", async () => {
 	const onDone = vi.fn();
 	const m = menu();
 	vi.mocked(insertTags).mockResolvedValue(false);
@@ -98,7 +98,7 @@ it("does not report done when the tag selector was cancelled", async () => {
 	expect(onDone).not.toHaveBeenCalled();
 });
 
-it("adds no item when nothing can be tagged", () => {
+it("何もタグ付けできない場合は項目を追加しません", () => {
 	const m = menu();
 	addTagInsertionMenuItems(m.instance, plugin, [{ ...base, mode: "command", commandId: "x" }]);
 	expect(m.titles).toEqual([]);

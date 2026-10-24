@@ -80,7 +80,7 @@ function result(
 	}
 }
 
-describe("note opening focus", () => {
+describe("メモの開始フォーカス", () => {
 	it.each(["file", "everything", "bookmark", "smart", "link", "backlink"] as const)(
 		"reveals and focuses the opened %s result",
 		async (mode) => {
@@ -95,7 +95,7 @@ describe("note opening focus", () => {
 				expect(f.leaf.view.editor.setCursor).toHaveBeenCalledWith({ line: 17, ch: 0 });
 		},
 	);
-	it("focuses the fallback leaf when the requested target is pinned", async () => {
+	it("要求されたターゲットが固定されている場合にフォールバック リーフに焦点を当てます", async () => {
 		const f = fixture();
 		const pinned = { getViewState: () => ({ pinned: true }), openFile: vi.fn() };
 		await executePaletteResult(f.plugin, result("file", f.file), "primary", {
@@ -114,7 +114,7 @@ describe("note opening focus", () => {
 			expect(f.workspace.setActiveLeaf).toHaveBeenCalledWith(f.leaf, { focus: true });
 		},
 	);
-	it("reveals ArrowRight previews without focusing the editor", async () => {
+	it("エディターにフォーカスを当てずに ArrowRight プレビューを表示します", async () => {
 		const f = fixture();
 		await executePaletteResult(f.plugin, result("file", f.file), "primary", {
 			...f.options,
@@ -123,14 +123,14 @@ describe("note opening focus", () => {
 		expect(f.workspace.revealLeaf).toHaveBeenCalledWith(f.leaf);
 		expect(f.workspace.setActiveLeaf).not.toHaveBeenCalled();
 	});
-	it("keeps middle-click opens in the background", async () => {
+	it("中クリックでバックグラウンドで開いたままにする", async () => {
 		const f = fixture();
 		await openPaletteResultInBackground(f.plugin, result("file", f.file));
 		expect(f.leaf.openFile).toHaveBeenCalledWith(f.file, { active: false });
 		expect(f.workspace.revealLeaf).not.toHaveBeenCalled();
 		expect(f.workspace.setActiveLeaf).not.toHaveBeenCalled();
 	});
-	it("passes the explicit new-tab policy to external Markdown opening", async () => {
+	it("明示的な新しいタブ ポリシーを外部の Markdown 開口部に渡します", async () => {
 		const f = fixture();
 		f.plugin.openExternalMarkdown = vi.fn().mockResolvedValue(undefined);
 		const external: PaletteResult = {
@@ -158,7 +158,7 @@ describe("note opening focus", () => {
 			false,
 		);
 	});
-	it("does not focus a destination after an open fails", async () => {
+	it("オープンに失敗した後、宛先に焦点を当てません", async () => {
 		const f = fixture();
 		f.leaf.openFile.mockRejectedValue(new Error("open failed"));
 		await expect(
@@ -168,7 +168,7 @@ describe("note opening focus", () => {
 		expect(f.workspace.setActiveLeaf).not.toHaveBeenCalled();
 	});
 
-	it("opens plugin folders in the external editor", async () => {
+	it("外部エディタでプラグインフォルダーを開きます", async () => {
 		const f = fixture();
 		const { openInExternalEditor } = await import("src/platform/externalOpen");
 		const pluginResult: PaletteResult = {
@@ -188,7 +188,7 @@ describe("note opening focus", () => {
 		expect(f.options.close).not.toHaveBeenCalled();
 	});
 
-	it("opens snippet files in the external editor", async () => {
+	it("外部エディタでスニペット ファイルを開きます", async () => {
 		const f = fixture();
 		const { openInExternalEditor } = await import("src/platform/externalOpen");
 		const snippetResult: PaletteResult = {

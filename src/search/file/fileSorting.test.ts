@@ -28,8 +28,8 @@ function file(
 	};
 }
 
-describe("file sorting", () => {
-	it("lets folder demotion override custom criteria independently of prior", () => {
+describe("ファイルの並べ替え", () => {
+	it("フォルダーの降格により、以前とは関係なくカスタム基準をオーバーライドできます。", () => {
 		const entries = [
 			file("archive/nested/project.md", 100, [], false, 100),
 			file("archive-other/project.md", 1, [], false, 1),
@@ -75,7 +75,7 @@ describe("file sorting", () => {
 		).toEqual(["archive-other/project.md", "archive/nested/project.md"]);
 	});
 
-	it("normalizes legacy and field-specific match signals at the sorter boundary", () => {
+	it("ソーター境界で従来のフィールド固有の一致信号を正規化します。", () => {
 		const legacy = { obj: file("legacy.md", 1), score: -4 };
 		const fieldSpecific = {
 			obj: file("field-specific.md", 1),
@@ -106,7 +106,7 @@ describe("file sorting", () => {
 		});
 	});
 
-	it("separates filename and alias prefix matches", () => {
+	it("ファイル名とエイリアスのプレフィックスの一致を分離します", () => {
 		const matches = [
 			{ obj: file("project-note.md", 1), score: 0 },
 			{ obj: file("archive/team-project-notes.md", 1), score: 0 },
@@ -134,7 +134,7 @@ describe("file sorting", () => {
 		]);
 	});
 
-	it("uses fuzzy score, activity, modified time, and path fallback in that order", () => {
+	it("ファジー スコア、アクティビティ、変更時刻、パス フォールバックをこの順序で使用します", () => {
 		const matches = [
 			{ obj: file("z/alpha.md", 10), score: 20 },
 			{ obj: file("a/beta.md", 30), score: 20 },
@@ -147,7 +147,7 @@ describe("file sorting", () => {
 		expect(sorted.map(({ path }) => path)).toEqual(["b/gamma.md", "z/alpha.md", "a/beta.md"]);
 	});
 
-	it("uses persistent usage when Activity is an explicit sorting priority", () => {
+	it("アクティビティが明示的なソート優先順位である場合、永続的な使用法を使用します。", () => {
 		const matches = [
 			{ obj: file("rare.md", 1), score: 0 },
 			{ obj: file("often.md", 1), score: 0 },
@@ -162,7 +162,7 @@ describe("file sorting", () => {
 		expect(sorted.map(({ path }) => path)).toEqual(["often.md", "rare.md"]);
 	});
 
-	it("prefers recent opens before persistent usage within Activity", () => {
+	it("アクティビティ内で永続的に使用する前に、最近開いたものを優先します", () => {
 		const matches = [
 			{ obj: file("old.md", 1), score: 0 },
 			{ obj: file("recent.md", 1), score: 0 },
@@ -178,7 +178,7 @@ describe("file sorting", () => {
 		expect(sorted.map(({ path }) => path)).toEqual(["recent.md", "old.md"]);
 	});
 
-	it("keeps an earlier configured match priority ahead of Activity", () => {
+	it("以前に設定された一致優先順位をアクティビティよりも前に保持します", () => {
 		const matches = [
 			{ obj: file("ordinary.md", 1), score: 1, filenameScore: 1 },
 			{ obj: file("strong.md", 1), score: 2, filenameScore: 2 },
@@ -199,7 +199,7 @@ describe("file sorting", () => {
 		expect(sorted.map(({ path }) => path)).toEqual(["strong.md", "ordinary.md"]);
 	});
 
-	it("puts ignored matches before normal notes in an include-ignored search", () => {
+	it("インクルード無視検索で、無視された一致を通常のノートの前に置きます", () => {
 		const matches = [
 			{ obj: file("notes/new.md", 100, [], false), score: 100 },
 			{ obj: file("archive/old.md", 1, [], true), score: 1 },
@@ -211,7 +211,7 @@ describe("file sorting", () => {
 		]);
 	});
 
-	it("shows recent files first, then newer files, then path order when input is empty", () => {
+	it("入力が空の場合は、最初に最近のファイル、次に新しいファイル、次にパスの順序を表示します", () => {
 		const entries = [
 			file("z/charlie.md", 30),
 			file("a/bravo.md", 30),
@@ -230,7 +230,7 @@ describe("file sorting", () => {
 		]);
 	});
 
-	it("uses path as the deterministic fallback when Last modified is omitted", () => {
+	it("Last Modified が省略された場合、パスを確定的なフォールバックとして使用します", () => {
 		const entries = [file("z-note.md", 100), file("a-note.md", 1)];
 
 		const sorted = sortFilesWithoutQuery(entries, new Map(), []);
@@ -238,7 +238,7 @@ describe("file sorting", () => {
 		expect(sorted.map(({ path }) => path)).toEqual(["a-note.md", "z-note.md"]);
 	});
 
-	it("puts Obsidian-excluded files first for an empty include-ignored listing", () => {
+	it("Obsidian で除外されたファイルを空の include-ignored リストの先頭に置きます", () => {
 		const entries = [file("notes/new.md", 100, [], false), file("archive/old.md", 1, [], true)];
 
 		const sorted = sortFilesWithoutQuery(entries, new Map());
@@ -246,7 +246,7 @@ describe("file sorting", () => {
 		expect(sorted.map(({ path }) => path)).toEqual(["archive/old.md", "notes/new.md"]);
 	});
 
-	it("sorts numeric prior values and keeps missing values last", () => {
+	it("前の数値をソートし、欠損値を最後に保持します", () => {
 		const entries = [
 			file("missing.md", 1),
 			file("low.md", 1, [], false, -1),
@@ -266,7 +266,7 @@ describe("file sorting", () => {
 		]);
 	});
 
-	it("applies configured priorities from left to right", () => {
+	it("設定された優先順位を左から右に適用します", () => {
 		const matches = [
 			{ obj: file("zeta.md", 10, [], false, 1), score: 100 },
 			{ obj: file("alpha.md", 1, [], false, 3), score: 100 },
@@ -278,7 +278,7 @@ describe("file sorting", () => {
 		expect(sorted.map(({ path }) => path)).toEqual(["alpha.md", "zeta.md"]);
 	});
 
-	it("separates filename and alias fuzzy scores", () => {
+	it("ファイル名とエイリアスのあいまいスコアを分離します", () => {
 		const matches = [
 			{
 				obj: file("ordinary.md", 1, ["project"]),
@@ -319,7 +319,7 @@ describe("file sorting", () => {
 		]);
 	});
 
-	it("keeps folder path matching available as its own priority", () => {
+	it("フォルダー パスの一致を独自の優先順位として利用可能な状態に保ちます", () => {
 		const matches = [
 			{
 				obj: file("folder/note.md", 1),
@@ -342,7 +342,7 @@ describe("file sorting", () => {
 		expect(sorted.map(({ path }) => path)).toEqual(["folder/note.md", "alpha.md"]);
 	});
 
-	it("ranks candidates by the number of matching tags", () => {
+	it("一致するタグの数によって候補をランク付けします", () => {
 		const matches = [
 			{ obj: file("one.md", 1), score: -1, tagMatchCount: 1 },
 			{ obj: file("none.md", 1), score: -1, tagMatchCount: 0 },
@@ -354,7 +354,7 @@ describe("file sorting", () => {
 		expect(sorted.map(({ path }) => path)).toEqual(["many.md", "one.md", "none.md"]);
 	});
 
-	it("ranks candidates by matched character coverage when configured", () => {
+	it("構成時に一致した文字の範囲に基づいて候補をランク付けします", () => {
 		const matches = [
 			{ obj: file("one.md", 1), score: -1, matchCoverage: 7 },
 			{ obj: file("many.md", 1), score: -1, matchCoverage: 21 },
@@ -366,7 +366,7 @@ describe("file sorting", () => {
 		expect(sorted.map(({ path }) => path)).toEqual(["many.md", "some.md", "one.md"]);
 	});
 
-	it("keeps contiguous metadata matches ahead of fuzzy-only matches", () => {
+	it("ファジーのみの一致よりも先に連続したメタデータの一致を保持します", () => {
 		const matches = [
 			{ obj: file("fuzzy-chat.md", 1), score: 1, contiguousMatch: false },
 			{ obj: file("exact-alias.md", 1), score: 0, contiguousMatch: true },
@@ -377,7 +377,7 @@ describe("file sorting", () => {
 		expect(sorted.map(({ path }) => path)).toEqual(["exact-alias.md", "fuzzy-chat.md"]);
 	});
 
-	it("uses prior before recent history when configured", () => {
+	it("設定されている場合は、最近の履歴より前の履歴を使用します", () => {
 		const entries = [file("recent.md", 1, [], false, 1), file("important.md", 1, [], false, 3)];
 		const recent = new Map([["recent.md", 0]]);
 
@@ -386,7 +386,7 @@ describe("file sorting", () => {
 		expect(sorted.map(({ path }) => path)).toEqual(["important.md", "recent.md"]);
 	});
 
-	it("sorts by the number of aliases when configured", () => {
+	it("構成時にエイリアスの数でソートします", () => {
 		const entries = [
 			file("one.md", 1, ["one"]),
 			file("five.md", 1, ["one", "two", "three", "four", "five"]),

@@ -13,8 +13,8 @@ import {
 	recordSearchHistory,
 } from "src/palette/searchHistory";
 
-describe("search history", () => {
-	it("restores the retired all-files scope on the unified Everything switch", () => {
+describe("検索履歴", () => {
+	it("統合されたすべてのスイッチで廃止されたすべてのファイルのスコープを復元します", () => {
 		const stored = {
 			input: "report",
 			category: "everything-directory",
@@ -41,7 +41,7 @@ describe("search history", () => {
 		expect(getSearchHistorySuggestions(normalized, "", category)).toEqual(normalized);
 	});
 
-	it("increments a committed search and merges case-only duplicates", () => {
+	it("コミットされた検索を増分し、ケースのみの重複をマージします", () => {
 		const first = recordSearchHistory([], "report", "everything", {
 			now: 1_000,
 			daysToKeep: 360,
@@ -58,7 +58,7 @@ describe("search history", () => {
 		]);
 	});
 
-	it("keeps whitespace-sensitive entries distinct", () => {
+	it("空白を含むエントリを区別しておく", () => {
 		const entries = recordSearchHistory(
 			recordSearchHistory([], "report", "file", {
 				now: 1_000,
@@ -73,7 +73,7 @@ describe("search history", () => {
 		expect(entries.map(({ input }) => input)).toEqual(["report ", "report"]);
 	});
 
-	it("prunes old entries and limits suggestions", () => {
+	it("古いエントリを削除し、提案を制限します", () => {
 		const now = 10 * 24 * 60 * 60 * 1000;
 		const entries = pruneStoredSearchHistory(
 			[
@@ -89,7 +89,7 @@ describe("search history", () => {
 		).toEqual(["new"]);
 	});
 
-	it("filters suggestions by the current input", () => {
+	it("現在の入力によって提案をフィルタリングします", () => {
 		const entries = [
 			{
 				input: "Open daily note",
@@ -111,7 +111,7 @@ describe("search history", () => {
 		).toEqual(["Search report"]);
 	});
 
-	it("keeps identical queries separate across categories", () => {
+	it("同一のクエリをカテゴリ間で分けて保持します", () => {
 		const entries = recordSearchHistory(
 			recordSearchHistory([], "report", "file", {
 				now: 1_000,
@@ -129,7 +129,7 @@ describe("search history", () => {
 		]);
 	});
 
-	it("keeps Obsidian-excluded scope separate from the normal file search", () => {
+	it("Obsidian を除外したスコープを通常のファイル検索から分離します。", () => {
 		const entries = recordSearchHistory(
 			recordSearchHistory([], "archive", "file", {
 				now: 1_000,
@@ -146,7 +146,7 @@ describe("search history", () => {
 		expect(getSearchHistorySuggestions(entries, "archive", "file", 30, false)).toHaveLength(1);
 	});
 
-	it("parses legacy entries before IndexedDB migration", () => {
+	it("IndexedDB の移行前にレガシー エントリを解析します", () => {
 		expect(
 			parseStoredSearchHistoryEntries(
 				[
@@ -181,7 +181,7 @@ describe("search history", () => {
 	});
 });
 
-describe("formatSearchHistoryInput", () => {
+describe("フォーマット検索履歴入力", () => {
 	const modes = { ...DEFAULT_SETTINGS.modes, everything: { alias: "es", enabled: true } };
 	const entry = (
 		category: SearchHistoryCategory,
@@ -207,7 +207,7 @@ describe("formatSearchHistoryInput", () => {
 		expect(formatSearchHistoryInput(entry(category), modes)).toBe(expected);
 	});
 
-	it("leaves the Obsidian-excluded scope to the host's switch", () => {
+	it("Obsidian 除外スコープをホストのスイッチに残します", () => {
 		expect(formatSearchHistoryInput(entry("file", true), modes)).toBe("foo");
 		expect(formatSearchHistoryInput(entry("command", true), modes)).toBe("> foo");
 	});

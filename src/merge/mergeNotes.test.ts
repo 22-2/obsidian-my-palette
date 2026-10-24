@@ -61,8 +61,8 @@ function scenario() {
 	return { ...fakeVault([a, b, c, moc], links), a, b, c, moc };
 }
 
-describe("planMerge", () => {
-	it("lists the body, property conflicts, and the notes whose links move", async () => {
+describe("プランマージ", () => {
+	it("本文、プロパティの競合、およびリンクが移動するメモをリストします。", async () => {
 		const { app, a, b } = scenario();
 		const plan = await planMerge(app, [a.file], b.file);
 
@@ -75,8 +75,8 @@ describe("planMerge", () => {
 	});
 });
 
-describe("executeMerge", () => {
-	it("writes the target, moves the links, then trashes the sources", async () => {
+describe("マージ実行", () => {
+	it("ターゲットを書き込み、リンクを移動し、ソースを破棄します。", async () => {
 		const { app, a, b, byPath, trashed } = scenario();
 		const plan = await planMerge(app, [a.file], b.file);
 		const result = await executeMerge(app, plan);
@@ -93,7 +93,7 @@ describe("executeMerge", () => {
 		expect(trashed).toEqual(["a.md"]);
 	});
 
-	it("keeps the source name out of aliases when the plan switch is off", async () => {
+	it("プランスイッチがオフの場合、ソース名がエイリアスに含まれないようにします。", async () => {
 		const { app, a, b, byPath } = scenario();
 		const plan = await planMerge(app, [a.file], b.file);
 		plan.aliasSourceNames = false;
@@ -103,7 +103,7 @@ describe("executeMerge", () => {
 		expect(byPath.get("b.md")!.frontmatter).toEqual({ status: "done", tags: ["x"] });
 	});
 
-	it("touches nothing else when the target cannot be written", async () => {
+	it("ターゲットを書き込めない場合は他には何も触れません", async () => {
 		const { app, a, b, trashed } = scenario();
 		const plan = await planMerge(app, [a.file], b.file);
 		vi.mocked(app.fileManager.processFrontMatter).mockRejectedValueOnce(new Error("locked"));

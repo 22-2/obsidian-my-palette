@@ -43,7 +43,7 @@ it.each([false, true])(
 	},
 );
 
-it("does not reveal or focus newly created background external notes", async () => {
+it("新しく作成された背景の外部ノートを表示したりフォーカスしたりしません", async () => {
 	const f = fixture(false);
 	await openExternalMarkdown(f.plugin, "C:/outside.md", "alternate", true, false);
 	expect(f.leaf.setViewState).toHaveBeenCalledWith(expect.objectContaining({ active: false }));
@@ -51,7 +51,7 @@ it("does not reveal or focus newly created background external notes", async () 
 	expect(f.workspace.setActiveLeaf).not.toHaveBeenCalled();
 });
 
-it("honors an explicit main-window target when the external file is already open in a popout", async () => {
+it("外部ファイルがすでにポップアウトで開かれている場合、明示的なメイン ウィンドウ ターゲットを尊重します。", async () => {
 	const f = fixture(true);
 	const popout = {};
 	const mainWindow = {};
@@ -72,7 +72,7 @@ it("honors an explicit main-window target when the external file is already open
 	expect(f.workspace.setActiveLeaf).toHaveBeenCalledExactlyOnceWith(target, { focus: true });
 });
 
-it("opens a fresh external Markdown tab even when the same path exists in the main window", async () => {
+it("メイン ウィンドウに同じパスが存在する場合でも、新しい外部 Markdown タブを開きます", async () => {
 	const f = fixture(true);
 	const mainWindow = {};
 	Object.assign(f.leaf, { getContainer: () => mainWindow });

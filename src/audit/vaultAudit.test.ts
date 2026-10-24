@@ -34,16 +34,16 @@ function paths(report: ReturnType<typeof runAudit>): string[] {
 	return report.items.map((item) => ("path" in item ? item.path : item.link));
 }
 
-describe("isAuditKind", () => {
-	it("accepts only the four kinds", () => {
+describe("監査対象の種類判定", () => {
+	it("4種類のみ受け付けます", () => {
 		expect(isAuditKind("broken-links")).toBe(true);
 		expect(isAuditKind("orphans")).toBe(false);
 		expect(isAuditKind(undefined)).toBe(false);
 	});
 });
 
-describe("orphaned files", () => {
-	it("lists files no other file links to or embeds, in path order", () => {
+describe("孤立したファイル", () => {
+	it("他のファイルがリンクまたは埋め込まれていないファイルをパス順にリストします。", () => {
 		const report = runAudit(
 			"orphaned-files",
 			snapshot({
@@ -54,7 +54,7 @@ describe("orphaned files", () => {
 		expect(paths(report)).toEqual(["a.md", "b.md"]);
 	});
 
-	it("treats a note that only links to itself as orphaned", () => {
+	it("自分自身にのみリンクしているノートを孤立したものとして扱います", () => {
 		const report = runAudit(
 			"orphaned-files",
 			snapshot({ files: [file("self.md")], resolvedLinks: { "self.md": { "self.md": 2 } } }),
@@ -62,7 +62,7 @@ describe("orphaned files", () => {
 		expect(paths(report)).toEqual(["self.md"]);
 	});
 
-	it("skips excluded folders and the orphan-only folders", () => {
+	it("除外されたフォルダーと孤立したフォルダーのみをスキップします", () => {
 		const report = runAudit(
 			"orphaned-files",
 			snapshot({
@@ -73,7 +73,7 @@ describe("orphaned files", () => {
 		expect(paths(report)).toEqual(["keep.md"]);
 	});
 
-	it("keeps a file linked only from an excluded note out of the list", () => {
+	it("除外されたノートからのみリンクされているファイルをリストから除外します", () => {
 		const report = runAudit(
 			"orphaned-files",
 			snapshot({
@@ -86,8 +86,8 @@ describe("orphaned files", () => {
 	});
 });
 
-describe("broken links", () => {
-	it("groups occurrences by link, most referenced first, with sorted sources", () => {
+describe("壊れたリンク", () => {
+	it("ソートされたソースを使用して、出現箇所をリンクごとにグループ化し、最も参照されているものが最初に表示されます。", () => {
 		const report = runAudit(
 			"broken-links",
 			snapshot({
@@ -113,7 +113,7 @@ describe("broken links", () => {
 		]);
 	});
 
-	it("drops links written in excluded notes", () => {
+	it("除外されたメモに書かれたリンクを削除します", () => {
 		const report = runAudit(
 			"broken-links",
 			snapshot({
@@ -126,8 +126,8 @@ describe("broken links", () => {
 	});
 });
 
-describe("empty files", () => {
-	it("judges Markdown by its content and other files by size", () => {
+describe("空のファイル", () => {
+	it("Markdown はその内容によって判断され、他のファイルはサイズによって判断されます", () => {
 		const report = runAudit(
 			"empty-files",
 			snapshot({
@@ -145,8 +145,8 @@ describe("empty files", () => {
 	});
 });
 
-describe("empty folders", () => {
-	it("lists only the topmost empty folder with the count of empty folders inside", () => {
+describe("空のフォルダー", () => {
+	it("最上位の空のフォルダーのみをリストし、その中にある空のフォルダーの数を表示します", () => {
 		const report = runAudit(
 			"empty-folders",
 			snapshot({
@@ -160,7 +160,7 @@ describe("empty folders", () => {
 		]);
 	});
 
-	it("counts a folder holding only excluded files as not empty, and skips excluded folders", () => {
+	it("除外されたファイルのみを含むフォルダーは空ではないとカウントし、除外されたフォルダーをスキップします", () => {
 		const report = runAudit(
 			"empty-folders",
 			snapshot({
@@ -173,10 +173,10 @@ describe("empty folders", () => {
 	});
 });
 
-describe("filterAuditReport", () => {
+describe("フィルター監査レポート", () => {
 	const startsWithNotes = (path: string) => path.startsWith("notes/");
 
-	it("keeps files and folders by their own path", () => {
+	it("ファイルとフォルダーを独自のパスで保持します", () => {
 		const report = filterAuditReport(
 			{
 				kind: "orphaned-files",
@@ -190,7 +190,7 @@ describe("filterAuditReport", () => {
 		expect(paths(report)).toEqual(["notes/a.md"]);
 	});
 
-	it("keeps broken links by the linking notes and drops links left without any", () => {
+	it("壊れたリンクをリンクメモによって保持し、何もせずに残っ​​たリンクを削除します", () => {
 		const report = filterAuditReport(
 			{
 				kind: "broken-links",
@@ -208,8 +208,8 @@ describe("filterAuditReport", () => {
 	});
 });
 
-describe("MOC-only notes", () => {
-	it("lists them as empty files, marked as MOC-only", () => {
+describe("MOC のみのメモ", () => {
+	it("それらを空のファイルとしてリストし、MOC 専用としてマークします", () => {
 		const report = runAudit(
 			"empty-files",
 			snapshot({ files: [file("moc-only.md", { mocOnly: true }), file("written.md")] }),
@@ -218,8 +218,8 @@ describe("MOC-only notes", () => {
 	});
 });
 
-describe("files Obsidian cannot open", () => {
-	it("are left out of orphaned and empty files but still keep their folder from being empty", () => {
+describe("Obsidian では開けないファイル", () => {
+	it("孤立した空のファイルは残されますが、フォルダーが空になることはありません", () => {
 		const files = [
 			file("cog.toml", { openable: false }),
 			file("config/empty.cjs", { openable: false, size: 0 }),

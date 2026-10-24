@@ -8,8 +8,8 @@ function app(): App {
 	} as unknown as App;
 }
 
-describe("search history store", () => {
-	it("keeps legacy history usable when IndexedDB is unavailable", async () => {
+describe("検索履歴ストア", () => {
+	it("IndexedDB が使用できない場合でもレガシー履歴を使用できるようにする", async () => {
 		const store = new SearchHistoryStore(app());
 		const persistent = await store.load([
 			{ input: "old", category: "file", lastSearchedAt: 1_000, count: 2 },

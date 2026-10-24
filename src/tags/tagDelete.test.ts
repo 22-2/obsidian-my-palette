@@ -22,8 +22,8 @@ function positionsOf(text: string): InlineTagPosition[] {
 	}));
 }
 
-describe("deleteInlineTags", () => {
-	it("removes matching tags with the blank before them and keeps the others", () => {
+describe("インラインタグの削除", () => {
+	it("前に空白がある一致するタグを削除し、他のタグは保持します", () => {
 		const text = "Body #old and #keep #old/x";
 		expect(deleteInlineTags(text, positionsOf(text), ["old"])).toEqual({
 			text: "Body and #keep",
@@ -31,7 +31,7 @@ describe("deleteInlineTags", () => {
 		});
 	});
 
-	it("removes a tag at the start of a line together with the blank after it", () => {
+	it("行頭のタグとその後の空白を削除します。", () => {
 		const text = "#old first line";
 		expect(deleteInlineTags(text, positionsOf(text), ["old"])).toEqual({
 			text: "first line",
@@ -39,28 +39,28 @@ describe("deleteInlineTags", () => {
 		});
 	});
 
-	it("gives up when the text at a position is no longer the tag", () => {
+	it("ある位置のテキストがタグでなくなったら諦める", () => {
 		const positions = [{ tag: "#old", start: 0, end: 4 }];
 		expect(deleteInlineTags("#changed", positions, ["old"])).toBeUndefined();
 	});
 });
 
-describe("deleteFrontmatterTags", () => {
-	it("removes matching items and reports the change", () => {
+describe("フロントマタータグの削除", () => {
+	it("一致する項目を削除し、変更を報告します", () => {
 		expect(deleteFrontmatterTags(["old", "keep", "old/child"], ["old"])).toEqual({
 			values: ["keep"],
 			changed: true,
 		});
 	});
 
-	it("does not report a change when nothing matches", () => {
+	it("何も一致しない場合は変更を報告しません", () => {
 		expect(deleteFrontmatterTags(["keep"], ["old"])).toEqual({
 			values: ["keep"],
 			changed: false,
 		});
 	});
 
-	it("reads a string list and writes it back only when something is removed", () => {
+	it("文字列リストを読み取り、何かが削除された場合にのみそれを書き戻します", () => {
 		expect(deleteFrontmatterTags("old, keep", ["old"])).toEqual({
 			values: ["keep"],
 			changed: true,
@@ -69,8 +69,8 @@ describe("deleteFrontmatterTags", () => {
 	});
 });
 
-describe("deleteAliasTags", () => {
-	it("removes only tag aliases that match", () => {
+describe("エイリアスタグの削除", () => {
+	it("一致するタグ エイリアスのみを削除します", () => {
 		expect(deleteAliasTags(["#old", "old", "#keep"], ["old"])).toEqual({
 			values: ["old", "#keep"],
 			changed: true,
@@ -78,7 +78,7 @@ describe("deleteAliasTags", () => {
 	});
 });
 
-describe("applyTagEdit with deleteTagEdit", () => {
+describe("applyTagEdit と deleteTagEdit", () => {
 	function noteWith(text: string, frontmatter: Record<string, unknown>) {
 		const cache = {
 			frontmatter,
@@ -108,7 +108,7 @@ describe("applyTagEdit with deleteTagEdit", () => {
 		return { app, file, item };
 	}
 
-	it("removes the tag from the body and the frontmatter, and drops emptied keys", async () => {
+	it("本体とフロントマターからタグを削除し、空のキーをドロップします", async () => {
 		const { app, file, item } = noteWith("Body #old and #keep", {
 			tags: ["old"],
 			aliases: ["#old"],
@@ -118,7 +118,7 @@ describe("applyTagEdit with deleteTagEdit", () => {
 		expect(item.frontmatter).toEqual({});
 	});
 
-	it("reports unchanged when the note has no matching tag", async () => {
+	it("メモに一致するタグがない場合、レポートは変更されません", async () => {
 		const { app, file, item } = noteWith("Body #keep", { tags: ["keep"] });
 		expect(await applyTagEdit(app, file, deleteTagEdit(["old"]))).toBe("unchanged");
 		expect(item.text).toBe("Body #keep");

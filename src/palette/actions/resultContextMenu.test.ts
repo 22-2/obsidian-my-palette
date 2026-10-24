@@ -128,7 +128,7 @@ it.each([false, true])(
 	},
 );
 
-it("does not add single-result navigation to bulk selections", () => {
+it("単一結果のナビゲーションを一括選択に追加しません", () => {
 	const f = fixture(true);
 	populatePaletteResultMenu({
 		...f.options,
@@ -137,7 +137,7 @@ it("does not add single-result navigation to bulk selections", () => {
 	expect(f.actions.has("メインウィンドウで開く")).toBe(false);
 });
 
-it("does not offer main-window file navigation for commands", () => {
+it("コマンドに対するメイン ウィンドウのファイル ナビゲーションは提供されません", () => {
 	const f = fixture(true);
 	const result: PaletteResult = {
 		id: "command",
@@ -152,7 +152,7 @@ it("does not offer main-window file navigation for commands", () => {
 	expect(f.actions.has("コマンドを実行")).toBe(true);
 });
 
-it("offers external open actions for file results on desktop", async () => {
+it("デスクトップ上のファイル結果に対する外部オープンアクションを提供します", async () => {
 	const f = fixture(false);
 	populatePaletteResultMenu({
 		...f.options,
@@ -175,7 +175,7 @@ it("offers external open actions for file results on desktop", async () => {
 	expect(openDirectoryInTerminal).toHaveBeenCalledWith("C:/vault");
 });
 
-it("hides external open actions for commands", () => {
+it("コマンドの外部オープンアクションを非表示にします", () => {
 	const f = fixture(false);
 	const result: PaletteResult = {
 		id: "command",
@@ -191,7 +191,7 @@ it("hides external open actions for commands", () => {
 	expect(f.actions.has("ターミナルで開く")).toBe(false);
 });
 
-it("offers editor, explorer and settings for plugin results without note navigation", () => {
+it("エディター、エクスプローラー、およびノー​​トナビゲーションなしのプラグイン結果の設定を提供します", () => {
 	const f = fixture(false);
 	const app = {
 		setting: { open: vi.fn(), openTabById: vi.fn() },
@@ -230,7 +230,7 @@ it("offers editor, explorer and settings for plugin results without note navigat
 	expect(onNoteActionSelected).toHaveBeenCalled();
 });
 
-it("offers editor and explorer for snippet results without settings", () => {
+it("設定なしでスニペット結果を表示するためのエディターとエクスプローラーを提供します", () => {
 	const f = fixture(false);
 	const result: PaletteResult = {
 		id: "snippet:alpha.css",
@@ -252,13 +252,13 @@ it("offers editor and explorer for snippet results without settings", () => {
 	expect(f.actions.has("開く")).toBe(false);
 });
 
-it("turns on the action filter for every result menu", () => {
+it("すべての結果メニューのアクション フィルターをオンにします", () => {
 	const f = fixture(false);
 	populatePaletteResultMenu(f.options);
 	expect(f.options.menu.enableFilter).toHaveBeenCalledOnce();
 });
 
-it("adds bookmark actions for the whole selection and refreshes after changes", async () => {
+it("選択範囲全体にブックマーク アクションを追加し、変更後に更新します。", async () => {
 	const { addBookmarkMenuItems } = await import("src/palette/actions/bookmarkMenu");
 	const f = fixture(false);
 	const onResultsChanged = vi.fn();

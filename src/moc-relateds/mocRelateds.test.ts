@@ -6,8 +6,8 @@ import {
 	removeLinkFromMocRelateds,
 } from "src/moc-relateds/mocRelatedsCore";
 
-describe("addLinkToMocRelateds", () => {
-	it("adds a link using the existing Relateds child indentation", () => {
+describe("addLinkToMoc関連", () => {
+	it("既存の関連子のインデントを使用してリンクを追加します", () => {
 		const content = ["## MOC", "- Relateds", "    - [[Existing note]]", "- References"].join(
 			"\n",
 		);
@@ -24,7 +24,7 @@ describe("addLinkToMocRelateds", () => {
 		});
 	});
 
-	it("adds to the last MOC section when the note has more than one", () => {
+	it("ノートに複数の MOC セクションがある場合、最後の MOC セクションに追加します。", () => {
 		const content = [
 			"## MOC",
 			"- Relateds",
@@ -42,7 +42,7 @@ describe("addLinkToMocRelateds", () => {
 		});
 	});
 
-	it("does not add the same link twice", () => {
+	it("同じリンクを二度追加しない", () => {
 		const content = "## MOC\n- Relateds\n    - [[Existing note]]";
 		expect(addLinkToMocRelateds(content, "Existing note", 4)).toEqual({
 			success: false,
@@ -51,7 +51,7 @@ describe("addLinkToMocRelateds", () => {
 	});
 });
 
-describe("removeLinkFromMocRelateds", () => {
+describe("RemoveLinkFromMoc関連", () => {
 	const moc = [
 		"## MOC",
 		"- Relateds",
@@ -61,7 +61,7 @@ describe("removeLinkFromMocRelateds", () => {
 		"    - [[A]]",
 	];
 
-	it("removes only the matching Relateds child, including aliased links", () => {
+	it("エイリアス化されたリンクを含む、一致する関連子のみを削除します", () => {
 		expect(removeLinkFromMocRelateds(moc.join("\n"), "B")).toEqual({
 			success: true,
 			newContent: ["## MOC", "- Relateds", "    - [[A]]", "- References", "    - [[A]]"].join(
@@ -70,21 +70,21 @@ describe("removeLinkFromMocRelateds", () => {
 		});
 	});
 
-	it("ignores links outside the Relateds item", () => {
+	it("関連項目以外のリンクを無視します", () => {
 		expect(removeLinkFromMocRelateds(moc.join("\n"), "Z")).toEqual({
 			success: false,
 			message: "リンクが見つかりません。",
 		});
 	});
 
-	it("refuses to delete a link that has nested items", () => {
+	it("ネストされた項目を含むリンクの削除を拒否します", () => {
 		const nested = "## MOC\n- Relateds\n    - [[A]]\n        - note";
 		expect(removeLinkFromMocRelateds(nested, "A")).toMatchObject({ success: false });
 	});
 });
 
-describe("relatedsLineRange", () => {
-	it("covers only the items nested under Relateds", () => {
+describe("関連LineRange", () => {
+	it("関連の下にネストされている項目のみをカバーします", () => {
 		const content = [
 			"intro [[X]]",
 			"## MOC",
@@ -98,29 +98,29 @@ describe("relatedsLineRange", () => {
 		expect(relatedsLineRange(content)).toEqual([3, 6]);
 	});
 
-	it("is undefined without a MOC Relateds item", () => {
+	it("MOC 関連アイテムがなければ定義されていません", () => {
 		expect(relatedsLineRange("## MOC\n- References")).toBeUndefined();
 		expect(relatedsLineRange("plain note")).toBeUndefined();
 	});
 });
 
-describe("isMocOnly", () => {
+describe("MOCのみのノート判定", () => {
 	const frontmatter = ["---", "createdAt: 2026-10-08T16:21:43", "---"];
 	const moc = ["## MOC", "- Relateds", "    - [[Hub]]", "- References"];
 
-	it("treats a note with only frontmatter and its MOC as MOC-only", () => {
+	it("フロントマターとその MOC のみを含むノートを MOC のみとして扱います", () => {
 		expect(isMocOnly([...frontmatter, "", ...moc, "    - "].join("\n"))).toBe(true);
 		expect(
 			isMocOnly([...frontmatter, ...moc, "    - [Thread](codex://threads/2)"].join("\r\n")),
 		).toBe(true);
 	});
 
-	it("is not MOC-only when text is written outside the MOC section", () => {
+	it("テキストが MOC セクションの外に書かれている場合、MOC のみではありません", () => {
 		expect(isMocOnly([...frontmatter, "A thought.", "", ...moc].join("\n"))).toBe(false);
 		expect(isMocOnly([...moc, "## Notes", "More."].join("\n"))).toBe(false);
 	});
 
-	it("is not MOC-only without a MOC section", () => {
+	it("MOC セクションがなければ MOC のみではありません", () => {
 		expect(isMocOnly([...frontmatter, ""].join("\n"))).toBe(false);
 	});
 });

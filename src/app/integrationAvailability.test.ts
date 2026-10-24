@@ -5,8 +5,8 @@ import { IntegrationAvailability, type ConnectionResult } from "src/app/integrat
 const success: ConnectionResult = { ok: true, message: "Connected" };
 const failure: ConnectionResult = { ok: false, message: "Unavailable" };
 
-describe("integration setup", () => {
-	it("hides unchecked and failed connections and restores them after a successful test", async () => {
+describe("統合セットアップ", () => {
+	it("未チェックの接続と失敗した接続を非表示にし、テストが成功した後に復元します。", async () => {
 		const settings = structuredClone(DEFAULT_SETTINGS);
 		const check = vi.fn().mockResolvedValueOnce(failure).mockResolvedValue(success);
 		const availability = new IntegrationAvailability(
@@ -25,7 +25,7 @@ describe("integration setup", () => {
 		expect(availability.current.everything).toBe(false);
 	});
 
-	it("ignores stale checks after the connection settings change", async () => {
+	it("接続設定が変更された後、古いチェックを無視します", async () => {
 		const settings = structuredClone(DEFAULT_SETTINGS);
 		let finishOld!: (result: ConnectionResult) => void;
 		const check = vi
@@ -51,7 +51,7 @@ describe("integration setup", () => {
 		expect(check.mock.calls[0]?.[1].aborted).toBe(true);
 	});
 
-	it("shares a pending check and respects disabled integrations", async () => {
+	it("保留中のチェックを共有し、無効化された統合を尊重します", async () => {
 		const settings = structuredClone(DEFAULT_SETTINGS);
 		let finish!: (result: ConnectionResult) => void;
 		const check = vi.fn(
@@ -79,7 +79,7 @@ describe("integration setup", () => {
 		expect(check).toHaveBeenCalledTimes(1);
 	});
 
-	it("does not publish an unfinished check after disposal", async () => {
+	it("廃棄後に未完了の小切手を公開しない", async () => {
 		let finish!: (result: ConnectionResult) => void;
 		const availability = new IntegrationAvailability(
 			() => DEFAULT_SETTINGS,

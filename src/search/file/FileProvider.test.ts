@@ -12,7 +12,7 @@ function tfile(path: string, mtime = 1): TFile {
 	return { path, basename, extension: "md", stat: { mtime } } as unknown as TFile;
 }
 
-describe("file provider vault event handling", () => {
+describe("ファイルプロバイダーのボールトイベント処理", () => {
 	const vaultHandlers = new Map<string, (...args: never[]) => unknown>();
 	const metadataHandlers = new Map<string, (...args: never[]) => unknown>();
 	let files: TFile[];
@@ -69,7 +69,7 @@ describe("file provider vault event handling", () => {
 		);
 	}
 
-	it("searches keywords and refreshes matching evidence after property edits", async () => {
+	it("キーワードを検索し、プロパティ編集後に一致する証拠を更新します", async () => {
 		frontmatter = { keywords: ["宇宙", "星空観察"] };
 		const provider = createProvider();
 		const request = { query: "宇宙 星空", mode: "file" as const };
@@ -92,7 +92,7 @@ describe("file provider vault event handling", () => {
 		provider.dispose();
 	});
 
-	it("lists what remains in the empty-query order for a query with only exclusions", async () => {
+	it("除外のみを含むクエリの空のクエリ順序に残っているものをリストします。", async () => {
 		files = [tfile("notes/alpha.md", 1), tfile("archive/beta.md", 3), tfile("gamma.md", 2)];
 		const provider = createProvider();
 		const request = { includeIgnored: false, mode: "file" as const };
@@ -107,7 +107,7 @@ describe("file provider vault event handling", () => {
 		provider.dispose();
 	});
 
-	it("hides files Obsidian cannot open only when the openable filter is on", async () => {
+	it("ファイルを非表示にします Obsidian は、開くことができるフィルターがオンになっている場合にのみ開くことができません", async () => {
 		files = [
 			tfile("note.md"),
 			{
@@ -128,7 +128,7 @@ describe("file provider vault event handling", () => {
 		expect(await visiblePaths(true)).toEqual(["note.md"]);
 	});
 
-	it("finds the file by its new name after a vault rename event", async () => {
+	it("Vault の名前変更イベント後に新しい名前でファイルを検索します", async () => {
 		const provider = createProvider();
 		expect(
 			await provider.search({ query: "ungaki-", includeIgnored: false, mode: "file" }),
@@ -150,7 +150,7 @@ describe("file provider vault event handling", () => {
 		provider.dispose();
 	});
 
-	it("keeps the renamed entry when metadataCache deleted fires for an existing path", async () => {
+	it("既存のパスに対してmetadataCache deleteが起動されたときに、名前変更されたエントリを保持します。", async () => {
 		const provider = createProvider();
 		const renamed = tfile("ungaki-test.md", 2);
 		files = [renamed];
@@ -167,7 +167,7 @@ describe("file provider vault event handling", () => {
 		provider.dispose();
 	});
 
-	it("drops the entry when the deleted path is actually gone from the vault", async () => {
+	it("削除されたパスがボールトから実際になくなったときにエントリを削除します", async () => {
 		const provider = createProvider();
 		const target = tfile("untitled.md");
 		files = [];

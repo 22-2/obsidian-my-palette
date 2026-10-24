@@ -8,8 +8,8 @@ function app(): App {
 	} as unknown as App;
 }
 
-describe("recent command service", () => {
-	it("mirrors recent ids to the legacy payload when IndexedDB is unavailable", async () => {
+describe("最近のコマンドサービス", () => {
+	it("IndexedDB が使用できない場合は、最近の ID を従来のペイロードにミラーリングします。", async () => {
 		const onLegacyChange = vi.fn();
 		const service = new RecentCommandService(app(), vi.fn(), onLegacyChange);
 		expect(service.getLegacyIds()).toBeUndefined();

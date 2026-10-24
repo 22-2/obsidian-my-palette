@@ -85,7 +85,7 @@ function fixture() {
 	return { view, panel, plugin, workspace, newMainLeaf, targetLeaf, result };
 }
 
-it("activates normal note opens without pulling focus back to the search input", async () => {
+it("検索入力にフォーカスを戻さずに通常のメモが開きます。", async () => {
 	const f = fixture();
 	await f.view.execute(f.result, "primary");
 	expect(executePaletteResult).toHaveBeenCalledWith(
@@ -97,14 +97,14 @@ it("activates normal note opens without pulling focus back to the search input",
 	expect(f.panel.focusSearchInput).not.toHaveBeenCalled();
 });
 
-it("keeps the search input focused after a background open", async () => {
+it("バックグラウンドを開いた後も検索入力にフォーカスを当てたままにします", async () => {
 	const f = fixture();
 	await f.view.openInBackground(f.result);
 	expect(openPaletteResultInBackground).toHaveBeenCalledWith(f.plugin, f.result);
 	expect(f.panel.focusSearchInput).toHaveBeenCalledTimes(1);
 });
 
-it("offers main-window navigation only while the palette belongs to a popout", () => {
+it("パレットがポップアウトに属している間のみ、メイン ウィンドウのナビゲーションを提供します", () => {
 	const f = fixture();
 	f.view.showContextMenu(f.result, {} as MouseEvent, [f.result]);
 	expect(populatePaletteResultMenu).toHaveBeenLastCalledWith(
@@ -117,7 +117,7 @@ it("offers main-window navigation only while the palette belongs to a popout", (
 	);
 });
 
-it("opens each main-window action in a fresh tab even when a popout is active", async () => {
+it("ポップアウトがアクティブな場合でも、メイン ウィンドウの各アクションを新しいタブで開きます", async () => {
 	const f = fixture();
 	f.workspace.activeLeaf = { ...f.targetLeaf, getRoot: () => ({ doc: {} }) };
 	const secondMainLeaf = { ...f.newMainLeaf };

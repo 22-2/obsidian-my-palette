@@ -20,20 +20,20 @@ const resolve: LinkResolver = (linkpath) => {
 const target = { path: "b.md", basename: "b" };
 const moved = new Set(["a.md"]);
 
-describe("splitFrontmatter", () => {
-	it("separates a leading frontmatter block from the body", () => {
+describe("スプリットフロントマター", () => {
+	it("先頭の前物質ブロックを本体から分離します", () => {
 		expect(splitFrontmatter("---\ntags: x\n---\nbody\n")).toEqual({
 			frontmatter: "---\ntags: x\n---\n",
 			body: "body\n",
 		});
 	});
-	it("keeps a note without frontmatter whole", () => {
+	it("前付部分のないメモをすべて保持します", () => {
 		expect(splitFrontmatter("body")).toEqual({ frontmatter: "", body: "body" });
 	});
 });
 
-describe("retargetLinks", () => {
-	it("points links to a moved note at the target and keeps heading, alias and embed", () => {
+describe("リターゲットリンク", () => {
+	it("移動したメモへのリンクをターゲットにポイントし、見出し、エイリアス、埋め込みを維持します", () => {
 		const result = retargetLinks(
 			"see [[a]], [[a#見出し]], [[a|別名]], ![[a]] and [[c]]",
 			"c.md",
@@ -46,7 +46,7 @@ describe("retargetLinks", () => {
 			count: 4,
 		});
 	});
-	it("uses the target path when the original link was written with a folder", () => {
+	it("元のリンクがフォルダーに書き込まれたときにターゲット パスを使用します。", () => {
 		const nested = new Set(["folder/a.md"]);
 		const result = retargetLinks("[[folder/a]]", "c.md", target, nested, resolve);
 		expect(result.content).toBe("[[b]]");
@@ -55,14 +55,14 @@ describe("retargetLinks", () => {
 				.content,
 		).toBe("[[b]]");
 	});
-	it("leaves a note alone when it links to nothing that moved", () => {
+	it("移動したものにリンクしていない場合はメモをそのまま残します", () => {
 		const content = "[[c]] and text";
 		expect(retargetLinks(content, "moc.md", target, moved, resolve)).toEqual({
 			content,
 			count: 0,
 		});
 	});
-	it("drops a duplicate bare link line that now points at the target", () => {
+	it("ターゲットを指すようになった重複した裸のリンク線をドロップします。", () => {
 		const content = ["## MOC", "- Relateds", "\t- [[a]]", "\t- [[b]]", "\t- [[c]]"].join("\n");
 		const result = retargetLinks(content, "moc.md", target, moved, resolve);
 		expect(result.content).toBe(["## MOC", "- Relateds", "\t- [[b]]", "\t- [[c]]"].join("\n"));
@@ -70,8 +70,8 @@ describe("retargetLinks", () => {
 	});
 });
 
-describe("buildMergedBody", () => {
-	it("places the target first and the sources after it, each under a path marker", () => {
+describe("結合後の本文作成", () => {
+	it("ターゲットを最初に配置し、その後にソースを配置し、それぞれパス マーカーの下に配置します。", () => {
 		const body = buildMergedBody(
 			[{ path: "a.md", body: "aaa\n" }],
 			{ path: "b.md", body: "bbb\n" },
@@ -80,7 +80,7 @@ describe("buildMergedBody", () => {
 		);
 		expect(body).toBe("%%b.md%%\n\nbbb\n\n%%a.md%%\n\naaa\n");
 	});
-	it("removes links between merged notes and keeps other links", () => {
+	it("マージされたノート間のリンクを削除し、他のリンクは保持します", () => {
 		const body = buildMergedBody(
 			[{ path: "a.md", body: "- [[b]]\nsee [[b|bee]] and [[c]]\n" }],
 			{ path: "b.md", body: "self [[a]]\n" },
@@ -91,8 +91,8 @@ describe("buildMergedBody", () => {
 	});
 });
 
-describe("mergeFrontmatter", () => {
-	it("adds missing keys, keeps target values and reports conflicts", () => {
+describe("マージフロントマター", () => {
+	it("不足しているキーを追加し、ターゲット値を保持し、競合を報告します", () => {
 		const frontmatter: Record<string, unknown> = { status: "done", rating: 3 };
 		const conflicts = mergeFrontmatter(
 			frontmatter,
@@ -103,7 +103,7 @@ describe("mergeFrontmatter", () => {
 		expect(conflicts).toEqual(["status"]);
 		expect(frontmatter).toMatchObject({ status: "done", rating: 3, due: "2026-01-01" });
 	});
-	it("unions tags and adds the source name to aliases", () => {
+	it("タグを結合し、ソース名をエイリアスに追加します", () => {
 		const frontmatter: Record<string, unknown> = { tags: ["x"], aliases: ["bee"] };
 		mergeFrontmatter(
 			frontmatter,
@@ -114,14 +114,14 @@ describe("mergeFrontmatter", () => {
 		expect(frontmatter.tags).toEqual(["x", "y"]);
 		expect(frontmatter.aliases).toEqual(["bee", "ay", "a"]);
 	});
-	it("leaves the source name out of aliases when the option is off", () => {
+	it("オプションがオフの場合、ソース名はエイリアスから除外されます。", () => {
 		const frontmatter: Record<string, unknown> = { aliases: ["bee"] };
 		mergeFrontmatter(frontmatter, "b", [{ basename: "a", frontmatter: { aliases: ["ay"] } }], {
 			aliasSourceNames: false,
 		});
 		expect(frontmatter.aliases).toEqual(["bee", "ay"]);
 	});
-	it("does not add the target's own name as an alias and ignores the internal position key", () => {
+	it("ターゲット自身の名前をエイリアスとして追加せず、内部位置キーを無視します。", () => {
 		const frontmatter: Record<string, unknown> = {};
 		const conflicts = mergeFrontmatter(
 			frontmatter,

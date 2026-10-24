@@ -21,7 +21,7 @@ function menu() {
 	return { instance, titles, disabled, addSeparator };
 }
 
-it("adds a disabled count row followed by a separator for several results", () => {
+it("無効なカウント行の後に複数の結果の区切り文字を追加します", () => {
 	const m = menu();
 	addSelectionHeader(m.instance, 4);
 	expect(m.titles).toEqual(["4 件を選択中"]);
@@ -29,7 +29,7 @@ it("adds a disabled count row followed by a separator for several results", () =
 	expect(m.addSeparator).toHaveBeenCalledOnce();
 });
 
-it("adds nothing for a single result", () => {
+it("単一の結果に対しては何も追加されません", () => {
 	const m = menu();
 	addSelectionHeader(m.instance, 1);
 	expect(m.titles).toEqual([]);

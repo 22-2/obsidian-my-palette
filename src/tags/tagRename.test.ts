@@ -8,14 +8,14 @@ import {
 	renameTagName,
 } from "src/tags/tagRename";
 
-describe("normalizeTagName", () => {
-	it("drops leading hashes and keeps hierarchy", () => {
+describe("正規化タグ名", () => {
+	it("先頭のハッシュを削除し、階層を維持します", () => {
 		expect(normalizeTagName("#project")).toBe("project");
 		expect(normalizeTagName("  ##work/2026 ")).toBe("work/2026");
 		expect(normalizeTagName("日本語")).toBe("日本語");
 	});
 
-	it("rejects names Obsidian does not accept as tags", () => {
+	it("Obsidian がタグとして受け入れない名前を拒否します", () => {
 		expect(normalizeTagName("")).toBeUndefined();
 		expect(normalizeTagName("#")).toBeUndefined();
 		expect(normalizeTagName("a b")).toBeUndefined();
@@ -24,66 +24,66 @@ describe("normalizeTagName", () => {
 	});
 });
 
-describe("renameTagName", () => {
-	it("renames the tag itself regardless of case", () => {
+describe("タグ名を変更する", () => {
+	it("大文字と小文字を区別せずにタグ自体の名前を変更します", () => {
 		expect(renameTagName("Project", "project", "work")).toBe("work");
 	});
 
-	it("renames child tags and keeps their remaining part", () => {
+	it("子タグの名前を変更し、残りの部分を保持します", () => {
 		expect(renameTagName("project/Alpha/beta", "project", "work")).toBe("work/Alpha/beta");
 	});
 
-	it("leaves sibling tags that only share a prefix", () => {
+	it("プレフィックスのみを共有する兄弟タグを残します", () => {
 		expect(renameTagName("project-x", "project", "work")).toBe("project-x");
 		expect(renameTagName("projects", "project", "work")).toBe("projects");
 	});
 });
 
-describe("isTagOrChild", () => {
-	it("matches the tag and its children, ignoring case and hashes", () => {
+describe("タグと子タグの判定", () => {
+	it("大文字と小文字とハッシュを無視して、タグとその子を照合します", () => {
 		expect(isTagOrChild("#Project", "project")).toBe(true);
 		expect(isTagOrChild("project/a", "project")).toBe(true);
 		expect(isTagOrChild("project-a", "project")).toBe(false);
 	});
 });
 
-describe("renameFrontmatterTags", () => {
-	it("renames list items and keeps the others", () => {
+describe("FrontmatterTags の名前を変更する", () => {
+	it("リスト項目の名前を変更し、他の項目は保持します", () => {
 		expect(renameFrontmatterTags(["old", "keep", "old/child"], "old", "new")).toEqual({
 			values: ["new", "keep", "new/child"],
 			changed: true,
 		});
 	});
 
-	it("keeps a leading hash on each item", () => {
+	it("各項目の先頭のハッシュを保持します", () => {
 		expect(renameFrontmatterTags(["#old"], "old", "new")).toEqual({
 			values: ["#new"],
 			changed: true,
 		});
 	});
 
-	it("reads a comma or space separated string and returns a list when it changes", () => {
+	it("カンマまたはスペースで区切られた文字列を読み取り、変更されたときにリストを返します。", () => {
 		expect(renameFrontmatterTags("old, keep", "old", "new")).toEqual({
 			values: ["new", "keep"],
 			changed: true,
 		});
 	});
 
-	it("does not rewrite a string that has nothing to rename", () => {
+	it("名前を変更するものが何もない文字列は書き換えられません", () => {
 		expect(renameFrontmatterTags("keep, other", "old", "new")).toEqual({
 			values: ["keep", "other"],
 			changed: false,
 		});
 	});
 
-	it("drops the duplicate that a rename creates and keeps the first one", () => {
+	it("名前変更によって作成された重複を削除し、最初の重複を保持します", () => {
 		expect(renameFrontmatterTags(["old", "new", "other"], "old", "new")).toEqual({
 			values: ["new", "other"],
 			changed: true,
 		});
 	});
 
-	it("leaves duplicates that existed before the rename", () => {
+	it("名前変更前に存在していた重複を残します", () => {
 		expect(renameFrontmatterTags(["keep", "keep", "old"], "old", "new")).toEqual({
 			values: ["keep", "keep", "new"],
 			changed: true,
@@ -91,21 +91,21 @@ describe("renameFrontmatterTags", () => {
 		expect(renameFrontmatterTags(["keep", "keep"], "old", "new").changed).toBe(false);
 	});
 
-	it("ignores values that are not a tag list", () => {
+	it("タグリストではない値を無視します", () => {
 		expect(renameFrontmatterTags(42, "old", "new")).toEqual({ values: [], changed: false });
 		expect(renameFrontmatterTags(["old", 1], "old", "new").changed).toBe(false);
 	});
 });
 
-describe("renameAliasTags", () => {
-	it("renames only aliases that are tags", () => {
+describe("エイリアスタグの名前を変更", () => {
+	it("タグであるエイリアスのみの名前を変更します", () => {
 		expect(renameAliasTags(["#old/a", "old", "#other"], "old", "new")).toEqual({
 			values: ["#new/a", "old", "#other"],
 			changed: true,
 		});
 	});
 
-	it("reports no change when no alias is a matching tag", () => {
+	it("一致するタグのエイリアスがない場合は、変更が報告されません", () => {
 		expect(renameAliasTags(["plain", "#other"], "old", "new")).toEqual({
 			values: ["plain", "#other"],
 			changed: false,
@@ -113,8 +113,8 @@ describe("renameAliasTags", () => {
 	});
 });
 
-describe("renameInlineTags", () => {
-	it("rewrites several tags and keeps the offsets of the others valid", () => {
+describe("インラインタグの名前を変更する", () => {
+	it("いくつかのタグを書き換えて、他のタグのオフセットを有効に保ちます", () => {
 		const text = "A #old and #old/x, then #keep and #Old.";
 		const at = (tag: string) => {
 			const start = text.indexOf(tag);
@@ -127,7 +127,7 @@ describe("renameInlineTags", () => {
 		});
 	});
 
-	it("gives up when the text at a position is no longer the tag", () => {
+	it("ある位置のテキストがタグでなくなったら諦める", () => {
 		const positions = [{ tag: "#old", start: 0, end: 4 }];
 		expect(renameInlineTags("#changed", positions, "old", "new")).toBeUndefined();
 	});

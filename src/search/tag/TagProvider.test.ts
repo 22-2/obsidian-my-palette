@@ -7,8 +7,8 @@ function providerWith(tags: Record<string, number>) {
 	return new TagProvider(app);
 }
 
-describe("TagProvider", () => {
-	it("lists tags by usage and merges counts that differ only by hash or case", async () => {
+describe("タグプロバイダー", () => {
+	it("使用法ごとにタグをリストし、ハッシュまたは大文字小文字のみが異なるカウントをマージします", async () => {
 		const rows = await providerWith({ "#Old": 2, "#old": 1, "#keep": 5 }).search({
 			mode: "tag",
 			query: "",
@@ -20,7 +20,7 @@ describe("TagProvider", () => {
 		expect(rows[1]).toMatchObject({ mode: "tag", tagName: "Old" });
 	});
 
-	it("searches by tag name when a query is typed", async () => {
+	it("クエリの入力時にタグ名で検索します", async () => {
 		const rows = await providerWith({ "#project": 2, "#work": 4 }).search({
 			mode: "tag",
 			query: "proj",

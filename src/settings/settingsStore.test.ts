@@ -3,8 +3,8 @@ import { SETTINGS_SCHEMA_VERSION } from "src/settings/model";
 import { describe, expect, it } from "vitest";
 import { loadPluginSettings, savePluginSettings } from "src/settings/settingsStore";
 
-describe("settings store", () => {
-	it("extracts legacy history for migration and omits it from normal saves", async () => {
+describe("設定ストア", () => {
+	it("移行のためにレガシー履歴を抽出し、通常の保存から除外します", async () => {
 		let savedData: unknown;
 		const plugin = {
 			loadData: async () => ({
@@ -49,21 +49,21 @@ describe("settings store", () => {
 		expect(savedData).toHaveProperty("recentCommandIds", ["first", "second"]);
 	});
 
-	describe("save decision", () => {
+	describe("決定を保存する", () => {
 		const load = (data: unknown) =>
 			loadPluginSettings({ loadData: async () => data } as unknown as MyPalettePlugin);
 
-		it("saves when the stored schema is older than the current one", async () => {
+		it("保存されているスキーマが現在のスキーマよりも古い場合に保存します", async () => {
 			const loaded = await load({ schemaVersion: SETTINGS_SCHEMA_VERSION - 1 });
 			expect(loaded.shouldSave).toBe(true);
 		});
 
-		it("does not save when the schema is current and there is no legacy data", async () => {
+		it("スキーマが最新でレガシー データがない場合は保存されません", async () => {
 			const loaded = await load({ schemaVersion: SETTINGS_SCHEMA_VERSION });
 			expect(loaded.shouldSave).toBe(false);
 		});
 
-		it("does not save for first-run data", async () => {
+		it("初回実行データは保存されません", async () => {
 			const loaded = await load(null);
 			expect(loaded.shouldSave).toBe(false);
 		});

@@ -14,8 +14,8 @@ function file(path: string): TFile {
 	return { path, name: path.split("/").at(-1) } as TFile;
 }
 
-describe("toAuditResults", () => {
-	it("names files by their name and drops files that no longer exist", () => {
+describe("監査結果へ", () => {
+	it("ファイルに名前を付けて、存在しないファイルを削除します", () => {
 		const results = toAuditResults(
 			{
 				kind: "orphaned-files",
@@ -36,7 +36,7 @@ describe("toAuditResults", () => {
 		]);
 	});
 
-	it("counts the linking notes once each and names the first one", () => {
+	it("リンクするノートを 1 回ずつ数えて、最初のノートに名前を付けます", () => {
 		const [result] = toAuditResults(
 			{
 				kind: "broken-links",
@@ -58,7 +58,7 @@ describe("toAuditResults", () => {
 		);
 	});
 
-	it("mentions the empty folders inside only when there are some", () => {
+	it("いくつかの空のフォルダーがある場合にのみ、内部の空のフォルダーについて言及します。", () => {
 		const results = toAuditResults(
 			{
 				kind: "empty-folders",
@@ -76,7 +76,7 @@ describe("toAuditResults", () => {
 	});
 });
 
-describe("AuditProvider", () => {
+describe("監査プロバイダー", () => {
 	beforeEach(() => {
 		vi.mocked(auditVault).mockReset();
 		vi.mocked(auditVault).mockResolvedValue({
@@ -103,7 +103,7 @@ describe("AuditProvider", () => {
 		return { provider, handlers, settings };
 	}
 
-	it("filters the kept rows while typing, without auditing again", async () => {
+	it("再度監査することなく、入力中に保持されている行をフィルタリングします。", async () => {
 		const { provider } = fixture();
 		await provider.search({ mode: "audit", query: "" });
 		const results = await provider.search({ mode: "audit", query: "b" });
@@ -111,7 +111,7 @@ describe("AuditProvider", () => {
 		expect(auditVault).toHaveBeenCalledTimes(1);
 	});
 
-	it("audits again after a vault change or a settings change", async () => {
+	it("ボールトの変更または設定の変更後に再度監査する", async () => {
 		const { provider, handlers, settings } = fixture();
 		await provider.search({ mode: "audit", query: "" });
 		handlers[0]?.();
@@ -123,7 +123,7 @@ describe("AuditProvider", () => {
 		expect(auditVault).toHaveBeenCalledTimes(3);
 	});
 
-	it("keeps the result when the change cannot affect its kind", async () => {
+	it("変更がその種類に影響を与えない場合は結果を保持します", async () => {
 		const { provider, handlers, settings } = fixture();
 		settings.audit.kind = "orphaned-files";
 		await provider.search({ mode: "audit", query: "" });
@@ -137,7 +137,7 @@ describe("AuditProvider", () => {
 		expect(auditVault).toHaveBeenCalledTimes(2);
 	});
 
-	it("does not keep a failed audit", async () => {
+	it("失敗した監査を保持しない", async () => {
 		const { provider } = fixture();
 		vi.mocked(auditVault).mockRejectedValueOnce(new Error("boom"));
 		await expect(provider.search({ mode: "audit", query: "" })).rejects.toThrow("boom");

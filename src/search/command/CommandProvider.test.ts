@@ -17,8 +17,8 @@ function match(id: string, name: string, fuzzyScore = 0) {
 	return { command: { id, name }, fuzzyScore };
 }
 
-describe("sortCommandMatches", () => {
-	it("groups plugin-name matches and sorts commands predictably", () => {
+describe("コマンド検索結果の並べ替え", () => {
+	it("プラグイン名が一致し、コマンドを予想どおりに並べ替えるグループを作成します", () => {
 		const results = sortCommandMatches(
 			[
 				match("toolkit:export", "@Novel Toolkit: Export novel data", 100),
@@ -39,7 +39,7 @@ describe("sortCommandMatches", () => {
 		]);
 	});
 
-	it("uses fuzzy relevance when there is no direct text match", () => {
+	it("テキストが直接一致しない場合はあいまい関連性を使用します", () => {
 		const results = sortCommandMatches(
 			[
 				match("lower", "Tools: Export document", 10),
@@ -51,7 +51,7 @@ describe("sortCommandMatches", () => {
 		expect(results.map(({ id }) => id)).toEqual(["higher", "lower"]);
 	});
 
-	it("sorts multi-word matches by command name instead of fuzzy character distance", () => {
+	it("複数の単語の一致をあいまいな文字の距離ではなくコマンド名でソートします", () => {
 		const results = sortCommandMatches(
 			[
 				match("navigate", "@My Commands Plugin: Navigate to outgoing link", 100),
@@ -63,7 +63,7 @@ describe("sortCommandMatches", () => {
 		expect(results.map(({ id }) => id)).toEqual(["copy", "navigate"]);
 	});
 
-	it("sorts equal single-word matches by action name across plugins", () => {
+	it("プラグイン間で等しい単一単語の一致をアクション名でソートします", () => {
 		const results = sortCommandMatches(
 			[
 				match("open", "GridExplorer: Open outgoing links in grid view", 100),
@@ -76,8 +76,8 @@ describe("sortCommandMatches", () => {
 	});
 });
 
-describe("CommandProvider", () => {
-	it("finds a command by its id as well as by its name", async () => {
+describe("コマンドプロバイダー", () => {
+	it("コマンドを名前だけでなく ID からも検索します。", async () => {
 		const provider = new CommandProvider({} as App, () => []);
 
 		const byId = await provider.search(request("toggle-bold"));

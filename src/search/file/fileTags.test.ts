@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { isTagOnlyQuery, matchingTags, normalizeTags } from "src/search/file/fileTags";
 
-describe("file tags", () => {
-	it("normalizes frontmatter and inline tag values", () => {
+describe("ファイルタグ", () => {
+	it("フロントマターとインラインタグの値を正規化します", () => {
 		expect(normalizeTags(["#project", "writing", ["#project", "", 42], " #todo "])).toEqual([
 			"#project",
 			"#writing",
@@ -10,7 +10,7 @@ describe("file tags", () => {
 		]);
 	});
 
-	it("recognizes hash-prefixed tag-only queries", () => {
+	it("ハッシュ接頭辞が付いたタグのみのクエリを認識します", () => {
 		expect(isTagOnlyQuery("#project #todo | #archive")).toBe(true);
 		expect(isTagOnlyQuery("project #todo")).toBe(false);
 		expect(isTagOnlyQuery("#")).toBe(true);
@@ -20,7 +20,7 @@ describe("file tags", () => {
 		expect(isTagOnlyQuery("!#done")).toBe(false);
 	});
 
-	it("finds tags with the same fuzzy matching used by file search", () => {
+	it("ファイル検索で使用されるのと同じあいまい一致を持つタグを検索します", () => {
 		expect(matchingTags(["#project", "#writing", "#todo"], "#proj")).toEqual(["#project"]);
 		expect(matchingTags(["#project", "#writing", "#todo"], "writing | todo")).toEqual([
 			"#writing",

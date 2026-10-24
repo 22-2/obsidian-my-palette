@@ -59,7 +59,7 @@
 		"vitest": "^5.0.3"
 	},
 	"lint-staged": {
-		"*": "oxfmt --no-error-on-unmatched-pattern"
+		"*": "node node_modules/oxfmt/bin/oxfmt --no-error-on-unmatched-pattern"
 	},
 	"devEngines": {
 		"packageManager": {

@@ -10,8 +10,8 @@ function app(): App {
 
 const options = { now: 2_000, daysToKeep: 0, maxEntries: 256 };
 
-describe("search history service", () => {
-	it("mirrors history to the legacy payload when IndexedDB is unavailable", async () => {
+describe("検索履歴サービス", () => {
+	it("IndexedDB が使用できない場合、履歴を従来のペイロードにミラーリングします。", async () => {
 		const onLegacyChange = vi.fn();
 		const service = new SearchHistoryService(app(), vi.fn(), onLegacyChange);
 		expect(service.getLegacyEntries()).toBeUndefined();

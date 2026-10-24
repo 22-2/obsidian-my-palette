@@ -28,8 +28,8 @@ function app(options: {
 	} as unknown as App;
 }
 
-describe("PropertyProvider", () => {
-	it("reads vault properties without calling the deprecated metadata cache API", async () => {
+describe("プロパティプロバイダー", () => {
+	it("非推奨のメタデータ キャッシュ API を呼び出さずに Vault プロパティを読み取ります。", async () => {
 		const application = app({ vault: { project: { widget: "number" } } });
 		const deprecated = vi.fn(() => {
 			throw new Error("Deprecated API called");
@@ -47,7 +47,7 @@ describe("PropertyProvider", () => {
 		expect(deprecated).not.toHaveBeenCalled();
 	});
 
-	it("lists This note, then Reserved, then Vault keys by use", async () => {
+	it("「このメモ」、「予約済み」、「使用別の Vault キー」の順にリストします。", async () => {
 		const provider = new PropertyProvider(
 			app({
 				frontmatter: { status: "done", position: {}, tags: ["a"] },
@@ -72,7 +72,7 @@ describe("PropertyProvider", () => {
 		]);
 	});
 
-	it("shows reserved keys that the note lacks as Not set, and vault counts", async () => {
+	it("ノートに不足している予約キーが「未設定」として表示され、ボールト数が表示されます。", async () => {
 		const provider = new PropertyProvider(
 			app({
 				frontmatter: {},
@@ -87,7 +87,7 @@ describe("PropertyProvider", () => {
 		expect(byKey.project.secondary).toBe("1 件のノート");
 	});
 
-	it("uses lowercase occurrence keys and counts each search only once", async () => {
+	it("小文字の出現キーを使用し、各検索を 1 回だけカウントします", async () => {
 		const application = app({ vault: { Project: {}, unused: {} } });
 		const getPropertyOccurrences = vi.fn(() => ({ project: 12 }));
 		Object.assign(application.metadataTypeManager, { getPropertyOccurrences });
@@ -107,7 +107,7 @@ describe("PropertyProvider", () => {
 		expect(getPropertyOccurrences).toHaveBeenCalledExactlyOnceWith();
 	});
 
-	it("uses the vault's assigned type and keeps the declared kind for note values", async () => {
+	it("Vault に割り当てられたタイプを使用し、メモ値の宣言された種類を保持します。", async () => {
 		const provider = new PropertyProvider(
 			app({
 				frontmatter: { due: "2026-10-13", meta: { a: 1 } },
@@ -122,7 +122,7 @@ describe("PropertyProvider", () => {
 		});
 	});
 
-	it("filters each section and keeps the section order", async () => {
+	it("各セクションをフィルタリングし、セクションの順序を維持します", async () => {
 		const provider = new PropertyProvider(
 			app({
 				frontmatter: { status: "done", statement: "x" },
@@ -140,14 +140,14 @@ describe("PropertyProvider", () => {
 		expect(results.some((r) => r.primary === "aliases")).toBe(false);
 	});
 
-	it("returns nothing when the current note is not Markdown", async () => {
+	it("現在のノートが Markdown でない場合は何も返しません。", async () => {
 		const provider = new PropertyProvider(
 			app({ file: { path: "a.png", extension: "png" } as unknown as TFile }),
 		);
 		expect(await provider.search({ mode: "property", query: "" })).toEqual([]);
 	});
 
-	it("offers a new-key row last when nothing matches the typed key", async () => {
+	it("入力されたキーに一致するものがない場合に、最後に新しいキー行を提供します", async () => {
 		const provider = new PropertyProvider(
 			app({
 				frontmatter: { status: "done" },
@@ -169,7 +169,7 @@ describe("PropertyProvider", () => {
 		});
 	});
 
-	it("does not offer a new key while an existing key matches", async () => {
+	it("既存のキーが一致する間は新しいキーを提供しません", async () => {
 		const provider = new PropertyProvider(app({ frontmatter: { status: "done" } }));
 		const results = await provider.search({
 			mode: "property",
@@ -179,13 +179,13 @@ describe("PropertyProvider", () => {
 		expect(results.some((result) => result.kind === "new")).toBe(false);
 	});
 
-	it("does not offer a new key for an empty input", async () => {
+	it("空の入力に対して新しいキーは提供されません", async () => {
 		const provider = new PropertyProvider(app({ frontmatter: {} }));
 		const results = await provider.search({ mode: "property", query: "  ", sourceFile: note });
 		expect(results.some((result) => result.kind === "new")).toBe(false);
 	});
 
-	describe("several notes", () => {
+	describe("いくつかのメモ", () => {
 		const second = { path: "second.md", extension: "md" } as unknown as TFile;
 		const third = { path: "third.md", extension: "md" } as unknown as TFile;
 		const frontmatters = {
@@ -194,7 +194,7 @@ describe("PropertyProvider", () => {
 			"third.md": { status: "todo", topic: ["b"], position: {} },
 		};
 
-		it("lists the keys of all notes, most shared first, each editing every note", async () => {
+		it("すべてのノートのキーをリストします。最も共有されているものから順に、各ノートが編集されます。", async () => {
 			const provider = new PropertyProvider(
 				app({ frontmatters, vault: { project: {} }, counts: { project: 4 } }),
 			);
@@ -217,7 +217,7 @@ describe("PropertyProvider", () => {
 			expect(results.find((r) => r.key === "topic")).toMatchObject({ kind: "list" });
 		});
 
-		it("offers a new key for all the notes", async () => {
+		it("すべての音符に新しいキーを提供します", async () => {
 			const provider = new PropertyProvider(app({ frontmatters }));
 			const [row] = await provider.search({
 				mode: "property",
@@ -227,7 +227,7 @@ describe("PropertyProvider", () => {
 			expect(row).toMatchObject({ kind: "new", sourcePaths: ["note.md", "second.md"] });
 		});
 
-		it("keeps a single note's rows free of the multi-note fields", async () => {
+		it("単一のノートの行を複数のノートのフィールドから解放します。", async () => {
 			const provider = new PropertyProvider(app({ frontmatters }));
 			const results = await provider.search({
 				mode: "property",

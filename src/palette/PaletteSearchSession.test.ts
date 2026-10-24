@@ -36,8 +36,8 @@ async function host() {
 	return { plugin, file, recordSearch };
 }
 
-describe("Home sections", () => {
-	it("lists only files when every mode is disabled, without a Settings section", async () => {
+describe("ホームセクション", () => {
+	it("すべてのモードが無効になっている場合に、設定セクションなしでファイルのみをリストします。", async () => {
 		const { plugin, file } = await host();
 		for (const mode of Object.values(plugin.settings.modes)) mode.enabled = false;
 		const session = new PaletteSearchSession(plugin, { modeEntries: true });
@@ -47,8 +47,8 @@ describe("Home sections", () => {
 	});
 });
 
-describe("PaletteSearchSession search lifecycle", () => {
-	it("enters a mode from its alias, remembers prefixed input, and commits history once", async () => {
+describe("PaletteSearchSession 検索ライフサイクル", () => {
+	it("エイリアスからモードに入り、接頭辞付きの入力を記憶し、履歴を一度コミットします", async () => {
 		const { plugin, recordSearch } = await host();
 		plugin.providers.command = { search: vi.fn().mockResolvedValue([]) };
 		const session = new PaletteSearchSession(plugin, { modeEntries: true });
@@ -64,7 +64,7 @@ describe("PaletteSearchSession search lifecycle", () => {
 		session.dispose();
 	});
 
-	it("passes ignored scope, source file, and route queries to providers", async () => {
+	it("無視されたスコープ、ソース ファイル、およびルート クエリをプロバイダーに渡します", async () => {
 		const { plugin } = await host();
 		const search = vi.fn().mockResolvedValue([]);
 		plugin.providers.command = { search };
@@ -80,7 +80,7 @@ describe("PaletteSearchSession search lifecycle", () => {
 		session.dispose();
 	});
 
-	it("keeps old rows during refresh and drops stale provider results", async () => {
+	it("更新中に古い行を保持し、古いプロバイダーの結果を削除します", async () => {
 		const { plugin, file } = await host();
 		let finish!: (rows: FileResult[]) => void;
 		plugin.providers.file = {
@@ -103,7 +103,7 @@ describe("PaletteSearchSession search lifecycle", () => {
 		expect(await refresh).toEqual([]);
 	});
 
-	it("reports provider failures and marks Everything unavailable", async () => {
+	it("プロバイダーの障害を報告し、すべてが利用不可であることをマークします", async () => {
 		const { plugin } = await host();
 		const failure = new Error("offline");
 		plugin.settings.everything.debounceMs = 0;
@@ -117,7 +117,7 @@ describe("PaletteSearchSession search lifecycle", () => {
 		session.dispose();
 	});
 
-	it("reports loading from the start of a search until the provider answers", async () => {
+	it("検索の開始からプロバイダーが応答するまでレポートを読み込みます", async () => {
 		const { plugin, file } = await host();
 		let answer!: (results: FileResult[]) => void;
 		plugin.providers.file = {
@@ -132,7 +132,7 @@ describe("PaletteSearchSession search lifecycle", () => {
 		session.dispose();
 	});
 
-	it("clears loading when the provider fails", async () => {
+	it("プロバイダーが失敗したときに読み込みをクリアします", async () => {
 		const { plugin } = await host();
 		plugin.providers.file = { search: vi.fn().mockRejectedValue(new Error("offline")) };
 		const session = new PaletteSearchSession(plugin);
@@ -142,7 +142,7 @@ describe("PaletteSearchSession search lifecycle", () => {
 		session.dispose();
 	});
 
-	it("returns no record for blank input and does not search after disposal", async () => {
+	it("空白入力の場合はレコードを返さず、破棄後は検索しません。", async () => {
 		const { plugin } = await host();
 		const session = new PaletteSearchSession(plugin);
 		expect(session.getRecordableSearch("  ")).toBeUndefined();
@@ -150,7 +150,7 @@ describe("PaletteSearchSession search lifecycle", () => {
 		expect(await session.search("after close")).toEqual([]);
 	});
 
-	it("refreshes source dependent modes only when the source changes", async () => {
+	it("ソースが変更された場合にのみソース依存モードを更新します。", async () => {
 		const { plugin } = await host();
 		const search = vi.fn().mockResolvedValue([]);
 		plugin.providers.link = { search };
@@ -170,8 +170,8 @@ describe("PaletteSearchSession search lifecycle", () => {
 	});
 });
 
-describe("palette route presentation", () => {
-	it("uses mode chips and mode specific placeholders", () => {
+describe("パレットルートのプレゼンテーション", () => {
+	it("モードチップとモード固有のプレースホルダーを使用します", () => {
 		expect(
 			paletteRouteChrome(
 				{ route: { kind: "mode", modeId: "commands" }, mode: "command" },
@@ -193,7 +193,7 @@ describe("palette route presentation", () => {
 		expect(palettePlaceholder("file")).toBe("ファイルを検索");
 	});
 
-	it("shows section headings only for mixed home lists", () => {
+	it("混合ホームリストのみセクション見出しを表示します", () => {
 		const file: FileResult = {
 			id: "file:x",
 			mode: "file",

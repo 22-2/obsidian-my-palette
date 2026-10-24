@@ -4,8 +4,8 @@ import { getSearchHistoryCategory, parseInput } from "src/palette/inputParser";
 
 const modes = DEFAULT_SETTINGS.modes;
 
-describe("Obsidian-excluded scope", () => {
-	it("leaves a leading i in the File query now that a switch sets the scope", () => {
+describe("黒曜石を除く範囲", () => {
+	it("スイッチによってスコープが設定されるため、ファイル クエリの先頭に i が残ります。", () => {
 		expect(parseInput("i old meeting", modes)).toEqual({
 			raw: "i old meeting",
 			mode: "file",
@@ -14,13 +14,13 @@ describe("Obsidian-excluded scope", () => {
 	});
 });
 
-describe("parseInput Everything scopes", () => {
-	it("no longer gives es a special meaning", () => {
+describe("parseInput すべてのスコープ", () => {
+	it("もはや es に特別な意味を与えない", () => {
 		expect(parseInput("es", modes)).toMatchObject({ mode: "file", query: "es" });
 		expect(parseInput("es ", modes)).toMatchObject({ mode: "file" });
 	});
 
-	it("keeps the Everything alias and its native syntax", () => {
+	it("Everything エイリアスとそのネイティブ構文を保持します", () => {
 		expect(parseInput('e content:"e"', modes)).toMatchObject({
 			mode: "everything",
 			query: 'content:"e"',
@@ -28,7 +28,7 @@ describe("parseInput Everything scopes", () => {
 		});
 	});
 
-	it("supports the bare directory shortcut and its spaced form", () => {
+	it("ベアディレクトリのショートカットとそのスペース形式をサポートします", () => {
 		expect(parseInput("esdir", modes)).toMatchObject({
 			mode: "everything",
 			query: "",
@@ -41,12 +41,12 @@ describe("parseInput Everything scopes", () => {
 		});
 	});
 
-	it("does not treat ordinary words starting with es as a prefix", () => {
+	it("es で始まる通常の単語を接頭辞として扱いません。", () => {
 		expect(parseInput("estate", modes)).toMatchObject({ mode: "file", query: "estate" });
 	});
 });
 
-it("requires a trailing space before switching command mode", () => {
+it("コマンドモードを切り替える前に末尾のスペースが必要です", () => {
 	expect(parseInput(">", modes)).toMatchObject({ mode: "file", query: ">" });
 	expect(parseInput("> ", modes)).toMatchObject({
 		mode: "command",
@@ -54,8 +54,8 @@ it("requires a trailing space before switching command mode", () => {
 	});
 });
 
-describe("Bookmark prefix", () => {
-	it("switches to bookmark search only after bk followed by a space", () => {
+describe("ブックマークプレフィックス", () => {
+	it("bk に続けてスペースを入力した場合にのみブックマーク検索に切り替わります", () => {
 		expect(parseInput("bk", modes)).toMatchObject({ mode: "file", query: "bk" });
 		expect(parseInput("bk ", modes)).toMatchObject({ mode: "bookmark", query: "" });
 		expect(parseInput("bk project", modes)).toMatchObject({
@@ -64,13 +64,13 @@ describe("Bookmark prefix", () => {
 		});
 	});
 
-	it("does not treat ordinary words beginning with bk as a prefix", () => {
+	it("bk で始まる通常の単語を接頭辞として扱いません。", () => {
 		expect(parseInput("books", modes)).toMatchObject({ mode: "file", query: "books" });
 	});
 });
 
-describe("Smart Connections prefix", () => {
-	it("switches to Smart Connections search only after sc followed by a space", () => {
+describe("スマート接続プレフィックス", () => {
+	it("sc に続けてスペースを入力した場合にのみ、スマート接続検索に切り替わります。", () => {
 		expect(parseInput("sc", modes)).toMatchObject({ mode: "file", query: "sc" });
 		expect(parseInput("sc ", modes)).toMatchObject({ mode: "smart", query: "" });
 		expect(parseInput("sc values", modes)).toMatchObject({
@@ -80,16 +80,16 @@ describe("Smart Connections prefix", () => {
 	});
 });
 
-describe("Tab prefix", () => {
-	it("switches to tab search only after t followed by a space", () => {
+describe("タブの接頭辞", () => {
+	it("t にスペースが続く場合のみタブ検索に切り替わります", () => {
 		expect(parseInput("t", modes)).toMatchObject({ mode: "file", query: "t" });
 		expect(parseInput("t ", modes)).toMatchObject({ mode: "tab", query: "" });
 		expect(parseInput("t daily", modes)).toMatchObject({ mode: "tab", query: "daily" });
 	});
 });
 
-describe("Related note prefixes", () => {
-	it("switches to outgoing-link search with the o prefix", () => {
+describe("関連する音符の接頭辞", () => {
+	it("o プレフィックスを使用した発信リンク検索に切り替えます", () => {
 		expect(parseInput("o ", modes)).toMatchObject({ mode: "link", query: "" });
 		expect(parseInput("o project", modes)).toMatchObject({
 			mode: "link",
@@ -97,7 +97,7 @@ describe("Related note prefixes", () => {
 		});
 	});
 
-	it("switches to backlink search with b without colliding with bookmarks", () => {
+	it("ブックマークと衝突せずに b で被リンク検索に切り替えます", () => {
 		expect(parseInput("b project", modes)).toMatchObject({
 			mode: "backlink",
 			query: "project",
@@ -106,7 +106,7 @@ describe("Related note prefixes", () => {
 	});
 });
 
-it("classifies history by mode and Everything scope", () => {
+it("履歴をモードとすべてのスコープごとに分類します", () => {
 	expect(getSearchHistoryCategory(parseInput("report", modes))).toBe("file");
 	expect(getSearchHistoryCategory(parseInput("> report", modes))).toBe("command");
 	expect(getSearchHistoryCategory(parseInput("e report", modes))).toBe("everything");

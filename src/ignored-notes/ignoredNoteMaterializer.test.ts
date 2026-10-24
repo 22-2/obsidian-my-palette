@@ -117,14 +117,14 @@ function addExistingFile(state: FakeVaultState, path: string, content: string): 
 	state.contents.set(path, content);
 }
 
-describe("materializeIgnoredNote", () => {
+describe("実体化無視注", () => {
 	const log = vi.fn<(message: string, detail?: unknown) => void>();
 
 	beforeEach(() => {
 		log.mockClear();
 	});
 
-	it("creates an imported note directly under the configured folder", async () => {
+	it("設定されたフォルダーの直下にインポートされたメモを作成します", async () => {
 		const state = createFakeVault("ignored/note.md", "# Note");
 
 		const imported = await materializeIgnoredNote(state.app, "ignored/note.md", log);
@@ -142,7 +142,7 @@ describe("materializeIgnoredNote", () => {
 		);
 	});
 
-	it("reuses an existing import for the same source", async () => {
+	it("同じソースの既存のインポートを再利用します", async () => {
 		const state = createFakeVault("ignored/note.md", "# Note");
 
 		const first = await materializeIgnoredNote(state.app, "ignored/note.md", log);
@@ -152,7 +152,7 @@ describe("materializeIgnoredNote", () => {
 		expect(state.createCount).toBe(1);
 	});
 
-	it("uses a deterministic suffix for a flattened collision", async () => {
+	it("フラット化された衝突に決定論的なサフィックスを使用します", async () => {
 		const state = createFakeVault(".private/note.md", "# Private");
 		addExistingFile(
 			state,

@@ -7,8 +7,8 @@ import {
 
 vi.mock("obsidian", () => ({ TFile: class {}, normalizePath: (path: string) => path }));
 
-describe("matched metadata presentation", () => {
-	it("limits the combined chips and keeps all matching metadata in the tooltip", () => {
+describe("一致したメタデータのプレゼンテーション", () => {
+	it("組み合わせられるチップを制限し、一致するすべてのメタデータをツールチップに保持します", () => {
 		expect(
 			matchedMetadataPresentation(
 				["#project"],
@@ -21,7 +21,7 @@ describe("matched metadata presentation", () => {
 		expect(matchedMetadataPresentation([])).toEqual({});
 	});
 
-	it("shows keyword-only hits beneath the filename without adding hashes", () => {
+	it("ハッシュを追加せずに、ファイル名の下にあるキーワードのみのヒットを表示します", () => {
 		const item = toPaletteSelectionItem(
 			{} as App,
 			{

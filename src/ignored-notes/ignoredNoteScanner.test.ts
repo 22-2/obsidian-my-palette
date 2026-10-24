@@ -19,8 +19,8 @@ function appWith(tree: Record<string, Node>, failOn: Record<string, unknown> = {
 	return { app: { vault: { adapter } } as unknown as App, adapter };
 }
 
-describe("collectVaultPaths", () => {
-	it("walks folders recursively and accepts a file root", async () => {
+describe("VaultPath を収集する", () => {
+	it("フォルダーを再帰的に探索し、ファイルのルートを受け入れます", async () => {
 		const { app } = appWith({
 			a: { type: "folder", files: ["a/1.md"], folders: ["a/b"] },
 			"a/b": { type: "folder", files: ["a/b/2.md"], folders: [] },
@@ -30,7 +30,7 @@ describe("collectVaultPaths", () => {
 		expect(files.toSorted()).toEqual(["a/1.md", "a/b/2.md", "c.md"]);
 	});
 
-	it("skips a missing root without listing it", async () => {
+	it("欠落しているルートをリストせずにスキップします", async () => {
 		const { app, adapter } = appWith({});
 		const log = vi.fn();
 		expect(await collectVaultPaths(app, ["gone"], log)).toEqual([]);
@@ -38,7 +38,7 @@ describe("collectVaultPaths", () => {
 		expect(log).toHaveBeenCalledWith("Skipped missing ignored folder", { folder: "gone" });
 	});
 
-	it("treats ENOENT as missing and keeps scanning other roots", async () => {
+	it("ENOENT を欠落しているものとして扱い、他のルートのスキャンを継続します", async () => {
 		const { app } = appWith(
 			{ ok: { type: "folder", files: ["ok/1.md"], folders: [] } },
 			{ racy: Object.assign(new Error("gone"), { code: "ENOENT" }) },
@@ -46,7 +46,7 @@ describe("collectVaultPaths", () => {
 		expect(await collectVaultPaths(app, ["racy", "ok"], vi.fn())).toEqual(["ok/1.md"]);
 	});
 
-	it("logs other errors and continues", async () => {
+	it("他のエラーをログに記録して続行します", async () => {
 		const { app } = appWith(
 			{ ok: { type: "folder", files: ["ok/1.md"], folders: [] } },
 			{ bad: new Error("locked") },
@@ -56,15 +56,15 @@ describe("collectVaultPaths", () => {
 		expect(log).toHaveBeenCalledWith("Failed to list ignored folder", expect.anything());
 	});
 
-	it("does not visit a duplicated root twice", async () => {
+	it("重複したルートに 2 回アクセスしない", async () => {
 		const { app, adapter } = appWith({ a: { type: "folder", files: [], folders: [] } });
 		await collectVaultPaths(app, ["a", "a"], vi.fn());
 		expect(adapter.list).toHaveBeenCalledTimes(1);
 	});
 });
 
-describe("mapWithConcurrency", () => {
-	it("keeps result order and never exceeds the concurrency limit", async () => {
+describe("マップと同時実行", () => {
+	it("結果の順序が維持され、同時実行制限を超えることはありません", async () => {
 		let running = 0;
 		let peak = 0;
 		const results = await mapWithConcurrency([1, 2, 3, 4, 5], 2, async (n) => {

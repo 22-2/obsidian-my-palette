@@ -28,14 +28,14 @@ function appWithPaths(fullPath: string | null): App {
 	} as unknown as App;
 }
 
-describe("getResultAbsolutePath", () => {
-	it("resolves vault files to absolute paths", () => {
+describe("getResult絶対パス", () => {
+	it("Vault ファイルを絶対パスに解決します", () => {
 		const app = appWithPaths("C:/vault/Note.md");
 		const result: PaletteResult = { ...base, mode: "file", vaultPath: "Note.md" };
 		expect(getResultAbsolutePath(app, result)).toBe("C:/vault/Note.md");
 	});
 
-	it("returns the absolute path for Everything results", () => {
+	it("すべての結果の絶対パスを返します", () => {
 		const app = appWithPaths(null);
 		const result: PaletteResult = {
 			...base,
@@ -48,7 +48,7 @@ describe("getResultAbsolutePath", () => {
 		expect(getResultAbsolutePath(app, result)).toBe("C:/vault/image.png");
 	});
 
-	it("returns the folder path for plugin results", () => {
+	it("プラグイン結果のフォルダー パスを返します。", () => {
 		const app = appWithPaths(null);
 		expect(
 			getResultAbsolutePath(app, {
@@ -63,7 +63,7 @@ describe("getResultAbsolutePath", () => {
 		).toBe("C:/vault/cfg/plugins/alpha");
 	});
 
-	it("returns the path for snippet files and folders", () => {
+	it("スニペットファイルとフォルダーのパスを返します。", () => {
 		const app = appWithPaths(null);
 		expect(
 			getResultAbsolutePath(app, {
@@ -78,7 +78,7 @@ describe("getResultAbsolutePath", () => {
 		).toBe("C:/vault/cfg/snippets/alpha.css");
 	});
 
-	it("resolves link and bookmark files through the vault adapter", () => {
+	it("Vault アダプターを介してリンク ファイルとブックマーク ファイルを解決します。", () => {
 		const app = appWithPaths("C:/vault/Link.md");
 		const file = { path: "Link.md" } as unknown as import("obsidian").TFile;
 		expect(getResultAbsolutePath(app, { ...base, mode: "link", file, line: 1 })).toBe(
@@ -89,7 +89,7 @@ describe("getResultAbsolutePath", () => {
 		);
 	});
 
-	it("has no path for commands and search entries", () => {
+	it("コマンドと検索エントリのパスがありません", () => {
 		const app = appWithPaths("C:/vault/Note.md");
 		expect(
 			getResultAbsolutePath(app, { ...base, mode: "command", commandId: "c" }),
@@ -105,8 +105,8 @@ describe("getResultAbsolutePath", () => {
 	});
 });
 
-describe("isFolderResult", () => {
-	it("marks only Everything folders as folders", () => {
+describe("フォルダー結果の判定", () => {
+	it("Everythingフォルダーのみをフォルダーとしてマークします", () => {
 		expect(
 			isFolderResult({
 				...base,
@@ -130,7 +130,7 @@ describe("isFolderResult", () => {
 		expect(isFolderResult({ ...base, mode: "file", vaultPath: "a.md" })).toBe(false);
 	});
 
-	it("treats plugin folders as folders", () => {
+	it("プラグインフォルダーをフォルダーとして扱います", () => {
 		expect(
 			isFolderResult({
 				...base,
@@ -144,7 +144,7 @@ describe("isFolderResult", () => {
 		).toBe(true);
 	});
 
-	it("follows the snippet row for folder detection", () => {
+	it("フォルダー検出のためのスニペット行の後に続きます", () => {
 		const folder = {
 			...base,
 			mode: "snippet",
@@ -160,14 +160,14 @@ describe("isFolderResult", () => {
 	});
 });
 
-describe("external actions", () => {
-	it("opens the path in the external editor", async () => {
+describe("外部アクション", () => {
+	it("外部エディタでパスを開きます", async () => {
 		const { openPathInCode } = await import("src/platform/vscode");
 		await openInExternalEditor("C:/vault/Note.md");
 		expect(openPathInCode).toHaveBeenCalledExactlyOnceWith("C:/vault/Note.md");
 	});
 
-	it("reveals files and opens folders in the system explorer", async () => {
+	it("システムエクスプローラーでファイルを表示し、フォルダーを開きます", async () => {
 		const showItemInFolder = vi.fn();
 		const openPath = vi.fn().mockResolvedValue("");
 		vi.stubGlobal("electron", { shell: { showItemInFolder, openPath } });

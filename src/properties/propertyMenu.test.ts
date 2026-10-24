@@ -16,25 +16,25 @@ vi.mock("obsidian", async () => ({
 	},
 }));
 
-describe("propertyValueText", () => {
-	it("copies a list one item per line", () => {
+describe("プロパティ値テキスト", () => {
+	it("リストを 1 行に 1 項目ずつコピーします", () => {
 		expect(propertyValueText("list", ["a", "b"])).toBe("a\nb");
 		expect(propertyValueText("tags", ["x"])).toBe("x");
 	});
 
-	it("copies scalars as they are and missing values as nothing", () => {
+	it("スカラーをそのままコピーし、欠損値を何もコピーしません", () => {
 		expect(propertyValueText("text", "hello")).toBe("hello");
 		expect(propertyValueText("number", 4)).toBe("4");
 		expect(propertyValueText("checkbox", false)).toBe("false");
 		expect(propertyValueText("text", undefined)).toBe("");
 	});
 
-	it("copies a nested value as JSON", () => {
+	it("ネストされた値を JSON としてコピーします", () => {
 		expect(propertyValueText("unsupported", { a: 1 })).toBe('{"a":1}');
 	});
 });
 
-describe("populatePropertyMenu for several notes", () => {
+describe("いくつかのノートのpopulatePropertyMenu", () => {
 	const notes = ["a.md", "b.md", "c.md"].map(
 		(path) => ({ path, basename: path.slice(0, -3) }) as unknown as TFile,
 	);
@@ -102,7 +102,7 @@ describe("populatePropertyMenu for several notes", () => {
 		return { items, titles, written, selection: (selected: unknown) => selection(selected) };
 	}
 
-	it("offers one confirmed delete instead of copy value and the single-note delete", () => {
+	it("値をコピーする代わりに 1 つの確認された削除と単一ノートの削除を提供します", () => {
 		const f = fixture();
 		expect(f.titles()).toEqual([
 			"編集",
@@ -112,7 +112,7 @@ describe("populatePropertyMenu for several notes", () => {
 		]);
 	});
 
-	it("needs a second press, and moving away cancels the first", async () => {
+	it("2 回押す必要があり、離れると最初のボタンがキャンセルされます", async () => {
 		const f = fixture();
 		const del = f.items[2];
 		del.click();
@@ -125,7 +125,7 @@ describe("populatePropertyMenu for several notes", () => {
 		expect(f.written).toEqual([]);
 	});
 
-	it("deletes the key only from the notes that have it", async () => {
+	it("キーを含むノートからのみキーを削除します", async () => {
 		notices.length = 0;
 		const f = fixture();
 		const del = f.items[2];

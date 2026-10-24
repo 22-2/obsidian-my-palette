@@ -74,8 +74,8 @@ function mouse(element: HTMLElement, type: string, button = 1) {
 	return event;
 }
 
-describe("table middle-click interactions", () => {
-	it("handles restored popout rows and sorting headers", () => {
+describe("テーブルの中クリック インタラクション", () => {
+	it("復元されたポップアウト行と並べ替えヘッダーを処理します", () => {
 		const mainDocument = document;
 		const mainElement = Element;
 		const mainHTMLElement = HTMLElement;
@@ -134,7 +134,7 @@ describe("table middle-click interactions", () => {
 		expect(f.choose).not.toHaveBeenCalled();
 	});
 
-	it("ignores middle-clicks on sorting headers", () => {
+	it("ヘッダーの並べ替えでの中クリックを無視します。", () => {
 		const f = fixture();
 		const header = f.root.querySelector<HTMLElement>("th button")!;
 		mouse(header, "mousedown");

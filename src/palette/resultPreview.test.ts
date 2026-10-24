@@ -6,7 +6,7 @@ function result(mode: PaletteResult["mode"]): PaletteResult {
 	return { id: mode, mode, primary: mode, secondary: "" } as unknown as PaletteResult;
 }
 
-describe("canPreviewResult", () => {
+describe("canプレビュー結果", () => {
 	it.each([
 		"file",
 		"tab",

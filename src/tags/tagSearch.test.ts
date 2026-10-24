@@ -13,15 +13,15 @@ beforeEach(() => {
 	vi.mocked(getGlobalSearch).mockReset();
 });
 
-describe("openTagSearch", () => {
-	it("opens the core global search for the tag and reports success", () => {
+describe("タグ検索を開く", () => {
+	it("タグのコアグローバル検索を開き、成功を報告します", () => {
 		const openGlobalSearch = vi.fn();
 		vi.mocked(getGlobalSearch).mockReturnValue({ openGlobalSearch });
 		expect(openTagSearch(app, "project", true)).toBe(true);
 		expect(openGlobalSearch).toHaveBeenCalledExactlyOnceWith("tag:#project", true);
 	});
 
-	it("notifies and reports failure when the global search core is off", () => {
+	it("グローバル検索コアがオフのときに失敗を通知および報告します", () => {
 		vi.mocked(getGlobalSearch).mockReturnValue(undefined);
 		expect(openTagSearch(app, "project", true)).toBe(false);
 		expect(Notice).toHaveBeenCalledTimes(1);

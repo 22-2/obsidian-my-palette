@@ -181,8 +181,8 @@ function key(el: HTMLElement, name: string) {
 	el.dispatchEvent(new KeyboardEvent("keydown", { key: name, bubbles: true, cancelable: true }));
 }
 
-describe("PaletteView", () => {
-	it("searches on open and follows the active note in its footer", async () => {
+describe("パレットビュー", () => {
+	it("開いているときに検索し、フッター内のアクティブなノートをたどります", async () => {
 		const f = await mount();
 		expect(f.labels()).toEqual(expect.arrayContaining(["Alpha", "Beta"]));
 		expect(f.root.textContent).toContain("元ファイル: Notes/First.md");
@@ -190,7 +190,7 @@ describe("PaletteView", () => {
 		expect(f.root.textContent).toContain("元ファイル: Notes/Second.md");
 	});
 
-	it("keeps the selected row when the active note changes", async () => {
+	it("アクティブなノートが変更されても選択した行を保持します", async () => {
 		const f = await mount(false, { input: "a" });
 		// 先頭はモードの行なので、ArrowDown で選ばれるのは最初のファイル(Alpha)。
 		key(f.input, "ArrowDown");
@@ -200,7 +200,7 @@ describe("PaletteView", () => {
 		expect(active()).toContain("Alpha");
 	});
 
-	it("keeps the double-clicked row selected after its note opens", async () => {
+	it("ダブルクリックした行は、ノートを開いた後も選択されたままになります。", async () => {
 		const f = await mount(false, { input: "a" });
 		const beta = [...f.root.querySelectorAll<HTMLElement>(".suggestion-item")].find((el) =>
 			el.textContent?.includes("Beta"),
@@ -213,14 +213,14 @@ describe("PaletteView", () => {
 		expect(active()).toContain("Beta");
 	});
 
-	it("keeps a pinned source when the active note changes", async () => {
+	it("アクティブなノートが変更されたときに、固定されたソースを維持します", async () => {
 		const f = await mount(false, { sourcePath: "Pinned.md", sourcePinned: true });
 		f.switchTo("Notes/Second.md");
 		expect(f.root.textContent).toContain("元ファイル: Pinned.md");
 		expect(f.view.getState()).toMatchObject({ sourcePath: "Pinned.md", sourcePinned: true });
 	});
 
-	it("opens a chosen result in the center pane without closing the view", async () => {
+	it("ビューを閉じずに、選択した結果を中央ペインで開きます", async () => {
 		const f = await mount(false, { input: "alpha" });
 		key(f.input, "Enter");
 		await settle();
@@ -233,7 +233,7 @@ describe("PaletteView", () => {
 		expect(f.root.isConnected).toBe(true);
 	});
 
-	it("previews the highlighted result with ArrowRight and keeps focus in the input", async () => {
+	it("ArrowRight で強調表示された結果をプレビューし、入力にフォーカスを維持します", async () => {
 		const f = await mount(false, { input: "a" });
 		key(f.input, "ArrowDown");
 		vi.mocked(executePaletteResult).mockClear();
@@ -249,7 +249,7 @@ describe("PaletteView", () => {
 		expect(document.activeElement).toBe(f.input);
 	});
 
-	it("does not run a preview for a result that cannot be shown", async () => {
+	it("表示できない結果のプレビューは実行しません", async () => {
 		const f = await mount(false, { input: "> build" });
 		vi.mocked(executePaletteResult).mockClear();
 		key(f.input, "ArrowDown");
@@ -258,7 +258,7 @@ describe("PaletteView", () => {
 		expect(executePaletteResult).not.toHaveBeenCalled();
 	});
 
-	it("restores a mode from its alias, persists it, and clears the query before Home", async () => {
+	it("エイリアスからモードを復元し、それを永続化し、ホームの前にクエリをクリアします。", async () => {
 		const f = await mount(false, { input: "> build" });
 		expect(f.panel().getAttribute("data-mode")).toBe("command");
 		expect(f.commandSearch).toHaveBeenCalledWith(expect.objectContaining({ query: "build" }));
@@ -275,7 +275,7 @@ describe("PaletteView", () => {
 		expect(f.root.isConnected).toBe(true);
 	});
 
-	it("saves the typed query in the layout so a restored pane resumes it", async () => {
+	it("入力したクエリをレイアウトに保存し、復元されたペインでクエリを再開します。", async () => {
 		const f = await mount();
 		f.input.value = "beta";
 		f.input.dispatchEvent(new Event("input", { bubbles: true }));
@@ -283,7 +283,7 @@ describe("PaletteView", () => {
 		expect(f.workspace.requestSaveLayout).toHaveBeenCalled();
 	});
 
-	it("keeps the last query in its state after closing", async () => {
+	it("最後のクエリを閉じた後もその状態を維持します", async () => {
 		const f = await mount(false, { input: "> deploy" });
 		await f.view.close();
 		cleanups.pop();
@@ -291,7 +291,7 @@ describe("PaletteView", () => {
 		expect(f.listeners).toHaveLength(0);
 	});
 
-	it("renders the table view with column headers and keeps its own presentation", async () => {
+	it("列ヘッダーを含むテーブル ビューをレンダリングし、独自のプレゼンテーションを維持します。", async () => {
 		const f = await mount(true, { input: "a", displayMode: "list" });
 		expect(f.root.querySelector("table, [role='grid'], .my-palette-table")).not.toBeNull();
 		expect(f.view.getState()).toMatchObject({ displayMode: "table", input: "a" });

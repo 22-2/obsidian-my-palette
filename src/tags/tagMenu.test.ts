@@ -78,8 +78,8 @@ beforeEach(() => {
 	written.length = 0;
 });
 
-describe("populateTagMenu", () => {
-	it("offers search, insert, and rename for one tag", () => {
+describe("タグメニューを入力", () => {
+	it("1 つのタグの検索、挿入、名前変更を提供します", () => {
 		const { menu, items } = recordingMenu();
 		const activate = vi.fn();
 		populateTagMenu({ app, plugin: {} as never, menu, tags: [tag("project")], activate });
@@ -96,7 +96,7 @@ describe("populateTagMenu", () => {
 		);
 	});
 
-	it("drops search and rename when several tags are selected", () => {
+	it("複数のタグが選択されている場合、検索と名前変更が削除されます", () => {
 		const { menu, items } = recordingMenu();
 		populateTagMenu({
 			app,
@@ -111,7 +111,7 @@ describe("populateTagMenu", () => {
 		]);
 	});
 
-	it("asks before deleting the selected tags everywhere", () => {
+	it("選択したタグをどこからでも削除する前に質問します", () => {
 		const { menu, items } = recordingMenu();
 		const onDone = vi.fn();
 		populateTagMenu({
@@ -126,7 +126,7 @@ describe("populateTagMenu", () => {
 		expect(confirmDeleteTags).toHaveBeenCalledExactlyOnceWith(app, ["a", "b"], onDone);
 	});
 
-	it("inserts the selected tags into the active note's frontmatter", async () => {
+	it("選択したタグをアクティブなノートのフロントマターに挿入します", async () => {
 		const { menu, items } = recordingMenu();
 		const onDone = vi.fn();
 		populateTagMenu({
@@ -142,7 +142,7 @@ describe("populateTagMenu", () => {
 		expect(written).toEqual([{ tags: ["keep", "project"].sort() }]);
 	});
 
-	it("opens the rename modal for the single tag", () => {
+	it("単一タグの名前変更モーダルを開きます", () => {
 		const { menu, items } = recordingMenu();
 		populateTagMenu({
 			app,

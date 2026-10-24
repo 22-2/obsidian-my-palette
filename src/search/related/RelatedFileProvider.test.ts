@@ -64,8 +64,8 @@ function fixture() {
 	return { app, origin, target, other, provider: new RelatedFileProvider(app) };
 }
 
-describe("RelatedFileProvider deduplication", () => {
-	it("lists each resolved destination once, including repeated, aliased and subpath links", async () => {
+describe("関連ファイルプロバイダーの重複排除", () => {
+	it("反復リンク、エイリアスリンク、サブパスリンクを含む、解決された各宛先を一度リストします。", async () => {
 		const { provider, target, other, app } = fixture();
 		const results = await provider.search({ mode: "link", query: "" });
 		expect(results.map(({ file }) => file.path)).toEqual([other.path, target.path]);
@@ -73,7 +73,7 @@ describe("RelatedFileProvider deduplication", () => {
 		expect(app.vault.cachedRead).toHaveBeenCalledTimes(1);
 	});
 
-	it("deduplicates queried destinations without hiding matches in later occurrences", async () => {
+	it("以降の一致を非表示にすることなく、クエリされた宛先の重複を排除します。", async () => {
 		const { provider, target } = fixture();
 		const byName = await provider.search({ mode: "link", query: "Target" });
 		expect(byName).toHaveLength(2);
@@ -83,7 +83,7 @@ describe("RelatedFileProvider deduplication", () => {
 		expect(byContext[0]).toMatchObject({ file: target, line: 1 });
 	});
 
-	it("lists each backlink source once and reads each source note once", async () => {
+	it("各バックリンク ソースを 1 回リストし、各ソース ノートを 1 回読み取ります", async () => {
 		const { provider, origin, target, other, app } = fixture();
 		const results = await provider.search({ mode: "backlink", query: "", sourceFile: target });
 		expect(results.map(({ file }) => file.path)).toEqual([origin.path, other.path]);
@@ -91,7 +91,7 @@ describe("RelatedFileProvider deduplication", () => {
 		expect(app.vault.cachedRead).toHaveBeenCalledTimes(2);
 	});
 
-	it("deduplicates queried backlinks without hiding matches in later occurrences", async () => {
+	it("以降の一致を非表示にすることなく、クエリされたバックリンクの重複を排除します。", async () => {
 		const { provider, origin, target } = fixture();
 		const request = { mode: "backlink" as const, sourceFile: target };
 		const byContext = await provider.search({ ...request, query: "Target" });

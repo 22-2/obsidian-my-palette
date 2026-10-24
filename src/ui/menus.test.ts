@@ -41,8 +41,8 @@ function selectedTitle(): string | null {
 	return document.querySelector(".menu-item.selected .menu-item-title")?.textContent ?? null;
 }
 
-describe("showMenuAtEvent", () => {
-	it("selects the first enabled item only for menus opened from the keyboard", () => {
+describe("イベント位置へのメニュー表示", () => {
+	it("キーボードから開かれたメニューに対してのみ、最初に有効になった項目を選択します", () => {
 		showMenuAtEvent(menuWithDisabledFirst(), new MouseEvent("contextmenu"));
 		expect(selectedTitle()).toBeNull();
 		document.body.replaceChildren();

@@ -12,23 +12,23 @@ const choices: TagChoice[] = [
 const keys = (query: string, checked: string[] = []) =>
 	buildTagSuggestions(choices, query, checked).map(tagSuggestionKey);
 
-describe("buildTagSuggestions", () => {
-	it("shows every choice in the given order without a query", () => {
+describe("buildTag提案", () => {
+	it("クエリなしですべての選択肢を指定された順序で表示します", () => {
 		expect(keys("")).toEqual(["tag:project", "tag:projection", "tag:proj", "tag:writing"]);
 	});
 
-	it("filters fuzzily, keeps registered tags last, and accepts a leading hash", () => {
+	it("あいまいにフィルタリングし、登録されたタグを最後に保持し、先頭のハッシュを受け入れます", () => {
 		expect(keys("#proj")).toEqual(["tag:project", "tag:projection", "tag:proj"]);
 	});
 
-	it("offers a new tag only when the input is a valid unknown tag", () => {
+	it("入力が有効な未知のタグである場合にのみ新しいタグを提供します", () => {
 		expect(keys("proje")[0]).toBe("new:proje");
 		expect(keys("Project")).not.toContain("new:Project");
 		expect(keys("two words")).not.toContain("new:two words");
 		expect(keys("a#b")).not.toContain("new:a#b");
 	});
 
-	it("keeps checked new tags listed while they match the input", () => {
+	it("入力と一致する間、新しいタグのリストをチェックし続けます", () => {
 		expect(keys("", ["writing", "Fresh"])).toEqual([
 			"new:Fresh",
 			"tag:project",

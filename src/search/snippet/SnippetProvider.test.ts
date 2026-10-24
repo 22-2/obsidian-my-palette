@@ -23,8 +23,8 @@ function app(): App {
 	} as unknown as App;
 }
 
-describe("SnippetProvider", () => {
-	it("lists the folder first, then snippets by name with availability", async () => {
+describe("スニペットプロバイダー", () => {
+	it("最初にフォルダーをリストし、次に可用性を示す名前でスニペットを表示します", async () => {
 		const results = await new SnippetProvider(app()).search({
 			mode: "snippet",
 			query: "",
@@ -47,7 +47,7 @@ describe("SnippetProvider", () => {
 		expect(results[2]).toMatchObject({ primary: "beta", secondary: "無効" });
 	});
 
-	it("searches snippets only, without the folder row", async () => {
+	it("フォルダー行を含まずにスニペットのみを検索します", async () => {
 		const provider = new SnippetProvider(app());
 		expect(
 			(await provider.search({ mode: "snippet", query: "alp" })).map((result) => result.id),

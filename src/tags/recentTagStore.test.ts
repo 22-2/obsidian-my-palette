@@ -8,8 +8,8 @@ function app(): App {
 	} as unknown as App;
 }
 
-describe("recent tag store", () => {
-	it("moves recorded tags to the front and merges case-only duplicates", async () => {
+describe("最近のタグストア", () => {
+	it("記録されたタグを前面に移動し、大文字と小文字のみの重複をマージします", async () => {
 		const store = new RecentTagStore(app());
 		await store.load();
 
@@ -20,7 +20,7 @@ describe("recent tag store", () => {
 		await store.dispose();
 	});
 
-	it("keeps only the newest tags", async () => {
+	it("最新のタグのみを保持します", async () => {
 		const store = new RecentTagStore(app());
 		await store.load();
 		store.record(...Array.from({ length: MAX_RECENT_TAGS + 5 }, (_, i) => `t${i}`));

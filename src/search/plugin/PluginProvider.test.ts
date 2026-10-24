@@ -35,8 +35,8 @@ function app(): App {
 	} as unknown as App;
 }
 
-describe("PluginProvider", () => {
-	it("lists plugins by name with folder paths and availability marks", async () => {
+describe("プラグインプロバイダー", () => {
+	it("プラグインを名前ごとにフォルダー パスと可用性マークとともにリストします。", async () => {
 		const results = await new PluginProvider(app()).search({
 			mode: "plugin",
 			query: "",
@@ -53,7 +53,7 @@ describe("PluginProvider", () => {
 		expect(results[1]).toMatchObject({ enabled: false, hasSettings: false });
 	});
 
-	it("searches names and ids with fuzzy matching", async () => {
+	it("名前とIDをあいまい一致で検索します", async () => {
 		const provider = new PluginProvider(app());
 		expect(
 			(await provider.search({ mode: "plugin", query: "alp" })).map(

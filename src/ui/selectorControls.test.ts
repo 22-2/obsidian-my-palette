@@ -99,7 +99,7 @@ async function fixture(category: SelectorHistoryCategory = "folder-move") {
 	return { plugin, modal, key, click, type };
 }
 
-describe("selector controls", () => {
+describe("セレクターコントロール", () => {
 	it.each(["tag-insertion", "moc-insertion", "folder-move"] as const)(
 		"restores only %s history without activating a candidate",
 		async (category) => {
@@ -126,7 +126,7 @@ describe("selector controls", () => {
 		},
 	);
 
-	it("orders action then history buttons, removes them on close and recreates them once", async () => {
+	it("アクションを命令してから履歴ボタンを実行し、閉じるときにボタンを削除して一度再作成します", async () => {
 		const f = await fixture();
 		const selector = ".my-palette-options-button, .my-palette-history-button";
 		expect(
@@ -154,7 +154,7 @@ describe("selector controls", () => {
 		expect(f.modal.choose).toHaveBeenCalledExactlyOnceWith("one");
 	});
 
-	it("opens the options menu from the keyboard with its first switch selected, and closes it again", async () => {
+	it("最初のスイッチが選択された状態でキーボードからオプション メニューを開き、再度閉じます", async () => {
 		const f = await fixture();
 		expect(f.key("o", { ctrlKey: true }).defaultPrevented).toBe(true);
 		expect(paletteMenuTitles()[0]).toBe("検索の一致を強調");
@@ -164,7 +164,7 @@ describe("selector controls", () => {
 		expect(isPaletteMenuOpen()).toBe(false);
 	});
 
-	it("uses selector help and shares the modal highlight preference", async () => {
+	it("セレクターヘルプを使用し、モーダルハイライト設定を共有します", async () => {
 		const f = await fixture();
 		f.click(".my-palette-options-button");
 		clickPaletteMenuItem("検索の一致を強調");
@@ -179,7 +179,7 @@ describe("selector controls", () => {
 		expect(help.textContent).not.toContain("Space");
 	});
 
-	it("respects idle history timing, commits once per query, and cancels a pending save on close", async () => {
+	it("アイドル履歴のタイミングを尊重し、クエリごとに 1 回コミットし、閉じるときに保留中の保存をキャンセルします。", async () => {
 		const f = await fixture();
 		const record = vi.spyOn(f.plugin, "recordSearch");
 		await f.type("one");
@@ -200,7 +200,7 @@ describe("selector controls", () => {
 		expect(record).toHaveBeenCalledTimes(1);
 	});
 
-	it("closes history with Escape while retaining the selector", async () => {
+	it("セレクターを保持したままEscapeで履歴を閉じます", async () => {
 		const f = await fixture();
 		f.plugin.recordSearch("one", "folder-move");
 		f.click(".my-palette-history-button");
@@ -213,7 +213,7 @@ describe("selector controls", () => {
 		).toBe(true);
 	});
 
-	it("uses changed history bindings and shows them in help", async () => {
+	it("変更された履歴バインディングを使用し、ヘルプに表示します", async () => {
 		const f = await fixture();
 		f.plugin.settings.hotkeys.history = { key: "Y", modifiers: ["Alt"] };
 		f.key("r", { ctrlKey: true });
@@ -229,7 +229,7 @@ describe("selector controls", () => {
 	});
 });
 
-describe("options menu switches", () => {
+describe("オプションメニュースイッチ", () => {
 	class SwitchSelector extends TestSelector {
 		readonly onChange = vi.fn();
 		protected override onSelectionModalOpen(): void {
@@ -251,7 +251,7 @@ describe("options menu switches", () => {
 		}
 	}
 
-	it("lists the footer switches right under Options and flips them without closing", async () => {
+	it("[オプション] のすぐ下にフッター スイッチをリストし、閉じずにフッター スイッチを反転します。", async () => {
 		const plugin = createSelectorPlugin({} as App);
 		const modal = new SwitchSelector(plugin, "folder-move");
 		modal.open();

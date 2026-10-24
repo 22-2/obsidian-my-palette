@@ -223,7 +223,7 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 		},
 	);
 
-	it("selects on press, extends with modifiers, and preserves bulk context selection", async () => {
+	it("プレス時に選択し、修飾子で拡張し、一括コンテキスト選択を保持します", async () => {
 		const f = await fixture(surface);
 		mouse(f.rows()[1], "mousedown");
 		mouse(f.rows()[3], "mousedown", { shiftKey: true });
@@ -237,7 +237,7 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 		mouse(f.rows()[0], "contextmenu", { button: 2 });
 		expect(f.selection()).toEqual(["alpha"]);
 	});
-	it("opens the context menu for the keyboard selection with Ctrl+K", async () => {
+	it("Ctrl+K でキーボード選択のコンテキスト メニューを開きます", async () => {
 		const f = await fixture(surface);
 		key(f.input, "ArrowDown");
 		key(f.input, "ArrowDown", { shiftKey: true });
@@ -249,7 +249,7 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 		mouse(f.rows()[2], "dblclick");
 		expect(f.choose).toHaveBeenCalledExactlyOnceWith("gamma");
 	});
-	it("activates extended selections only on double-click or Enter", async () => {
+	it("ダブルクリックまたは Enter キーを押した場合にのみ拡張選択をアクティブにします", async () => {
 		const f = await fixture(surface);
 		mouse(f.rows()[1], "mousedown");
 		mouse(f.rows()[1], "click");
@@ -259,7 +259,7 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 		key(f.input, "Enter");
 		expect(f.choose).toHaveBeenCalledTimes(2);
 	});
-	it("opens a middle-click once without falling through to primary activation", async () => {
+	it("プライマリアクティベーションに失敗せずに中クリックを 1 回開きます", async () => {
 		const f = await fixture(surface);
 		mouse(f.rows()[1], "mousedown", { button: 1 });
 		mouse(f.rows()[1], "click", { button: 1 });
@@ -267,7 +267,7 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 		expect(f.middle).toHaveBeenCalledExactlyOnceWith("beta");
 		expect(f.choose).not.toHaveBeenCalled();
 	});
-	it("consumes right-click follow-up events without opening a background tab", async () => {
+	it("バックグラウンドタブを開かずに右クリックのフォローアップイベントを消費します", async () => {
 		const f = await fixture(surface);
 		mouse(f.rows()[0], "mousedown", { button: 2 });
 		mouse(f.rows()[0], "contextmenu", { button: 2 });
@@ -285,13 +285,13 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 		expect(f.middle).toHaveBeenCalledExactlyOnceWith("beta");
 		expect(f.choose).not.toHaveBeenCalled();
 	});
-	it("does not treat a standalone right auxclick as a middle-click", async () => {
+	it("スタンドアロンの右補助クリックを中クリックとして扱いません。", async () => {
 		const f = await fixture(surface);
 		mouse(f.rows()[1], "auxclick", { button: 2 });
 		expect(f.middle).not.toHaveBeenCalled();
 		expect(f.choose).not.toHaveBeenCalled();
 	});
-	it("extends keyboard selection, keeps it while moving with Ctrl, and ignores IME", async () => {
+	it("キーボードの選択を拡張し、Ctrl を押しながら移動している間は選択を維持し、IME を無視します", async () => {
 		const f = await fixture(surface, "extended", true);
 		key(f.input, "ArrowDown");
 		key(f.input, "ArrowDown", { shiftKey: true });
@@ -304,7 +304,7 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 		expect(f.choose).toHaveBeenCalledExactlyOnceWith("gamma");
 		expect(f.resultFocus).toHaveBeenCalledTimes(4);
 	});
-	it("returns to input mode when ArrowUp is pressed on the first row", async () => {
+	it("最初の行で ArrowUp を押すと入力モードに戻ります", async () => {
 		const f = await fixture(surface, "extended", true);
 		key(f.input, "ArrowDown");
 		key(f.input, "ArrowDown");
@@ -332,7 +332,7 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 			expect(f.choose).not.toHaveBeenCalled();
 		},
 	);
-	it("keeps the history focus boundary for empty modal space and table headers", async () => {
+	it("空のモーダルスペースとテーブルヘッダーの履歴フォーカス境界を維持します", async () => {
 		const f = await fixture(surface);
 		const header = f.root.querySelector<HTMLElement>(".prompt-results")!.createDiv("header");
 		mouse(header, "mousedown");
@@ -341,7 +341,7 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 	});
 });
 
-it("keeps click activation for single-choice modals and press activation for views", async () => {
+it("単一選択モーダルのクリック アクティベーションとビューのプレス アクティベーションを維持します。", async () => {
 	for (const surface of ["modal", "view"] as const) {
 		const f = await fixture(surface, "single");
 		mouse(f.rows()[1], "mousedown");
@@ -351,7 +351,7 @@ it("keeps click activation for single-choice modals and press activation for vie
 	}
 });
 
-it("selects and opens sidebar results created in a restored popout window", async () => {
+it("復元されたポップアウト ウィンドウで作成されたサイドバーの結果を選択して開きます", async () => {
 	const mainDocument = document;
 	const mainElement = Element;
 	const mainHTMLElement = HTMLElement;
@@ -380,7 +380,7 @@ it("selects and opens sidebar results created in a restored popout window", asyn
 	expect(f.context).toHaveBeenCalledWith("delta", ["delta"]);
 });
 
-it("preserves modal Home/End scope handling and closes on Escape", async () => {
+it("モーダルな Home/End スコープの処理を保持し、エスケープ時に閉じます", async () => {
 	const f = await fixture("modal");
 	f.input.value = "query";
 	key(f.input, "Home");
@@ -405,7 +405,7 @@ it("preserves modal Home/End scope handling and closes on Escape", async () => {
 	expect(f.root.isConnected).toBe(false);
 });
 
-it("discards stale searches and preserves the provider's match query and total", async () => {
+it("古い検索を破棄し、プロバイダーの一致クエリと合計を保持します。", async () => {
 	const f = await fixture("modal");
 	let resolveOld!: (items: string[]) => void;
 	f.modal!.search.mockImplementationOnce(
@@ -430,7 +430,7 @@ it("discards stale searches and preserves the provider's match query and total",
 	expect(f.root.querySelector(".my-palette-status-bar__count")?.textContent).toBe("50 / 120");
 });
 
-it("restores the selection and cursor to the same items after a keep-open rerender", async () => {
+it("開いたままの再レンダリング後に選択範囲とカーソルを同じアイテムに復元します", async () => {
 	const f = await fixture("modal", "extended");
 	mouse(f.rows()[1], "mousedown");
 	mouse(f.rows()[2], "mousedown", { shiftKey: true });
@@ -443,7 +443,7 @@ it("restores the selection and cursor to the same items after a keep-open rerend
 	expect(f.choose).toHaveBeenCalledWith("gamma");
 });
 
-it("redraws rows in place without losing the extended selection", async () => {
+it("拡張選択を失わずに行を所定の位置に再描画します", async () => {
 	const f = await fixture("modal");
 	mouse(f.rows()[1], "mousedown");
 	mouse(f.rows()[3], "mousedown", { shiftKey: true });
@@ -510,7 +510,7 @@ describe.each(["modal", "view"] as const)("%s preview transparency", (surface) =
 	);
 });
 
-it("does not steal focus from another panel on an ordinary H or Alt release", async () => {
+it("通常の H または Alt リリースでは別のパネルからフォーカスを奪いません。", async () => {
 	const first = await fixture("view");
 	const second = await fixture("view");
 	first.input.focus();
@@ -523,7 +523,7 @@ it("does not steal focus from another panel on an ordinary H or Alt release", as
 	expect(first.root.classList.contains("is-preview-hidden")).toBe(false);
 });
 
-it("handles Alt+H from controls outside the search input", async () => {
+it("検索入力以外のコントロールからの Alt+H を処理します", async () => {
 	const f = await fixture("view");
 	const control = f.root.createEl("button");
 	control.focus();
@@ -562,7 +562,7 @@ it.each(["modal", "view"] as const)(
 	},
 );
 
-it("previews with a custom binding away from the end of the query", async () => {
+it("クエリの末尾から離れたカスタム バインディングを使用したプレビュー", async () => {
 	const hotkeys = structuredClone(DEFAULT_HOTKEYS);
 	hotkeys.preview = { key: "P", modifiers: ["Alt"] };
 	const f = await fixture("modal", "extended", false, () => hotkeys);
@@ -575,7 +575,7 @@ it("previews with a custom binding away from the end of the query", async () => 
 	expect(f.modal!.preview).toHaveBeenCalledExactlyOnceWith("alpha");
 });
 
-it("does not duplicate handlers or the footer when reopening a modal", async () => {
+it("モーダルを再度開くときにハンドラーまたはフッターを複製しません。", async () => {
 	const f = await fixture("modal");
 	f.modal!.close();
 	f.modal!.open();
@@ -592,7 +592,7 @@ it("does not duplicate handlers or the footer when reopening a modal", async () 
 	expect(f.modal!.preview).toHaveBeenCalledTimes(1);
 });
 
-it("focuses initial input and preserves a host's prefix-aware selection range", async () => {
+it("初期入力に焦点を当て、ホストのプレフィックスを認識した選択範囲を保持します。", async () => {
 	const modal = new TestModal({ initialInput: "> query" });
 	modal.initialRange = [2, 7];
 	cleanups.push(() => modal.close());
@@ -604,7 +604,7 @@ it("focuses initial input and preserves a host's prefix-aware selection range", 
 	expect([modal.inputEl.selectionStart, modal.inputEl.selectionEnd]).toEqual([2, 7]);
 });
 
-it("does not render a closed session's search after the modal has reopened", async () => {
+it("モーダルが再度開かれた後、閉じられたセッションの検索はレンダリングされません。", async () => {
 	const f = await fixture("modal");
 	let resolveOld!: (items: string[]) => void;
 	f.modal!.search.mockImplementationOnce(
@@ -623,7 +623,7 @@ it("does not render a closed session's search after the modal has reopened", asy
 	expect(f.rows().some((row) => row.textContent?.includes("closed"))).toBe(false);
 });
 
-it("keeps custom table layouts and their displayed row order selectable", async () => {
+it("カスタム テーブル レイアウトと表示される行の順序を選択可能な状態に保ちます", async () => {
 	const f = await fixture("view");
 	f.panel!.setResultsLayout({
 		render: (container, visible, query, decorateRow) => {

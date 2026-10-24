@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { mergeSettings } from "src/settings/mergeSettings";
 import { PaletteDisplaySettingsStore } from "src/settings/paletteDisplaySettingsStore";
 
-describe("PaletteDisplaySettingsStore", () => {
-	it("updates and persists only the selected surface while notifying its subscribers", async () => {
+describe("パレット表示設定ストア", () => {
+	it("サブスクライバーに通知しながら、選択したサーフェスのみを更新および永続化します。", async () => {
 		const settings = mergeSettings(undefined);
 		const save = vi.fn(async () => {});
 		const store = new PaletteDisplaySettingsStore(() => settings, save);
@@ -29,7 +29,7 @@ describe("PaletteDisplaySettingsStore", () => {
 		});
 	});
 
-	it("releases closed surface listeners and isolates plugin state", async () => {
+	it("閉曲面リスナーを解放し、プラグインの状態を分離します", async () => {
 		const settings = mergeSettings(undefined);
 		const otherSettings = mergeSettings(undefined);
 		const store = new PaletteDisplaySettingsStore(

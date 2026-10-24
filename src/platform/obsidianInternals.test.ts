@@ -20,8 +20,8 @@ import {
 /** An app as a future Obsidian might ship it: none of the internals exist. */
 const bareApp = { vault: { adapter: {} }, metadataCache: {} } as unknown as App;
 
-describe("Obsidian internals", () => {
-	it("reads commands, plugins and settings when Obsidian provides them", () => {
+describe("黒曜石の内部", () => {
+	it("Obsidian が提供するコマンド、プラグイン、設定を読み取ります。", () => {
 		const executeCommandByIdSpy = vi.fn().mockReturnValue(true);
 		const search = { openGlobalSearch: vi.fn() };
 		const app = {
@@ -59,7 +59,7 @@ describe("Obsidian internals", () => {
 		expect(getFrontmatterValuesForKey(app, "tags")).toEqual(["a", "b"]);
 	});
 
-	it("falls back to empty values instead of throwing when the internals are missing", () => {
+	it("内部が欠落している場合はスローせずに空の値にフォールバックします。", () => {
 		expect(getCommands(bareApp)).toEqual([]);
 		expect(executeCommandById(bareApp, "app:reload")).toBe(false);
 		expect(getCommunityPluginManifests(bareApp)).toEqual([]);
@@ -76,7 +76,7 @@ describe("Obsidian internals", () => {
 		expect(getScopeHandlers({} as Scope)).toEqual([]);
 	});
 
-	it("returns a copy of the scope handlers so callers can unregister while iterating", () => {
+	it("呼び出し側が反復中に登録を解除できるように、スコープ ハンドラーのコピーを返します。", () => {
 		const keys = [{ key: "Escape", modifiers: "" }];
 		const handlers = getScopeHandlers({ keys } as unknown as Scope);
 		expect(handlers).toEqual(keys);

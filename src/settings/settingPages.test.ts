@@ -26,8 +26,8 @@ function isGroup(item: SettingDefinitionItem): item is SettingDefinitionGroup {
 function groupsOf(page: SettingDefinitionPage): SettingDefinitionGroup[] {
 	return (page.items ?? []).filter(isGroup);
 }
-describe("settings page layout", () => {
-	it("hides unready integrations from Modes while leaving built-in modes available", () => {
+describe("設定ページのレイアウト", () => {
+	it("組み込みモードを利用可能なままにして、未準備の統合をモードから非表示にします", () => {
 		const readiness = { everything: false, smartConnections: false };
 		const pages = createSettingPages({
 			integrationAvailability: { current: readiness },
@@ -48,7 +48,7 @@ describe("settings page layout", () => {
 		readiness.everything = true;
 		expect(visibleNames()).toContain("Everything");
 	});
-	it("keeps related controls discoverable in task-oriented pages", () => {
+	it("関連するコントロールをタスク指向のページで見つけられるようにする", () => {
 		const pages = createSettingPages({} as SettingsHost);
 
 		expect(pages.filter(isPage).map((page) => page.name)).toEqual([

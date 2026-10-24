@@ -31,8 +31,8 @@ function fixture() {
 	return { plugin, workspace, leaf };
 }
 
-describe("palette view placement", () => {
-	it("opens a new center tab when only a restored sidebar table exists", async () => {
+describe("パレットビューの配置", () => {
+	it("復元されたサイドバーテー​​ブルのみが存在する場合に、新しいセンタータブを開きます", async () => {
 		const { plugin, workspace, leaf } = fixture();
 		workspace.getLeavesOfType.mockReturnValue([{ getRoot: () => workspace.rightSplit }]);
 		await plugin.paletteOpener.openPaletteTableView("project");
@@ -46,7 +46,7 @@ describe("palette view placement", () => {
 		expect(workspace.revealLeaf).toHaveBeenCalledWith(leaf);
 	});
 
-	it("reveals an existing center table without replacing its saved query or sorting", async () => {
+	it("保存されたクエリを置き換えたり並べ替えたりせずに、既存の中央テーブルを表示します", async () => {
 		const { plugin, workspace } = fixture();
 		const existing = {
 			getRoot: () => workspace.rootSplit,
@@ -60,7 +60,7 @@ describe("palette view placement", () => {
 		expect(workspace.revealLeaf).toHaveBeenCalledWith(existing);
 	});
 
-	it("duplicates tables into new center tabs with their pinned source and sort state", async () => {
+	it("ピン留めされたソースとソート状態とともにテーブルを新しい中央タブに複製します", async () => {
 		const { plugin, workspace, leaf } = fixture();
 		await plugin.paletteOpener.openNewPaletteView({
 			input: "project",
@@ -92,7 +92,7 @@ describe("palette view placement", () => {
 		});
 	});
 
-	it("keeps regular palettes and their duplicates in the right sidebar", async () => {
+	it("通常のパレットとその複製を右側のサイドバーに保持します", async () => {
 		const { plugin, workspace } = fixture();
 		await plugin.paletteOpener.openPaletteView("list query");
 		expect(workspace.ensureSideLeaf).toHaveBeenCalledWith(PALETTE_VIEW_TYPE, "right", {

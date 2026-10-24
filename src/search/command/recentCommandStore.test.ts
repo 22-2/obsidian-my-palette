@@ -8,8 +8,8 @@ function app(): App {
 	} as unknown as App;
 }
 
-describe("recent command store", () => {
-	it("keeps recent commands usable when IndexedDB is unavailable", async () => {
+describe("最近のコマンドストア", () => {
+	it("IndexedDB が使用できない場合でも、最近のコマンドを使用できるようにする", async () => {
 		const store = new RecentCommandStore(app());
 		const persistent = await store.load(["first", "second"]);
 

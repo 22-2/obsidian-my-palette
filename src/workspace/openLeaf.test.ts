@@ -15,8 +15,8 @@ function fakeApp(getLeaf: ReturnType<typeof vi.fn>): App {
 	return { workspace: { getLeaf } } as unknown as App;
 }
 
-describe("getLeafForAction", () => {
-	it("reuses an unpinned primary target", () => {
+describe("操作に応じたリーフ取得", () => {
+	it("固定されていないプライマリターゲットを再利用します", () => {
 		const getLeaf = vi.fn();
 		const app = fakeApp(getLeaf);
 		const target = fakeLeaf(false);
@@ -25,7 +25,7 @@ describe("getLeafForAction", () => {
 		expect(getLeaf).not.toHaveBeenCalled();
 	});
 
-	it("falls back to a navigable leaf for a pinned primary target", () => {
+	it("固定されたプライマリ ターゲットのナビゲート可能なリーフにフォールバックします", () => {
 		const fallback = fakeLeaf(false);
 		const getLeaf = vi.fn().mockReturnValue(fallback);
 		const app = fakeApp(getLeaf);
@@ -34,7 +34,7 @@ describe("getLeafForAction", () => {
 		expect(getLeaf).toHaveBeenCalledWith(false);
 	});
 
-	it("keeps alternate and split actions on their requested new leaf", () => {
+	it("要求された新しいリーフで代替アクションと分割アクションを維持します", () => {
 		const tab = fakeLeaf(false);
 		const horizontal = fakeLeaf(false);
 		const vertical = fakeLeaf(false);
@@ -55,8 +55,8 @@ describe("getLeafForAction", () => {
 	});
 });
 
-describe("revealOpenedLeaf", () => {
-	it("waits for a deferred destination before giving it focus", async () => {
+describe("明らかに開いた葉", () => {
+	it("遅延された宛先にフォーカスを与える前にその宛先を待ちます", async () => {
 		const leaf = fakeLeaf(false);
 		let loaded!: () => void;
 		const revealLeaf = vi.fn(
@@ -74,7 +74,7 @@ describe("revealOpenedLeaf", () => {
 		await revealing;
 		expect(setActiveLeaf).toHaveBeenCalledExactlyOnceWith(leaf, { focus: true });
 	});
-	it("reveals a preview without moving keyboard focus", async () => {
+	it("キーボードのフォーカスを移動せずにプレビューを表示します", async () => {
 		const leaf = fakeLeaf(false);
 		const revealLeaf = vi.fn().mockResolvedValue(undefined);
 		const setActiveLeaf = vi.fn();
@@ -88,7 +88,7 @@ describe("revealOpenedLeaf", () => {
 	});
 });
 
-describe("openFileInLeaf", () => {
+describe("ファイルインリーフを開く", () => {
 	function fileLeaf(path: string) {
 		return {
 			getViewState: () => ({ pinned: false }),
@@ -110,14 +110,14 @@ describe("openFileInLeaf", () => {
 		return { app, workspace, file, created };
 	}
 
-	it("finds the leaf that already shows the file", () => {
+	it("すでにファイルを表示しているリーフを検索します", () => {
 		const other = fileLeaf("other.md");
 		const match = fileLeaf("note.md");
 		const { app, file } = fixture([other, match]);
 		expect(findLeafShowingFile(app, file)).toBe(match);
 	});
 
-	it("reveals the existing tab instead of opening the file again", async () => {
+	it("ファイルを再度開かずに既存のタブを表示します", async () => {
 		const existing = fileLeaf("note.md");
 		const { app, workspace, file, created } = fixture([existing]);
 		const leaf = await openFileInLeaf(app, file, {
@@ -133,7 +133,7 @@ describe("openFileInLeaf", () => {
 		expect(workspace.setActiveLeaf).toHaveBeenCalledExactlyOnceWith(existing, { focus: true });
 	});
 
-	it("opens a new leaf when focusing existing tabs is off", async () => {
+	it("既存のタブのフォーカスがオフのときに新しいリーフを開きます", async () => {
 		const existing = fileLeaf("note.md");
 		const { app, workspace, file, created } = fixture([existing]);
 		const leaf = await openFileInLeaf(app, file, {
@@ -147,7 +147,7 @@ describe("openFileInLeaf", () => {
 		expect(workspace.revealLeaf).toHaveBeenCalledWith(created);
 	});
 
-	it("leaves an existing tab alone for background opens", async () => {
+	it("バックグラウンドで開くために既存のタブをそのままにしておく", async () => {
 		const existing = fileLeaf("note.md");
 		const { app, workspace, file, created } = fixture([existing]);
 		await openFileInLeaf(app, file, {
@@ -161,7 +161,7 @@ describe("openFileInLeaf", () => {
 		expect(created.openFile).not.toHaveBeenCalled();
 	});
 
-	it("loads a background open in a new leaf without activating it", async () => {
+	it("新しいリーフで開いている背景をアクティブ化せずにロードします", async () => {
 		const { app, workspace, file, created } = fixture();
 		await openFileInLeaf(app, file, {
 			action: "alternate",

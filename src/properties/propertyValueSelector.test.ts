@@ -30,27 +30,27 @@ function fakeApp(frontmatter: Record<string, unknown>, options: { fail?: boolean
 	return { app, written };
 }
 
-describe("applyListChanges", () => {
-	it("appends added values after the kept ones", async () => {
+describe("リスト変更の適用", () => {
+	it("保持された値の後に追加値を追加します", async () => {
 		const { app, written } = fakeApp({ aliases: ["a", "b"] });
 		const ok = await applyListChanges(app, file, "aliases", { add: ["c"], remove: ["a"] });
 		expect(ok).toBe(true);
 		expect(written.aliases).toEqual(["b", "c"]);
 	});
 
-	it("turns a single string into a list when values change", async () => {
+	it("値が変更されたときに単一の文字列をリストに変換します", async () => {
 		const { app, written } = fakeApp({ aliases: "a" });
 		await applyListChanges(app, file, "aliases", { add: ["b"], remove: [] });
 		expect(written.aliases).toEqual(["a", "b"]);
 	});
 
-	it("removes the key when the list becomes empty", async () => {
+	it("リストが空になったときにキーを削除します", async () => {
 		const { app, written } = fakeApp({ cssclasses: ["x"] });
 		await applyListChanges(app, file, "cssclasses", { add: [], remove: ["x"] });
 		expect("cssclasses" in written).toBe(false);
 	});
 
-	it("reports a failed write and keeps the note as it was", async () => {
+	it("失敗した書き込みを報告し、メモをそのまま保持します", async () => {
 		vi.mocked(Notice).mockClear();
 		const { app } = fakeApp({}, { fail: true });
 		expect(await applyListChanges(app, file, "aliases", { add: ["a"], remove: [] })).toBe(
@@ -62,8 +62,8 @@ describe("applyListChanges", () => {
 	});
 });
 
-describe("applyListChangesToFiles", () => {
-	it("writes every note and keeps going when one fails", async () => {
+describe("ファイルへのリスト変更の適用", () => {
+	it("すべてのメモを書き、失敗しても書き続ける", async () => {
 		const written: Record<string, Record<string, unknown>> = {
 			"a.md": { aliases: ["x"] },
 			"c.md": {},
@@ -90,7 +90,7 @@ describe("applyListChangesToFiles", () => {
 	});
 });
 
-describe("PropertyValueModal", () => {
+describe("プロパティ値モーダル", () => {
 	beforeEach(() => {
 		const dom = new Window();
 		for (const name of [
@@ -141,7 +141,7 @@ describe("PropertyValueModal", () => {
 		return { modal, result, rows, checked, key, type };
 	}
 
-	it("lists the note's values checked and the vault's values after them", async () => {
+	it("チェックされたメモの値とその後のボールトの値をリストします。", async () => {
 		const f = open(["a"], ["b", "c"]);
 		await flush();
 		expect(f.rows().map((row) => row.textContent)).toEqual([
@@ -153,7 +153,7 @@ describe("PropertyValueModal", () => {
 		f.modal.close();
 	});
 
-	it("adds a checked vault value with Ctrl+Enter", async () => {
+	it("Ctrl+Enter を使用してチェックされたボールト値を追加します", async () => {
 		const f = open(["a"], ["b"]);
 		await flush();
 		f.key("ArrowUp");
@@ -163,7 +163,7 @@ describe("PropertyValueModal", () => {
 		await expect(f.result).resolves.toEqual({ add: ["b"], remove: [] });
 	});
 
-	it("offers a typed value that no list has yet and adds it on Enter", async () => {
+	it("まだリストにない型付きの値を提供し、Enter キーで追加します。", async () => {
 		const f = open(["a"], ["b"]);
 		await f.type("zeta");
 		expect(f.rows()[0].textContent).toContain("新しい値");
@@ -171,14 +171,14 @@ describe("PropertyValueModal", () => {
 		await expect(f.result).resolves.toEqual({ add: ["zeta"], remove: [] });
 	});
 
-	it("removes an applied value on Enter", async () => {
+	it("Enter で適用された値を削除します", async () => {
 		const f = open(["a"], ["b"]);
 		await f.type("a");
 		f.key("Enter");
 		await expect(f.result).resolves.toEqual({ add: [], remove: ["a"] });
 	});
 
-	it("checks values every note has and badges values only some have", async () => {
+	it("すべてのノートが持つ値をチェックし、一部のノートのみが持つ値をバッジします。", async () => {
 		const plugin = createSelectorPlugin({} as App) as unknown as MyPalettePlugin;
 		const other = { path: "other.md", basename: "other" } as unknown as TFile;
 		const modal = new PropertyValueModal(

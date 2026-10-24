@@ -7,8 +7,8 @@ vi.mock("obsidian", () => ({
 	getFrontMatterInfo: () => ({ contentStart: 0 }),
 }));
 
-describe("which kinds can be moved", () => {
-	it("trashes everything but broken links and moves elsewhere files only", () => {
+describe("どの種類を移動できるか", () => {
+	it("壊れたリンク以外はすべて破棄し、ファイルのみを別の場所に移動します", () => {
 		expect(canTrash("broken-links")).toBe(false);
 		expect(canTrash("empty-folders")).toBe(true);
 		expect(listsFiles("orphaned-files")).toBe(true);
@@ -17,8 +17,8 @@ describe("which kinds can be moved", () => {
 	});
 });
 
-describe("describeAuditActionResults", () => {
-	it("reports what moved, then what was skipped or failed", () => {
+describe("監査アクション結果の説明", () => {
+	it("何が移動したか、次に何がスキップまたは失敗したかを報告します", () => {
 		expect(
 			describeAuditActionResults("orphaned-files", [
 				{ path: "a.md", outcome: "trashed" },
@@ -31,7 +31,7 @@ describe("describeAuditActionResults", () => {
 		);
 	});
 
-	it("names folders", () => {
+	it("フォルダに名前を付ける", () => {
 		expect(
 			describeAuditActionResults("empty-folders", [{ path: "x", outcome: "trashed" }]),
 		).toBe("フォルダー 1 件をゴミ箱に移動しました。");

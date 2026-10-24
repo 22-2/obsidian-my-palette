@@ -50,7 +50,7 @@ function menu() {
 
 const base = { id: "", primary: "", secondary: "", icon: "" };
 
-it("renames distinct vault files of any type and skips everything else", () => {
+it("あらゆるタイプの個別の Vault ファイルの名前を変更し、他のすべてをスキップします", () => {
 	const results: PaletteResult[] = [
 		{ ...base, mode: "file", vaultPath: "a.md" },
 		{ ...base, mode: "link", file: files.get("a.md")!, line: 0 },
@@ -71,7 +71,7 @@ it("renames distinct vault files of any type and skips everything else", () => {
 	);
 });
 
-it("adds nothing when no result is a vault file", () => {
+it("結果が Vault ファイルでない場合は何も追加しません", () => {
 	const m = menu();
 	addBulkRenameMenuItem(m.instance, plugin, [{ ...base, mode: "command", commandId: "x" }]);
 	expect(m.titles).toEqual([]);

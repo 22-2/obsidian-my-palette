@@ -38,8 +38,8 @@ function tree() {
 	return { a, b, search, inner, work, instance: fakeInstance([a, work]) };
 }
 
-describe("bookmarkLabel", () => {
-	it("prefers the title, then the file name without .md, then the query", () => {
+describe("しおりラベル", () => {
+	it("タイトル、次に .md を除いたファイル名、次にクエリを優先します", () => {
 		expect(bookmarkLabel({ type: "file", path: "x/y.md", title: "T" })).toBe("T");
 		expect(bookmarkLabel({ type: "file", path: "x/y.md" })).toBe("y");
 		expect(bookmarkLabel({ type: "file", path: "x/y.png" })).toBe("y.png");
@@ -47,8 +47,8 @@ describe("bookmarkLabel", () => {
 	});
 });
 
-describe("listBookmarkGroups", () => {
-	it("lists nested groups in tree order with their paths", () => {
+describe("リストブックマークグループ", () => {
+	it("ネストされたグループをそのパスとともにツリー順にリストします。", () => {
 		const t = tree();
 		expect(listBookmarkGroups(t.instance.items)).toEqual([
 			{ group: t.work, path: ["Work"] },
@@ -57,8 +57,8 @@ describe("listBookmarkGroups", () => {
 	});
 });
 
-describe("addFileBookmarks", () => {
-	it("adds new paths to the chosen group and skips ones already there", () => {
+describe("ファイルブックマークの追加", () => {
+	it("選択したグループに新しいパスを追加し、既存のパスをスキップします", () => {
 		const t = tree();
 		const result = addFileBookmarks(t.instance, ["b.md", "c.md", "c.md"], t.inner, 5);
 		expect(result).toEqual({ added: 1, skipped: 1 });
@@ -66,7 +66,7 @@ describe("addFileBookmarks", () => {
 		expect(t.instance.onItemsChanged).toHaveBeenCalledWith(true);
 	});
 
-	it("does not save when nothing was added", () => {
+	it("何も追加されていない場合は保存されません", () => {
 		const t = tree();
 		expect(addFileBookmarks(t.instance, ["notes/a.md"], undefined)).toEqual({
 			added: 0,
@@ -76,8 +76,8 @@ describe("addFileBookmarks", () => {
 	});
 });
 
-describe("moveBookmarks", () => {
-	it("moves entries between groups and to the top level", () => {
+describe("ブックマークの移動", () => {
+	it("エントリをグループ間および最上位レベルに移動します", () => {
 		const t = tree();
 		expect(moveBookmarks(t.instance, [t.a, t.search], t.inner)).toBe(2);
 		expect(t.inner.items).toEqual([t.b, t.a, t.search]);
@@ -86,7 +86,7 @@ describe("moveBookmarks", () => {
 		expect(t.instance.items).toEqual([t.work, t.b]);
 	});
 
-	it("skips entries already in the destination and groups moved into themselves", () => {
+	it("宛先にすでに存在するエントリと、それ自体に移動されたグループをスキップします", () => {
 		const t = tree();
 		expect(moveBookmarks(t.instance, [t.b], t.inner)).toBe(0);
 		expect(moveBookmarks(t.instance, [t.work], t.inner)).toBe(0);
@@ -95,8 +95,8 @@ describe("moveBookmarks", () => {
 	});
 });
 
-describe("removeBookmarks", () => {
-	it("removes each entry once", () => {
+describe("ブックマークを削除する", () => {
+	it("各エントリを一度削除します", () => {
 		const t = tree();
 		expect(removeBookmarks(t.instance, [t.b, t.b, t.a])).toBe(2);
 		expect(t.instance.items).toEqual([t.work]);
@@ -104,8 +104,8 @@ describe("removeBookmarks", () => {
 	});
 });
 
-describe("setBookmarkTitle", () => {
-	it("sets a trimmed title and clears it for empty input", () => {
+describe("ブックマーク名の設定", () => {
+	it("トリミングされたタイトルを設定し、空の入力に対してクリアします", () => {
 		const t = tree();
 		setBookmarkTitle(t.instance, t.a, "  Alpha ");
 		expect(t.a.title).toBe("Alpha");
@@ -114,7 +114,7 @@ describe("setBookmarkTitle", () => {
 		expect(t.instance.onItemsChanged).toHaveBeenCalledTimes(2);
 	});
 
-	it("saves through saveData when the instance has no change hook", () => {
+	it("インスタンスに変更フックがない場合は、saveData を通じて保存します。", () => {
 		const entry: BookmarkEntry = { type: "file", path: "a.md" };
 		const instance = { items: [entry], saveData: vi.fn() };
 		setBookmarkTitle(instance, entry, "A");
@@ -122,8 +122,8 @@ describe("setBookmarkTitle", () => {
 	});
 });
 
-describe("createBookmarkGroup", () => {
-	it("reuses a top-level group with the same title regardless of case", () => {
+describe("ブックマークグループの作成", () => {
+	it("大文字と小文字に関係なく、同じタイトルを持つ最上位グループを再利用します", () => {
 		const t = tree();
 		expect(createBookmarkGroup(t.instance, "work")).toBe(t.work);
 		const created = createBookmarkGroup(t.instance, " Later ", 7);
@@ -132,8 +132,8 @@ describe("createBookmarkGroup", () => {
 	});
 });
 
-describe("bookmarkGroupRows", () => {
-	it("starts with the top level and lists every group with its path", () => {
+describe("ブックマークグループ行", () => {
+	it("最上位から始まり、すべてのグループとそのパスをリストします。", () => {
 		const t = tree();
 		expect(
 			bookmarkGroupRows(t.instance.items, "").map((row) => [row.label, row.description]),
@@ -144,7 +144,7 @@ describe("bookmarkGroupRows", () => {
 		]);
 	});
 
-	it("offers a new group only when no top-level group has the typed name", () => {
+	it("最上位グループに入力された名前がない場合にのみ、新しいグループを提供します", () => {
 		const t = tree();
 		const rows = bookmarkGroupRows(t.instance.items, "inn");
 		expect(rows.map((row) => row.target.kind)).toEqual(["group", "new"]);

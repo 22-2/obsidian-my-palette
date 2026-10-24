@@ -7,8 +7,8 @@ import {
 	FileUsageHistory,
 } from "src/search/file/fileUsageHistory";
 
-describe("file usage history scoring", () => {
-	it("decays recent usage by the configured half-life", () => {
+describe("ファイル使用履歴のスコアリング", () => {
+	it("設定された半減期によって最近の使用量を減衰します", () => {
 		const now = FILE_USAGE_RECENCY_HALF_LIFE_MS * 2;
 		const recent = calculateFileUsageScore({ count: 1, lastUsedAt: now }, now);
 		const oneHalfLifeAgo = calculateFileUsageScore(
@@ -19,7 +19,7 @@ describe("file usage history scoring", () => {
 		expect(oneHalfLifeAgo).toBeCloseTo(recent / 2, 8);
 	});
 
-	it("rewards repeated usage without allowing frequency to grow forever", () => {
+	it("頻度を永遠に増加させることなく、繰り返しの使用に報いる", () => {
 		const now = 1_000_000;
 		const once = calculateFileUsageScore({ count: 1, lastUsedAt: now }, now);
 		const often = calculateFileUsageScore(
@@ -36,7 +36,7 @@ describe("file usage history scoring", () => {
 		expect(often).toBeLessThanOrEqual(1);
 	});
 
-	it("clamps future timestamps and rejects invalid records", () => {
+	it("今後のタイムスタンプをクランプし、無効なレコードを拒否します", () => {
 		const now = 1_000_000;
 
 		expect(
@@ -49,7 +49,7 @@ describe("file usage history scoring", () => {
 		expect(calculateFileUsageScore({ count: 1, lastUsedAt: Number.NaN }, now)).toBe(0);
 	});
 
-	it("keeps the in-memory signal when IndexedDB is unavailable", async () => {
+	it("IndexedDB が使用できない場合でもメモリ内の信号を維持します", async () => {
 		const app = {
 			vault: { adapter: {}, getName: () => "test-vault" },
 		} as unknown as App;

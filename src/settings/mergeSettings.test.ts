@@ -7,8 +7,8 @@ import {
 } from "src/settings/model";
 import { mergeSettings } from "src/settings/mergeSettings";
 
-describe("mergeSettings", () => {
-	it("enables independent folder demotion once for existing configured folders", () => {
+describe("マージ設定", () => {
+	it("既存の構成済みフォルダーに対して、独立したフォルダーの降格を 1 回有効にします", () => {
 		const settings = mergeSettings({
 			schemaVersion: 17,
 			file: {
@@ -24,7 +24,7 @@ describe("mergeSettings", () => {
 		expect(mergeSettings(settings).file.sortPriorities.blank).toEqual(["Activity"]);
 	});
 
-	it("migrates shared highlighting into independent surface preferences", () => {
+	it("共有ハイライトを独立したサーフェス設定に移行します", () => {
 		const settings = mergeSettings({ schemaVersion: 16, highlightSearchMatches: false });
 		expect(settings.paletteDisplay).toEqual({
 			table: { highlightSearchMatches: false },
@@ -35,7 +35,7 @@ describe("mergeSettings", () => {
 		expect(settings).not.toHaveProperty("highlightSearchMatches");
 	});
 
-	it("restores each surface and sanitizes invalid display preferences", () => {
+	it("各サーフェスを復元し、無効な表示設定をサニタイズします", () => {
 		expect(
 			mergeSettings({
 				paletteDisplay: {
@@ -51,11 +51,11 @@ describe("mergeSettings", () => {
 		});
 	});
 
-	it("fills missing data with the documented defaults", () => {
+	it("不足しているデータを文書化されたデフォルトで埋める", () => {
 		expect(mergeSettings(undefined)).toEqual(DEFAULT_SETTINGS);
 	});
 
-	it("falls back to the default alias when a stored one is blank", () => {
+	it("保存されているエイリアスが空の場合、デフォルトのエイリアスに戻ります", () => {
 		expect(
 			mergeSettings({ modes: { commands: { alias: " " }, everything: { alias: "ev" } } })
 				.modes,
@@ -65,7 +65,7 @@ describe("mergeSettings", () => {
 		});
 	});
 
-	it("keeps a mode enabled unless its stored settings turn it off", () => {
+	it("保存された設定がオフにならない限り、モードは有効のままになります", () => {
 		expect(mergeSettings({ modes: { tabs: { alias: "t" } } }).modes.tabs).toEqual({
 			alias: "t",
 			enabled: true,
@@ -75,7 +75,7 @@ describe("mergeSettings", () => {
 		).toBe(false);
 	});
 
-	it("moves the schema 18 prefixes into the mode aliases without their trailing space", () => {
+	it("スキーマ 18 の接頭辞を末尾のスペースなしでモード エイリアスに移動します", () => {
 		const settings = mergeSettings({
 			schemaVersion: 18,
 			prefixes: { command: "c ", everything: "ev " },
@@ -85,7 +85,7 @@ describe("mergeSettings", () => {
 		expect(settings).not.toHaveProperty("prefixes");
 	});
 
-	it("prefers a mode alias that is already stored over a leftover prefix", () => {
+	it("残っているプレフィックスよりも、すでに保存されているモード エイリアスを優先します。", () => {
 		expect(
 			mergeSettings({
 				schemaVersion: 19,
@@ -95,13 +95,13 @@ describe("mergeSettings", () => {
 		).toEqual({ alias: "c", enabled: true });
 	});
 
-	it("defaults history retention to unlimited", () => {
+	it("デフォルトの履歴保持は無制限です", () => {
 		expect(DEFAULT_SETTINGS.searchHistory.addDelayMs).toBe(0);
 		expect(DEFAULT_SETTINGS.searchHistory.daysToKeep).toBe(UNLIMITED_DAYS);
 		expect(mergeSettings({ searchHistory: {} }).searchHistory.daysToKeep).toBe(UNLIMITED_DAYS);
 	});
 
-	it("migrates the old idle-history default to action-only history", () => {
+	it("古いアイドル履歴のデフォルトをアクションのみの履歴に移行します。", () => {
 		expect(
 			mergeSettings({
 				schemaVersion: 11,
@@ -122,7 +122,7 @@ describe("mergeSettings", () => {
 		).toBe(3_000);
 	});
 
-	it("defaults file sorting to relevance, prior, and recency", () => {
+	it("関連性、以前、および最近の順にファイルをデフォルトで並べ替えます", () => {
 		expect(mergeSettings(undefined).file.sortPriorities).toEqual({
 			blank: ["Activity", "Last modified", "@prior:desc"],
 			input: [
@@ -140,7 +140,7 @@ describe("mergeSettings", () => {
 		});
 	});
 
-	it("bounds numeric settings and sanitizes extensions", () => {
+	it("数値設定を制限し、拡張機能をサニタイズします", () => {
 		const settings = mergeSettings({
 			searchHistory: { addDelayMs: -1, daysToKeep: 99999 },
 			everything: {
@@ -161,7 +161,7 @@ describe("mergeSettings", () => {
 		expect(settings.everything.vaultExtensions).toEqual(["md"]);
 	});
 
-	it("normalizes configured file sort priorities and ignores invalid values", () => {
+	it("設定されたファイルの並べ替え優先順位を正規化し、無効な値を無視します", () => {
 		const settings = mergeSettings({
 			file: {
 				sortPriorities: [
@@ -182,7 +182,7 @@ describe("mergeSettings", () => {
 		});
 	});
 
-	it("migrates the previous combined name priorities", () => {
+	it("以前の結合された名前の優先順位を移行します", () => {
 		const settings = mergeSettings({
 			schemaVersion: 9,
 			file: {
@@ -216,7 +216,7 @@ describe("mergeSettings", () => {
 		]);
 	});
 
-	it("adds the tag priority to untouched previous defaults", () => {
+	it("タグの優先順位を未変更の以前のデフォルトに追加します", () => {
 		const settings = mergeSettings({
 			schemaVersion: 10,
 			file: {
@@ -237,7 +237,7 @@ describe("mergeSettings", () => {
 		expect(settings.file.sortPriorities).toEqual(DEFAULT_SETTINGS.file.sortPriorities);
 	});
 
-	it("adds Activity to untouched previous defaults", () => {
+	it("未変更の以前のデフォルトにアクティビティを追加します", () => {
 		const settings = mergeSettings({
 			schemaVersion: 13,
 			file: {
@@ -258,7 +258,7 @@ describe("mergeSettings", () => {
 		expect(settings.file.sortPriorities).toEqual(DEFAULT_SETTINGS.file.sortPriorities);
 	});
 
-	it("migrates the previous Activity default", () => {
+	it("以前のアクティビティのデフォルトを移行します", () => {
 		const settings = mergeSettings({
 			schemaVersion: SETTINGS_SCHEMA_VERSION,
 			file: {
@@ -281,7 +281,7 @@ describe("mergeSettings", () => {
 		expect(settings.file.sortPriorities).toEqual(DEFAULT_SETTINGS.file.sortPriorities);
 	});
 
-	it("preserves independent sort priorities for blank and typed input", () => {
+	it("空白の入力と入力された入力に対して独立したソート優先順位を保持します。", () => {
 		const settings = mergeSettings({
 			file: {
 				sortPriorities: {
@@ -298,8 +298,8 @@ describe("mergeSettings", () => {
 	});
 });
 
-describe("Notes mode migration", () => {
-	it("chooses a free alias without changing existing aliases", () => {
+describe("メモモードの移行", () => {
+	it("既存のエイリアスを変更せずに自由なエイリアスを選択します", () => {
 		const settings = mergeSettings({
 			modes: {
 				commands: { alias: "N", enabled: true },
@@ -311,13 +311,13 @@ describe("Notes mode migration", () => {
 	});
 });
 
-describe("Plugins mode migration", () => {
-	it("adds the mode with its default alias for existing settings", () => {
+describe("プラグインモードの移行", () => {
+	it("既存の設定のデフォルトのエイリアスを使用してモードを追加します", () => {
 		const settings = mergeSettings({ modes: { tabs: { alias: "t" } } });
 		expect(settings.modes.plugins).toEqual({ alias: "p", enabled: true });
 	});
 
-	it("moves the new mode aside when its alias is already taken", () => {
+	it("エイリアスがすでに取得されている場合、新しいモードを脇に移動します", () => {
 		const settings = mergeSettings({
 			modes: { commands: { alias: "p", enabled: true } },
 		});
@@ -326,13 +326,13 @@ describe("Plugins mode migration", () => {
 	});
 });
 
-describe("Snippets mode migration", () => {
-	it("adds the mode with its default alias for existing settings", () => {
+describe("スニペット モードの移行", () => {
+	it("既存の設定のデフォルトのエイリアスを使用してモードを追加します", () => {
 		const settings = mergeSettings({ modes: { tabs: { alias: "t" } } });
 		expect(settings.modes.snippets).toEqual({ alias: "sn", enabled: true });
 	});
 
-	it("moves the new mode aside when its alias is already taken", () => {
+	it("エイリアスがすでに取得されている場合、新しいモードを脇に移動します", () => {
 		const settings = mergeSettings({
 			modes: { smart: { alias: "sn", enabled: true } },
 		});
@@ -341,13 +341,13 @@ describe("Snippets mode migration", () => {
 	});
 });
 
-describe("Properties mode migration", () => {
-	it("adds the mode with its default alias for existing settings", () => {
+describe("プロパティモードの移行", () => {
+	it("既存の設定のデフォルトのエイリアスを使用してモードを追加します", () => {
 		const settings = mergeSettings({ modes: { snippets: { alias: "sn" } } });
 		expect(settings.modes.properties).toEqual({ alias: "pr", enabled: true });
 	});
 
-	it("moves the new mode aside when its alias is already taken", () => {
+	it("エイリアスがすでに取得されている場合、新しいモードを脇に移動します", () => {
 		const settings = mergeSettings({
 			modes: { smart: { alias: "pr", enabled: true } },
 		});
@@ -356,8 +356,8 @@ describe("Properties mode migration", () => {
 	});
 });
 
-describe("merged Everything mode", () => {
-	it("preserves its alias and keeps the mode enabled if either old scope was enabled", () => {
+describe("統合されたすべてのモード", () => {
+	it("いずれかの古いスコープが有効になっている場合は、そのエイリアスを保持し、モードを有効のままにします", () => {
 		const settings = mergeSettings({
 			schemaVersion: 21,
 			modes: {
@@ -369,7 +369,7 @@ describe("merged Everything mode", () => {
 		expect(settings.modes).not.toHaveProperty("everything-all");
 	});
 
-	it("preserves a disabled merged mode after migration and uses the old all-files alias if needed", () => {
+	it("移行後に無効化されたマージ モードを保持し、必要に応じて古い全ファイル エイリアスを使用します。", () => {
 		expect(
 			mergeSettings({
 				schemaVersion: SETTINGS_SCHEMA_VERSION,
@@ -384,8 +384,8 @@ describe("merged Everything mode", () => {
 	});
 });
 
-describe("Return to Home after", () => {
-	it("turns the old remember-last-input switch into a time, keeping the default for new installs", () => {
+describe("終了後にホームに戻る", () => {
+	it("古い「最後の入力を記憶」スイッチを時刻に変更し、新規インストールのデフォルトを維持します", () => {
 		expect(mergeSettings({ rememberLastInput: false }).home).toEqual({
 			returnAfterSeconds: 0,
 		});
@@ -395,7 +395,7 @@ describe("Return to Home after", () => {
 		expect(mergeSettings(undefined).home).toEqual({ returnAfterSeconds: 90 });
 	});
 
-	it("keeps a stored time over the old switch, and drops the switch", () => {
+	it("保存された時間を古いスイッチに保持し、スイッチをドロップします", () => {
 		const settings = mergeSettings({
 			rememberLastInput: false,
 			home: { returnAfterSeconds: 60 },
@@ -404,19 +404,19 @@ describe("Return to Home after", () => {
 		expect(settings).not.toHaveProperty("rememberLastInput");
 	});
 
-	it("reads the time stored under the old launcher key and drops that key", () => {
+	it("古いランチャー キーの下に保存されている時間を読み取り、そのキーをドロップします", () => {
 		const settings = mergeSettings({ launcher: { popToRootAfterSeconds: 30 } });
 		expect(settings.home.returnAfterSeconds).toBe(30);
 		expect(settings).not.toHaveProperty("launcher");
 	});
 });
 
-describe("audit settings", () => {
-	it("defaults to orphaned files", () => {
+describe("監査設定", () => {
+	it("デフォルトでは孤立したファイルになります", () => {
 		expect(mergeSettings({}).audit).toEqual(DEFAULT_SETTINGS.audit);
 	});
 
-	it("keeps a stored kind and drops the removed options", () => {
+	it("保存された種類を保持し、削除されたオプションを削除します", () => {
 		const settings = mergeSettings({
 			audit: {
 				kind: "empty-files",
@@ -435,15 +435,15 @@ describe("audit settings", () => {
 	});
 });
 
-describe("audit mode alias", () => {
-	it("uses `a`, or moves to `audit` when another mode already uses `a`", () => {
+describe("監査モードのエイリアス", () => {
+	it("`a` を使用するか、別のモードがすでに `a` を使用している場合は `audit` に移動します", () => {
 		expect(mergeSettings({}).modes.audit).toEqual({ alias: "a", enabled: true });
 		expect(
 			mergeSettings({ modes: { tabs: { alias: "a", enabled: true } } }).modes.audit.alias,
 		).toBe("audit");
 	});
 
-	it("keeps the stored kind", () => {
+	it("保存された種類を保持します", () => {
 		expect(mergeSettings({ audit: { kind: "broken-links" } }).audit.kind).toBe("broken-links");
 	});
 });

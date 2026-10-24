@@ -87,8 +87,8 @@ beforeEach(() => {
 	vi.mocked(editListProperty).mockReset().mockResolvedValue("done");
 });
 
-describe("editPropertyResult", () => {
-	it("sets a missing checkbox to true", async () => {
+describe("プロパティ結果の編集", () => {
+	it("欠落しているチェックボックスを true に設定します", async () => {
 		const { plugin: p, written } = plugin({});
 		const outcome = await editPropertyResult(p, row({ key: "done" }));
 		expect(outcome).toBe("stay");
@@ -96,7 +96,7 @@ describe("editPropertyResult", () => {
 		expect(notices).toEqual(["note の done を true に設定しました。"]);
 	});
 
-	it("flips a true checkbox to false and a false one to true", async () => {
+	it("true のチェックボックスを false に切り替え、false のチェックボックスを true に切り替えます。", async () => {
 		const first = plugin({ done: true });
 		await editPropertyResult(first.plugin, row({ key: "done" }));
 		expect(first.written).toEqual({ done: false });
@@ -105,7 +105,7 @@ describe("editPropertyResult", () => {
 		expect(second.written).toEqual({ done: true });
 	});
 
-	it("reports a failed write without changing the list", async () => {
+	it("リストを変更せずに書き込み失敗を報告します", async () => {
 		const { plugin: p } = plugin({}, { fail: true });
 		const outcome = await editPropertyResult(p, row({ key: "done" }));
 		expect(outcome).toBe("stay");
@@ -114,13 +114,13 @@ describe("editPropertyResult", () => {
 		]);
 	});
 
-	it("keeps the palette when Tag insertion is cancelled", async () => {
+	it("タグの挿入がキャンセルされたときにパレットを保持します", async () => {
 		const { plugin: p } = plugin({});
 		insertTagsMock.mockResolvedValue(false);
 		expect(await editPropertyResult(p, row({ key: "tags", kind: "tags" }))).toBe("stay");
 	});
 
-	it("opens Tag insertion for the tags key and closes the palette", async () => {
+	it("タグキーのタグ挿入を開き、パレットを閉じます", async () => {
 		const { plugin: p } = plugin({});
 		insertTagsMock.mockResolvedValue(true);
 		const outcome = await editPropertyResult(p, row({ key: "tags", kind: "tags" }));
@@ -128,7 +128,7 @@ describe("editPropertyResult", () => {
 		expect(insertTagsMock).toHaveBeenCalledWith(p, [file]);
 	});
 
-	it("opens the value input for text, number, date and date-time rows and closes", async () => {
+	it("テキスト、数値、日付、日時行の値入力を開いて閉じます。", async () => {
 		const { plugin: p } = plugin({});
 		for (const kind of ["text", "number", "date", "datetime"] as const) {
 			vi.mocked(editPropertyValue).mockClear();
@@ -138,14 +138,14 @@ describe("editPropertyResult", () => {
 		}
 	});
 
-	it("opens the list selector for list rows and closes", async () => {
+	it("リスト行のリストセレクターを開いて閉じます", async () => {
 		const { plugin: p } = plugin({});
 		const outcome = await editPropertyResult(p, row({ key: "aliases", kind: "list" }));
 		expect(outcome).toBe("close");
 		expect(editListProperty).toHaveBeenCalledWith(p, [file], "aliases");
 	});
 
-	it("tells the user that nested values are edited in source mode", async () => {
+	it("ネストされた値がソース モードで編集されることをユーザーに伝えます", async () => {
 		const { plugin: p } = plugin({});
 		await editPropertyResult(p, row({ kind: "unsupported" }));
 		expect(notices).toEqual(["このプロパティはソースモードで編集してください。"]);
@@ -178,7 +178,7 @@ describe("editPropertyResult", () => {
 		},
 	);
 
-	it("returns to the property list when type selection is dismissed after an editor", async () => {
+	it("エディターの後にタイプの選択が解除されると、プロパティ リストに戻ります。", async () => {
 		const { plugin: p, written } = plugin({});
 		selectedKinds.push("text", null);
 		vi.mocked(editPropertyValue).mockResolvedValueOnce("dismissed");
@@ -187,17 +187,17 @@ describe("editPropertyResult", () => {
 		expect(written).toEqual({});
 	});
 
-	it("reports a missing source note", async () => {
+	it("ソースノートの欠落を報告します", async () => {
 		const { plugin: p } = plugin({});
 		const outcome = await editPropertyResult(p, row({ sourcePath: "gone.md" }));
 		expect(outcome).toBe("stay");
 		expect(notices).toEqual(["このプロパティのノートは存在しません。"]);
 	});
 
-	describe("a row spanning several notes", () => {
+	describe("複数の音符にまたがる行", () => {
 		const many = { sourcePaths: ["note.md", "second.md"] };
 
-		it("opens the list selector with every note", async () => {
+		it("すべての音符でリストセレクターを開きます", async () => {
 			const { plugin: p } = plugin({});
 			const outcome = await editPropertyResult(
 				p,
@@ -207,7 +207,7 @@ describe("editPropertyResult", () => {
 			expect(editListProperty).toHaveBeenCalledWith(p, [file, second], "topic");
 		});
 
-		it("opens Tag insertion with every note", async () => {
+		it("すべての音符にタグの挿入を開始します", async () => {
 			const { plugin: p } = plugin({});
 			insertTagsMock.mockResolvedValue(true);
 			await editPropertyResult(p, row({ key: "tags", kind: "tags", ...many }));
@@ -228,7 +228,7 @@ describe("editPropertyResult", () => {
 			},
 		);
 
-		it("offers only the list type for a new key, then edits every note", async () => {
+		it("新しいキーのリスト タイプのみを提供し、すべてのノートを編集します", async () => {
 			const { plugin: p } = plugin({});
 			selectedKinds.push("list");
 			const outcome = await editPropertyResult(
@@ -239,7 +239,7 @@ describe("editPropertyResult", () => {
 			expect(editListProperty).toHaveBeenCalledWith(p, [file, second], "topic");
 		});
 
-		it("skips a note that no longer exists", async () => {
+		it("存在しないメモをスキップします", async () => {
 			const { plugin: p } = plugin({});
 			await editPropertyResult(
 				p,

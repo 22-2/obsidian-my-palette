@@ -28,8 +28,8 @@ function createViews() {
 	};
 }
 
-describe("dedicated palette views", () => {
-	it("opens the table directly with its own workspace identity before restoring any state", () => {
+describe("専用のパレットビュー", () => {
+	it("状態を復元する前に、独自のワークスペース ID を使用してテーブルを直接開きます。", () => {
 		const { list, table } = createViews();
 		expect(list.getViewType()).toBe(PALETTE_VIEW_TYPE);
 		expect(table.getViewType()).toBe(PALETTE_TABLE_VIEW_TYPE);
@@ -38,7 +38,7 @@ describe("dedicated palette views", () => {
 		expect(table.getIcon()).toBe("table");
 	});
 
-	it("keeps registered presentations when restoring legacy layouts with conflicting mode flags", async () => {
+	it("競合するモードフラグを持つ従来のレイアウトを復元するときに、登録されたプレゼンテーションを保持します", async () => {
 		const { list, table } = createViews();
 		await list.setState({ input: "list query", displayMode: "table" });
 		await table.setState({
@@ -58,7 +58,7 @@ describe("dedicated palette views", () => {
 		});
 	});
 
-	it("duplicates a table as a separate table, preserving the query, source pin, and sort priorities", async () => {
+	it("テーブルを別のテーブルとして複製し、クエリ、ソースピン、ソート優先順位を保持します。", async () => {
 		const { table, plugin } = createViews();
 		await table.setState({
 			input: "project",

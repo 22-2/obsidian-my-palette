@@ -88,8 +88,8 @@ async function open(
 	return { plugin, modal, result, rows, labels, checked, button, key, mouse, type };
 }
 
-describe("TagSelectionModal", () => {
-	it("previews a tag through core search without activating it or leaving selection mode", async () => {
+describe("タグ選択モーダル", () => {
+	it("タグをアクティブにしたり選択モードを終了したりせずに、コア検索を通じてタグをプレビューします。", async () => {
 		const openGlobalSearch = vi.fn();
 		const plugin = createSelectorPlugin({
 			internalPlugins: { getEnabledPluginById: () => ({ openGlobalSearch }) },
@@ -110,7 +110,7 @@ describe("TagSelectionModal", () => {
 		f.modal.close();
 	});
 
-	it("keeps insertion shortcuts and target context in its own help", async () => {
+	it("挿入ショートカットとターゲット コンテキストを独自のヘルプに保持します", async () => {
 		const f = await open();
 		f.mouse(f.modal.modalEl.querySelector(".my-palette-options-button")!, "click");
 		clickPaletteMenuItem("ヘルプ");
@@ -125,7 +125,7 @@ describe("TagSelectionModal", () => {
 		f.modal.close();
 	});
 
-	it("offers insertion and check actions in the shared action button", async () => {
+	it("共有アクションボタンに挿入アクションとチェックアクションを提供します", async () => {
 		const f = await open();
 		const actionButton = f.modal.modalEl.querySelector<HTMLElement>(
 			".my-palette-options-button",
@@ -148,7 +148,7 @@ describe("TagSelectionModal", () => {
 		await expect(f.result).resolves.toEqual({ add: ["alpha"], remove: [] });
 	});
 
-	it("restores tag history without discarding checks or inserting tags", async () => {
+	it("チェックを破棄したりタグを挿入したりせずにタグ履歴を復元します", async () => {
 		const f = await open();
 		await f.type("#fresh");
 		f.key("ArrowUp");
@@ -185,7 +185,7 @@ describe("TagSelectionModal", () => {
 		},
 	);
 
-	it("allows Space and f in input mode, then uses them as selection commands", async () => {
+	it("入力モードでスペースと f を許可し、それらを選択コマンドとして使用します", async () => {
 		const f = await open();
 		expect(f.modal.inputEl.readOnly).toBe(false);
 		expect(f.key(" ")).toBe(true);
@@ -212,7 +212,7 @@ describe("TagSelectionModal", () => {
 		f.modal.close();
 	});
 
-	it("starts in input mode again when reopened", async () => {
+	it("再度開くと入力モードが再び開始されます", async () => {
 		const f = await open();
 		f.key("ArrowDown");
 		f.modal.close();
@@ -225,7 +225,7 @@ describe("TagSelectionModal", () => {
 		f.modal.close();
 	});
 
-	it("checks tags without closing and runs the checked ones with Ctrl+Enter", async () => {
+	it("タグを閉じずにチェックし、チェックしたタグを Ctrl+Enter で実行します", async () => {
 		const f = await open();
 		f.key("ArrowUp");
 		f.key(" ");
@@ -266,7 +266,7 @@ describe("TagSelectionModal", () => {
 		},
 	);
 
-	it("keeps checked tags after the Enter warning and prefers them over highlighted rows", async () => {
+	it("Enter 警告の後もチェックされたタグを保持し、強調表示された行よりもタグを優先します。", async () => {
 		const f = await open();
 		f.key("ArrowDown");
 		f.key("ArrowDown", { shiftKey: true });
@@ -288,7 +288,7 @@ describe("TagSelectionModal", () => {
 		await expect(f.result).resolves.toEqual({ add: ["alpha", "beta"], remove: [] });
 	});
 
-	it("allows a single highlighted row to be inserted after the multi-selection warning", async () => {
+	it("複数選択の警告の後に、強調表示された 1 つの行を挿入できます。", async () => {
 		const f = await open();
 		f.key("ArrowDown");
 		f.key("ArrowDown", { shiftKey: true });
@@ -300,14 +300,14 @@ describe("TagSelectionModal", () => {
 		expect(Notice).toHaveBeenCalledTimes(1);
 	});
 
-	it("removes a registered tag on Enter and closes, since its check is cleared", async () => {
+	it("Enterで登録済みのタグを削除し、チェックが外されるので閉じます。", async () => {
 		const f = await open();
 		await f.type("mine");
 		f.key("Enter");
 		await expect(f.result).resolves.toEqual({ add: [], remove: ["mine"] });
 	});
 
-	it("keeps registered tags checked and runs nothing for them until they are unchecked", async () => {
+	it("登録されたタグをチェックしたままにし、チェックを外すまで何も実行しません。", async () => {
 		const f = await open();
 		await f.type("mine");
 		f.key("Enter", { ctrlKey: true });
@@ -315,7 +315,7 @@ describe("TagSelectionModal", () => {
 		await expect(f.result).resolves.toBeNull();
 	});
 
-	it("checks every selected row at once and unchecks them on the next Space", async () => {
+	it("選択したすべての行を一度にチェックし、次のスペースでチェックを外します。", async () => {
 		const f = await open();
 		f.key("ArrowDown");
 		f.key("ArrowDown", { shiftKey: true });
@@ -329,7 +329,7 @@ describe("TagSelectionModal", () => {
 		await expect(f.result).resolves.toBeNull();
 	});
 
-	it("checks only the clicked row when its check box is pressed", async () => {
+	it("チェックボックスが押された場合、クリックされた行のみをチェックします", async () => {
 		const f = await open();
 		f.mouse(f.rows()[1].querySelector(".my-palette-suggestion__icon")!, "mousedown", {
 			button: 0,
@@ -340,7 +340,7 @@ describe("TagSelectionModal", () => {
 		await expect(f.result).resolves.toBeNull();
 	});
 
-	it("badges partly applied tags yet keeps them selectable", async () => {
+	it("バッジにはタグが部分的に適用されていますが、選択可能な状態が保たれています", async () => {
 		const f = await open(2);
 		expect(f.labels()[1]).toContain("On 1/2 notes");
 		expect(f.rows()[1].classList.contains("is-applied")).toBe(false);
@@ -348,7 +348,7 @@ describe("TagSelectionModal", () => {
 		f.modal.close();
 	});
 
-	it("shows a check menu for one row and a bulk one for a multi-selection", async () => {
+	it("1 行のチェック メニューと複数選択の一括チェック メニューを示します。", async () => {
 		const f = await open();
 		f.mouse(f.rows()[0], "contextmenu", { button: 2 });
 		expect(paletteMenuTitles()).toEqual(["チェック", "追加 1 件"]);
@@ -369,7 +369,7 @@ describe("TagSelectionModal", () => {
 		f.modal.close();
 	});
 
-	it("closes an open menu when a row is pressed", async () => {
+	it("行が押されると、開いているメニューが閉じます", async () => {
 		const f = await open();
 		f.mouse(f.rows()[0], "contextmenu", { button: 2 });
 		expect(isPaletteMenuOpen()).toBe(true);
@@ -378,7 +378,7 @@ describe("TagSelectionModal", () => {
 		f.modal.close();
 	});
 
-	it("previews the checked tags from the input button and can run or clear them", async () => {
+	it("入力ボタンからチェックされたタグをプレビューし、実行またはクリアできます。", async () => {
 		const f = await open();
 		expect(f.button().hidden).toBe(true);
 		f.key("ArrowUp");
@@ -403,7 +403,7 @@ describe("TagSelectionModal", () => {
 		await expect(f.result).resolves.toEqual({ add: ["alpha"], remove: [] });
 	});
 
-	it("keeps a checked new tag listed after the input changes", async () => {
+	it("入力が変更された後も、チェックされた新しいタグをリストに保持します。", async () => {
 		const f = await open();
 		await f.type("fresh");
 		f.key("ArrowUp");
@@ -417,7 +417,7 @@ describe("TagSelectionModal", () => {
 		await expect(f.result).resolves.toEqual({ add: ["fresh"], remove: [] });
 	});
 
-	it("keeps unchecked candidates accessible after fifty tags have been pinned", async () => {
+	it("50 個のタグが固定された後も、チェックされていない候補にアクセスできるようにします", async () => {
 		const candidates = Array.from({ length: 51 }, (_, index) => ({
 			tag: `tag${index}`,
 			count: 1,
@@ -446,7 +446,7 @@ describe("TagSelectionModal", () => {
 		});
 	});
 
-	it("keeps a checked tag in place, then pins it above matches on the next search", async () => {
+	it("チェックされたタグを所定の位置に保持し、次の検索時に一致するタグの上に固定します。", async () => {
 		const f = await open();
 		f.key("ArrowDown");
 		f.key("ArrowDown");
@@ -476,7 +476,7 @@ describe("TagSelectionModal", () => {
 		await expect(f.result).resolves.toEqual({ add: ["beta"], remove: [] });
 	});
 
-	it("runs the checked and highlighted tags together from the row menu", async () => {
+	it("チェックされたタグと強調表示されたタグを行メニューから一緒に実行します", async () => {
 		const f = await open();
 		f.mouse(f.rows()[0].querySelector(".my-palette-suggestion__icon")!, "mousedown", {
 			button: 0,
@@ -488,7 +488,7 @@ describe("TagSelectionModal", () => {
 		await expect(f.result).resolves.toEqual({ add: ["alpha", "beta"], remove: [] });
 	});
 
-	it("unchecks a registered tag and runs the removal with Ctrl+Enter", async () => {
+	it("登録されたタグのチェックを外し、Ctrl+Enter で削除を実行します。", async () => {
 		const f = await open();
 		await f.type("mine");
 		f.key("ArrowUp");
@@ -501,7 +501,7 @@ describe("TagSelectionModal", () => {
 		await expect(f.result).resolves.toEqual({ add: [], remove: ["mine"] });
 	});
 
-	it("runs an addition and a removal together and shows both in the footer", async () => {
+	it("追加と削除を一緒に実行し、両方をフッターに表示します", async () => {
 		const f = await open();
 		f.key("ArrowUp");
 		f.key(" ");

@@ -16,8 +16,8 @@ vi.mock("obsidian", () => ({
 	},
 }));
 
-describe("hotkeyScopeLabel", () => {
-	it("names every place a shortcut works, collapsing palette and selectors", () => {
+describe("ホットキースコープラベル", () => {
+	it("ショートカットが機能するすべての場所に名前を付け、パレットとセレクターを折りたたむ", () => {
 		expect(hotkeyScopeLabel(HOTKEY_ACTIONS.hidePreview.scopes)).toBe(
 			"すべてのパレットとセレクター",
 		);
@@ -30,7 +30,7 @@ describe("hotkeyScopeLabel", () => {
 		expect(hotkeyScopeLabel(HOTKEY_ACTIONS.enterMode.scopes)).toBe("パレット");
 	});
 
-	it("lists places in one order, from the palette to the selectors", () => {
+	it("パレットからセレクターまで、場所を 1 つの順序でリストします。", () => {
 		expect(hotkeyScopeLabel(["moc-remove-selector", "tag-insert-selector"])).toBe(
 			"タグ挿入セレクター, MOC 削除セレクター",
 		);
@@ -40,8 +40,8 @@ describe("hotkeyScopeLabel", () => {
 	});
 });
 
-describe("compareScopes", () => {
-	it("sorts the shortcuts by When, everywhere first", () => {
+describe("比較スコープ", () => {
+	it("ショートカットをいつ、どこでも最初に並べ替えます", () => {
 		const names = Object.values(HOTKEY_ACTIONS)
 			.sort((a, b) => compareScopes(a.scopes, b.scopes))
 			.map(({ name }) => name);
@@ -58,7 +58,7 @@ describe("compareScopes", () => {
 	});
 });
 
-describe("renderShortcutsTable", () => {
+describe("レンダリングショートカットテーブル", () => {
 	beforeEach(() => {
 		const dom = new Window();
 		for (const name of [
@@ -127,7 +127,7 @@ describe("renderShortcutsTable", () => {
 		for (let i = 0; i < 3; i += 1) await Promise.resolve();
 	}
 
-	it("records a new shortcut and then offers Reset back to the default", async () => {
+	it("新しいショートカットを記録し、デフォルトに戻すことを提案します", async () => {
 		const t = render();
 		const key = t.keyOf("optionsMenu");
 		expect(t.resetOf("optionsMenu").hidden).toBe(true);
@@ -146,7 +146,7 @@ describe("renderShortcutsTable", () => {
 		expect(key.textContent).toBe("Ctrl+O");
 	});
 
-	it("refuses a shortcut another action already uses in the same place", async () => {
+	it("別のアクションが同じ場所ですでに使用しているショートカットを拒否します", async () => {
 		const t = render();
 		const key = t.keyOf("history");
 		key.click();
@@ -160,7 +160,7 @@ describe("renderShortcutsTable", () => {
 		expect(t.saveSettings).not.toHaveBeenCalled();
 	});
 
-	it("cancels with Escape and disables with Backspace", async () => {
+	it("Esc キーでキャンセル、Backspace キーで無効にします", async () => {
 		const t = render();
 		const key = t.keyOf("preview");
 		key.click();
@@ -175,7 +175,7 @@ describe("renderShortcutsTable", () => {
 		expect(key.textContent).toBe("無効");
 	});
 
-	it("restores the previous shortcut and tells the user when saving fails", async () => {
+	it("以前のショートカットを復元し、保存が失敗したときにユーザーに通知します", async () => {
 		const t = render();
 		t.saveSettings.mockRejectedValueOnce(new Error("disk full"));
 		const key = t.keyOf("optionsMenu");
@@ -187,7 +187,7 @@ describe("renderShortcutsTable", () => {
 		expect(key.textContent).toBe("キーを押してください…");
 	});
 
-	it("filters rows by command, keybinding or place", () => {
+	it("コマンド、キーバインド、または場所によって行をフィルタリングします", () => {
 		const t = render();
 		t.filter.value = "ctrl+k";
 		t.filter.dispatchEvent(new Event("input"));
@@ -200,7 +200,7 @@ describe("renderShortcutsTable", () => {
 		expect(visibleActions(t)).toHaveLength(Object.keys(HOTKEY_ACTIONS).length);
 	});
 
-	it("lists each shortcut once, under a heading for the places it works in", () => {
+	it("各ショートカットを、それが機能する場所の見出しの下に 1 回リストします。", () => {
 		const t = render();
 		const headings = t.groups().map((group) => ({
 			name: group.querySelector("th")!.getAttribute("aria-label"),
@@ -229,7 +229,7 @@ describe("renderShortcutsTable", () => {
 		]);
 	});
 
-	it("narrows to one place, keeping shortcuts that work everywhere", () => {
+	it("1 か所に絞り込み、どこでも機能するショートカットを保持します", () => {
 		const t = render();
 		t.placeFilter.value = "moc-remove-selector";
 		t.placeFilter.dispatchEvent(new Event("change"));

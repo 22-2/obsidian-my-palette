@@ -90,7 +90,7 @@ function bookmarkResult(entry: BookmarkEntry): PaletteResult {
 	return { ...base, mode: "bookmark", kind: "file", entry };
 }
 
-it("offers rename, move and remove for one bookmark", () => {
+it("1 つのブックマークの名前変更、移動、削除を提供します", () => {
 	const s = setup();
 	const changed = vi.fn();
 	addBookmarkMenuItems({
@@ -122,7 +122,7 @@ it("offers rename, move and remove for one bookmark", () => {
 	expect(changed).toHaveBeenCalledTimes(3);
 });
 
-it("drops rename for several bookmarks", () => {
+it("いくつかのブックマークの名前変更を削除します", () => {
 	const s = setup();
 	const b: BookmarkEntry = { type: "search", query: "q" };
 	addBookmarkMenuItems({
@@ -136,7 +136,7 @@ it("drops rename for several bookmarks", () => {
 	]);
 });
 
-it("bookmarks files from other modes and closes the palette after adding", () => {
+it("他のモードからファイルをブックマークし、追加後にパレットを閉じます", () => {
 	const s = setup();
 	const done = vi.fn();
 	addBookmarkMenuItems({
@@ -158,7 +158,7 @@ it("bookmarks files from other modes and closes the palette after adding", () =>
 	expect(done).toHaveBeenCalledOnce();
 });
 
-it("adds nothing while the Bookmarks plugin is off or no result is a file", () => {
+it("ブックマーク プラグインがオフであるか、結果がファイルにない間は何も追加されません", () => {
 	const off = setup(false);
 	addBookmarkMenuItems({
 		menu: off.menu,

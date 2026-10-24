@@ -52,7 +52,7 @@ function menu() {
 const base = { id: "", primary: "", secondary: "", icon: "" };
 const note: PaletteResult = { ...base, mode: "file", vaultPath: "a.md" };
 
-it("opens Properties for the selected note after closing the palette", () => {
+it("パレットを閉じた後、選択したノートのプロパティを開きます", () => {
 	const m = menu();
 	const onSelected = vi.fn();
 	addPropertyEditMenuItem(m.instance, plugin, [note], onSelected);
@@ -66,7 +66,7 @@ it("opens Properties for the selected note after closing the palette", () => {
 	});
 });
 
-it("opens Properties for all the selected notes, skipping other files and repeats", () => {
+it("選択したすべてのノートのプロパティを開き、他のファイルとリピートをスキップします", () => {
 	const m = menu();
 	files.set("b.md", file("b.md"));
 	const second: PaletteResult = { ...base, mode: "file", vaultPath: "b.md" };
@@ -82,7 +82,7 @@ it("opens Properties for all the selected notes, skipping other files and repeat
 	});
 });
 
-it("offers nothing for a non-Markdown file", () => {
+it("非Markdownファイルには何も提供しません", () => {
 	const m = menu();
 	addPropertyEditMenuItem(m.instance, plugin, [
 		{ ...base, mode: "file", vaultPath: "image.png" },

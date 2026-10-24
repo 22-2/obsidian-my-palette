@@ -53,7 +53,7 @@ function menu() {
 
 const base = { id: "", primary: "", secondary: "", icon: "" };
 
-it("moves distinct indexed files of any type and skips the rest", () => {
+it("あらゆる種類の個別のインデックス付きファイルを移動し、残りをスキップします", () => {
 	const results: PaletteResult[] = [
 		{ ...base, mode: "file", vaultPath: "a.md" },
 		{ ...base, mode: "link", file: files.get("a.md")!, line: 0 },
@@ -83,13 +83,13 @@ it("moves distinct indexed files of any type and skips the rest", () => {
 	);
 });
 
-it("uses the single-file title for one file", () => {
+it("1 つのファイルに単一ファイルのタイトルを使用します", () => {
 	const m = menu();
 	addFileMoveMenuItem(m.instance, plugin, [{ ...base, mode: "file", vaultPath: "a.md" }]);
 	expect(m.titles).toEqual(["移動…"]);
 });
 
-it("adds nothing when no result is a movable file", () => {
+it("結果が移動可能なファイルでない場合は何も追加されません", () => {
 	const m = menu();
 	addFileMoveMenuItem(m.instance, plugin, [{ ...base, mode: "command", commandId: "x" }]);
 	expect(m.titles).toEqual([]);

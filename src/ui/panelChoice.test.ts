@@ -15,8 +15,8 @@ function createChoice(onChange = vi.fn()) {
 	return { choice, onChange };
 }
 
-describe("PanelChoice", () => {
-	it("notifies only when a different item is chosen", () => {
+describe("パネルの選択", () => {
+	it("別の項目が選択された場合にのみ通知します", () => {
 		const { choice, onChange } = createChoice();
 		choice.choose("a");
 		expect(onChange).not.toHaveBeenCalled();
@@ -25,7 +25,7 @@ describe("PanelChoice", () => {
 		expect(onChange).toHaveBeenCalledWith("b");
 	});
 
-	it("restores a value without notifying and keeps it while hidden", () => {
+	it("通知せずに値を復元し、非表示のまま保持します", () => {
 		const { choice, onChange } = createChoice();
 		choice.set("b");
 		choice.setHidden(true);

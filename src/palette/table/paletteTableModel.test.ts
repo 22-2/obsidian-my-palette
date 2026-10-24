@@ -31,8 +31,8 @@ function names(model: PaletteTableModel): string[] {
 	return model.sortedRows().map((item) => item.name);
 }
 
-describe("PaletteTableModel", () => {
-	it("returns all matches in sort order, including records past the original display limit", () => {
+describe("パレットテーブルモデル", () => {
+	it("元の表示制限を超えたレコードを含む、すべての一致をソート順に返します。", () => {
 		const model = new PaletteTableModel([{ id: "modified", desc: true }]);
 		model.setRows(Array.from({ length: 120 }, (_, index) => row(`Note ${index}`, index)));
 		expect(names(model)).toHaveLength(120);
@@ -41,7 +41,7 @@ describe("PaletteTableModel", () => {
 		expect(names(model).at(-1)).toBe("Note 0");
 	});
 
-	it("uses multiple column priorities", () => {
+	it("複数の列の優先順位を使用する", () => {
 		const model = new PaletteTableModel([
 			{ id: "prior", desc: true },
 			{ id: "modified", desc: true },
@@ -63,7 +63,7 @@ describe("PaletteTableModel", () => {
 		);
 	});
 
-	it("restores search ranking when sorting is cleared and retains it for ties", () => {
+	it("並べ替えがクリアされると検索ランキングを復元し、同順位の場合はそれを保持します", () => {
 		const model = new PaletteTableModel([{ id: "prior", desc: true }]);
 		model.setRows([row("Second", 5, 1), row("First", 5, 1)]);
 		expect(names(model)).toEqual(["Second", "First"]);
@@ -73,7 +73,7 @@ describe("PaletteTableModel", () => {
 		expect(names(model)).toEqual(["Second", "First"]);
 	});
 
-	it("adds and cycles header sorts without modifier keys or replacing other priorities", () => {
+	it("修飾キーを使用したり、他の優先順位を置き換えたりせずに、ヘッダーのソートを追加および循環します。", () => {
 		const model = new PaletteTableModel();
 		model.setRows([row("Note 10", 1), row("Note 2", 2)]);
 		model.toggleSorting("name");
@@ -96,7 +96,7 @@ describe("PaletteTableModel", () => {
 		expect(model.sorting).toEqual([]);
 	});
 
-	it("moves columns to either side of a header without changing sort precedence", () => {
+	it("並べ替えの優先順位を変更せずに列をヘッダーのどちらかの側に移動します", () => {
 		const model = new PaletteTableModel([{ id: "prior", desc: true }]);
 		model.moveColumn("prior", "name", "before");
 		expect(model.visibleColumns.map(({ id }) => id)).toEqual([
@@ -117,7 +117,7 @@ describe("PaletteTableModel", () => {
 		expect(model.sorting).toEqual([{ id: "prior", desc: true }]);
 	});
 
-	it("restores hidden columns in their saved position while keeping Name visible and sorts active", () => {
+	it("名前を表示し、並べ替えをアクティブにしたまま、非表示の列を保存された位置に復元します", () => {
 		const model = new PaletteTableModel([{ id: "prior", desc: true }]);
 		model.moveColumn("prior", "name", "before");
 		model.toggleColumnVisibility("prior");
@@ -138,7 +138,7 @@ describe("PaletteTableModel", () => {
 		expect(restored.visibleColumns[0].id).toBe("prior");
 	});
 
-	it("reapplies the current sort to new search results without changing the original arrays", () => {
+	it("元の配列を変更せずに、現在の並べ替えを新しい検索結果に再適用します。", () => {
 		const model = new PaletteTableModel([{ id: "name", desc: false }]);
 		const rows = [row("Zulu"), row("Alpha")];
 		model.setRows(rows);
@@ -149,8 +149,8 @@ describe("PaletteTableModel", () => {
 	});
 });
 
-describe("normalizePaletteTableState", () => {
-	it("restores supported priorities in order and discards malformed, removed, and duplicate columns", () => {
+describe("正規化PaletteTableState", () => {
+	it("サポートされている優先順位を順番に復元し、不正な列、削除された列、重複した列を破棄します。", () => {
 		expect(
 			normalizePaletteTableState({
 				displayMode: "table",
@@ -175,7 +175,7 @@ describe("normalizePaletteTableState", () => {
 		});
 	});
 
-	it("keeps old workspace layouts in list mode with search ranking", () => {
+	it("検索ランキングを使用して古いワークスペース レイアウトをリスト モードに維持します", () => {
 		expect(normalizePaletteTableState({})).toEqual({
 			displayMode: "list",
 			sorting: [],
@@ -190,7 +190,7 @@ describe("normalizePaletteTableState", () => {
 		});
 	});
 
-	it("normalizes malformed layouts and appends missing columns while retaining valid saved order", () => {
+	it("有効な保存順序を維持しながら、不正なレイアウトを正規化し、欠落している列を追加します", () => {
 		expect(
 			normalizePaletteTableState({
 				columnOrder: ["prior", "removed", "name", "prior", null],
@@ -209,8 +209,8 @@ describe("normalizePaletteTableState", () => {
 	});
 });
 
-describe("column sets", () => {
-	it("shows each set's own columns and keeps each set's sorting and layout", () => {
+describe("列セット", () => {
+	it("各セットの独自の列を表示し、各セットの並べ替えとレイアウトを維持します", () => {
 		const model = new PaletteTableModel([{ id: "modified", desc: true }]);
 		model.toggleColumnVisibility("prior");
 		model.setColumnSet("broken-links");
@@ -232,7 +232,7 @@ describe("column sets", () => {
 		expect(model.sorting).toEqual([{ id: "linkedFrom", desc: true }]);
 	});
 
-	it("saves the files set at the top level and the shown sets under columnSets", () => {
+	it("最上位に設定されたファイルと、columnSets の下に表示されているセットを保存します。", () => {
 		const model = new PaletteTableModel();
 		expect(model.state).not.toHaveProperty("columnSets");
 		model.setColumnSet("empty-folders");
@@ -260,7 +260,7 @@ describe("column sets", () => {
 		]);
 	});
 
-	it("normalizes stored sets and drops columns a set does not have", () => {
+	it("保存されたセットを正規化し、セットにない列を削除します", () => {
 		expect(
 			normalizePaletteTableState({
 				columnSets: {
