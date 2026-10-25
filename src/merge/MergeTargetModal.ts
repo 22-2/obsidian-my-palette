@@ -2,7 +2,6 @@ import { Notice, type TFile } from "obsidian";
 import type { SelectorControls } from "src/ui/selectorControls";
 import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
 import { ICONS } from "src/ui/icons";
-import { countLabel } from "src/shared/countLabel";
 import { logger } from "src/shared/logger";
 import { planMerge } from "src/merge/mergeNotes";
 import { MergePlanModal } from "src/merge/MergePlanModal";
@@ -30,7 +29,16 @@ export class MergeTargetModal extends SelectionModal<TargetItem> {
 		private readonly onDone?: () => void,
 	) {
 		const sourcePaths = new Set(sources.map((file) => file.path));
-		const items = plugin.app.vault
+		const selectedTargets =
+			sources.length > 1
+				? sources.map((file) => ({
+						label: file.basename,
+						description: file.path,
+						icon: ICONS.note,
+						file,
+					}))
+				: [];
+		const otherTargets = plugin.app.vault
 			.getMarkdownFiles()
 			.filter((file) => !sourcePaths.has(file.path))
 			.sort((a, b) => a.path.localeCompare(b.path))
@@ -40,6 +48,7 @@ export class MergeTargetModal extends SelectionModal<TargetItem> {
 				icon: ICONS.note,
 				file,
 			}));
+		const items = [...selectedTargets, ...otherTargets];
 		const paths = sources.map((file) => file.path).sort((a, b) => a.localeCompare(b));
 		super(
 			{
@@ -47,7 +56,7 @@ export class MergeTargetModal extends SelectionModal<TargetItem> {
 				footerText:
 					paths.length === 1
 						? t("merge.footer.one", { path: paths[0] ?? "" })
-						: t("merge.footer.many", { what: countLabel(paths.length, "ファイル") }),
+						: t("merge.footer.many", { count: paths.length }),
 				controls: {
 					plugin,
 					category: "merge-target",
