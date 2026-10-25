@@ -279,6 +279,7 @@
 	"menu.moveToFolder": "移動…",
 	"menu.rename": "名前を変更…",
 	"menu.merge": "マージ…",
+	"menu.mergeSelected": "{count} 件をマージ…",
 	"menu.editProperties": "プロパティを編集…",
 	"menu.addTags": "タグを追加…",
 	"menu.insertIntoMoc": "MOC の Relateds に挿入",

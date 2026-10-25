@@ -5,6 +5,7 @@ import type { PaletteResult } from "src/palette/results";
 import { MergeTargetModal } from "src/merge/MergeTargetModal";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
+import { t } from "src/i18n";
 
 /**
  * 選んだノートを、次に選ぶマージ先へ統合する操作を1つ加える。対象は Markdown ノートだけ。
@@ -22,8 +23,12 @@ export function addMergeMenuItem(
 		if (file?.extension === "md") sources.set(file.path, file);
 	}
 	if (sources.size === 0) return;
+	const action =
+		results.length > 1
+			? { ...MENU_ACTIONS.merge, title: t("menu.mergeSelected", { count: sources.size }) }
+			: MENU_ACTIONS.merge;
 	menu.addItem((item) =>
-		withAction(item, MENU_ACTIONS.merge).onClick(() =>
+		withAction(item, action).onClick(() =>
 			new MergeTargetModal(plugin, [...sources.values()], onDone).open(),
 		),
 	);
