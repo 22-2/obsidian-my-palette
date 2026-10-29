@@ -133,7 +133,7 @@ export class PaletteHistoryControls {
 		const { containerEl } = this.options;
 		const optionsButton = containerEl.createEl("button", {
 			cls: "clickable-icon my-palette-options-button",
-			attr: { type: "button", title: t("palette.control.options") },
+			attr: { type: "button", "aria-label": t("palette.control.options") },
 		});
 		this.optionsButton = optionsButton;
 		// Why: メニューは先頭にオプション(スイッチと選択肢)を置き、その画面の操作が続く。
@@ -178,7 +178,7 @@ export class PaletteHistoryControls {
 	private updateHotkeyHint(): void {
 		const hotkeys = this.options.plugin.settings.hotkeys ?? DEFAULT_HOTKEYS;
 		this.optionsButton?.setAttribute(
-			"title",
+			"aria-label",
 			hotkeys.optionsMenu
 				? t("palette.control.optionsHotkey", { hotkey: formatHotkey(hotkeys.optionsMenu) })
 				: t("palette.control.options"),

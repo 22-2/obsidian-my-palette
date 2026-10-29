@@ -1,4 +1,4 @@
-import { App, setIcon } from "obsidian";
+import { App, setIcon, setTooltip } from "obsidian";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 import { BaseSuggestModal, type SuggestModalProps } from "src/ui/baseSuggestModal";
 import { matchedQueryIndexes } from "src/ui/queryHighlight";
@@ -44,13 +44,13 @@ export function renderSelectionItem(
 			cls: "my-palette-suggestion__description",
 			text: result.description,
 		});
-		if (result.descriptionTitle) description.setAttr("title", result.descriptionTitle);
+		if (result.descriptionTitle) setTooltip(description, result.descriptionTitle);
 	}
 	if (result.badge) main.createSpan({ cls: "my-palette-suggestion__badge", text: result.badge });
 	if (result.tags?.length) {
 		// 一致したタグとキーワードは、コンパクトなファイル名・パスの行の下に、一致の理由を説明する。
 		const tags = body.createDiv("my-palette-suggestion__tags");
-		tags.setAttr("title", result.tagsTitle ?? result.tags.join(" "));
+		setTooltip(tags, result.tagsTitle ?? result.tags.join(" "));
 		for (const tag of result.tags)
 			tags.createSpan({ cls: "my-palette-suggestion__tag", text: tag });
 	}

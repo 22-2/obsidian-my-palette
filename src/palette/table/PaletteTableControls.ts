@@ -1,4 +1,4 @@
-import { Component, TFile, type App } from "obsidian";
+import { Component, TFile, setTooltip, type App } from "obsidian";
 import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
 import type { AuditResult, PaletteResult } from "src/palette/results";
@@ -284,7 +284,7 @@ export class PaletteTableControls extends Component {
 			case "content": {
 				const text = data?.[column] ?? "—";
 				cell.setText(text);
-				cell.setAttribute("title", text);
+				setTooltip(cell, text);
 				return;
 			}
 			case "modified":
@@ -378,8 +378,12 @@ export class PaletteTableControls extends Component {
 	): HTMLButtonElement {
 		return container.createEl("button", {
 			cls: "my-palette-table-button",
-			// Why: 操作のヒントはツールチップに入れ、aria-label は付けない。
-			attr: { type: "button", title, "data-action": action, "data-column": column },
+			attr: {
+				type: "button",
+				"aria-label": title,
+				"data-action": action,
+				"data-column": column,
+			},
 		});
 	}
 }

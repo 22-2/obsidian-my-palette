@@ -40,8 +40,8 @@ test("keywords find a note and explain the hit in chips", async ({ obsidian }, t
 		"+1",
 	]);
 	await expect(page.locator(`${MODAL_ROW} .my-palette-suggestion__tags`)).toHaveAttribute(
-		"title",
-		"Keywords: 宇宙, 星空観察, 宇宙探査, 宇宙旅行",
+		"aria-label",
+		"キーワード: 宇宙, 星空観察, 宇宙探査, 宇宙旅行",
 	);
 	await page.screenshot({ path: testInfo.outputPath("keywords.png") });
 });

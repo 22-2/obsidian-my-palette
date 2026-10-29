@@ -1,4 +1,4 @@
-import { Component, Notice, setIcon } from "obsidian";
+import { Component, Notice, setIcon, setTooltip } from "obsidian";
 import { ExtendedSelection } from "src/ui/extendedSelection";
 import { InteractionModes } from "src/ui/interactionModes";
 import {
@@ -394,7 +394,7 @@ export class SuggestionPanel<T> extends Component {
 		if (!chip) return;
 		setIcon(this.modeChipEl.createSpan("my-palette-mode-chip__icon"), chip.icon);
 		this.modeChipEl.createSpan({ cls: "my-palette-mode-chip__label", text: chip.label });
-		this.modeChipEl.setAttribute("title", t("panel.modeChip.title", { title: chip.title }));
+		setTooltip(this.modeChipEl, t("panel.modeChip.title", { title: chip.title }));
 	}
 
 	focusSearchInput(): void {
@@ -432,7 +432,7 @@ export class SuggestionPanel<T> extends Component {
 
 	updateFooterText(text: string, icon?: string): void {
 		this.statusTextEl.empty();
-		this.statusTextEl.setAttribute("title", text);
+		setTooltip(this.statusTextEl, text);
 		if (icon) setIcon(this.statusTextEl.createSpan("my-palette-status-bar__icon"), icon);
 		this.statusTextEl.appendText(text);
 	}

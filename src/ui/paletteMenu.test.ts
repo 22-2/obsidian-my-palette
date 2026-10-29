@@ -109,7 +109,7 @@ describe("パレットメニューのマークアップ", () => {
 		expect(itemNamed("Off").getAttribute("aria-checked")).toBe("false");
 		expect(itemNamed("On").querySelector(".my-palette-menu-switch.is-enabled")).not.toBeNull();
 		expect(itemNamed("On").getAttribute("role")).toBe("menuitemcheckbox");
-		expect(itemNamed("On").getAttribute("title")).toBe("Explains it");
+		expect(itemNamed("On").getAttribute("aria-label")).toBe("Explains it");
 	});
 
 	it("メニューの役割とチェックされた状態と無効な状態を支援技術に公開します", () => {

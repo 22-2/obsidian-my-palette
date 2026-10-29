@@ -437,7 +437,7 @@ export abstract class MultiSelectModal<V> extends BaseSuggestModal<MultiSelectCa
 		container.querySelector(".my-palette-checked-button")?.remove();
 		const button = container.createEl("button", {
 			cls: "clickable-icon my-palette-checked-button",
-			attr: { type: "button", title: t("multi.checkedButton") },
+			attr: { type: "button", "aria-label": t("multi.checkedButton") },
 		});
 		container.insertBefore(button, container.querySelector(".my-palette-options-button"));
 		setIcon(button, ICONS.selection);

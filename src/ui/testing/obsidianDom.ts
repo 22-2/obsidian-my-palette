@@ -176,3 +176,7 @@ export class Modal {
 }
 
 export function setIcon(): void {}
+
+export function setTooltip(el: HTMLElement, tooltip: string): void {
+	el.setAttribute("aria-label", tooltip);
+}

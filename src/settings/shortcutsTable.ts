@@ -1,4 +1,4 @@
-import { Notice, type Setting } from "obsidian";
+import { Notice, setTooltip, type Setting } from "obsidian";
 import type { SettingsHost } from "src/settings/settingsHost";
 import {
 	DEFAULT_HOTKEYS,
@@ -66,7 +66,7 @@ export function compareScopes(a: readonly HotkeyScope[], b: readonly HotkeyScope
 }
 
 /**
- * グループの見出しにあるチップの短い名前。見出しのツールチップとアクセシブルな名前は正式名を並べるので、
+ * グループの見出しにあるチップの短い名前。アクセシブルな名前は正式名を並べるので、
  * 場所が増えてもチップは短いままになる。
  */
 const SCOPE_SHORT_NAMES: Record<HotkeyScope, string> = {
@@ -106,10 +106,11 @@ function createGroup(table: HTMLTableElement, scopes: readonly HotkeyScope[]): S
 		attr: {
 			colspan: String(TABLE_COLUMNS),
 			scope: "rowgroup",
-			"aria-label": hotkeyScopeLabel(scopes),
 		},
 	});
+	heading.createSpan({ cls: "my-palette-visually-hidden", text: hotkeyScopeLabel(scopes) });
 	const places = heading.createDiv("my-palette-shortcuts__places");
+	places.setAttribute("aria-hidden", "true");
 	if (coversPalettesAndSelectors(scopes)) {
 		places.createSpan({
 			text: hotkeyScopeLabel(scopes),
@@ -195,7 +196,7 @@ export function renderShortcutsTable(setting: Setting, plugin: SettingsHost): vo
 			cls: "my-palette-shortcuts__name",
 			attr: { id: nameId },
 		});
-		name.title = definition.description;
+		setTooltip(name, definition.description);
 
 		const keyCell = row.createEl("td");
 		const key = keyCell.createDiv({
@@ -315,7 +316,7 @@ function createRowEditor(action: HotkeyAction, plugin: SettingsHost, parts: RowP
 		parts.key.textContent = label;
 		parts.key.toggleClass("is-recording", recording);
 		parts.key.toggleClass("is-disabled", !recording && !hotkey);
-		parts.key.title = definition.description;
+		setTooltip(parts.key, definition.description);
 		// 変更された割り当てだけが「リセット」を出す。
 		parts.reset.toggleAttribute("hidden", sameHotkey(hotkey, DEFAULT_HOTKEYS[action]));
 	};

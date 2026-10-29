@@ -1,4 +1,4 @@
-import { Scope, setIcon, type App, type IconName } from "obsidian";
+import { Scope, setIcon, setTooltip, type App, type IconName } from "obsidian";
 import { ICONS } from "src/ui/icons";
 import { t } from "src/i18n";
 
@@ -496,7 +496,7 @@ export class PaletteMenuItem {
 
 	/** すべてを言えないラベルのために、ツールチップで項目を説明する。 */
 	setTooltip(text: string): this {
-		this.dom.setAttribute("title", text);
+		setTooltip(this.dom, text);
 		return this;
 	}
 

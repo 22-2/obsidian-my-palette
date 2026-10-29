@@ -9,6 +9,7 @@ import { installObsidianDom } from "src/ui/testing/obsidianDom";
 
 const notices = vi.hoisted(() => [] as string[]);
 vi.mock("obsidian", () => ({
+	setTooltip: (el: HTMLElement, text: string) => el.setAttribute("aria-label", text),
 	Notice: class {
 		constructor(message: string) {
 			notices.push(message);
@@ -202,8 +203,13 @@ describe("レンダリングショートカットテーブル", () => {
 
 	it("各ショートカットを、それが機能する場所の見出しの下に 1 回リストします。", () => {
 		const t = render();
+		for (const group of t.groups()) {
+			const heading = group.querySelector("th")!;
+			expect(heading.hasAttribute("aria-label")).toBe(false);
+			expect(heading.hasAttribute("title")).toBe(false);
+		}
 		const headings = t.groups().map((group) => ({
-			name: group.querySelector("th")!.getAttribute("aria-label"),
+			name: group.querySelector(".my-palette-visually-hidden")!.textContent,
 			chips: [...group.querySelectorAll(".my-palette-shortcuts__place")].map(
 				(chip) => chip.textContent,
 			),
