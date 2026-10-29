@@ -38,7 +38,7 @@ test("a result can be inserted into the active note's MOC Relateds", async ({ ob
 	const page = await openPaletteWith(obsidian, "child");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Child note");
 	await page.locator(MODAL_ROW).first().click({ button: "right" });
-	await menuItems(page).filter({ hasText: "Insert into MOC Relateds" }).click();
+	await menuItems(page).filter({ hasText: "MOC の Relateds に挿入" }).click();
 
 	await expect
 		.poll(() => obsidian.read("Topic MOC.md"))
@@ -177,9 +177,9 @@ test("checked MOC notes stay above results from a different query", async ({ obs
 	await runPaletteCommand(obsidian, "open-moc-insert-selector");
 	// The options menu lists the selector's switches, Obsidian-excluded first as in the palette.
 	expect((await optionMenuTitles(page)).slice(0, 3)).toEqual([
-		"Include Obsidian-excluded files",
-		"Mutual",
-		"Highlight search matches",
+		"Obsidian の除外ファイルを表示",
+		"相互",
+		"検索の一致を強調",
 	]);
 	await page.locator(MODAL_INPUT).fill("alpha");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Alpha child");
@@ -262,7 +262,7 @@ test("MOC insertion warns on Enter with several selected notes and accepts Ctrl+
 	await page.keyboard.press("Shift+ArrowDown");
 	await expect(page.locator(`${MODAL_ROW}.is-selected`)).toHaveCount(2);
 	await page.keyboard.press("Enter");
-	await expect(page.locator(".notice")).toContainText("Enter will only insert");
+	await expect(page.locator(".notice")).toContainText("Enter では");
 	await expect(page.locator(".notice")).toContainText("Ctrl+Enter");
 	await expect(page.locator(MODAL_INPUT)).toBeVisible();
 	expect(await obsidian.read("Topic MOC.md")).not.toContain("[[Alpha child]]");

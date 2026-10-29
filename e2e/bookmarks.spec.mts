@@ -45,11 +45,11 @@ test("files from Notes are bookmarked into a group created from the selector", a
 	const page = await openPaletteWith(obsidian, "alpha");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Alpha");
 	await page.locator(MODAL_ROW).first().click({ button: "right" });
-	await menuItems(page).filter({ hasText: "Add to bookmarks…" }).click();
+	await menuItems(page).filter({ hasText: "ブックマークに追加…" }).click();
 
 	const selectorInput = page.locator(MODAL_INPUT).last();
 	await selectorInput.fill("Reading");
-	await expect(page.locator(MODAL_ROW).last()).toContainText("New group: Reading");
+	await expect(page.locator(MODAL_ROW).last()).toContainText("新しいグループ: Reading");
 	await selectorInput.press("Enter");
 
 	await expect
@@ -82,13 +82,13 @@ test("Bookmarks mode renames, moves and removes a bookmark", async ({ obsidian }
 	await expect.poll(() => rowLabels(page)).toEqual(["Reading › Alpha.md"]);
 
 	await page.locator(MODAL_ROW).first().click({ button: "right" });
-	await menuItems(page).filter({ hasText: "Rename bookmark…" }).click();
+	await menuItems(page).filter({ hasText: "ブックマークの名前を変更…" }).click();
 	await page.locator(MODAL_INPUT).last().fill("First");
 	await page.locator(MODAL_INPUT).last().press("Enter");
 	await expect.poll(() => rowLabels(page)).toEqual(["Reading › First"]);
 
 	await page.locator(MODAL_ROW).first().click({ button: "right" });
-	await menuItems(page).filter({ hasText: "Move to bookmark group…" }).click();
+	await menuItems(page).filter({ hasText: "ブックマークのグループへ移動…" }).click();
 	await expect(page.locator(MODAL_ROW).last()).toBeVisible();
 	await page.locator(MODAL_INPUT).last().press("Enter");
 	await expect.poll(() => rowLabels(page)).toEqual(["First"]);
@@ -98,7 +98,7 @@ test("Bookmarks mode renames, moves and removes a bookmark", async ({ obsidian }
 	]);
 
 	await page.locator(MODAL_ROW).first().click({ button: "right" });
-	await menuItems(page).filter({ hasText: "Remove from bookmarks" }).click();
+	await menuItems(page).filter({ hasText: "ブックマークから削除" }).click();
 	await expect
 		.poll(() => bookmarkTree(obsidian))
 		.toEqual([{ type: "group", title: "Reading", items: [] }]);

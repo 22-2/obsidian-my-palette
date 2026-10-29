@@ -41,21 +41,21 @@ async function openPropertiesForAll(obsidian: Parameters<typeof openPaletteWith>
 		.nth(2)
 		.click({ modifiers: ["Shift"] });
 	await page.locator(MODAL_ROW).nth(1).click({ button: "right" });
-	await expect(page.locator(".menu .menu-item").first()).toContainText("3 items selected");
-	await page.locator(".menu .menu-item").filter({ hasText: "Edit properties…" }).click();
-	await expect(page.locator(".my-palette-suggest-modal")).toContainText("Source: 3 notes");
+	await expect(page.locator(".menu .menu-item").first()).toContainText("3 件を選択中");
+	await page.locator(".menu .menu-item").filter({ hasText: "プロパティを編集…" }).click();
+	await expect(page.locator(".my-palette-suggest-modal")).toContainText("元: 3 件のノート");
 	return page;
 }
 
 test("a value typed in the list selector is added to every selected note", async ({ obsidian }) => {
 	const page = await openPropertiesForAll(obsidian);
 	await page.locator(MODAL_INPUT).fill("topic");
-	await expect(page.locator(MODAL_ROW).first()).toContainText("2/3 notes");
+	await expect(page.locator(MODAL_ROW).first()).toContainText("2/3 件のノート");
 	await page.locator(MODAL_INPUT).press("Enter");
 
 	// Property value selector: "x" is on two of the three notes, "y" on one.
 	const selector = page.locator(".my-palette-suggest-modal").last();
-	await expect(selector).toContainText("On 2/3 notes");
+	await expect(selector).toContainText("2/3 件のノートにある");
 	await page.locator(MODAL_INPUT).last().fill("z");
 	await page.locator(MODAL_INPUT).last().press("Enter");
 
@@ -72,14 +72,14 @@ test("deleting a key needs a second press and only touches the notes that have i
 	const page = await openPropertiesForAll(obsidian);
 	await page.locator(MODAL_INPUT).fill("topic");
 	await expect(page.locator(MODAL_ROW)).toHaveCount(1);
-	await expect(page.locator(MODAL_ROW).first()).toContainText("2/3 notes");
+	await expect(page.locator(MODAL_ROW).first()).toContainText("2/3 件のノート");
 	await page.locator(MODAL_ROW).first().click({ button: "right" });
 	const del = page
 		.locator(".menu .menu-item")
-		.filter({ hasText: "Delete property from 3 notes" });
+		.filter({ hasText: "3 件のノートからプロパティを削除" });
 	await del.click();
 	await expect(page.locator(".menu .menu-item.mod-cta")).toContainText(
-		"Click again to delete from 3 notes",
+		"もう一度クリックして 3 件のノートから削除",
 	);
 	expect(await obsidian.read("Bulk A.md")).toContain("topic");
 
