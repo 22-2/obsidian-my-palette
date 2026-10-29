@@ -650,189 +650,198 @@ export class SuggestionPanel<T> extends Component {
 		this.registerDomEvent(
 			this.resultContainerEl,
 			"pointermove",
-			(event) => {
-				if (this.selectionMode === "extended") return;
-				const row = this.suggestionRowAtEvent(event);
-				if (!row) return;
-				const index = Number(row.getAttribute("data-index"));
-				if (Number.isInteger(index)) this.setSelectedIndex(index, false);
-			},
+			(event) => this.handlePointerMove(event),
 			true,
 		);
 		this.registerDomEvent(
 			this.resultContainerEl,
 			"mousedown",
-			(event) => {
-				// 結果のクリックは、ユーザーの注意を入力からの一覧へ移す、具体的なブラウザーのイベント。
-				// モーダルの一覧の余白のクリックも、昔から検索語を確定してきた。ビューにはテーブルの
-				// ヘッダーもあるので、実際の結果の行だけを確定する。
-				const modal = this.props.surface !== "view";
-				if (modal) this.focusResults();
-				const row = this.suggestionRowAtEvent(event);
-				if (!row) {
-					this.restoreFocusFromListSpace(event);
-					return;
-				}
-				// 並べ替えのヘッダーも結果のコンテナを共有する。しかし、検索を利用履歴に記録するのは、
-				// 実際の結果とのやり取りだけにする。
-				if (!modal) this.focusResults();
-				const item = this.itemAtRow(row);
-				if (item === undefined) return;
-				// Why: 中クリックの保護は click/auxclick までの間保ち、次の押下でリセットする。
-				// 1回のジェスチャーで同じノートを2回開かないようにするため。
-				this.middleClickRows.delete(row);
-				const index = Number(row.getAttribute("data-index"));
-				if (event.button === 0 && this.isRowToggleEvent(event)) {
-					// Why: チェックの操作は、その行で即座に動く。押下をそのまま通すと、強調表示の選択も変わる。
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					this.leftClickRows.add(row);
-					this.props.onRowToggle?.(item, event);
-				} else if (
-					event.button === 0 &&
-					this.props.activateOnClick?.(item) &&
-					!event.ctrlKey &&
-					!event.metaKey &&
-					!event.shiftKey
-				) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					this.leftClickRows.add(row);
-					this.setSelectedIndex(index, false);
-					void this.props.onChoose(item, event);
-				} else if (event.button === 0 && this.selectionMode === "extended") {
-					// Why: サイドバーは、mousedown の後に Obsidian にクリックを奪われることがある。
-					// 今ここで選び、開く操作はダブルクリックと Enter だけに任せる。
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					this.leftClickRows.add(row);
-					this.extendedSelection.select(index, this.chooser.values.length, {
-						toggle: event.ctrlKey || event.metaKey,
-						range: event.shiftKey,
-					});
-					this.setSelectedIndex(index, false);
-				} else if (event.button === 0 && this.props.surface === "view") {
-					// サイドバーのクリックは、mousedown の後に Obsidian に消費されることがある。そのため、
-					// 主な操作はここで実行し、後のクリックはガードを外すだけにする。
-					// 単一選択のモーダルは、通常のクリックでの有効化を保つ。
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					this.leftClickRows.add(row);
-					this.setSelectedIndex(index, false);
-					void this.props.onChoose(item, event);
-				} else if (event.button === 1 && this.props.onMiddleClick) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					this.handleMiddleClick(row, event);
-				} else if (event.button === 2 && this.props.onContextMenu) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					this.rightClickRows.add(row);
-					if (this.selectionMode === "extended")
-						this.extendedSelection.selectForContextMenu(
-							index,
-							this.chooser.values.length,
-						);
-					this.setSelectedIndex(index, false);
-				}
-			},
+			(event) => this.handleMouseDown(event),
 			true,
 		);
 		this.registerDomEvent(
 			this.resultContainerEl,
 			"dblclick",
-			(event) => {
-				if (this.selectionMode !== "extended" || event.button !== 0) return;
-				// チェックの上で素早く2回押すと、すでに2回切り替わっている。その後に続く dblclick で、
-				// さらに行を有効にしてはいけない。
-				if (this.isRowToggleEvent(event)) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					return;
-				}
-				const row = this.suggestionRowAtEvent(event);
-				const item = row ? this.itemAtRow(row) : undefined;
-				if (!row || item === undefined) return;
-				if (this.props.activateOnClick?.(item)) return;
-				event.preventDefault();
-				event.stopImmediatePropagation();
-				this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
-				void this.props.onChoose(item, event);
-			},
+			(event) => this.handleDoubleClick(event),
 			true,
 		);
 		this.registerDomEvent(
 			this.resultContainerEl,
 			"auxclick",
-			(event) => {
-				if (event.button !== 1 && event.button !== 2) return;
-				const row = this.suggestionRowAtEvent(event);
-				if (!row) return;
-				event.preventDefault();
-				event.stopImmediatePropagation();
-				// Why: 補助の右クリックは、ホストが先行する mousedown を届けなかったとしても、
-				// 決して中クリックの操作を使ってはいけない。
-				if (event.button === 1) this.handleMiddleClick(row, event);
-			},
+			(event) => this.handleAuxClick(event),
 			true,
 		);
 		this.registerDomEvent(
 			this.resultContainerEl,
 			"click",
-			(event) => {
-				// 中・右クリックの後に発火する click/auxclick の取りこぼしが、主な操作として onChoose へ
-				// 落ちて、アクティブなタブを上書きしないよう、左クリック以外はここで確実に消費する。
-				// Why: Electron/Windows の環境では、中クリックで click が、右クリックで click が飛ぶことがあり、
-				// ガードの漏れが上書きの原因になっていた。
-				if (event.button !== 0) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					// Why: 一部の Electron のホストは、中ボタンに auxclick の代わりに click を出す。
-					// 通常の mousedown の経路とガードを共有する。
-					const row = this.suggestionRowAtEvent(event);
-					if (event.button === 1 && row) this.handleMiddleClick(row, event);
-					return;
-				}
-				const row = this.suggestionRowAtEvent(event);
-				if (!row) return;
-				if (this.middleClickRows.has(row)) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					return;
-				}
-				if (this.leftClickRows.delete(row)) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					return;
-				}
-				if (this.rightClickRows.delete(row)) {
-					event.preventDefault();
-					event.stopImmediatePropagation();
-					return;
-				}
-				if (this.selectionMode === "extended") return;
-				const item = this.itemAtRow(row);
-				if (item === undefined) return;
-				this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
-				void this.props.onChoose(item, event);
-			},
+			(event) => this.handleClick(event),
 			true,
 		);
 		this.registerDomEvent(
 			this.resultContainerEl,
 			"contextmenu",
-			(event) => {
-				if (!this.props.onContextMenu) return;
-				const row = this.suggestionRowAtEvent(event);
-				const item = row ? this.itemAtRow(row) : undefined;
-				if (!row || item === undefined) return;
-				event.preventDefault();
-				event.stopImmediatePropagation();
-				this.rightClickRows.add(row);
-				this.showRowContextMenu(Number(row.getAttribute("data-index")), item, event);
-			},
+			(event) => this.handleContextMenu(event),
 			true,
 		);
+	}
+
+	private handlePointerMove(event: PointerEvent): void {
+		if (this.selectionMode === "extended") return;
+		const row = this.suggestionRowAtEvent(event);
+		if (!row) return;
+		const index = Number(row.getAttribute("data-index"));
+		if (Number.isInteger(index)) this.setSelectedIndex(index, false);
+	}
+
+	private handleMouseDown(event: MouseEvent): void {
+		// 結果のクリックは、ユーザーの注意を入力からの一覧へ移す、具体的なブラウザーのイベント。
+		// モーダルの一覧の余白のクリックも、昔から検索語を確定してきた。ビューにはテーブルの
+		// ヘッダーもあるので、実際の結果の行だけを確定する。
+		const modal = this.props.surface !== "view";
+		if (modal) this.focusResults();
+		const row = this.suggestionRowAtEvent(event);
+		if (!row) {
+			this.restoreFocusFromListSpace(event);
+			return;
+		}
+		// 並べ替えのヘッダーも結果のコンテナを共有する。しかし、検索を利用履歴に記録するのは、
+		// 実際の結果とのやり取りだけにする。
+		if (!modal) this.focusResults();
+		const item = this.itemAtRow(row);
+		if (item === undefined) return;
+		// Why: 中クリックの保護は click/auxclick までの間保ち、次の押下でリセットする。
+		// 1回のジェスチャーで同じノートを2回開かないようにするため。
+		this.middleClickRows.delete(row);
+		const index = Number(row.getAttribute("data-index"));
+		if (event.button === 0 && this.isRowToggleEvent(event)) {
+			// Why: チェックの操作は、その行で即座に動く。押下をそのまま通すと、強調表示の選択も変わる。
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			this.leftClickRows.add(row);
+			this.props.onRowToggle?.(item, event);
+		} else if (
+			event.button === 0 &&
+			this.props.activateOnClick?.(item) &&
+			!event.ctrlKey &&
+			!event.metaKey &&
+			!event.shiftKey
+		) {
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			this.leftClickRows.add(row);
+			this.setSelectedIndex(index, false);
+			void this.props.onChoose(item, event);
+		} else if (event.button === 0 && this.selectionMode === "extended") {
+			// Why: サイドバーは、mousedown の後に Obsidian にクリックを奪われることがある。
+			// 今ここで選び、開く操作はダブルクリックと Enter だけに任せる。
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			this.leftClickRows.add(row);
+			this.extendedSelection.select(index, this.chooser.values.length, {
+				toggle: event.ctrlKey || event.metaKey,
+				range: event.shiftKey,
+			});
+			this.setSelectedIndex(index, false);
+		} else if (event.button === 0 && this.props.surface === "view") {
+			// サイドバーのクリックは、mousedown の後に Obsidian に消費されることがある。そのため、
+			// 主な操作はここで実行し、後のクリックはガードを外すだけにする。
+			// 単一選択のモーダルは、通常のクリックでの有効化を保つ。
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			this.leftClickRows.add(row);
+			this.setSelectedIndex(index, false);
+			void this.props.onChoose(item, event);
+		} else if (event.button === 1 && this.props.onMiddleClick) {
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			this.handleMiddleClick(row, event);
+		} else if (event.button === 2 && this.props.onContextMenu) {
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			this.rightClickRows.add(row);
+			if (this.selectionMode === "extended")
+				this.extendedSelection.selectForContextMenu(index, this.chooser.values.length);
+			this.setSelectedIndex(index, false);
+		}
+	}
+
+	private handleDoubleClick(event: MouseEvent): void {
+		if (this.selectionMode !== "extended" || event.button !== 0) return;
+		// チェックの上で素早く2回押すと、すでに2回切り替わっている。その後に続く dblclick で、
+		// さらに行を有効にしてはいけない。
+		if (this.isRowToggleEvent(event)) {
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			return;
+		}
+		const row = this.suggestionRowAtEvent(event);
+		const item = row ? this.itemAtRow(row) : undefined;
+		if (!row || item === undefined) return;
+		if (this.props.activateOnClick?.(item)) return;
+		event.preventDefault();
+		event.stopImmediatePropagation();
+		this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
+		void this.props.onChoose(item, event);
+	}
+
+	private handleAuxClick(event: MouseEvent): void {
+		if (event.button !== 1 && event.button !== 2) return;
+		const row = this.suggestionRowAtEvent(event);
+		if (!row) return;
+		event.preventDefault();
+		event.stopImmediatePropagation();
+		// Why: 補助の右クリックは、ホストが先行する mousedown を届けなかったとしても、
+		// 決して中クリックの操作を使ってはいけない。
+		if (event.button === 1) this.handleMiddleClick(row, event);
+	}
+
+	private handleClick(event: MouseEvent): void {
+		// 中・右クリックの後に発火する click/auxclick の取りこぼしが、主な操作として onChoose へ
+		// 落ちて、アクティブなタブを上書きしないよう、左クリック以外はここで確実に消費する。
+		// Why: Electron/Windows の環境では、中クリックで click が、右クリックで click が飛ぶことがあり、
+		// ガードの漏れが上書きの原因になっていた。
+		if (event.button !== 0) {
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			// Why: 一部の Electron のホストは、中ボタンに auxclick の代わりに click を出す。
+			// 通常の mousedown の経路とガードを共有する。
+			const row = this.suggestionRowAtEvent(event);
+			if (event.button === 1 && row) this.handleMiddleClick(row, event);
+			return;
+		}
+		const row = this.suggestionRowAtEvent(event);
+		if (!row) return;
+		if (this.middleClickRows.has(row)) {
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			return;
+		}
+		if (this.leftClickRows.delete(row)) {
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			return;
+		}
+		if (this.rightClickRows.delete(row)) {
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			return;
+		}
+		if (this.selectionMode === "extended") return;
+		const item = this.itemAtRow(row);
+		if (item === undefined) return;
+		this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
+		void this.props.onChoose(item, event);
+	}
+
+	private handleContextMenu(event: MouseEvent): void {
+		if (!this.props.onContextMenu) return;
+		const row = this.suggestionRowAtEvent(event);
+		const item = row ? this.itemAtRow(row) : undefined;
+		if (!row || item === undefined) return;
+		event.preventDefault();
+		event.stopImmediatePropagation();
+		this.rightClickRows.add(row);
+		this.showRowContextMenu(Number(row.getAttribute("data-index")), item, event);
 	}
 
 	private showRowContextMenu(index: number, item: T, event: MouseEvent): void {
