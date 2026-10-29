@@ -1,12 +1,8 @@
 import { Component, Notice, setIcon, setTooltip } from "obsidian";
 import { ExtendedSelection } from "src/ui/extendedSelection";
 import { InteractionModes } from "src/ui/interactionModes";
-import {
-	DEFAULT_HOTKEYS,
-	matchesHotkey,
-	type PaletteHotkey,
-	type PaletteHotkeys,
-} from "src/ui/hotkeys";
+import { registerPreviewTransparency } from "src/ui/previewTransparency";
+import { DEFAULT_HOTKEYS, matchesHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
 import { markKeyboardMenuEvent } from "src/ui/menus";
 import { PanelSwitch, type PanelSwitchOptions } from "src/ui/panelSwitch";
 import { ICONS } from "src/ui/icons";
@@ -184,7 +180,13 @@ export class SuggestionPanel<T> extends Component {
 	}
 
 	onload(): void {
-		this.registerPreviewTransparency();
+		registerPreviewTransparency(
+			this,
+			this.rootEl,
+			this.previewContainerEl,
+			this.inputEl,
+			() => this.hotkeys,
+		);
 		const modes = this.modes;
 		if (modes) {
 			modes.set("input");
@@ -234,52 +236,6 @@ export class SuggestionPanel<T> extends Component {
 
 	private get hotkeys(): PaletteHotkeys {
 		return this.props.getHotkeys?.() ?? DEFAULT_HOTKEYS;
-	}
-
-	private registerPreviewTransparency(): void {
-		const container = this.previewContainerEl;
-		let held: PaletteHotkey | undefined;
-		container.addClass("my-palette-preview-surface");
-		const restore = (returnFocus = false) => {
-			// この窓の他のパネルも同じ窓を共有する。隠れているパネルだけがフォーカスを戻す。
-			if (!container.hasClass("is-preview-hidden")) return;
-			container.removeClass("is-preview-hidden");
-			held = undefined;
-			if (returnFocus && this.inputEl.isConnected)
-				this.inputEl.focus({ preventScroll: true });
-		};
-		this.registerDomEvent(
-			this.rootEl,
-			"keydown",
-			(event) => {
-				const hotkey = this.hotkeys.hidePreview;
-				if (!matchesHotkey(event, hotkey)) return;
-				event.preventDefault();
-				event.stopImmediatePropagation();
-				held = hotkey ?? undefined;
-				container.addClass("is-preview-hidden");
-			},
-			true,
-		);
-		const ownerWindow = this.rootEl.ownerDocument.defaultView;
-		if (!ownerWindow) return;
-		// フォーカスは、フェードしたパネルから離れることがある。キーを離すことと、アプリの切り替えでも戻す。
-		this.registerDomEvent(
-			ownerWindow,
-			"keyup",
-			(event) => {
-				if (!held) return;
-				const key = event.key === " " ? "Space" : event.key;
-				const modifier = key === "Control" ? "Ctrl" : key;
-				if (
-					key.toUpperCase() === held.key.toUpperCase() ||
-					held.modifiers.some((item) => item === modifier)
-				)
-					restore(true);
-			},
-			true,
-		);
-		this.registerDomEvent(ownerWindow, "blur", () => restore());
 	}
 
 	setResults(results: SuggestionPanelResults<T>): void {
