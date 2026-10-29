@@ -57,7 +57,6 @@ function sourceFooterText(app: App, sourceFile?: TFile, sourceFiles?: readonly T
 
 export class PaletteModal extends SelectionModal<PaletteResult> {
 	private readonly session: PaletteSearchSession;
-	private suppressHistoryForNextInput = false;
 	private activeMenu?: PaletteMenu;
 	private historyControls?: PaletteHistoryControls;
 	private ignoredToggle?: PanelSwitch;
@@ -243,9 +242,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	override async getSuggestions(input: string): Promise<PaletteResult[]> {
-		const suppressHistoryRecord = this.suppressHistoryForNextInput;
-		this.suppressHistoryForNextInput = false;
-		return await this.session.search(input, { suppressHistory: suppressHistoryRecord });
+		return await this.session.search(input);
 	}
 
 	private updateMode(): void {
@@ -360,7 +357,6 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private applySearchHistory(result: Extract<PaletteResult, { mode: "search-history" }>): void {
 		this.homeView = undefined;
 		this.historyControls?.close();
-		this.suppressHistoryForNextInput = true;
 		// 履歴はプレフィックス付きの形で保存する。Home がそれをモードに戻す。
 		this.session.returnToHome();
 		this.session.setIgnoredScope(Boolean(result.includeIgnored));

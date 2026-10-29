@@ -121,6 +121,16 @@ describe("PaletteSearchSession 検索ライフサイクル", () => {
 		session.dispose();
 	});
 
+	it("復元した検索は一覧を操作するまで履歴に記録しない", async () => {
+		const { plugin, recordSearch } = await host();
+		const session = new PaletteSearchSession(plugin);
+		await session.search("restored");
+		expect(recordSearch).not.toHaveBeenCalled();
+		session.commitCurrentSearch();
+		expect(recordSearch).toHaveBeenCalledTimes(1);
+		session.dispose();
+	});
+
 	it("無視されたスコープ、ソース ファイル、およびルート クエリをプロバイダーに渡します", async () => {
 		const { plugin } = await host();
 		const search = vi.fn().mockResolvedValue([]);

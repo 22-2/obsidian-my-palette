@@ -197,7 +197,7 @@ export class PaletteView extends ItemView {
 		this.ignoredToggle?.set(next.includeIgnored);
 		// 保存された入力にはエイリアスが含まれる。Home がそれをモードに戻す。
 		this.session.returnToHome();
-		this.session.setInput(next.input, { suppressHistory: true });
+		this.session.setInput(next.input);
 	}
 
 	async onOpen(): Promise<void> {
@@ -580,7 +580,7 @@ export class PaletteView extends ItemView {
 		this.session?.returnToHome();
 		this.session?.setIgnoredScope(Boolean(result.includeIgnored));
 		this.ignoredToggle?.set(Boolean(result.includeIgnored));
-		this.updateInput(input, "end", { suppressHistory: true, syncPanel: true });
+		this.updateInput(input, "end", { syncPanel: true });
 		this.panel?.focusSearchInput();
 	}
 
@@ -754,14 +754,13 @@ export class PaletteView extends ItemView {
 	private updateInput(
 		input: string,
 		selection: "all" | "end" | "none" = "none",
-		options: { suppressHistory?: boolean; syncPanel?: boolean } = {},
+		options: { syncPanel?: boolean } = {},
 	): void {
 		// Why: getState() はリーフごとの保存の境界だが、Obsidian は DOM の入力イベントのたびに
 		// レイアウトの保存を要求するとは限らない。予備の状態を更新し、遅延した保存を要求しておけば、
 		// ビューが遅れて閉じられても、リーフの最新のクエリが残るため。
 		if (options.syncPanel) this.panel?.setInput(input, selection);
-		if (options.suppressHistory) this.session?.setInputFromHistory(input);
-		else this.session?.setInput(input);
+		this.session?.setInput(input);
 		// エイリアス付きの形で保存し、復元されたペインが同じモードに入り直せるようにする。
 		this.pendingState = { ...this.pendingState, input: this.session?.prefixedInput ?? input };
 		void this.app.workspace.requestSaveLayout();

@@ -191,13 +191,13 @@ export class PaletteSearchSession {
 			this.state.mode === "smart" ||
 			this.state.mode === "property"
 		)
-			void this.search(this.state.input, { suppressHistory: true });
+			void this.search(this.state.input);
 	}
 
 	/** プロバイダーの新しい検索を始め、古い入力の結果は捨てる。 */
 	async search(
 		input = this.state.input,
-		options: { suppressHistory?: boolean; keepResults?: boolean } = {},
+		options: { keepResults?: boolean } = {},
 	): Promise<PaletteResult[]> {
 		if (this.disposed) return [];
 		this.controller?.abort();
@@ -277,12 +277,8 @@ export class PaletteSearchSession {
 		}
 	}
 
-	setInput(input: string, options: { suppressHistory?: boolean } = {}): void {
-		void this.search(input, options);
-	}
-
-	setInputFromHistory(input: string): void {
-		this.setInput(input, { suppressHistory: true });
+	setInput(input: string): void {
+		void this.search(input);
 	}
 
 	getSearchHistoryContext(input = this.state.input): RecordableSearch {
