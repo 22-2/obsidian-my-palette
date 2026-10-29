@@ -221,6 +221,23 @@ describe("パレットモーダル", () => {
 		expect(f.modal.inputEl.value).toBe("");
 	});
 
+	it("モードから戻ると Home の選択とスクロール位置を復元する", async () => {
+		const f = await open();
+		key(f.modal.inputEl, "ArrowDown");
+		const container = f.modal.modalEl.querySelector<HTMLElement>(".prompt-results")!;
+		container.scrollTop = 80;
+		key(f.modal.inputEl, "Enter");
+		await settle();
+		expect(f.modal.modalEl.getAttribute("data-mode")).toBe("command");
+		key(f.modal.inputEl, "Escape");
+		await settle();
+		expect(f.modal.inputEl.value).toBe("");
+		expect(f.rows().find((row) => row.classList.contains("is-active"))?.textContent).toContain(
+			"コマンド",
+		);
+		expect(container.scrollTop).toBe(80);
+	});
+
 	it("モードチップをクリックすると空の Home に戻る", async () => {
 		const f = await open("> build");
 		const chip = f.modal.modalEl.querySelector<HTMLElement>(".my-palette-mode-chip")!;

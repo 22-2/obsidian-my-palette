@@ -51,6 +51,18 @@ test("an installed but uninitialized Smart Connections mode stays hidden until i
 	await expect(page.locator(".suggestion-empty")).toContainText("No suggestions");
 });
 
+test("returning to Home restores the selected mode", async ({ obsidian }) => {
+	const page = await openHomeWith(obsidian, "");
+	const input = page.locator(MODAL_INPUT);
+	await expect(page.locator(MODAL_ROW).nth(1)).toContainText("コマンド");
+	await input.press("ArrowDown");
+	await input.press("Enter");
+	await expect(page.locator(".my-palette-mode-chip")).toBeVisible();
+	await input.press("Escape");
+	await expect(input).toHaveValue("");
+	await expect(page.locator(`${MODAL_ROW}.is-active`)).toContainText("コマンド");
+});
+
 test("the > prefix searches commands", async ({ obsidian }) => {
 	const page = await openHomeWith(obsidian, "> outgoing link list");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Open outgoing link list");

@@ -103,7 +103,7 @@ export class SuggestionPanel<T> extends Component {
 	readonly resultCountEl: HTMLElement;
 	private readonly modeChipEl: HTMLElement;
 	readonly chooser: SuggestionChooser<T> = { values: [], selectedItem: -1 };
-	private pendingView?: SuggestionPanelView;
+	private pendingView?: { view: SuggestionPanelView; matches?: (item: T) => boolean };
 	limit: number;
 	selected: T | null = null;
 	query = "";
@@ -261,12 +261,12 @@ export class SuggestionPanel<T> extends Component {
 		const view = this.pendingView;
 		this.pendingView = undefined;
 		this.renderResults(results);
-		if (view) this.applyView(view);
+		if (view) this.applyView(view.view, view.matches);
 	}
 
 	/** 次の結果にビューを適用する。開き直したパレットが、同じ行とスクロール位置に着地するように。 */
-	restoreView(view: SuggestionPanelView): void {
-		this.pendingView = view;
+	restoreView(view: SuggestionPanelView, matches?: (item: T) => boolean): void {
+		this.pendingView = { view, matches };
 	}
 
 	/** 選ばれた行とスクロール位置。開き直されるかもしれないパレットのために。 */
@@ -277,8 +277,13 @@ export class SuggestionPanel<T> extends Component {
 		};
 	}
 
-	private applyView({ activeIndex, scrollTop }: SuggestionPanelView): void {
+	private applyView(
+		{ activeIndex, scrollTop }: SuggestionPanelView,
+		matches?: (item: T) => boolean,
+	): void {
 		const count = this.chooser.values.length;
+		const matchedIndex = matches ? this.chooser.values.findIndex(matches) : -1;
+		if (matchedIndex >= 0) activeIndex = matchedIndex;
 		if (count > 0) this.setSelectedIndex(Math.min(Math.max(activeIndex, 0), count - 1), true);
 		this.resultContainerEl.scrollTop = scrollTop;
 	}

@@ -65,6 +65,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private mode: PaletteMode = "file";
 	private everythingScope: EverythingScope = "vault";
 	private state?: PaletteSearchState;
+	private homeView?: { activeIndex: number; scrollTop: number; id?: string };
 	private readonly modeEntries: boolean;
 	private readonly restore?: PaletteRestoreState;
 
@@ -97,6 +98,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			includeIgnored: restore?.includeIgnored ?? false,
 			onModesChange: () => this.refreshSuggestions(),
 			onStateChange: (state) => {
+				if (this.state?.route.kind === "home" && state.route.kind !== "home")
+					this.rememberHomeView();
 				this.state = state;
 				// `alias + Space` moves into a mode and leaves only the query behind.
 				if (this.inputEl.value !== state.input) this.panelInput(state.input);
@@ -289,6 +292,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 
 	private enterMode(result: Extract<PaletteResult, { mode: "mode-entry" }>): void {
 		if (result.unavailable) return;
+		if (this.session.current.route.kind === "home") this.rememberHomeView();
 		this.session.enterMode(result.modeId);
 		this.panelInput("");
 		this.clearSuggestions();
@@ -296,9 +300,17 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.focusSearchInput();
 	}
 
-	/** 入力を空にして Home に戻る。 */
+	private rememberHomeView(): void {
+		if (this.homeView) return;
+		this.homeView = { ...this.currentResultView(), id: this.getSelectedItem()?.id };
+	}
+
+	/** 入力を空にして Home に戻り、元の一覧位置を復元する。 */
 	private returnToHome(): void {
 		this.session.returnToHome();
+		const view = this.homeView;
+		this.homeView = undefined;
+		if (view) this.restoreResultView(view, (item) => item.id === view.id);
 		this.panelInput("");
 		this.refreshSuggestions();
 		this.focusSearchInput();
@@ -346,6 +358,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	private applySearchHistory(result: Extract<PaletteResult, { mode: "search-history" }>): void {
+		this.homeView = undefined;
 		this.historyControls?.close();
 		this.suppressHistoryForNextInput = true;
 		// 履歴はプレフィックス付きの形で保存する。Home がそれをモードに戻す。

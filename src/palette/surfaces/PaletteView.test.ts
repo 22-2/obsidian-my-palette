@@ -276,6 +276,23 @@ describe("パレットビュー", () => {
 		expect(f.root.isConnected).toBe(true);
 	});
 
+	it("モードから戻ると Home の選択とスクロール位置を復元する", async () => {
+		const f = await mount();
+		key(f.input, "ArrowDown");
+		const container = f.root.querySelector<HTMLElement>(".prompt-results")!;
+		container.scrollTop = 80;
+		key(f.input, "Enter");
+		await settle();
+		expect(f.panel().getAttribute("data-mode")).toBe("command");
+		key(f.input, "Escape");
+		await settle();
+		expect(f.input.value).toBe("");
+		expect(f.root.querySelector(".suggestion-item.is-active")?.textContent).toContain(
+			"コマンド",
+		);
+		expect(container.scrollTop).toBe(80);
+	});
+
 	it("入力したクエリをレイアウトに保存し、復元されたペインでクエリを再開します。", async () => {
 		const f = await mount();
 		f.input.value = "beta";

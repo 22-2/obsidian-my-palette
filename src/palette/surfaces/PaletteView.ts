@@ -81,6 +81,9 @@ export class PaletteView extends ItemView {
 
 	private panel?: SuggestionPanel<PaletteResult>;
 	private session?: PaletteSearchSession;
+	private homeView?: { activeIndex: number; scrollTop: number; id?: string };
+	private restoringHome = false;
+	private lastRoute: PaletteSearchState["route"]["kind"] = "home";
 	private historyControls?: PaletteHistoryControls;
 	private tableControls?: PaletteTableControls;
 	private ignoredToggle?: PanelSwitch;
@@ -187,6 +190,7 @@ export class PaletteView extends ItemView {
 			this.createSurface(this.pendingState);
 			return;
 		}
+		this.homeView = undefined;
 		this.tableControls?.setState(next);
 		this.panel.setInput(next.input, "end");
 		this.session.setIgnoredScope(next.includeIgnored);
@@ -244,6 +248,9 @@ export class PaletteView extends ItemView {
 	}
 
 	private createSurface(state: NormalizedPaletteViewState): void {
+		this.homeView = undefined;
+		this.restoringHome = false;
+		this.lastRoute = "home";
 		this.activeMenu?.close();
 		this.historyControls?.destroy();
 		this.historyControls = undefined;
@@ -390,6 +397,8 @@ export class PaletteView extends ItemView {
 
 	private renderState(state: PaletteSearchState): void {
 		if (!this.panel || !this.session) return;
+		if (this.lastRoute === "home" && state.route.kind !== "home") this.rememberHomeView();
+		this.lastRoute = state.route.kind;
 		// 「エイリアス + Space」でモードに入り、残るのはクエリだけになる。
 		if (this.panel.inputEl.value !== state.input) this.panel.setInput(state.input, "end");
 		const chrome = paletteRouteChrome(
@@ -428,6 +437,10 @@ export class PaletteView extends ItemView {
 		const scrollTop = this.panel.currentView.scrollTop;
 		if (this.tableControls) this.tableControls.setResults(results);
 		else this.panel.setResults(results);
+		if (this.restoringHome) {
+			if (!results.loading) this.restoringHome = false;
+			return;
+		}
 		if (!active) return;
 		const { values } = this.panel.chooser;
 		const indexOf = (item: PaletteResult) => values.findIndex(({ id }) => id === item.id);
@@ -560,6 +573,7 @@ export class PaletteView extends ItemView {
 	}
 
 	private applySearchHistory(result: Extract<PaletteResult, { mode: "search-history" }>): void {
+		this.homeView = undefined;
 		const input = this.plugin.formatSearchHistoryInput(result);
 		this.historyControls?.close();
 		// 履歴はプレフィックス付きの形で保存する。Home がそれをモードに戻す。
@@ -700,6 +714,7 @@ export class PaletteView extends ItemView {
 
 	private enterMode(modeId: PaletteModeId | "other"): void {
 		if (!this.session || !this.panel) return;
+		if (this.session.current.route.kind === "home") this.rememberHomeView();
 		this.session.enterMode(modeId);
 		this.panel.setInput("", "end");
 		// 一覧は今すぐ空にする。遅いプロバイダーだと、Home の行が見えてしまうため。
@@ -708,10 +723,21 @@ export class PaletteView extends ItemView {
 		this.panel.focusSearchInput();
 	}
 
-	/** 入力を空にして Home に戻る。 */
+	private rememberHomeView(): void {
+		if (!this.panel || this.homeView) return;
+		this.homeView = { ...this.panel.currentView, id: this.panel.getSelectedItem()?.id };
+	}
+
+	/** 入力を空にして Home に戻り、元の一覧位置を復元する。 */
 	private returnToHome(): void {
 		if (!this.session || !this.panel) return;
 		this.session.returnToHome();
+		const view = this.homeView;
+		this.homeView = undefined;
+		if (view) {
+			this.restoringHome = true;
+			this.panel.restoreView(view, (item) => item.id === view.id);
+		}
 		this.updateInput("", "end", { syncPanel: true });
 		this.panel.focusSearchInput();
 	}

@@ -286,8 +286,8 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	protected onSelectionModalClose(): void {}
 
 	/** 再開するパレットのために、次の結果を行とスクロール位置に合わせる。 */
-	protected restoreResultView(view: SuggestionPanelView): void {
-		this.panel.restoreView(view);
+	protected restoreResultView(view: SuggestionPanelView, matches?: (item: T) => boolean): void {
+		this.panel.restoreView(view, matches);
 	}
 
 	/** モーダルがまだ開いている間に読む、選ばれた行とスクロール位置。 */
