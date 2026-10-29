@@ -58,6 +58,7 @@ export interface PaletteSearchState {
 	includeIgnored: boolean;
 	results: PaletteResult[];
 	resultCount: number;
+	hasModeEntries: boolean;
 	error?: string;
 	/** プロバイダーの検索が進行中かどうか。モードによらず、結果が届くまで true。 */
 	loading: boolean;
@@ -126,6 +127,7 @@ export class PaletteSearchSession {
 			includeIgnored: includeIgnored && supportsIncludeIgnored(parsed.mode),
 			results: [],
 			resultCount: 0,
+			hasModeEntries: false,
 			loading: false,
 			route: this.route,
 		};
@@ -217,7 +219,7 @@ export class PaletteSearchSession {
 			mode: parsed.mode,
 			everythingScope: this.scopeOf(parsed),
 			includeIgnored,
-			...(keepResults ? {} : { results: [], resultCount: 0 }),
+			...(keepResults ? {} : { results: [], resultCount: 0, hasModeEntries: false }),
 			error: undefined,
 			loading: true,
 			route: this.route,
@@ -251,6 +253,7 @@ export class PaletteSearchSession {
 				...this.state,
 				results,
 				resultCount: results.length,
+				hasModeEntries: results.some((item) => item.mode === "mode-entry"),
 				error: undefined,
 				loading: false,
 			};
@@ -269,6 +272,7 @@ export class PaletteSearchSession {
 				...this.state,
 				results: [],
 				resultCount: 0,
+				hasModeEntries: false,
 				error: error instanceof Error ? error.message : String(error),
 				loading: false,
 			};
@@ -437,12 +441,12 @@ export function paletteRouteChrome(
 
 /** Home の見出し。モードの項目とファイルが同じ一覧にあるときだけ表示する。 */
 export function paletteSectionOf(
-	state: Pick<PaletteSearchState, "route" | "results"> | undefined,
+	state: Pick<PaletteSearchState, "route" | "hasModeEntries"> | undefined,
 	result: PaletteResult,
 ): string | undefined {
 	if (result.mode === "property") return result.section;
 	if (state?.route.kind !== "home") return undefined;
-	if (!state.results.some((item) => item.mode === "mode-entry")) return undefined;
+	if (!state.hasModeEntries) return undefined;
 	return result.mode === "mode-entry" ? t("palette.section.modes") : t("palette.section.files");
 }
 

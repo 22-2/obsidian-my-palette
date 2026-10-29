@@ -49,6 +49,7 @@ describe("ホームセクション", () => {
 			"tags",
 			"other",
 		]);
+		expect(session.current.hasModeEntries).toBe(true);
 		session.enterMode("other");
 		const other = await session.search();
 		expect(ids(other)).toContain("plugins");
@@ -98,6 +99,7 @@ describe("ホームセクション", () => {
 		for (const mode of Object.values(plugin.settings.modes)) mode.enabled = false;
 		const session = new PaletteSearchSession(plugin, { modeEntries: true });
 		expect(await session.search("settings")).toEqual([file]);
+		expect(session.current.hasModeEntries).toBe(false);
 		expect(paletteSectionOf(session.current, file)).toBeUndefined();
 		session.dispose();
 	});
@@ -278,12 +280,16 @@ describe("パレットルートのプレゼンテーション", () => {
 			secondary: "Obsidian",
 			icon: "files",
 		} as const;
-		const state = { route: { kind: "home" as const }, results: [mode] };
+		const state = { route: { kind: "home" as const }, hasModeEntries: true };
 		expect(paletteSectionOf(state, mode)).toBe("モード");
 		expect(paletteSectionOf(state, file)).toBe("ファイル");
+		expect(paletteSectionOf({ ...state, hasModeEntries: false }, file)).toBeUndefined();
 		expect(paletteSectionOf(undefined, file)).toBeUndefined();
 		expect(
-			paletteSectionOf({ route: { kind: "mode", modeId: "notes" }, results: [mode] }, file),
+			paletteSectionOf(
+				{ route: { kind: "mode", modeId: "notes" }, hasModeEntries: true },
+				file,
+			),
 		).toBeUndefined();
 		expect(
 			paletteRouteChrome({ route: { kind: "home" }, mode: "file" }, undefined, true),
