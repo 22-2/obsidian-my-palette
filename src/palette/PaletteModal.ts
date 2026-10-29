@@ -291,7 +291,11 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.updateFooterText(
 			sourceFooterText(this.app, this.mode, this.sourceFile, this.sourceFiles),
 		);
-		this.updateSortStatus(paletteSortPresentation(this.session.getSorting()));
+		const canSort = state.route.kind !== "other" && isPaletteSortableMode(state.mode);
+		this.updateSortStatus(
+			canSort ? paletteSortPresentation(this.session.getSorting()) : undefined,
+			(event, button) => this.historyControls?.openSortMenu(event, button),
+		);
 	}
 
 	protected override sectionOf(result: PaletteResult): string | undefined {

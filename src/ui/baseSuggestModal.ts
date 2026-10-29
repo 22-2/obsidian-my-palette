@@ -375,8 +375,11 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	protected updateFooterText(text: string): void {
 		this.panel.updateFooterText(text);
 	}
-	protected updateSortStatus(status?: { label: string; title: string }): void {
-		this.panel.updateSortStatus(status);
+	protected updateSortStatus(
+		status?: { label: string; title: string },
+		onClick?: (event: MouseEvent, anchor: HTMLElement) => void,
+	): void {
+		this.panel.updateSortStatus(status, onClick);
 	}
 	protected updateMatchQuery(query: string): void {
 		this.query = query;

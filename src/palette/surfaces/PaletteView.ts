@@ -441,10 +441,15 @@ export class PaletteView extends ItemView {
 
 	private updateSortStatus(): void {
 		if (!this.panel || !this.session) return;
+		const state = this.session.current;
+		const canSort = state.route.kind !== "other" && isPaletteSortableMode(state.mode);
 		const sorting = this.tableControls
 			? this.tableControls.getSort()
 			: this.session.getSorting();
-		this.panel.updateSortStatus(paletteSortPresentation(sorting));
+		this.panel.updateSortStatus(
+			canSort ? paletteSortPresentation(sorting) : undefined,
+			(event, button) => this.historyControls?.openSortMenu(event, button),
+		);
 	}
 
 	/**

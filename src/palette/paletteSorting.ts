@@ -46,10 +46,11 @@ export function defaultSortDirection(key: PaletteSortKey): boolean {
 	return key === "modified" || key === "created" || key === "prior";
 }
 
-export function paletteSortPresentation(
-	sorting: PaletteSort | undefined,
-): PaletteSortPresentation | undefined {
-	if (!sorting) return undefined;
+export function paletteSortPresentation(sorting: PaletteSort | undefined): PaletteSortPresentation {
+	if (!sorting) {
+		const label = t("sorting.default");
+		return { label, title: label };
+	}
 	const label = SORT_LABELS[sorting.key];
 	const direction = sorting.desc ? t("sorting.descending") : t("sorting.ascending");
 	return {

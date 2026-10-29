@@ -100,7 +100,7 @@ export class SuggestionPanel<T> extends Component {
 	readonly resultContainerEl: HTMLElement;
 	readonly statusBarEl: HTMLElement;
 	readonly statusTextEl: HTMLElement;
-	readonly sortStatusEl: HTMLElement;
+	readonly sortStatusEl: HTMLSpanElement;
 	readonly resultCountEl: HTMLElement;
 	private readonly modeChipEl: HTMLElement;
 	readonly chooser: SuggestionChooser<T> = { values: [], selectedItem: -1 };
@@ -119,6 +119,7 @@ export class SuggestionPanel<T> extends Component {
 	private readonly leftClickRows = new WeakSet<Element>();
 	private readonly middleClickRows = new WeakSet<Element>();
 	private readonly rightClickRows = new WeakSet<Element>();
+	private sortStatusClick?: (event: MouseEvent, anchor: HTMLElement) => void;
 	private resultsLayout?: SuggestionPanelResultsLayout<T>;
 	private readonly modes?: InteractionModes;
 	private readonly switches = new Map<string, PanelSwitch>();
@@ -176,7 +177,7 @@ export class SuggestionPanel<T> extends Component {
 		});
 		this.sortStatusEl = this.statusBarEl.createSpan({
 			cls: "my-palette-status-bar__sort",
-			attr: { hidden: "" },
+			attr: { role: "button", tabindex: "0", hidden: "", "aria-haspopup": "menu" },
 		});
 		this.resultCountEl = this.statusBarEl.createSpan("my-palette-status-bar__count");
 		this.updateResultCount(0);
@@ -191,6 +192,30 @@ export class SuggestionPanel<T> extends Component {
 		}
 		this.registerDomEvent(this.inputEl, "input", () => this.props.onInput(this.inputEl.value));
 		this.registerDomEvent(this.inputEl, "keydown", (event) => this.handleInputKeyDown(event));
+		this.registerDomEvent(this.sortStatusEl, "click", (event) => {
+			if (!this.sortStatusClick) return;
+			event.preventDefault();
+			event.stopPropagation();
+			this.sortStatusClick(event, this.sortStatusEl);
+		});
+		this.registerDomEvent(this.sortStatusEl, "keydown", (event) => {
+			if (event.isComposing) return;
+			if (event.key === " ") {
+				event.preventDefault();
+				event.stopPropagation();
+				return;
+			}
+			if (event.key !== "Enter") return;
+			event.preventDefault();
+			event.stopPropagation();
+			this.sortStatusEl.click();
+		});
+		this.registerDomEvent(this.sortStatusEl, "keyup", (event) => {
+			if (event.key !== " ") return;
+			event.preventDefault();
+			event.stopPropagation();
+			this.sortStatusEl.click();
+		});
 		this.registerDomEvent(this.modeChipEl, "click", (event) => {
 			event.preventDefault();
 			this.props.onModeChipClick?.();
@@ -447,11 +472,18 @@ export class SuggestionPanel<T> extends Component {
 		this.statusTextEl.appendText(text);
 	}
 
-	updateSortStatus(status?: { label: string; title: string }): void {
-		this.sortStatusEl.toggleAttribute("hidden", !status);
+	updateSortStatus(
+		status?: { label: string; title: string },
+		onClick?: (event: MouseEvent, anchor: HTMLElement) => void,
+	): void {
+		this.sortStatusEl.toggleAttribute("hidden", !status || !onClick);
+		this.sortStatusClick = status ? onClick : undefined;
 		this.sortStatusEl.setText(status?.label ?? "");
 		if (status) setTooltip(this.sortStatusEl, status.title);
-		else this.sortStatusEl.removeAttribute("aria-label");
+		else {
+			this.sortStatusEl.removeAttribute("aria-label");
+			this.sortStatusEl.removeAttribute("data-tooltip");
+		}
 	}
 
 	private registerFooterTextActions(): void {

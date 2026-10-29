@@ -374,6 +374,22 @@ export class PaletteHistoryControls {
 		);
 	}
 
+	openSortMenu(event: MouseEvent, anchorEl: HTMLElement): void {
+		const keys = this.options.getSortOptions?.() ?? [];
+		if (!this.options.setSorting || keys.length === 0) return;
+		if (event.detail === 0) {
+			const rect = anchorEl.getBoundingClientRect();
+			event = markKeyboardMenuEvent(
+				new MouseEvent("click", {
+					clientX: rect.left,
+					clientY: rect.bottom,
+					view: anchorEl.ownerDocument.defaultView,
+				}),
+			);
+		}
+		this.showSortMenu(event, keys);
+	}
+
 	private showSortMenu(event: MouseEvent, keys: readonly PaletteSortKey[]): void {
 		const menu = this.replaceActiveMenu();
 		const sortItems = new Map<PaletteSortKey, PaletteMenuItem>();
