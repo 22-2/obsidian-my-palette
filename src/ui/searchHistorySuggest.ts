@@ -111,6 +111,13 @@ export class SearchHistorySuggest {
 			const selected = index === this.selectedIndex;
 			item.toggleClass("is-selected", selected);
 			item.setAttr("aria-selected", String(selected));
+			if (selected) {
+				const top = item.offsetTop;
+				const bottom = top + item.offsetHeight;
+				if (top < this.el.scrollTop) this.el.scrollTop = top;
+				else if (bottom > this.el.scrollTop + this.el.clientHeight)
+					this.el.scrollTop = bottom - this.el.clientHeight;
+			}
 		}
 	}
 }
