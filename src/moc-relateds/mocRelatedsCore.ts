@@ -69,16 +69,10 @@ export function addLinkToMocRelateds(
 
 	const wikiLink = `[[${linkBasename}]]`;
 	const relatedsIndent = lines[relatedsIndex].match(/^\s*/)?.[0] ?? "";
-	let insertIndex = relatedsIndex + 1;
-	for (; insertIndex < lines.length; insertIndex += 1) {
-		const line = lines[insertIndex];
-		if (line.includes(wikiLink))
-			return { success: false, message: t("moc.core.alreadyExists") };
-		if (line.trim().startsWith("##")) break;
-		if (line.trim() === "") continue;
-		const indent = line.match(/^\s*/)?.[0].length ?? 0;
-		if (indent <= relatedsIndent.length) break;
-	}
+	const insertIndex = relatedsChildrenEnd(lines, relatedsIndex);
+	// 従来どおり、子項目の直後の行も重複確認に含める。
+	if (lines.slice(relatedsIndex + 1, insertIndex + 1).some((line) => line.includes(wikiLink)))
+		return { success: false, message: t("moc.core.alreadyExists") };
 
 	const directChildIndent = lines
 		.slice(relatedsIndex + 1, insertIndex)
@@ -103,14 +97,11 @@ export function removeLinkFromMocRelateds(content: string, linkBasename: string)
 	if (!("relatedsIndex" in located)) return { success: false, message: located.message };
 	const { relatedsIndex } = located;
 
-	const relatedsIndent = lines[relatedsIndex].match(/^\s*/)?.[0].length ?? 0;
+	const end = relatedsChildrenEnd(lines, relatedsIndex);
 	const wikiLink = new RegExp(`\\[\\[${escapeRegExp(linkBasename)}(\\|[^\\]]*)?\\]\\]`);
-	for (let index = relatedsIndex + 1; index < lines.length; index += 1) {
+	for (let index = relatedsIndex + 1; index < end; index += 1) {
 		const line = lines[index];
-		if (line.trim().startsWith("##")) break;
-		if (line.trim() === "") continue;
 		const indent = line.match(/^\s*/)?.[0].length ?? 0;
-		if (indent <= relatedsIndent) break;
 		if (!/^\s*[-*+]\s+/.test(line) || !wikiLink.test(line)) continue;
 		// Why: 親の行を削除すると、その下にネストされたノートが黙って消えるか、付け替わってしまうため。
 		const next = lines[index + 1];

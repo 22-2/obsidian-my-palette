@@ -42,6 +42,11 @@ describe("addLinkToMoc関連", () => {
 		});
 	});
 
+	it("子項目の直後にあるリンクも重複として扱う", () => {
+		const content = "## MOC\n- Relateds\n    - [[A]]\n- References [[B]]";
+		expect(addLinkToMocRelateds(content, "B", 4)).toMatchObject({ success: false });
+	});
+
 	it("同じリンクを二度追加しない", () => {
 		const content = "## MOC\n- Relateds\n    - [[Existing note]]";
 		expect(addLinkToMocRelateds(content, "Existing note", 4)).toEqual({
