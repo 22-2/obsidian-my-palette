@@ -1,12 +1,13 @@
-import { Component, Notice, setIcon, setTooltip } from "obsidian";
+import { Component, setIcon, setTooltip } from "obsidian";
 import { ExtendedSelection } from "src/ui/extendedSelection";
 import { InteractionModes } from "src/ui/interactionModes";
+import { SuggestionPreview } from "src/ui/suggestionPreview";
+import { renderSuggestionResults } from "src/ui/suggestionResults";
 import { registerPreviewTransparency } from "src/ui/previewTransparency";
 import { DEFAULT_HOTKEYS, matchesHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
-import { markKeyboardMenuEvent } from "src/ui/menus";
+import { SuggestionPointerActions } from "src/ui/suggestionPointerActions";
 import { PanelSwitch, type PanelSwitchOptions } from "src/ui/panelSwitch";
 import { ICONS } from "src/ui/icons";
-import { logger } from "src/shared/logger";
 import { t } from "src/i18n";
 
 export interface SuggestionPanelProps<T> {
@@ -112,15 +113,12 @@ export class SuggestionPanel<T> extends Component {
 	private readonly initialInput: string;
 	private readonly selectionMode: "single" | "extended";
 	private readonly extendedSelection = new ExtendedSelection();
-	private readonly leftClickRows = new WeakSet<Element>();
-	private readonly middleClickRows = new WeakSet<Element>();
-	private readonly rightClickRows = new WeakSet<Element>();
+	private readonly pointerActions: SuggestionPointerActions<T>;
 	private sortStatusClick?: (event: MouseEvent, anchor: HTMLElement) => void;
 	private resultsLayout?: SuggestionPanelResultsLayout<T>;
 	private readonly modes?: InteractionModes;
 	private readonly switches = new Map<string, PanelSwitch>();
-	private previewGeneration = 0;
-	private previewPending = false;
+	private readonly preview: SuggestionPreview<T>;
 
 	constructor(rootEl: HTMLElement, props: SuggestionPanelProps<T>) {
 		super();
@@ -156,6 +154,12 @@ export class SuggestionPanel<T> extends Component {
 			},
 		});
 		this.inputEl.value = this.initialInput;
+		this.preview = new SuggestionPreview(
+			this.inputEl,
+			() => this.hotkeys,
+			() => this.getSelectedItem(),
+			props.onPreview ? (item) => this.props.onPreview?.(item) : undefined,
+		);
 		const cta = inputContainer.createDiv("prompt-input-cta");
 		cta.setAttribute("aria-hidden", "true");
 		const clearButton = inputContainer.createDiv("search-input-clear-button");
@@ -164,6 +168,20 @@ export class SuggestionPanel<T> extends Component {
 		this.resultContainerEl.setAttribute("role", "listbox");
 		if (this.selectionMode === "extended")
 			this.resultContainerEl.setAttribute("aria-multiselectable", "true");
+		this.pointerActions = new SuggestionPointerActions({
+			component: this,
+			props: this.props,
+			selectionMode: this.selectionMode,
+			extendedSelection: this.extendedSelection,
+			chooser: this.chooser,
+			resultContainerEl: this.resultContainerEl,
+			focusResults: () => this.focusResults(),
+			restoreFocusFromListSpace: (event) => this.restoreFocusFromListSpace(event),
+			itemAtRow: (row) => this.itemAtRow(row),
+			setSelectedIndex: (index, scroll) => this.setSelectedIndex(index, scroll),
+			getSelectedItem: () => this.getSelectedItem(),
+			getSelectedItems: () => this.getSelectedItems(),
+		});
 		this.statusBarEl = this.rootEl.createDiv("my-palette-status-bar");
 		if (props.interactionModes)
 			this.modes = new InteractionModes(this.rootEl, this.inputEl, () => this.hotkeys);
@@ -222,7 +240,7 @@ export class SuggestionPanel<T> extends Component {
 			event.preventDefault();
 			this.props.onModeChipClick?.();
 		});
-		this.registerPointerActions();
+		this.pointerActions.register();
 		this.registerFooterTextActions();
 		this.props.onReady?.();
 	}
@@ -230,7 +248,7 @@ export class SuggestionPanel<T> extends Component {
 	onunload(): void {
 		this.switches.clear();
 		// 閉じた後に終わったプレビューは、入力欄へフォーカスを戻さない。
-		this.previewGeneration += 1;
+		this.preview.unload();
 		this.previewContainerEl.removeClass("my-palette-preview-surface", "is-preview-hidden");
 	}
 
@@ -289,52 +307,17 @@ export class SuggestionPanel<T> extends Component {
 		this.extendedSelection.reset(this.chooser.values.length);
 		this.selected = this.chooser.values[0] ?? null;
 		this.updateResultCount(total);
-		this.resultContainerEl.empty();
-		if (this.resultsLayout) {
-			// 描画の形は、このパネルではなくレイアウトが持つ。行の番号と選択はパネルが持つ。
-			// キーボードもポインターも、表示されている並び順で動くようにする。
-			this.resultsLayout.render(
-				this.resultContainerEl,
-				this.chooser.values,
-				this.query,
-				(row, index) => this.decorateRow(row, index),
-			);
-		}
-		if (!this.chooser.values.length) {
-			if (loading) this.renderLoadingState();
-			else
-				this.resultContainerEl.createDiv({
-					cls: "suggestion-empty",
-					text: this.emptyStateText,
-				});
-			return;
-		}
-		if (this.resultsLayout) return;
-		let section: string | undefined;
-		for (const [index, item] of this.chooser.values.entries()) {
-			const nextSection = this.props.sectionOf?.(item);
-			if (nextSection && nextSection !== section)
-				// 見出しは `.suggestion-item` ではないので、行の番号と矢印の移動は、
-				// 選べる結果だけを数え続ける。
-				this.resultContainerEl.createDiv({
-					cls: "my-palette-section-heading",
-					text: nextSection,
-					attr: { role: "presentation" },
-				});
-			section = nextSection;
-			const el = this.resultContainerEl.createDiv("suggestion-item");
-			this.decorateRow(el, index);
-			this.props.renderSuggestion(item, el, this.query);
-		}
-	}
-
-	/** 検索中の空の一覧。すぐ終わる検索で点滅しないよう、スピナーは CSS で少し遅れて現れる。 */
-	private renderLoadingState(): void {
-		const loadingEl = this.resultContainerEl.createDiv({
-			cls: "suggestion-empty my-palette-loading",
-			attr: { role: "status", "aria-label": t("view.searching") },
+		renderSuggestionResults({
+			container: this.resultContainerEl,
+			items: this.chooser.values,
+			query: this.query,
+			emptyStateText: this.emptyStateText,
+			loading,
+			layout: this.resultsLayout,
+			sectionOf: (item) => this.props.sectionOf?.(item),
+			renderSuggestion: (item, el, query) => this.props.renderSuggestion(item, el, query),
+			decorateRow: (row, index) => this.decorateRow(row, index),
 		});
-		loadingEl.createDiv({ cls: "my-palette-spinner", attr: { "aria-hidden": "true" } });
 	}
 
 	/**
@@ -532,54 +515,9 @@ export class SuggestionPanel<T> extends Component {
 		return true;
 	}
 
-	/**
-	 * プレビューのキー。モーダルと常設のビューで同じ判定にし、フォーカスは入力欄に残す。
-	 * 右矢印は入力欄の末尾にカーソルがあるときだけ使い、途中の編集を奪わない。
-	 */
-	private handlePreviewKey(event: KeyboardEvent): boolean {
-		const { onPreview } = this.props;
-		const hotkey = this.hotkeys.preview;
-		if (!onPreview || !matchesHotkey(event, hotkey)) return false;
-		const cursorIsAtEnd =
-			this.inputEl.selectionStart === this.inputEl.value.length &&
-			this.inputEl.selectionEnd === this.inputEl.value.length;
-		const usesCursorKey = hotkey?.key === "ArrowRight" && hotkey.modifiers.length === 0;
-		if (usesCursorKey && !this.inputEl.readOnly && !cursorIsAtEnd) return false;
-		event.preventDefault();
-		event.stopImmediatePropagation();
-		const item = this.getSelectedItem();
-		if (item === undefined || event.repeat || this.previewPending) return true;
-		void this.previewItem(item);
-		return true;
-	}
-
-	private async previewItem(item: T): Promise<void> {
-		this.previewPending = true;
-		const generation = this.previewGeneration;
-		const selectionStart = this.inputEl.selectionStart;
-		const selectionEnd = this.inputEl.selectionEnd;
-		const restoreFocus = () => {
-			if (generation !== this.previewGeneration || !this.inputEl.isConnected) return;
-			// DOM の入力欄に直接フォーカスする。入力モードに切り替えると、プレビューのたびに
-			// セレクターの読み取り専用の選択モードが失われてしまうため。
-			this.inputEl.focus({ preventScroll: true });
-			this.inputEl.setSelectionRange(selectionStart, selectionEnd);
-		};
-		try {
-			await this.props.onPreview?.(item);
-		} catch (error) {
-			logger.error("Failed to preview selection", error);
-			new Notice(error instanceof Error ? error.message : t("modal.error.previewFailed"));
-		} finally {
-			this.previewPending = false;
-			restoreFocus();
-			window.setTimeout(restoreFocus, 0);
-		}
-	}
-
 	private handleInputKeyDown(event: KeyboardEvent): void {
 		if (event.isComposing) return;
-		if (this.handlePreviewKey(event)) return;
+		if (this.preview.handleKey(event)) return;
 		if (this.handleModeCommand(event)) return;
 		if (this.props.onContextMenu && matchesHotkey(event, this.hotkeys.contextMenu)) {
 			event.preventDefault();
@@ -644,257 +582,8 @@ export class SuggestionPanel<T> extends Component {
 		}
 	}
 
-	private registerPointerActions(): void {
-		// Component のアンロードは、すべてのリスナーを外す。そのため、同じモーダルを開き直すたびに、
-		// ここで登録し直す必要がある。
-		this.registerDomEvent(
-			this.resultContainerEl,
-			"pointermove",
-			(event) => this.handlePointerMove(event),
-			true,
-		);
-		this.registerDomEvent(
-			this.resultContainerEl,
-			"mousedown",
-			(event) => this.handleMouseDown(event),
-			true,
-		);
-		this.registerDomEvent(
-			this.resultContainerEl,
-			"dblclick",
-			(event) => this.handleDoubleClick(event),
-			true,
-		);
-		this.registerDomEvent(
-			this.resultContainerEl,
-			"auxclick",
-			(event) => this.handleAuxClick(event),
-			true,
-		);
-		this.registerDomEvent(
-			this.resultContainerEl,
-			"click",
-			(event) => this.handleClick(event),
-			true,
-		);
-		this.registerDomEvent(
-			this.resultContainerEl,
-			"contextmenu",
-			(event) => this.handleContextMenu(event),
-			true,
-		);
-	}
-
-	private handlePointerMove(event: PointerEvent): void {
-		if (this.selectionMode === "extended") return;
-		const row = this.suggestionRowAtEvent(event);
-		if (!row) return;
-		const index = Number(row.getAttribute("data-index"));
-		if (Number.isInteger(index)) this.setSelectedIndex(index, false);
-	}
-
-	private handleMouseDown(event: MouseEvent): void {
-		// 結果のクリックは、ユーザーの注意を入力からの一覧へ移す、具体的なブラウザーのイベント。
-		// モーダルの一覧の余白のクリックも、昔から検索語を確定してきた。ビューにはテーブルの
-		// ヘッダーもあるので、実際の結果の行だけを確定する。
-		const modal = this.props.surface !== "view";
-		if (modal) this.focusResults();
-		const row = this.suggestionRowAtEvent(event);
-		if (!row) {
-			this.restoreFocusFromListSpace(event);
-			return;
-		}
-		// 並べ替えのヘッダーも結果のコンテナを共有する。しかし、検索を利用履歴に記録するのは、
-		// 実際の結果とのやり取りだけにする。
-		if (!modal) this.focusResults();
-		const item = this.itemAtRow(row);
-		if (item === undefined) return;
-		// Why: 中クリックの保護は click/auxclick までの間保ち、次の押下でリセットする。
-		// 1回のジェスチャーで同じノートを2回開かないようにするため。
-		this.middleClickRows.delete(row);
-		const index = Number(row.getAttribute("data-index"));
-		if (event.button === 0 && this.isRowToggleEvent(event)) {
-			// Why: チェックの操作は、その行で即座に動く。押下をそのまま通すと、強調表示の選択も変わる。
-			event.preventDefault();
-			event.stopImmediatePropagation();
-			this.leftClickRows.add(row);
-			this.props.onRowToggle?.(item, event);
-		} else if (
-			event.button === 0 &&
-			this.props.activateOnClick?.(item) &&
-			!event.ctrlKey &&
-			!event.metaKey &&
-			!event.shiftKey
-		) {
-			event.preventDefault();
-			event.stopImmediatePropagation();
-			this.leftClickRows.add(row);
-			this.setSelectedIndex(index, false);
-			void this.props.onChoose(item, event);
-		} else if (event.button === 0 && this.selectionMode === "extended") {
-			// Why: サイドバーは、mousedown の後に Obsidian にクリックを奪われることがある。
-			// 今ここで選び、開く操作はダブルクリックと Enter だけに任せる。
-			event.preventDefault();
-			event.stopImmediatePropagation();
-			this.leftClickRows.add(row);
-			this.extendedSelection.select(index, this.chooser.values.length, {
-				toggle: event.ctrlKey || event.metaKey,
-				range: event.shiftKey,
-			});
-			this.setSelectedIndex(index, false);
-		} else if (event.button === 0 && this.props.surface === "view") {
-			// サイドバーのクリックは、mousedown の後に Obsidian に消費されることがある。そのため、
-			// 主な操作はここで実行し、後のクリックはガードを外すだけにする。
-			// 単一選択のモーダルは、通常のクリックでの有効化を保つ。
-			event.preventDefault();
-			event.stopImmediatePropagation();
-			this.leftClickRows.add(row);
-			this.setSelectedIndex(index, false);
-			void this.props.onChoose(item, event);
-		} else if (event.button === 1 && this.props.onMiddleClick) {
-			event.preventDefault();
-			event.stopImmediatePropagation();
-			this.handleMiddleClick(row, event);
-		} else if (event.button === 2 && this.props.onContextMenu) {
-			event.preventDefault();
-			event.stopImmediatePropagation();
-			this.rightClickRows.add(row);
-			if (this.selectionMode === "extended")
-				this.extendedSelection.selectForContextMenu(index, this.chooser.values.length);
-			this.setSelectedIndex(index, false);
-		}
-	}
-
-	private handleDoubleClick(event: MouseEvent): void {
-		if (this.selectionMode !== "extended" || event.button !== 0) return;
-		// チェックの上で素早く2回押すと、すでに2回切り替わっている。その後に続く dblclick で、
-		// さらに行を有効にしてはいけない。
-		if (this.isRowToggleEvent(event)) {
-			event.preventDefault();
-			event.stopImmediatePropagation();
-			return;
-		}
-		const row = this.suggestionRowAtEvent(event);
-		const item = row ? this.itemAtRow(row) : undefined;
-		if (!row || item === undefined) return;
-		if (this.props.activateOnClick?.(item)) return;
-		event.preventDefault();
-		event.stopImmediatePropagation();
-		this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
-		void this.props.onChoose(item, event);
-	}
-
-	private handleAuxClick(event: MouseEvent): void {
-		if (event.button !== 1 && event.button !== 2) return;
-		const row = this.suggestionRowAtEvent(event);
-		if (!row) return;
-		event.preventDefault();
-		event.stopImmediatePropagation();
-		// Why: 補助の右クリックは、ホストが先行する mousedown を届けなかったとしても、
-		// 決して中クリックの操作を使ってはいけない。
-		if (event.button === 1) this.handleMiddleClick(row, event);
-	}
-
-	private handleClick(event: MouseEvent): void {
-		// 中・右クリックの後に発火する click/auxclick の取りこぼしが、主な操作として onChoose へ
-		// 落ちて、アクティブなタブを上書きしないよう、左クリック以外はここで確実に消費する。
-		// Why: Electron/Windows の環境では、中クリックで click が、右クリックで click が飛ぶことがあり、
-		// ガードの漏れが上書きの原因になっていた。
-		if (event.button !== 0) {
-			event.preventDefault();
-			event.stopImmediatePropagation();
-			// Why: 一部の Electron のホストは、中ボタンに auxclick の代わりに click を出す。
-			// 通常の mousedown の経路とガードを共有する。
-			const row = this.suggestionRowAtEvent(event);
-			if (event.button === 1 && row) this.handleMiddleClick(row, event);
-			return;
-		}
-		const row = this.suggestionRowAtEvent(event);
-		if (!row) return;
-		if (this.middleClickRows.has(row)) {
-			event.preventDefault();
-			event.stopImmediatePropagation();
-			return;
-		}
-		if (this.leftClickRows.delete(row)) {
-			event.preventDefault();
-			event.stopImmediatePropagation();
-			return;
-		}
-		if (this.rightClickRows.delete(row)) {
-			event.preventDefault();
-			event.stopImmediatePropagation();
-			return;
-		}
-		if (this.selectionMode === "extended") return;
-		const item = this.itemAtRow(row);
-		if (item === undefined) return;
-		this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
-		void this.props.onChoose(item, event);
-	}
-
-	private handleContextMenu(event: MouseEvent): void {
-		if (!this.props.onContextMenu) return;
-		const row = this.suggestionRowAtEvent(event);
-		const item = row ? this.itemAtRow(row) : undefined;
-		if (!row || item === undefined) return;
-		event.preventDefault();
-		event.stopImmediatePropagation();
-		this.rightClickRows.add(row);
-		this.showRowContextMenu(Number(row.getAttribute("data-index")), item, event);
-	}
-
-	private showRowContextMenu(index: number, item: T, event: MouseEvent): void {
-		if (this.selectionMode === "extended")
-			this.extendedSelection.selectForContextMenu(index, this.chooser.values.length);
-		this.setSelectedIndex(index, false);
-		this.props.onContextMenu?.(item, event, this.getSelectedItems());
-	}
-
-	/** コンテキストメニューのホットキーと同じく、アクティブな行の下にその行のメニューを開く。 */
 	showActiveRowContextMenu(): void {
-		const index = this.chooser.selectedItem;
-		const item = this.getSelectedItem();
-		const row = this.resultContainerEl.querySelector<HTMLElement>(
-			`.suggestion-item[data-index="${index}"]`,
-		);
-		if (item === undefined || !row) return;
-		row.scrollIntoView({ block: "nearest" });
-		const rect = row.getBoundingClientRect();
-		// Why: メニューのホストはマウスのイベントから位置を決めるので、キーボードの経路は、
-		// アクティブな行のすぐ下に、ドロップダウンのように合成したイベントを置く。
-		const event = markKeyboardMenuEvent(
-			new MouseEvent("contextmenu", {
-				clientX: rect.left,
-				clientY: rect.bottom,
-				view: row.win,
-			}),
-		);
-		this.showRowContextMenu(index, item, event);
-	}
-
-	private handleMiddleClick(row: Element, event: MouseEvent): void {
-		if (this.middleClickRows.has(row) || !this.props.onMiddleClick) return;
-		const item = this.itemAtRow(row);
-		if (item === undefined) return;
-		this.middleClickRows.add(row);
-		this.setSelectedIndex(Number(row.getAttribute("data-index")), false);
-		void this.props.onMiddleClick(item, event);
-	}
-
-	private isRowToggleEvent(event: Event): boolean {
-		if (!this.props.onRowToggle) return false;
-		const target = event.target as Node | null;
-		return Boolean(target?.instanceOf(Element) && target.closest("[data-row-toggle]"));
-	}
-
-	private suggestionRowAtEvent(event: Event): Element | undefined {
-		const target = event.target as Node | null;
-		// Why: 復元されたポップアウトのパネルは別の窓にノードを作る。その Element のコンストラクタは
-		// プラグインの窓のものと違う。Obsidian は窓をまたいで確認する。
-		if (!target?.instanceOf(Element)) return undefined;
-		const row = target.closest(".suggestion-item");
-		return row && this.resultContainerEl.contains(row) ? row : undefined;
+		this.pointerActions.showActiveRowContextMenu();
 	}
 
 	private itemAtRow(row: Element): T | undefined {
