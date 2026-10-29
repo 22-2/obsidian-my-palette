@@ -18,7 +18,7 @@
 
 ### 1. ノートのGitHubのページを開く操作
 
-ファイル結果の操作(`docs/PLUGINS_SNIPPETS_AND_OPEN_WITH_PLAN.md`の「開き方」)に、「Open on GitHub」を足す。どのモードのファイル結果にも効くので、Paletteの作りに合う。
+ファイル結果の操作([開き方の計画](plan/PLUGINS_SNIPPETS_AND_OPEN_WITH_PLAN.md))に「Open on GitHub」を足す。どのモードのファイル結果にも効くので、Paletteの作りに合う。
 
 - URLは`origin`のURL、現在のブランチ、保管庫ルートからの相対パスから組み立てる(`https://github.com/<owner>/<repo>/blob/<branch>/<path>`)。`gh browse <path>`を呼ぶより、`gh`が要らない分だけ条件が軽い。
 - ブランチがリモートにない、ファイルがコミットされていない場合は、開いても404になる。操作は出したままにし、開く前に確かめるかどうかは試して決める。

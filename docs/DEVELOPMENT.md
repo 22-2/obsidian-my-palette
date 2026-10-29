@@ -1,66 +1,66 @@
-# Development
+# 開発
 
-My Palette is written in TypeScript and bundled with esbuild. Source is organized by feature under `src/`, with unit tests colocated next to the pure search, settings and Obsidian-excluded file logic.
+My PaletteはTypeScriptで書かれ、esbuildでバンドルされます。ソースコードは`src/`以下に機能ごとに整理されています。検索、設定、Obsidianによる除外対象ファイルの処理に関する純粋ロジックの単体テストは、それぞれのソースファイルの近くに置いています。
 
-Requirements: Node.js and pnpm.
+必要な環境: Node.js、pnpm。
 
-## Commands
+## コマンド
 
-- `pnpm install`: install dependencies. It also points Git at `.githooks/`, whose pre-commit hook formats staged files with oxfmt.
-- `pnpm dev`: start the watch build.
-- `pnpm format`: format with oxfmt. `pnpm format:check` only reports unformatted files.
-- `pnpm lint`: lint with ESLint and the Obsidian plugin rules.
-- `pnpm test`: run unit tests with Vitest.
-- `pnpm test:coverage`: run unit tests and write the report to `coverage/unit/`.
-- `pnpm test:coverage:e2e`: build with source maps, collect Playwright coverage in `coverage/e2e/`, then restore the regular build.
-- `pnpm test:coverage:combined`: run both coverage suites and merge them into `coverage/combined/`.
-- `pnpm check-types`: run the TypeScript check.
-- `pnpm build`: build a production bundle.
-- `pnpm e2e`: run the end-to-end tests (see below).
-- `pnpm test:e2e:smoke`: build and run only the E2E smoke test.
-- `pnpm ui:shots`: capture the palette and settings screens into a new `run-*` folder under `UI_SHOT_DIR` (default: the OS temp folder). The VS Code task "My Palette: Capture UI screenshots" runs it and opens the folder.
+- `pnpm install`: 依存関係をインストールします。また、Gitのフック参照先を`.githooks/`に設定します。pre-commitフックは、ステージ済みファイルをoxfmtで整形します。
+- `pnpm dev`: ビルドを監視モードで実行します。
+- `pnpm format`: oxfmtで整形します。`pnpm format:check`は、整形されていないファイルだけを報告します。
+- `pnpm lint`: ESLintとObsidianプラグイン向けルールで静的解析します。
+- `pnpm test`: Vitestで単体テストを実行します。
+- `pnpm test:coverage`: 単体テストを実行し、レポートを`coverage/unit/`に出力します。
+- `pnpm test:coverage:e2e`: ソースマップ付きでビルドし、Playwrightのカバレッジを`coverage/e2e/`に収集してから、通常のビルドに戻します。
+- `pnpm test:coverage:combined`: 2種類のカバレッジテストを実行し、結果を`coverage/combined/`にまとめます。
+- `pnpm check-types`: TypeScriptの型チェックを実行します。
+- `pnpm build`: 本番用バンドルを作成します。
+- `pnpm e2e`: E2Eテストを実行します（詳細は下記を参照）。
+- `pnpm test:e2e:smoke`: ビルドして、E2Eスモークテストだけを実行します。
+- `pnpm ui:shots`: パレットと設定画面のスクリーンショットを、`UI_SHOT_DIR`の下に新しい`run-*`フォルダーを作って保存します（既定ではOSの一時フォルダー）。VS Codeのタスク「My Palette: Capture UI screenshots」から実行すると、保存先フォルダーも開きます。
 
-Formatting, linting, type checking and tests are separate so they can be run independently while refactoring.
+整形、静的解析、型チェック、テストは個別に実行できるため、リファクタリング中も必要なものを選んで実行できます。
 
-`esbuild.config.mjs` writes `main.js` and `styles.css` to `dist/`. Copy them with `manifest.json` into a Vault's plugin folder, then enable or reload the plugin in Obsidian.
+`esbuild.config.mjs`は`main.js`と`styles.css`を`dist/`に出力します。これらを`manifest.json`と一緒に保管庫のプラグインフォルダーへコピーし、Obsidianでプラグインを有効化または再読み込みしてください。
 
-## Icons and shared constants
+## アイコンと共有定数
 
-- Icon names live in `src/ui/icons.ts` (`ICONS`), keyed by what they mean rather than how they look. Use an entry from there instead of writing a Lucide name inline, so one action keeps one icon everywhere.
-- Menu items that appear in more than one menu, or that name the same action, are defined once in `src/ui/menuActions.ts` (`MENU_ACTIONS`) with their title and icon. `withAction` applies one to a menu item; `addOpenMenuItems` and `addExternalAppMenuItems` add the open and external-app groups in a fixed order.
-- IndexedDB database names live in `src/shared/databaseNames.ts`. They are stored in the user's browser profile, so renaming one drops its data.
+- アイコン名は`src/ui/icons.ts`の`ICONS`に定義します。見た目ではなく意味を表す名前をキーにしています。Lucideのアイコン名を直接書かず、ここにある定義を使うことで、同じ操作には常に同じアイコンを使えます。
+- 複数のメニューに表示される項目や、同じ操作を表す項目は、タイトルとアイコンとともに`src/ui/menuActions.ts`の`MENU_ACTIONS`へ一度だけ定義します。`withAction`で定義をメニュー項目に適用します。`addOpenMenuItems`と`addExternalAppMenuItems`は、「開く」と「外部アプリ」の項目を決まった順序で追加します。
+- IndexedDBのデータベース名は`src/shared/databaseNames.ts`に定義します。データはユーザーのブラウザープロファイルに保存されるため、名前を変更すると既存データが失われます。
 
-## End-to-end tests
+## E2Eテスト
 
-`pnpm e2e` builds the plugin, installs it into a temporary Vault and drives a real Obsidian with Playwright through [obsidian-e2e-toolkit](https://github.com/22-2/obsidian-e2e-toolkit). The specs live in `e2e/`; Vitest only runs `src/**/*.test.ts`.
+`pnpm e2e`はプラグインをビルドして一時的な保管庫にインストールし、[obsidian-e2e-toolkit](https://github.com/22-2/obsidian-e2e-toolkit)を通じてPlaywrightで実際のObsidianを操作します。テスト仕様は`e2e/`にあります。Vitestが実行するのは`src/**/*.test.ts`だけです。
 
-- Tests run through `pnpx offstage-windows playwright test`. On Windows, [offstage-windows](https://github.com/LippInc/offstage-windows) puts the test runner and Obsidian on a hidden desktop so they do not take keyboard focus. On other platforms, the command passes through unchanged. The first run downloads the CLI through pnpx.
-- Windows uses one Playwright worker because the CLI wrapper shares one hidden desktop per run; other platforms retain parallel workers.
-- Run `pnpm test:e2e:smoke` for a quick plugin-load check, or `pnpm e2e file-search.spec.mts` to build and run a specific spec. Extra Playwright arguments such as `--shard=1/2` pass through `pnpm e2e`.
-- `pnpm test:e2e` runs the wrapped tests without building or preparing the plugin. E2E coverage uses this same wrapper after preparing its instrumented build.
-- For visible windows or interactive modes (`--debug`, `--ui`), set `$env:OFFSTAGE = '0'` in PowerShell before running the script. Restore hidden runs with `Remove-Item Env:OFFSTAGE` afterwards. Check the hidden-desktop helper with `pnpx offstage-windows --check`.
-- Node.js 23 or later is required by the toolkit.
-- `pnpm e2e` first runs Electron's `install.js`, which downloads the Electron binary on the first run; a plain `pnpm install` does not fetch it.
-- On a machine without a display (Linux servers, containers), run `xvfb-run -a pnpm e2e`.
-- The Obsidian build is the one bundled with the toolkit. Set `OBSIDIAN_E2E_TOOLKIT_OBSIDIAN_VERSION` and rerun `node node_modules/obsidian-e2e-toolkit/setup.mjs` to test another version.
-- Failed tests attach a screenshot and the DOM to the Playwright report in `test-results/`.
-- Everything search only checks the request sent to the HTTP server, because the plugin accepts Windows-style paths only.
+- テストは`pnpx offstage-windows playwright test`経由で実行します。Windowsでは[offstage-windows](https://github.com/LippInc/offstage-windows)がテストランナーとObsidianを非表示のデスクトップで動かし、キーボードフォーカスを奪わないようにします。それ以外のプラットフォームでは、コマンドをそのまま実行します。初回実行時に、pnpx経由でCLIがダウンロードされます。
+- Windowsでは、CLIラッパーが1回の実行につき1つの非表示デスクトップを共有するため、Playwrightのワーカーを1つにします。それ以外のプラットフォームでは並列ワーカーを使います。
+- プラグインの読み込みだけを手早く確認するには`pnpm test:e2e:smoke`を実行します。特定の仕様だけをビルドして実行するには`pnpm e2e file-search.spec.mts`を使います。`--shard=1/2`などの追加のPlaywright引数は`pnpm e2e`に渡せます。
+- `pnpm test:e2e`は、ビルドやプラグインの準備をせずにラッパー経由でテストを実行します。E2Eカバレッジでは、計測用ビルドを準備したあとに同じラッパーを使います。
+- ウィンドウを表示したり、`--debug`や`--ui`などの対話モードを使ったりする場合は、スクリプトの実行前にPowerShellで`$env:OFFSTAGE = '0'`を設定します。非表示での実行に戻すには、後で`Remove-Item Env:OFFSTAGE`を実行します。非表示デスクトップのヘルパーは`pnpx offstage-windows --check`で確認できます。
+- toolkitの実行にはNode.js 23以降が必要です。
+- `pnpm e2e`は最初にElectronの`install.js`を実行し、初回にElectronのバイナリをダウンロードします。通常の`pnpm install`ではダウンロードされません。
+- Linuxサーバーやコンテナーなど、ディスプレイのない環境では`xvfb-run -a pnpm e2e`を実行します。
+- Obsidianのビルドにはtoolkitに同梱されたものを使います。別のバージョンをテストするには、`OBSIDIAN_E2E_TOOLKIT_OBSIDIAN_VERSION`を設定してから`node node_modules/obsidian-e2e-toolkit/setup.mjs`を再実行します。
+- テストに失敗すると、スクリーンショットとDOMが`test-results/`のPlaywrightレポートに添付されます。
+- Everything検索では、HTTPサーバーに送信したリクエストだけを検証します。プラグインがWindows形式のパスだけを受け付けるためです。
 
-## Releasing
+## リリース
 
-1. Update `manifest.json` with the new version and the minimum Obsidian version required.
-2. Add `"new-plugin-version": "minimum-obsidian-version"` to `versions.json` so older Obsidian versions can download a compatible release.
-3. Create a GitHub release whose tag is the exact version number, without a `v` prefix.
-4. Attach `manifest.json`, `main.js` and `styles.css` as binary files. `manifest.json` must also stay in the repository root.
-5. Publish the release.
+1. `manifest.json`のバージョンと、必要なObsidianの最小バージョンを更新します。
+2. 古いObsidianでも互換性のあるリリースをダウンロードできるよう、`versions.json`に`"new-plugin-version": "minimum-obsidian-version"`の形式で項目を追加します。
+3. バージョン番号と完全に一致するタグ（`v`接頭辞なし）でGitHubリリースを作成します。
+4. `manifest.json`、`main.js`、`styles.css`をバイナリファイルとして添付します。`manifest.json`はリポジトリのルートにも置いておきます。
+5. リリースを公開します。
 
-After editing `minAppVersion` by hand, `npm version patch|minor|major` bumps the version in `manifest.json` and `package.json` and adds the entry to `versions.json`.
+`minAppVersion`を手作業で変更した後、`npm version patch|minor|major`を実行すると、`manifest.json`と`package.json`のバージョンが更新され、`versions.json`にも項目が追加されます。
 
-## Community plugin list
+## コミュニティプラグイン一覧への登録
 
-See the [plugin review guidelines](https://github.com/obsidianmd/obsidian-releases/blob/master/plugin-review.md), publish an initial release, and open a pull request against [obsidian-releases](https://github.com/obsidianmd/obsidian-releases).
+[プラグインのレビューガイドライン](https://github.com/obsidianmd/obsidian-releases/blob/master/plugin-review.md)を確認し、最初のリリースを公開してから、[obsidian-releases](https://github.com/obsidianmd/obsidian-releases)にプルリクエストを作成します。
 
-## Reference
+## 参考資料
 
 - [Obsidian API](https://github.com/obsidianmd/obsidian-api)
-- Design notes: [DETAILED_SPECIFICATION.md](DETAILED_SPECIFICATION.md), [REFACTORING_ROADMAP.md](REFACTORING_ROADMAP.md)
+- 設計資料: [詳細仕様書](DETAILED_SPECIFICATION.md)、[リファクタリング・ロードマップ](plan/REFACTORING_ROADMAP.md)

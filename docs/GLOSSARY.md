@@ -125,7 +125,7 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 
 ### Vault audit
 
-計画は`docs/VAULT_AUDIT_PLAN.md`。
+計画は[VAULT_AUDIT_PLAN.md](plan/VAULT_AUDIT_PLAN.md)。
 
 | 正式名         | 意味                                                 | 識別子(`AuditKind`) |
 | -------------- | ---------------------------------------------------- | ------------------- |
