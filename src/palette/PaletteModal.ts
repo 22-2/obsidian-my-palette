@@ -288,6 +288,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	private enterMode(result: Extract<PaletteResult, { mode: "mode-entry" }>): void {
+		if (result.unavailable) return;
 		this.session.enterMode(result.modeId);
 		this.panelInput("");
 		this.clearSuggestions();

@@ -60,6 +60,30 @@ describe("ホームセクション", () => {
 		session.dispose();
 	});
 
+	it("未準備の連携は表示し、無効な連携は表示しない", async () => {
+		const { plugin } = await host();
+		const session = new PaletteSearchSession(plugin, { modeEntries: true });
+		session.enterMode("other");
+		const results = await session.search();
+		expect(results.find((result) => result.id === "mode:everything")).toMatchObject({
+			unavailable: true,
+		});
+		expect(results.find((result) => result.id === "mode:smart")).toMatchObject({
+			unavailable: true,
+		});
+		plugin.settings.integrations.everything.enabled = false;
+		expect((await session.search()).some((result) => result.id === "mode:everything")).toBe(
+			false,
+		);
+		session.returnToHome();
+		expect(
+			(await session.search("sc")).find((result) => result.id === "mode:smart"),
+		).toMatchObject({ unavailable: true });
+		await session.search("sc query");
+		expect(session.current.route.kind).toBe("home");
+		session.dispose();
+	});
+
 	it("残りのモードが無効ならその他を表示しない", async () => {
 		const { plugin } = await host();
 		for (const [id, mode] of Object.entries(plugin.settings.modes))

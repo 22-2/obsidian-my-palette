@@ -48,9 +48,10 @@ export function toPaletteSelectionItem(
 	if (result.mode === "mode-entry") {
 		return {
 			label: result.primary,
-			description: result.secondary,
+			description: result.unavailable ? t("mode.unavailable") : result.secondary,
 			icon: result.icon,
 			badge: result.alias,
+			disabled: result.unavailable,
 		};
 	}
 	if (result.mode === "search-history") {

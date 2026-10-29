@@ -6,6 +6,7 @@ import { matchPreparer } from "src/search/kana";
 
 export interface SelectionItem {
 	label: string;
+	disabled?: boolean;
 	description?: string;
 	descriptionTitle?: string;
 	icon?: string;
@@ -27,6 +28,8 @@ export function renderSelectionItem(
 	query = "",
 	highlight: SelectionHighlightOptions = {},
 ): void {
+	if (result.disabled) container.setAttribute("aria-disabled", "true");
+	else container.removeAttribute("aria-disabled");
 	const row = container.createDiv("my-palette-suggestion");
 	if (result.icon) {
 		const icon = row.createSpan("my-palette-suggestion__icon");

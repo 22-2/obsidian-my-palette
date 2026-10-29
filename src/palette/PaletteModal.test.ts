@@ -164,6 +164,19 @@ describe("パレットモーダル", () => {
 		expect(f.modal.modalEl.getAttribute("data-route")).toBe("home");
 	});
 
+	it("利用できない連携を無効表示し、Enter や Tab で開かない", async () => {
+		const f = await open("Everything");
+		const row = f.rows().find((el) => el.textContent?.includes("Everything"));
+		expect(row?.getAttribute("aria-disabled")).toBe("true");
+		expect(row?.textContent).toContain("利用できません");
+		key(f.modal.inputEl, "Enter");
+		await settle();
+		expect(f.modal.modalEl.getAttribute("data-route")).toBe("home");
+		key(f.modal.inputEl, "Tab");
+		await settle();
+		expect(f.modal.modalEl.getAttribute("data-route")).toBe("home");
+	});
+
 	it("ソースノートに名前を付けるのではなく、いくつかのソースノートを数えます", async () => {
 		const sourceFiles = [{ path: "A.md" }, { path: "B.md" }] as TFile[];
 		const f = await open("", { sourceFiles });

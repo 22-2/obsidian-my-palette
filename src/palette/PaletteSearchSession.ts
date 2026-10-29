@@ -14,6 +14,8 @@ import {
 	availableModes,
 	findPaletteMode,
 	getPaletteMode,
+	isModeIntegrationOn,
+	isModeIntegrationReady,
 	matchPaletteModes,
 	paletteModeAlias,
 	parseDirectModeEntry,
@@ -349,10 +351,16 @@ export class PaletteSearchSession {
 
 	private modeEntries(input: string): ModeEntryResult[] {
 		if (!this.listsModes || this.route.kind === "mode") return [];
-		const modes = availableModes(
-			this.plugin.settings,
-			this.plugin.integrationAvailability.current,
-		);
+		const { settings, integrationAvailability } = this.plugin;
+		const modes = Object.fromEntries(
+			Object.entries(settings.modes).map(([id, mode]) => [
+				id,
+				{
+					...mode,
+					enabled: mode.enabled && isModeIntegrationOn(id as PaletteModeId, settings),
+				},
+			]),
+		) as typeof settings.modes;
 		const matched = matchPaletteModes(input, modes);
 		const definitions =
 			this.route.kind === "other"
@@ -364,6 +372,7 @@ export class PaletteSearchSession {
 			id: `mode:${definition.id}`,
 			mode: "mode-entry",
 			modeId: definition.id,
+			unavailable: !isModeIntegrationReady(definition.id, integrationAvailability.current),
 			alias: paletteModeAlias(definition.id, modes),
 			primary: definition.title,
 			secondary: definition.subtitle,

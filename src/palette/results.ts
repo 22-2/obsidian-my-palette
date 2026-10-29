@@ -99,6 +99,7 @@ export interface SmartConnectionResult extends BaseResult {
 export interface ModeEntryResult extends Omit<BaseResult, "mode"> {
 	mode: "mode-entry";
 	modeId: PaletteModeId | "other";
+	unavailable?: boolean;
 	alias: string;
 }
 

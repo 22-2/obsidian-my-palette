@@ -786,6 +786,10 @@
 	white-space: nowrap;
 }
 
+.suggestion-item[aria-disabled="true"] .my-palette-suggestion {
+	opacity: 0.45;
+}
+
 .my-palette-suggestion {
 	display: flex;
 	align-items: flex-start;

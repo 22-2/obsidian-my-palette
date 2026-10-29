@@ -157,10 +157,11 @@ export function populatePaletteResultMenu({
 		return;
 	}
 	if (result.mode === "mode-entry") {
-		addMenuAction(menu, MENU_ACTIONS.enterMode, () => void activate("primary", result));
+		if (!result.unavailable)
+			addMenuAction(menu, MENU_ACTIONS.enterMode, () => void activate("primary", result));
 		if (result.modeId === "other") return;
 		const modeId = result.modeId;
-		menu.addSeparator();
+		if (!result.unavailable) menu.addSeparator();
 		addMenuAction(menu, MENU_ACTIONS.hideMode, () => {
 			plugin.settings.modes[modeId].enabled = false;
 			void plugin.saveSettings().then(() => onResultsChanged?.());

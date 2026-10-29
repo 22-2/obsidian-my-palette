@@ -325,7 +325,7 @@ export class PaletteView extends ItemView {
 			onModeChipClick: () => this.returnToHome(),
 			onTab: (result) => {
 				if (result.mode !== "mode-entry") return false;
-				this.enterMode(result.modeId);
+				if (!result.unavailable) this.enterMode(result.modeId);
 				return true;
 			},
 			onPreview: (result) => this.preview(result),
@@ -588,7 +588,7 @@ export class PaletteView extends ItemView {
 		autoFocus = true,
 	): Promise<void> {
 		if (result.mode === "mode-entry") {
-			this.enterMode(result.modeId);
+			if (!result.unavailable) this.enterMode(result.modeId);
 			return;
 		}
 		if (!this.session || !this.panel || result.mode === "search-history") {
