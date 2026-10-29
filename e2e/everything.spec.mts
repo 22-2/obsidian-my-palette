@@ -27,7 +27,7 @@ const { port } = server.address() as AddressInfo;
 // The plugin starts with its data.json already pointing at the stand-in server.
 test.use({
 	vaultOptions: pluginVaultOptions({
-		everything: { httpUrl: `http://127.0.0.1:${port}/` },
+		everything: { backend: "http", httpUrl: `http://127.0.0.1:${port}/` },
 	}),
 });
 
@@ -41,7 +41,7 @@ test.beforeEach(async ({ obsidian }) => {
 	requests.length = 0;
 });
 
-test("failed integrations leave Home and Modes and successful setup restores Everything", async ({
+test("Everything remains visible but unavailable after a failed connection and recovers", async ({
 	obsidian,
 }) => {
 	const testConnection = () =>
@@ -50,11 +50,13 @@ test("failed integrations leave Home and Modes and successful setup restores Eve
 		);
 	await runPaletteCommand(obsidian, "open-home");
 	const page = obsidian.page;
-	await expect(page.locator(MODAL_ROW).filter({ hasText: "Everything" })).toHaveCount(1);
-	await expect(page.locator(MODAL_ROW).filter({ hasText: "Related notes" })).toHaveCount(0);
+	await page.locator(MODAL_INPUT).fill("Everything");
+	const everything = page.locator(MODAL_ROW).filter({ hasText: "Everything" });
+	await expect(everything).toHaveCount(1);
+	await expect(everything).not.toContainText("利用できません");
 	serverStatus = 503;
 	expect((await testConnection()).ok).toBe(false);
-	await expect(page.locator(MODAL_ROW).filter({ hasText: "Everything" })).toHaveCount(0);
+	await expect(everything).toContainText("利用できません");
 	await page.locator(MODAL_INPUT).press("Escape");
 	// The plugin's own settings entry is what this test checks, so it is invoked directly.
 	await obsidian.evaluatePlugin<void, { openSettings(): void }>(PLUGIN_ID, (plugin) =>
@@ -62,19 +64,25 @@ test("failed integrations leave Home and Modes and successful setup restores Eve
 	);
 	// Only the window lookup uses findPage, so an already open settings window is found too.
 	const settings = await obsidian.findPage(
-		(candidate) => candidate.locator(".setting-item-name").filter({ hasText: /^Modes$/ }),
+		(candidate) => candidate.locator(".setting-item-name").filter({ hasText: /^モード$/ }),
 		{ description: "my-palette settings window" },
 	);
 	await settings
 		.locator(".setting-item-name")
-		.filter({ hasText: /^Modes$/ })
+		.filter({ hasText: /^モード$/ })
 		.click();
 	await expect(settings.getByText("Everything", { exact: true })).toBeHidden();
-	await expect(settings.getByText("Related notes", { exact: true })).toBeHidden();
-	await expect(settings.getByText("Notes", { exact: true })).toBeVisible();
+	await expect(settings.getByText("関連ノート", { exact: true })).toBeHidden();
+	await expect(settings.getByText("ノート", { exact: true })).toBeVisible();
 	serverStatus = 200;
 	expect((await testConnection()).ok).toBe(true);
 	await expect(settings.getByText("Everything", { exact: true })).toBeVisible();
+	await obsidian.closeSettings();
+	await runPaletteCommand(obsidian, "open-home");
+	await page.locator(MODAL_INPUT).fill("Everything");
+	await expect(page.locator(MODAL_ROW).filter({ hasText: "Everything" })).not.toContainText(
+		"利用できません",
+	);
 });
 
 test.afterAll(() => {
@@ -96,7 +104,7 @@ test("the e prefix sends a vault-scoped query to the Everything HTTP server", as
 	expect(params.get("search")).toContain(`path:"${vaultRoot}"`);
 	expect(params.get("search")).toContain("ext:");
 	expect(params.get("search")).toMatch(/report$/);
-	await expect(page.locator(".my-palette-suggest-modal")).toContainText("No suggestions");
+	await expect(page.locator(".my-palette-suggest-modal")).toContainText("候補がありません");
 });
 
 test("the Obsidian-excluded option changes the single Everything mode's scope", async ({
