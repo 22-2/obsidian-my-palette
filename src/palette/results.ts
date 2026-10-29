@@ -98,7 +98,7 @@ export interface SmartConnectionResult extends BaseResult {
 /** 何も開かず、モードに入る Home の行。 */
 export interface ModeEntryResult extends Omit<BaseResult, "mode"> {
 	mode: "mode-entry";
-	modeId: PaletteModeId;
+	modeId: PaletteModeId | "other";
 	alias: string;
 }
 

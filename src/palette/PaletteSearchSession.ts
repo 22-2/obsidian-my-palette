@@ -21,6 +21,9 @@ import {
 } from "src/palette/modes";
 import type { ModeEntryResult } from "src/palette/results";
 import { t } from "src/i18n";
+import { ICONS } from "src/ui/icons";
+
+const HOME_MODE_IDS: readonly PaletteModeId[] = ["notes", "commands", "bookmarks", "tags"];
 
 export type FixedPaletteMode = Extract<
 	PaletteMode,
@@ -31,7 +34,10 @@ export type FixedPaletteMode = Extract<
  * 移動できるパレットの現在位置。Home は、ファイルの上にモードの一覧を出す(`modeEntries` が off でない限り)。
  * モードは、接頭辞なしで1つのプロバイダーを表示する。
  */
-export type PaletteRoute = { kind: "home" } | { kind: "mode"; modeId: PaletteModeId };
+export type PaletteRoute =
+	| { kind: "home" }
+	| { kind: "other" }
+	| { kind: "mode"; modeId: PaletteModeId };
 
 export type RecordableSearch = {
 	query: string;
@@ -123,7 +129,7 @@ export class PaletteSearchSession {
 		};
 		this.stopReadinessUpdates = plugin.integrationAvailability.subscribe(() => {
 			queueMicrotask(() => {
-				if (this.disposed || this.route.kind !== "home") return;
+				if (this.disposed || this.route.kind === "mode") return;
 				if (onModesChange) onModesChange();
 				else void this.search(this.state.input, { keepResults: true });
 			});
@@ -132,8 +138,8 @@ export class PaletteSearchSession {
 	}
 
 	/** Home からモードに入る。入力にはクエリだけが残る。 */
-	enterMode(modeId: PaletteModeId, query = ""): void {
-		this.route = { kind: "mode", modeId };
+	enterMode(modeId: PaletteModeId | "other", query = ""): void {
+		this.route = modeId === "other" ? { kind: "other" } : { kind: "mode", modeId };
 		this.state = { ...this.state, input: query, route: this.route };
 	}
 
@@ -233,15 +239,18 @@ export class PaletteSearchSession {
 
 		this.controller = new AbortController();
 		try {
-			const providerResults = await this.plugin.providers[parsed.mode].search({
-				mode: parsed.mode,
-				query: parsed.query,
-				signal: this.controller.signal,
-				everythingScope: this.scopeOf(parsed),
-				includeIgnored,
-				sourceFile: this.sourceFile,
-				sourceFiles: this.sourceFiles,
-			});
+			const providerResults =
+				this.route.kind === "other"
+					? []
+					: await this.plugin.providers[parsed.mode].search({
+							mode: parsed.mode,
+							query: parsed.query,
+							signal: this.controller.signal,
+							everythingScope: this.scopeOf(parsed),
+							includeIgnored,
+							sourceFile: this.sourceFile,
+							sourceFiles: this.sourceFiles,
+						});
 			const results = [...this.modeEntries(input), ...providerResults];
 			if (this.disposed || generation !== this.generation) return [];
 			this.state = {
@@ -313,7 +322,7 @@ export class PaletteSearchSession {
 	}
 
 	private parse(input: string): ParsedInput {
-		if (this.route.kind === "home") return { raw: input, mode: "file", query: input };
+		if (this.route.kind !== "mode") return { raw: input, mode: "file", query: input };
 		const { mode } = getPaletteMode(this.route.modeId);
 		const everythingScope =
 			mode === "everything" && this.state.ignoredScope ? "directory" : "vault";
@@ -339,12 +348,19 @@ export class PaletteSearchSession {
 	}
 
 	private modeEntries(input: string): ModeEntryResult[] {
-		if (!this.listsModes || this.route.kind !== "home") return [];
+		if (!this.listsModes || this.route.kind === "mode") return [];
 		const modes = availableModes(
 			this.plugin.settings,
 			this.plugin.integrationAvailability.current,
 		);
-		return matchPaletteModes(input, modes).map((definition) => ({
+		const matched = matchPaletteModes(input, modes);
+		const definitions =
+			this.route.kind === "other"
+				? matched.filter(({ id }) => !HOME_MODE_IDS.includes(id))
+				: input.trim()
+					? matched
+					: HOME_MODE_IDS.flatMap((id) => matched.filter((mode) => mode.id === id));
+		const entries: ModeEntryResult[] = definitions.map((definition) => ({
 			id: `mode:${definition.id}`,
 			mode: "mode-entry",
 			modeId: definition.id,
@@ -353,6 +369,21 @@ export class PaletteSearchSession {
 			secondary: definition.subtitle,
 			icon: definition.icon,
 		}));
+		if (
+			this.route.kind === "home" &&
+			!input.trim() &&
+			matched.some(({ id }) => !HOME_MODE_IDS.includes(id))
+		)
+			entries.push({
+				id: "mode:other",
+				mode: "mode-entry",
+				modeId: "other",
+				alias: "",
+				primary: t("mode.other.title"),
+				secondary: "",
+				icon: ICONS.expand,
+			});
+		return entries;
 	}
 
 	private includesIgnored(parsed: ParsedInput): boolean {
@@ -391,6 +422,15 @@ export function paletteRouteChrome(
 			chip: { icon: definition.icon, label: alias ?? "", title: definition.title },
 		};
 	}
+	if (state.route.kind === "other")
+		return {
+			placeholder: t("mode.other.placeholder"),
+			chip: {
+				icon: ICONS.expand,
+				label: t("mode.other.title"),
+				title: t("mode.other.title"),
+			},
+		};
 	return {
 		placeholder: modeEntries
 			? t("palette.placeholder.homeSearch")

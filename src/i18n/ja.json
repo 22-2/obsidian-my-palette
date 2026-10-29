@@ -131,6 +131,8 @@
 	"audit.error.linkNoteGone": "このリンクのあるノートは存在しません。",
 	"audit.error.folderGone": "フォルダーが存在しません。",
 	"audit.error.enableExplorer": "フォルダーを表示するには、Obsidian のファイルエクスプローラーのコアプラグインを有効にしてください。",
+	"mode.other.title": "その他",
+	"mode.other.placeholder": "その他のモードを検索",
 	"mode.notes.title": "ノート",
 	"mode.notes.placeholder": "ノートを検索",
 	"mode.subtitle.obsidian": "Obsidian",

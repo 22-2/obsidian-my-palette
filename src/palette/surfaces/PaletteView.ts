@@ -314,11 +314,11 @@ export class PaletteView extends ItemView {
 			onContextMenu: (result, event, selectedItems) =>
 				this.showContextMenu(result, event, selectedItems),
 			onEscape: () => {
-				if (this.session?.current.route.kind === "mode") this.returnToHome();
+				if (this.session && this.session.current.route.kind !== "home") this.returnToHome();
 				else this.clearOrFocus();
 			},
 			onEmptyBackspace: () => {
-				if (this.session?.current.route.kind !== "mode") return false;
+				if (!this.session || this.session.current.route.kind === "home") return false;
 				this.returnToHome();
 				return true;
 			},
@@ -698,7 +698,7 @@ export class PaletteView extends ItemView {
 		};
 	}
 
-	private enterMode(modeId: PaletteModeId): void {
+	private enterMode(modeId: PaletteModeId | "other"): void {
 		if (!this.session || !this.panel) return;
 		this.session.enterMode(modeId);
 		this.panel.setInput("", "end");

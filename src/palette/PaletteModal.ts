@@ -267,12 +267,12 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override onSuggestionEscape(): void {
-		if (this.state?.route.kind === "mode") this.returnToHome();
+		if (this.state && this.state.route.kind !== "home") this.returnToHome();
 		else this.close();
 	}
 
 	protected override onEmptyBackspace(): boolean {
-		if (this.state?.route.kind !== "mode") return false;
+		if (this.state?.route.kind === "home" || !this.state) return false;
 		this.returnToHome();
 		return true;
 	}

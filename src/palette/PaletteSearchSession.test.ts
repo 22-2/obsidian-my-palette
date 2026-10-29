@@ -37,6 +37,37 @@ async function host() {
 }
 
 describe("ホームセクション", () => {
+	it("主要なモードとその他を表示し、残りを絞り込んで選べる", async () => {
+		const { plugin, file } = await host();
+		const session = new PaletteSearchSession(plugin, { modeEntries: true });
+		const ids = (results: Awaited<ReturnType<typeof session.search>>) =>
+			results.filter((result) => result.mode === "mode-entry").map((result) => result.modeId);
+		expect(ids(await session.search())).toEqual([
+			"notes",
+			"commands",
+			"bookmarks",
+			"tags",
+			"other",
+		]);
+		session.enterMode("other");
+		const other = await session.search();
+		expect(ids(other)).toContain("plugins");
+		expect(ids(other)).not.toContain("notes");
+		expect(other).not.toContain(file);
+		expect(ids(await session.search("plugins"))).toEqual(["plugins"]);
+		expect(session.returnToHome()).toBe("");
+		expect(ids(await session.search("plugins"))).toEqual(["plugins"]);
+		session.dispose();
+	});
+
+	it("残りのモードが無効ならその他を表示しない", async () => {
+		const { plugin } = await host();
+		for (const [id, mode] of Object.entries(plugin.settings.modes))
+			if (!["notes", "commands", "bookmarks", "tags"].includes(id)) mode.enabled = false;
+		const session = new PaletteSearchSession(plugin, { modeEntries: true });
+		expect((await session.search()).some((result) => result.id === "mode:other")).toBe(false);
+		session.dispose();
+	});
 	it("すべてのモードが無効になっている場合に、設定セクションなしでファイルのみをリストします。", async () => {
 		const { plugin, file } = await host();
 		for (const mode of Object.values(plugin.settings.modes)) mode.enabled = false;

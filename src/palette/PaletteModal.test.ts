@@ -149,6 +149,21 @@ describe("パレットモーダル", () => {
 		expect(f.modal.modalEl.getAttribute("data-route")).toBe("home");
 	});
 
+	it("その他からモードを選び、Escape で Home に戻る", async () => {
+		const f = await open();
+		expect(f.labels()).toContain("その他");
+		expect(f.labels()).not.toContain("プラグイン");
+		for (let i = 0; i < 4; i++) key(f.modal.inputEl, "ArrowDown");
+		key(f.modal.inputEl, "Enter");
+		await settle();
+		expect(f.modal.modalEl.getAttribute("data-route")).toBe("other");
+		expect(f.labels()).toContain("プラグイン");
+		expect(f.labels()).not.toContain("ノート");
+		key(f.modal.inputEl, "Escape");
+		await settle();
+		expect(f.modal.modalEl.getAttribute("data-route")).toBe("home");
+	});
+
 	it("ソースノートに名前を付けるのではなく、いくつかのソースノートを数えます", async () => {
 		const sourceFiles = [{ path: "A.md" }, { path: "B.md" }] as TFile[];
 		const f = await open("", { sourceFiles });
