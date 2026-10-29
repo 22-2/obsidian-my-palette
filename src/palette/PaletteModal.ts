@@ -30,7 +30,11 @@ import { populatePaletteResultMenu } from "src/palette/actions/resultContextMenu
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 import type { PaletteRestoreState } from "src/palette/restoreState";
 import { PALETTE_HISTORY_CATEGORIES } from "src/palette/searchHistory";
-import { isPaletteSortableMode, PALETTE_SORT_KEYS } from "src/palette/paletteSorting";
+import {
+	isPaletteSortableMode,
+	PALETTE_SORT_KEYS,
+	paletteSortPresentation,
+} from "src/palette/paletteSorting";
 import { ignoredToggleOptions, syncIgnoredToggle } from "src/palette/ignoredToggle";
 import { createAuditKindChoice, syncAuditKindChoice } from "src/palette/auditKindChoice";
 import type { AuditKind } from "src/audit/vaultAudit";
@@ -287,6 +291,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.updateFooterText(
 			sourceFooterText(this.app, this.mode, this.sourceFile, this.sourceFiles),
 		);
+		this.updateSortStatus(paletteSortPresentation(this.session.getSorting()));
 	}
 
 	protected override sectionOf(result: PaletteResult): string | undefined {

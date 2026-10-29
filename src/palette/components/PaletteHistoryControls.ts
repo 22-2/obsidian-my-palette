@@ -1,5 +1,5 @@
 import { Notice, setIcon } from "obsidian";
-import { PaletteMenu } from "src/ui/paletteMenu";
+import { PaletteMenu, type PaletteMenuItem } from "src/ui/paletteMenu";
 import { markKeyboardMenuEvent, showMenuAtEvent } from "src/ui/menus";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
@@ -376,41 +376,42 @@ export class PaletteHistoryControls {
 
 	private showSortMenu(event: MouseEvent, keys: readonly PaletteSortKey[]): void {
 		const menu = this.replaceActiveMenu();
-		const current = this.options.getSorting?.();
-		menu.addItem((item) =>
-			item
+		const sortItems = new Map<PaletteSortKey, PaletteMenuItem>();
+		let defaultItem: PaletteMenuItem | undefined;
+		menu.addItem((item) => {
+			defaultItem = item
 				.setTitle(t("sorting.default"))
-				.setChecked(current === undefined)
+				.setKeepOpen()
 				.onClick(() => {
 					this.options.setSorting?.();
-					this.options.focusInput?.();
-				}),
-		);
+					syncSortMenu(this.options.getSorting?.());
+				});
+		});
 		menu.addSeparator();
 		for (const key of PALETTE_SORT_KEYS) {
 			if (!keys.includes(key)) continue;
-			const isCurrent = current?.key === key;
-			const next = {
-				key,
-				desc: isCurrent ? !current.desc : defaultSortDirection(key),
-			};
-			const direction = isCurrent
-				? current.desc
-					? t("sorting.descending")
-					: t("sorting.ascending")
-				: next.desc
-					? t("sorting.descending")
-					: t("sorting.ascending");
-			menu.addItem((item) =>
-				item
-					.setTitle(`${SORT_LABELS[key]} · ${direction}`)
-					.setChecked(isCurrent)
-					.onClick(() => {
-						this.options.setSorting?.(next);
-						this.options.focusInput?.();
-					}),
-			);
+			menu.addItem((item) => {
+				sortItems.set(key, item);
+				item.setKeepOpen().onClick(() => {
+					const current = this.options.getSorting?.();
+					this.options.setSorting?.({
+						key,
+						desc: current?.key === key ? !current.desc : defaultSortDirection(key),
+					});
+					syncSortMenu(this.options.getSorting?.());
+				});
+			});
 		}
+		const syncSortMenu = (current?: PaletteSort) => {
+			defaultItem?.setChecked(current === undefined);
+			for (const [key, item] of sortItems) {
+				const isCurrent = current?.key === key;
+				const desc = isCurrent ? current.desc : defaultSortDirection(key);
+				const direction = desc ? t("sorting.descending") : t("sorting.ascending");
+				item.setTitle(`${SORT_LABELS[key]} · ${direction}`).setChecked(isCurrent);
+			}
+		};
+		syncSortMenu(this.options.getSorting?.());
 		menu.setParentElement(this.options.hostEl);
 		showMenuAtEvent(menu, event);
 	}

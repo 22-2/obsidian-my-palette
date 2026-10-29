@@ -1,6 +1,7 @@
 import type { App } from "obsidian";
 import type { PaletteResult } from "src/palette/results";
 import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
+import { t } from "src/i18n";
 
 export const PALETTE_SORT_KEYS = [
 	"name",
@@ -19,6 +20,20 @@ export interface PaletteSort {
 	desc: boolean;
 }
 
+export interface PaletteSortPresentation {
+	label: string;
+	title: string;
+}
+
+const SORT_LABELS: Record<PaletteSortKey, string> = {
+	name: t("sorting.name"),
+	path: t("sorting.path"),
+	modified: t("sorting.modified"),
+	created: t("sorting.created"),
+	recent: t("sorting.recent"),
+	prior: t("sorting.prior"),
+};
+
 type SortablePaletteResult = Extract<PaletteResult, { mode: "file" | "link" | "backlink" }>;
 
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
@@ -29,6 +44,18 @@ export function isPaletteSortableMode(mode: string): mode is PaletteSortMode {
 
 export function defaultSortDirection(key: PaletteSortKey): boolean {
 	return key === "modified" || key === "created" || key === "prior";
+}
+
+export function paletteSortPresentation(
+	sorting: PaletteSort | undefined,
+): PaletteSortPresentation | undefined {
+	if (!sorting) return undefined;
+	const label = SORT_LABELS[sorting.key];
+	const direction = sorting.desc ? t("sorting.descending") : t("sorting.ascending");
+	return {
+		label: `${label} ${sorting.desc ? "↓" : "↑"}`,
+		title: `${label} · ${direction}`,
+	};
 }
 
 /** ファイル関連の結果だけを、他の行の位置を保ったまま並べ替える。 */

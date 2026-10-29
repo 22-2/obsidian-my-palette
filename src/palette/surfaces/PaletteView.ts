@@ -36,7 +36,11 @@ import {
 } from "src/workspace/external-markdown/openExternalMarkdown";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 import { PALETTE_HISTORY_CATEGORIES } from "src/palette/searchHistory";
-import { isPaletteSortableMode, PALETTE_SORT_KEYS } from "src/palette/paletteSorting";
+import {
+	isPaletteSortableMode,
+	PALETTE_SORT_KEYS,
+	paletteSortPresentation,
+} from "src/palette/paletteSorting";
 import { ignoredToggleOptions, syncIgnoredToggle } from "src/palette/ignoredToggle";
 import type { PanelSwitch } from "src/ui/panelSwitch";
 import { createAuditKindChoice, syncAuditKindChoice } from "src/palette/auditKindChoice";
@@ -371,6 +375,7 @@ export class PaletteView extends ItemView {
 					// 同じクエリでも、別のペインでは並び順の優先度が違うことがある。
 					// 表示の設定はファイルの全体設定ではなく、ペインのレイアウトに保存する。
 					this.pendingState = { ...this.pendingState, ...tableState };
+					this.updateSortStatus();
 					void this.app.workspace.requestSaveLayout();
 				},
 			});
@@ -419,6 +424,7 @@ export class PaletteView extends ItemView {
 		this.panel.setAttribute("data-route", state.route.kind);
 		this.panel.setAttribute("data-mode", state.mode);
 		this.panel.setAttribute("data-everything-scope", state.everythingScope);
+		this.updateSortStatus();
 		syncIgnoredToggle(this.ignoredToggle, state.mode);
 		syncAuditKindChoice(this.auditKindChoice, state.mode, this.plugin.settings.audit.kind);
 		this.renderFooter(state.mode, this.actionMessage);
@@ -431,6 +437,14 @@ export class PaletteView extends ItemView {
 		this.setResultsKeepingSelection(results);
 		this.actionMessage = undefined;
 		this.historyControls?.update(state.input);
+	}
+
+	private updateSortStatus(): void {
+		if (!this.panel || !this.session) return;
+		const sorting = this.tableControls
+			? this.tableControls.getSort()
+			: this.session.getSorting();
+		this.panel.updateSortStatus(paletteSortPresentation(sorting));
 	}
 
 	/**

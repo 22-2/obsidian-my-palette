@@ -775,6 +775,15 @@
 	color: var(--text-normal);
 }
 
+.my-palette-status-bar__sort {
+	flex: 0 1 auto;
+	min-width: 0;
+	max-width: min(40%, 12em);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
 .my-palette-status-bar__icon {
 	display: inline-block;
 	margin-right: 4px;

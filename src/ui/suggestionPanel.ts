@@ -100,6 +100,7 @@ export class SuggestionPanel<T> extends Component {
 	readonly resultContainerEl: HTMLElement;
 	readonly statusBarEl: HTMLElement;
 	readonly statusTextEl: HTMLElement;
+	readonly sortStatusEl: HTMLElement;
 	readonly resultCountEl: HTMLElement;
 	private readonly modeChipEl: HTMLElement;
 	readonly chooser: SuggestionChooser<T> = { values: [], selectedItem: -1 };
@@ -172,6 +173,10 @@ export class SuggestionPanel<T> extends Component {
 		this.statusTextEl = this.statusBarEl.createSpan({
 			cls: "my-palette-status-bar__text",
 			text: props.footerText ?? "",
+		});
+		this.sortStatusEl = this.statusBarEl.createSpan({
+			cls: "my-palette-status-bar__sort",
+			attr: { hidden: "" },
 		});
 		this.resultCountEl = this.statusBarEl.createSpan("my-palette-status-bar__count");
 		this.updateResultCount(0);
@@ -440,6 +445,13 @@ export class SuggestionPanel<T> extends Component {
 		setTooltip(this.statusTextEl, text);
 		if (icon) setIcon(this.statusTextEl.createSpan("my-palette-status-bar__icon"), icon);
 		this.statusTextEl.appendText(text);
+	}
+
+	updateSortStatus(status?: { label: string; title: string }): void {
+		this.sortStatusEl.toggleAttribute("hidden", !status);
+		this.sortStatusEl.setText(status?.label ?? "");
+		if (status) setTooltip(this.sortStatusEl, status.title);
+		else this.sortStatusEl.removeAttribute("aria-label");
 	}
 
 	private registerFooterTextActions(): void {
