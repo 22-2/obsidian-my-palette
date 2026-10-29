@@ -106,6 +106,7 @@ test("o lists outgoing links and b lists backlinks of the active note", async ({
 
 	// Esc leaves the outgoing-link mode for Home before entering backlinks.
 	await page.locator(MODAL_INPUT).press("Escape");
+	await expect(page.locator(MODAL_INPUT)).toHaveValue("");
 	await page.locator(MODAL_INPUT).fill("b ");
 	await expect.poll(() => rowLabels(page)).toEqual(["Referrer"]);
 });

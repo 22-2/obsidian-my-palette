@@ -296,13 +296,12 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.focusSearchInput();
 	}
 
-	/** エイリアスを選択した状態で Home に戻る。Enter でモードに入り直せるようにする。 */
+	/** 入力を空にして Home に戻る。 */
 	private returnToHome(): void {
-		const alias = this.session.returnToHome();
-		this.panelInput(alias);
+		this.session.returnToHome();
+		this.panelInput("");
 		this.refreshSuggestions();
 		this.focusSearchInput();
-		this.inputEl.select();
 	}
 
 	private panelInput(input: string): void {

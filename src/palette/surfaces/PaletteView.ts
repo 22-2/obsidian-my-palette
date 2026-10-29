@@ -708,13 +708,12 @@ export class PaletteView extends ItemView {
 		this.panel.focusSearchInput();
 	}
 
-	/** エイリアスを選択した状態で Home に戻る。Enter でモードに入り直せるようにする。 */
+	/** 入力を空にして Home に戻る。 */
 	private returnToHome(): void {
 		if (!this.session || !this.panel) return;
-		const alias = this.session.returnToHome();
-		this.updateInput(alias, "all", { syncPanel: true });
+		this.session.returnToHome();
+		this.updateInput("", "end", { syncPanel: true });
 		this.panel.focusSearchInput();
-		this.panel.inputEl.select();
 	}
 
 	private clearOrFocus(): void {

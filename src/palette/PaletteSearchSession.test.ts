@@ -55,7 +55,8 @@ describe("ホームセクション", () => {
 		expect(ids(other)).not.toContain("notes");
 		expect(other).not.toContain(file);
 		expect(ids(await session.search("plugins"))).toEqual(["plugins"]);
-		expect(session.returnToHome()).toBe("");
+		session.returnToHome();
+		expect(session.input).toBe("");
 		expect(ids(await session.search("plugins"))).toEqual(["plugins"]);
 		session.dispose();
 	});
@@ -115,7 +116,8 @@ describe("PaletteSearchSession 検索ライフサイクル", () => {
 		session.commitCurrentSearch();
 		session.commitCurrentSearch();
 		expect(recordSearch).toHaveBeenCalledTimes(1);
-		expect(session.returnToHome()).toBe(">");
+		session.returnToHome();
+		expect(session.input).toBe("");
 		session.dispose();
 	});
 

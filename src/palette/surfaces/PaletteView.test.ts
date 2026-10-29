@@ -267,9 +267,10 @@ describe("パレットビュー", () => {
 		key(f.input, "Escape");
 		await settle();
 		expect(f.panel().getAttribute("data-route")).toBe("home");
-		expect(f.input.value).toBe(">");
+		expect(f.input.value).toBe("");
+		expect(f.view.getState()).toMatchObject({ input: "" });
 
-		// A view never closes itself: Escape on Home clears the query instead.
+		// A view never closes itself when Escape is pressed on Home.
 		key(f.input, "Escape");
 		expect(f.input.value).toBe("");
 		expect(f.root.isConnected).toBe(true);

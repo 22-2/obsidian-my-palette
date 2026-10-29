@@ -145,18 +145,10 @@ export class PaletteSearchSession {
 		this.state = { ...this.state, input: query, route: this.route };
 	}
 
-	/**
-	 * モードを抜けて Home に戻り、入力を埋めるエイリアスを返す。モードには Enter 1回で
-	 * 入り直せる状態のままになる。
-	 */
-	returnToHome(): string {
-		const alias =
-			this.route.kind === "mode"
-				? paletteModeAlias(this.route.modeId, this.plugin.settings.modes)
-				: "";
+	/** モードを抜け、空の Home に戻る。 */
+	returnToHome(): void {
 		this.route = { kind: "home" };
-		this.state = { ...this.state, input: alias, route: this.route };
-		return alias;
+		this.state = { ...this.state, input: "", route: this.route };
 	}
 
 	/**

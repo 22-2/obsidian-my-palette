@@ -205,7 +205,7 @@ describe("パレットモーダル", () => {
 		key(f.modal.inputEl, "Escape");
 		await settle();
 		expect(f.modal.modalEl.getAttribute("data-route")).toBe("home");
-		expect(f.modal.inputEl.value).toBe(">");
+		expect(f.modal.inputEl.value).toBe("");
 		expect(f.modal.modalEl.isConnected).toBe(true);
 
 		key(f.modal.inputEl, "Escape");
@@ -218,6 +218,16 @@ describe("パレットモーダル", () => {
 		key(f.modal.inputEl, "Backspace");
 		await settle();
 		expect(f.modal.modalEl.getAttribute("data-route")).toBe("home");
+		expect(f.modal.inputEl.value).toBe("");
+	});
+
+	it("モードチップをクリックすると空の Home に戻る", async () => {
+		const f = await open("> build");
+		const chip = f.modal.modalEl.querySelector<HTMLElement>(".my-palette-mode-chip")!;
+		mouse(chip, "click", { button: 0 });
+		await settle();
+		expect(f.modal.modalEl.getAttribute("data-route")).toBe("home");
+		expect(f.modal.inputEl.value).toBe("");
 	});
 
 	it("状態を次のパレットに渡し、閉じると自分自身を解放します", async () => {
