@@ -32,6 +32,11 @@ export function supportsIncludeIgnored(mode: PaletteMode): boolean {
 	return mode === "file" || mode === "everything" || mode === "audit";
 }
 
+/** 元のノートを読むモード。フッターに元ファイルを出すのはこのモードだけ。 */
+export function usesSourceNote(mode: PaletteMode): boolean {
+	return mode === "link" || mode === "backlink" || mode === "smart" || mode === "property";
+}
+
 export interface BaseResult {
 	id: string;
 	mode: PaletteMode;

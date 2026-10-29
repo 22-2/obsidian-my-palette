@@ -2,7 +2,12 @@ import { ItemView, Menu, Scope, TFile, type WorkspaceLeaf } from "obsidian";
 import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
 import type MyPalettePlugin from "src/main";
-import { choosingOpensMenu, type PaletteResult } from "src/palette/results";
+import {
+	choosingOpensMenu,
+	type PaletteMode,
+	type PaletteResult,
+	usesSourceNote,
+} from "src/palette/results";
 import { canPreviewResult } from "src/palette/resultPreview";
 import { openFileInLeaf, revealOpenedLeaf } from "src/workspace/openLeaf";
 import {
@@ -414,7 +419,7 @@ export class PaletteView extends ItemView {
 		this.panel.setAttribute("data-everything-scope", state.everythingScope);
 		syncIgnoredToggle(this.ignoredToggle, state.mode);
 		syncAuditKindChoice(this.auditKindChoice, state.mode, this.plugin.settings.audit.kind);
-		this.renderFooter(this.actionMessage);
+		this.renderFooter(state.mode, this.actionMessage);
 		const results = {
 			items: state.results,
 			total: state.resultCount,
@@ -451,7 +456,12 @@ export class PaletteView extends ItemView {
 		this.panel.resultContainerEl.scrollTop = scrollTop;
 	}
 
-	private renderFooter(message?: string): void {
+	private renderFooter(mode: PaletteMode, message?: string): void {
+		// 元のノートを読まないモードでは、元ファイルを出さず、通知だけを出す。
+		if (!usesSourceNote(mode)) {
+			this.panel?.updateFooterText(message ?? "");
+			return;
+		}
 		const source = this.sourcePath ?? t("view.noActiveNote");
 		const suffix = message ? ` · ${message}` : "";
 		// Why: ピン留めには専用のボタンがないので、フッターが示す必要があるのはピン留めの状態だけ。
@@ -623,7 +633,7 @@ export class PaletteView extends ItemView {
 			close: () => undefined,
 			showError: (message) => {
 				this.actionMessage = message;
-				this.renderFooter(message);
+				this.renderFooter(this.session?.current.mode ?? "file", message);
 			},
 		};
 		await executePaletteResult(this.plugin, result, action, execution);

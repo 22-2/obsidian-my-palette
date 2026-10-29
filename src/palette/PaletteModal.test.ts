@@ -141,11 +141,11 @@ function type(input: HTMLInputElement, value: string) {
 }
 
 describe("パレットモーダル", () => {
-	it("ファイルの結果をリストし、フッター内のソースノートに名前を付けます", async () => {
+	it("ファイルの結果をリストし、元のノートを読まないモードでは元ファイルを出しません", async () => {
 		const f = await open();
 		expect(f.labels()).toContain("Alpha");
 		expect(f.labels()).toContain("Beta");
-		expect(f.modal.modalEl.textContent).toContain("元ファイル: Active.md");
+		expect(f.modal.modalEl.textContent).not.toContain("元ファイル");
 		expect(f.modal.modalEl.getAttribute("data-route")).toBe("home");
 	});
 
@@ -179,7 +179,7 @@ describe("パレットモーダル", () => {
 
 	it("ソースノートに名前を付けるのではなく、いくつかのソースノートを数えます", async () => {
 		const sourceFiles = [{ path: "A.md" }, { path: "B.md" }] as TFile[];
-		const f = await open("", { sourceFiles });
+		const f = await open("pr ", { sourceFiles });
 		expect(f.modal.modalEl.textContent).toContain("元: 2 件のノート");
 	});
 

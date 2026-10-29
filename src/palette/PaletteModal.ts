@@ -7,6 +7,7 @@ import {
 	type EverythingScope,
 	type PaletteMode,
 	type PaletteResult,
+	usesSourceNote,
 } from "src/palette/results";
 import {
 	SelectionModal,
@@ -47,7 +48,14 @@ export interface PaletteModalOptions {
 	sourceFiles?: readonly TFile[];
 }
 
-function sourceFooterText(app: App, sourceFile?: TFile, sourceFiles?: readonly TFile[]): string {
+function sourceFooterText(
+	app: App,
+	mode: PaletteMode,
+	sourceFile?: TFile,
+	sourceFiles?: readonly TFile[],
+): string {
+	// 元のノートを読まないモードでは、元ファイルを出さない。
+	if (!usesSourceNote(mode)) return "";
 	if (sourceFiles && sourceFiles.length > 1)
 		return t("palette.source.notes", { count: sourceFiles.length });
 	return t("view.source", {
@@ -67,6 +75,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	private homeView?: { activeIndex: number; scrollTop: number; id?: string };
 	private readonly modeEntries: boolean;
 	private readonly restore?: PaletteRestoreState;
+	private readonly sourceFile?: TFile;
+	private readonly sourceFiles?: readonly TFile[];
 
 	constructor(
 		app: App,
@@ -82,12 +92,14 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 				placeholder: t("palette.placeholder.files"),
 				initialInput,
 				selectionMode: "extended",
-				footerText: sourceFooterText(app, sourceFile, sourceFiles),
+				footerText: sourceFooterText(app, fixedMode ?? "file", sourceFile, sourceFiles),
 			},
 			app,
 		);
 		this.modeEntries = modeEntries;
 		this.restore = restore;
+		this.sourceFile = sourceFile;
+		this.sourceFiles = sourceFiles;
 		this.session = new PaletteSearchSession(this.plugin, {
 			initialInput,
 			fixedMode,
@@ -260,6 +272,9 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.modalEl.setAttribute("data-everything-scope", this.everythingScope);
 		syncIgnoredToggle(this.ignoredToggle, this.mode);
 		syncAuditKindChoice(this.auditKindChoice, this.mode, this.plugin.settings.audit.kind);
+		this.updateFooterText(
+			sourceFooterText(this.app, this.mode, this.sourceFile, this.sourceFiles),
+		);
 	}
 
 	protected override sectionOf(result: PaletteResult): string | undefined {

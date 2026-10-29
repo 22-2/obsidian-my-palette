@@ -182,9 +182,14 @@ function key(el: HTMLElement, name: string) {
 }
 
 describe("パレットビュー", () => {
-	it("開いているときに検索し、フッター内のアクティブなノートをたどります", async () => {
+	it("元のノートを読まないモードでは、フッターに元ファイルを出しません", async () => {
 		const f = await mount();
 		expect(f.labels()).toEqual(expect.arrayContaining(["Alpha", "Beta"]));
+		expect(f.root.textContent).not.toContain("元ファイル");
+	});
+
+	it("開いているときに、フッター内のアクティブなノートをたどります", async () => {
+		const f = await mount(false, { input: "o " });
 		expect(f.root.textContent).toContain("元ファイル: Notes/First.md");
 		f.switchTo("Notes/Second.md");
 		expect(f.root.textContent).toContain("元ファイル: Notes/Second.md");
@@ -214,7 +219,7 @@ describe("パレットビュー", () => {
 	});
 
 	it("アクティブなノートが変更されたときに、固定されたソースを維持します", async () => {
-		const f = await mount(false, { sourcePath: "Pinned.md", sourcePinned: true });
+		const f = await mount(false, { input: "o ", sourcePath: "Pinned.md", sourcePinned: true });
 		f.switchTo("Notes/Second.md");
 		expect(f.root.textContent).toContain("元ファイル: Pinned.md");
 		expect(f.view.getState()).toMatchObject({ sourcePath: "Pinned.md", sourcePinned: true });
