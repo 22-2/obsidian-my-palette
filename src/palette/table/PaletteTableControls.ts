@@ -16,6 +16,7 @@ import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
 import { renderSelectionItem, type SelectionItem } from "src/ui/selectionModal";
 import type { SuggestionPanel, SuggestionPanelResults } from "src/ui/suggestionPanel";
 import { t } from "src/i18n";
+import type { PaletteSort } from "src/palette/paletteSorting";
 
 interface PaletteTableControlsOptions {
 	initialState: PaletteTableState;
@@ -120,6 +121,30 @@ export class PaletteTableControls extends Component {
 
 	getState(): PaletteTableState {
 		return { displayMode: "table", ...structuredClone(this.model.state) };
+	}
+
+	getSort(): PaletteSort | undefined {
+		const sort = this.model.sorting[0];
+		if (
+			!sort ||
+			(sort.id !== "name" &&
+				sort.id !== "path" &&
+				sort.id !== "modified" &&
+				sort.id !== "prior")
+		)
+			return undefined;
+		return { key: sort.id, desc: sort.desc };
+	}
+
+	setSort(sort?: PaletteSort): void {
+		const supported =
+			sort &&
+			(sort.key === "name" ||
+				sort.key === "path" ||
+				sort.key === "modified" ||
+				sort.key === "prior");
+		this.model.setSorting(supported ? [{ id: sort.key, desc: sort.desc }] : []);
+		this.changed();
 	}
 
 	setState(state: PaletteTableState): void {

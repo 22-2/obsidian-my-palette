@@ -36,6 +36,7 @@ import {
 } from "src/workspace/external-markdown/openExternalMarkdown";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 import { PALETTE_HISTORY_CATEGORIES } from "src/palette/searchHistory";
+import { isPaletteSortableMode, PALETTE_SORT_KEYS } from "src/palette/paletteSorting";
 import { ignoredToggleOptions, syncIgnoredToggle } from "src/palette/ignoredToggle";
 import type { PanelSwitch } from "src/ui/panelSwitch";
 import { createAuditKindChoice, syncAuditKindChoice } from "src/palette/auditKindChoice";
@@ -214,6 +215,7 @@ export class PaletteView extends ItemView {
 			const ownsShortcut = (Object.keys(HOTKEY_ACTIONS) as HotkeyAction[]).some(
 				(action) =>
 					worksIn(HOTKEY_ACTIONS[action].scopes, "palette") &&
+					(action !== "sortMenu" || this.historyControls?.canOpenSortMenu()) &&
 					matchesHotkey(event, hotkeys[action]) &&
 					(event.target === panel.inputEl ||
 						(action === "hidePreview" &&
@@ -564,6 +566,19 @@ export class PaletteView extends ItemView {
 					category: "file",
 					includeIgnored: false,
 				},
+			getSortOptions: () => {
+				const state = this.session?.current;
+				if (!state || state.route.kind === "other" || !isPaletteSortableMode(state.mode))
+					return [];
+				return this.tableControls
+					? ["name", "path", "modified", "prior"]
+					: PALETTE_SORT_KEYS;
+			},
+			getSorting: () => this.tableControls?.getSort() ?? this.session?.getSorting(),
+			setSorting: (sorting) => {
+				if (this.tableControls) this.tableControls.setSort(sorting);
+				else this.session?.setSorting(sorting);
+			},
 			apply: (result) => this.applySearchHistory(result),
 			openSettings: () => this.plugin.openSettings(),
 			focusInput: () => this.panel?.focusSearchInput(),

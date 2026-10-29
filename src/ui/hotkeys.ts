@@ -48,6 +48,11 @@ export const HOTKEY_ACTIONS = {
 		description: t("hotkey.optionsMenu.description"),
 		scopes: ["palette", "selector"],
 	},
+	sortMenu: {
+		name: t("hotkey.sortMenu.name"),
+		description: t("hotkey.sortMenu.description"),
+		scopes: ["palette"],
+	},
 	contextMenu: {
 		name: t("hotkey.contextMenu.name"),
 		description: t("hotkey.contextMenu.description"),
@@ -108,6 +113,7 @@ export const DEFAULT_HOTKEYS: PaletteHotkeys = {
 	preview: { key: "ArrowRight", modifiers: [] },
 	history: { key: "R", modifiers: ["Ctrl"] },
 	optionsMenu: { key: "O", modifiers: ["Ctrl"] },
+	sortMenu: { key: ",", modifiers: ["Ctrl"] },
 	contextMenu: { key: "K", modifiers: ["Ctrl"] },
 	enterMode: { key: "Tab", modifiers: [] },
 	focusInput: { key: "F", modifiers: [] },
@@ -119,6 +125,7 @@ const MODIFIERS: HotkeyModifier[] = ["Ctrl", "Alt", "Shift", "Meta"];
 function normalizeKey(key: string): string | undefined {
 	if (key === " " || key === "Space") return "Space";
 	if (key === "Tab") return "Tab";
+	if (key === ",") return key;
 	if (key.length === 1 && !/\s/.test(key)) return key.toUpperCase();
 	if (/^F([1-9]|1\d|2[0-4])$/.test(key) || key === "ArrowRight") return key;
 	return undefined;
@@ -192,6 +199,7 @@ const MODIFIER_ACTIONS: readonly HotkeyAction[] = [
 	"hidePreview",
 	"history",
 	"optionsMenu",
+	"sortMenu",
 	"preview",
 	"contextMenu",
 	"enterMode",

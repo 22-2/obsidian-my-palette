@@ -24,6 +24,12 @@ import {
 import type { ModeEntryResult } from "src/palette/results";
 import { t } from "src/i18n";
 import { ICONS } from "src/ui/icons";
+import {
+	isPaletteSortableMode,
+	sortPaletteResults,
+	type PaletteSort,
+	type PaletteSortMode,
+} from "src/palette/paletteSorting";
 
 const HOME_MODE_IDS: readonly PaletteModeId[] = ["notes", "commands", "bookmarks", "tags"];
 
@@ -97,6 +103,8 @@ export class PaletteSearchSession {
 	private readonly onStateChange?: (state: PaletteSearchState) => void;
 	private state: PaletteSearchState;
 	private readonly stopReadinessUpdates: () => void;
+	private readonly sortingByMode = new Map<PaletteSortMode, PaletteSort>();
+	private unsortedResults: PaletteResult[] = [];
 
 	constructor(
 		private readonly plugin: MyPalettePlugin,
@@ -175,6 +183,25 @@ export class PaletteSearchSession {
 		return this.state.input;
 	}
 
+	getSorting(): PaletteSort | undefined {
+		return isPaletteSortableMode(this.state.mode)
+			? this.sortingByMode.get(this.state.mode)
+			: undefined;
+	}
+
+	/** 現在のモードだけに並べ替えを適用する。未指定なら provider 本来の順序に戻す。 */
+	setSorting(sorting?: PaletteSort): void {
+		const mode = this.state.mode;
+		if (!isPaletteSortableMode(mode)) return;
+		if (sorting) this.sortingByMode.set(mode, sorting);
+		else this.sortingByMode.delete(mode);
+		this.state = {
+			...this.state,
+			results: sortPaletteResults(this.plugin.app, this.unsortedResults, sorting),
+		};
+		this.emit();
+	}
+
 	/**
 	 * 次の検索で使う、Obsidian の除外ファイルの範囲を切り替える。モーダルは自分の更新で結果を描くので、
 	 * ホストが自分で検索をやり直す。
@@ -212,6 +239,7 @@ export class PaletteSearchSession {
 		// 先に一覧を空にすると、表示全体が一瞬空になってしまう。新しい結果が1回の描画で置き換えるまで、
 		// 古い行を画面に残す。
 		const keepResults = options.keepResults === true && input === this.state.input;
+		if (!keepResults) this.unsortedResults = [];
 		this.state = {
 			...this.state,
 			input,
@@ -247,7 +275,15 @@ export class PaletteSearchSession {
 							sourceFile: this.sourceFile,
 							sourceFiles: this.sourceFiles,
 						});
-			const results = [...this.modeEntries(input), ...providerResults];
+			if (this.disposed || generation !== this.generation) return [];
+			this.unsortedResults = [...this.modeEntries(input), ...providerResults];
+			const results = sortPaletteResults(
+				this.plugin.app,
+				this.unsortedResults,
+				isPaletteSortableMode(parsed.mode)
+					? this.sortingByMode.get(parsed.mode)
+					: undefined,
+			);
 			if (this.disposed || generation !== this.generation) return [];
 			this.state = {
 				...this.state,

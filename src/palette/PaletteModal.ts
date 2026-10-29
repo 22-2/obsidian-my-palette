@@ -30,6 +30,7 @@ import { populatePaletteResultMenu } from "src/palette/actions/resultContextMenu
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
 import type { PaletteRestoreState } from "src/palette/restoreState";
 import { PALETTE_HISTORY_CATEGORIES } from "src/palette/searchHistory";
+import { isPaletteSortableMode, PALETTE_SORT_KEYS } from "src/palette/paletteSorting";
 import { ignoredToggleOptions, syncIgnoredToggle } from "src/palette/ignoredToggle";
 import { createAuditKindChoice, syncAuditKindChoice } from "src/palette/auditKindChoice";
 import type { AuditKind } from "src/audit/vaultAudit";
@@ -137,6 +138,17 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			containerEl: this.inputEl.parentElement ?? this.modalEl,
 			hostEl: this.modalEl,
 			getContext: (input) => this.session.getSearchHistoryContext(input),
+			getSortOptions: () => {
+				const state = this.session.current;
+				return state.route.kind !== "other" && isPaletteSortableMode(state.mode)
+					? PALETTE_SORT_KEYS
+					: [];
+			},
+			getSorting: () => this.session.getSorting(),
+			setSorting: (sorting) => {
+				this.session.setSorting(sorting);
+				this.refreshSuggestionsKeepingSelection((left, right) => left.id === right.id);
+			},
 			apply: (result) => this.applySearchHistory(result),
 			openSettings: () => {
 				this.close();

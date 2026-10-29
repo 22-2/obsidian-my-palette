@@ -13,6 +13,12 @@ import type { PanelSwitch } from "src/ui/panelSwitch";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 import { ICONS } from "src/ui/icons";
 import { t } from "src/i18n";
+import {
+	defaultSortDirection,
+	PALETTE_SORT_KEYS,
+	type PaletteSort,
+	type PaletteSortKey,
+} from "src/palette/paletteSorting";
 
 interface PaletteHistoryContext {
 	query: string;
@@ -60,6 +66,10 @@ interface PaletteHistoryControlsOptions {
 	showHighlightOption?: boolean;
 	/** メニューにファイル検索の切り替えを出すかどうか。既定は出さない。パレット本体だけが出す。 */
 	showFileSearchOptions?: boolean;
+	/** ファイル関連モードがメニューに出せる並べ替え項目。未指定ならメニューを提供しない。 */
+	getSortOptions?: () => readonly PaletteSortKey[];
+	getSorting?: () => PaletteSort | undefined;
+	setSorting?: (sorting?: PaletteSort) => void;
 }
 
 /**
@@ -72,6 +82,15 @@ const FILE_SEARCH_TOGGLES = [
 ] as const;
 
 type FileSearchToggle = (typeof FILE_SEARCH_TOGGLES)[number];
+
+const SORT_LABELS: Record<PaletteSortKey, string> = {
+	name: t("sorting.name"),
+	path: t("sorting.path"),
+	modified: t("sorting.modified"),
+	created: t("sorting.created"),
+	recent: t("sorting.recent"),
+	prior: t("sorting.prior"),
+};
 
 /** 両方のパレットの外枠で共有する、検索履歴とオプションの操作。 */
 export class PaletteHistoryControls {
@@ -112,6 +131,10 @@ export class PaletteHistoryControls {
 		// 結果の押下はイベントの伝播を止めるので、ホストは両方のオーバーレイを明示的に閉じる。
 		this.activeMenu?.close();
 		this.suggest.close();
+	}
+
+	canOpenSortMenu(): boolean {
+		return Boolean(this.options.setSorting && this.options.getSortOptions?.().length);
 	}
 
 	update(input = this.options.inputEl.value): void {
@@ -224,12 +247,7 @@ export class PaletteHistoryControls {
 
 	private showOptionsMenu(event: MouseEvent): void {
 		const { plugin, hostEl, moveToSidebar } = this.options;
-		this.close();
-		const menu = new PaletteMenu();
-		this.activeMenu = menu;
-		menu.onHide(() => {
-			if (this.activeMenu === menu) this.activeMenu = undefined;
-		});
+		const menu = this.replaceActiveMenu();
 		// Why: 選択肢はパレットに並ぶ一覧を変えるので、メニューの先頭に置く。項目を選ぶと、
 		// 後ろの一覧が変わるのでメニューを閉じる。
 		const choices = (this.options.getChoices?.() ?? []).filter(({ isHidden }) => !isHidden);
@@ -330,6 +348,73 @@ export class PaletteHistoryControls {
 		showMenuAtEvent(menu, event);
 	}
 
+	private replaceActiveMenu(): PaletteMenu {
+		this.close();
+		const menu = new PaletteMenu();
+		this.activeMenu = menu;
+		menu.onHide(() => {
+			if (this.activeMenu === menu) this.activeMenu = undefined;
+		});
+		return menu;
+	}
+
+	private toggleSortMenuFromKeyboard(): void {
+		if (this.activeMenu) {
+			this.activeMenu.close();
+			return;
+		}
+		const keys = this.options.getSortOptions?.() ?? [];
+		if (!this.options.setSorting || keys.length === 0) return;
+		const rect = this.options.inputEl.getBoundingClientRect();
+		this.showSortMenu(
+			markKeyboardMenuEvent(
+				new MouseEvent("click", { clientX: rect.left, clientY: rect.bottom }),
+			),
+			keys,
+		);
+	}
+
+	private showSortMenu(event: MouseEvent, keys: readonly PaletteSortKey[]): void {
+		const menu = this.replaceActiveMenu();
+		const current = this.options.getSorting?.();
+		menu.addItem((item) =>
+			item
+				.setTitle(t("sorting.default"))
+				.setChecked(current === undefined)
+				.onClick(() => {
+					this.options.setSorting?.();
+					this.options.focusInput?.();
+				}),
+		);
+		menu.addSeparator();
+		for (const key of PALETTE_SORT_KEYS) {
+			if (!keys.includes(key)) continue;
+			const isCurrent = current?.key === key;
+			const next = {
+				key,
+				desc: isCurrent ? !current.desc : defaultSortDirection(key),
+			};
+			const direction = isCurrent
+				? current.desc
+					? t("sorting.descending")
+					: t("sorting.ascending")
+				: next.desc
+					? t("sorting.descending")
+					: t("sorting.ascending");
+			menu.addItem((item) =>
+				item
+					.setTitle(`${SORT_LABELS[key]} · ${direction}`)
+					.setChecked(isCurrent)
+					.onClick(() => {
+						this.options.setSorting?.(next);
+						this.options.focusInput?.();
+					}),
+			);
+		}
+		menu.setParentElement(this.options.hostEl);
+		showMenuAtEvent(menu, event);
+	}
+
 	private showHelp(): void {
 		const { plugin, surface, showHelp } = this.options;
 		if (showHelp) showHelp();
@@ -419,6 +504,12 @@ export class PaletteHistoryControls {
 			event.preventDefault();
 			event.stopImmediatePropagation();
 			this.toggleOptionsMenuFromKeyboard();
+			return;
+		}
+		if (this.canOpenSortMenu() && matchesHotkey(event, hotkeys.sortMenu)) {
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			this.toggleSortMenuFromKeyboard();
 			return;
 		}
 		if (!this.suggest.isOpen) return;

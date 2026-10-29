@@ -78,6 +78,11 @@ export class PaletteHelpModal extends Modal {
 						[formatHotkey(this.hotkeys.optionsMenu), t("help.row.optionsDescription")],
 					] satisfies Array<[string, string]>)
 				: []),
+			...(this.hotkeys.sortMenu
+				? ([
+						[formatHotkey(this.hotkeys.sortMenu), t("help.row.sortMenuDescription")],
+					] satisfies Array<[string, string]>)
+				: []),
 			[formatHotkey(this.hotkeys.history), t("help.row.historyDescription")],
 			[
 				t("help.row.modeEnterKeys", {
