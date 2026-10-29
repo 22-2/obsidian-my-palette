@@ -63,7 +63,7 @@ it("個別のマークダウンノートのみのマージを提供します", (
 	const m = menu();
 	const onDone = vi.fn();
 	addMergeMenuItem(m.instance, plugin, results, onDone);
-	expect(m.titles).toEqual(["マージ…"]);
+	expect(m.titles).toEqual(["1 件をマージ…"]);
 
 	m.click();
 	expect(MergeTargetModal).toHaveBeenCalledWith(plugin, [files.get("a.md")], onDone);
