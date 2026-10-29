@@ -110,7 +110,7 @@ export class MoveFileModal extends SelectionModal<FolderItem> {
 			return this.close();
 		}
 		if (moved > 0) new Notice(t("folder.movedMany", { count: moved, folder: folderName }));
-		this.emptyStateText = failures.join("\n");
+		new Notice(t("folder.moveFailed", { details: failures.join("\n") }), 10000);
 	}
 
 	protected override onSelectionModalClose(): void {

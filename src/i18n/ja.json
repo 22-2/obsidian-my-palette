@@ -244,6 +244,7 @@
 	"folder.vaultRoot": "Vault のルート",
 	"folder.moved": "{folder} に移動しました",
 	"folder.movedMany": "{count} 件のファイルを {folder} に移動しました",
+	"folder.moveFailed": "移動できませんでした:\n{details}",
 	"palette.control.options": "パレットのオプション",
 	"palette.control.optionsHotkey": "パレットのオプション ({hotkey})",
 	"palette.control.history": "検索履歴",
