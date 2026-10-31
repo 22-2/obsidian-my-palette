@@ -507,6 +507,6 @@ export function palettePlaceholder(mode: PaletteMode): string {
 									: mode === "tag"
 										? t("palette.placeholder.tag")
 										: mode === "heading"
-											? t("palette.placeholder.heading")
+											? t("mode.headings.placeholder")
 											: t("palette.placeholder.files");
 }

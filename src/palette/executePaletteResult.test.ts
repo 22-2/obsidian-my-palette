@@ -96,7 +96,7 @@ describe("メモの開始フォーカス", () => {
 				expect(f.leaf.view.editor.setCursor).toHaveBeenCalledWith({ line: 17, ch: 0 });
 		},
 	);
-	it("見出しは、その行へ移動して中央に寄せ、行を強調します", async () => {
+	it("moves to the heading line, centers it, and highlights it", async () => {
 		const f = fixture();
 		const editor = {
 			getLine: vi.fn().mockReturnValue("## Details"),

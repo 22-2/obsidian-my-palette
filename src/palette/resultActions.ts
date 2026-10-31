@@ -95,8 +95,10 @@ export async function runResultAction(
 		return { close: true };
 	}
 	if (result.mode === "command") return { close: true };
-	if (result.mode === "link" || result.mode === "backlink" || result.mode === "heading")
+	if (result.mode === "link" || result.mode === "backlink")
 		return { close: false, message: t("palette.error.relatedOnly") };
+	// 見出しの移動は executePaletteResult が担う。ここに来るのは想定外なので、開かずに伝える。
+	if (result.mode === "heading") return { close: false, message: t("palette.error.headingOnly") };
 	const everythingResult = result as EverythingResult;
 	try {
 		await getDesktopAdapter(app).fs.promises.stat(everythingResult.absolutePath);
