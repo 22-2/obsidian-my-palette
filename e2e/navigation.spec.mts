@@ -4,6 +4,7 @@ import {
 	MODAL_ROW,
 	pluginVaultOptions,
 	runPaletteCommand,
+	t,
 	waitForResolvedLinks,
 } from "./support.mts";
 
@@ -24,24 +25,24 @@ test("Home enters a mode with Enter and returns with Esc", async ({ obsidian }) 
 	await runPaletteCommand(obsidian, "open-home");
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);
-	await expect(page.locator(`${MODAL} ${HEADING}`)).toHaveText(["Modes", "Files"]);
-	await expect(page.locator(MODAL_ROW).first()).toContainText("Notes");
+	await expect(page.locator(`${MODAL} ${HEADING}`)).toHaveText([
+		t("palette.section.modes"),
+		t("palette.section.files"),
+	]);
+	await expect(page.locator(MODAL_ROW).first()).toContainText(t("mode.notes.title"));
 
 	await input.pressSequentially("n");
-	await expect(page.locator(MODAL_ROW).first()).toContainText("Notes");
+	await expect(page.locator(MODAL_ROW).first()).toContainText(t("mode.notes.title"));
 	await input.press("Enter");
 	await expect(page.locator(`${MODAL} ${CHIP}`)).toHaveText("n");
 	await expect(input).toHaveValue("");
 	await expect(page.locator(MODAL)).toHaveAttribute("data-mode", "file");
 
-	// Esc goes back with the alias selected, so Enter would re-enter the mode.
+	// Esc returns to an empty Home and restores the previously active mode.
 	await input.press("Escape");
 	await expect(page.locator(`${MODAL} ${CHIP}`)).toBeHidden();
-	await expect(input).toHaveValue("n");
-	expect(
-		await input.evaluate((el: HTMLInputElement) => [el.selectionStart, el.selectionEnd]),
-	).toEqual([0, 1]);
-	await expect(page.locator(MODAL_ROW).first()).toContainText("Notes");
+	await expect(input).toHaveValue("");
+	await expect(page.locator(`${MODAL_ROW}.is-active`)).toContainText(t("mode.notes.title"));
 
 	await input.press("Escape");
 	await expect(page.locator(MODAL)).toHaveCount(0);
@@ -52,14 +53,15 @@ test("Tab enters a mode and Backspace in the empty input returns", async ({ obsi
 	const page = obsidian.page;
 	const input = page.locator(MODAL_INPUT);
 	await input.pressSequentially("b");
-	await expect(page.locator(MODAL_ROW).first()).toContainText("Backlinks");
+	await expect(page.locator(MODAL_ROW).first()).toContainText(t("mode.backlinks.title"));
 	await input.press("Tab");
 	await expect(page.locator(`${MODAL} ${CHIP}`)).toHaveText("b");
 	await expect(page.locator(MODAL_ROW)).toHaveText(/Referrer/);
 
 	await input.press("Backspace");
 	await expect(page.locator(`${MODAL} ${CHIP}`)).toBeHidden();
-	await expect(input).toHaveValue("b");
+	await expect(input).toHaveValue("");
+	await expect(page.locator(`${MODAL_ROW}.is-active`)).toContainText(t("mode.notes.title"));
 });
 
 test("alias plus Space enters the mode directly", async ({ obsidian }) => {
@@ -69,7 +71,7 @@ test("alias plus Space enters the mode directly", async ({ obsidian }) => {
 	await input.pressSequentially("> outgoing link list");
 	await expect(page.locator(`${MODAL} ${CHIP}`)).toHaveText(">");
 	await expect(input).toHaveValue("outgoing link list");
-	await expect(page.locator(MODAL_ROW).first()).toContainText("Open outgoing link list");
+	await expect(page.locator(MODAL_ROW).first()).toContainText(t("command.openOutgoingLinkList"));
 });
 
 test("the note list shows no Home rows", async ({ obsidian }) => {
@@ -77,7 +79,9 @@ test("the note list shows no Home rows", async ({ obsidian }) => {
 	const page = obsidian.page;
 	await expect(page.locator(MODAL_ROW).first()).toBeVisible();
 	await expect(page.locator(`${MODAL} ${HEADING}`)).toHaveCount(0);
-	await expect(page.locator(MODAL_ROW).filter({ hasText: "Commands" })).toHaveCount(0);
+	await expect(page.locator(MODAL_ROW).filter({ hasText: t("mode.commands.title") })).toHaveCount(
+		0,
+	);
 });
 
 test("a mode opened by its command returns to Home on Esc", async ({ obsidian }) => {
@@ -88,8 +92,10 @@ test("a mode opened by its command returns to Home on Esc", async ({ obsidian })
 	await expect(page.locator(MODAL_ROW)).toHaveText(/Referrer/);
 	await input.press("Escape");
 	await expect(page.locator(MODAL)).toHaveCount(1);
-	await expect(input).toHaveValue("b");
-	await expect(page.locator(`${MODAL} ${HEADING}`).first()).toHaveText("Modes");
+	await expect(input).toHaveValue("");
+	await expect(page.locator(`${MODAL} ${HEADING}`).first()).toHaveText(
+		t("palette.section.modes"),
+	);
 });
 
 test("the command list returns to Home on Esc", async ({ obsidian }) => {
@@ -98,8 +104,10 @@ test("the command list returns to Home on Esc", async ({ obsidian }) => {
 	const input = page.locator(MODAL_INPUT);
 	await expect(page.locator(`${MODAL} ${CHIP}`)).toHaveText(">");
 	await input.press("Escape");
-	await expect(input).toHaveValue(">");
-	await expect(page.locator(`${MODAL} ${HEADING}`).first()).toHaveText("Modes");
+	await expect(input).toHaveValue("");
+	await expect(page.locator(`${MODAL} ${HEADING}`).first()).toHaveText(
+		t("palette.section.modes"),
+	);
 });
 
 test("the sidebar keeps the mode as an alias in its saved input", async ({ obsidian }) => {
@@ -119,8 +127,8 @@ test("the sidebar keeps the mode as an alias in its saved input", async ({ obsid
 
 	await input.press("Escape");
 	await expect(view.locator(CHIP)).toBeHidden();
-	await expect(input).toHaveValue("b");
-	await expect(view.locator(HEADING).first()).toHaveText("Modes");
+	await expect(input).toHaveValue("");
+	await expect(view.locator(HEADING).first()).toHaveText(t("palette.section.modes"));
 });
 
 test("the table lists no modes but still enters one by alias", async ({ obsidian }) => {
@@ -131,7 +139,7 @@ test("the table lists no modes but still enters one by alias", async ({ obsidian
 	);
 	const input = view.locator(".prompt-input");
 	await input.fill("b");
-	await expect(view.getByText("Backlinks")).toHaveCount(0);
+	await expect(view.getByText(t("mode.backlinks.title"))).toHaveCount(0);
 	await input.fill("b ");
 	await expect(view.locator(CHIP)).toHaveText("b");
 	await expect(view).toContainText("Referrer");

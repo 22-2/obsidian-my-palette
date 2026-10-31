@@ -4,6 +4,7 @@ import {
 	IGNORED_OPTION,
 	MODAL_INPUT,
 	PLUGIN_ID,
+	closePalette,
 	flipOption,
 	menuItems,
 	openHomeWith,
@@ -12,6 +13,7 @@ import {
 	rowLabels,
 	runPaletteCommand,
 	setIgnoreFilters,
+	t,
 	waitForResolvedLinks,
 	writeRaw,
 } from "./support.mts";
@@ -128,11 +130,17 @@ test("lists the chosen kind in the palette and switches it from the options menu
 	obsidian,
 }) => {
 	const page = await openHomeWith(obsidian, "a ");
-	await expect(page.locator(MODAL_INPUT)).toHaveAttribute("placeholder", "Search orphaned files");
+	await expect(page.locator(MODAL_INPUT)).toHaveAttribute(
+		"placeholder",
+		t("audit.placeholder", { label: t("audit.kind.orphaned-files") }),
+	);
 	await expect.poll(() => rowLabels(page)).toContain("orphan.md");
 
-	await chooseKind(page, "Broken links");
-	await expect(page.locator(MODAL_INPUT)).toHaveAttribute("placeholder", "Search broken links");
+	await chooseKind(page, t("audit.kind.broken-links"));
+	await expect(page.locator(MODAL_INPUT)).toHaveAttribute(
+		"placeholder",
+		t("audit.placeholder", { label: t("audit.kind.broken-links") }),
+	);
 	await expect.poll(() => rowLabels(page)).toEqual(["Missing note"]);
 	await expect
 		.poll(() =>
@@ -146,16 +154,18 @@ test("lists the chosen kind in the palette and switches it from the options menu
 			),
 		)
 		.toBe("broken-links");
+	await closePalette(page);
 });
 
 test("offers the kinds only in Vault audit", async ({ obsidian }) => {
 	const page = await openHomeWith(obsidian, "");
-	expect(await optionMenuTitles(page)).not.toContain("Broken links");
+	expect(await optionMenuTitles(page)).not.toContain(t("audit.kind.broken-links"));
+	await closePalette(page);
 });
 
 test("opens the note with a broken link at the link's line", async ({ obsidian }) => {
 	const page = await openHomeWith(obsidian, "a ");
-	await chooseKind(page, "Broken links");
+	await chooseKind(page, t("audit.kind.broken-links"));
 	await expect.poll(() => rowLabels(page)).toEqual(["Missing note"]);
 	await page.locator(MODAL_INPUT).press("Enter");
 	await expect
@@ -191,11 +201,24 @@ test("the table palette shows the columns of the chosen kind", async ({ obsidian
 	const page = obsidian.page;
 	const table = page.locator('.workspace-leaf-content[data-type="my-palette-table"]');
 	const headers = table.locator("table.my-palette-results-table th");
-	await expect(headers).toHaveText(["Name", "Path", "Size", "Modified"]);
+	await expect(headers).toHaveText([
+		t("table.col.name"),
+		t("table.col.path"),
+		t("table.col.size"),
+		t("table.col.modified"),
+	]);
 
 	await table.locator(".my-palette-options-button").click();
-	await page.locator(".menu .menu-item").filter({ hasText: "Broken links" }).first().click();
-	await expect(headers).toHaveText(["Link", "Linked from", "First source"]);
+	await page
+		.locator(".menu .menu-item")
+		.filter({ hasText: t("audit.kind.broken-links") })
+		.first()
+		.click();
+	await expect(headers).toHaveText([
+		t("table.col.link"),
+		t("table.col.linkedFrom"),
+		t("table.col.firstSource"),
+	]);
 	await expect(table.locator("table.my-palette-results-table tbody tr")).toHaveCount(1);
 	await expect(table.locator('td[data-column="firstSource"]')).toHaveText("notes/source.md");
 });
@@ -226,7 +249,7 @@ test.describe("moving items", () => {
 		expect(
 			(await runAuditCli(obsidian, { kind: "broken-links", glob: "**", trash: "true" }))
 				.error,
-		).toContain("cannot be moved");
+		).toContain(t("audit.error.notTrashable", { kind: "broken-links" }));
 		expect(await obsidian.exists("notes/orphan.md")).toBe(true);
 	});
 
@@ -248,15 +271,18 @@ test.describe("moving items", () => {
 		await expect.poll(() => rowLabels(page)).toEqual(["orphan.md"]);
 		const row = page.locator(".my-palette-suggest-modal .suggestion-item").first();
 		await row.click({ button: "right" });
-		await expect(menuItems(page)).toContainText(["Move to…", "Move to trash"]);
+		await expect(menuItems(page)).toContainText([
+			t("menu.moveToFolder"),
+			t("audit.menu.trash"),
+		]);
 		await page.keyboard.press("Escape");
 
-		await chooseKind(page, "Empty folders");
+		await chooseKind(page, t("audit.kind.empty-folders"));
 		await page.locator(MODAL_INPUT).fill("");
 		await expect.poll(() => rowLabels(page)).toEqual(["empty"]);
 		await row.click({ button: "right" });
-		await expect(menuItems(page).filter({ hasText: "Move to trash" })).toHaveCount(1);
-		await expect(menuItems(page).filter({ hasText: "Move to…" })).toHaveCount(0);
+		await expect(menuItems(page).filter({ hasText: t("audit.menu.trash") })).toHaveCount(1);
+		await expect(menuItems(page).filter({ hasText: t("menu.moveToFolder") })).toHaveCount(0);
 	});
 
 	test("moves a multi-selection to the trash at once", async ({ obsidian }) => {
@@ -267,8 +293,13 @@ test.describe("moving items", () => {
 		await rows.nth(0).click();
 		await rows.nth(1).click({ modifiers: ["Shift"] });
 		await rows.nth(1).click({ button: "right" });
-		await expect(page.locator(".menu .menu-item").first()).toContainText("2 items selected");
-		await page.locator(".menu .menu-item").filter({ hasText: "Move to trash" }).click();
+		await expect(page.locator(".menu .menu-item").first()).toContainText(
+			t("selection.header", { count: 2 }),
+		);
+		await page
+			.locator(".menu .menu-item")
+			.filter({ hasText: t("audit.menu.trash") })
+			.click();
 		await page.locator(".menu .menu-item.mod-cta").click();
 		const remaining = () =>
 			obsidian.evaluateApp(
@@ -285,9 +316,12 @@ test.describe("moving items", () => {
 			.locator(".my-palette-suggest-modal .suggestion-item")
 			.first()
 			.click({ button: "right" });
-		await page.locator(".menu .menu-item").filter({ hasText: "Move to trash" }).click();
+		await page
+			.locator(".menu .menu-item")
+			.filter({ hasText: t("audit.menu.trash") })
+			.click();
 		await expect(page.locator(".menu .menu-item.mod-cta")).toContainText(
-			"Click again to move 1 file to trash",
+			t("audit.menu.trashConfirm", { what: "ファイル 1 件" }),
 		);
 		expect(await obsidian.exists("notes/orphan.md")).toBe(true);
 		await page.locator(".menu .menu-item.mod-cta").click();
@@ -346,14 +380,14 @@ test.describe("MOC-only notes", () => {
 		]);
 
 		const page = await openHomeWith(obsidian, "a ");
-		await chooseKind(page, "Empty files");
+		await chooseKind(page, t("audit.kind.empty-files"));
 		await page.locator(MODAL_INPUT).fill("blank");
 		await expect(
 			page
 				.locator(".my-palette-suggest-modal .suggestion-item")
 				.first()
 				.locator(".my-palette-suggestion__badge"),
-		).toHaveText("MOC only");
+		).toHaveText(t("audit.emptiness.mocOnly"));
 	});
 
 	test("moving one to the trash removes it from its partners' Relateds", async ({ obsidian }) => {
@@ -378,7 +412,7 @@ test.describe("MOC-only notes", () => {
 		await expect(rows).toHaveCount(2);
 		await expect(
 			rows.filter({ hasText: "blank" }).locator(".my-palette-suggestion__badge"),
-		).toHaveText("MOC only");
+		).toHaveText(t("audit.emptiness.mocOnly"));
 		await expect(
 			rows.filter({ hasText: "written" }).locator(".my-palette-suggestion__badge"),
 		).toHaveCount(0);

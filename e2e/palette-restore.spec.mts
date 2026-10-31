@@ -7,6 +7,7 @@ import {
 	PLUGIN_ID,
 	pluginVaultOptions,
 	runPaletteCommand,
+	t,
 } from "./support.mts";
 
 test.use({ vaultOptions: pluginVaultOptions() });
@@ -69,10 +70,12 @@ test("Immediately always starts at Home", async ({ obsidian }) => {
 });
 
 test("General offers Return to Home after, set to 90 seconds by default", async ({ obsidian }) => {
-	const settingsPage = await obsidian.openSettings(PLUGIN_ID, { subPage: "General" });
+	const settingsPage = await obsidian.openSettings(PLUGIN_ID, {
+		subPage: t("settings.general.name"),
+	});
 	const row = settingsPage
 		.locator(".setting-item")
-		.filter({ has: settingsPage.getByText("Return to Home after", { exact: true }) });
+		.filter({ has: settingsPage.getByText(t("settings.returnHome.name"), { exact: true }) });
 	const select = row.locator("select").first();
 	await expect(select).toHaveValue("90");
 	await select.selectOption("0");

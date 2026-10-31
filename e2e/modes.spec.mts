@@ -2,12 +2,14 @@ import { expect, test } from "./fixtures.mts";
 import {
 	MODAL_INPUT,
 	MODAL_ROW,
+	closePalette,
 	menuItems,
 	openHomeWith,
 	PLUGIN_ID,
 	pluginVaultOptions,
 	rowLabels,
 	runPaletteCommand,
+	t,
 	waitForResolvedLinks,
 } from "./support.mts";
 
@@ -17,7 +19,7 @@ type SmartConnectionsHost = {
 	integrationAvailability: { refresh(): Promise<unknown> };
 };
 
-test("an installed but uninitialized Smart Connections mode stays hidden until its adapter is ready", async ({
+test("an installed but uninitialized Smart Connections mode is disabled until its adapter is ready", async ({
 	obsidian,
 }) => {
 	await obsidian.createNote("Origin.md", "# Origin");
@@ -29,7 +31,11 @@ test("an installed but uninitialized Smart Connections mode stays hidden until i
 	});
 	await runPaletteCommand(obsidian, "open-home");
 	const page = obsidian.page;
-	await expect(page.locator(MODAL_ROW).filter({ hasText: "Related notes" })).toHaveCount(0);
+	await page.locator(MODAL_INPUT).fill("sc");
+	const smartMode = page.locator(MODAL_ROW).filter({ hasText: t("mode.smart.title") });
+	await expect(smartMode).toHaveCount(1);
+	await expect(smartMode).toHaveAttribute("aria-disabled", "true");
+	await expect(smartMode).toContainText(t("mode.unavailable"));
 	await obsidian.evaluateApp(() => {
 		const plugins = (app as unknown as { plugins: { plugins: Record<string, unknown> } })
 			.plugins.plugins;
@@ -45,27 +51,32 @@ test("an installed but uninitialized Smart Connections mode stays hidden until i
 	await obsidian.evaluatePlugin<unknown, SmartConnectionsHost>(PLUGIN_ID, (plugin) =>
 		plugin.integrationAvailability.refresh(),
 	);
-	await expect(page.locator(MODAL_ROW).filter({ hasText: "Related notes" })).toHaveCount(1);
+	await expect(smartMode).not.toHaveAttribute("aria-disabled");
 	await page.locator(MODAL_INPUT).fill("sc ");
 	await expect(page.locator(".my-palette-mode-chip")).toHaveText("sc");
-	await expect(page.locator(".suggestion-empty")).toContainText("No suggestions");
+	await expect(page.locator(".suggestion-empty")).toContainText(t("suggest.noSuggestions"));
+	await closePalette(page);
 });
 
 test("returning to Home restores the selected mode", async ({ obsidian }) => {
 	const page = await openHomeWith(obsidian, "");
 	const input = page.locator(MODAL_INPUT);
 	await expect(page.locator(MODAL_ROW).nth(1)).toContainText("コマンド");
+	await expect(page.locator(`${MODAL_ROW}.is-active`)).toContainText("ノート");
 	await input.press("ArrowDown");
+	await expect(page.locator(`${MODAL_ROW}.is-active`)).toContainText("コマンド");
 	await input.press("Enter");
 	await expect(page.locator(".my-palette-mode-chip")).toBeVisible();
+	await expect(page.locator(".my-palette-suggest-modal")).toHaveAttribute("data-mode", "command");
 	await input.press("Escape");
 	await expect(input).toHaveValue("");
 	await expect(page.locator(`${MODAL_ROW}.is-active`)).toContainText("コマンド");
+	await closePalette(page);
 });
 
 test("the > prefix searches commands", async ({ obsidian }) => {
 	const page = await openHomeWith(obsidian, "> outgoing link list");
-	await expect(page.locator(MODAL_ROW).first()).toContainText("Open outgoing link list");
+	await expect(page.locator(MODAL_ROW).first()).toContainText(t("command.openOutgoingLinkList"));
 });
 
 for (const { mode, input, row } of [
@@ -77,10 +88,13 @@ for (const { mode, input, row } of [
 		await expect(page.locator(MODAL_ROW).first()).toContainText(row, { ignoreCase: true });
 		await page.locator(MODAL_INPUT).press("Enter");
 		await expect(
-			page.locator(".menu .menu-item").filter({ hasText: "Open in external editor" }),
+			page.locator(".menu .menu-item").filter({ hasText: t("menu.openInExternalEditor") }),
 		).toBeVisible();
 		// The palette stays open behind the menu, so Esc returns to the list.
 		await expect(page.locator(MODAL_INPUT)).toBeAttached();
+		await page.keyboard.press("Escape");
+		await expect(page.locator(".menu")).toHaveCount(0);
+		await closePalette(page);
 	});
 }
 
@@ -98,6 +112,7 @@ test("bk searches core bookmarks", async ({ obsidian }) => {
 	});
 	const page = await openHomeWith(obsidian, "bk pinned");
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Pinned topic");
+	await closePalette(page);
 });
 
 test("o lists outgoing links and b lists backlinks of the active note", async ({ obsidian }) => {
@@ -123,7 +138,7 @@ test("o lists outgoing links and b lists backlinks of the active note", async ({
 	await expect.poll(() => rowLabels(page)).toEqual(["Referrer"]);
 });
 
-test("an unavailable Smart Connections mode is absent and its alias does not enter a mode", async ({
+test("an unavailable Smart Connections mode is disabled and its alias does not enter a mode", async ({
 	obsidian,
 }) => {
 	await obsidian.createNote("Solo.md", "alone");
@@ -131,7 +146,10 @@ test("an unavailable Smart Connections mode is absent and its alias does not ent
 	const page = await openHomeWith(obsidian, "sc ");
 	await expect(page.locator(".my-palette-mode-chip")).toBeHidden();
 	await expect(page.locator(MODAL_INPUT)).toHaveValue("sc ");
-	await expect(page.locator(MODAL_ROW).filter({ hasText: "Related notes" })).toHaveCount(0);
+	const smartMode = page.locator(MODAL_ROW).filter({ hasText: t("mode.smart.title") });
+	await expect(smartMode).toHaveCount(1);
+	await expect(smartMode).toHaveAttribute("aria-disabled", "true");
+	await closePalette(page);
 });
 
 test("a Home mode can be hidden and restored from its settings page", async ({ obsidian }) => {
@@ -175,4 +193,5 @@ test("a Home mode can be hidden and restored from its settings page", async ({ o
 	const restoredPage = obsidian.page;
 	await restoredPage.locator(MODAL_INPUT).pressSequentially("n ");
 	await expect(restoredPage.locator(".my-palette-mode-chip")).toHaveText("n");
+	await closePalette(restoredPage);
 });

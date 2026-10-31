@@ -1,12 +1,14 @@
 import { expect, test } from "./fixtures.mts";
-import { MODAL_INPUT, PLUGIN_ID, pluginVaultOptions, runPaletteCommand } from "./support.mts";
+import { MODAL_INPUT, PLUGIN_ID, pluginVaultOptions, runPaletteCommand, t } from "./support.mts";
 
 test.use({ vaultOptions: pluginVaultOptions() });
 
 type IntegrationSettings = { integrations: { everything: { enabled: boolean } } };
 
 test("turning Everything off removes its modes from Home and alias entry", async ({ obsidian }) => {
-	const settingsPage = await obsidian.openSettings(PLUGIN_ID, { subPage: "Integrations" });
+	const settingsPage = await obsidian.openSettings(PLUGIN_ID, {
+		subPage: t("settings.integrations.name"),
+	});
 	const everything = settingsPage
 		.locator(".setting-item")
 		.filter({ has: settingsPage.getByText("Everything", { exact: true }) })
@@ -28,20 +30,28 @@ test("turning Everything off removes its modes from Home and alias entry", async
 	await input.pressSequentially("e ");
 	await expect(page.locator(".my-palette-suggest-modal .my-palette-mode-chip")).toBeHidden();
 	await expect(input).toHaveValue("e ");
+	await input.press("Escape");
+	await expect(page.locator(".my-palette-suggest-modal")).toHaveCount(0);
 });
 
 test("the Everything card opens its settings without interfering with its controls", async ({
 	obsidian,
 }) => {
-	const settingsPage = await obsidian.openSettings(PLUGIN_ID, { subPage: "Integrations" });
+	const settingsPage = await obsidian.openSettings(PLUGIN_ID, {
+		subPage: t("settings.integrations.name"),
+	});
 	const header = settingsPage.getByRole("button", { name: "Everything", exact: true });
 	const panel = settingsPage.locator("#my-palette-everything-panel");
 	await expect(header).toHaveAttribute("aria-expanded", "false");
 	await expect(panel).toBeHidden();
 	await header.locator(".setting-item-description").click();
 	await expect(header).toHaveAttribute("aria-expanded", "true");
-	await expect(panel.getByText("Results and timing", { exact: true })).toBeVisible();
-	await expect(panel.getByText("Request timeout", { exact: true })).toBeVisible();
+	await expect(
+		panel.getByText(t("settings.everything.resultsTiming"), { exact: true }),
+	).toBeVisible();
+	await expect(
+		panel.getByText(t("settings.everything.item.timeout"), { exact: true }),
+	).toBeVisible();
 	await settingsPage.locator(".my-palette-accordion__header .checkbox-container").click();
 	await expect(header).toHaveAttribute("aria-expanded", "true");
 	await panel.getByRole("textbox").first().fill("http://127.0.0.1:51361/");

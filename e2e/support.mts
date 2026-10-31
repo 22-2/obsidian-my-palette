@@ -4,6 +4,8 @@ import { expect, type ObsidianAPI, type VaultOptions } from "obsidian-e2e-toolki
 
 export const PLUGIN_ID = "my-palette";
 
+export { t } from "../src/i18n";
+
 // Resolved from this file, so the path does not depend on the directory the tests start in.
 const PREPARED_PLUGIN_DIR = fileURLToPath(new URL("../.e2e/plugin", import.meta.url));
 

@@ -7,6 +7,7 @@ import {
 	openPaletteWith,
 	pluginVaultOptions,
 	runPaletteCommand,
+	t,
 	waitForResolvedLinks,
 } from "./support.mts";
 
@@ -38,9 +39,11 @@ test("a committed search shows up in the history and restores its input", async 
 test("right click offers the open actions", async ({ obsidian }) => {
 	const page = await openPaletteWith(obsidian, "alpha");
 	await page.locator(MODAL_ROW).first().click({ button: "right" });
-	await expect(menuItems(page).filter({ hasText: /^Open$/ })).toBeVisible();
-	await expect(menuItems(page).filter({ hasText: "Open in new tab (background)" })).toBeVisible();
-	await expect(menuItems(page).filter({ hasText: "Open side by side" })).toBeVisible();
+	await expect(
+		menuItems(page).filter({ hasText: new RegExp(`^${t("menu.open")}$`) }),
+	).toBeVisible();
+	await expect(menuItems(page).filter({ hasText: t("menu.openInBackground") })).toBeVisible();
+	await expect(menuItems(page).filter({ hasText: t("menu.openSideBySide") })).toBeVisible();
 });
 
 test("pressing a result row closes the open result menu", async ({ obsidian }) => {
@@ -70,13 +73,16 @@ test("moves the current modal search into a fresh sidebar pane", async ({ obsidi
 	).toHaveClass(/lucide-history/);
 	await page.locator(".my-palette-suggest-modal .my-palette-options-button").click();
 	await expect(menuItems(page)).toHaveText([
-		"Include Obsidian-excluded files",
-		"Move to right sidebar",
-		"Help",
-		"Clear search history",
+		t("menu.foldKana"),
+		t("palette.ignored.label"),
+		t("menu.openableFilesOnly"),
+		t("menu.moveToRightSidebar"),
+		t("menu.openPluginSettings"),
+		t("menu.help"),
+		t("palette.control.clearHistory"),
 	]);
 	await menuItems(page)
-		.filter({ hasText: /^Move to right sidebar$/ })
+		.filter({ hasText: new RegExp(`^${t("menu.moveToRightSidebar")}$`) })
 		.click();
 	await expect(page.locator(MODAL_INPUT)).toHaveCount(0);
 	await expect(sidebarInputs).toHaveCount(2);
@@ -85,7 +91,9 @@ test("moves the current modal search into a fresh sidebar pane", async ({ obsidi
 	await expect(sidebarInputs.last()).toBeFocused();
 	await expect(page.locator(".my-palette-view").last()).toContainText("Alpha plan");
 	await page.locator(".my-palette-view .my-palette-options-button").last().click();
-	await expect(menuItems(page).filter({ hasText: /^Move to right sidebar$/ })).toHaveCount(0);
+	await expect(
+		menuItems(page).filter({ hasText: new RegExp(`^${t("menu.moveToRightSidebar")}$`) }),
+	).toHaveCount(0);
 });
 
 test("the highlight option is not offered in the palette and works in a selector", async ({
@@ -93,7 +101,9 @@ test("the highlight option is not offered in the palette and works in a selector
 }) => {
 	const page = await openPaletteWith(obsidian, "alpha");
 	const highlight = () =>
-		page.locator(".menu .menu-item").filter({ hasText: /^Highlight search matches$/ });
+		page
+			.locator(".menu .menu-item")
+			.filter({ hasText: new RegExp(`^${t("menu.highlightSearchMatches")}$`) });
 	await page.locator(".my-palette-suggest-modal .my-palette-options-button").click();
 	await expect(highlight()).toHaveCount(0);
 	await page.keyboard.press("Escape");
@@ -124,7 +134,7 @@ test("moving a link search preserves its fixed mode and source note", async ({ o
 	await expect(page.locator(MODAL_ROW).first()).toContainText("Alpha plan");
 	await page.locator(".my-palette-suggest-modal .my-palette-options-button").click();
 	await menuItems(page)
-		.filter({ hasText: /^Move to right sidebar$/ })
+		.filter({ hasText: new RegExp(`^${t("menu.moveToRightSidebar")}$`) })
 		.click();
 	await expect(page.locator(MODAL_INPUT)).toHaveCount(0);
 	await expect(page.locator(".my-palette-view .prompt-input")).toHaveValue("alpha");

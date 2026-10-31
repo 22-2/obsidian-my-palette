@@ -7,6 +7,7 @@ import {
 	openPaletteWith,
 	PLUGIN_ID,
 	pluginVaultOptions,
+	t,
 } from "./support.mts";
 
 test.use({ vaultOptions: pluginVaultOptions() });
@@ -48,15 +49,22 @@ test("Clear search history takes two presses and clears only the palette's own h
 	const page = await openPaletteWith(obsidian, "");
 	await page.locator(".my-palette-suggest-modal .my-palette-options-button").click();
 	expect(await menuItems(page).allTextContents()).toEqual([
-		"Include Obsidian-excluded files",
-		"Move to right sidebar",
-		"Help",
-		"Clear search history",
+		t("menu.foldKana"),
+		t("palette.ignored.label"),
+		t("menu.openableFilesOnly"),
+		t("menu.moveToRightSidebar"),
+		t("menu.openPluginSettings"),
+		t("menu.help"),
+		t("palette.control.clearHistory"),
 	]);
 
 	// The first press asks for a second press and keeps the menu open.
-	await menuItems(page).filter({ hasText: "Clear search history" }).click();
-	const confirm = page.locator(".menu-item").filter({ hasText: "Click again to clear" });
+	await menuItems(page)
+		.filter({ hasText: t("palette.control.clearHistory") })
+		.click();
+	const confirm = page
+		.locator(".menu-item")
+		.filter({ hasText: t("palette.control.confirmClear") });
 	await expect(confirm).toHaveClass(/mod-cta/);
 	await expect(page.locator(".menu")).toHaveCount(1);
 	expect(await storedCount(obsidian, "file")).toBe(1);
@@ -71,12 +79,21 @@ test("Clear search history takes two presses and clears only the palette's own h
 test("moving to another item cancels the confirmation", async ({ obsidian }) => {
 	const page = await openPaletteWith(obsidian, "");
 	await page.locator(".my-palette-suggest-modal .my-palette-options-button").click();
-	await menuItems(page).filter({ hasText: "Clear search history" }).click();
-	await expect(menuItems(page).filter({ hasText: "Click again to clear" })).toBeVisible();
-
-	await page.locator(".menu-item").filter({ hasText: "Help" }).hover();
-	await expect(menuItems(page).filter({ hasText: "Clear search history" })).toBeVisible();
+	await menuItems(page)
+		.filter({ hasText: t("palette.control.clearHistory") })
+		.click();
 	await expect(
-		page.locator(".menu-item").filter({ hasText: "Clear search history" }),
+		menuItems(page).filter({ hasText: t("palette.control.confirmClear") }),
+	).toBeVisible();
+
+	await page
+		.locator(".menu-item")
+		.filter({ hasText: t("menu.help") })
+		.hover();
+	await expect(
+		menuItems(page).filter({ hasText: t("palette.control.clearHistory") }),
+	).toBeVisible();
+	await expect(
+		page.locator(".menu-item").filter({ hasText: t("palette.control.clearHistory") }),
 	).not.toHaveClass(/mod-cta/);
 });
