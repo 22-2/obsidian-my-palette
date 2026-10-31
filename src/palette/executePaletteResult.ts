@@ -1,5 +1,5 @@
-import type { TFile, WorkspaceLeaf } from "obsidian";
-import { revealInFileExplorer } from "src/platform/obsidianInternals";
+import { MarkdownView, type TFile, type WorkspaceLeaf } from "obsidian";
+import { highlightEditorRanges, revealInFileExplorer } from "src/platform/obsidianInternals";
 import { openFileInLeaf } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
 import type { AuditResult, PaletteResult } from "src/palette/results";
@@ -92,6 +92,13 @@ export async function executePaletteResult(
 		// 関連するノートを実際に受け取ったリーフにカーソルを置く。
 		const editor = editorOf(openedLeaf);
 		if (editor) editor.setCursor({ line: result.line, ch: 0 });
+		finish(options);
+		return;
+	}
+	if (result.mode === "heading") {
+		const openedLeaf = await openFileResult(plugin, result.file, action, options);
+		plugin.recordResultUsage(result);
+		revealHeading(openedLeaf, result.line);
 		finish(options);
 		return;
 	}
@@ -224,6 +231,19 @@ function editorOf(
 	return editor && typeof (editor as { setCursor?: unknown }).setCursor === "function"
 		? (editor as { setCursor: (position: { line: number; ch: number }) => void })
 		: undefined;
+}
+
+/** 見出しの行へカーソルを移して中央に寄せ、その行を検索の一致と同じように強調する。 */
+function revealHeading(leaf: WorkspaceLeaf, line: number): void {
+	const view = leaf.view;
+	if (!(view instanceof MarkdownView)) return;
+	const { editor } = view;
+	const from = { line, ch: 0 };
+	const to = { line, ch: editor.getLine(line).length };
+	editor.setCursor(from);
+	editor.scrollIntoView({ from, to }, true);
+	// 移動の処理が終わってから強調を付ける。
+	queueMicrotask(() => highlightEditorRanges(view, [{ from, to }]));
 }
 
 function finish(options: PaletteResultExecutionOptions): void {

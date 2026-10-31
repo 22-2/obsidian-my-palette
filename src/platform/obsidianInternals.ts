@@ -1,4 +1,11 @@
-import type { App, KeymapEventHandler, Scope, TAbstractFile } from "obsidian";
+import type {
+	App,
+	EditorRange,
+	KeymapEventHandler,
+	MarkdownView,
+	Scope,
+	TAbstractFile,
+} from "obsidian";
 
 /*
  * 公開の `obsidian` の型定義にない Obsidian の API は、すべてこのモジュールを通す。
@@ -74,6 +81,12 @@ export interface MetadataTypeManagerInternals {
 /** コアの検索プラグインの入口。 */
 export interface GlobalSearchInternals {
 	openGlobalSearch(query: string, active: boolean): void;
+}
+
+interface MarkdownViewInternals {
+	editMode?: {
+		highlightSearchMatches?: (ranges: EditorRange[]) => void;
+	};
 }
 
 function internals(app: App): AppInternals {
@@ -169,6 +182,13 @@ export function getVaultBasePath(vault: { adapter: object }): string | undefined
 /** Vault のパスの絶対パス。デスクトップ以外では undefined。 */
 export function getVaultFullPath(app: App, vaultPath: string): string | undefined {
 	return (app.vault.adapter as AdapterInternals).getFullPath?.(vaultPath);
+}
+
+/**
+ * 検索の一致と同じ見た目で、Markdown のエディターの範囲を強調する。ビューの強調のAPIがなければ何もしない。
+ */
+export function highlightEditorRanges(view: MarkdownView, ranges: EditorRange[]): void {
+	(view as unknown as MarkdownViewInternals).editMode?.highlightSearchMatches?.(ranges);
 }
 
 /** スコープに登録されたハンドラー。組み込みのものを置き換えられるように。 */

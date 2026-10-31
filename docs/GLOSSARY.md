@@ -83,6 +83,7 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 | Open table palette          | `open-table-palette`          | Table palette                    |
 | Open outgoing link list     | `open-outgoing-link-list`     | 発リンクのモード                 |
 | Open backlink list          | `open-backlink-list`          | 被リンクのモード                 |
+| Open heading list           | `open-heading-list`           | 見出しのモード                   |
 | Open bookmark list          | `open-bookmark-list`          | ブックマークのモード             |
 | Open Smart Connections list | `open-smart-connections-list` | 関連ノートのモード               |
 | Open tab list               | `open-tab-list`               | タブのモード                     |
@@ -109,6 +110,7 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 | Everything     | `e`        | Open Everything list        |
 | Outgoing links | `o`        | Open outgoing link list     |
 | Backlinks      | `b`        | Open backlink list          |
+| Headings       | `h`        | Open heading list           |
 | Bookmarks      | `bk`       | Open bookmark list          |
 | Related notes  | `sc`       | Open Smart Connections list |
 | Tabs           | `t`        | Open tab list               |

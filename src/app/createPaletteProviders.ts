@@ -6,6 +6,7 @@ import { EverythingProvider } from "src/search/everything/EverythingProvider";
 import { FileProvider } from "src/search/file/FileProvider";
 import { CommandProvider } from "src/search/command/CommandProvider";
 import { RelatedFileProvider } from "src/search/related/RelatedFileProvider";
+import { HeadingProvider } from "src/search/heading/HeadingProvider";
 import { BookmarkProvider } from "src/search/bookmark/BookmarkProvider";
 import { SmartConnectionProvider } from "src/search/smart/SmartConnectionProvider";
 import { TabProvider } from "src/search/tab/TabProvider";
@@ -115,6 +116,7 @@ export function createPaletteProviders(
 			snippet: snippetProvider,
 			tag: tagProvider,
 			property: new PropertyProvider(app),
+			heading: new HeadingProvider(app),
 			audit: auditProvider,
 		},
 	};

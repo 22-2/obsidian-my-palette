@@ -91,6 +91,7 @@ Tag insert selector、MOC insert selector、MOC remove selector、Folder move se
 | `e`        | Everything     | Vault のファイルを検索。Obsidian-excluded オンで全種類       |
 | `o`        | Outgoing links | 現在のノートからリンクしているノート                         |
 | `b`        | Backlinks      | 現在のノートへリンクしているノート                           |
+| `h`        | Headings       | 現在のノートの見出しへ移動（レベルをバッジで表示）           |
 | `bk`       | Bookmarks      | 保存したブックマークを検索                                   |
 | `sc`       | Related notes  | 現在のノートに関連するノート（Smart Connections）            |
 | `t`        | Tabs           | 開いているタブへ切り替え                                     |

@@ -65,6 +65,12 @@ describe("マージ設定", () => {
 		});
 	});
 
+	it("ほかのモードがすでに h を使っていれば、見出しは空いている別のエイリアスへ移ります", () => {
+		const settings = mergeSettings({ modes: { tabs: { alias: "h" } } });
+		expect(settings.modes.tabs.alias).toBe("h");
+		expect(settings.modes.headings.alias).toBe("headings");
+	});
+
 	it("保存された設定がオフにならない限り、モードは有効のままになります", () => {
 		expect(mergeSettings({ modes: { tabs: { alias: "t" } } }).modes.tabs).toEqual({
 			alias: "t",

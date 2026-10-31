@@ -10,6 +10,7 @@ export type PaletteModeId =
 	| "everything"
 	| "outlinks"
 	| "backlinks"
+	| "headings"
 	| "bookmarks"
 	| "smart"
 	| "tabs"
@@ -76,6 +77,15 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		subtitle: t("mode.subtitle.currentNote"),
 		icon: ICONS.backlinks,
 		placeholder: t("mode.backlinks.placeholder"),
+	},
+	{
+		id: "headings",
+		mode: "heading",
+		englishName: "Headings",
+		title: t("mode.headings.title"),
+		subtitle: t("mode.subtitle.currentNote"),
+		icon: ICONS.heading,
+		placeholder: t("mode.headings.placeholder"),
 	},
 	{
 		id: "bookmarks",

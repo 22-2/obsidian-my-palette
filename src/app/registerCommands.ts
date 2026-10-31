@@ -69,6 +69,11 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		},
 	});
 	plugin.addCommand({
+		id: "open-heading-list",
+		name: t("command.openHeadingList"),
+		callback: () => openWithHome(`${plugin.settings.modes.headings.alias} `),
+	});
+	plugin.addCommand({
 		id: "open-bookmark-list",
 		name: t("command.openBookmarkList"),
 		callback: () => openWithHome("", "bookmark"),

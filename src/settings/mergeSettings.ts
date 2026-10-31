@@ -314,6 +314,16 @@ function normalizeModes(source: Record<string, unknown>): ModeSettingsMap {
 			modes,
 		);
 	}
+	// 見出しは Vault 監査より後に来た。`h` はすでに別のモードへ割り当てられているかもしれない。
+	if (!rawModes.headings) {
+		modes.headings.alias = unusedAlias(
+			DEFAULT_SETTINGS.modes.headings.alias,
+			"headings",
+			"headings",
+			modeIds,
+			modes,
+		);
+	}
 	return modes;
 }
 

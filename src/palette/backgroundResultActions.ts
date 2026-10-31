@@ -71,7 +71,12 @@ async function openPaletteResultInBackgroundInternal(
 		await openFileInBackground(plugin, file);
 		return true;
 	}
-	if (result.mode === "link" || result.mode === "backlink" || result.mode === "smart") {
+	if (
+		result.mode === "link" ||
+		result.mode === "backlink" ||
+		result.mode === "heading" ||
+		result.mode === "smart"
+	) {
 		await openFileInBackground(plugin, result.file);
 		return true;
 	}

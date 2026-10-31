@@ -10,6 +10,7 @@ export type PaletteMode =
 	| "everything"
 	| "link"
 	| "backlink"
+	| "heading"
 	| "bookmark"
 	| "smart"
 	| "tab"
@@ -34,7 +35,13 @@ export function supportsIncludeIgnored(mode: PaletteMode): boolean {
 
 /** 元のノートを読むモード。フッターに元ファイルを出すのはこのモードだけ。 */
 export function usesSourceNote(mode: PaletteMode): boolean {
-	return mode === "link" || mode === "backlink" || mode === "smart" || mode === "property";
+	return (
+		mode === "link" ||
+		mode === "backlink" ||
+		mode === "heading" ||
+		mode === "smart" ||
+		mode === "property"
+	);
 }
 
 export interface BaseResult {
@@ -83,6 +90,16 @@ export interface RelatedFileResult extends BaseResult {
 	mode: "link" | "backlink";
 	file: TFile;
 	line: number;
+}
+
+/** 現在のノートの見出し。選ぶと、その行へ移動して強調する。 */
+export interface HeadingResult extends BaseResult {
+	mode: "heading";
+	file: TFile;
+	/** 見出しの行(0 から始まる)。 */
+	line: number;
+	/** 見出しの深さ。`#` の数で、1 から 6。 */
+	level: number;
 }
 
 export interface BookmarkResult extends BaseResult {
@@ -207,6 +224,7 @@ export type PaletteResult =
 	| EverythingResult
 	| SearchHistoryResult
 	| RelatedFileResult
+	| HeadingResult
 	| BookmarkResult
 	| SmartConnectionResult
 	| TabResult
@@ -238,6 +256,7 @@ export function getResultFilePath(result: PaletteResult): string | undefined {
 			return result.file?.path;
 		case "link":
 		case "backlink":
+		case "heading":
 		case "smart":
 			return result.file.path;
 		case "command":

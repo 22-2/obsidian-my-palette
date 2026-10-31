@@ -217,6 +217,7 @@ export class PaletteSearchSession {
 		if (
 			this.state.mode === "link" ||
 			this.state.mode === "backlink" ||
+			this.state.mode === "heading" ||
 			this.state.mode === "smart" ||
 			this.state.mode === "property"
 		)
@@ -505,5 +506,7 @@ export function palettePlaceholder(mode: PaletteMode): string {
 									? t("palette.placeholder.property")
 									: mode === "tag"
 										? t("palette.placeholder.tag")
-										: t("palette.placeholder.files");
+										: mode === "heading"
+											? t("palette.placeholder.heading")
+											: t("palette.placeholder.files");
 }

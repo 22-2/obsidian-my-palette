@@ -1,4 +1,4 @@
-import { TFile, type App, type WorkspaceLeaf } from "obsidian";
+import { MarkdownView, TFile, type App, type WorkspaceLeaf } from "obsidian";
 import { describe, expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
@@ -11,6 +11,7 @@ vi.mock("obsidian", async () => ({
 		path = "Note.md";
 	},
 	Notice: class {},
+	MarkdownView: class {},
 	normalizePath: (path: string) => path,
 	Platform: { isDesktopApp: true },
 }));
@@ -95,6 +96,37 @@ describe("メモの開始フォーカス", () => {
 				expect(f.leaf.view.editor.setCursor).toHaveBeenCalledWith({ line: 17, ch: 0 });
 		},
 	);
+	it("見出しは、その行へ移動して中央に寄せ、行を強調します", async () => {
+		const f = fixture();
+		const editor = {
+			getLine: vi.fn().mockReturnValue("## Details"),
+			setCursor: vi.fn(),
+			scrollIntoView: vi.fn(),
+		};
+		const highlightSearchMatches = vi.fn();
+		// 実際の MarkdownView の生成には Leaf が要るので、プロトタイプだけを持つ空のビューを使う。
+		const view = Object.assign(Object.create(MarkdownView.prototype) as MarkdownView, {
+			editor,
+			editMode: { highlightSearchMatches },
+		});
+		Object.assign(f.leaf, { view });
+		const heading: PaletteResult = {
+			id: "heading:Note.md:4",
+			mode: "heading",
+			primary: "Details",
+			secondary: "5 行目",
+			icon: "heading",
+			file: f.file,
+			line: 4,
+			level: 2,
+		};
+		await executePaletteResult(f.plugin, heading, "primary", f.options);
+		const range = { from: { line: 4, ch: 0 }, to: { line: 4, ch: 10 } };
+		expect(editor.setCursor).toHaveBeenCalledWith({ line: 4, ch: 0 });
+		expect(editor.scrollIntoView).toHaveBeenCalledWith(range, true);
+		await vi.waitFor(() => expect(highlightSearchMatches).toHaveBeenCalledWith([range]));
+		expect(f.plugin.recordResultUsage).toHaveBeenCalledWith(heading);
+	});
 	it("要求されたターゲットが固定されている場合にフォールバック リーフに焦点を当てます", async () => {
 		const f = fixture();
 		const pinned = { getViewState: () => ({ pinned: true }), openFile: vi.fn() };

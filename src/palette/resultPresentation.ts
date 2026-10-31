@@ -107,7 +107,9 @@ export function toPaletteSelectionItem(
 								: // Why: 名前の横の印は見えたままになる。パスの文字列は切り詰められる。
 									result.mode === "audit" && result.kind === "empty-files"
 									? emptyFileLabel(result.mocOnly)
-									: undefined,
+									: result.mode === "heading"
+										? `H${result.level}`
+										: undefined,
 	};
 }
 

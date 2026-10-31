@@ -32,6 +32,7 @@ export const PALETTE_HISTORY_CATEGORIES: readonly SearchHistoryCategory[] = [
 	"everything-directory",
 	"link",
 	"backlink",
+	"heading",
 ];
 
 const LEGACY_INCLUDE_IGNORED_PREFIX = "i ";
@@ -63,6 +64,7 @@ function isSearchHistoryCategory(value: unknown): value is SearchHistoryCategory
 		value === "everything-directory" ||
 		value === "link" ||
 		value === "backlink" ||
+		value === "heading" ||
 		isSelectorHistoryCategory(value)
 	);
 }
@@ -299,6 +301,8 @@ function historyCategoryMode(category: SearchHistoryCategory): PaletteModeId | u
 			return "outlinks";
 		case "backlink":
 			return "backlinks";
+		case "heading":
+			return "headings";
 		case "file":
 		case "tag-insertion":
 		case "moc-insertion":

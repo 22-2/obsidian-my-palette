@@ -28,6 +28,7 @@ export function getResultAbsolutePath(app: App, result: PaletteResult): string |
 			return result.absolutePath;
 		case "link":
 		case "backlink":
+		case "heading":
 		case "smart":
 			return getVaultFullPath(app, result.file.path) ?? undefined;
 		case "bookmark":

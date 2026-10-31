@@ -84,6 +84,7 @@ export const ICONS = {
 	command: "square-terminal",
 	outgoingLinks: "links-going-out",
 	backlinks: "links-coming-in",
+	heading: "heading",
 	bookmark: "bookmark",
 	smartConnections: "sparkles",
 	tab: "panel-top",

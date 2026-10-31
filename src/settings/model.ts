@@ -33,7 +33,8 @@ export type SearchHistoryCategory =
 	| "everything"
 	| "everything-directory"
 	| "link"
-	| "backlink";
+	| "backlink"
+	| "heading";
 
 export interface SearchHistorySettings {
 	enabled: boolean;
@@ -369,6 +370,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		everything: { alias: "e", enabled: true },
 		outlinks: { alias: "o", enabled: true },
 		backlinks: { alias: "b", enabled: true },
+		headings: { alias: "h", enabled: true },
 		bookmarks: { alias: "bk", enabled: true },
 		smart: { alias: "sc", enabled: true },
 		tabs: { alias: "t", enabled: true },

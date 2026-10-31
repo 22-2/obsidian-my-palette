@@ -95,7 +95,7 @@ export async function runResultAction(
 		return { close: true };
 	}
 	if (result.mode === "command") return { close: true };
-	if (result.mode === "link" || result.mode === "backlink")
+	if (result.mode === "link" || result.mode === "backlink" || result.mode === "heading")
 		return { close: false, message: t("palette.error.relatedOnly") };
 	const everythingResult = result as EverythingResult;
 	try {

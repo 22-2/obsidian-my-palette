@@ -15,6 +15,7 @@ export function resolveVaultFile(app: App, result: PaletteResult): TFile | undef
 		}
 		case "link":
 		case "backlink":
+		case "heading":
 		case "bookmark":
 		case "smart":
 			return result.file;
