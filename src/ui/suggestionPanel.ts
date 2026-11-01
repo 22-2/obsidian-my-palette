@@ -288,7 +288,11 @@ export class SuggestionPanel<T> extends Component {
 		const count = this.chooser.values.length;
 		const matchedIndex = matches ? this.chooser.values.findIndex(matches) : -1;
 		if (matchedIndex >= 0) activeIndex = matchedIndex;
-		if (count > 0) this.setSelectedIndex(Math.min(Math.max(activeIndex, 0), count - 1), true);
+		if (count > 0) {
+			const index = Math.min(Math.max(activeIndex, 0), count - 1);
+			this.extendedSelection.restore([index], index, count);
+			this.setSelectedIndex(index, true);
+		}
 		this.resultContainerEl.scrollTop = scrollTop;
 	}
 

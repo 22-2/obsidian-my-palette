@@ -430,6 +430,21 @@ it("古い検索を破棄し、プロバイダーの一致クエリと合計を�
 	expect(f.root.querySelector(".my-palette-status-bar__count")?.textContent).toBe("50 / 120");
 });
 
+it("ビュー復元時に選択と範囲選択の起点をカーソルに合わせます", async () => {
+	const f = await fixture("view", "extended");
+	f.panel!.restoreView({ activeIndex: 2, scrollTop: 0 });
+	f.panel!.setResults({ items });
+	expect(f.selection()).toEqual(["gamma"]);
+	expect(f.rows().map((row) => row.classList.contains("is-selected"))).toEqual([
+		false,
+		false,
+		true,
+		false,
+	]);
+	key(f.input, "ArrowDown", { shiftKey: true });
+	expect(f.selection()).toEqual(["gamma", "delta"]);
+});
+
 it("開いたままの再レンダリング後に選択範囲とカーソルを同じアイテムに復元します", async () => {
 	const f = await fixture("modal", "extended");
 	mouse(f.rows()[1], "mousedown");
