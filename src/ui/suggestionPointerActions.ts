@@ -22,6 +22,8 @@ export class SuggestionPointerActions<T> {
 	private readonly leftClickRows = new WeakSet<Element>();
 	private readonly middleClickRows = new WeakSet<Element>();
 	private readonly rightClickRows = new WeakSet<Element>();
+	/** 2回目の押下で行を開いたので、続く dblclick では開かない。 */
+	private openedByDoublePress = false;
 
 	constructor(private readonly host: PointerActionsHost<T>) {}
 
@@ -93,6 +95,7 @@ export class SuggestionPointerActions<T> {
 		// Why: 中クリックの保護は click/auxclick までの間保ち、次の押下でリセットする。
 		// 1回のジェスチャーで同じノートを2回開かないようにするため。
 		this.middleClickRows.delete(row);
+		this.openedByDoublePress = false;
 		const index = Number(row.getAttribute("data-index"));
 		if (event.button === 0 && this.isRowToggleEvent(event)) {
 			// Why: チェックの操作は、その行で即座に動く。押下をそのまま通すと、強調表示の選択も変わる。
@@ -115,6 +118,8 @@ export class SuggestionPointerActions<T> {
 		} else if (event.button === 0 && this.host.selectionMode === "extended") {
 			// Why: サイドバーは、mousedown の後に Obsidian にクリックを奪われることがある。
 			// 今ここで選び、開く操作はダブルクリックと Enter だけに任せる。
+			// Why: dblclick は、2回押す間に一覧が描き直されると届かない(再検索はいつでも走る)。
+			// そのため、2回目の押下(detail が 2)で開き、続く dblclick では開かない。
 			event.preventDefault();
 			event.stopImmediatePropagation();
 			this.leftClickRows.add(row);
@@ -123,6 +128,10 @@ export class SuggestionPointerActions<T> {
 				range: event.shiftKey,
 			});
 			this.host.setSelectedIndex(index, false);
+			if (event.detail === 2) {
+				this.openedByDoublePress = true;
+				void this.host.props.onChoose(item, event);
+			}
 		} else if (event.button === 0 && this.host.props.surface === "view") {
 			// サイドバーのクリックは、mousedown の後に Obsidian に消費されることがある。そのため、
 			// 主な操作はここで実行し、後のクリックはガードを外すだけにする。
@@ -151,6 +160,12 @@ export class SuggestionPointerActions<T> {
 
 	private handleDoubleClick(event: MouseEvent): void {
 		if (this.host.selectionMode !== "extended" || event.button !== 0) return;
+		if (this.openedByDoublePress) {
+			this.openedByDoublePress = false;
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			return;
+		}
 		// チェックの上で素早く2回押すと、すでに2回切り替わっている。その後に続く dblclick で、
 		// さらに行を有効にしてはいけない。
 		if (this.isRowToggleEvent(event)) {
