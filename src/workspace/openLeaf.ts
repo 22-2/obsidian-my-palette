@@ -25,9 +25,9 @@ export async function openFileInLeaf(
 ): Promise<WorkspaceLeaf> {
 	const existing = options.focusExisting ? findLeafShowingFile(app, file) : undefined;
 	if (existing) {
-		// Why: 裏で開く操作は、ノートがどこかに既に見えているときにユーザーのタブを切り替えてはいけない。
-		// そのため、有効な操作だけが既存のリーフを前面に出す。
-		if (options.active) await revealOpenedLeaf(app, existing, options.autoFocus);
+		// Why: 裏で開く操作でも、ノートがすでに開いているなら、そのタブを前面に出す。
+		// ただしキーボードのフォーカスは奪わないので、有効な操作だけが移す。
+		await revealOpenedLeaf(app, existing, options.active && options.autoFocus);
 		return existing;
 	}
 	const leaf = getLeafForAction(app, options.action, options.targetLeaf);

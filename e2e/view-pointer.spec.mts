@@ -50,3 +50,17 @@ test("sidebar double click opens the note only once", async ({ obsidian }) => {
 	const tabs = await page.locator(".mod-root .workspace-tab-header").count();
 	expect(tabs).toBe(1);
 });
+
+test("sidebar middle click brings the already open note's tab to the front", async ({
+	obsidian,
+}) => {
+	await openSidebarPalette(obsidian);
+	const page = obsidian.page;
+	await page.locator(ROW).filter({ hasText: "Beta" }).first().click({ button: "middle" });
+	const tabs = page.locator(".mod-root .workspace-tab-header");
+	await expect(tabs).toHaveCount(2);
+	await expect(tabs.filter({ hasText: "Beta" })).toHaveClass(/is-active/);
+	await page.locator(ROW).filter({ hasText: "Alpha" }).first().click({ button: "middle" });
+	await expect(tabs.filter({ hasText: "Alpha" })).toHaveClass(/is-active/);
+	await expect(tabs).toHaveCount(2);
+});

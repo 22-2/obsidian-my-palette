@@ -147,7 +147,7 @@ describe("ファイルインリーフを開く", () => {
 		expect(workspace.revealLeaf).toHaveBeenCalledWith(created);
 	});
 
-	it("バックグラウンドで開くために既存のタブをそのままにしておく", async () => {
+	it("バックグラウンドで開くときも、既存のタブを前面に出すがフォーカスは奪わない", async () => {
 		const existing = fileLeaf("note.md");
 		const { app, workspace, file, created } = fixture([existing]);
 		await openFileInLeaf(app, file, {
@@ -156,7 +156,7 @@ describe("ファイルインリーフを開く", () => {
 			autoFocus: false,
 			focusExisting: true,
 		});
-		expect(workspace.revealLeaf).not.toHaveBeenCalled();
+		expect(workspace.revealLeaf).toHaveBeenCalledExactlyOnceWith(existing);
 		expect(workspace.setActiveLeaf).not.toHaveBeenCalled();
 		expect(created.openFile).not.toHaveBeenCalled();
 	});

@@ -51,6 +51,13 @@ it("新しく作成された背景の外部ノートを表示したりフォー�
 	expect(f.workspace.setActiveLeaf).not.toHaveBeenCalled();
 });
 
+it("背景で開く外部ノートがすでに開いているときは、そのタブを前面に出すがフォーカスは奪いません", async () => {
+	const f = fixture(true);
+	await openExternalMarkdown(f.plugin, "C:/outside.md", "alternate", true, false);
+	expect(f.workspace.revealLeaf).toHaveBeenCalledExactlyOnceWith(f.leaf);
+	expect(f.workspace.setActiveLeaf).not.toHaveBeenCalled();
+});
+
 it("外部ファイルがすでにポップアウトで開かれている場合、明示的なメイン ウィンドウ ターゲットを尊重します。", async () => {
 	const f = fixture(true);
 	const popout = {};

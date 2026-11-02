@@ -44,8 +44,11 @@ export async function openExternalMarkdown(
 			externalPathOf(leaf)?.toLocaleLowerCase() === resolvedPath.toLocaleLowerCase(),
 	);
 	if (existing) {
-		// Why: 裏で開く操作は、既に見えているノートへユーザーのタブを切り替えてはいけない。
-		if (!active) return;
+		// Why: 裏で開く操作でも、すでに開いているノートはそのタブを前面に出す。フォーカスは奪わない。
+		if (!active) {
+			await revealOpenedLeaf(plugin.app, existing, false);
+			return;
+		}
 		// Why: ネイティブの Markdown リーフがこの外部のパスを既に持っているので、開き直すときは
 		// 重複するリーフを作らず、そのタブへ移動する。
 		await existing.setViewState({
