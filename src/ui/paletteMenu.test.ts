@@ -496,6 +496,44 @@ describe("パレットメニューフィルター", () => {
 		expect(runs.open).toHaveBeenCalledOnce();
 	});
 
+	it("IME が空白だけを入力欄に入れても、選択を保ったままスペースで切り替えられます", () => {
+		const { menu, runs } = filterMenu();
+		menu.showAtPosition({ x: 0, y: 0 }, { selectFirst: true });
+
+		// IME が有効だと、1回目のスペースは全角スペースとして入力欄に入る。
+		type("　");
+		expect(filterInput().value).toBe("");
+		expect(selectedTitle()).toBe("Open in terminal");
+		expect(press(" ", filterInput()).defaultPrevented).toBe(true);
+		expect(runs.open).toHaveBeenCalledOnce();
+	});
+
+	it("IME 中の keydown (key が Process) でも、code が Space ならスペースとして扱います", () => {
+		const { menu, runs } = filterMenu();
+		menu.showAtPosition({ x: 0, y: 0 }, { selectFirst: true });
+		const event = new KeyboardEvent("keydown", {
+			key: "Process",
+			code: "Space",
+			bubbles: true,
+			cancelable: true,
+		});
+		filterInput().dispatchEvent(event);
+
+		expect(event.defaultPrevented).toBe(true);
+		expect(runs.open).toHaveBeenCalledOnce();
+	});
+
+	it("空白だけの入力で絞り込みを解除します", () => {
+		const { menu } = filterMenu();
+		menu.showAtPosition({ x: 0, y: 0 });
+		type("rename");
+		expect(visibleTitles()).toEqual(["Rename…"]);
+		type(" ");
+
+		expect(filterInput().value).toBe("");
+		expect(visibleTitles()).toHaveLength(3);
+	});
+
 	it("何も選択されていない場合でも、スペースをフィールドから遠ざけます", () => {
 		const { menu, runs } = filterMenu();
 		menu.showAtPosition({ x: 0, y: 0 });

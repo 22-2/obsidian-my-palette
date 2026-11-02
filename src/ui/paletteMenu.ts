@@ -35,8 +35,9 @@ const GAP = 2;
 /** 全角スペース(U+3000)。日本語の入力では半角と同じく、スイッチの切り替えに使えるようにする。 */
 const FULL_WIDTH_SPACE = "　";
 
-function isSpaceKey(key: string): boolean {
-	return key === " " || key === FULL_WIDTH_SPACE;
+function isSpaceKey(event: KeyboardEvent): boolean {
+	// Why: IME が有効だと keydown の key は "Process" になる。物理キーを表す code で判定する。
+	return event.key === " " || event.key === FULL_WIDTH_SPACE || event.code === "Space";
 }
 
 /**
@@ -179,9 +180,24 @@ export class PaletteMenu {
 			cls: "my-palette-menu-empty",
 			text: t("menu.filter.noMatch"),
 		});
-		inputEl.addEventListener("input", () => this.applyFilter());
+		inputEl.addEventListener("input", () => this.onFilterInput());
 		this.filter = { app, wrapEl, inputEl, emptyEl, minItems, active: false, scope: null };
 		return this;
+	}
+
+	private onFilterInput(): void {
+		const filter = this.filter;
+		if (!filter) return;
+		const { value } = filter.inputEl;
+		// Why: IME が有効だと、スペースが全角スペースとして入力欄に入る。空白だけの入力は語ではないので、
+		// 取り除く。残すと、以降のスペースが入力として扱われ、スイッチを切り替えられなくなる。
+		if (value !== "" && value.trim() === "") {
+			filter.inputEl.value = "";
+			// 絞り込み中でなければ、選択を保つために何もしない。
+			if (this.items.some((item) => item.isFiltered)) this.applyFilter();
+			return;
+		}
+		this.applyFilter();
 	}
 
 	/** すべての操作をもう一度表示し、入力した語を消す。 */
@@ -320,9 +336,15 @@ export class PaletteMenu {
 		if (event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return;
 		// 絞り込みの欄に語が入っているとき、スペースとカーソルキーは入力欄のものになる。
 		// Why: 欄が空なら、スペースは選ばれた項目(スイッチ)を切り替える。語の区切りとして打つ必要がないため。
-		if (this.filter?.active && this.filter.inputEl.value !== "" && isSpaceKey(event.key))
-			return;
+		if (this.filter?.active && this.filter.inputEl.value !== "" && isSpaceKey(event)) return;
 		if (this.filter?.active && ["Home", "End"].includes(event.key)) return;
+		if (isSpaceKey(event)) {
+			// Why: 何も選ばれていなくても、メニューが開いている間はスペースを背後の入力欄に渡さない。
+			this.items[this.selected]?.activate(event);
+			event.preventDefault();
+			event.stopPropagation();
+			return;
+		}
 		switch (event.key) {
 			case "ArrowDown":
 				this.focusEnabled(this.selected + 1, 1);
@@ -340,11 +362,6 @@ export class PaletteMenu {
 				this.focusEnabled(this.items.length - 1, -1);
 				break;
 			case "Enter":
-				this.items[this.selected]?.activate(event);
-				break;
-			case " ":
-			case FULL_WIDTH_SPACE:
-				// Why: 何も選ばれていなくても、メニューが開いている間はスペースを背後の入力欄に渡さない。
 				this.items[this.selected]?.activate(event);
 				break;
 			case "Escape":
