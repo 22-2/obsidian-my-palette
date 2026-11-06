@@ -46,10 +46,10 @@ export interface SuggestionPanelProps<T> {
 	onContextMenu?: (item: T, event: MouseEvent, selectedItems: T[]) => void;
 	onEscape?: () => void;
 	/**
-	 * 結果の一覧にフォーカスがあるときの数字キー 1〜9 で動かす行。行がなければ undefined を返す。
-	 * 返せた数字はキーを消費し、入力欄には打たれない。返せなければ、数字は通常どおり入力される。
+	 * 数字キー 1〜9 で動かす行の並び。n 番目の要素が数字 n の行の番号。並びに含まれる行には数字を表示する。
+	 * 並びが空なら、数字は通常どおり入力される。
 	 */
-	rowForDigit?: (digit: number, items: readonly T[]) => number | undefined;
+	digitRows?: (items: readonly T[]) => readonly number[];
 	/** 強調行でモードに入るキー。true を返すとキーを消費する(Home がモードに入る)。 */
 	onTab?: (item: T) => boolean;
 	/**
@@ -130,6 +130,8 @@ export class SuggestionPanel<T> extends Component {
 	private readonly modes?: InteractionModes;
 	/** 結果の一覧にフォーカスがあるか。入力欄にフォーカスがあるあいだ、数字キーは入力に回す。 */
 	private listFocused = false;
+	/** 数字キーで動かせる行の番号。先頭から 9 行まで。 */
+	private digitRowIndexes: readonly number[] = [];
 	private readonly switches = new Map<string, PanelSwitch>();
 	private readonly preview: SuggestionPreview<T>;
 
@@ -324,6 +326,7 @@ export class SuggestionPanel<T> extends Component {
 		// ホストは接頭辞を解析するかもしれない。強調表示は、一致に使うのと同じ文字列を使う必要がある。
 		this.query = query ?? this.inputEl.value;
 		this.chooser.values = items.slice(0, this.limit);
+		this.digitRowIndexes = this.props.digitRows?.(this.chooser.values).slice(0, 9) ?? [];
 		this.chooser.selectedItem = this.chooser.values.length ? 0 : -1;
 		this.extendedSelection.reset(this.chooser.values.length);
 		this.selected = this.chooser.values[0] ?? null;
@@ -365,9 +368,17 @@ export class SuggestionPanel<T> extends Component {
 			this.resultContainerEl.setAttribute("aria-multiselectable", "true");
 	}
 
+	/** 数字キーで動かせる行に、その数字を付ける。 */
+	private decorateDigit(row: HTMLElement, index: number): void {
+		const digit = this.digitRowIndexes.indexOf(index) + 1;
+		if (digit === 0) row.removeAttribute("data-digit");
+		else row.setAttribute("data-digit", String(digit));
+	}
+
 	private decorateRow(row: HTMLElement, index: number): void {
 		row.addClass("suggestion-item");
 		row.setAttribute("data-index", String(index));
+		this.decorateDigit(row, index);
 		row.setAttribute("role", this.resultsLayout ? "row" : "option");
 		row.setAttribute("aria-selected", String(index === 0));
 		if (index === 0) row.addClass("is-selected", "is-active");
@@ -541,8 +552,8 @@ export class SuggestionPanel<T> extends Component {
 	/** 結果にフォーカスがあるときの数字キーで行を動かす。キーを消費したら true。 */
 	private handleDigitKey(event: KeyboardEvent): boolean {
 		const digit = digitFromEvent(event);
-		if (digit === undefined || !this.listFocused || !this.props.rowForDigit) return false;
-		const index = this.props.rowForDigit(digit, this.chooser.values);
+		if (digit === undefined || !this.listFocused) return false;
+		const index = this.digitRowIndexes[digit - 1];
 		if (index === undefined) return false;
 		event.preventDefault();
 		event.stopPropagation();

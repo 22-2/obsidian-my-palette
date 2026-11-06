@@ -19,7 +19,7 @@ import {
 	palettePlaceholder,
 	paletteRouteChrome,
 	paletteSectionOf,
-	paletteRowForDigit,
+	paletteDigitRows,
 	type FixedPaletteMode,
 	type PaletteSearchState,
 } from "src/palette/PaletteSearchSession";
@@ -349,8 +349,7 @@ export class PaletteView extends ItemView {
 			},
 			onPreview: (result) => this.preview(result),
 			sectionOf: (result) => paletteSectionOf(this.session?.current, result),
-			rowForDigit: (digit, items) =>
-				paletteRowForDigit(this.session?.current.route, items, digit),
+			digitRows: (items) => paletteDigitRows(this.session?.current.route, items),
 			// Why: ピン留めはめったに切り替えないので、常設のフッターボタンではなく元のノート名の
 			// メニューに置く。通常のクリックはノートに移動する。
 			onFooterTextClick: () => void this.focusSourceNote(),

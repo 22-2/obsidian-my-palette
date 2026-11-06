@@ -22,7 +22,7 @@ import {
 	PaletteSearchSession,
 	paletteRouteChrome,
 	paletteSectionOf,
-	paletteRowForDigit,
+	paletteDigitRows,
 	type FixedPaletteMode,
 	type PaletteSearchState,
 } from "src/palette/PaletteSearchSession";
@@ -419,15 +419,12 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		await openPaletteResultInBackground(this.plugin, result);
 	}
 
-	protected override handlesDigitJump(): boolean {
+	protected override handlesDigitRows(): boolean {
 		return true;
 	}
 
-	protected override digitJumpRow(
-		digit: number,
-		items: readonly PaletteResult[],
-	): number | undefined {
-		return paletteRowForDigit(this.state?.route, items, digit);
+	protected override digitRows(items: readonly PaletteResult[]): number[] {
+		return paletteDigitRows(this.state?.route, items);
 	}
 
 	protected override handlesSuggestionPreview(): boolean {

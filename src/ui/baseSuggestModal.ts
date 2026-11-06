@@ -112,9 +112,7 @@ export abstract class BaseSuggestModal<T> extends Modal {
 			onPreview: this.handlesSuggestionPreview()
 				? (item) => this.previewSuggestion(item)
 				: undefined,
-			rowForDigit: this.handlesDigitJump()
-				? (digit, items) => this.digitJumpRow(digit, items)
-				: undefined,
+			digitRows: this.handlesDigitRows() ? (items) => this.digitRows(items) : undefined,
 			onModeChipClick: () => this.onModeChipClick(),
 			sectionOf: (item) => this.sectionOf(item),
 		});
@@ -332,11 +330,11 @@ export abstract class BaseSuggestModal<T> extends Modal {
 	protected handlesSelectionSpace(): boolean {
 		return false;
 	}
-	protected handlesDigitJump(): boolean {
+	protected handlesDigitRows(): boolean {
 		return false;
 	}
-	protected digitJumpRow(_digit: number, _items: readonly T[]): number | undefined {
-		return undefined;
+	protected digitRows(_items: readonly T[]): readonly number[] {
+		return [];
 	}
 	protected async onSuggestionMiddleClick(_item: T, _event: MouseEvent): Promise<void> {}
 	protected onSuggestionContextMenu(_item: T, _event: MouseEvent): void {}
