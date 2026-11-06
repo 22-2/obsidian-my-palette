@@ -355,7 +355,7 @@
 	"help.row.ctrlArrows": "選択を変えずにアクティブな行を移動",
 	"help.row.preview": "パレットを閉じずに、アクティブな結果をプレビュー",
 	"help.row.homeEnd": "検索欄の先頭・末尾へ移動",
-	"help.row.digits": "入力が空のとき、1〜9 で上から n 番目の結果へ移動（Home ではファイルの n 番目）",
+	"help.row.digits": "結果にフォーカスがあるとき、1〜9 で上から n 番目の結果へ移動（Home ではファイルの n 番目）",
 	"help.row.ctrlHomeEnd": "最初・最後の結果へ移動",
 	"help.row.holdKey": "{key} を押し続ける",
 	"help.row.fade": "一時的にパレットをフェードアウトさせる。離すと元に戻る",

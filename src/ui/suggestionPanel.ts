@@ -46,7 +46,7 @@ export interface SuggestionPanelProps<T> {
 	onContextMenu?: (item: T, event: MouseEvent, selectedItems: T[]) => void;
 	onEscape?: () => void;
 	/**
-	 * 入力が空のときの数字キー 1〜9 で動かす行。行がなければ undefined を返す。
+	 * 結果の一覧にフォーカスがあるときの数字キー 1〜9 で動かす行。行がなければ undefined を返す。
 	 * 返せた数字はキーを消費し、入力欄には打たれない。返せなければ、数字は通常どおり入力される。
 	 */
 	rowForDigit?: (digit: number, items: readonly T[]) => number | undefined;
@@ -128,6 +128,8 @@ export class SuggestionPanel<T> extends Component {
 	private sortStatusClick?: (event: MouseEvent, anchor: HTMLElement) => void;
 	private resultsLayout?: SuggestionPanelResultsLayout<T>;
 	private readonly modes?: InteractionModes;
+	/** 結果の一覧にフォーカスがあるか。入力欄にフォーカスがあるあいだ、数字キーは入力に回す。 */
+	private listFocused = false;
 	private readonly switches = new Map<string, PanelSwitch>();
 	private readonly preview: SuggestionPreview<T>;
 
@@ -221,7 +223,11 @@ export class SuggestionPanel<T> extends Component {
 			modes.set("input");
 			this.registerDomEvent(this.inputEl, "mousedown", () => modes.set("input"));
 		}
-		this.registerDomEvent(this.inputEl, "input", () => this.props.onInput(this.inputEl.value));
+		this.registerDomEvent(this.inputEl, "input", () => {
+			this.listFocused = false;
+			this.props.onInput(this.inputEl.value);
+		});
+		this.registerDomEvent(this.inputEl, "mousedown", () => (this.listFocused = false));
 		this.registerDomEvent(this.inputEl, "keydown", (event) => this.handleInputKeyDown(event));
 		this.registerDomEvent(this.sortStatusEl, "click", (event) => {
 			if (!this.sortStatusClick) return;
@@ -387,11 +393,13 @@ export class SuggestionPanel<T> extends Component {
 	}
 
 	focusSearchInput(): void {
+		this.listFocused = false;
 		this.modes?.set("input");
 		if (this.inputEl.isConnected) this.inputEl.focus({ preventScroll: true });
 	}
 
 	private focusResults(): void {
+		this.listFocused = true;
 		this.modes?.set("selection");
 		this.props.onResultFocus?.();
 	}
@@ -530,11 +538,10 @@ export class SuggestionPanel<T> extends Component {
 		return true;
 	}
 
-	/** 入力が空のときの数字キーで行を動かす。キーを消費したら true。 */
+	/** 結果にフォーカスがあるときの数字キーで行を動かす。キーを消費したら true。 */
 	private handleDigitKey(event: KeyboardEvent): boolean {
 		const digit = digitFromEvent(event);
-		if (digit === undefined || this.inputEl.value !== "" || !this.props.rowForDigit)
-			return false;
+		if (digit === undefined || !this.listFocused || !this.props.rowForDigit) return false;
 		const index = this.props.rowForDigit(digit, this.chooser.values);
 		if (index === undefined) return false;
 		event.preventDefault();
