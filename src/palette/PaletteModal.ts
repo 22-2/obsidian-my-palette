@@ -22,6 +22,7 @@ import {
 	PaletteSearchSession,
 	paletteRouteChrome,
 	paletteSectionOf,
+	paletteRowForDigit,
 	type FixedPaletteMode,
 	type PaletteSearchState,
 } from "src/palette/PaletteSearchSession";
@@ -416,6 +417,17 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		// Why: 裏で開いてもパレットは閉じないので、成功時の
 		// 操作の挙動を、結果の一覧をクリックしていない呼び出し元のために残す。
 		await openPaletteResultInBackground(this.plugin, result);
+	}
+
+	protected override handlesDigitJump(): boolean {
+		return true;
+	}
+
+	protected override digitJumpRow(
+		digit: number,
+		items: readonly PaletteResult[],
+	): number | undefined {
+		return paletteRowForDigit(this.state?.route, items, digit);
 	}
 
 	protected override handlesSuggestionPreview(): boolean {

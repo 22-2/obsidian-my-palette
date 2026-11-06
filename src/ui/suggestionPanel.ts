@@ -10,6 +10,12 @@ import { PanelSwitch, type PanelSwitchOptions } from "src/ui/panelSwitch";
 import { ICONS } from "src/ui/icons";
 import { t } from "src/i18n";
 
+/** 修飾キーのない数字キー 1〜9 を数字に変える。それ以外は undefined。 */
+function digitFromEvent(event: KeyboardEvent): number | undefined {
+	if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) return undefined;
+	return /^[1-9]$/.test(event.key) ? Number(event.key) : undefined;
+}
+
 export interface SuggestionPanelProps<T> {
 	getHotkeys?: () => PaletteHotkeys;
 	initialInput?: string;
@@ -39,6 +45,11 @@ export interface SuggestionPanelProps<T> {
 	onSelectionSpace?: (selectedItems: T[], event: KeyboardEvent) => void;
 	onContextMenu?: (item: T, event: MouseEvent, selectedItems: T[]) => void;
 	onEscape?: () => void;
+	/**
+	 * 入力が空のときの数字キー 1〜9 で動かす行。行がなければ undefined を返す。
+	 * 返せた数字はキーを消費し、入力欄には打たれない。返せなければ、数字は通常どおり入力される。
+	 */
+	rowForDigit?: (digit: number, items: readonly T[]) => number | undefined;
 	/** 強調行でモードに入るキー。true を返すとキーを消費する(Home がモードに入る)。 */
 	onTab?: (item: T) => boolean;
 	/**
@@ -519,10 +530,30 @@ export class SuggestionPanel<T> extends Component {
 		return true;
 	}
 
+	/** 入力が空のときの数字キーで行を動かす。キーを消費したら true。 */
+	private handleDigitKey(event: KeyboardEvent): boolean {
+		const digit = digitFromEvent(event);
+		if (digit === undefined || this.inputEl.value !== "" || !this.props.rowForDigit)
+			return false;
+		const index = this.props.rowForDigit(digit, this.chooser.values);
+		if (index === undefined) return false;
+		event.preventDefault();
+		event.stopPropagation();
+		this.focusResults();
+		if (this.selectionMode === "extended")
+			this.extendedSelection.select(index, this.chooser.values.length, {
+				toggle: false,
+				range: false,
+			});
+		this.setSelectedIndex(index, true);
+		return true;
+	}
+
 	private handleInputKeyDown(event: KeyboardEvent): void {
 		if (event.isComposing) return;
 		if (this.preview.handleKey(event)) return;
 		if (this.handleModeCommand(event)) return;
+		if (this.handleDigitKey(event)) return;
 		if (this.props.onContextMenu && matchesHotkey(event, this.hotkeys.contextMenu)) {
 			event.preventDefault();
 			event.stopPropagation();

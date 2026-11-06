@@ -52,6 +52,7 @@ export class PaletteHelpModal extends Modal {
 				? ([
 						[formatHotkey(this.hotkeys.preview), t("help.row.preview")],
 						["Home / End", t("help.row.homeEnd")],
+						["1〜9", t("help.row.digits")],
 						["Ctrl+Home / Ctrl+End", t("help.row.ctrlHomeEnd")],
 					] satisfies Array<[string, string]>)
 				: []),

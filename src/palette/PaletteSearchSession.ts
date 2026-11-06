@@ -487,6 +487,18 @@ export function paletteSectionOf(
 	return result.mode === "mode-entry" ? t("palette.section.modes") : t("palette.section.files");
 }
 
+/** 数字キーの 1〜9 が移動する行。Home では、モードの行を数えず、ファイルの n 番目の行を指す。 */
+export function paletteRowForDigit(
+	route: PaletteRoute | undefined,
+	items: readonly PaletteResult[],
+	digit: number,
+): number | undefined {
+	const rows = items.flatMap((item, index) =>
+		route?.kind === "home" && item.mode === "mode-entry" ? [] : [index],
+	);
+	return rows[digit - 1];
+}
+
 export function palettePlaceholder(mode: PaletteMode): string {
 	return mode === "link"
 		? t("palette.placeholder.link")

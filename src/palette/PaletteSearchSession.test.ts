@@ -7,6 +7,7 @@ import {
 	palettePlaceholder,
 	paletteRouteChrome,
 	paletteSectionOf,
+	paletteRowForDigit,
 } from "src/palette/PaletteSearchSession";
 import type { FileResult } from "src/palette/results";
 
@@ -294,5 +295,38 @@ describe("パレットルートのプレゼンテーション", () => {
 		expect(
 			paletteRouteChrome({ route: { kind: "home" }, mode: "file" }, undefined, true),
 		).toEqual({ placeholder: "ファイルを検索、またはモードを選択" });
+	});
+});
+
+describe("paletteRowForDigit", () => {
+	const note = (name: string): FileResult => ({
+		id: `file:${name}.md`,
+		mode: "file",
+		primary: name,
+		secondary: `${name}.md`,
+		icon: "file",
+		vaultPath: `${name}.md`,
+	});
+	const modeEntry = {
+		id: "mode:notes",
+		mode: "mode-entry",
+		modeId: "notes",
+		alias: "n",
+		primary: "Notes",
+		secondary: "Obsidian",
+		icon: "files",
+	} as const;
+
+	it("Home では、モードの行を数えずにファイルの n 番目を指す", () => {
+		const items = [modeEntry, note("a"), note("b")];
+		expect(paletteRowForDigit({ kind: "home" }, items, 1)).toBe(1);
+		expect(paletteRowForDigit({ kind: "home" }, items, 2)).toBe(2);
+		expect(paletteRowForDigit({ kind: "home" }, items, 3)).toBeUndefined();
+	});
+
+	it("モードの中では、先頭から n 番目の行を指す", () => {
+		const items = [modeEntry, note("a")];
+		expect(paletteRowForDigit({ kind: "mode", modeId: "notes" }, items, 1)).toBe(0);
+		expect(paletteRowForDigit({ kind: "mode", modeId: "notes" }, items, 2)).toBe(1);
 	});
 });
