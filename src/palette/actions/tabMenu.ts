@@ -73,7 +73,6 @@ export function populateTabMenu({
 			item
 				.setTitle(t("tab.menu.pin"))
 				.setIcon(ICONS.pin)
-				.setAccessKey("I")
 				.setSearchTerms("pin-tab")
 				.onClick(() => {
 					for (const leaf of leavesNow()) leaf.setPinned(true);
@@ -86,7 +85,6 @@ export function populateTabMenu({
 			item
 				.setTitle(t("tab.menu.unpin"))
 				.setIcon(ICONS.unpin)
-				.setAccessKey("Q")
 				.setSearchTerms("unpin-tab")
 				.onClick(() => {
 					for (const leaf of leavesNow()) leaf.setPinned(false);
@@ -98,7 +96,6 @@ export function populateTabMenu({
 		item
 			.setTitle(t("tab.menu.close"))
 			.setIcon(ICONS.close)
-			.setAccessKey("C")
 			.setSearchTerms("close-tab")
 			.onClick(() => {
 				for (const leaf of leavesNow()) leaf.detach();

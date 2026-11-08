@@ -239,31 +239,6 @@ describe("パレットメニューのクリック数", () => {
 });
 
 describe("パレットメニューキーボード", () => {
-	it("絞り込みの欄があるメニューでは Alt との組み合わせで実行し、打った文字は絞り込みに使います", () => {
-		const menu = new PaletteMenu();
-		menu.enableFilter(
-			{ keymap: { pushScope: vi.fn(), popScope: vi.fn() } } as unknown as App,
-			2,
-		);
-		const open = vi.fn();
-		menu.addItem((item) => item.setTitle("Open").setAccessKey("o").onClick(open));
-		menu.addItem((item) => item.setTitle("Copy").setAccessKey("c").onClick(vi.fn()));
-		menu.showAtPosition({ x: 0, y: 0 });
-
-		expect(titleOf(document.querySelector(".menu-item"))).toBe("Open (Alt+O)");
-		press("o");
-		expect(open).not.toHaveBeenCalled();
-		const event = new KeyboardEvent("keydown", {
-			key: "ø",
-			code: "KeyO",
-			altKey: true,
-			bubbles: true,
-			cancelable: true,
-		});
-		document.body.dispatchEvent(event);
-		expect(open).toHaveBeenCalledOnce();
-	});
-
 	it("項目名にアクセスキーを表示し、そのキーで実行します", () => {
 		const menu = new PaletteMenu();
 		const run = vi.fn();
@@ -505,14 +480,90 @@ describe("パレットメニューフィルター", () => {
 		expect(document.querySelector(".my-palette-menu-empty.is-visible")).toBeNull();
 	});
 
-	it("Space と Home がメニューで動作するのではなく、テキスト フィールドにアクセスできるようにします。", () => {
+	it("入力モードのスペースは、メニューで動作するのではなく、テキスト フィールドに入ります。", () => {
 		const { menu, runs } = filterMenu();
 		menu.showAtPosition({ x: 0, y: 0 });
 		type("e");
 
 		expect(press(" ", filterInput()).defaultPrevented).toBe(false);
-		expect(press("Home", filterInput()).defaultPrevented).toBe(false);
 		expect(runs.open).not.toHaveBeenCalled();
+	});
+
+	it("Home と End は入力中でもメニューの先頭と末尾へ移動する", () => {
+		const { menu } = filterMenu();
+		menu.showAtPosition({ x: 0, y: 0 });
+
+		expect(press("End", filterInput()).defaultPrevented).toBe(true);
+		expect(selectedTitle()).toBe("Rename…");
+		press("Home", filterInput());
+		expect(selectedTitle()).toBe("Open in terminal");
+	});
+
+	describe("入力モードと選択モード", () => {
+		function keyedMenu() {
+			const menu = new PaletteMenu().enableFilter({ keymap } as unknown as App, 2);
+			const runs = { open: vi.fn(), copy: vi.fn() };
+			menu.addItem((item) => item.setTitle("Open").setAccessKey("o").onClick(runs.open));
+			menu.addItem((item) => item.setTitle("Copy name").setAccessKey("n").onClick(runs.copy));
+			menu.addItem((item) => item.setTitle("Rename").onClick(vi.fn()));
+			return { menu, runs };
+		}
+
+		it("入力モードで始まり、キーは絞り込みに入って表示も出さない", () => {
+			const { menu, runs } = keyedMenu();
+			menu.showAtPosition({ x: 0, y: 0 });
+
+			expect(filterInput().readOnly).toBe(false);
+			expect(visibleTitles()).toEqual(["Open", "Copy name", "Rename"]);
+			press("o", filterInput());
+			expect(runs.open).not.toHaveBeenCalled();
+		});
+
+		it("↓ で選択モードに入り、アクセスキーを表示して、そのキーで実行する", () => {
+			const { menu, runs } = keyedMenu();
+			menu.showAtPosition({ x: 0, y: 0 });
+			press("ArrowDown", filterInput());
+
+			expect(filterInput().readOnly).toBe(true);
+			expect(visibleTitles()).toEqual(["Open (O)", "Copy name (N)", "Rename"]);
+			expect(press("n", filterInput()).defaultPrevented).toBe(true);
+			expect(runs.copy).toHaveBeenCalledOnce();
+		});
+
+		it("選択モードで先頭の項目から ↑ を押すと入力モードへ戻る", () => {
+			const { menu } = keyedMenu();
+			menu.showAtPosition({ x: 0, y: 0 });
+			press("ArrowDown", filterInput());
+			press("ArrowDown", filterInput());
+			expect(selectedTitle()).toBe("Copy name (N)");
+
+			press("ArrowUp", filterInput());
+			expect(selectedTitle()).toBe("Open (O)");
+			expect(filterInput().readOnly).toBe(true);
+			press("ArrowUp", filterInput());
+			expect(filterInput().readOnly).toBe(false);
+			expect(visibleTitles()).toEqual(["Open", "Copy name", "Rename"]);
+		});
+
+		it("入力欄のクリックでも入力モードへ戻る", () => {
+			const { menu } = keyedMenu();
+			menu.showAtPosition({ x: 0, y: 0 });
+			press("ArrowDown", filterInput());
+			filterInput().dispatchEvent(new MouseEvent("mousedown", { bubbles: true, button: 0 }));
+
+			expect(filterInput().readOnly).toBe(false);
+		});
+
+		it("絞り込みの欄がない短いメニューは、開いた直後から選択モードでキー1打で実行する", () => {
+			const menu = new PaletteMenu().enableFilter({ keymap } as unknown as App, 5);
+			const open = vi.fn();
+			menu.addItem((item) => item.setTitle("Open").setAccessKey("o").onClick(open));
+			menu.showAtPosition({ x: 0, y: 0 });
+
+			expect(visibleTitles()).toEqual(["Open (O)"]);
+			press("o");
+			expect(open).toHaveBeenCalledOnce();
+		});
 	});
 
 	it("フィールドが空のときにスペースを使用して選択した項目をアクティブにします", () => {

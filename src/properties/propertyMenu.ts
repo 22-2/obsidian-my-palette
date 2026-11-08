@@ -97,7 +97,6 @@ function addBulkDeleteItem(
 		title: t("property.menu.deleteFromMany", { count: targetCount }),
 		confirmTitle: t("property.menu.confirmDeleteMany", { count: targetCount }),
 		id: "delete-property-from-many",
-		accessKey: "D",
 		icon: ICONS.delete,
 		run: () => void deleteProperties(app, result),
 	});

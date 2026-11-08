@@ -235,15 +235,10 @@ export function populatePaletteResultMenu({
 		});
 		if (result.mode === "plugin" && result.hasSettings) {
 			const pluginId = result.pluginId;
-			// Why: 同じ操作がオプションメニューにも出るので、アクセスキーは結果のメニューだけで付ける。
-			menu.addItem((item) =>
-				withAction(item, MENU_ACTIONS.openPluginSettings)
-					.setAccessKey("G")
-					.onClick(() => {
-						onNoteActionSelected?.();
-						openPluginSettings(app, pluginId);
-					}),
-			);
+			addMenuAction(menu, MENU_ACTIONS.openPluginSettings, () => {
+				onNoteActionSelected?.();
+				openPluginSettings(app, pluginId);
+			});
 		}
 		addCopyPathMenuItems(
 			menu,

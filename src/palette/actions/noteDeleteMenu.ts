@@ -34,7 +34,6 @@ export function addNoteDeleteMenuItem(
 		item
 			.setTitle(title)
 			.setIcon(ICONS.delete)
-			.setAccessKey("D")
 			.setSearchTerms("delete-note trash-note")
 			.setWarning(true)
 			.onClick(() =>

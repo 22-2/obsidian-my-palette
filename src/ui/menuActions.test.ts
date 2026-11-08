@@ -18,47 +18,37 @@ describe("アクセスキー", () => {
 		for (const key of Object.values(ACCESS_KEYS)) expect(key).toMatch(/^[A-Z]$/);
 	});
 
+	it("書き換える操作と破壊的な操作にはキーを付けない", () => {
+		for (const id of [
+			"move-to-folder",
+			"rename",
+			"merge-notes",
+			"edit-properties",
+			"add-tags",
+			"insert-into-moc",
+			"remove-from-bookmarks",
+			"delete-property",
+			"tag-delete",
+			"open-in-external-editor",
+		])
+			expect(ACCESS_KEYS[id], id).toBeUndefined();
+	});
+
 	it("同じメニューに並ぶ操作どうしでキーが重ならない", () => {
 		const fileMenu = keysOf(
 			"open",
-			"open-in-main-window",
 			"open-in-background",
 			"open-side-by-side",
-			"open-below",
-			"open-in-external-editor",
-			"show-in-system-explorer",
-			"open-in-terminal",
 			"copy-file-name",
 			"copy-relative-path",
-			"copy-absolute-path",
-			"move-to-folder",
-			"rename",
-			"edit-properties",
-			"insert-into-moc",
-			"add-tags",
-			"merge-notes",
-			"add-to-bookmarks",
-			"rename-bookmark",
-			"move-to-bookmark-group",
-			"remove-from-bookmarks",
 		);
-		const tabMenu = keysOf(
-			"focus-tab",
-			"duplicate-tab",
-			"copy-file-name",
-			"copy-relative-path",
-			"copy-absolute-path",
-			"add-tags",
-		);
+		const tabMenu = keysOf("focus-tab", "copy-file-name", "copy-relative-path");
 		const propertyMenu = keysOf(
-			"edit-property",
 			"open-property-in-search",
 			"copy-property-value",
 			"copy-property-name",
-			"delete-property",
 		);
-		const tagMenu = keysOf("tag-search", "tag-insert-active-note", "tag-rename", "tag-delete");
-		for (const menu of [fileMenu, tabMenu, propertyMenu, tagMenu])
+		for (const menu of [fileMenu, tabMenu, propertyMenu])
 			expect(new Set(menu).size).toBe(menu.length);
 	});
 });

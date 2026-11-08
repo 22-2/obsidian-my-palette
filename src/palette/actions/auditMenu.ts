@@ -143,7 +143,6 @@ function addTrashItem(
 		title: t("audit.menu.trash"),
 		confirmTitle: t("audit.menu.trashConfirm", { what }),
 		id: "move-to-trash",
-		accessKey: "D",
 		icon: ICONS.delete,
 		warning: true,
 		...(kind === "empty-folders"

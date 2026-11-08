@@ -21,8 +21,6 @@ export interface ConfirmedMenuItemOptions {
 	title: string;
 	/** 表示名以外に検索できる操作 ID。 */
 	id?: string;
-	/** 項目名の後ろに表示し、押すと実行する1文字のキー。 */
-	accessKey?: string;
 	/** 1回目の押下のあとに出す。例: 「もう一度クリックして消去」。 */
 	confirmTitle: string;
 	icon: IconName;
@@ -75,6 +73,12 @@ export class PaletteMenu {
 	private hideCallback: (() => void) | null = null;
 	private selectionListener: ((item: PaletteMenuItem | undefined) => void) | null = null;
 	private filter: MenuFilter | null = null;
+	/**
+	 * 絞り込みの欄があるメニューの、入力モードと選択モード(selection パレットと同じ考え方)。
+	 * 入力モードは打った文字を絞り込みに使い、選択モードは欄を読み取り専用にして、1キーのアクセスキーを受ける。
+	 * 欄のないメニューは、いつでも選択モード。
+	 */
+	private mode: "input" | "select" = "select";
 
 	constructor() {
 		this.dom = createDiv();
@@ -110,7 +114,6 @@ export class PaletteMenu {
 		icon,
 		tooltip,
 		warning = true,
-		accessKey,
 		run,
 	}: ConfirmedMenuItemOptions): this {
 		let confirming = false;
@@ -124,7 +127,6 @@ export class PaletteMenu {
 			confirmedItem = item;
 			item.setIcon(icon).setWarning(warning);
 			if (id) item.setSearchTerms(id);
-			if (accessKey) item.setAccessKey(accessKey);
 			if (tooltip) item.setTooltip(tooltip);
 			render(item);
 			item.onClick(() => {
@@ -185,6 +187,8 @@ export class PaletteMenu {
 			text: t("menu.filter.noMatch"),
 		});
 		inputEl.addEventListener("input", () => this.onFilterInput());
+		// 欄をクリックしたら、打てるように入力モードへ戻る。
+		inputEl.addEventListener("mousedown", () => this.setMode("input"));
 		this.filter = { app, wrapEl, inputEl, emptyEl, minItems, active: false, scope: null };
 		return this;
 	}
@@ -283,7 +287,7 @@ export class PaletteMenu {
 		win.addEventListener("blur", this.onWindowChange);
 
 		this.resetFilter();
-		this.syncAccessKeyHints();
+		this.setMode(this.filter?.active ? "input" : "select");
 		if (this.filter?.active) {
 			this.filter.scope = new Scope();
 			this.filter.app.keymap.pushScope(this.filter.scope);
@@ -316,6 +320,7 @@ export class PaletteMenu {
 		win.removeEventListener("resize", this.onWindowChange);
 		win.removeEventListener("blur", this.onWindowChange);
 		this.openDoc = null;
+		if (this.filter) this.filter.inputEl.readOnly = false;
 		if (this.filter?.scope) {
 			this.filter.app.keymap.popScope(this.filter.scope);
 			this.filter.scope = null;
@@ -338,17 +343,16 @@ export class PaletteMenu {
 	private readonly onWindowChange = (): void => this.hide();
 
 	private readonly onKeyDown = (event: KeyboardEvent): void => {
-		if (event.isComposing || event.ctrlKey || event.metaKey) return;
-		if (this.activateByAccessKey(event)) {
+		if (event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return;
+		const typing = this.mode === "input" && this.filter?.active === true;
+		if (!typing && this.activateByAccessKey(event)) {
 			event.preventDefault();
 			event.stopPropagation();
 			return;
 		}
-		if (event.altKey) return;
-		// 絞り込みの欄に語が入っているとき、スペースとカーソルキーは入力欄のものになる。
+		// 入力モードで絞り込みの欄に語が入っているとき、スペースは入力欄のものになる。
 		// Why: 欄が空なら、スペースは選ばれた項目(スイッチ)を切り替える。語の区切りとして打つ必要がないため。
-		if (this.filter?.active && this.filter.inputEl.value !== "" && isSpaceKey(event)) return;
-		if (this.filter?.active && ["Home", "End"].includes(event.key)) return;
+		if (typing && this.filter?.inputEl.value !== "" && isSpaceKey(event)) return;
 		if (isSpaceKey(event)) {
 			// Why: 何も選ばれていなくても、メニューが開いている間はスペースを背後の入力欄に渡さない。
 			this.items[this.selected]?.activate(event);
@@ -358,18 +362,27 @@ export class PaletteMenu {
 		}
 		switch (event.key) {
 			case "ArrowDown":
+				this.enterSelectMode();
 				this.focusEnabled(this.selected + 1, 1);
 				break;
 			case "ArrowUp":
+				// 入力モードの上矢印は何もしない。選択モードで先頭の項目から押すと、入力モードへ戻る。
+				if (typing) break;
+				if (this.filter?.active && this.isAtFirstEnabled()) {
+					this.setMode("input");
+					break;
+				}
 				this.focusEnabled(
 					this.selected < 0 ? this.items.length - 1 : this.selected - 1,
 					-1,
 				);
 				break;
 			case "Home":
+				this.enterSelectMode();
 				this.focusEnabled(0, 1);
 				break;
 			case "End":
+				this.enterSelectMode();
 				this.focusEnabled(this.items.length - 1, -1);
 				break;
 			case "Enter":
@@ -386,18 +399,9 @@ export class PaletteMenu {
 		event.stopPropagation();
 	};
 
-	/**
-	 * アクセスキーを押された項目を実行する。絞り込みの欄がないメニューは、キーだけで実行する。
-	 * Why: 欄があるメニューは、打った文字を絞り込みに使うので、Alt を押したときだけ実行する。
-	 */
+	/** アクセスキーを押された項目を実行する。選択モードでだけ呼ぶ。 */
 	private activateByAccessKey(event: KeyboardEvent): boolean {
-		const needsAlt = this.filter?.active ?? false;
-		if (event.altKey !== needsAlt) return false;
-		// Why: Alt を押すと key が別の文字になる環境があるので、その場合は物理キーで判定する。
-		const pressed = event.altKey
-			? /^Key([A-Z])$/.exec(event.code)?.[1]
-			: event.key.toLocaleUpperCase();
-		if (!pressed) return false;
+		const pressed = event.key.toLocaleUpperCase();
 		const item = this.items.find(
 			(candidate) =>
 				candidate.accessKey === pressed && !candidate.isDisabled && !candidate.isFiltered,
@@ -407,10 +411,22 @@ export class PaletteMenu {
 		return true;
 	}
 
-	/** 絞り込みの欄があるメニューでは、押すキーが Alt との組み合わせになるので、表示もそれに合わせる。 */
-	private syncAccessKeyHints(): void {
-		const withAlt = this.filter?.active ?? false;
-		for (const item of this.items) item.setAccessKeyNeedsAlt(withAlt);
+	private setMode(mode: "input" | "select"): void {
+		this.mode = mode;
+		if (this.filter?.active) this.filter.inputEl.readOnly = mode === "select";
+		// Why: キーが効くのは選択モードだけなので、表示もそのときだけにする。
+		for (const item of this.items) item.setAccessKeyVisible(mode === "select");
+	}
+
+	private enterSelectMode(): void {
+		if (this.filter?.active && this.mode === "input") this.setMode("select");
+	}
+
+	/** 選択中の項目より前に、選べる項目がないかどうか。 */
+	private isAtFirstEnabled(): boolean {
+		return !this.items
+			.slice(0, Math.max(this.selected, 0))
+			.some((item) => !item.isDisabled && !item.isFiltered);
 	}
 
 	private onPointerOver(event: PointerEvent): void {
@@ -472,7 +488,7 @@ export class PaletteMenuItem {
 	private searchText = "";
 	private baseTitle = "";
 	accessKey: string | undefined;
-	private accessKeyNeedsAlt = false;
+	private accessKeyVisible = true;
 
 	constructor(menu: PaletteMenu) {
 		this.menu = menu;
@@ -526,15 +542,13 @@ export class PaletteMenuItem {
 		return this;
 	}
 
-	setAccessKeyNeedsAlt(needsAlt: boolean): void {
-		this.accessKeyNeedsAlt = needsAlt;
+	setAccessKeyVisible(visible: boolean): void {
+		this.accessKeyVisible = visible;
 		this.renderTitle();
 	}
 
 	private renderTitle(): void {
-		const hint = this.accessKey
-			? ` (${this.accessKeyNeedsAlt ? "Alt+" : ""}${this.accessKey})`
-			: "";
+		const hint = this.accessKey && this.accessKeyVisible ? ` (${this.accessKey})` : "";
 		this.titleEl.setText(`${this.baseTitle}${hint}`);
 	}
 
