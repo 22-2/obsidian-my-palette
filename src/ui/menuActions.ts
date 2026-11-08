@@ -173,10 +173,11 @@ interface MenuItemLike<T> {
 }
 
 /**
- * 右クリックメニューのアクセスキー。Chrome のメニューのように、頻繁に使う閲覧・開く・コピーの操作だけに付ける。
- * Why: ファイルや設定を書き換える操作と破壊的な操作は、キー1打での誤操作を避けるため付けない。
+ * 右クリックメニューのアクセスキー。Chrome のメニューのように、頻繁に使う開く・コピーと、
+ * 編集の入口になる操作(名前変更、プロパティ、タグ、MOC 挿入)だけに付ける。
+ * Why: 移動、統合、削除など、取り消しにくい操作は、キー1打での誤操作を避けるため付けない。
  * 操作の id ごとに1つ決め、どのメニューでも同じ操作は同じキーにする。
- * 新しい操作を足すときは、同じメニューに出る操作と重ならないキーを選ぶ。
+ * 同じメニューで同じキーの項目が並ぶときは、押すたびに順番にカーソルが移る。
  */
 export const ACCESS_KEYS: Readonly<Record<string, string>> = {
 	open: "O",
@@ -189,6 +190,14 @@ export const ACCESS_KEYS: Readonly<Record<string, string>> = {
 	"copy-property-value": "V",
 	"copy-property-name": "N",
 	"open-property-in-search": "S",
+	"edit-properties": "P",
+	"edit-property": "P",
+	"insert-into-moc": "I",
+	"add-tags": "T",
+	rename: "R",
+	"rename-bookmark": "R",
+	"tag-rename": "R",
+	"tag-insert-active-note": "I",
 	"focus-tab": "F",
 	"run-command": "R",
 	"use-search": "U",

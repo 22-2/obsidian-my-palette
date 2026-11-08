@@ -18,14 +18,10 @@ describe("アクセスキー", () => {
 		for (const key of Object.values(ACCESS_KEYS)) expect(key).toMatch(/^[A-Z]$/);
 	});
 
-	it("書き換える操作と破壊的な操作にはキーを付けない", () => {
+	it("取り消しにくい操作にはキーを付けない", () => {
 		for (const id of [
 			"move-to-folder",
-			"rename",
 			"merge-notes",
-			"edit-properties",
-			"add-tags",
-			"insert-into-moc",
 			"remove-from-bookmarks",
 			"delete-property",
 			"tag-delete",
@@ -34,21 +30,25 @@ describe("アクセスキー", () => {
 			expect(ACCESS_KEYS[id], id).toBeUndefined();
 	});
 
-	it("同じメニューに並ぶ操作どうしでキーが重ならない", () => {
-		const fileMenu = keysOf(
-			"open",
-			"open-in-background",
-			"open-side-by-side",
-			"copy-file-name",
-			"copy-relative-path",
-		);
-		const tabMenu = keysOf("focus-tab", "copy-file-name", "copy-relative-path");
+	it("名前変更、プロパティ、タグ、挿入の頭文字が割り当てられている", () => {
+		expect(keysOf("rename", "edit-properties", "add-tags", "insert-into-moc")).toEqual([
+			"R",
+			"P",
+			"T",
+			"I",
+		]);
+	});
+
+	it("タブ、プロパティ、タグのメニューでは、キーが重ならない", () => {
+		const tabMenu = keysOf("focus-tab", "copy-file-name", "copy-relative-path", "add-tags");
 		const propertyMenu = keysOf(
+			"edit-property",
 			"open-property-in-search",
 			"copy-property-value",
 			"copy-property-name",
 		);
-		for (const menu of [fileMenu, tabMenu, propertyMenu])
+		const tagMenu = keysOf("tag-search", "tag-insert-active-note", "tag-rename");
+		for (const menu of [tabMenu, propertyMenu, tagMenu])
 			expect(new Set(menu).size).toBe(menu.length);
 	});
 });

@@ -545,6 +545,38 @@ describe("パレットメニューフィルター", () => {
 			expect(visibleTitles()).toEqual(["Open", "Copy name", "Rename"]);
 		});
 
+		it("同じキーの項目を順に巡り、最後の次は最初へ戻って、実行はしない", () => {
+			const menu = new PaletteMenu();
+			menu.addItem((item) => item.setTitle("Copy path").setAccessKey("p").onClick(vi.fn()));
+			menu.addItem((item) => item.setTitle("Rename").setAccessKey("r").onClick(vi.fn()));
+			menu.addItem((item) => item.setTitle("Edit props").setAccessKey("p").onClick(vi.fn()));
+			menu.showAtPosition({ x: 0, y: 0 });
+
+			expect(selectedTitle()).toBeNull();
+			press("p");
+			expect(selectedTitle()).toBe("Copy path (P)");
+			press("p");
+			expect(selectedTitle()).toBe("Edit props (P)");
+			press("p");
+			expect(selectedTitle()).toBe("Copy path (P)");
+			expect(document.querySelector(".menu")).not.toBeNull();
+		});
+
+		it("同じキーの項目が複数あるときは、押すたびに順番にカーソルが移り、Enter で実行する", () => {
+			const menu = new PaletteMenu();
+			const first = vi.fn();
+			const second = vi.fn();
+			menu.addItem((item) => item.setTitle("A").setAccessKey("p").onClick(first));
+			menu.addItem((item) => item.setTitle("B").setAccessKey("p").onClick(second));
+			menu.showAtPosition({ x: 0, y: 0 });
+
+			press("p");
+			press("p");
+			press("Enter");
+			expect(first).not.toHaveBeenCalled();
+			expect(second).toHaveBeenCalledOnce();
+		});
+
 		it("入力欄のクリックでも入力モードへ戻る", () => {
 			const { menu } = keyedMenu();
 			menu.showAtPosition({ x: 0, y: 0 });

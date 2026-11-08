@@ -399,15 +399,24 @@ export class PaletteMenu {
 		event.stopPropagation();
 	};
 
-	/** アクセスキーを押された項目を実行する。選択モードでだけ呼ぶ。 */
+	/**
+	 * アクセスキーを押された項目を実行する。選択モードでだけ呼ぶ。
+	 * 同じキーの項目が複数あるときは実行せず、押すたびに次の項目へカーソルを移す(最後の次は最初)。
+	 */
 	private activateByAccessKey(event: KeyboardEvent): boolean {
 		const pressed = event.key.toLocaleUpperCase();
-		const item = this.items.find(
+		const matches = this.items.filter(
 			(candidate) =>
 				candidate.accessKey === pressed && !candidate.isDisabled && !candidate.isFiltered,
 		);
-		if (!item) return false;
-		item.activate(event);
+		const [first] = matches;
+		if (!first) return false;
+		if (matches.length === 1) {
+			first.activate(event);
+			return true;
+		}
+		const current = matches.findIndex((candidate) => candidate === this.items[this.selected]);
+		this.setSelected(this.items.indexOf(matches[(current + 1) % matches.length]));
 		return true;
 	}
 
