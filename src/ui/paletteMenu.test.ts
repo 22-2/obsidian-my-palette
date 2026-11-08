@@ -239,6 +239,31 @@ describe("パレットメニューのクリック数", () => {
 });
 
 describe("パレットメニューキーボード", () => {
+	it("絞り込みの欄があるメニューでは Alt との組み合わせで実行し、打った文字は絞り込みに使います", () => {
+		const menu = new PaletteMenu();
+		menu.enableFilter(
+			{ keymap: { pushScope: vi.fn(), popScope: vi.fn() } } as unknown as App,
+			2,
+		);
+		const open = vi.fn();
+		menu.addItem((item) => item.setTitle("Open").setAccessKey("o").onClick(open));
+		menu.addItem((item) => item.setTitle("Copy").setAccessKey("c").onClick(vi.fn()));
+		menu.showAtPosition({ x: 0, y: 0 });
+
+		expect(titleOf(document.querySelector(".menu-item"))).toBe("Open (Alt+O)");
+		press("o");
+		expect(open).not.toHaveBeenCalled();
+		const event = new KeyboardEvent("keydown", {
+			key: "ø",
+			code: "KeyO",
+			altKey: true,
+			bubbles: true,
+			cancelable: true,
+		});
+		document.body.dispatchEvent(event);
+		expect(open).toHaveBeenCalledOnce();
+	});
+
 	it("項目名にアクセスキーを表示し、そのキーで実行します", () => {
 		const menu = new PaletteMenu();
 		const run = vi.fn();

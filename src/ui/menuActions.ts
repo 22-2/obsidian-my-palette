@@ -172,11 +172,61 @@ interface MenuItemLike<T> {
 	setIcon(icon: IconName | null): T;
 }
 
-/** 1つの操作から、項目のタイトルとアイコンを設定する。PaletteMenu と Obsidian の Menu の両方で使う。 */
+/**
+ * 右クリックメニューのアクセスキー。操作の id ごとに1つ決め、どのメニューでも同じ操作は同じキーにする。
+ * Why: 1つのメニューに同時に並びうる操作どうしで、キーが重ならないように割り当てている。
+ * 新しい操作を足すときは、同じメニューに出る操作と重ならないキーを選ぶ。
+ */
+export const ACCESS_KEYS: Readonly<Record<string, string>> = {
+	open: "O",
+	"open-in-main-window": "M",
+	"open-in-background": "B",
+	"open-side-by-side": "S",
+	"open-below": "W",
+	"open-in-external-editor": "E",
+	"show-in-system-explorer": "X",
+	"open-in-terminal": "T",
+	"copy-file-name": "N",
+	"copy-file-names": "N",
+	"copy-relative-path": "P",
+	"copy-relative-paths": "P",
+	"copy-absolute-path": "A",
+	"copy-absolute-paths": "A",
+	"move-to-folder": "F",
+	rename: "R",
+	"merge-notes": "U",
+	"edit-properties": "Y",
+	"add-tags": "H",
+	"insert-into-moc": "I",
+	"add-to-bookmarks": "K",
+	"rename-bookmark": "L",
+	"move-to-bookmark-group": "J",
+	"remove-from-bookmarks": "Z",
+	"edit-property": "E",
+	"open-property-in-search": "S",
+	"copy-property-value": "V",
+	"copy-property-name": "N",
+	"delete-property": "D",
+	"focus-tab": "F",
+	"duplicate-tab": "U",
+	"run-command": "R",
+	"enter-mode": "E",
+	"hide-mode": "H",
+	"use-search": "U",
+	"tag-search": "S",
+	"tag-insert-active-note": "I",
+	"tag-rename": "R",
+	"tag-delete": "D",
+};
+
+/** 1つの操作から、項目のタイトル、アイコン、アクセスキーを設定する。PaletteMenu と Obsidian の Menu の両方で使う。 */
 export function withAction<T extends MenuItemLike<T>>(item: T, action: MenuAction): T {
 	item.setTitle(action.title).setIcon(action.icon);
 	if (action.id && "setSearchTerms" in item)
 		(item as T & { setSearchTerms: (...terms: string[]) => T }).setSearchTerms(action.id);
+	const accessKey = action.id ? ACCESS_KEYS[action.id] : undefined;
+	if (accessKey && "setAccessKey" in item)
+		(item as T & { setAccessKey: (key: string) => T }).setAccessKey(accessKey);
 	return item;
 }
 

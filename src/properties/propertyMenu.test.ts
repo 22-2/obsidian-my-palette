@@ -72,6 +72,7 @@ describe("いくつかのノートのpopulatePropertyMenu", () => {
 					setTitle: (title: string) => ((entry.title = title), item),
 					setIcon: () => item,
 					setSearchTerms: () => item,
+					setAccessKey: () => item,
 					setWarning: () => item,
 					setCta: () => item,
 					setKeepOpen: () => item,

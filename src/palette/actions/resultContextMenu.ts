@@ -41,6 +41,7 @@ import {
 	addMenuAction,
 	addOpenMenuItems,
 	MENU_ACTIONS,
+	withAction,
 } from "src/ui/menuActions";
 
 interface PaletteResultMenuOptions {
@@ -191,17 +192,16 @@ export function populatePaletteResultMenu({
 	}
 	if (result.mode === "command") {
 		menu.addItem((item) => {
-			item.setTitle(MENU_ACTIONS.runCommand.title)
-				.setIcon(MENU_ACTIONS.runCommand.icon)
-				.setAccessKey("R");
-			item.onClick(() => void activate("primary", result));
+			withAction(item, MENU_ACTIONS.runCommand).onClick(
+				() => void activate("primary", result),
+			);
 		});
 		menu.addSeparator();
 		menu.addItem((item) =>
 			item
 				.setTitle(t("menu.copyCommandId"))
 				.setIcon("copy")
-				.setAccessKey("I")
+				.setAccessKey("C")
 				.onClick(() => void copyCommandId(result.commandId)),
 		);
 		return;
@@ -235,10 +235,15 @@ export function populatePaletteResultMenu({
 		});
 		if (result.mode === "plugin" && result.hasSettings) {
 			const pluginId = result.pluginId;
-			addMenuAction(menu, MENU_ACTIONS.openPluginSettings, () => {
-				onNoteActionSelected?.();
-				openPluginSettings(app, pluginId);
-			});
+			// Why: 同じ操作がオプションメニューにも出るので、アクセスキーは結果のメニューだけで付ける。
+			menu.addItem((item) =>
+				withAction(item, MENU_ACTIONS.openPluginSettings)
+					.setAccessKey("G")
+					.onClick(() => {
+						onNoteActionSelected?.();
+						openPluginSettings(app, pluginId);
+					}),
+			);
 		}
 		addCopyPathMenuItems(
 			menu,

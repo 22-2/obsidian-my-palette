@@ -21,6 +21,8 @@ export interface ConfirmedMenuItemOptions {
 	title: string;
 	/** 表示名以外に検索できる操作 ID。 */
 	id?: string;
+	/** 項目名の後ろに表示し、押すと実行する1文字のキー。 */
+	accessKey?: string;
 	/** 1回目の押下のあとに出す。例: 「もう一度クリックして消去」。 */
 	confirmTitle: string;
 	icon: IconName;
@@ -108,6 +110,7 @@ export class PaletteMenu {
 		icon,
 		tooltip,
 		warning = true,
+		accessKey,
 		run,
 	}: ConfirmedMenuItemOptions): this {
 		let confirming = false;
@@ -121,6 +124,7 @@ export class PaletteMenu {
 			confirmedItem = item;
 			item.setIcon(icon).setWarning(warning);
 			if (id) item.setSearchTerms(id);
+			if (accessKey) item.setAccessKey(accessKey);
 			if (tooltip) item.setTooltip(tooltip);
 			render(item);
 			item.onClick(() => {
@@ -279,6 +283,7 @@ export class PaletteMenu {
 		win.addEventListener("blur", this.onWindowChange);
 
 		this.resetFilter();
+		this.syncAccessKeyHints();
 		if (this.filter?.active) {
 			this.filter.scope = new Scope();
 			this.filter.app.keymap.pushScope(this.filter.scope);
@@ -333,21 +338,13 @@ export class PaletteMenu {
 	private readonly onWindowChange = (): void => this.hide();
 
 	private readonly onKeyDown = (event: KeyboardEvent): void => {
-		if (event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return;
-		if (!this.filter?.active) {
-			const item = this.items.find(
-				(candidate) =>
-					!candidate.isDisabled &&
-					!candidate.isFiltered &&
-					candidate.accessKey === event.key.toLocaleUpperCase(),
-			);
-			if (item) {
-				item.activate(event);
-				event.preventDefault();
-				event.stopPropagation();
-				return;
-			}
+		if (event.isComposing || event.ctrlKey || event.metaKey) return;
+		if (this.activateByAccessKey(event)) {
+			event.preventDefault();
+			event.stopPropagation();
+			return;
 		}
+		if (event.altKey) return;
 		// 絞り込みの欄に語が入っているとき、スペースとカーソルキーは入力欄のものになる。
 		// Why: 欄が空なら、スペースは選ばれた項目(スイッチ)を切り替える。語の区切りとして打つ必要がないため。
 		if (this.filter?.active && this.filter.inputEl.value !== "" && isSpaceKey(event)) return;
@@ -388,6 +385,33 @@ export class PaletteMenu {
 		event.preventDefault();
 		event.stopPropagation();
 	};
+
+	/**
+	 * アクセスキーを押された項目を実行する。絞り込みの欄がないメニューは、キーだけで実行する。
+	 * Why: 欄があるメニューは、打った文字を絞り込みに使うので、Alt を押したときだけ実行する。
+	 */
+	private activateByAccessKey(event: KeyboardEvent): boolean {
+		const needsAlt = this.filter?.active ?? false;
+		if (event.altKey !== needsAlt) return false;
+		// Why: Alt を押すと key が別の文字になる環境があるので、その場合は物理キーで判定する。
+		const pressed = event.altKey
+			? /^Key([A-Z])$/.exec(event.code)?.[1]
+			: event.key.toLocaleUpperCase();
+		if (!pressed) return false;
+		const item = this.items.find(
+			(candidate) =>
+				candidate.accessKey === pressed && !candidate.isDisabled && !candidate.isFiltered,
+		);
+		if (!item) return false;
+		item.activate(event);
+		return true;
+	}
+
+	/** 絞り込みの欄があるメニューでは、押すキーが Alt との組み合わせになるので、表示もそれに合わせる。 */
+	private syncAccessKeyHints(): void {
+		const withAlt = this.filter?.active ?? false;
+		for (const item of this.items) item.setAccessKeyNeedsAlt(withAlt);
+	}
 
 	private onPointerOver(event: PointerEvent): void {
 		const index = this.items.findIndex((item) => item.dom.contains(event.target as Node));
@@ -448,6 +472,7 @@ export class PaletteMenuItem {
 	private searchText = "";
 	private baseTitle = "";
 	accessKey: string | undefined;
+	private accessKeyNeedsAlt = false;
 
 	constructor(menu: PaletteMenu) {
 		this.menu = menu;
@@ -464,7 +489,8 @@ export class PaletteMenuItem {
 	}
 
 	get title(): string {
-		return this.titleEl.textContent ?? "";
+		// Why: 絞り込みがアクセスキーの表示 "(O)" に一致しないよう、表示名だけを返す。
+		return this.baseTitle;
 	}
 
 	get searchTerms(): string {
@@ -500,10 +526,16 @@ export class PaletteMenuItem {
 		return this;
 	}
 
+	setAccessKeyNeedsAlt(needsAlt: boolean): void {
+		this.accessKeyNeedsAlt = needsAlt;
+		this.renderTitle();
+	}
+
 	private renderTitle(): void {
-		this.titleEl.setText(
-			this.accessKey ? `${this.baseTitle} (${this.accessKey})` : this.baseTitle,
-		);
+		const hint = this.accessKey
+			? ` (${this.accessKeyNeedsAlt ? "Alt+" : ""}${this.accessKey})`
+			: "";
+		this.titleEl.setText(`${this.baseTitle}${hint}`);
 	}
 
 	setIcon(icon: IconName | null): this {
