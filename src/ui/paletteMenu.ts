@@ -476,6 +476,14 @@ export class PaletteMenuItem {
 		return this;
 	}
 
+	/** ブラウザーのコンテキストメニューのように、項目の右端へキーを表示する。 */
+	setShortcut(shortcut: string): this {
+		let shortcutEl = this.dom.querySelector<HTMLElement>(".my-palette-menu-shortcut");
+		if (!shortcutEl) shortcutEl = this.dom.createDiv("my-palette-menu-shortcut");
+		shortcutEl.setText(shortcut);
+		return this;
+	}
+
 	setIcon(icon: IconName | null): this {
 		if (icon) setIcon(this.iconEl, icon);
 		else this.iconEl.empty();

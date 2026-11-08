@@ -1,5 +1,5 @@
 import type { App } from "obsidian";
-import { Notice } from "obsidian";
+import { Notice, Platform } from "obsidian";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import type MyPalettePlugin from "src/main";
 import type { MocInsertionContext } from "src/moc-relateds/mocInsertion";
@@ -34,6 +34,7 @@ import { addTagInsertionMenuItems } from "src/tags/tagInsertionMenu";
 import { populateTagMenu } from "src/tags/tagMenu";
 import { populatePropertyMenu } from "src/properties/propertyMenu";
 import { openPluginSettings } from "src/search/plugin/pluginSettings";
+import { getCommandHotkeys } from "src/platform/obsidianInternals";
 import {
 	addExternalAppMenuItems,
 	addMenuAction,
@@ -61,6 +62,18 @@ interface PaletteResultMenuOptions {
 	getMocContext?: () => MocInsertionContext;
 	/** タブまたはブックマークの操作で一覧の結果が変わったあと、検索をやり直す。 */
 	onResultsChanged?: () => void;
+}
+
+function formatCommandHotkey(hotkey: { modifiers: string[]; key: string }): string {
+	const order = ["Ctrl", "Cmd", "Alt", "Shift"];
+	const modifiers = hotkey.modifiers
+		.map((modifier) => {
+			if (modifier === "Mod" || modifier === "Meta") return Platform.isMacOS ? "Cmd" : "Ctrl";
+			return modifier;
+		})
+		.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+	const key = hotkey.key === " " ? "Space" : hotkey.key;
+	return [...modifiers, key].join("+");
 }
 
 /** モーダルと常駐のパレットの両方が使う、結果のメニューを組み立てる。 */
@@ -179,7 +192,14 @@ export function populatePaletteResultMenu({
 		return;
 	}
 	if (result.mode === "command") {
-		addMenuAction(menu, MENU_ACTIONS.runCommand, () => void activate("primary", result));
+		const hotkeys = getCommandHotkeys(app, result.commandId);
+		const shortcut = hotkeys.map(formatCommandHotkey).join(", ") || undefined;
+		menu.addItem((item) => {
+			item.setTitle(MENU_ACTIONS.runCommand.title).setIcon(MENU_ACTIONS.runCommand.icon);
+			if (shortcut) item.setShortcut(shortcut);
+			item.onClick(() => void activate("primary", result));
+		});
+
 		return;
 	}
 

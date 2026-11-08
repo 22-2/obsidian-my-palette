@@ -1151,6 +1151,14 @@
 	display: none;
 }
 
+.my-palette-menu-shortcut {
+	margin-inline-start: auto;
+	padding-inline-start: var(--size-4-4);
+	color: var(--text-faint);
+	font-size: var(--font-ui-smaller);
+	white-space: nowrap;
+}
+
 .my-palette-menu-empty {
 	display: none;
 	padding: var(--size-4-2) var(--size-4-3);
