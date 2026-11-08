@@ -1,5 +1,5 @@
 import type { App } from "obsidian";
-import { Notice, Platform } from "obsidian";
+import { Notice } from "obsidian";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import type MyPalettePlugin from "src/main";
 import type { MocInsertionContext } from "src/moc-relateds/mocInsertion";
@@ -34,7 +34,6 @@ import { addTagInsertionMenuItems } from "src/tags/tagInsertionMenu";
 import { populateTagMenu } from "src/tags/tagMenu";
 import { populatePropertyMenu } from "src/properties/propertyMenu";
 import { openPluginSettings } from "src/search/plugin/pluginSettings";
-import { getCommandHotkeys } from "src/platform/obsidianInternals";
 import { logger } from "src/shared/logger";
 import { t } from "src/i18n";
 import {
@@ -64,18 +63,6 @@ interface PaletteResultMenuOptions {
 	getMocContext?: () => MocInsertionContext;
 	/** タブまたはブックマークの操作で一覧の結果が変わったあと、検索をやり直す。 */
 	onResultsChanged?: () => void;
-}
-
-function formatCommandHotkey(hotkey: { modifiers: string[]; key: string }): string {
-	const order = ["Ctrl", "Cmd", "Alt", "Shift"];
-	const modifiers = hotkey.modifiers
-		.map((modifier) => {
-			if (modifier === "Mod" || modifier === "Meta") return Platform.isMacOS ? "Cmd" : "Ctrl";
-			return modifier;
-		})
-		.sort((a, b) => order.indexOf(a) - order.indexOf(b));
-	const key = hotkey.key === " " ? "Space" : hotkey.key;
-	return [...modifiers, key].join("+");
 }
 
 async function copyCommandId(commandId: string): Promise<void> {
@@ -203,11 +190,10 @@ export function populatePaletteResultMenu({
 		return;
 	}
 	if (result.mode === "command") {
-		const hotkeys = getCommandHotkeys(app, result.commandId);
-		const shortcut = hotkeys.map(formatCommandHotkey).join(", ") || undefined;
 		menu.addItem((item) => {
-			item.setTitle(MENU_ACTIONS.runCommand.title).setIcon(MENU_ACTIONS.runCommand.icon);
-			if (shortcut) item.setShortcut(shortcut);
+			item.setTitle(MENU_ACTIONS.runCommand.title)
+				.setIcon(MENU_ACTIONS.runCommand.icon)
+				.setAccessKey("R");
 			item.onClick(() => void activate("primary", result));
 		});
 		menu.addSeparator();
@@ -215,6 +201,7 @@ export function populatePaletteResultMenu({
 			item
 				.setTitle(t("menu.copyCommandId"))
 				.setIcon("copy")
+				.setAccessKey("I")
 				.onClick(() => void copyCommandId(result.commandId)),
 		);
 		return;

@@ -239,6 +239,18 @@ describe("パレットメニューのクリック数", () => {
 });
 
 describe("パレットメニューキーボード", () => {
+	it("項目名にアクセスキーを表示し、そのキーで実行します", () => {
+		const menu = new PaletteMenu();
+		const run = vi.fn();
+		menu.addItem((item) => item.setTitle("Copy id").setAccessKey("i").onClick(run));
+		menu.showAtPosition({ x: 0, y: 0 });
+
+		expect(titleOf(document.querySelector(".menu-item"))).toBe("Copy id (I)");
+		const event = press("i");
+		expect(run).toHaveBeenCalledOnce();
+		expect(event.defaultPrevented).toBe(true);
+	});
+
 	it("矢印で無効な項目を通過して回り込みます", () => {
 		const { menu } = sample();
 		menu.showAtPosition({ x: 0, y: 0 });

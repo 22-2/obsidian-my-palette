@@ -16,12 +16,6 @@ import type {
 
 /** 任意のメンバー。内部のものが欠けていても、例外ではなく undefined として読めるようにする。 */
 interface AppInternals {
-	hotkeyManager?: {
-		getHotkeysForCommand?: (commandId: string) => Array<{
-			modifiers: string[];
-			key: string;
-		}>;
-	};
 	commands?: {
 		commands?: Record<string, { id: string; name: string }>;
 		executeCommandById?: (id: string) => boolean;
@@ -102,14 +96,6 @@ function internals(app: App): AppInternals {
 /** 登録されているすべてのコマンド。ほかのプラグインのものと Obsidian 自身のものを含む。 */
 export function getCommands(app: App): { id: string; name: string }[] {
 	return Object.values(internals(app).commands?.commands ?? {});
-}
-
-/** Obsidian がコマンドに割り当てたショートカット。 */
-export function getCommandHotkeys(
-	app: App,
-	commandId: string,
-): Array<{ modifiers: string[]; key: string }> {
-	return internals(app).hotkeyManager?.getHotkeysForCommand?.(commandId) ?? [];
 }
 
 /** ID でコマンドを実行する。ID が不明、または API がなければ false。 */

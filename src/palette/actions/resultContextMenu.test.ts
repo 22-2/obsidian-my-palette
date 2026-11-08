@@ -82,6 +82,7 @@ function fixture(popout: boolean) {
 					return item;
 				},
 				setIcon: () => item,
+				setAccessKey: () => item,
 				onClick: (callback: () => void) => {
 					actions.set(title, callback);
 					return item;

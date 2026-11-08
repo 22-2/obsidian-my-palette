@@ -334,6 +334,20 @@ export class PaletteMenu {
 
 	private readonly onKeyDown = (event: KeyboardEvent): void => {
 		if (event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return;
+		if (!this.filter?.active) {
+			const item = this.items.find(
+				(candidate) =>
+					!candidate.isDisabled &&
+					!candidate.isFiltered &&
+					candidate.accessKey === event.key.toLocaleUpperCase(),
+			);
+			if (item) {
+				item.activate(event);
+				event.preventDefault();
+				event.stopPropagation();
+				return;
+			}
+		}
 		// 絞り込みの欄に語が入っているとき、スペースとカーソルキーは入力欄のものになる。
 		// Why: 欄が空なら、スペースは選ばれた項目(スイッチ)を切り替える。語の区切りとして打つ必要がないため。
 		if (this.filter?.active && this.filter.inputEl.value !== "" && isSpaceKey(event)) return;
@@ -432,6 +446,8 @@ export class PaletteMenuItem {
 	private keepOpen = false;
 	private callback: ((event: PaletteMenuActivation) => void) | null = null;
 	private searchText = "";
+	private baseTitle = "";
+	accessKey: string | undefined;
 
 	constructor(menu: PaletteMenu) {
 		this.menu = menu;
@@ -472,16 +488,22 @@ export class PaletteMenuItem {
 	}
 
 	setTitle(title: string): this {
-		this.titleEl.setText(title);
+		this.baseTitle = title;
+		this.renderTitle();
 		return this;
 	}
 
-	/** ブラウザーのコンテキストメニューのように、項目の右端へキーを表示する。 */
-	setShortcut(shortcut: string): this {
-		let shortcutEl = this.dom.querySelector<HTMLElement>(".my-palette-menu-shortcut");
-		if (!shortcutEl) shortcutEl = this.dom.createDiv("my-palette-menu-shortcut");
-		shortcutEl.setText(shortcut);
+	/** ブラウザーのコンテキストメニューのように、項目名の後ろへアクセスキーを表示する。 */
+	setAccessKey(key: string): this {
+		this.accessKey = key.toLocaleUpperCase();
+		this.renderTitle();
 		return this;
+	}
+
+	private renderTitle(): void {
+		this.titleEl.setText(
+			this.accessKey ? `${this.baseTitle} (${this.accessKey})` : this.baseTitle,
+		);
 	}
 
 	setIcon(icon: IconName | null): this {
