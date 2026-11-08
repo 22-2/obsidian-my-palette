@@ -35,6 +35,8 @@ import { populateTagMenu } from "src/tags/tagMenu";
 import { populatePropertyMenu } from "src/properties/propertyMenu";
 import { openPluginSettings } from "src/search/plugin/pluginSettings";
 import { getCommandHotkeys } from "src/platform/obsidianInternals";
+import { logger } from "src/shared/logger";
+import { t } from "src/i18n";
 import {
 	addExternalAppMenuItems,
 	addMenuAction,
@@ -76,6 +78,15 @@ function formatCommandHotkey(hotkey: { modifiers: string[]; key: string }): stri
 	return [...modifiers, key].join("+");
 }
 
+async function copyCommandId(commandId: string): Promise<void> {
+	try {
+		await navigator.clipboard.writeText(commandId);
+		new Notice(t("menu.commandIdCopied"));
+	} catch (error) {
+		logger.error("Failed to copy the command ID", error);
+		new Notice(t("clipboard.copyPathFailed"));
+	}
+}
 /** モーダルと常駐のパレットの両方が使う、結果のメニューを組み立てる。 */
 export function populatePaletteResultMenu({
 	app,
@@ -199,7 +210,13 @@ export function populatePaletteResultMenu({
 			if (shortcut) item.setShortcut(shortcut);
 			item.onClick(() => void activate("primary", result));
 		});
-
+		menu.addSeparator();
+		menu.addItem((item) =>
+			item
+				.setTitle(t("menu.copyCommandId"))
+				.setIcon("copy")
+				.onClick(() => void copyCommandId(result.commandId)),
+		);
 		return;
 	}
 

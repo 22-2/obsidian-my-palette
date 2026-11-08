@@ -313,6 +313,8 @@
 	"menu.focusTab": "タブにフォーカス",
 	"menu.duplicateTab": "タブを複製",
 	"menu.runCommand": "コマンドを実行",
+	"menu.copyCommandId": "コマンド ID をコピー",
+	"menu.commandIdCopied": "コマンド ID をコピーしました。",
 	"menu.enterMode": "モードに入る",
 	"menu.hideMode": "モードを非表示にする",
 	"menu.useSearch": "この検索を使う",
