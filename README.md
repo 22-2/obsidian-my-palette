@@ -247,7 +247,7 @@ Table palette では次の操作ができます。
 
 ### Return to Home after
 
-`My Palette: Open home` は、閉じたときの入力・Obsidian-excluded オプションの状態・選択行・スクロール位置を、**設定 → My Palette → General → Return to Home after** で決めた時間（Immediately、30、60、90 秒。既定は 90 秒）以内に開き直すと復元します。それ以外はHomeの空の状態から始まります。復元した検索語は選択された状態になるので、そのまま打ち直せます。この状態はメモリーにだけ保持し、Obsidian を再起動するとHomeから始まります。
+`My Palette: Open home` は、閉じたときの入力・Obsidian-excluded オプションの状態・選択行・スクロール位置を、**設定 → My Palette → General → Return to Home after** で決めた時間（Immediately、30、60、90 秒。既定は 90 秒）以内に開き直すと復元します。同じモードを開くコマンドも、最後に閉じたモードが一致すれば同じ時間内に復元します。時間切れや別のモードの場合は空の検索から始まります。モード内で Esc を押して Home に戻ると検索語は破棄します。復元した検索語は選択された状態になるので、そのまま打ち直せます。この状態はメモリーにだけ保持し、Obsidian を再起動するとHomeから始まります。
 
 ### 検索履歴
 

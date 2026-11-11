@@ -2,7 +2,7 @@ import type { App, WorkspaceLeaf } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import { PaletteModal, type PaletteModalOptions } from "src/palette/PaletteModal";
 import { shouldRestore, type PaletteRestoreState } from "src/palette/restoreState";
-import { paletteModeAlias } from "src/palette/modes";
+import { paletteModeAlias, type PaletteModeId } from "src/palette/modes";
 import type { FixedPaletteMode } from "src/palette/PaletteSearchSession";
 import { PaletteView } from "src/palette/surfaces/PaletteView";
 import {
@@ -125,6 +125,18 @@ export class PaletteOpener {
 	openHomePalette(): void {
 		const state = this.restorableState();
 		this.openPalette(state?.input ?? "", undefined, { modeEntries: true, restore: state });
+	}
+
+	/** 同じモードを指定して開き直したとき、そのモードの直前の検索を再開する。 */
+	openModePalette(
+		modeId: PaletteModeId,
+		initialInput: string,
+		fixedMode?: FixedPaletteMode,
+	): void {
+		const last = this.restorableState();
+		const restore =
+			last?.route.kind === "mode" && last.route.modeId === modeId ? last : undefined;
+		this.openPalette(restore?.input ?? initialInput, fixedMode, { modeEntries: true, restore });
 	}
 
 	/** パレットのモーダルを閉じるたびに呼ぶ。次の「ホームを開く」で再開できるようにするため。 */

@@ -252,7 +252,11 @@ describe("パレットモーダル", () => {
 		f.modal.close();
 		expect(f.paletteOpener.releaseModal).toHaveBeenCalledWith(f.modal);
 		expect(f.paletteOpener.rememberClosedPalette).toHaveBeenCalledWith(
-			expect.objectContaining({ input: "> build", includeIgnored: false }),
+			expect.objectContaining({
+				input: "build",
+				route: { kind: "mode", modeId: "commands" },
+				includeIgnored: false,
+			}),
 		);
 	});
 

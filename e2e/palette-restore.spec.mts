@@ -86,3 +86,72 @@ test("General offers Return to Home after, set to 90 seconds by default", async 
 		})
 		.toBe(0);
 });
+
+test("mode commands resume only their own recent search", async ({ obsidian }) => {
+	await obsidian.evaluatePlugin(
+		PLUGIN_ID,
+		(plugin: {
+			integrationAvailability: object;
+			providers: { everything: { search: () => Promise<unknown[]> } };
+		}) => {
+			Object.defineProperty(plugin.integrationAvailability, "current", {
+				get: () => ({ everything: true, smartConnections: false }),
+			});
+			plugin.providers.everything.search = async () => [];
+		},
+	);
+	await runPaletteCommand(obsidian, "open-everything-list");
+	const page = obsidian.page;
+	const input = page.locator(MODAL_INPUT);
+	await expect(page.locator(".my-palette-suggest-modal")).toHaveAttribute(
+		"data-mode",
+		"everything",
+	);
+	await input.fill("example");
+	await closePalette(page);
+	await runPaletteCommand(obsidian, "open-everything-list");
+	await expect(input).toHaveValue("example");
+	await expect(page.locator(".my-palette-suggest-modal")).toHaveAttribute(
+		"data-mode",
+		"everything",
+	);
+	await closePalette(page);
+	await runPaletteCommand(obsidian, "open-run-list");
+	await expect(page.locator(".my-palette-suggest-modal")).toHaveAttribute("data-mode", "command");
+	await expect(input).toHaveValue("");
+	await input.fill("alpha");
+	await closePalette(page);
+	await runPaletteCommand(obsidian, "open-run-list");
+	await expect(input).toHaveValue("alpha");
+	await input.press("Escape");
+	await expect(input).toHaveValue("");
+	await closePalette(page);
+	await runPaletteCommand(obsidian, "open-run-list");
+	await expect(input).toHaveValue("");
+});
+
+test("mode commands start empty after the restore period", async ({ obsidian }) => {
+	await runPaletteCommand(obsidian, "open-run-list");
+	const input = obsidian.page.locator(MODAL_INPUT);
+	await input.fill("alpha");
+	await closePalette(obsidian.page);
+	await advanceClock(obsidian, 91_000);
+	await runPaletteCommand(obsidian, "open-run-list");
+	await expect(input).toHaveValue("");
+});
+
+test("Home resumes a mode after its alias changes", async ({ obsidian }) => {
+	await runPaletteCommand(obsidian, "open-run-list");
+	const input = obsidian.page.locator(MODAL_INPUT);
+	await input.fill("alpha");
+	await closePalette(obsidian.page);
+	await obsidian.evaluatePlugin(
+		PLUGIN_ID,
+		(plugin: { settings: { modes: { commands: { alias: string } } } }) => {
+			plugin.settings.modes.commands.alias = "changed";
+		},
+	);
+	await runPaletteCommand(obsidian, "open-home");
+	await expect(input).toHaveValue("alpha");
+	await expect(obsidian.page.locator(".my-palette-mode-chip")).toHaveText("changed");
+});

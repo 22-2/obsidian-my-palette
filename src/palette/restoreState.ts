@@ -1,9 +1,11 @@
+import type { PaletteRoute } from "src/palette/PaletteSearchSession";
 import type { ReturnToHomeSeconds } from "src/settings/model";
 
 /** 閉じられたパレットが、次の「ホームを開く」のために残す状態。メモリ上にだけ保持する。 */
 export interface PaletteRestoreState {
-	/** エイリアス付きの入力。復元するとそのモードに入り直す。 */
+	/** モードの検索語、または Home の入力。 */
 	input: string;
+	route: PaletteRoute;
 	includeIgnored: boolean;
 	activeIndex: number;
 	scrollTop: number;

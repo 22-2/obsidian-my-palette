@@ -447,7 +447,7 @@
 	"settings.general.desc": "Home、検索履歴、表示、診断。",
 	"settings.general.home": "Home",
 	"settings.returnHome.name": "Home に戻るまでの時間",
-	"settings.returnHome.desc": "「ホームを開く」をもう一度使ったとき、この時間内に閉じた検索なら、最後の検索を再開します。「すぐに」は常に Home から始めます。検索語はメモリにのみ保持します。",
+	"settings.returnHome.desc": "この時間内に「ホームを開く」か同じモードのコマンドをもう一度使うと、最後の検索を再開します。「すぐに」は検索を再開しません。検索語はメモリにのみ保持します。",
 	"settings.general.tabs": "タブ",
 	"settings.focusTab.name": "開いているタブにフォーカス",
 	"settings.focusTab.desc": "ノートがすでにタブで開いていれば、もう一度開く代わりにそのタブに切り替えます。裏で開く操作はそのままにします。",

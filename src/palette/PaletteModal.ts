@@ -109,6 +109,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		this.session = new PaletteSearchSession(this.plugin, {
 			initialInput,
 			fixedMode,
+			initialRoute: restore?.route,
 			modeEntries,
 			sourceFile,
 			sourceFiles,
@@ -182,7 +183,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	/** 次の「ホームを開く」で再開するもの: 入力、範囲のオプション、行とスクロール位置。 */
 	private captureRestoreState(): PaletteRestoreState {
 		return {
-			input: this.session.prefixedInput,
+			input: this.session.current.input,
+			route: this.session.current.route,
 			includeIgnored: this.session.current.ignoredScope,
 			...this.currentResultView(),
 		};

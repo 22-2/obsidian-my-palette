@@ -75,6 +75,7 @@ export interface PaletteSearchSessionOptions {
 	initialInput?: string;
 	/** 最初に入るモード。Esc を押すと、そこから Home に戻る。 */
 	fixedMode?: FixedPaletteMode;
+	initialRoute?: PaletteRoute;
 	sourceFile?: TFile;
 	/** 一緒に編集するノート。プロパティのモードだけが読む。 */
 	sourceFiles?: readonly TFile[];
@@ -111,6 +112,7 @@ export class PaletteSearchSession {
 		{
 			initialInput = "",
 			fixedMode,
+			initialRoute,
 			sourceFile,
 			sourceFiles,
 			includeIgnored = false,
@@ -121,11 +123,12 @@ export class PaletteSearchSession {
 	) {
 		this.listsModes = modeEntries;
 		const definition = fixedMode ? findPaletteMode(fixedMode) : undefined;
-		if (definition) this.route = { kind: "mode", modeId: definition.id };
+		if (initialRoute) this.route = initialRoute;
+		else if (definition) this.route = { kind: "mode", modeId: definition.id };
 		this.sourceFile = sourceFile;
 		this.sourceFiles = sourceFiles;
 		this.onStateChange = onStateChange;
-		const parsed = this.parse(initialInput);
+		const parsed = this.parse(initialInput, includeIgnored);
 		this.state = {
 			input: initialInput,
 			query: parsed.query,
@@ -352,11 +355,10 @@ export class PaletteSearchSession {
 		this.stopReadinessUpdates();
 	}
 
-	private parse(input: string): ParsedInput {
+	private parse(input: string, ignoredScope = this.state.ignoredScope): ParsedInput {
 		if (this.route.kind !== "mode") return { raw: input, mode: "file", query: input };
 		const { mode } = getPaletteMode(this.route.modeId);
-		const everythingScope =
-			mode === "everything" && this.state.ignoredScope ? "directory" : "vault";
+		const everythingScope = mode === "everything" && ignoredScope ? "directory" : "vault";
 		return { raw: input, mode, query: input, everythingScope };
 	}
 

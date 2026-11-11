@@ -4,6 +4,7 @@ import { MoveFileModal } from "src/palette/MoveFileModal";
 import { BulkRenameModal } from "src/rename/BulkRenameModal";
 import { TagRenameModal } from "src/tags/TagRenameModal";
 import { MergeTargetModal } from "src/merge/MergeTargetModal";
+import type { PaletteModeId } from "src/palette/modes";
 import type { FixedPaletteMode } from "src/palette/PaletteSearchSession";
 import { insertTags } from "src/tags/insertTags";
 import { t } from "src/i18n";
@@ -15,8 +16,8 @@ import { t } from "src/i18n";
 export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	// Why: モードから Esc を押すと Home に戻るため、モードを開くすべての経路で
 	// モードの一覧も表示する。
-	const openWithHome = (input: string, fixedMode?: FixedPaletteMode) =>
-		plugin.paletteOpener.openPalette(input, fixedMode, { modeEntries: true });
+	const openWithHome = (modeId: PaletteModeId, input: string, fixedMode?: FixedPaletteMode) =>
+		plugin.paletteOpener.openModePalette(modeId, input, fixedMode);
 	plugin.addCommand({
 		id: "open-home",
 		name: t("command.openHome"),
@@ -28,17 +29,17 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		name: t("command.openNoteList"),
 		// Notes は Obsidian の標準ファイル検索。findPaletteMode("file") は
 		// PALETTE_MODES で最初のファイルモードなので、これに解決される。
-		callback: () => openWithHome("", "file"),
+		callback: () => openWithHome("notes", "", "file"),
 	});
 	plugin.addCommand({
 		id: "open-run-list",
 		name: t("command.openRunList"),
-		callback: () => openWithHome(plugin.paletteOpener.commandPaletteInitialInput()),
+		callback: () => openWithHome("commands", plugin.paletteOpener.commandPaletteInitialInput()),
 	});
 	plugin.addCommand({
 		id: "open-everything-list",
 		name: t("command.openEverythingList"),
-		callback: () => openWithHome(`${plugin.settings.modes.everything.alias} `),
+		callback: () => openWithHome("everything", `${plugin.settings.modes.everything.alias} `),
 	});
 	plugin.addCommand({
 		id: "open-sidebar-palette",
@@ -57,7 +58,7 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		name: t("command.openOutgoingLinkList"),
 		checkCallback: (checking) => {
 			if (checking) return Boolean(plugin.app.workspace.getActiveFile());
-			openWithHome("", "link");
+			openWithHome("outlinks", "", "link");
 		},
 	});
 	plugin.addCommand({
@@ -65,7 +66,7 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		name: t("command.openBacklinkList"),
 		checkCallback: (checking) => {
 			if (checking) return Boolean(plugin.app.workspace.getActiveFile());
-			openWithHome("", "backlink");
+			openWithHome("backlinks", "", "backlink");
 		},
 	});
 	plugin.addCommand({
@@ -73,20 +74,20 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 		name: t("command.openHeadingList"),
 		checkCallback: (checking) => {
 			if (checking) return Boolean(plugin.app.workspace.getActiveFile());
-			openWithHome(`${plugin.settings.modes.headings.alias} `);
+			openWithHome("headings", `${plugin.settings.modes.headings.alias} `);
 		},
 	});
 	plugin.addCommand({
 		id: "open-bookmark-list",
 		name: t("command.openBookmarkList"),
-		callback: () => openWithHome("", "bookmark"),
+		callback: () => openWithHome("bookmarks", "", "bookmark"),
 	});
 	plugin.addCommand({
 		id: "open-smart-connections-list",
 		name: t("command.openSmartConnectionsList"),
 		checkCallback: (checking) => {
 			if (checking) return Boolean(plugin.app.workspace.getActiveFile());
-			openWithHome("", "smart");
+			openWithHome("smart", "", "smart");
 		},
 	});
 	plugin.addCommand({
@@ -124,27 +125,27 @@ export function registerPluginCommands(plugin: MyPalettePlugin): void {
 	plugin.addCommand({
 		id: "open-tab-list",
 		name: t("command.openTabList"),
-		callback: () => openWithHome("", "tab"),
+		callback: () => openWithHome("tabs", "", "tab"),
 	});
 	plugin.addCommand({
 		id: "open-plugin-list",
 		name: t("command.openPluginList"),
-		callback: () => openWithHome(`${plugin.settings.modes.plugins.alias} `),
+		callback: () => openWithHome("plugins", `${plugin.settings.modes.plugins.alias} `),
 	});
 	plugin.addCommand({
 		id: "open-snippet-list",
 		name: t("command.openSnippetList"),
-		callback: () => openWithHome(`${plugin.settings.modes.snippets.alias} `),
+		callback: () => openWithHome("snippets", `${plugin.settings.modes.snippets.alias} `),
 	});
 	plugin.addCommand({
 		id: "open-tag-list",
 		name: t("command.openTagList"),
-		callback: () => openWithHome(`${plugin.settings.modes.tags.alias} `),
+		callback: () => openWithHome("tags", `${plugin.settings.modes.tags.alias} `),
 	});
 	plugin.addCommand({
 		id: "open-property-list",
 		name: t("command.openPropertyList"),
-		callback: () => openWithHome(`${plugin.settings.modes.properties.alias} `),
+		callback: () => openWithHome("properties", `${plugin.settings.modes.properties.alias} `),
 	});
 	plugin.addCommand({
 		id: "open-vault-audit-list",
