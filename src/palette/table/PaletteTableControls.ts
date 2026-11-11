@@ -21,6 +21,7 @@ import type { PaletteSort } from "src/palette/paletteSorting";
 interface PaletteTableControlsOptions {
 	initialState: PaletteTableState;
 	presentation: (result: PaletteResult) => SelectionItem;
+	previewContent?: (result: PaletteResult, cell: HTMLElement, query: string) => void;
 	/** 名前の列の強調で、ひらがなとカタカナを同じ文字として扱うかどうか。 */
 	foldKana: () => boolean;
 	onChange: (state: PaletteTableState) => void;
@@ -302,6 +303,7 @@ export class PaletteTableControls extends Component {
 				renderSelectionItem({ ...presentation, description: undefined }, cell, query, {
 					foldKana: this.options.foldKana(),
 				});
+				this.options.previewContent?.(result, cell, query);
 				return;
 			}
 			case "path":

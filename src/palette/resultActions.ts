@@ -11,6 +11,7 @@ export type ActionKind = LeafOpenAction;
 export interface ActionOutcome {
 	close: boolean;
 	message?: string;
+	openedLeaf?: WorkspaceLeaf;
 }
 
 interface ExternalMarkdownActions {
@@ -91,8 +92,8 @@ export async function runResultAction(
 		const current = app.vault.getAbstractFileByPath(result.vaultPath);
 		if (!(current instanceof TFile))
 			return { close: false, message: t("palette.error.fileGone") };
-		await openFile(app, current, action, options);
-		return { close: true };
+		const openedLeaf = await openFile(app, current, action, options);
+		return { close: true, openedLeaf };
 	}
 	if (result.mode === "command") return { close: true };
 	if (result.mode === "link" || result.mode === "backlink")
@@ -110,8 +111,8 @@ export async function runResultAction(
 	} else if (everythingResult.vaultPath) {
 		const current = app.vault.getAbstractFileByPath(everythingResult.vaultPath);
 		if (current instanceof TFile) {
-			await openFile(app, current, action, options);
-			return { close: true };
+			const openedLeaf = await openFile(app, current, action, options);
+			return { close: true, openedLeaf };
 		}
 	}
 	const target = resolveExternalOpenTarget(everythingResult.absolutePath, {
@@ -131,8 +132,8 @@ async function openFile(
 	file: TFile,
 	action: ActionKind,
 	options: ResultActionOptions,
-): Promise<void> {
-	await openFileInLeaf(app, file, {
+): Promise<WorkspaceLeaf> {
+	return await openFileInLeaf(app, file, {
 		action,
 		targetLeaf: options.targetLeaf,
 		active: options.active ?? true,

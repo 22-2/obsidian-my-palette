@@ -1,4 +1,4 @@
-import { MarkdownView, type TFile, type WorkspaceLeaf } from "obsidian";
+import { MarkdownView, type EditorRange, type TFile, type WorkspaceLeaf } from "obsidian";
 import { highlightEditorRanges, revealInFileExplorer } from "src/platform/obsidianInternals";
 import { openFileInLeaf } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
@@ -8,6 +8,7 @@ import { openInExternalEditor } from "src/platform/externalOpen";
 import { editPropertyResult } from "src/properties/propertyActions";
 import { executeCommandById } from "src/platform/obsidianInternals";
 import { t } from "src/i18n";
+import { contentPreviewTerm } from "src/palette/contentPreview";
 import { openTagSearch } from "src/tags/tagSearch";
 
 export interface PaletteResultExecutionOptions {
@@ -21,6 +22,8 @@ export interface PaletteResultExecutionOptions {
 	active: boolean;
 	/** モーダルの右矢印によるプレビューは、対象を有効にしつつエディターにフォーカスしない。 */
 	autoFocus?: boolean;
+	/** Everything の本文検索語。対応する単独の content: 構文だけを強調する。 */
+	searchQuery?: string;
 	close: () => void;
 	showError: (message: string) => void;
 }
@@ -151,6 +154,8 @@ export async function executePaletteResult(
 		},
 	);
 	if (outcome.close) {
+		if (result.mode === "everything" && outcome.openedLeaf && options.searchQuery)
+			highlightContentMatches(outcome.openedLeaf, options.searchQuery);
 		plugin.recordResultUsage(result);
 		finish(options);
 	} else options.showError(outcome.message ?? t("palette.error.actionFailed"));
@@ -244,6 +249,29 @@ function revealHeading(leaf: WorkspaceLeaf, line: number): void {
 	editor.scrollIntoView({ from, to }, true);
 	// 移動の処理が終わってから強調を付ける。
 	queueMicrotask(() => highlightEditorRanges(view, [{ from, to }]));
+}
+
+/** 開いたエディターの現在の内容から位置を求める。プレビュー時点から編集されていてもずれない。 */
+function highlightContentMatches(leaf: WorkspaceLeaf, query: string): void {
+	const term = contentPreviewTerm(query);
+	const view = leaf.view;
+	if (!term || !(view instanceof MarkdownView) || view.getMode() !== "source") return;
+	const editor = view.editor;
+	const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	const matches = editor.getValue().matchAll(new RegExp(escaped, "giu"));
+	const ranges: EditorRange[] = [];
+	for (const match of matches) {
+		const from = editor.offsetToPos(match.index);
+		const to = editor.offsetToPos(match.index + match[0].length);
+		ranges.push({ from, to });
+		if (ranges.length >= 500) break;
+	}
+	if (!ranges.length) return;
+	const first = ranges[0];
+	editor.scrollIntoView(first, true);
+	queueMicrotask(() => {
+		if (leaf.view === view) highlightEditorRanges(view, ranges);
+	});
 }
 
 function finish(options: PaletteResultExecutionOptions): void {

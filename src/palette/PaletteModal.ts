@@ -26,6 +26,7 @@ import {
 	type FixedPaletteMode,
 	type PaletteSearchState,
 } from "src/palette/PaletteSearchSession";
+import { ContentPreview } from "src/palette/contentPreview";
 import { toPaletteSelectionItem } from "src/palette/resultPresentation";
 import { populatePaletteResultMenu } from "src/palette/actions/resultContextMenu";
 import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
@@ -71,6 +72,7 @@ function sourceFooterText(
 
 export class PaletteModal extends SelectionModal<PaletteResult> {
 	private readonly session: PaletteSearchSession;
+	private readonly contentPreview: ContentPreview;
 	private activeMenu?: PaletteMenu;
 	private historyControls?: PaletteHistoryControls;
 	private ignoredToggle?: PanelSwitch;
@@ -102,6 +104,9 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			},
 			app,
 		);
+		this.contentPreview = new ContentPreview(app, () =>
+			this.session.current.mode === "everything" ? this.session.current.query : "",
+		);
 		this.modeEntries = modeEntries;
 		this.restore = restore;
 		this.sourceFile = sourceFile;
@@ -116,6 +121,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			includeIgnored: restore?.includeIgnored ?? false,
 			onModesChange: () => this.refreshSuggestions(),
 			onStateChange: (state) => {
+				if (this.state?.input !== state.input || this.state?.mode !== state.mode)
+					this.contentPreview.reset();
 				if (this.state?.route.kind === "home" && state.route.kind !== "home")
 					this.rememberHomeView();
 				this.state = state;
@@ -191,6 +198,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override onSelectionModalClose(): void {
+		this.contentPreview.dispose();
 		this.plugin.paletteOpener.releaseModal(this);
 		this.plugin.paletteOpener.rememberClosedPalette(this.captureRestoreState());
 		// このセッションが要求のシグナルを持つ。共有のクライアントをここでキャンセルすると、
@@ -206,6 +214,11 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 
 	protected override highlightOptions(): SelectionHighlightOptions {
 		return { foldKana: this.plugin.settings.file.foldKana };
+	}
+
+	override renderSuggestion(result: PaletteResult, el: HTMLElement): void {
+		super.renderSuggestion(result, el);
+		this.contentPreview.observe(result, el, this.session.current.query);
 	}
 
 	protected override toSelectionItem(result: PaletteResult): SelectionItem {
@@ -273,6 +286,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	override async getSuggestions(input: string): Promise<PaletteResult[]> {
+		this.contentPreview.reset();
 		return await this.session.search(input);
 	}
 
@@ -384,6 +398,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		}
 		await executePaletteResult(this.plugin, result, action, {
 			closeWhenDone: closePalette,
+			searchQuery:
+				this.session.current.mode === "everything" ? this.session.current.query : undefined,
 			active: true,
 			autoFocus: closePalette,
 			close: () => this.close(),

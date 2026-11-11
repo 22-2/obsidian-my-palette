@@ -1428,3 +1428,11 @@
 	white-space: nowrap;
 	border: 0;
 }
+
+.my-palette-suggestion__content-preview {
+	color: var(--text-muted);
+	font-size: var(--font-smaller);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}

@@ -127,6 +127,33 @@ describe("メモの開始フォーカス", () => {
 		await vi.waitFor(() => expect(highlightSearchMatches).toHaveBeenCalledWith([range]));
 		expect(f.plugin.recordResultUsage).toHaveBeenCalledWith(heading);
 	});
+	it("Everything の本文検索で実際に開いたノートの一致箇所を強調する", async () => {
+		const f = fixture();
+		const highlightSearchMatches = vi.fn();
+		const editor = {
+			getValue: () => "one 約束\ntwo 約束",
+			offsetToPos: (offset: number) =>
+				offset < 7 ? { line: 0, ch: offset } : { line: 1, ch: offset - 7 },
+			scrollIntoView: vi.fn(),
+		};
+		const view = Object.assign(Object.create(MarkdownView.prototype) as MarkdownView, {
+			editor,
+			getMode: () => "source",
+			editMode: { highlightSearchMatches },
+		});
+		Object.assign(f.leaf, { view });
+		await executePaletteResult(f.plugin, result("everything", f.file), "primary", {
+			...f.options,
+			searchQuery: "content:約束",
+		});
+		const ranges = [
+			{ from: { line: 0, ch: 4 }, to: { line: 0, ch: 6 } },
+			{ from: { line: 1, ch: 4 }, to: { line: 1, ch: 6 } },
+		];
+		expect(editor.scrollIntoView).toHaveBeenCalledWith(ranges[0], true);
+		await vi.waitFor(() => expect(highlightSearchMatches).toHaveBeenCalledWith(ranges));
+	});
+
 	it("要求されたターゲットが固定されている場合にフォールバック リーフに焦点を当てます", async () => {
 		const f = fixture();
 		const pinned = { getViewState: () => ({ pinned: true }), openFile: vi.fn() };

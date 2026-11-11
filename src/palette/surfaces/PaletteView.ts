@@ -25,6 +25,7 @@ import {
 } from "src/palette/PaletteSearchSession";
 import type { PaletteModeId } from "src/palette/modes";
 import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
+import { ContentPreview } from "src/palette/contentPreview";
 import { toPaletteSelectionItem } from "src/palette/resultPresentation";
 import { renderSelectionItem } from "src/ui/selectionModal";
 import { SuggestionPanel, type SuggestionPanelResults } from "src/ui/suggestionPanel";
@@ -92,6 +93,7 @@ export class PaletteView extends ItemView {
 
 	private panel?: SuggestionPanel<PaletteResult>;
 	private session?: PaletteSearchSession;
+	private contentPreview?: ContentPreview;
 	private homeView?: { activeIndex: number; scrollTop: number; id?: string };
 	private restoringHome = false;
 	private lastRoute: PaletteSearchState["route"]["kind"] = "home";
@@ -244,6 +246,8 @@ export class PaletteView extends ItemView {
 				includeIgnored: this.session.current.ignoredScope,
 			};
 		}
+		this.contentPreview?.dispose();
+		this.contentPreview = undefined;
 		this.fileListRefresh.cancel();
 		this.activeMenu?.close();
 		this.activeMenu = undefined;
@@ -260,6 +264,10 @@ export class PaletteView extends ItemView {
 	}
 
 	private createSurface(state: NormalizedPaletteViewState): void {
+		this.contentPreview?.dispose();
+		this.contentPreview = new ContentPreview(this.app, () =>
+			this.session?.current.mode === "everything" ? this.session.current.query : "",
+		);
 		this.homeView = undefined;
 		this.restoringHome = false;
 		this.lastRoute = "home";
@@ -315,7 +323,7 @@ export class PaletteView extends ItemView {
 				if (mode === "mode-entry") return;
 				this.session?.commitCurrentSearch();
 			},
-			renderSuggestion: (result, el, query) =>
+			renderSuggestion: (result, el, query) => {
 				renderSelectionItem(
 					toPaletteSelectionItem(this.app, result, {
 						openExternalMarkdownInObsidian:
@@ -324,7 +332,9 @@ export class PaletteView extends ItemView {
 					el,
 					query,
 					{ foldKana: this.plugin.settings.file.foldKana },
-				),
+				);
+				this.contentPreview?.observe(result, el, query);
+			},
 			onChoose: (result) => {
 				if (choosingOpensMenu(result)) this.panel?.showActiveRowContextMenu();
 				else void this.execute(result, "primary");
@@ -368,6 +378,8 @@ export class PaletteView extends ItemView {
 							this.plugin.settings.openExternalMarkdownInObsidian,
 					}),
 				foldKana: () => this.plugin.settings.file.foldKana,
+				previewContent: (result, cell, query) =>
+					this.contentPreview?.observe(result, cell, query),
 				// Why: Vault 監査は種類ごとに別のものを一覧にし、それぞれ列が異なる。
 				columnSet: () =>
 					this.session?.current.mode === "audit"
@@ -436,6 +448,7 @@ export class PaletteView extends ItemView {
 			error: state.error,
 			loading: state.loading,
 		};
+		this.contentPreview?.reset();
 		this.setResultsKeepingSelection(results);
 		this.actionMessage = undefined;
 		this.historyControls?.update(state.input);
@@ -660,6 +673,10 @@ export class PaletteView extends ItemView {
 		const targetLeaf = targetOverride ?? this.leafTracker.resolveTargetLeaf();
 		const execution: PaletteResultExecutionOptions = {
 			closeWhenDone: false,
+			searchQuery:
+				result.mode === "everything" && this.session.current.mode === "everything"
+					? this.session.current.query
+					: undefined,
 			targetLeaf,
 			reuseExternalMarkdownLeaf,
 			// ノートを開くのはナビゲーションなので、開き終えた後にこのパレットの入力へ戻るのではなく、
