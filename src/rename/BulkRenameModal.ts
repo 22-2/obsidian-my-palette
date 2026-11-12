@@ -12,6 +12,7 @@ import {
 } from "src/rename/renamePlan";
 import { ICONS } from "src/ui/icons";
 import { countLabel } from "src/shared/countLabel";
+import { renameFiles } from "src/rename/renameFiles";
 import { t } from "src/i18n";
 
 interface RenameItem extends SelectionItem {
@@ -168,24 +169,11 @@ export class BulkRenameModal extends SelectionModal<RenameItem> {
 		}
 		this.applying = true;
 		this.commitSearchHistory();
-		let renamed = 0;
-		const failures: string[] = [];
-		// Why: 1つずつ名前を変えて、名前の変更のたびにリンクを更新してから次を始める。
-		for (const row of targets) {
-			const file = this.app.vault.getAbstractFileByPath(row.path);
-			if (!(file instanceof TFile)) {
-				failures.push(`${row.oldName}: ${t("rename.error.notFound")}`);
-				continue;
-			}
-			try {
-				await this.app.fileManager.renameFile(file, row.newPath);
-				renamed++;
-			} catch (error) {
-				failures.push(
-					`${row.oldName}: ${error instanceof Error ? error.message : String(error)}`,
-				);
-			}
-		}
+		const results = await renameFiles(this.app, targets);
+		const renamed = results.filter((result) => result.result === "renamed").length;
+		const failures = results
+			.filter((result) => result.result === "failed")
+			.map((result) => `${result.path.split("/").pop()}: ${result.reason}`);
 		this.applying = false;
 		new Notice(
 			failures.length === 0

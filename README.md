@@ -188,6 +188,8 @@ MOC remove selector も、同じ判定でつながっているノートに印（
 
 ### Obsidian CLI
 
+`obsidian my-palette:rename` は Vault 内のファイル名変更をプレビューできます。`paths` に対象の Vault 相対パスの JSON 配列、`rule` に検索/置換を指定します。まず `apply` なしで実行し、返された `items` と `blocked` を確認します。実行するときは同じ引数に `apply` とプレビューの `plan` を加えます。計画が変わった場合や名前が衝突する場合は実行しません。結果には各ファイルの成功・失敗と理由を返します。`regex`、`ignore-case`、`first` で検索方法を切り替えられます。JSON 引数の引用方法は利用するシェルに合わせてください。
+
 `obsidian my-palette:audit kind=<kind>` で同じ一覧を JSON で出力します。スクリプトや AI エージェントから使うためのものです。`kind` は `orphaned-files`・`broken-links`・`empty-files`・`empty-folders` のどれかで、`glob=<pattern>` で一致するパス（壊れたリンクでは参照元のノート）だけに絞ります。壊れたリンクの行番号は1から数えます。
 
 `trash` を付けない限り一覧を出すだけです。`trash` には `glob` が必須なので、指定を忘れて保管庫全体を動かすことはありません。そのときは各項目に `trashed`・`skipped`・`failed` の結果が付きます。`obsidian my-palette` で使える CLI コマンドの一覧を出します。
