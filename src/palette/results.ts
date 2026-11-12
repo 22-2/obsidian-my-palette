@@ -1,7 +1,5 @@
 import type { SearchHistoryEntry } from "src/core/searchHistoryTypes";
 import type { TFile } from "obsidian";
-import type { BrokenLinkSource } from "src/audit/vaultAudit";
-import type { PaletteModeId } from "src/palette/modes";
 import type { BookmarkEntry } from "src/core/bookmarkEntry";
 
 export type PaletteMode =
@@ -19,6 +17,24 @@ export type PaletteMode =
 	| "property"
 	| "tag"
 	| "audit";
+
+/** Home に並ぶモードの識別子。設定の保存形式にも使うので、定義は `modes.ts` ではなくここに置く。 */
+export type PaletteModeId =
+	| "notes"
+	| "commands"
+	| "everything"
+	| "outlinks"
+	| "backlinks"
+	| "headings"
+	| "bookmarks"
+	| "smart"
+	| "tabs"
+	| "plugins"
+	| "snippets"
+	| "properties"
+	| "tags"
+	| "audit";
+
 export type EverythingScope = "vault" | "directory";
 
 export interface ParsedInput {
@@ -200,6 +216,12 @@ export interface AuditFileResult extends AuditResultBase {
 	size: number;
 	/** 空のファイルだけ: MOC の節だけを持つノート。 */
 	mocOnly?: true;
+}
+
+/** 存在しないリンク先へリンクしているノートと、そのリンクの行。 */
+export interface BrokenLinkSource {
+	path: string;
+	line?: number;
 }
 
 /** 存在しないリンク先と、それにリンクしているすべてのノート。 */

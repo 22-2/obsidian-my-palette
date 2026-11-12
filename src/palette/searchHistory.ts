@@ -1,10 +1,11 @@
+import type { PaletteModeId } from "src/palette/results";
 import type {
 	SearchHistoryCategory,
 	SearchHistoryEntry,
 	SelectorHistoryCategory,
 } from "src/core/searchHistoryTypes";
 import { getSearchHistoryCategory, parseInput } from "src/palette/inputParser";
-import { paletteModeAlias, type PaletteModeId } from "src/palette/modes";
+import { paletteModeAlias } from "src/palette/modes";
 import type { ModeSettingsMap } from "src/settings/model";
 
 export interface RecordSearchHistoryOptions {

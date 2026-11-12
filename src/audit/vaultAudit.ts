@@ -1,4 +1,5 @@
 import { createUserIgnoredPathMatcher } from "src/ignored-notes/ignoredPathMatching";
+import type { BrokenLinkSource } from "src/palette/results";
 
 /**
  * Vault 監査の判定。Obsidian に依存しないように保ち、パレットのモードと CLI が
@@ -75,11 +76,6 @@ export interface AuditFileItem {
 	mtime: number;
 	/** 空のファイルだけ: ノートに MOC の節があり、空白ではないことを示す。 */
 	mocOnly?: true;
-}
-
-export interface BrokenLinkSource {
-	path: string;
-	line?: number;
 }
 
 export interface BrokenLinkItem {

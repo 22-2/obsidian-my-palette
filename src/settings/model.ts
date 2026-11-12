@@ -1,5 +1,5 @@
+import type { PaletteModeId } from "src/palette/results";
 import type { AuditKind } from "src/audit/vaultAudit";
-import type { PaletteModeId } from "src/palette/modes";
 import { DEFAULT_HOTKEYS, type PaletteHotkeys } from "src/ui/hotkeys";
 
 export interface SearchHistorySettings {

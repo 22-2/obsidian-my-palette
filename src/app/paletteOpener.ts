@@ -1,8 +1,9 @@
+import type { PaletteModeId } from "src/palette/results";
 import type { App, WorkspaceLeaf } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import { PaletteModal, type PaletteModalOptions } from "src/palette/PaletteModal";
 import { shouldRestore, type PaletteRestoreState } from "src/palette/restoreState";
-import { paletteModeAlias, type PaletteModeId } from "src/palette/modes";
+import { paletteModeAlias } from "src/palette/modes";
 import type { FixedPaletteMode } from "src/palette/PaletteSearchSession";
 import { PaletteView } from "src/palette/surfaces/PaletteView";
 import {

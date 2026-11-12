@@ -7,6 +7,7 @@ import {
 	type PaletteMode,
 	type PaletteResult,
 	usesSourceNote,
+	type PaletteModeId,
 } from "src/palette/results";
 import { canPreviewResult } from "src/palette/resultPreview";
 import { openFileInLeaf, revealOpenedLeaf } from "src/workspace/openLeaf";
@@ -23,7 +24,6 @@ import {
 	type FixedPaletteMode,
 	type PaletteSearchState,
 } from "src/palette/PaletteSearchSession";
-import type { PaletteModeId } from "src/palette/modes";
 import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
 import { ContentPreview } from "src/palette/contentPreview";
 import { toPaletteSelectionItem } from "src/palette/resultPresentation";

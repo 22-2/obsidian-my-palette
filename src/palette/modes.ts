@@ -1,24 +1,8 @@
 import type { IntegrationSettings, ModeSettingsMap, MyPaletteSettings } from "src/settings/model";
-import type { PaletteMode } from "src/palette/results";
+import type { PaletteMode, PaletteModeId } from "src/palette/results";
 import type { IntegrationReadiness } from "src/app/integrationAvailability";
 import { ICONS } from "src/ui/icons";
 import { t } from "src/i18n";
-
-export type PaletteModeId =
-	| "notes"
-	| "commands"
-	| "everything"
-	| "outlinks"
-	| "backlinks"
-	| "headings"
-	| "bookmarks"
-	| "smart"
-	| "tabs"
-	| "plugins"
-	| "snippets"
-	| "properties"
-	| "tags"
-	| "audit";
 
 export interface PaletteModeDefinition {
 	id: PaletteModeId;

@@ -1,11 +1,7 @@
+import type { PaletteModeId } from "src/palette/results";
 import type { Setting } from "obsidian";
 import type { SettingsHost } from "src/settings/settingsHost";
-import {
-	getPaletteMode,
-	isModeIntegrationOn,
-	validateModeAlias,
-	type PaletteModeId,
-} from "src/palette/modes";
+import { getPaletteMode, isModeIntegrationOn, validateModeAlias } from "src/palette/modes";
 import { t } from "src/i18n";
 
 /**
