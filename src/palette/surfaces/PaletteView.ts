@@ -36,7 +36,7 @@ import {
 	getExternalMarkdownLeaves,
 	isExternalMarkdownLeaf,
 } from "src/workspace/external-markdown/openExternalMarkdown";
-import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
+import { PaletteHistoryControls } from "src/ui/PaletteHistoryControls";
 import { PALETTE_HISTORY_CATEGORIES } from "src/palette/searchHistory";
 import {
 	isPaletteSortableMode,

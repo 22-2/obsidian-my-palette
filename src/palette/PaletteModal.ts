@@ -29,7 +29,7 @@ import {
 import { ContentPreview } from "src/palette/contentPreview";
 import { toPaletteSelectionItem } from "src/palette/resultPresentation";
 import { populatePaletteResultMenu } from "src/palette/actions/resultContextMenu";
-import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
+import { PaletteHistoryControls } from "src/ui/PaletteHistoryControls";
 import type { PaletteRestoreState } from "src/palette/restoreState";
 import { PALETTE_HISTORY_CATEGORIES } from "src/palette/searchHistory";
 import {

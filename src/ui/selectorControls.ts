@@ -1,6 +1,6 @@
 import { Modal, type App } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import type { PaletteControlsPlugin } from "src/palette/components/PaletteHistoryControls";
+import type { PaletteControlsPlugin } from "src/ui/PaletteHistoryControls";
 import type { SelectorHistoryCategory } from "src/settings/model";
 import { DEFAULT_HOTKEYS, formatHotkey } from "src/ui/hotkeys";
 import { t } from "src/i18n";

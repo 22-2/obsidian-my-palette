@@ -1,6 +1,6 @@
 import { App, Modal } from "obsidian";
 import type { PaletteMenu } from "src/ui/paletteMenu";
-import { PaletteHistoryControls } from "src/palette/components/PaletteHistoryControls";
+import { PaletteHistoryControls } from "src/ui/PaletteHistoryControls";
 import { SelectorHelpModal, type SelectorControls } from "src/ui/selectorControls";
 import { SuggestionPanel, type SuggestionPanelView } from "src/ui/suggestionPanel";
 import type { PanelSwitch, PanelSwitchOptions } from "src/ui/panelSwitch";
