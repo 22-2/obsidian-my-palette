@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	isTagOrChild,
 	normalizeTagName,
+	parseTagRenameInput,
 	renameAliasTags,
 	renameFrontmatterTags,
 	renameInlineTags,
@@ -21,6 +22,36 @@ describe("正規化タグ名", () => {
 		expect(normalizeTagName("a b")).toBeUndefined();
 		expect(normalizeTagName("a,b")).toBeUndefined();
 		expect(normalizeTagName("2026")).toBeUndefined();
+	});
+});
+
+describe("旧タグと新タグの入力を読む", () => {
+	it("空白で区切った2つのタグ名を読み、ハッシュを外す", () => {
+		expect(parseTagRenameInput("#project  work/2026")).toEqual({
+			kind: "ready",
+			from: "project",
+			to: "work/2026",
+		});
+		expect(parseTagRenameInput("project　work")).toEqual({
+			kind: "ready",
+			from: "project",
+			to: "work",
+		});
+	});
+
+	it("旧タグだけなら、新タグの入力を待つ", () => {
+		expect(parseTagRenameInput("#project ")).toEqual({ kind: "from", from: "project" });
+	});
+
+	it("空白だけの入力は空として扱う", () => {
+		expect(parseTagRenameInput("")).toEqual({ kind: "empty" });
+		expect(parseTagRenameInput("  　 ")).toEqual({ kind: "empty" });
+	});
+
+	it("使えないタグ名と、3つ以上の語を拒否する", () => {
+		expect(parseTagRenameInput("a,b work")).toEqual({ kind: "invalid", reason: "name" });
+		expect(parseTagRenameInput("project 2026")).toEqual({ kind: "invalid", reason: "name" });
+		expect(parseTagRenameInput("a b c")).toEqual({ kind: "invalid", reason: "tooMany" });
 	});
 });
 

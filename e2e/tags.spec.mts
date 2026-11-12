@@ -8,6 +8,7 @@ import {
 	menuItems,
 	pluginVaultOptions,
 	runPaletteCommand,
+	t,
 } from "./support.mts";
 
 test.use({ vaultOptions: pluginVaultOptions() });
@@ -32,9 +33,17 @@ async function openTagList(obsidian: ObsidianAPI, tagName: string): Promise<Page
 	return page;
 }
 
-/** 一括変更と削除の確認ダイアログは、タイトルの文言で選ぶ。パレットと区別するため。 */
-function dialogTitled(page: Page, title: string) {
-	return page.locator(".modal").filter({ hasText: title });
+/** タグの一括変更は「旧タグ 新タグ」を入力するパレット。入力欄の案内の文言で選ぶ。 */
+function renameInput(page: Page) {
+	return page.getByPlaceholder(t("tagRename.placeholder"));
+}
+
+/** 一括変更のパレットの行。背後のタグの一覧の行と区別する。 */
+function renameRows(page: Page) {
+	return page
+		.locator(".my-palette-suggest-modal")
+		.filter({ has: renameInput(page) })
+		.locator(".suggestion-item");
 }
 
 test("Enter on a tag opens the global search for it", async ({ obsidian }) => {
@@ -74,17 +83,20 @@ test("the context menu inserts the tag into the active note's frontmatter", asyn
 	await expect.poll(() => obsidian.read("Target.md")).toMatch(/tags:\s*\n\s*-\s*project/);
 });
 
-test("the context menu renames the tag everywhere after confirmation", async ({ obsidian }) => {
+test("the context menu renames the tag everywhere with Ctrl+Enter", async ({ obsidian }) => {
 	await obsidian.createNote("Tagged.md", "Body #project and #project/child\n");
 	const page = await openTagList(obsidian, "project");
 	await page.locator(MODAL_ROW).first().click({ button: "right" });
 	await menuItems(page).filter({ hasText: "タグ名を変更" }).click();
 
-	const rename = dialogTitled(page, "タグを一括で変更");
-	await rename.locator("input").nth(1).fill("work");
-	await rename.getByRole("button", { name: "タグを変更" }).click();
+	// 変更するタグが入力済みで、続けて新しいタグを打てる。
+	const input = renameInput(page);
+	await expect(input).toHaveValue("#project ");
+	await input.fill("#project work");
+	await expect(renameRows(page).first()).toContainText("#project → #work");
+	await input.press("Control+Enter");
 
-	await dialogTitled(page, "変更しますか").getByRole("button", { name: "変更する" }).click();
+	await expect(input).toBeHidden();
 	await expect.poll(() => obsidian.read("Tagged.md")).toBe("Body #work and #work/child\n");
 });
 
@@ -113,16 +125,16 @@ test("cancelling the delete confirmation leaves the note unchanged", async ({ ob
 	expect(await obsidian.read("Tagged.md")).toBe("Body #project\n");
 });
 
-test("Enter in the new name field also asks for confirmation", async ({ obsidian }) => {
+test("Enter alone does not rename the tag", async ({ obsidian }) => {
 	await obsidian.createNote("Tagged.md", "Body #project\n");
 	const page = await openTagList(obsidian, "project");
 	await page.locator(MODAL_ROW).first().click({ button: "right" });
 	await menuItems(page).filter({ hasText: "タグ名を変更" }).click();
 
-	const rename = dialogTitled(page, "タグを一括で変更");
-	await rename.locator("input").nth(1).fill("work");
-	await rename.locator("input").nth(1).press("Enter");
+	const input = renameInput(page);
+	await input.fill("#project work");
+	await input.press("Enter");
 
-	await expect(dialogTitled(page, "変更しますか")).toBeVisible();
+	await expect(input).toBeVisible();
 	expect(await obsidian.read("Tagged.md")).toBe("Body #project\n");
 });

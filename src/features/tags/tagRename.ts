@@ -11,6 +11,29 @@ export function normalizeTagName(input: string): string | undefined {
 	return name;
 }
 
+/** 「旧タグ 新タグ」の1行の入力を読んだ結果。 */
+export type TagRenameInput =
+	| { kind: "empty" }
+	| { kind: "invalid"; reason: "name" | "tooMany" }
+	| { kind: "from"; from: string }
+	| { kind: "ready"; from: string; to: string };
+
+/**
+ * 空白(全角を含む)で区切った「旧タグ 新タグ」を読む。タグ名に空白は使えないので、
+ * 区切りは曖昧にならない。`#` は付けても付けなくてもよい。
+ */
+export function parseTagRenameInput(input: string): TagRenameInput {
+	const tokens = input.split(/\s+/).filter(Boolean);
+	if (tokens.length === 0) return { kind: "empty" };
+	if (tokens.length > 2) return { kind: "invalid", reason: "tooMany" };
+	const from = normalizeTagName(tokens[0]);
+	if (!from) return { kind: "invalid", reason: "name" };
+	if (tokens.length === 1) return { kind: "from", from };
+	const to = normalizeTagName(tokens[1]);
+	if (!to) return { kind: "invalid", reason: "name" };
+	return { kind: "ready", from, to };
+}
+
 /** タグ名が `from` 本体か、その子階層（`from/...`）かどうか。大文字・小文字は区別しない。 */
 export function isTagOrChild(name: string, from: string): boolean {
 	const key = tagKey(name);
