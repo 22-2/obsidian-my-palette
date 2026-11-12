@@ -7,7 +7,7 @@ import {
 	matchesHotkey,
 	normalizeHotkeys,
 	scopesOverlap,
-} from "src/ui/hotkeys";
+} from "src/core/hotkeys";
 
 const event = (key: string, extra: Partial<KeyboardEvent> = {}) =>
 	({

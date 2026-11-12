@@ -13,7 +13,7 @@ import {
 } from "src/ui/pathClipboard";
 import { addTagInsertionMenuItems } from "src/features/tags/tagInsertionMenu";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { t } from "src/i18n";
 
 export function isTabResult(result: PaletteResult): result is TabResult {

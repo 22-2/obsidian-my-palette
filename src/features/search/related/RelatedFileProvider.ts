@@ -7,7 +7,7 @@ import {
 import type { RelatedFileResult } from "src/core/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/core/PaletteProvider";
 import { searchFuzzyQuery } from "src/core/fuzzyQuery";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 
 /** アクティブなノートの、発リンクの重複しない行き先、または被リンクの元のノートを探す。 */
 export class RelatedFileProvider implements PaletteProvider<RelatedFileResult> {

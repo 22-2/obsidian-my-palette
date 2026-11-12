@@ -2,7 +2,7 @@ import { Notice, TFolder } from "obsidian";
 import type { SelectorControls } from "src/ui/selectorControls";
 import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
 import { moveFiles, moveSourcePath, type MoveSource } from "src/features/move/moveFiles";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { countLabel } from "src/core/countLabel";
 import { t } from "src/i18n";
 

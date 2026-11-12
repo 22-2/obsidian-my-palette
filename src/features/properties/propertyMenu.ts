@@ -5,7 +5,7 @@ import type { PaletteMenu } from "src/ui/paletteMenu";
 import { readList } from "src/features/properties/propertyList";
 import { updateFrontmatter } from "src/core/frontmatter";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { logger } from "src/core/logger";
 import { getGlobalSearch } from "src/platform/obsidianInternals";
 import { t } from "src/i18n";

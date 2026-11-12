@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BaseSuggestModal, type SuggestModalProps } from "src/ui/baseSuggestModal";
 import { SuggestionPanel } from "src/ui/suggestionPanel";
 import { installObsidianDom } from "src/ui/testing/obsidianDom";
-import { DEFAULT_HOTKEYS, type PaletteHotkeys } from "src/ui/hotkeys";
+import { DEFAULT_HOTKEYS, type PaletteHotkeys } from "src/core/hotkeys";
 
 vi.mock("obsidian", () => import("src/ui/testing/obsidianDom"));
 

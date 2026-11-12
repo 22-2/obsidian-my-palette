@@ -6,7 +6,7 @@ import {
 } from "src/features/search/bookmark/bookmarkGroupRows";
 import { bookmarkLabel, type BookmarksInstance } from "src/features/search/bookmark/bookmarks";
 import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { t } from "src/i18n";
 
 interface BookmarkGroupOptions {

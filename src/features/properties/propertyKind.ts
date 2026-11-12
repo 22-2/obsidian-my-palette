@@ -1,5 +1,5 @@
 import type { PropertyKind } from "src/core/results";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { t } from "src/i18n";
 
 /** Obsidian が種類を固定しているキー。保存された種類が、編集のしかたを変えることはない。 */

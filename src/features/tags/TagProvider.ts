@@ -3,7 +3,7 @@ import type { TagResult } from "src/core/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/core/PaletteProvider";
 import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { tagKey } from "src/core/tagKey";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { t } from "src/i18n";
 
 /**

@@ -28,7 +28,7 @@ My PaletteはTypeScriptで書かれ、esbuildでバンドルされます。ソ�
 
 ## アイコンと共有定数
 
-- アイコン名は`src/ui/icons.ts`の`ICONS`に定義します。見た目ではなく意味を表す名前をキーにしています。Lucideのアイコン名を直接書かず、ここにある定義を使うことで、同じ操作には常に同じアイコンを使えます。
+- アイコン名は`src/core/icons.ts`の`ICONS`に定義します。見た目ではなく意味を表す名前をキーにしています。Lucideのアイコン名を直接書かず、ここにある定義を使うことで、同じ操作には常に同じアイコンを使えます。
 - 複数のメニューに表示される項目や、同じ操作を表す項目は、タイトルとアイコンとともに`src/ui/menuActions.ts`の`MENU_ACTIONS`へ一度だけ定義します。`withAction`で定義をメニュー項目に適用します。`addOpenMenuItems`と`addExternalAppMenuItems`は、「開く」と「外部アプリ」の項目を決まった順序で追加します。
 - IndexedDBのデータベース名は`src/platform/databaseNames.ts`に定義します。データはユーザーのブラウザープロファイルに保存されるため、名前を変更すると既存データが失われます。
 

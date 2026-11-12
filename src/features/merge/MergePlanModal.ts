@@ -1,7 +1,7 @@
 import { Notice } from "obsidian";
 import type { SelectorControls } from "src/ui/selectorControls";
 import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { countLabel } from "src/core/countLabel";
 import { logger } from "src/core/logger";
 import { executeMerge, type MergePlan } from "src/features/merge/mergeNotes";

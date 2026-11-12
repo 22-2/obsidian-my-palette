@@ -4,10 +4,10 @@ import { InteractionModes } from "src/ui/interactionModes";
 import { SuggestionPreview } from "src/ui/suggestionPreview";
 import { renderSuggestionResults } from "src/ui/suggestionResults";
 import { registerPreviewTransparency } from "src/ui/previewTransparency";
-import { DEFAULT_HOTKEYS, matchesHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
+import { DEFAULT_HOTKEYS, matchesHotkey, type PaletteHotkeys } from "src/core/hotkeys";
 import { SuggestionPointerActions } from "src/ui/suggestionPointerActions";
 import { PanelSwitch, type PanelSwitchOptions } from "src/ui/panelSwitch";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { t } from "src/i18n";
 
 /** 修飾キーのない数字キー 1〜9 を数字に変える。それ以外は undefined。 */

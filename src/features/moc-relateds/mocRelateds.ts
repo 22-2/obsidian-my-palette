@@ -26,7 +26,7 @@ import { relationPaths } from "src/core/noteRelations";
 import { isExcludedFolder } from "src/features/search/excludedFolders";
 import { openPaletteResultInBackground } from "src/features/palette/backgroundResultActions";
 import { addOpenMenuItems } from "src/ui/menuActions";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { logger } from "src/core/logger";
 import { t } from "src/i18n";
 

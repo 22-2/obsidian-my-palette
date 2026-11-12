@@ -8,11 +8,11 @@ import type { PaletteSurface } from "src/settings/model";
 import { PaletteHelpModal } from "src/ui/paletteHelpModal";
 import { availableModes } from "src/features/palette/modes";
 import { SearchHistorySuggest } from "src/ui/searchHistorySuggest";
-import { DEFAULT_HOTKEYS, formatHotkey, matchesHotkey } from "src/ui/hotkeys";
+import { DEFAULT_HOTKEYS, formatHotkey, matchesHotkey } from "src/core/hotkeys";
 import type { MenuChoice } from "src/ui/panelChoice";
 import type { PanelSwitch } from "src/ui/panelSwitch";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { t } from "src/i18n";
 import {
 	defaultSortDirection,

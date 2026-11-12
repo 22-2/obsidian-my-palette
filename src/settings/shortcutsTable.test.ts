@@ -1,7 +1,7 @@
 import type { Setting } from "obsidian";
 import { Window } from "happy-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_HOTKEYS, HOTKEY_ACTIONS, type HotkeyAction } from "src/ui/hotkeys";
+import { DEFAULT_HOTKEYS, HOTKEY_ACTIONS, type HotkeyAction } from "src/core/hotkeys";
 import { DEFAULT_SETTINGS } from "src/settings/model";
 import type { SettingsHost } from "src/settings/settingsHost";
 import { compareScopes, hotkeyScopeLabel, renderShortcutsTable } from "src/settings/shortcutsTable";

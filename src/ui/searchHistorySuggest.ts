@@ -1,6 +1,6 @@
 import { setIcon } from "obsidian";
 import type { SearchHistoryResult } from "src/core/results";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { t } from "src/i18n";
 
 export class SearchHistorySuggest {

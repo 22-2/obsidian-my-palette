@@ -4,7 +4,7 @@ import { collectVaultFiles } from "src/features/palette/actions/resultFile";
 import type { PaletteResult } from "src/core/results";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { openConfirmModal } from "src/ui/confirmModal";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { trashNotes } from "src/features/trash/trashNotes";
 
 /** Markdown ノートの結果だけを重複なく集める。 */

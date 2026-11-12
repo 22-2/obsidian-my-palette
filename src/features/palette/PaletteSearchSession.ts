@@ -23,7 +23,7 @@ import {
 } from "src/features/palette/modes";
 import type { ModeEntryResult } from "src/core/results";
 import { t } from "src/i18n";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import {
 	isPaletteSortableMode,
 	sortPaletteResults,

@@ -32,7 +32,7 @@ import { IntegrationAvailability } from "src/app/integrationAvailability";
 import { getVaultRootPath } from "src/features/ignored-notes/ignoredPaths";
 import { openPluginSettings } from "src/features/search/plugin/pluginSettings";
 import "../styles.css";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { debugLog, logger, setDebugLogging } from "src/core/logger";
 import { t } from "src/i18n";
 

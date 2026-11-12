@@ -1,7 +1,7 @@
 import { Notice, Setting, setIcon, type App } from "obsidian";
 import type { SettingsHost } from "src/settings/settingsHost";
 import { DEFAULT_SETTINGS, SETTING_LIMITS } from "src/settings/model";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { getCommunityPlugin } from "src/platform/obsidianInternals";
 import { t } from "src/i18n";
 

@@ -60,14 +60,14 @@ import {
 	PALETTE_VIEW_TYPE,
 	type PaletteViewType,
 } from "src/features/palette/surfaces/paletteViewTypes";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import {
 	DEFAULT_HOTKEYS,
 	HOTKEY_ACTIONS,
 	matchesHotkey,
 	worksIn,
 	type HotkeyAction,
-} from "src/ui/hotkeys";
+} from "src/core/hotkeys";
 import { t } from "src/i18n";
 
 interface PaletteViewState extends Record<string, unknown> {

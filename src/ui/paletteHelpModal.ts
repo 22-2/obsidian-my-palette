@@ -1,8 +1,8 @@
 import { App, Modal, setIcon } from "obsidian";
 import { PALETTE_MODES, paletteModeAlias } from "src/features/palette/modes";
 import type { ModeSettingsMap, PaletteSurface } from "src/settings/model";
-import { DEFAULT_HOTKEYS, formatHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
-import { ICONS } from "src/ui/icons";
+import { DEFAULT_HOTKEYS, formatHotkey, type PaletteHotkeys } from "src/core/hotkeys";
+import { ICONS } from "src/core/icons";
 import { t } from "src/i18n";
 
 /** 入力欄のプレースホルダーに詰め込まず、見つけやすい構文の案内を表示する。 */

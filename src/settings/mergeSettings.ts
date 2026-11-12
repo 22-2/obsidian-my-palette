@@ -8,7 +8,7 @@ import type {
 	PaletteSurface,
 	ReturnToHomeSeconds,
 } from "src/settings/model";
-import { normalizeHotkeys } from "src/ui/hotkeys";
+import { normalizeHotkeys } from "src/core/hotkeys";
 import {
 	DEFAULT_BLANK_FILE_SORT_PRIORITIES,
 	DEFAULT_SETTINGS,

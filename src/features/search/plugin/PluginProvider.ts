@@ -4,7 +4,7 @@ import type { PluginResult } from "src/core/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/core/PaletteProvider";
 import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { hasPluginSettingsTab } from "src/features/search/plugin/pluginSettings";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { getCommunityPlugin, getCommunityPluginManifests } from "src/platform/obsidianInternals";
 import { t } from "src/i18n";
 

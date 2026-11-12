@@ -12,7 +12,7 @@ import {
 	BOOKMARK_PATH_SEPARATOR,
 	getBookmarksInstance,
 } from "src/features/search/bookmark/bookmarks";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 
 /** Reads the core Bookmarks plugin's nested items and exposes usable entries for the palette. */
 export class BookmarkProvider implements PaletteProvider<BookmarkResult> {

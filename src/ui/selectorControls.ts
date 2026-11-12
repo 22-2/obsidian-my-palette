@@ -2,7 +2,7 @@ import type { SelectorHistoryCategory } from "src/core/searchHistoryTypes";
 import { Modal, type App } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import type { PaletteControlsPlugin } from "src/ui/PaletteHistoryControls";
-import { DEFAULT_HOTKEYS, formatHotkey } from "src/ui/hotkeys";
+import { DEFAULT_HOTKEYS, formatHotkey } from "src/core/hotkeys";
 import { t } from "src/i18n";
 
 export interface SelectorControls {

@@ -10,7 +10,7 @@ import {
 	type RenamePlanRow,
 	type RenameStatus,
 } from "src/features/rename/renamePlan";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { countLabel } from "src/core/countLabel";
 import { renameFiles } from "src/features/rename/renameFiles";
 import { t } from "src/i18n";

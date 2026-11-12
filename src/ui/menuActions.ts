@@ -1,5 +1,5 @@
 import type { IconName } from "obsidian";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { t } from "src/i18n";
 

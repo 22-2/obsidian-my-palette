@@ -10,7 +10,7 @@ import {
 	type HotkeyScope,
 	type PaletteHotkey,
 	worksIn,
-} from "src/ui/hotkeys";
+} from "src/core/hotkeys";
 import { t } from "src/i18n";
 
 const SCOPE_NAMES: Record<HotkeyScope, string> = {

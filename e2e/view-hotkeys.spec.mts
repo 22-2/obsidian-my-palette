@@ -1,6 +1,6 @@
 import { expect, test } from "./fixtures.mts";
 import { PLUGIN_ID, pluginVaultOptions, runPaletteCommand } from "./support.mts";
-import type { PaletteHotkeys } from "../src/ui/hotkeys";
+import type { PaletteHotkeys } from "../src/core/hotkeys";
 
 type ShortcutSettings = { settings: { hotkeys: PaletteHotkeys } };
 

@@ -3,7 +3,7 @@ import { t } from "src/i18n";
 import type { HeadingResult } from "src/core/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/core/PaletteProvider";
 import { searchFuzzyQuery } from "src/core/fuzzyQuery";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 
 /** 元のノートの見出しを文書の順に並べ、クエリがあれば見出しの文字列で絞り込む。 */
 export class HeadingProvider implements PaletteProvider<HeadingResult> {

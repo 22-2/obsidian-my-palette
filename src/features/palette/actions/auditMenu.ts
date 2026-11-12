@@ -22,7 +22,7 @@ import {
 	copyPathListToClipboard,
 	copyPathToClipboard,
 } from "src/ui/pathClipboard";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { countLabel } from "src/core/countLabel";
 import { t } from "src/i18n";

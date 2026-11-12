@@ -5,7 +5,7 @@ import type {
 	IntegrationReadiness,
 } from "src/settings/model";
 import type { PaletteMode, PaletteModeId } from "src/core/results";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { t } from "src/i18n";
 
 export interface PaletteModeDefinition {

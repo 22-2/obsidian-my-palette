@@ -6,7 +6,7 @@ import {
 	listBookmarkGroups,
 } from "src/features/search/bookmark/bookmarks";
 import type { SelectionItem } from "src/ui/selectionModal";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { t } from "src/i18n";
 
 /** 移動先の行: 最上位、既存のグループ、または入力から作るグループ。 */

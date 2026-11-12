@@ -1,5 +1,5 @@
 import { Component } from "obsidian";
-import { matchesHotkey, type PaletteHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
+import { matchesHotkey, type PaletteHotkey, type PaletteHotkeys } from "src/core/hotkeys";
 
 export function registerPreviewTransparency(
 	component: Component,

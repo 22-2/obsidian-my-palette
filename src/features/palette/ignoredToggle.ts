@@ -1,6 +1,6 @@
 import { supportsIncludeIgnored, type PaletteMode } from "src/core/results";
 import type { PanelSwitch, PanelSwitchOptions } from "src/ui/panelSwitch";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { t } from "src/i18n";
 
 /** Obsidian の除外ファイルの範囲のオプション。ファイル検索の画面すべてで共有する。 */

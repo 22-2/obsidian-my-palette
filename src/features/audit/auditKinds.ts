@@ -1,6 +1,6 @@
 import type { AuditKind } from "src/core/results";
 import type { IconName } from "obsidian";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { t } from "src/i18n";
 
 /** 種類の表示名。 */

@@ -1,7 +1,7 @@
 import { Notice, type TFile } from "obsidian";
 import type { SelectorControls } from "src/ui/selectorControls";
 import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { logger } from "src/core/logger";
 import { planMerge } from "src/features/merge/mergeNotes";
 import { MergePlanModal } from "src/features/merge/MergePlanModal";

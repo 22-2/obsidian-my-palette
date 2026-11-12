@@ -4,8 +4,8 @@ import { PaletteHistoryControls } from "src/ui/PaletteHistoryControls";
 import { SelectorHelpModal, type SelectorControls } from "src/ui/selectorControls";
 import { SuggestionPanel, type SuggestionPanelView } from "src/ui/suggestionPanel";
 import type { PanelSwitch, PanelSwitchOptions } from "src/ui/panelSwitch";
-import { DEFAULT_HOTKEYS, type PaletteHotkeys } from "src/ui/hotkeys";
-import { ICONS } from "src/ui/icons";
+import { DEFAULT_HOTKEYS, type PaletteHotkeys } from "src/core/hotkeys";
+import { ICONS } from "src/core/icons";
 import { getScopeHandlers } from "src/platform/obsidianInternals";
 import { t } from "src/i18n";
 

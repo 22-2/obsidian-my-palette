@@ -3,7 +3,7 @@ import type { CommandResult } from "src/core/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/core/PaletteProvider";
 import { type Command, sortCommandMatches } from "src/features/search/command/commandSorting";
 import { searchFuzzyQuery } from "src/core/fuzzyQuery";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { getCommands } from "src/platform/obsidianInternals";
 
 export class CommandProvider implements PaletteProvider<CommandResult> {

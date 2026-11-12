@@ -1,7 +1,7 @@
 import type { PropertyKind } from "src/core/results";
 import { formatPropertyValue } from "src/features/properties/propertyKind";
 import { searchFuzzyQuery } from "src/core/fuzzyQuery";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { t } from "src/i18n";
 
 /** 単一の値を入力して編集する種類。 */

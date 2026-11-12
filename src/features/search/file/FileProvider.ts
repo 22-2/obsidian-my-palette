@@ -40,7 +40,7 @@ import {
 	searchFuzzyQueryWithFieldScores,
 } from "src/core/fuzzyQuery";
 import type { PaletteProvider, PaletteSearchRequest } from "src/core/PaletteProvider";
-import { fileIcon } from "src/ui/icons";
+import { fileIcon } from "src/core/icons";
 
 /** Vault のイベントはフォルダーも報告する。フォルダーには拡張子がないので、キャストせずにファイルを見分ける。 */
 function isTFile(file: TAbstractFile): file is TFile {

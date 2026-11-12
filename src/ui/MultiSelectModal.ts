@@ -16,7 +16,7 @@ import {
 	type MultiSelectChanges,
 } from "src/ui/multiSelectChanges";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
-import { ICONS } from "src/ui/icons";
+import { ICONS } from "src/core/icons";
 import { t } from "src/i18n";
 
 /** 1つの選択できる行。`value` は、行がチェックされたときにモーダルが返す値。 */

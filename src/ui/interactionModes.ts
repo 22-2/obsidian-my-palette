@@ -1,4 +1,4 @@
-import { DEFAULT_HOTKEYS, matchesHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
+import { DEFAULT_HOTKEYS, matchesHotkey, type PaletteHotkeys } from "src/core/hotkeys";
 
 export type InteractionMode = "input" | "selection";
 

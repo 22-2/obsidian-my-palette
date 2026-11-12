@@ -1,5 +1,5 @@
 import type { PaletteModeId, AuditKind } from "src/core/results";
-import { DEFAULT_HOTKEYS, type PaletteHotkeys } from "src/ui/hotkeys";
+import { DEFAULT_HOTKEYS, type PaletteHotkeys } from "src/core/hotkeys";
 
 export interface SearchHistorySettings {
 	enabled: boolean;
