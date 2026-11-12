@@ -1,7 +1,7 @@
 import type { App } from "obsidian";
-import { RecentIdStore, type RecentIdStoreLogger } from "src/shared/recentIdStore";
+import { RecentIdStore, type RecentIdStoreLogger } from "src/platform/recentIdStore";
 import { tagKey } from "src/shared/tagKey";
-import { DATABASE_NAMES } from "src/shared/databaseNames";
+import { DATABASE_NAMES } from "src/platform/databaseNames";
 
 export const MAX_RECENT_TAGS = 20;
 

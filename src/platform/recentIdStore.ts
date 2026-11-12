@@ -1,6 +1,6 @@
 import type { App } from "obsidian";
 import { type DBSchema, type IDBPDatabase, openDB } from "idb";
-import { getVaultId, getVaultPathKey } from "src/shared/vaultIdentity";
+import { getVaultId, getVaultPathKey } from "src/platform/vaultIdentity";
 
 const RECENT_ID_DATABASE_VERSION = 1;
 const RECENT_ID_MIGRATION_VERSION = 1;

@@ -5,14 +5,14 @@ import {
 	isUserIgnoreFilterRegex,
 	isUserIgnoredPathWithFilters,
 } from "src/ignored-notes/ignoredPaths";
-import { getVaultId, getVaultPathKey } from "src/shared/vaultIdentity";
+import { getVaultId, getVaultPathKey } from "src/platform/vaultIdentity";
 import {
 	parseIgnoredNoteFrontmatter,
 	type IgnoredNoteIndexEntry,
 } from "src/ignored-notes/ignoredNoteEntry";
 import { ignoredNotePathParts } from "src/ignored-notes/ignoredNotePath";
 import { collectVaultPaths, mapWithConcurrency } from "src/ignored-notes/ignoredNoteScanner";
-import { DATABASE_NAMES } from "src/shared/databaseNames";
+import { DATABASE_NAMES } from "src/platform/databaseNames";
 
 export type { IgnoredNoteIndexEntry } from "src/ignored-notes/ignoredNoteEntry";
 

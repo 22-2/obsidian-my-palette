@@ -1,7 +1,7 @@
 import type { App } from "obsidian";
 import { type DBSchema, type IDBPDatabase, openDB } from "idb";
-import { getVaultId, getVaultPathKey } from "src/shared/vaultIdentity";
-import { DATABASE_NAMES } from "src/shared/databaseNames";
+import { getVaultId, getVaultPathKey } from "src/platform/vaultIdentity";
+import { DATABASE_NAMES } from "src/platform/databaseNames";
 
 const DATABASE_VERSION = 1;
 const MAX_TRACKED_FILES = 5_000;

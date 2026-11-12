@@ -10,8 +10,8 @@ import {
 	type RecordSearchHistoryOptions,
 } from "src/palette/searchHistory";
 import type { SearchHistoryCategory, SearchHistoryEntry } from "src/settings/model";
-import { getVaultId, getVaultPathKey } from "src/shared/vaultIdentity";
-import { DATABASE_NAMES } from "src/shared/databaseNames";
+import { getVaultId, getVaultPathKey } from "src/platform/vaultIdentity";
+import { DATABASE_NAMES } from "src/platform/databaseNames";
 
 const SEARCH_HISTORY_DATABASE_VERSION = 1;
 const SEARCH_HISTORY_MIGRATION_VERSION = 1;

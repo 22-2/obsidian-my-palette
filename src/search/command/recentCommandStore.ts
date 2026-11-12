@@ -4,8 +4,8 @@ import {
 	normalizeRecentIds,
 	RecentIdStore,
 	type RecentIdStoreLogger,
-} from "src/shared/recentIdStore";
-import { DATABASE_NAMES } from "src/shared/databaseNames";
+} from "src/platform/recentIdStore";
+import { DATABASE_NAMES } from "src/platform/databaseNames";
 
 export type RecentCommandStoreLogger = RecentIdStoreLogger;
 
