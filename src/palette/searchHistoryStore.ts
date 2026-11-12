@@ -1,3 +1,4 @@
+import type { SearchHistoryCategory, SearchHistoryEntry } from "src/core/searchHistoryTypes";
 import type { App } from "obsidian";
 import { type DBSchema, type IDBPDatabase, openDB } from "idb";
 import {
@@ -9,7 +10,6 @@ import {
 	SEARCH_HISTORY_MAX_ENTRIES,
 	type RecordSearchHistoryOptions,
 } from "src/palette/searchHistory";
-import type { SearchHistoryCategory, SearchHistoryEntry } from "src/settings/model";
 import { getVaultId, getVaultPathKey } from "src/platform/vaultIdentity";
 import { DATABASE_NAMES } from "src/platform/databaseNames";
 

@@ -1,3 +1,4 @@
+import type { SearchHistoryCategory, SearchHistoryEntry } from "src/core/searchHistoryTypes";
 import { Plugin, type WorkspaceLeaf } from "obsidian";
 import { MyPaletteSettingTab } from "src/settings/settingTab";
 import type { LeafOpenAction } from "src/workspace/openLeaf";
@@ -17,7 +18,6 @@ import {
 	type PaletteResult,
 	type SearchHistoryResult,
 } from "src/palette/results";
-import type { SearchHistoryCategory, SearchHistoryEntry } from "src/settings/model";
 import { formatSearchHistoryInput, SEARCH_HISTORY_MAX_ENTRIES } from "src/palette/searchHistory";
 import {
 	loadPluginSettings,

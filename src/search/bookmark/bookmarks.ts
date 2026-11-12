@@ -1,16 +1,7 @@
 import type { App } from "obsidian";
+import type { BookmarkEntry } from "src/core/bookmarkEntry";
 import { getEnabledCorePlugin } from "src/platform/obsidianInternals";
 import { t } from "src/i18n";
-
-/** コアのブックマークプラグインの木の1つのノード。パレットは編集のために参照を保つ。 */
-export interface BookmarkEntry {
-	type: string;
-	title?: string;
-	path?: string;
-	query?: string;
-	items?: BookmarkEntry[];
-	ctime?: number;
-}
 
 /**
  * パレットが使う、コアのブックマークプラグインのインスタンスの部分。`addItem` は親のグループを受け取る。

@@ -1,7 +1,7 @@
+import type { SearchHistoryCategory, SearchHistoryEntry } from "src/core/searchHistoryTypes";
 import type { App } from "obsidian";
 import type { RecordSearchHistoryOptions } from "src/palette/searchHistory";
 import { SearchHistoryStore, type SearchHistoryStoreLogger } from "src/palette/searchHistoryStore";
-import type { SearchHistoryCategory, SearchHistoryEntry } from "src/settings/model";
 
 /**
  * IndexedDB に保存する検索履歴。IndexedDB がデータを受け付けられないときは、エントリをメモリに置き、

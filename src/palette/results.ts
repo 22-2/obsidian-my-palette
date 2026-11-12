@@ -1,8 +1,8 @@
+import type { SearchHistoryEntry } from "src/core/searchHistoryTypes";
 import type { TFile } from "obsidian";
 import type { BrokenLinkSource } from "src/audit/vaultAudit";
 import type { PaletteModeId } from "src/palette/modes";
-import type { BookmarkEntry } from "src/search/bookmark/bookmarks";
-import type { SearchHistoryEntry } from "src/settings/model";
+import type { BookmarkEntry } from "src/core/bookmarkEntry";
 
 export type PaletteMode =
 	| "file"

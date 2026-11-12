@@ -1,5 +1,5 @@
+import type { SearchHistoryEntry } from "src/core/searchHistoryTypes";
 import type MyPalettePlugin from "src/main";
-import type { SearchHistoryEntry } from "src/settings/model";
 import { normalizeRecentCommandIds } from "src/search/command/recentCommandStore";
 import { mergeSettings } from "src/settings/mergeSettings";
 import {

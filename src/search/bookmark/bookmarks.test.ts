@@ -1,3 +1,4 @@
+import type { BookmarkEntry } from "src/core/bookmarkEntry";
 import { describe, expect, it, vi } from "vitest";
 import {
 	addFileBookmarks,
@@ -8,7 +9,6 @@ import {
 	moveBookmarks,
 	removeBookmarks,
 	setBookmarkTitle,
-	type BookmarkEntry,
 	type BookmarksInstance,
 } from "src/search/bookmark/bookmarks";
 import { bookmarkGroupRows } from "src/search/bookmark/bookmarkGroupRows";

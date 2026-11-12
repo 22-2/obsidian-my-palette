@@ -1,9 +1,9 @@
+import type { BookmarkEntry } from "src/core/bookmarkEntry";
 import fuzzysort from "fuzzysort";
 import {
 	BOOKMARK_PATH_SEPARATOR,
 	bookmarkLabel,
 	listBookmarkGroups,
-	type BookmarkEntry,
 } from "src/search/bookmark/bookmarks";
 import type { SelectionItem } from "src/ui/selectionModal";
 import { ICONS } from "src/ui/icons";

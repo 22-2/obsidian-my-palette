@@ -1,9 +1,10 @@
+import type { SearchHistoryCategory } from "src/core/searchHistoryTypes";
 import { Notice, setIcon } from "obsidian";
 import { PaletteMenu, type PaletteMenuItem } from "src/ui/paletteMenu";
 import { markKeyboardMenuEvent, showMenuAtEvent } from "src/ui/menus";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/palette/results";
-import type { PaletteSurface, SearchHistoryCategory } from "src/settings/model";
+import type { PaletteSurface } from "src/settings/model";
 import { PaletteHelpModal } from "src/ui/paletteHelpModal";
 import { availableModes } from "src/palette/modes";
 import { SearchHistorySuggest } from "src/ui/searchHistorySuggest";

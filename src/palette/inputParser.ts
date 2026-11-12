@@ -1,5 +1,6 @@
+import type { SearchHistoryCategory } from "src/core/searchHistoryTypes";
 import type { EverythingScope, ParsedInput, PaletteMode } from "src/palette/results";
-import type { ModeSettingsMap, SearchHistoryCategory } from "src/settings/model";
+import type { ModeSettingsMap } from "src/settings/model";
 import { paletteModeAlias } from "src/palette/modes";
 
 /**

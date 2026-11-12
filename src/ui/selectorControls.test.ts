@@ -1,7 +1,7 @@
+import type { SelectorHistoryCategory } from "src/core/searchHistoryTypes";
 import type { App } from "obsidian";
 import { Window } from "happy-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { SelectorHistoryCategory } from "src/settings/model";
 import { SelectionModal } from "src/ui/selectionModal";
 import { createSelectorPlugin } from "src/ui/testing/selectorPlugin";
 import { installObsidianDom } from "src/ui/testing/obsidianDom";

@@ -1,3 +1,4 @@
+import type { BookmarkEntry } from "src/core/bookmarkEntry";
 import { Notice } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import { resolveVaultFile } from "src/palette/actions/resultFile";
@@ -12,7 +13,6 @@ import {
 	moveBookmarks,
 	removeBookmarks,
 	setBookmarkTitle,
-	type BookmarkEntry,
 } from "src/search/bookmark/bookmarks";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";

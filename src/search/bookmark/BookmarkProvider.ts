@@ -1,3 +1,4 @@
+import type { BookmarkEntry } from "src/core/bookmarkEntry";
 import { TFile, type App } from "obsidian";
 import {
 	EMPTY_EXCLUDED_FOLDER_SOURCE,
@@ -7,11 +8,7 @@ import {
 import type { BookmarkResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/core/fuzzyQuery";
-import {
-	BOOKMARK_PATH_SEPARATOR,
-	getBookmarksInstance,
-	type BookmarkEntry,
-} from "src/search/bookmark/bookmarks";
+import { BOOKMARK_PATH_SEPARATOR, getBookmarksInstance } from "src/search/bookmark/bookmarks";
 import { ICONS } from "src/ui/icons";
 
 /** Reads the core Bookmarks plugin's nested items and exposes usable entries for the palette. */

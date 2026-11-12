@@ -4,7 +4,7 @@ import { expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
 import { addBookmarkMenuItems } from "src/palette/actions/bookmarkMenu";
 import type { PaletteResult } from "src/palette/results";
-import type { BookmarkEntry } from "src/search/bookmark/bookmarks";
+import type { BookmarkEntry } from "src/core/bookmarkEntry";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 
 const modals = vi.hoisted(() => ({ group: [] as unknown[], title: [] as unknown[] }));

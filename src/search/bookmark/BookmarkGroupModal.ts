@@ -1,10 +1,7 @@
+import type { BookmarkEntry } from "src/core/bookmarkEntry";
 import type { App } from "obsidian";
 import { bookmarkGroupRows, type BookmarkGroupItem } from "src/search/bookmark/bookmarkGroupRows";
-import {
-	bookmarkLabel,
-	type BookmarkEntry,
-	type BookmarksInstance,
-} from "src/search/bookmark/bookmarks";
+import { bookmarkLabel, type BookmarksInstance } from "src/search/bookmark/bookmarks";
 import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
 import { ICONS } from "src/ui/icons";
 import { t } from "src/i18n";
