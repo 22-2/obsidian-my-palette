@@ -1,4 +1,4 @@
-import type { PropertyKind } from "src/palette/results";
+import type { PropertyKind } from "src/core/results";
 import { formatPropertyValue } from "src/properties/propertyKind";
 import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { ICONS } from "src/ui/icons";

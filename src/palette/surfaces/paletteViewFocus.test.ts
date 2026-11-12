@@ -1,7 +1,7 @@
 import type { App, WorkspaceLeaf } from "obsidian";
 import { expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import { executePaletteResult } from "src/palette/executePaletteResult";
 import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
 import { PaletteView } from "src/palette/surfaces/PaletteView";

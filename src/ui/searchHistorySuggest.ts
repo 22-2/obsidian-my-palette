@@ -1,5 +1,5 @@
 import { setIcon } from "obsidian";
-import type { SearchHistoryResult } from "src/palette/results";
+import type { SearchHistoryResult } from "src/core/results";
 import { ICONS } from "src/ui/icons";
 import { t } from "src/i18n";
 

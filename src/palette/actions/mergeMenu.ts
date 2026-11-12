@@ -1,6 +1,6 @@
 import type MyPalettePlugin from "src/main";
 import { collectVaultFiles } from "src/palette/actions/resultFile";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import { MergeTargetModal } from "src/merge/MergeTargetModal";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";

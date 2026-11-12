@@ -1,7 +1,7 @@
 import type { App } from "obsidian";
 import { getVaultFullPath } from "src/ignored-notes/ignoredPaths";
-import type { PluginResult } from "src/palette/results";
-import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
+import type { PluginResult } from "src/core/results";
+import type { PaletteProvider, PaletteSearchRequest } from "src/core/PaletteProvider";
 import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { hasPluginSettingsTab } from "src/search/plugin/pluginSettings";
 import { ICONS } from "src/ui/icons";

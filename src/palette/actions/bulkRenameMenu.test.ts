@@ -3,7 +3,7 @@ import { TFile } from "obsidian";
 import { expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
 import { addBulkRenameMenuItem } from "src/palette/actions/bulkRenameMenu";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import { BulkRenameModal } from "src/rename/BulkRenameModal";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 

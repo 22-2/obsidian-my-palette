@@ -7,7 +7,7 @@ import {
 } from "obsidian";
 import { getUserIgnoreFilters, isUserIgnoredPathWithFilters } from "src/ignored-notes/ignoredPaths";
 import { IgnoredNoteIndex, type IgnoredNoteIndexLogger } from "src/ignored-notes/ignoredNoteIndex";
-import type { FileResult } from "src/palette/results";
+import type { FileResult } from "src/core/results";
 import {
 	DEFAULT_FILE_SORT_PRIORITIES,
 	FILE_SORT_PRIORITIES,
@@ -29,7 +29,7 @@ import {
 	searchFuzzyQuery,
 	searchFuzzyQueryWithFieldScores,
 } from "src/core/fuzzyQuery";
-import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
+import type { PaletteProvider, PaletteSearchRequest } from "src/core/PaletteProvider";
 import { fileIcon } from "src/ui/icons";
 
 /** Vault のイベントはフォルダーも報告する。フォルダーには拡張子がないので、キャストせずにファイルを見分ける。 */

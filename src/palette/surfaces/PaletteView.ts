@@ -8,7 +8,7 @@ import {
 	type PaletteResult,
 	usesSourceNote,
 	type PaletteModeId,
-} from "src/palette/results";
+} from "src/core/results";
 import { canPreviewResult } from "src/palette/resultPreview";
 import { openFileInLeaf, revealOpenedLeaf } from "src/workspace/openLeaf";
 import {

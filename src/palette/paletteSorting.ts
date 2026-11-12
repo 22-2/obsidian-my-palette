@@ -1,5 +1,5 @@
 import type { App } from "obsidian";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import { normalizeFrontmatterPrior } from "src/core/frontmatter";
 import { t } from "src/i18n";
 

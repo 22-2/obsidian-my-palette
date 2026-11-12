@@ -4,7 +4,7 @@ import { isUserIgnoredPath } from "src/ignored-notes/ignoredPaths";
 import { resolveVaultFile } from "src/palette/actions/resultFile";
 import { MoveFileModal } from "src/move/MoveFileModal";
 import type { MoveSource } from "src/move/moveFiles";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 

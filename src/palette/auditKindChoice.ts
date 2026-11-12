@@ -1,7 +1,7 @@
 import { AUDIT_KIND_ICONS, AUDIT_KIND_LABELS } from "src/audit/auditKinds";
 import { AUDIT_KINDS, type AuditKind } from "src/audit/vaultAudit";
 import type MyPalettePlugin from "src/main";
-import type { PaletteMode } from "src/palette/results";
+import type { PaletteMode } from "src/core/results";
 import { PanelChoice } from "src/ui/panelChoice";
 import { t } from "src/i18n";
 

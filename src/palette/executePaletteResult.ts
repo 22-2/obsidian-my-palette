@@ -2,7 +2,7 @@ import { MarkdownView, type EditorRange, type TFile, type WorkspaceLeaf } from "
 import { highlightEditorRanges, revealInFileExplorer } from "src/platform/obsidianInternals";
 import { openFileInLeaf } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
-import type { AuditResult, PaletteResult } from "src/palette/results";
+import type { AuditResult, PaletteResult } from "src/core/results";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
 import { openInExternalEditor } from "src/platform/externalOpen";
 import { editPropertyResult } from "src/properties/propertyActions";

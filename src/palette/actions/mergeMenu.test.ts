@@ -3,7 +3,7 @@ import { TFile } from "obsidian";
 import { expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
 import { addMergeMenuItem } from "src/palette/actions/mergeMenu";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import { MergeTargetModal } from "src/merge/MergeTargetModal";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 

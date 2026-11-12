@@ -1,6 +1,6 @@
 import { TFile, type App, type WorkspaceLeaf } from "obsidian";
-import type { TabResult } from "src/palette/results";
-import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
+import type { TabResult } from "src/core/results";
+import type { PaletteProvider, PaletteSearchRequest } from "src/core/PaletteProvider";
 import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 
 /** メインのエディター領域のタブ。ポップアウトのウィンドウ内のものも含む。サイドバーは除く。 */

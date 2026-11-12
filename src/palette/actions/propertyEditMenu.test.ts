@@ -3,7 +3,7 @@ import { TFile } from "obsidian";
 import { expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
 import { addPropertyEditMenuItem } from "src/palette/actions/propertyEditMenu";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 
 vi.mock("obsidian", () => ({

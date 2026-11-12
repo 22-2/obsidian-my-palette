@@ -1,5 +1,5 @@
 import { TFile, type App } from "obsidian";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 
 /**
  * 結果を、Vault がインデックスしているファイルに解決する。フォルダー、Obsidian の除外ファイル、

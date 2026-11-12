@@ -6,7 +6,7 @@ import {
 	openInExternalEditor,
 	showInSystemExplorer,
 } from "src/platform/externalOpen";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 
 vi.mock("obsidian", () => ({
 	Platform: { isDesktopApp: true },

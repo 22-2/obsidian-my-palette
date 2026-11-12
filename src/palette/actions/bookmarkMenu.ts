@@ -2,7 +2,7 @@ import type { BookmarkEntry } from "src/core/bookmarkEntry";
 import { Notice } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import { resolveVaultFile } from "src/palette/actions/resultFile";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import { BookmarkGroupModal, BookmarkTitleModal } from "src/search/bookmark/BookmarkGroupModal";
 import type { BookmarkGroupItem } from "src/search/bookmark/bookmarkGroupRows";
 import {

@@ -9,7 +9,7 @@ import {
 	paletteSectionOf,
 	paletteDigitRows,
 } from "src/palette/PaletteSearchSession";
-import type { FileResult } from "src/palette/results";
+import type { FileResult } from "src/core/results";
 
 async function host() {
 	const settings = structuredClone(DEFAULT_SETTINGS);

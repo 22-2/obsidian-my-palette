@@ -1,7 +1,7 @@
 import { Notice, TFile } from "obsidian";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import type MyPalettePlugin from "src/main";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import {
 	getActiveMocInsertionContext,
 	insertFilesToMocRelateds,

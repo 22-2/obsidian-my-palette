@@ -4,8 +4,8 @@ import {
 	isExcludedFolder,
 	type ExcludedFolderSource,
 } from "src/search/excludedFolders";
-import type { SmartConnectionResult } from "src/palette/results";
-import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
+import type { SmartConnectionResult } from "src/core/results";
+import type { PaletteProvider, PaletteSearchRequest } from "src/core/PaletteProvider";
 import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { ICONS } from "src/ui/icons";
 import { getCommunityPlugin } from "src/platform/obsidianInternals";

@@ -1,6 +1,6 @@
 import { execFile, type ChildProcess } from "child_process";
 import type { MyPaletteSettings } from "src/settings/model";
-import type { EverythingResult } from "src/palette/results";
+import type { EverythingResult } from "src/core/results";
 import { t } from "src/i18n";
 
 interface EsJsonItem {

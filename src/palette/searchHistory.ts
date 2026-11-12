@@ -1,4 +1,4 @@
-import type { PaletteModeId } from "src/palette/results";
+import type { PaletteModeId } from "src/core/results";
 import type {
 	SearchHistoryCategory,
 	SearchHistoryEntry,

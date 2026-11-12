@@ -3,7 +3,7 @@ import type { PaletteMenu } from "src/ui/paletteMenu";
 import type MyPalettePlugin from "src/main";
 import { TFile } from "obsidian";
 import { expect, it, vi } from "vitest";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import { insertTags } from "src/tags/insertTags";
 import { addTagInsertionMenuItems } from "src/tags/tagInsertionMenu";
 

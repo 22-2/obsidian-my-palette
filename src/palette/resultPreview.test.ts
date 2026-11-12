@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import { canPreviewResult } from "src/palette/resultPreview";
 
 function result(mode: PaletteResult["mode"]): PaletteResult {

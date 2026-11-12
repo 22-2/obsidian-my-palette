@@ -4,7 +4,7 @@ import { getVaultFullPath, isUserIgnoredPath } from "src/ignored-notes/ignoredPa
 import { getDesktopAdapter } from "src/platform/desktopAdapter";
 import { openWithSystemApplication, showInSystemExplorer } from "src/platform/externalOpen";
 import { resolveExternalOpenTarget, type ExternalOpenTarget } from "src/palette/openTargets";
-import type { EverythingResult, PaletteResult } from "src/palette/results";
+import type { EverythingResult, PaletteResult } from "src/core/results";
 import { t } from "src/i18n";
 
 export type ActionKind = LeafOpenAction;

@@ -1,6 +1,6 @@
 import { Platform, type App } from "obsidian";
 import { getVaultFullPath } from "src/ignored-notes/ignoredPaths";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import { openPathInCode } from "src/platform/vscode";
 
 declare const electron: {

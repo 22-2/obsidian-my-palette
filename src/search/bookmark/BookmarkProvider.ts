@@ -5,8 +5,8 @@ import {
 	filterExcludedFolders,
 	type ExcludedFolderSource,
 } from "src/search/excludedFolders";
-import type { BookmarkResult } from "src/palette/results";
-import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
+import type { BookmarkResult } from "src/core/results";
+import type { PaletteProvider, PaletteSearchRequest } from "src/core/PaletteProvider";
 import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { BOOKMARK_PATH_SEPARATOR, getBookmarksInstance } from "src/search/bookmark/bookmarks";
 import { ICONS } from "src/ui/icons";

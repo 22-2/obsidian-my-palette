@@ -9,7 +9,7 @@ import {
 } from "@tanstack/table-core";
 import { storeReactivityBindings } from "@tanstack/table-core/store-reactivity-bindings";
 import { AUDIT_KINDS, type AuditKind } from "src/audit/vaultAudit";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import { t } from "src/i18n";
 
 const COLUMN_DEFINITIONS = {

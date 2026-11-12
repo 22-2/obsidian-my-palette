@@ -8,7 +8,7 @@ import {
 	type PaletteMode,
 	type PaletteResult,
 	usesSourceNote,
-} from "src/palette/results";
+} from "src/core/results";
 import {
 	SelectionModal,
 	type SelectionHighlightOptions,

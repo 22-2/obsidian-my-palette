@@ -4,7 +4,7 @@ import { expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
 import { MoveFileModal } from "src/move/MoveFileModal";
 import { addFileMoveMenuItem } from "src/palette/actions/fileMoveMenu";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 
 vi.mock("obsidian", () => ({

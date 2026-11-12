@@ -1,7 +1,7 @@
 import type { App, TFile } from "obsidian";
 import { describe, expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
-import type { PropertyResult } from "src/palette/results";
+import type { PropertyResult } from "src/core/results";
 import { populatePropertyMenu, propertyValueText } from "src/properties/propertyMenu";
 import { PaletteMenu } from "src/ui/paletteMenu";
 

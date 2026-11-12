@@ -1,4 +1,4 @@
-import type { PropertyKind } from "src/palette/results";
+import type { PropertyKind } from "src/core/results";
 import { ICONS } from "src/ui/icons";
 import { t } from "src/i18n";
 

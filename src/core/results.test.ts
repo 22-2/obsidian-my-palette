@@ -1,6 +1,6 @@
 import type { TFile } from "obsidian";
 import { describe, expect, it } from "vitest";
-import { getResultFilePath, type PaletteResult } from "src/palette/results";
+import { getResultFilePath, type PaletteResult } from "src/core/results";
 
 const file = { path: "notes/a.md" } as TFile;
 const base = { id: "id", primary: "p", secondary: "s", icon: "i" };

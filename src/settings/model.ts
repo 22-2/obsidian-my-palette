@@ -1,4 +1,4 @@
-import type { PaletteModeId } from "src/palette/results";
+import type { PaletteModeId } from "src/core/results";
 import type { AuditKind } from "src/audit/vaultAudit";
 import { DEFAULT_HOTKEYS, type PaletteHotkeys } from "src/ui/hotkeys";
 

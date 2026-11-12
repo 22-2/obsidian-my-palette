@@ -1,6 +1,6 @@
 import { Notice, type App, type TFile } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import { propertyTargetPaths, type PropertyResult } from "src/palette/results";
+import { propertyTargetPaths, type PropertyResult } from "src/core/results";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { readList } from "src/properties/propertyList";
 import { updateFrontmatter } from "src/core/frontmatter";

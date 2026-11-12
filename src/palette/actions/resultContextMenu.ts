@@ -15,7 +15,7 @@ import { addMergeMenuItem } from "src/palette/actions/mergeMenu";
 import { isTabResult, populateTabMenu } from "src/palette/actions/tabMenu";
 import type { ActionKind } from "src/palette/resultActions";
 import { getCopyablePaths, isCopyablePaletteResult } from "src/palette/resultPresentation";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import {
 	getResultAbsolutePath,
 	isDesktopApp,

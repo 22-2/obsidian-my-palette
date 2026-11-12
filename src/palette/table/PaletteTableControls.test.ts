@@ -1,7 +1,7 @@
 import type { App } from "obsidian";
 import { Window } from "happy-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import { PaletteTableControls } from "src/palette/table/PaletteTableControls";
 import { normalizePaletteTableState } from "src/palette/table/paletteTableModel";
 import { SuggestionPanel } from "src/ui/suggestionPanel";

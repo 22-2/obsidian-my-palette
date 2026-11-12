@@ -1,7 +1,7 @@
 import { MarkdownView, TFile, type App, type WorkspaceLeaf } from "obsidian";
 import { describe, expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import { executePaletteResult } from "src/palette/executePaletteResult";
 import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
 

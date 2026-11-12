@@ -2,7 +2,7 @@ import { Notice, TFile, type App, type WorkspaceLeaf } from "obsidian";
 import { emptinessBadge, noteEmptiness } from "src/audit/noteEmptiness";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import type MyPalettePlugin from "src/main";
-import type { FileResult } from "src/palette/results";
+import type { FileResult } from "src/core/results";
 import type { SelectionItem } from "src/ui/selectionModal";
 import { MultiSelectModal, type MultiSelectCandidate } from "src/ui/MultiSelectModal";
 import {

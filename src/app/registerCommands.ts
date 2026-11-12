@@ -1,4 +1,4 @@
-import type { PaletteModeId } from "src/palette/results";
+import type { PaletteModeId } from "src/core/results";
 import type MyPalettePlugin from "src/main";
 import { insertLinkToMocRelateds, removeLinkInMocRelateds } from "src/moc-relateds/mocRelateds";
 import { MoveFileModal } from "src/move/MoveFileModal";

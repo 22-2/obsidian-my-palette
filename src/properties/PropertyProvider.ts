@@ -1,11 +1,11 @@
 import type { App, TFile } from "obsidian";
-import type { PropertyKind, PropertyResult } from "src/palette/results";
+import type { PropertyKind, PropertyResult } from "src/core/results";
 import {
 	formatPropertyValue,
 	PROPERTY_KIND_ICONS,
 	propertyKindOf,
 } from "src/properties/propertyKind";
-import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
+import type { PaletteProvider, PaletteSearchRequest } from "src/core/PaletteProvider";
 import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { ICONS } from "src/ui/icons";
 import { getMetadataTypeManager, type VaultPropertyInfo } from "src/platform/obsidianInternals";

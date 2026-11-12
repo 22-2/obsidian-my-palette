@@ -3,7 +3,7 @@ import { TFile } from "obsidian";
 import { expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
 import { addBookmarkMenuItems } from "src/palette/actions/bookmarkMenu";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import type { BookmarkEntry } from "src/core/bookmarkEntry";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 

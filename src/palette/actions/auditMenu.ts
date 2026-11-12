@@ -11,7 +11,7 @@ import { addFileMoveMenuItem } from "src/palette/actions/fileMoveMenu";
 import { addSelectionHeader } from "src/palette/actions/selectionHeader";
 import type { ActionKind } from "src/palette/resultActions";
 import { getCopyablePaths } from "src/palette/resultPresentation";
-import type { AuditBrokenLinkResult, AuditResult, PaletteResult } from "src/palette/results";
+import type { AuditBrokenLinkResult, AuditResult, PaletteResult } from "src/core/results";
 import {
 	addCopyPathListMenuItems,
 	addCopyPathMenuItems,

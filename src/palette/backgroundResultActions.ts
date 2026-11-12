@@ -3,7 +3,7 @@ import { openFileInLeaf } from "src/workspace/openLeaf";
 import type MyPalettePlugin from "src/main";
 import { getVaultFullPath, isUserIgnoredPath } from "src/ignored-notes/ignoredPaths";
 import { getDesktopAdapter } from "src/platform/desktopAdapter";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import { resolveExternalOpenTarget } from "src/palette/openTargets";
 import { t } from "src/i18n";
 

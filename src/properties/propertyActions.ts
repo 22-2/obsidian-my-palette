@@ -1,6 +1,6 @@
 import { Notice, type App, type TFile } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import { propertyTargetPaths, type PropertyResult } from "src/palette/results";
+import { propertyTargetPaths, type PropertyResult } from "src/core/results";
 import { insertTags } from "src/tags/insertTags";
 import { editListProperty } from "src/properties/propertyValueSelector";
 import { editPropertyValue } from "src/properties/propertyInputSelector";

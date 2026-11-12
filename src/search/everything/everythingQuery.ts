@@ -1,4 +1,4 @@
-import type { EverythingScope } from "src/palette/results";
+import type { EverythingScope } from "src/core/results";
 
 export function buildEverythingQuery(
 	vaultRoot: string,

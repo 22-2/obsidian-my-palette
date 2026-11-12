@@ -3,7 +3,7 @@ import { Window } from "happy-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
 import { PaletteModal } from "src/palette/PaletteModal";
-import type { FileResult, SearchHistoryResult } from "src/palette/results";
+import type { FileResult, SearchHistoryResult } from "src/core/results";
 import { executePaletteResult } from "src/palette/executePaletteResult";
 import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
 import { populatePaletteResultMenu } from "src/palette/actions/resultContextMenu";

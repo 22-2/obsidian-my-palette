@@ -1,7 +1,7 @@
 import { Notice, type TFile, type App } from "obsidian";
 import { t } from "src/i18n";
 import { collectVaultFiles } from "src/palette/actions/resultFile";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { openConfirmModal } from "src/ui/confirmModal";
 import { ICONS } from "src/ui/icons";

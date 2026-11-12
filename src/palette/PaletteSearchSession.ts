@@ -8,7 +8,7 @@ import {
 	type PaletteResult,
 	type ParsedInput,
 	type PaletteModeId,
-} from "src/palette/results";
+} from "src/core/results";
 import type MyPalettePlugin from "src/main";
 import { getSearchHistoryCategory } from "src/palette/inputParser";
 import {
@@ -21,7 +21,7 @@ import {
 	paletteModeAlias,
 	parseDirectModeEntry,
 } from "src/palette/modes";
-import type { ModeEntryResult } from "src/palette/results";
+import type { ModeEntryResult } from "src/core/results";
 import { t } from "src/i18n";
 import { ICONS } from "src/ui/icons";
 import {

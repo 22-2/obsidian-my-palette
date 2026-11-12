@@ -13,11 +13,7 @@ import { registerPluginCommands } from "src/app/registerCommands";
 import { registerPluginEvents } from "src/app/registerEvents";
 import { openExternalMarkdown } from "src/workspace/external-markdown/openExternalMarkdown";
 import { EverythingClient } from "src/search/everything/EverythingClient";
-import {
-	getResultFilePath,
-	type PaletteResult,
-	type SearchHistoryResult,
-} from "src/palette/results";
+import { getResultFilePath, type PaletteResult, type SearchHistoryResult } from "src/core/results";
 import { formatSearchHistoryInput, SEARCH_HISTORY_MAX_ENTRIES } from "src/palette/searchHistory";
 import {
 	loadPluginSettings,

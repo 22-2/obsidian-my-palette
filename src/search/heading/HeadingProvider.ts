@@ -1,7 +1,7 @@
 import type { App, HeadingCache, TFile } from "obsidian";
 import { t } from "src/i18n";
-import type { HeadingResult } from "src/palette/results";
-import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
+import type { HeadingResult } from "src/core/results";
+import type { PaletteProvider, PaletteSearchRequest } from "src/core/PaletteProvider";
 import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { ICONS } from "src/ui/icons";
 

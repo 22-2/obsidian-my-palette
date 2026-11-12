@@ -4,7 +4,7 @@ import type MyPalettePlugin from "src/main";
 import type { ActionKind } from "src/palette/resultActions";
 import { addSelectionHeader } from "src/palette/actions/selectionHeader";
 import { getCopyablePaths } from "src/palette/resultPresentation";
-import type { PaletteResult, TabResult } from "src/palette/results";
+import type { PaletteResult, TabResult } from "src/core/results";
 import {
 	addCopyPathListMenuItems,
 	addCopyPathMenuItems,

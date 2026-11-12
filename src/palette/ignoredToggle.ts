@@ -1,4 +1,4 @@
-import { supportsIncludeIgnored, type PaletteMode } from "src/palette/results";
+import { supportsIncludeIgnored, type PaletteMode } from "src/core/results";
 import type { PanelSwitch, PanelSwitchOptions } from "src/ui/panelSwitch";
 import { ICONS } from "src/ui/icons";
 import { t } from "src/i18n";

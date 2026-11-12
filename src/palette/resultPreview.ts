@@ -1,4 +1,4 @@
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 
 /**
  * 右矢印のプレビューに出せない結果の種類。

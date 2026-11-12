@@ -1,6 +1,6 @@
 import type { App } from "obsidian";
 import type { FileSortPriorities, MyPaletteSettings } from "src/settings/model";
-import type { PaletteMode } from "src/palette/results";
+import type { PaletteMode } from "src/core/results";
 import { EverythingClient } from "src/search/everything/EverythingClient";
 import { EverythingProvider } from "src/search/everything/EverythingProvider";
 import { FileProvider } from "src/search/file/FileProvider";
@@ -15,7 +15,7 @@ import { SnippetProvider } from "src/search/snippet/SnippetProvider";
 import { TagProvider } from "src/tags/TagProvider";
 import { PropertyProvider } from "src/properties/PropertyProvider";
 import { AuditProvider } from "src/audit/AuditProvider";
-import type { PaletteProvider } from "src/search/PaletteProvider";
+import type { PaletteProvider } from "src/core/PaletteProvider";
 import {
 	EMPTY_EXCLUDED_FOLDER_SOURCE,
 	type ExcludedFolderSource,

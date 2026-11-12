@@ -3,7 +3,7 @@ import type { PaletteMenu } from "src/ui/paletteMenu";
 import { expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
 import { populatePaletteResultMenu } from "src/palette/actions/resultContextMenu";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 
 vi.mock("src/palette/resultPresentation", () => ({
 	getCopyablePaths: (_app: App, result: PaletteResult) => ({ fileName: result.primary }),

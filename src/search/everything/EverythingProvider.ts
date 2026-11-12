@@ -10,9 +10,9 @@ import {
 	type ExcludedFolderSource,
 } from "src/search/excludedFolders";
 import type { MyPaletteSettings } from "src/settings/model";
-import type { EverythingResult } from "src/palette/results";
+import type { EverythingResult } from "src/core/results";
 import { EverythingClient } from "src/search/everything/EverythingClient";
-import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
+import type { PaletteProvider, PaletteSearchRequest } from "src/core/PaletteProvider";
 import { buildEverythingQuery } from "src/search/everything/everythingQuery";
 import { isExtensionOpenable } from "src/platform/obsidianInternals";
 import { t } from "src/i18n";

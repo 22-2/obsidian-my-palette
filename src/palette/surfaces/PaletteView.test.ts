@@ -2,7 +2,7 @@ import type { App, WorkspaceLeaf } from "obsidian";
 import { Window } from "happy-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
-import type { FileResult, SearchHistoryResult } from "src/palette/results";
+import type { FileResult, SearchHistoryResult } from "src/core/results";
 import { executePaletteResult } from "src/palette/executePaletteResult";
 import { PaletteView } from "src/palette/surfaces/PaletteView";
 import { PaletteTableView } from "src/palette/surfaces/PaletteTableView";

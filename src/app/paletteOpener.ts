@@ -1,4 +1,4 @@
-import type { PaletteModeId } from "src/palette/results";
+import type { PaletteModeId } from "src/core/results";
 import type { App, WorkspaceLeaf } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import { PaletteModal, type PaletteModalOptions } from "src/palette/PaletteModal";

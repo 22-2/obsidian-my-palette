@@ -1,7 +1,7 @@
 import type { TFile } from "obsidian";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
-import type { PropertyResult } from "src/palette/results";
+import type { PropertyResult } from "src/core/results";
 import { editPropertyResult } from "src/properties/propertyActions";
 import { editPropertyValue } from "src/properties/propertyInputSelector";
 import { editListProperty } from "src/properties/propertyValueSelector";

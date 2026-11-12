@@ -1,6 +1,6 @@
 import type { App } from "obsidian";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { TagResult } from "src/palette/results";
+import type { TagResult } from "src/core/results";
 import { confirmDeleteTags } from "src/tags/tagDelete";
 import { populateTagMenu } from "src/tags/tagMenu";
 import type { PaletteMenu } from "src/ui/paletteMenu";

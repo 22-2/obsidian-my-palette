@@ -1,5 +1,5 @@
 import { createUserIgnoredPathMatcher } from "src/ignored-notes/ignoredPathMatching";
-import type { BrokenLinkSource } from "src/palette/results";
+import type { BrokenLinkSource } from "src/core/results";
 
 /**
  * Vault 監査の判定。Obsidian に依存しないように保ち、パレットのモードと CLI が

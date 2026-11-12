@@ -1,6 +1,6 @@
 import type { App } from "obsidian";
-import type { TagResult } from "src/palette/results";
-import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
+import type { TagResult } from "src/core/results";
+import type { PaletteProvider, PaletteSearchRequest } from "src/core/PaletteProvider";
 import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { tagKey } from "src/core/tagKey";
 import { ICONS } from "src/ui/icons";

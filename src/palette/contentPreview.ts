@@ -1,5 +1,5 @@
 import { TFile, type App } from "obsidian";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 
 const MAX_BYTES = 1024 * 1024;
 const MAX_CONCURRENT = 3;

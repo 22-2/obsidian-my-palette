@@ -1,6 +1,6 @@
 import { TFile, type App } from "obsidian";
 import type { PaletteMenu } from "src/ui/paletteMenu";
-import type { PaletteResult } from "src/palette/results";
+import type { PaletteResult } from "src/core/results";
 import { insertTags } from "src/tags/insertTags";
 import type MyPalettePlugin from "src/main";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";

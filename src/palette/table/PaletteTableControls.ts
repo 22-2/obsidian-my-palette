@@ -1,7 +1,7 @@
 import { Component, TFile, setTooltip, type App } from "obsidian";
 import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
-import type { AuditResult, PaletteResult } from "src/palette/results";
+import type { AuditResult, PaletteResult } from "src/core/results";
 import { emptyFileLabel } from "src/audit/noteEmptiness";
 import {
 	PaletteTableModel,
