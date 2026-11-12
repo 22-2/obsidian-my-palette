@@ -192,6 +192,8 @@ MOC remove selector も、同じ判定でつながっているノートに印（
 
 `obsidian my-palette:move` は同じ `paths` と `folder`（Vault 相対パス、ルートは `/`）で移動をプレビューします。名前変更と同じように `plan` を確認してから `apply` で実行します。索引済みファイルのみが対象です。
 
+`obsidian my-palette:trash-notes` は `paths` で指定した Markdown ノートを対象に、ゴミ箱への移動をプレビューします。実行には同じ対象とプレビューの `plan`、`apply` が必要です。確認後に内容が変わった場合は実行しません。ゴミ箱の保存先は Obsidian の設定に従います。
+
 `obsidian my-palette:audit kind=<kind>` で同じ一覧を JSON で出力します。スクリプトや AI エージェントから使うためのものです。`kind` は `orphaned-files`・`broken-links`・`empty-files`・`empty-folders` のどれかで、`glob=<pattern>` で一致するパス（壊れたリンクでは参照元のノート）だけに絞ります。壊れたリンクの行番号は1から数えます。
 
 `trash` を付けない限り一覧を出すだけです。`trash` には `glob` が必須なので、指定を忘れて保管庫全体を動かすことはありません。そのときは各項目に `trashed`・`skipped`・`failed` の結果が付きます。`obsidian my-palette` で使える CLI コマンドの一覧を出します。

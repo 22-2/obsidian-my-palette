@@ -55,6 +55,7 @@
 	"cli.move.folderFlag": "移動先の Vault 相対フォルダーパス。ルートは /",
 	"cli.move.folderMissing": "移動先のフォルダーが見つかりません。ルートには / を指定してください。",
 	"cli.move.blocked": "移動先の名前が衝突しています。変更予定を確認してください。",
+	"cli.trash.description": "Markdown ノートのゴミ箱への移動をプレビューし、確認した計画を実行する。",
 	"command.openHome": "ホームを開く",
 	"command.openNoteList": "ノート一覧を開く",
 	"command.openRunList": "コマンド一覧を開く",

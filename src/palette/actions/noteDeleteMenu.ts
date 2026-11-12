@@ -1,10 +1,11 @@
-import { Notice, TFile, type App } from "obsidian";
+import { Notice, type TFile, type App } from "obsidian";
 import { t } from "src/i18n";
 import { collectVaultFiles } from "src/palette/actions/resultFile";
 import type { PaletteResult } from "src/palette/results";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { openConfirmModal } from "src/ui/confirmModal";
 import { ICONS } from "src/ui/icons";
+import { trashNotes } from "src/palette/trashNotes";
 
 /** Markdown ノートの結果だけを重複なく集める。 */
 function resolveNotes(app: App, results: readonly PaletteResult[]): TFile[] {
@@ -45,33 +46,26 @@ export function addNoteDeleteMenuItem(
 							: t("noteDelete.confirm.body.multiple", { count }),
 					],
 					action: t("noteDelete.confirm.action"),
-					onConfirm: () => void trashNotes(app, notes, onResultsChanged),
+					onConfirm: () => void trashAndNotify(app, notes, onResultsChanged),
 				}),
 			),
 	);
 }
 
 /** 失敗があっても残りのノートを処理し、結果を通知する。 */
-async function trashNotes(
+async function trashAndNotify(
 	app: App,
 	notes: readonly TFile[],
 	onResultsChanged?: () => void,
 ): Promise<void> {
-	let trashed = 0;
-	const failures: string[] = [];
-	for (const note of notes) {
-		try {
-			const current = app.vault.getAbstractFileByPath(note.path);
-			if (!(current instanceof TFile) || current.extension.toLocaleLowerCase() !== "md") {
-				throw new Error(t("noteDelete.error.missing"));
-			}
-			await app.fileManager.trashFile(current);
-			trashed += 1;
-		} catch (error) {
-			const reason = error instanceof Error ? error.message : String(error);
-			failures.push(`${note.path}: ${reason}`);
-		}
-	}
+	const results = await trashNotes(
+		app,
+		notes.map((note) => note.path),
+	);
+	const trashed = results.filter((result) => result.result === "trashed").length;
+	const failures = results
+		.filter((result) => result.result === "failed")
+		.map((result) => `${result.path}: ${result.reason}`);
 
 	if (trashed > 0) onResultsChanged?.();
 	if (failures.length === 0) {
