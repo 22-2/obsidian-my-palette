@@ -1,6 +1,6 @@
 import { Notice, type App, type TFile } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { readList } from "src/properties/propertyList";
 import type { EditResult } from "src/properties/propertyInputSelector";
 import { typedNewValue, type NewValueRules } from "src/core/newValue";

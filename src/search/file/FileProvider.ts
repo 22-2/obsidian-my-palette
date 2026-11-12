@@ -28,7 +28,7 @@ import {
 	hasPositiveQueryTerms,
 	searchFuzzyQuery,
 	searchFuzzyQueryWithFieldScores,
-} from "src/search/fuzzyQuery";
+} from "src/core/fuzzyQuery";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { fileIcon } from "src/ui/icons";
 

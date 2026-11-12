@@ -6,7 +6,7 @@ import {
 } from "src/search/excludedFolders";
 import type { RelatedFileResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
-import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { ICONS } from "src/ui/icons";
 
 /** アクティブなノートの、発リンクの重複しない行き先、または被リンクの元のノートを探す。 */

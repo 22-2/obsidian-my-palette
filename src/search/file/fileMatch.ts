@@ -1,13 +1,13 @@
 import type { TFile } from "obsidian";
 import fuzzysort from "fuzzysort";
 import { matchingTags } from "src/search/file/fileTags";
-import { matchPreparer } from "src/search/kana";
-import { positiveQueryTerms } from "src/search/query/searchQuery";
+import { matchPreparer } from "src/core/kana";
+import { positiveQueryTerms } from "src/core/searchQuery";
 import {
 	fuzzyMatchCoverage,
 	hasContiguousQueryMatch,
 	type FuzzyQueryFieldMatch,
-} from "src/search/fuzzyQuery";
+} from "src/core/fuzzyQuery";
 
 export interface SortableFileEntry {
 	path: string;

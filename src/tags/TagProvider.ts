@@ -1,7 +1,7 @@
 import type { App } from "obsidian";
 import type { TagResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
-import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { tagKey } from "src/core/tagKey";
 import { ICONS } from "src/ui/icons";
 import { t } from "src/i18n";

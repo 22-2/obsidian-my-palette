@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { foldKana } from "src/search/kana";
-import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { foldKana } from "src/core/kana";
+import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 
 describe("折りかな", () => {
 	it("ひらがなをカタカナに変換し、長さを維持します", () => {

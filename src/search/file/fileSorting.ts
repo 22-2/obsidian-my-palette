@@ -11,7 +11,7 @@ import {
 	type SortableFileEntry,
 } from "src/search/file/fileMatch";
 import { isUserIgnoredPathWithFilters } from "src/ignored-notes/ignoredPathMatching";
-import { positiveTermBranches } from "src/search/query/searchQuery";
+import { positiveTermBranches } from "src/core/searchQuery";
 
 // 既存のモジュールの公開を保つ。一致のデータモデルは比較関数の外に置くので、将来のプロバイダーが
 // 並べ替えの実装を読み込まずにシグナルを作れる。

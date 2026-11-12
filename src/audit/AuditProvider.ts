@@ -4,7 +4,7 @@ import { auditExclusions, auditVault } from "src/audit/auditSnapshot";
 import type { AuditKind, AuditReport } from "src/audit/vaultAudit";
 import type { AuditResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
-import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { formatSize } from "src/core/fileSize";
 import { countLabel } from "src/core/countLabel";
 import type { MyPaletteSettings } from "src/settings/model";

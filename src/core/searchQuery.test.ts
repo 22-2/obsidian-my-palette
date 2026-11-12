@@ -4,7 +4,7 @@ import {
 	parseSearchQuery,
 	positiveQueryTerms,
 	positiveTermBranches,
-} from "src/search/query/searchQuery";
+} from "src/core/searchQuery";
 
 const term = (text: string, exact = false) => ({ kind: "term", text, exact });
 

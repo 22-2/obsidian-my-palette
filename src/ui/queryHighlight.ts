@@ -1,5 +1,5 @@
 import fuzzysort from "fuzzysort";
-import { positiveTermBranches } from "src/search/query/searchQuery";
+import { positiveTermBranches } from "src/core/searchQuery";
 
 interface BranchHighlight {
 	indexes: Set<number>;

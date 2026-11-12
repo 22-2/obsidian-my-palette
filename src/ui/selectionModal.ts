@@ -1,8 +1,8 @@
 import { App, setIcon, setTooltip } from "obsidian";
-import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { BaseSuggestModal, type SuggestModalProps } from "src/ui/baseSuggestModal";
 import { matchedQueryIndexes } from "src/ui/queryHighlight";
-import { matchPreparer } from "src/search/kana";
+import { matchPreparer } from "src/core/kana";
 
 export interface SelectionItem {
 	label: string;

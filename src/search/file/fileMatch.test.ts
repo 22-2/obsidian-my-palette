@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createFileMatch, fileSearchKeys, type FileSearchEntry } from "src/search/file/fileMatch";
-import { searchFuzzyQueryWithFieldScores } from "src/search/fuzzyQuery";
+import { searchFuzzyQueryWithFieldScores } from "src/core/fuzzyQuery";
 
 function entry(overrides: Partial<FileSearchEntry> = {}): FileSearchEntry {
 	return {

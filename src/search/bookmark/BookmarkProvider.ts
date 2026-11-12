@@ -6,7 +6,7 @@ import {
 } from "src/search/excludedFolders";
 import type { BookmarkResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
-import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import {
 	BOOKMARK_PATH_SEPARATOR,
 	getBookmarksInstance,

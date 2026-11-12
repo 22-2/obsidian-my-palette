@@ -6,7 +6,7 @@ import {
 	propertyKindOf,
 } from "src/properties/propertyKind";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
-import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { ICONS } from "src/ui/icons";
 import { getMetadataTypeManager, type VaultPropertyInfo } from "src/platform/obsidianInternals";
 import { t } from "src/i18n";

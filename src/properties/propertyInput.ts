@@ -1,6 +1,6 @@
 import type { PropertyKind } from "src/palette/results";
 import { formatPropertyValue } from "src/properties/propertyKind";
-import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { ICONS } from "src/ui/icons";
 import { t } from "src/i18n";
 

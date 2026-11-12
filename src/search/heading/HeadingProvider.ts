@@ -2,7 +2,7 @@ import type { App, HeadingCache, TFile } from "obsidian";
 import { t } from "src/i18n";
 import type { HeadingResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
-import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { ICONS } from "src/ui/icons";
 
 /** 元のノートの見出しを文書の順に並べ、クエリがあれば見出しの文字列で絞り込む。 */

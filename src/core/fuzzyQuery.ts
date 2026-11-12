@@ -1,11 +1,11 @@
 import fuzzysort from "fuzzysort";
-import { matchPreparer } from "src/search/kana";
+import { matchPreparer } from "src/core/kana";
 import {
 	parseSearchQuery,
 	positiveTermBranches,
 	type QueryNode,
 	type QueryTerm,
-} from "src/search/query/searchQuery";
+} from "src/core/searchQuery";
 
 export interface FuzzyQueryMatch<T> {
 	obj: T;

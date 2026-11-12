@@ -4,7 +4,7 @@ import {
 	hasContiguousQueryMatch,
 	searchFuzzyQuery,
 	searchFuzzyQueryWithFieldScores,
-} from "src/search/fuzzyQuery";
+} from "src/core/fuzzyQuery";
 
 const items = ["alpha beta", "alpha gamma", "delta beta", "omega"];
 

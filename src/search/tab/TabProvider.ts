@@ -1,7 +1,7 @@
 import { TFile, type App, type WorkspaceLeaf } from "obsidian";
 import type { TabResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
-import { searchFuzzyQuery } from "src/search/fuzzyQuery";
+import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 
 /** メインのエディター領域のタブ。ポップアウトのウィンドウ内のものも含む。サイドバーは除く。 */
 function getMainAreaLeaves(app: App): WorkspaceLeaf[] {

@@ -1,5 +1,5 @@
 import fuzzysort from "fuzzysort";
-import { allQueryTerms, positiveQueryTerms } from "src/search/query/searchQuery";
+import { allQueryTerms, positiveQueryTerms } from "src/core/searchQuery";
 
 function normalizedTag(value: unknown): string | undefined {
 	if (typeof value !== "string") return undefined;

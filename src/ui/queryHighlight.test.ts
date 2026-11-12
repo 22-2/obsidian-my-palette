@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { matchPreparer } from "src/search/kana";
+import { matchPreparer } from "src/core/kana";
 import { matchedQueryIndexes } from "src/ui/queryHighlight";
 
 describe("クエリの強調表示", () => {
