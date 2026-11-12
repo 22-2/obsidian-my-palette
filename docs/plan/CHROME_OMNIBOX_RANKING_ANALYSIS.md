@@ -578,9 +578,9 @@ scored_history_match_unittest.cc では次が確認されています。
 
 ### 現在の実装で既に Chrome 的な部分
 
-src/search/fuzzyQuery.ts は、query を pipe 区切りの OR branch と whitespace 区切りの AND term に分けます。各 term を basename、path、combined text、alias、tag へ検索し、候補が全 term を満たす branch を採用します。さらに fieldScores を分けて返すので、単一の総合 score だけでなく「どのフィールドが寄与したか」を後段で選べます。
+src/core/fuzzyQuery.ts は、query を pipe 区切りの OR branch と whitespace 区切りの AND term に分けます。各 term を basename、path、combined text、alias、tag へ検索し、候補が全 term を満たす branch を採用します。さらに fieldScores を分けて返すので、単一の総合 score だけでなく「どのフィールドが寄与したか」を後段で選べます。
 
-src/search/file/fileSorting.ts は、次の段階を分けています。
+src/features/search/file/fileSorting.ts は、次の段階を分けています。
 
 - ignored-first。
 - complete contiguous match。

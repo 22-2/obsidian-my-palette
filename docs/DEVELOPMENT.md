@@ -2,7 +2,9 @@
 
 My PaletteはTypeScriptで書かれ、esbuildでバンドルされます。ソースコードは`src/`以下に機能ごとに整理されています。検索、設定、Obsidianによる除外対象ファイルの処理に関する純粋ロジックの単体テストは、それぞれのソースファイルの近くに置いています。
 
-監査、プロパティ、タグの検索プロバイダーは、それぞれ`src/audit/`、`src/properties/`、`src/tags/`にあります。その他の検索プロバイダーと共通の検索処理は`src/search/`に置きます。ノートの移動とゴミ箱への移動は、パレット以外からも使えるように`src/move/`と`src/trash/`にまとめています。パレットに固有の画面や操作の組み立ては`src/palette/`に置きます。
+`src/`は層に分かれていて、下の層は上の層を import しません。上から順に、`app/`(コマンド・イベント・CLIの登録とProviderの生成)、`settings/`と`features/`、`ui/`(汎用のUI部品)、`platform/`(Obsidianの内部API・OS・CLI・外部アプリとの境界)、`core/`と`i18n/`(他の層に依存しない型と純粋なロジック、UIの文言)です。新しいファイルは、import する先のうち最も上の層か、それより上の層に置きます。依存の向きはESLintの`no-restricted-imports`で検査します。テストと、層をまたいで組み立てる`src/ui/testing/`は対象外です。
+
+`features/`には機能ごとのディレクトリがあります。パレットの画面と結果の操作は`features/palette/`、パレット以外の検索プロバイダーと共通の検索処理は`features/search/`、監査・プロパティ・タグは`features/audit/`・`features/properties/`・`features/tags/`に置きます。ノートの移動とゴミ箱への移動は、パレット以外からも使えるように`features/move/`と`features/trash/`にまとめています。
 
 必要な環境: Node.js、pnpm。
 

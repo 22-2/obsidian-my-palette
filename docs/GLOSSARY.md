@@ -183,7 +183,7 @@ PaletteとSelectorの総称として新しい名詞は作らない。両方を�
 
 - 設定画面: `src/settings/settingPages.ts`、`src/settings/integrationSettings.ts`、`src/settings/modeSettingControl.ts`
 - ショートカット表: `src/settings/shortcutsTable.ts`(`SCOPE_NAMES`、`hotkeyScopeLabel`)、`src/core/hotkeys.ts`(`HOTKEY_ACTIONS`)
-- モード名: `src/palette/modes.ts`(`PALETTE_MODES`)
+- モード名: `src/core/modes.ts`(`PALETTE_MODES`)
 - コマンド名: `src/app/registerCommands.ts`
-- オプションメニューのスイッチ: `src/ui/panelSwitch.ts`、`src/palette/ignoredToggle.ts`
+- オプションメニューのスイッチ: `src/ui/panelSwitch.ts`、`src/features/palette/ignoredToggle.ts`
 - 利用者向けの説明: `README.md`

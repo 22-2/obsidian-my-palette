@@ -133,7 +133,7 @@ Obsidian 標準の「ホットキー」設定から、利用者がこのコマ�
 
 ### 5.1 ナビゲーション（Home とモード）
 
-Raycast の Root Search にならい、パレットは「Home → モード」の2段のナビゲーションスタックで動く。モードの定義（エイリアス、タイトル、アイコン、プレースホルダ）は `src/palette/modes.ts` に集約する。
+Raycast の Root Search にならい、パレットは「Home → モード」の2段のナビゲーションスタックで動く。モードの定義（エイリアス、タイトル、アイコン、プレースホルダ）は `src/core/modes.ts` に集約する。
 
 | エイリアス | モード          | 内部モード / Everything 範囲 |
 | ---------- | --------------- | ---------------------------- |
@@ -575,124 +575,23 @@ interface MyPaletteSettings {
 
 ```text
 src/
-├── main.ts
-├── settings.ts
-├── app/
-│   ├── createPaletteProviders.ts
-│   ├── paletteOpener.ts
-│   ├── registerCommands.ts
-│   └── registerEvents.ts
-├── ignored-notes/
-│   ├── ignoredNoteEntry.ts
-│   ├── ignoredNoteIndex.ts
-│   ├── ignoredNoteMaterializer.ts
-│   ├── ignoredNotePath.ts
-│   ├── ignoredNoteScanner.ts
-│   ├── ignoredPathMatching.ts
-│   └── ignoredPaths.ts
-├── moc-relateds/
-│   ├── mocInsertion.ts
-│   ├── mocRelateds.ts
-│   └── mocRelatedsCore.ts
-├── rename/
-│   ├── BulkRenameModal.ts
-│   └── renamePlan.ts
-├── palette/
-│   ├── backgroundResultActions.ts
-│   ├── executePaletteResult.ts
-│   ├── inputParser.ts
-│   ├── MoveFileModal.ts
-│   ├── openTargets.ts
-│   ├── PaletteModal.ts
-│   ├── PaletteSearchSession.ts
-│   ├── resultActions.ts
-│   ├── resultPresentation.ts
-│   ├── results.ts
-│   ├── searchHistory.ts
-│   ├── searchHistoryService.ts
-│   ├── searchHistoryStore.ts
-│   ├── actions/
-│   │   └── resultContextMenu.ts
-│   ├── components/
-│   │   └── PaletteHistoryControls.ts
-│   ├── surfaces/
-│   │   ├── fileListRefresh.ts
-│   │   ├── paletteLeafTracker.ts
-│   │   ├── PaletteTableView.ts
-│   │   ├── PaletteView.ts
-│   │   └── paletteViewTypes.ts
-│   └── table/
-│       ├── PaletteTableControls.ts
-│       └── paletteTableModel.ts
-├── platform/
-│   ├── desktopAdapter.ts
-│   ├── pathClipboard.ts
-│   └── vscode.ts
-├── search/
-│   ├── excludedFolders.ts
-│   ├── fuzzyQuery.ts
-│   ├── PaletteProvider.ts
-│   ├── bookmark/
-│   │   └── BookmarkProvider.ts
-│   ├── command/
-│   │   ├── CommandProvider.ts
-│   │   ├── commandSorting.ts
-│   │   ├── recentCommandService.ts
-│   │   └── recentCommandStore.ts
-│   ├── everything/
-│   │   ├── EverythingHttpClient.ts
-│   │   ├── EverythingProvider.ts
-│   │   └── everythingQuery.ts
-│   ├── file/
-│   │   ├── fileMatch.ts
-│   │   ├── FileProvider.ts
-│   │   ├── fileSorting.ts
-│   │   ├── fileTags.ts
-│   │   └── fileUsageHistory.ts
-│   ├── related/
-│   │   └── RelatedFileProvider.ts
-│   └── smart/
-│       └── SmartConnectionProvider.ts
-├── settings/
-│   ├── fileSortPriorityControl.ts
-│   ├── fileSortPriorityOrdering.ts
-│   ├── mergeSettings.ts
-│   ├── model.ts
-│   ├── paletteDisplaySettingsStore.ts
-│   ├── settingPages.ts
-│   ├── settingsHost.ts
-│   ├── settingsStore.ts
-│   └── settingTab.ts
-├── shared/
-│   ├── externalFiles.ts
-│   ├── frontmatter.ts
-│   ├── noteRelations.ts
-│   ├── pathDisplay.ts
-│   ├── recentIdStore.ts
-│   └── vaultIdentity.ts
-├── tags/
-│   ├── insertTags.ts
-│   ├── recentTagStore.ts
-│   ├── tagChoices.ts
-│   ├── tagInsertionMenu.ts
-│   ├── TagSelectionModal.ts
-│   └── tagSuggestions.ts
-├── ui/
-│   ├── baseSuggestModal.ts
-│   ├── extendedSelection.ts
-│   ├── MultiSelectModal.ts
-│   ├── paletteHelpModal.ts
-│   ├── queryHighlight.ts
-│   ├── searchHistorySuggest.ts
-│   ├── selectionModal.ts
-│   ├── suggestionPanel.ts
-│   └── testing/
-│       └── obsidianDom.ts
-└── workspace/
-    ├── openLeaf.ts
-    └── external-markdown/
-        └── openExternalMarkdown.ts
+├── main.ts          Plugin のライフサイクルと、ストアとサービスの組み立て
+├── app/             コマンド・イベント・CLI の登録、Provider の生成
+├── features/        機能ごとのディレクトリ
+│   ├── palette/         パレットの画面(Modal / View / Table)と結果の操作
+│   ├── search/          検索 Provider(file・command・everything・bookmark など)
+│   ├── tags/ properties/ audit/       タグ・プロパティ・監査の検索と操作
+│   ├── merge/ move/ rename/ trash/    ノートの統合・移動・名前の変更・ゴミ箱
+│   ├── moc-relateds/    MOC の Relateds の挿入と削除
+│   └── ignored-notes/   Obsidian-excluded files の走査と索引
+├── settings/        設定の読み込み・保存・正規化と設定画面
+├── ui/              汎用の UI 部品(メニュー、モーダル、選択パネル)
+├── platform/        Obsidian の内部 API・OS・CLI・外部アプリとの境界
+├── core/            他の層に依存しない型と純粋なロジック(結果、モード、設定モデル、検索クエリ)
+└── i18n/            UI の文言
 ```
+
+依存は下の層から上の層へ向かわない。層は `core`・`i18n` < `platform` < `ui` < `settings`・`features` < `app` の順で、ESLint の `no-restricted-imports` が検査する。
 
 ### 11.2 責務
 
@@ -705,7 +604,7 @@ src/
 | `app/registerCommands`        | Obsidianコマンドの登録と実行条件                                           |
 | `app/registerEvents`          | ViewとVaultイベントの登録                                                  |
 | `app/createPaletteProviders`  | Providerの生成とモードregistryの構築                                       |
-| `workspace/openLeaf`          | pinned状態を含む結果アクションのleaf選択規則                               |
+| `platform/openLeaf`           | pinned状態を含む結果アクションのleaf選択規則                               |
 | `PaletteHistoryControls`      | Modal / ItemView共通の検索履歴・ヘルプ操作とイベントのライフサイクル       |
 | `resultContextMenu`           | Modal / ItemView共通の結果メニュー構築                                     |
 | `PaletteSearchSession`        | 入力解析、Provider検索、世代番号、キャンセル、履歴コミット                 |
