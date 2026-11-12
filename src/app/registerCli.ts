@@ -5,6 +5,7 @@ import { moveCliApi } from "src/palette/moveCli";
 import { trashCliApi } from "src/palette/trashCli";
 import { tagCliApi } from "src/tags/tagCli";
 import { listPropertyCliApi } from "src/properties/listPropertyCli";
+import { mergeCliApi } from "src/merge/mergeCli";
 import type MyPalettePlugin from "src/main";
 import { logger } from "src/shared/logger";
 import { t } from "src/i18n";
@@ -27,6 +28,7 @@ const CLI_APIS: readonly CliApi[] = [
 	trashCliApi,
 	tagCliApi,
 	listPropertyCliApi,
+	mergeCliApi,
 ];
 
 /** プラグイン ID だけで API の一覧を出せるので、README を見なくても呼び出し先を見つけられる。 */

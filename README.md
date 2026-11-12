@@ -198,6 +198,8 @@ MOC remove selector も、同じ判定でつながっているノートに印（
 
 `obsidian my-palette:edit-list-property` は `paths`、プロパティ名の `key`、`add` と `remove` の文字列配列で、リスト型プロパティを編集します。変更前後を確認し、`plan` と `apply` を付けて実行します。文字列リスト以外の値は変更せず、タグには `edit-tags` を使います。
 
+`obsidian my-palette:merge-notes` は統合元の `paths` と統合先の `target` を指定します。プレビューには統合元・統合先、プロパティの衝突、リンクを付け替えるノートを出します。`plan` と `apply` で実行し、成功すると統合元をゴミ箱へ移動します。`no-aliases` を付けると統合元の名前を aliases に追加しません。
+
 `obsidian my-palette:audit kind=<kind>` で同じ一覧を JSON で出力します。スクリプトや AI エージェントから使うためのものです。`kind` は `orphaned-files`・`broken-links`・`empty-files`・`empty-folders` のどれかで、`glob=<pattern>` で一致するパス（壊れたリンクでは参照元のノート）だけに絞ります。壊れたリンクの行番号は1から数えます。
 
 `trash` を付けない限り一覧を出すだけです。`trash` には `glob` が必須なので、指定を忘れて保管庫全体を動かすことはありません。そのときは各項目に `trashed`・`skipped`・`failed` の結果が付きます。`obsidian my-palette` で使える CLI コマンドの一覧を出します。
