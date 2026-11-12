@@ -84,3 +84,20 @@ test("行をクリックしたあとも、上下キーで行を移動できる",
 	await page.keyboard.press("ArrowDown");
 	await expect.poll(activeIndex).toBe(1);
 });
+
+test("メニューで D を押すと、削除の確認パレットが開き、押しただけでは削除されない", async ({
+	obsidian,
+}) => {
+	const page = await openPaletteWith(obsidian, "Trash me");
+	await expect(page.locator(MODAL_ROW).first()).toContainText("Trash me");
+	await page.locator(MODAL_ROW).first().click({ button: "right" });
+	// 絞り込みの欄がある長いメニューは入力モードで開く。アクセスキーは選択モードで効く。
+	await page.keyboard.press("ArrowDown");
+	await expect(
+		menuItems(page).filter({ hasText: `${t("noteDelete.menu.single")} (D)` }),
+	).toBeVisible();
+	await page.keyboard.press("d");
+
+	await expect(confirmPalette(page)).toBeVisible();
+	expect(await obsidian.exists(NOTE)).toBe(true);
+});

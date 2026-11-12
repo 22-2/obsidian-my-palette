@@ -39,6 +39,14 @@ describe("アクセスキー", () => {
 		]);
 	});
 
+	it("ノートとファイルの削除は D で、ほかの操作と重ならない", () => {
+		expect(keysOf("delete-note", "delete-file")).toEqual(["D", "D"]);
+		const withD = Object.entries(ACCESS_KEYS)
+			.filter(([, key]) => key === "D")
+			.map(([id]) => id);
+		expect(withD).toEqual(["delete-note", "delete-file"]);
+	});
+
 	it("タブ、プロパティ、タグのメニューでは、キーが重ならない", () => {
 		const tabMenu = keysOf("focus-tab", "copy-file-name", "copy-relative-path", "add-tags");
 		const propertyMenu = keysOf(
