@@ -1,6 +1,6 @@
+import type { CliApi } from "src/platform/cliApi";
 import { TFile } from "obsidian";
-import type { CliApi } from "src/app/registerCli";
-import { cliPlanHash, cliTargetPaths, requireCliPlan } from "src/app/cliPlans";
+import { cliPlanHash, cliTargetPaths, requireCliPlan } from "src/platform/cliPlans";
 import { trashNotes } from "src/trash/trashNotes";
 import { t } from "src/i18n";
 

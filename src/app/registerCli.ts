@@ -1,4 +1,4 @@
-import type { CliData, CliFlags } from "obsidian";
+import type { CliApi } from "src/platform/cliApi";
 import { auditCliApi } from "src/audit/auditCli";
 import { renameCliApi } from "src/rename/renameCli";
 import { moveCliApi } from "src/move/moveCli";
@@ -12,17 +12,6 @@ import { renameTagCliApi, deleteTagsCliApi } from "src/tags/globalTagCli";
 import type MyPalettePlugin from "src/main";
 import { logger } from "src/core/logger";
 import { t } from "src/i18n";
-
-/**
- * Obsidian CLI の API。`obsidian my-palette:<action> ...` として登録される。
- * `run` が返した値は JSON として出力する。
- */
-export interface CliApi {
-	action: string;
-	description: string;
-	flags: CliFlags;
-	run: (plugin: MyPalettePlugin, params: CliData) => Promise<unknown>;
-}
 
 const CLI_APIS: readonly CliApi[] = [
 	auditCliApi,

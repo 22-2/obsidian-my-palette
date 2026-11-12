@@ -1,6 +1,6 @@
+import type { CliApi } from "src/platform/cliApi";
 import { getFrontMatterInfo, parseYaml, type App, type CliData, type TFile } from "obsidian";
-import type { CliApi } from "src/app/registerCli";
-import { cliPlanHash, requireCliPlan } from "src/app/cliPlans";
+import { cliPlanHash, requireCliPlan } from "src/platform/cliPlans";
 import { t } from "src/i18n";
 import { normalizeTagName, type InlineTagPosition } from "src/tags/tagRename";
 import {

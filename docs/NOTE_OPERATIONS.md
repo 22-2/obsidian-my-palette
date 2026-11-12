@@ -15,7 +15,7 @@
 | MOC の Relateds のリンク   | [mocRelatedsCore.ts](../src/moc-relateds/mocRelatedsCore.ts)、[mocOperations.ts](../src/moc-relateds/mocOperations.ts) | `insert-moc-relateds`、`remove-moc-relateds` |
 | Vault 監査                 | [auditActions.ts](../src/audit/auditActions.ts)                                                                        | `audit`                                      |
 
-パレットのファイル対象は [resultFile.ts](../src/palette/actions/resultFile.ts) で解決・重複除去する。画面の組み立ては [resultContextMenu.ts](../src/palette/actions/resultContextMenu.ts)、CLI の登録は [registerCli.ts](../src/app/registerCli.ts)、対象と計画の検証は [cliPlans.ts](../src/app/cliPlans.ts) にある。操作ごとに対象条件が異なるため、共通の対象収集後もそれぞれの条件を確認する。
+パレットのファイル対象は [resultFile.ts](../src/palette/actions/resultFile.ts) で解決・重複除去する。画面の組み立ては [resultContextMenu.ts](../src/palette/actions/resultContextMenu.ts)、CLI の登録は [registerCli.ts](../src/app/registerCli.ts)、対象と計画の検証は [cliPlans.ts](../src/platform/cliPlans.ts) にある。操作ごとに対象条件が異なるため、共通の対象収集後もそれぞれの条件を確認する。
 
 ## CLI の共通手順
 

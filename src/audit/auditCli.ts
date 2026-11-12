@@ -1,6 +1,6 @@
+import type { CliApi } from "src/platform/cliApi";
 import type { CliData } from "obsidian";
 import picomatch from "picomatch";
-import type { CliApi } from "src/app/registerCli";
 import { canTrash, trashAuditItems, type AuditActionResult } from "src/audit/auditActions";
 import { auditVault } from "src/audit/auditSnapshot";
 import {
