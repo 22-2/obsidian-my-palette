@@ -188,6 +188,8 @@ MOC remove selector も、同じ判定でつながっているノートに印（
 
 ### Obsidian CLI
 
+操作の実装場所、各 API の対象条件、プレビューと部分失敗の扱いは [ノートとファイルの操作](docs/NOTE_OPERATIONS.md) にまとめています。
+
 `obsidian my-palette:rename` は Vault 内のファイル名変更をプレビューできます。`paths` に対象の Vault 相対パスの JSON 配列、`rule` に検索/置換を指定します。まず `apply` なしで実行し、返された `items` と `blocked` を確認します。実行するときは同じ引数に `apply` とプレビューの `plan` を加えます。計画が変わった場合や名前が衝突する場合は実行しません。結果には各ファイルの成功・失敗と理由を返します。`regex`、`ignore-case`、`first` で検索方法を切り替えられます。JSON 引数の引用方法は利用するシェルに合わせてください。
 
 `obsidian my-palette:move` は同じ `paths` と `folder`（Vault 相対パス、ルートは `/`）で移動をプレビューします。名前変更と同じように `plan` を確認してから `apply` で実行します。索引済みファイルのみが対象です。
