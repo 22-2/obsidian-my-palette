@@ -193,7 +193,7 @@ export function searchFuzzyQueryWithFieldScores<T>(
 		.sort((a, b) => b.score - a.score);
 }
 
-/** `src/search/query/searchQuery` に記述された、共通の検索構文を適用する。 */
+/** `src/features/search/query/searchQuery` に記述された、共通の検索構文を適用する。 */
 export function searchFuzzyQuery<T>(
 	query: string,
 	items: readonly T[],

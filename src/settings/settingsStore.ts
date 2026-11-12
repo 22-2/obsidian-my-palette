@@ -1,11 +1,11 @@
 import type { SearchHistoryEntry } from "src/core/searchHistoryTypes";
 import type MyPalettePlugin from "src/main";
-import { normalizeRecentCommandIds } from "src/search/command/recentCommandStore";
+import { normalizeRecentCommandIds } from "src/features/search/command/recentCommandStore";
 import { mergeSettings } from "src/settings/mergeSettings";
 import {
 	parseStoredSearchHistoryEntries,
 	pruneStoredSearchHistory,
-} from "src/palette/searchHistory";
+} from "src/features/palette/searchHistory";
 
 export interface LoadedPluginSettings {
 	legacySearchHistoryEntries: SearchHistoryEntry[];

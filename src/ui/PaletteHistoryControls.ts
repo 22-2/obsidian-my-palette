@@ -6,7 +6,7 @@ import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/core/results";
 import type { PaletteSurface } from "src/settings/model";
 import { PaletteHelpModal } from "src/ui/paletteHelpModal";
-import { availableModes } from "src/palette/modes";
+import { availableModes } from "src/features/palette/modes";
 import { SearchHistorySuggest } from "src/ui/searchHistorySuggest";
 import { DEFAULT_HOTKEYS, formatHotkey, matchesHotkey } from "src/ui/hotkeys";
 import type { MenuChoice } from "src/ui/panelChoice";
@@ -19,7 +19,7 @@ import {
 	PALETTE_SORT_KEYS,
 	type PaletteSort,
 	type PaletteSortKey,
-} from "src/palette/paletteSorting";
+} from "src/features/palette/paletteSorting";
 
 interface PaletteHistoryContext {
 	query: string;

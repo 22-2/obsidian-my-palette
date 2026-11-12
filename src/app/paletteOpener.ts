@@ -1,17 +1,17 @@
 import type { PaletteModeId } from "src/core/results";
 import type { App, WorkspaceLeaf } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import { PaletteModal, type PaletteModalOptions } from "src/palette/PaletteModal";
-import { shouldRestore, type PaletteRestoreState } from "src/palette/restoreState";
-import { paletteModeAlias } from "src/palette/modes";
-import type { FixedPaletteMode } from "src/palette/PaletteSearchSession";
-import { PaletteView } from "src/palette/surfaces/PaletteView";
+import { PaletteModal, type PaletteModalOptions } from "src/features/palette/PaletteModal";
+import { shouldRestore, type PaletteRestoreState } from "src/features/palette/restoreState";
+import { paletteModeAlias } from "src/features/palette/modes";
+import type { FixedPaletteMode } from "src/features/palette/PaletteSearchSession";
+import { PaletteView } from "src/features/palette/surfaces/PaletteView";
 import {
 	PALETTE_TABLE_VIEW_TYPE,
 	PALETTE_VIEW_TYPE,
 	type PaletteViewType,
-} from "src/palette/surfaces/paletteViewTypes";
-import type { PaletteTableState } from "src/palette/table/paletteTableModel";
+} from "src/features/palette/surfaces/paletteViewTypes";
+import type { PaletteTableState } from "src/features/palette/table/paletteTableModel";
 
 export interface NewPaletteViewOptions {
 	input?: string;

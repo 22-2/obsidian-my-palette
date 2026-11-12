@@ -12,22 +12,25 @@ import { registerCli } from "src/app/registerCli";
 import { registerPluginCommands } from "src/app/registerCommands";
 import { registerPluginEvents } from "src/app/registerEvents";
 import { openExternalMarkdown } from "src/workspace/external-markdown/openExternalMarkdown";
-import { EverythingClient } from "src/search/everything/EverythingClient";
+import { EverythingClient } from "src/features/search/everything/EverythingClient";
 import { getResultFilePath, type PaletteResult, type SearchHistoryResult } from "src/core/results";
-import { formatSearchHistoryInput, SEARCH_HISTORY_MAX_ENTRIES } from "src/palette/searchHistory";
+import {
+	formatSearchHistoryInput,
+	SEARCH_HISTORY_MAX_ENTRIES,
+} from "src/features/palette/searchHistory";
 import {
 	loadPluginSettings,
 	savePluginSettings,
 	type LoadedPluginSettings,
 } from "src/settings/settingsStore";
-import { FileUsageHistory } from "src/search/file/fileUsageHistory";
-import { RecentCommandService } from "src/search/command/recentCommandService";
-import { SearchHistoryService } from "src/palette/searchHistoryService";
-import { RecentTagStore } from "src/tags/recentTagStore";
+import { FileUsageHistory } from "src/features/search/file/fileUsageHistory";
+import { RecentCommandService } from "src/features/search/command/recentCommandService";
+import { SearchHistoryService } from "src/features/palette/searchHistoryService";
+import { RecentTagStore } from "src/features/tags/recentTagStore";
 import { PaletteDisplaySettingsStore } from "src/settings/paletteDisplaySettingsStore";
 import { IntegrationAvailability } from "src/app/integrationAvailability";
-import { getVaultRootPath } from "src/ignored-notes/ignoredPaths";
-import { openPluginSettings } from "src/search/plugin/pluginSettings";
+import { getVaultRootPath } from "src/features/ignored-notes/ignoredPaths";
+import { openPluginSettings } from "src/features/search/plugin/pluginSettings";
 import "../styles.css";
 import { ICONS } from "src/ui/icons";
 import { debugLog, logger, setDebugLogging } from "src/core/logger";

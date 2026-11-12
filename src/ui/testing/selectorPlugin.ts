@@ -3,7 +3,10 @@ import type { App } from "obsidian";
 import { IntegrationAvailability } from "src/app/integrationAvailability";
 import { DEFAULT_SETTINGS } from "src/settings/model";
 import { PaletteDisplaySettingsStore } from "src/settings/paletteDisplaySettingsStore";
-import { getSearchHistorySuggestions, recordSearchHistory } from "src/palette/searchHistory";
+import {
+	getSearchHistorySuggestions,
+	recordSearchHistory,
+} from "src/features/palette/searchHistory";
 import type { SelectorControls } from "src/ui/selectorControls";
 import { t } from "src/i18n";
 

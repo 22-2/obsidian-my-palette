@@ -28,7 +28,7 @@ import {
 	renderSmartConnectionsIntegration,
 	renderVscodeIntegration,
 } from "src/settings/integrationSettings";
-import { PALETTE_MODES, isModeIntegrationReady } from "src/palette/modes";
+import { PALETTE_MODES, isModeIntegrationReady } from "src/features/palette/modes";
 import { renderModeSetting } from "src/settings/modeSettingControl";
 
 type ControlType = "text" | "toggle" | "slider";

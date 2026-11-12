@@ -1,7 +1,10 @@
 import type MyPalettePlugin from "src/main";
-import { PaletteView } from "src/palette/surfaces/PaletteView";
-import { PaletteTableView } from "src/palette/surfaces/PaletteTableView";
-import { PALETTE_VIEW_TYPE, PALETTE_TABLE_VIEW_TYPE } from "src/palette/surfaces/paletteViewTypes";
+import { PaletteView } from "src/features/palette/surfaces/PaletteView";
+import { PaletteTableView } from "src/features/palette/surfaces/PaletteTableView";
+import {
+	PALETTE_VIEW_TYPE,
+	PALETTE_TABLE_VIEW_TYPE,
+} from "src/features/palette/surfaces/paletteViewTypes";
 
 /**
  * Obsidian のイベントとビューの登録はここに置く。`onload` を、関係のない

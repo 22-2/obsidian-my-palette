@@ -1,5 +1,5 @@
 import { App, Modal, setIcon } from "obsidian";
-import { PALETTE_MODES, paletteModeAlias } from "src/palette/modes";
+import { PALETTE_MODES, paletteModeAlias } from "src/features/palette/modes";
 import type { ModeSettingsMap, PaletteSurface } from "src/settings/model";
 import { DEFAULT_HOTKEYS, formatHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
 import { ICONS } from "src/ui/icons";

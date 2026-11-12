@@ -1,26 +1,26 @@
 import type { App } from "obsidian";
 import type { FileSortPriorities, MyPaletteSettings } from "src/settings/model";
 import type { PaletteMode } from "src/core/results";
-import { EverythingClient } from "src/search/everything/EverythingClient";
-import { EverythingProvider } from "src/search/everything/EverythingProvider";
-import { FileProvider } from "src/search/file/FileProvider";
-import { CommandProvider } from "src/search/command/CommandProvider";
-import { RelatedFileProvider } from "src/search/related/RelatedFileProvider";
-import { HeadingProvider } from "src/search/heading/HeadingProvider";
-import { BookmarkProvider } from "src/search/bookmark/BookmarkProvider";
-import { SmartConnectionProvider } from "src/search/smart/SmartConnectionProvider";
-import { TabProvider } from "src/search/tab/TabProvider";
-import { PluginProvider } from "src/search/plugin/PluginProvider";
-import { SnippetProvider } from "src/search/snippet/SnippetProvider";
-import { TagProvider } from "src/tags/TagProvider";
-import { PropertyProvider } from "src/properties/PropertyProvider";
-import { AuditProvider } from "src/audit/AuditProvider";
+import { EverythingClient } from "src/features/search/everything/EverythingClient";
+import { EverythingProvider } from "src/features/search/everything/EverythingProvider";
+import { FileProvider } from "src/features/search/file/FileProvider";
+import { CommandProvider } from "src/features/search/command/CommandProvider";
+import { RelatedFileProvider } from "src/features/search/related/RelatedFileProvider";
+import { HeadingProvider } from "src/features/search/heading/HeadingProvider";
+import { BookmarkProvider } from "src/features/search/bookmark/BookmarkProvider";
+import { SmartConnectionProvider } from "src/features/search/smart/SmartConnectionProvider";
+import { TabProvider } from "src/features/search/tab/TabProvider";
+import { PluginProvider } from "src/features/search/plugin/PluginProvider";
+import { SnippetProvider } from "src/features/search/snippet/SnippetProvider";
+import { TagProvider } from "src/features/tags/TagProvider";
+import { PropertyProvider } from "src/features/properties/PropertyProvider";
+import { AuditProvider } from "src/features/audit/AuditProvider";
 import type { PaletteProvider } from "src/core/PaletteProvider";
 import {
 	EMPTY_EXCLUDED_FOLDER_SOURCE,
 	type ExcludedFolderSource,
-} from "src/search/excludedFolders";
-import type { FileUsageScoreSource } from "src/search/file/fileUsageHistory";
+} from "src/features/search/excludedFolders";
+import type { FileUsageScoreSource } from "src/features/search/file/fileUsageHistory";
 
 export interface PaletteProviderInstances {
 	fileProvider: FileProvider;

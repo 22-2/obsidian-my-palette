@@ -1,12 +1,15 @@
 import type { PaletteModeId } from "src/core/results";
 import type MyPalettePlugin from "src/main";
-import { insertLinkToMocRelateds, removeLinkInMocRelateds } from "src/moc-relateds/mocRelateds";
-import { MoveFileModal } from "src/move/MoveFileModal";
-import { BulkRenameModal } from "src/rename/BulkRenameModal";
-import { TagRenameModal } from "src/tags/TagRenameModal";
-import { MergeTargetModal } from "src/merge/MergeTargetModal";
-import type { FixedPaletteMode } from "src/palette/PaletteSearchSession";
-import { insertTags } from "src/tags/insertTags";
+import {
+	insertLinkToMocRelateds,
+	removeLinkInMocRelateds,
+} from "src/features/moc-relateds/mocRelateds";
+import { MoveFileModal } from "src/features/move/MoveFileModal";
+import { BulkRenameModal } from "src/features/rename/BulkRenameModal";
+import { TagRenameModal } from "src/features/tags/TagRenameModal";
+import { MergeTargetModal } from "src/features/merge/MergeTargetModal";
+import type { FixedPaletteMode } from "src/features/palette/PaletteSearchSession";
+import { insertTags } from "src/features/tags/insertTags";
 import { t } from "src/i18n";
 
 /**
