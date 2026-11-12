@@ -38,6 +38,8 @@ for (const [surface, command, selector] of [
 			await input.fill(query);
 			await expect(panel).toHaveAttribute("data-mode", mode);
 			const shownInput = mode === "file" ? query : query.slice(query.indexOf(" ") + 1);
+			// Wait for Obsidian's sidebar opening animation before recording its position.
+			await input.click({ trial: true });
 			const bounds = await container.boundingBox();
 			await page.keyboard.down("Alt");
 			await page.keyboard.down("h");
