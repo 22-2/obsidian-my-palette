@@ -57,7 +57,7 @@ it("メタデータが古くてもノートの内容を基に削除する", asyn
 	const { plugin, frontmatter } = fixture();
 	vi.spyOn(plugin.app.metadataCache, "getFileCache").mockReturnValue({
 		frontmatter: { tags: [] },
-	} as never);
+	});
 	const params = { paths: '["note.md"]', remove: '["old"]' };
 	const preview = (await tagCliApi.run(plugin, params)) as { plan: string };
 	const result = await tagCliApi.run(plugin, { ...params, apply: "true", plan: preview.plan });
