@@ -52,9 +52,9 @@ test("the tag context menu offers tag operations and no file operations", async 
 	const titles = await menuItems(page).allTextContents();
 	expect(titles).toEqual(
 		expect.arrayContaining([
-			"タグを検索",
-			"現在のノートに挿入",
-			"タグ名を変更",
+			"タグを検索 (S)",
+			"現在のノートに挿入 (I)",
+			"タグ名を変更 (R)",
 			"タグを全削除",
 		]),
 	);
