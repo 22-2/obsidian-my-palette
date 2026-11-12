@@ -5,6 +5,7 @@ import {
 	MODAL_INPUT,
 	PLUGIN_ID,
 	closePalette,
+	confirmPalette,
 	flipOption,
 	menuItems,
 	openHomeWith,
@@ -300,7 +301,8 @@ test.describe("moving items", () => {
 			.locator(".menu .menu-item")
 			.filter({ hasText: t("audit.menu.trash") })
 			.click();
-		await page.locator(".menu .menu-item.mod-cta").click();
+		await expect(confirmPalette(page)).toBeVisible();
+		await page.keyboard.press("Control+Enter");
 		const remaining = () =>
 			obsidian.evaluateApp(
 				(names) => app.vault.getFiles().filter((file) => names.includes(file.name)).length,
@@ -309,7 +311,7 @@ test.describe("moving items", () => {
 		await expect.poll(remaining).toBe(0);
 	});
 
-	test("Move to trash in the row menu needs a second press", async ({ obsidian }) => {
+	test("Move to trash in the row menu asks for confirmation", async ({ obsidian }) => {
 		const page = await openHomeWith(obsidian, "a orphan");
 		await expect.poll(() => rowLabels(page)).toEqual(["orphan.md"]);
 		await page
@@ -320,12 +322,26 @@ test.describe("moving items", () => {
 			.locator(".menu .menu-item")
 			.filter({ hasText: t("audit.menu.trash") })
 			.click();
-		await expect(page.locator(".menu .menu-item.mod-cta")).toContainText(
-			t("audit.menu.trashConfirm", { what: "ファイル 1 件" }),
+		const confirm = confirmPalette(page);
+		await expect(confirm.locator(".prompt-input")).toHaveAttribute(
+			"placeholder",
+			t("audit.confirm.title", { what: "ファイル 1 件" }),
 		);
+		await page.keyboard.press("Escape");
+		await expect(confirm).toBeHidden();
 		expect(await obsidian.exists("notes/orphan.md")).toBe(true);
-		await page.locator(".menu .menu-item.mod-cta").click();
-		await expect(page.locator(".menu")).toHaveCount(0);
+
+		await page
+			.locator(".my-palette-suggest-modal .suggestion-item")
+			.first()
+			.click({ button: "right" });
+		await page
+			.locator(".menu .menu-item")
+			.filter({ hasText: t("audit.menu.trash") })
+			.click();
+		await expect(confirm).toBeVisible();
+		await page.keyboard.press("Control+Enter");
+		await expect(confirm).toBeHidden();
 		await expect.poll(() => obsidian.exists("notes/orphan.md")).toBe(false);
 		await expect.poll(() => rowLabels(page)).toEqual([]);
 	});

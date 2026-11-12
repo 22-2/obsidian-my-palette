@@ -32,6 +32,9 @@ vi.mock("src/features/palette/actions/bookmarkMenu", () => ({
 vi.mock("src/features/palette/actions/fileMoveMenu", () => ({
 	addFileMoveMenuItem: vi.fn(),
 }));
+vi.mock("src/ui/confirmPalette", () => ({
+	openConfirmPalette: vi.fn(),
+}));
 vi.mock("src/features/palette/actions/noteDeleteMenu", () => ({
 	addNoteDeleteMenuItem: vi.fn(),
 }));

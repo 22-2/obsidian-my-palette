@@ -8,6 +8,7 @@ import {
 import type MyPalettePlugin from "src/main";
 import { addFileMoveMenuItem } from "src/features/palette/actions/fileMoveMenu";
 import { addSelectionHeader } from "src/features/palette/actions/selectionHeader";
+import { openConfirmPalette } from "src/ui/confirmPalette";
 import type { ActionKind } from "src/features/palette/resultActions";
 import { getCopyablePaths } from "src/features/palette/resultPresentation";
 import type {
@@ -137,29 +138,36 @@ function addMoveItems(options: AuditMenuOptions, kind: AuditKind): void {
 	addTrashItem(options, kind);
 }
 
-/** 複数の項目をまとめてゴミ箱に入れるのは元に戻しにくいので、移動には2回押しが必要。 */
+/** 複数の項目をまとめてゴミ箱に入れるのは元に戻しにくいので、確認パレットを経る。 */
 function addTrashItem(
 	{ app, menu, results, onResultsChanged }: AuditMenuOptions,
 	kind: AuditKind,
 ): void {
-	const what = countLabel(results.length, kind === "empty-folders" ? "フォルダー" : "ファイル");
-	menu.addConfirmedItem({
-		title: t("audit.menu.trash"),
-		confirmTitle: t("audit.menu.trashConfirm", { what }),
-		id: "move-to-trash",
-		icon: ICONS.delete,
-		warning: true,
-		...(kind === "empty-folders"
-			? {
-					tooltip: t("audit.menu.trashFolderTooltip"),
-				}
-			: {}),
-		run: () =>
-			void (async () => {
-				const outcome = await trashAuditItems(app, kind, results.map(itemPath));
-				new Notice(describeAuditActionResults(kind, outcome));
-				onResultsChanged?.();
-			})(),
+	const isFolders = kind === "empty-folders";
+	const what = countLabel(results.length, isFolders ? "フォルダー" : "ファイル");
+	const paragraphs = [
+		t("audit.confirm.body"),
+		...(isFolders ? [t("audit.menu.trashFolderTooltip")] : []),
+	];
+	menu.addItem((item) => {
+		item.setTitle(t("audit.menu.trash"))
+			.setIcon(ICONS.delete)
+			.setSearchTerms("move-to-trash")
+			.setWarning(true)
+			.onClick(() =>
+				openConfirmPalette(app, {
+					title: t("audit.confirm.title", { what }),
+					paragraphs,
+					action: t("audit.confirm.action"),
+					onConfirm: () =>
+						void (async () => {
+							const outcome = await trashAuditItems(app, kind, results.map(itemPath));
+							new Notice(describeAuditActionResults(kind, outcome));
+							onResultsChanged?.();
+						})(),
+				}),
+			);
+		if (isFolders) item.setTooltip(t("audit.menu.trashFolderTooltip"));
 	});
 }
 
