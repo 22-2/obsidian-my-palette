@@ -8,6 +8,7 @@ import {
 	type PaletteMode,
 	type PaletteResult,
 	usesSourceNote,
+	type AuditKind,
 } from "src/core/results";
 import {
 	SelectionModal,
@@ -39,7 +40,6 @@ import {
 } from "src/features/palette/paletteSorting";
 import { ignoredToggleOptions, syncIgnoredToggle } from "src/features/palette/ignoredToggle";
 import { createAuditKindChoice, syncAuditKindChoice } from "src/features/palette/auditKindChoice";
-import type { AuditKind } from "src/features/audit/vaultAudit";
 import type { PanelChoice } from "src/ui/panelChoice";
 import type { PanelSwitch } from "src/ui/panelSwitch";
 import { t } from "src/i18n";

@@ -1,9 +1,9 @@
+import type { AuditKind } from "src/core/results";
 import { getLinkpath, normalizePath, type App, type CachedMetadata } from "obsidian";
 import {
 	runAudit,
 	type AuditExclusions,
 	type AuditFile,
-	type AuditKind,
 	type AuditReport,
 	type AuditSnapshot,
 	type UnresolvedLinkOccurrence,

@@ -1,5 +1,5 @@
+import { isAuditKind } from "src/core/results";
 import type { PaletteModeId } from "src/core/results";
-import { isAuditKind } from "src/features/audit/vaultAudit";
 import type {
 	AuditSettings,
 	IntegrationSettings,

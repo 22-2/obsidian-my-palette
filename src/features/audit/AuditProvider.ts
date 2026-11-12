@@ -1,8 +1,8 @@
 import type { App, EventRef, TFile } from "obsidian";
 import { AUDIT_KIND_ICONS } from "src/features/audit/auditKinds";
 import { auditExclusions, auditVault } from "src/features/audit/auditSnapshot";
-import type { AuditKind, AuditReport } from "src/features/audit/vaultAudit";
-import type { AuditResult } from "src/core/results";
+import type { AuditReport } from "src/features/audit/vaultAudit";
+import type { AuditResult, AuditKind } from "src/core/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/core/PaletteProvider";
 import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { formatSize } from "src/core/fileSize";

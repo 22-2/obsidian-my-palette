@@ -205,6 +205,19 @@ export function propertyTargetPaths(result: PropertyResult): readonly string[] {
 	return result.sourcePaths ?? [result.sourcePath];
 }
 
+export const AUDIT_KINDS = [
+	"orphaned-files",
+	"broken-links",
+	"empty-files",
+	"empty-folders",
+] as const;
+
+export type AuditKind = (typeof AUDIT_KINDS)[number];
+
+export function isAuditKind(value: unknown): value is AuditKind {
+	return typeof value === "string" && (AUDIT_KINDS as readonly string[]).includes(value);
+}
+
 interface AuditResultBase extends BaseResult {
 	mode: "audit";
 }

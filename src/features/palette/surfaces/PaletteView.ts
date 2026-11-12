@@ -8,6 +8,7 @@ import {
 	type PaletteResult,
 	usesSourceNote,
 	type PaletteModeId,
+	type AuditKind,
 } from "src/core/results";
 import { canPreviewResult } from "src/features/palette/resultPreview";
 import { openFileInLeaf, revealOpenedLeaf } from "src/platform/openLeaf";
@@ -46,7 +47,6 @@ import {
 import { ignoredToggleOptions, syncIgnoredToggle } from "src/features/palette/ignoredToggle";
 import type { PanelSwitch } from "src/ui/panelSwitch";
 import { createAuditKindChoice, syncAuditKindChoice } from "src/features/palette/auditKindChoice";
-import type { AuditKind } from "src/features/audit/vaultAudit";
 import type { PanelChoice } from "src/ui/panelChoice";
 import { PaletteTableControls } from "src/features/palette/table/PaletteTableControls";
 import {

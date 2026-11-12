@@ -1,5 +1,5 @@
+import type { AuditKind } from "src/core/results";
 import type { IconName } from "obsidian";
-import type { AuditKind } from "src/features/audit/vaultAudit";
 import { ICONS } from "src/ui/icons";
 import { t } from "src/i18n";
 

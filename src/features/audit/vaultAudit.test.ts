@@ -1,8 +1,8 @@
+import { isAuditKind } from "src/core/results";
 import { describe, expect, it } from "vitest";
 import {
 	NO_AUDIT_EXCLUSIONS,
 	filterAuditReport,
-	isAuditKind,
 	runAudit,
 	type AuditExclusions,
 	type AuditFile,

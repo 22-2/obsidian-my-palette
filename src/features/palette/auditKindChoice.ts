@@ -1,5 +1,5 @@
+import { AUDIT_KINDS, type AuditKind } from "src/core/results";
 import { AUDIT_KIND_ICONS, AUDIT_KIND_LABELS } from "src/features/audit/auditKinds";
-import { AUDIT_KINDS, type AuditKind } from "src/features/audit/vaultAudit";
 import type MyPalettePlugin from "src/main";
 import type { PaletteMode } from "src/core/results";
 import { PanelChoice } from "src/ui/panelChoice";

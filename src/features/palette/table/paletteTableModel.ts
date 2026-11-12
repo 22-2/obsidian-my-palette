@@ -1,3 +1,4 @@
+import { AUDIT_KINDS, type AuditKind } from "src/core/results";
 import {
 	constructTable,
 	createColumnHelper,
@@ -8,7 +9,6 @@ import {
 	type SortingState,
 } from "@tanstack/table-core";
 import { storeReactivityBindings } from "@tanstack/table-core/store-reactivity-bindings";
-import { AUDIT_KINDS, type AuditKind } from "src/features/audit/vaultAudit";
 import type { PaletteResult } from "src/core/results";
 import { t } from "src/i18n";
 

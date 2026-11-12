@@ -1,15 +1,10 @@
+import { AUDIT_KINDS, isAuditKind, type AuditKind } from "src/core/results";
 import type { CliApi } from "src/platform/cliApi";
 import type { CliData } from "obsidian";
 import picomatch from "picomatch";
 import { canTrash, trashAuditItems, type AuditActionResult } from "src/features/audit/auditActions";
 import { auditVault } from "src/features/audit/auditSnapshot";
-import {
-	AUDIT_KINDS,
-	filterAuditReport,
-	isAuditKind,
-	type AuditKind,
-	type AuditReport,
-} from "src/features/audit/vaultAudit";
+import { filterAuditReport, type AuditReport } from "src/features/audit/vaultAudit";
 import { t } from "src/i18n";
 
 export const auditCliApi: CliApi = {

@@ -1,7 +1,7 @@
+import type { AuditKind } from "src/core/results";
 import { TFile, TFolder, type App, type TAbstractFile } from "obsidian";
 import { noteEmptiness } from "src/features/audit/noteEmptiness";
 import { logger } from "src/core/logger";
-import type { AuditKind } from "src/features/audit/vaultAudit";
 import { removeLinkFromMocRelateds } from "src/features/moc-relateds/mocRelatedsCore";
 import { t } from "src/i18n";
 

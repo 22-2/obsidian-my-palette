@@ -1,6 +1,5 @@
 import type { TFile } from "obsidian";
 import { auditPlaceholder } from "src/features/audit/auditKinds";
-import type { AuditKind } from "src/features/audit/vaultAudit";
 import {
 	supportsIncludeIgnored,
 	type EverythingScope,
@@ -8,6 +7,7 @@ import {
 	type PaletteResult,
 	type ParsedInput,
 	type PaletteModeId,
+	type AuditKind,
 } from "src/core/results";
 import type MyPalettePlugin from "src/main";
 import { getSearchHistoryCategory } from "src/features/palette/inputParser";

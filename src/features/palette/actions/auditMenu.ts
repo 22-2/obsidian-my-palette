@@ -5,13 +5,17 @@ import {
 	listsFiles,
 	trashAuditItems,
 } from "src/features/audit/auditActions";
-import type { AuditKind } from "src/features/audit/vaultAudit";
 import type MyPalettePlugin from "src/main";
 import { addFileMoveMenuItem } from "src/features/palette/actions/fileMoveMenu";
 import { addSelectionHeader } from "src/features/palette/actions/selectionHeader";
 import type { ActionKind } from "src/features/palette/resultActions";
 import { getCopyablePaths } from "src/features/palette/resultPresentation";
-import type { AuditBrokenLinkResult, AuditResult, PaletteResult } from "src/core/results";
+import type {
+	AuditBrokenLinkResult,
+	AuditResult,
+	PaletteResult,
+	AuditKind,
+} from "src/core/results";
 import {
 	addCopyPathListMenuItems,
 	addCopyPathMenuItems,

@@ -1,24 +1,11 @@
 import { createUserIgnoredPathMatcher } from "src/features/ignored-notes/ignoredPathMatching";
-import type { BrokenLinkSource } from "src/core/results";
+import type { AuditKind, BrokenLinkSource } from "src/core/results";
 
 /**
  * Vault 監査の判定。Obsidian に依存しないように保ち、パレットのモードと CLI が
  * 「浮いた」「壊れた」「空」の同じ定義を共有してテストできるようにする。
  * `auditSnapshot.ts` が Vault を読む。
  */
-
-export const AUDIT_KINDS = [
-	"orphaned-files",
-	"broken-links",
-	"empty-files",
-	"empty-folders",
-] as const;
-
-export type AuditKind = (typeof AUDIT_KINDS)[number];
-
-export function isAuditKind(value: unknown): value is AuditKind {
-	return typeof value === "string" && (AUDIT_KINDS as readonly string[]).includes(value);
-}
 
 export interface AuditFile {
 	path: string;
