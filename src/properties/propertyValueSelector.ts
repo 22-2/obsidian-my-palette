@@ -6,7 +6,7 @@ import type { EditResult } from "src/properties/propertyInputSelector";
 import { typedNewValue, type NewValueRules } from "src/shared/newValue";
 import { MultiSelectModal, type MultiSelectCandidate } from "src/ui/MultiSelectModal";
 import { changeCount, type MultiSelectChanges } from "src/ui/multiSelectChanges";
-import { setOrDeleteFrontmatterList, updateFrontmatter } from "src/shared/frontmatter";
+import { writeListChanges, writeListChangesToFiles } from "src/properties/listPropertyOperations";
 import { getFrontmatterValuesForKey } from "src/platform/obsidianInternals";
 import { countLabel } from "src/shared/countLabel";
 import { t } from "src/i18n";
@@ -23,23 +23,6 @@ export function vaultValuesOf(app: App, key: string): string[] {
 	return Array.isArray(values)
 		? values.filter((value): value is string => typeof value === "string")
 		: [];
-}
-
-/** 1つのノートに変更を書き込む。書き込みに失敗したら false(理由はコンソールにある)。 */
-async function writeListChanges(
-	app: App,
-	file: TFile,
-	key: string,
-	changes: MultiSelectChanges<string>,
-): Promise<boolean> {
-	return updateFrontmatter(app, file, `update the property ${key} of`, (frontmatter) => {
-		const current = readList(frontmatter[key]);
-		const next = [
-			...current.filter((value) => !changes.remove.includes(value)),
-			...changes.add.filter((value) => !current.includes(value)),
-		];
-		setOrDeleteFrontmatterList(frontmatter, key, next);
-	});
 }
 
 /**
@@ -75,12 +58,11 @@ export async function applyListChangesToFiles(
 	key: string,
 	changes: MultiSelectChanges<string>,
 ): Promise<BulkWriteResult> {
-	const result: BulkWriteResult = { updated: 0, failed: 0 };
-	for (const file of files) {
-		if (await writeListChanges(app, file, key, changes)) result.updated += 1;
-		else result.failed += 1;
-	}
-	return result;
+	const results = await writeListChangesToFiles(app, files, key, changes);
+	return {
+		updated: results.filter((result) => result.result === "updated").length,
+		failed: results.filter((result) => result.result === "failed").length,
+	};
 }
 
 /** 各ノートのフロントマターのキャッシュから、リストのプロパティが持つ値を読む。 */
