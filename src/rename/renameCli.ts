@@ -1,29 +1,9 @@
-import { createHash } from "node:crypto";
-import { TFile, type App, type CliData } from "obsidian";
+import type { CliData } from "obsidian";
 import type { CliApi } from "src/app/registerCli";
+import { cliPlanHash, cliTargetPaths, requireCliPlan } from "src/app/cliPlans";
 import { t } from "src/i18n";
 import { renameFiles } from "src/rename/renameFiles";
 import { isBlocked, parseRenameRule, planRename } from "src/rename/renamePlan";
-
-function pathsFromParams(app: App, value: string | undefined): string[] {
-	let parsed: unknown;
-	try {
-		parsed = JSON.parse(value ?? "");
-	} catch {
-		throw new Error(t("cli.rename.pathsRequired"));
-	}
-	if (
-		!Array.isArray(parsed) ||
-		parsed.length === 0 ||
-		parsed.some((path) => typeof path !== "string" || !path)
-	)
-		throw new Error(t("cli.rename.pathsRequired"));
-	const paths = [...new Set(parsed as string[])].sort();
-	for (const path of paths)
-		if (!(app.vault.getAbstractFileByPath(path) instanceof TFile))
-			throw new Error(t("cli.rename.fileMissing", { path }));
-	return paths;
-}
 
 export const renameCliApi: CliApi = {
 	action: "rename",
@@ -38,7 +18,7 @@ export const renameCliApi: CliApi = {
 		plan: { value: "<hash>", description: t("cli.rename.planFlag") },
 	},
 	run: async (plugin, params: CliData) => {
-		const paths = pathsFromParams(plugin.app, params.paths);
+		const paths = cliTargetPaths(plugin.app, params.paths);
 		const rule = parseRenameRule(params.rule ?? "", {
 			regex: params.regex === "true",
 			matchCase: params["ignore-case"] !== "true",
@@ -50,10 +30,10 @@ export const renameCliApi: CliApi = {
 			plugin.app.vault.getAllLoadedFiles().map((file) => file.path.toLowerCase()),
 		);
 		const items = planRename(paths, rule, existing);
-		const plan = createHash("sha256").update(JSON.stringify(items)).digest("hex");
+		const plan = cliPlanHash(items);
 		if (params.apply !== "true")
 			return { action: "preview", blocked: isBlocked(items), plan, items };
-		if (!params.plan || params.plan !== plan) throw new Error(t("cli.rename.planChanged"));
+		requireCliPlan(params.plan, plan);
 		if (isBlocked(items)) throw new Error(t("rename.notice.fixMarked"));
 		return { action: "rename", plan, items: await renameFiles(plugin.app, items) };
 	},
