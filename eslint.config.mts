@@ -115,6 +115,11 @@ export default defineConfig(
 		},
 	})),
 	{
+		// ログは src/core/logger の logger に集約する。docs/DEVELOPMENT.md の「ログ」を参照。
+		files: ["src/**/*.ts"],
+		rules: { "no-console": "error" },
+	},
+	{
 		// Commands are all "Open <thing>" with a matching kebab-case id.
 		files: ["src/app/registerCommands.ts"],
 		plugins: { "my-palette": myPalette },

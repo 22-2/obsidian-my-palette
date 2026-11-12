@@ -34,6 +34,13 @@ My PaletteはTypeScriptで書かれ、esbuildでバンドルされます。ソ�
 - 複数のメニューに表示される項目や、同じ操作を表す項目は、タイトルとアイコンとともに`src/ui/menuActions.ts`の`MENU_ACTIONS`へ一度だけ定義します。`withAction`で定義をメニュー項目に適用します。`addOpenMenuItems`と`addExternalAppMenuItems`は、「開く」と「外部アプリ」の項目を決まった順序で追加します。
 - IndexedDBのデータベース名は`src/platform/databaseNames.ts`に定義します。データはユーザーのブラウザープロファイルに保存されるため、名前を変更すると既存データが失われます。
 
+## ログ
+
+- ログは`src/core/logger.ts`の`logger`だけで出します。どの層もこれを直接importして使い、ロガーの関数をコンストラクターや引数で渡しません。`console.*`はESLintの`no-console`で禁止しています。
+- `logger.error`は、操作が失敗してユーザーに影響するときに使います。開発者コンソールに常に出ます。
+- `logger.debug`は、調査用の経過や、続行できる失敗に使います。設定の「ログを表示する」（`showLog`）がオンのときだけ出ます。
+- 例外は`{ error }`で包まず、最後の引数にそのまま渡します。対象のパスなどはメッセージに含めます。
+
 ## E2Eテスト
 
 `pnpm e2e`はプラグインをビルドして一時的な保管庫にインストールし、[obsidian-e2e-toolkit](https://github.com/22-2/obsidian-e2e-toolkit)を通じてPlaywrightで実際のObsidianを操作します。テスト仕様は`e2e/`にあります。Vitestが実行するのは`src/**/*.test.ts`だけです。
