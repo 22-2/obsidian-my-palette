@@ -98,13 +98,13 @@ test("a failed reverse MOC link remains visible beside the successful forward li
 			path: string;
 		}
 		interface MutableVault {
-			modify(file: FilePath, data: string): Promise<void>;
+			process(file: FilePath, update: (data: string) => string): Promise<string>;
 		}
 		const vault = app.vault as unknown as MutableVault;
-		const originalModify = vault.modify.bind(vault);
-		vault.modify = async (file, data) => {
+		const originalProcess = vault.process.bind(vault);
+		vault.process = async (file, update) => {
 			if (file.path === "Beta child.md") throw new Error("forced reverse-link failure");
-			await originalModify(file, data);
+			return originalProcess(file, update);
 		};
 	});
 

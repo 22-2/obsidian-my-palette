@@ -398,11 +398,15 @@ async function addLink(
 		if (notify) new Notice(message);
 	};
 	try {
-		const content = await app.vault.read(mocFile);
 		const tabSize = Number(app.vault.getConfig("tabSize")) || 4;
-		const result = addLinkToMocRelateds(content, fileToLink.basename, tabSize);
+		const outcome: { result?: ReturnType<typeof addLinkToMocRelateds> } = {};
+		await app.vault.process(mocFile, (content) => {
+			outcome.result = addLinkToMocRelateds(content, fileToLink.basename, tabSize);
+			return outcome.result.success ? outcome.result.newContent : content;
+		});
+		const result = outcome.result;
+		if (!result) throw new Error("MOC の更新結果を取得できませんでした。");
 		if (result.success) {
-			await app.vault.modify(mocFile, result.newContent);
 			const message = t("moc.added", { moc: mocFile.basename, file: fileToLink.basename });
 			showNotice(message);
 			return { status: "added", message };
@@ -432,9 +436,14 @@ async function removeLink(
 	linkedFile: TFile,
 ): Promise<"removed" | "missing" | "failed"> {
 	try {
-		const result = removeLinkFromMocRelateds(await app.vault.read(note), linkedFile.basename);
+		const outcome: { result?: ReturnType<typeof removeLinkFromMocRelateds> } = {};
+		await app.vault.process(note, (content) => {
+			outcome.result = removeLinkFromMocRelateds(content, linkedFile.basename);
+			return outcome.result.success ? outcome.result.newContent : content;
+		});
+		const result = outcome.result;
+		if (!result) throw new Error("MOC の更新結果を取得できませんでした。");
 		if (result.success) {
-			await app.vault.modify(note, result.newContent);
 			return "removed";
 		}
 		if (result.message === t("moc.core.notFound")) return "missing";
