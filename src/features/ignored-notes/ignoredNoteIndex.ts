@@ -16,6 +16,7 @@ import {
 	mapWithConcurrency,
 } from "src/features/ignored-notes/ignoredNoteScanner";
 import { DATABASE_NAMES } from "src/platform/databaseNames";
+import { logger } from "src/core/logger";
 
 export type { IgnoredNoteIndexEntry } from "src/features/ignored-notes/ignoredNoteEntry";
 
@@ -49,8 +50,6 @@ interface IgnoredNoteIndexDatabase extends DBSchema {
 	};
 }
 
-export type IgnoredNoteIndexLogger = (message: string, detail?: unknown) => void;
-
 function fingerprint(filters: readonly string[]): string {
 	return filters
 		.map((filter) => filter.toLocaleLowerCase())
@@ -72,10 +71,7 @@ export class IgnoredNoteIndex {
 	private filterFingerprint = "";
 	private lastScannedAt = 0;
 
-	constructor(
-		private readonly app: App,
-		private readonly log: IgnoredNoteIndexLogger = () => undefined,
-	) {
+	constructor(private readonly app: App) {
 		this.currentVaultId = getVaultId(app);
 	}
 
@@ -150,10 +146,10 @@ export class IgnoredNoteIndex {
 		} else {
 			// `prior` やタグの追加のように項目の形が変わったときは、除外された結果を返す前に
 			// 作り直す必要がある。さもないと、最初の検索が古いデータを使ってしまうため。
-			this.log("Obsidian-excluded index requires rebuild", { entries: entries.length });
+			logger.debug("Obsidian-excluded index requires rebuild", { entries: entries.length });
 		}
 		this.loaded = true;
-		this.log("Loaded Obsidian-excluded index", { entries: this.current.size });
+		logger.debug("Loaded Obsidian-excluded index", { entries: this.current.size });
 	}
 
 	private needsScan(): boolean {
@@ -167,12 +163,14 @@ export class IgnoredNoteIndex {
 		const regexCount = filters.length - roots.length;
 		const scanRoots = regexCount > 0 ? [...roots, ""] : roots;
 		if (regexCount > 0)
-			this.log("Scanning Vault root to resolve ignored regex filters", { count: regexCount });
-		this.log("Scanning Obsidian-excluded files", {
+			logger.debug("Scanning Vault root to resolve ignored regex filters", {
+				count: regexCount,
+			});
+		logger.debug("Scanning Obsidian-excluded files", {
 			roots: scanRoots,
 			cachedEntries: this.current.size,
 		});
-		const paths = (await collectVaultPaths(this.app, scanRoots, this.log)).filter((path) =>
+		const paths = (await collectVaultPaths(this.app, scanRoots)).filter((path) =>
 			isUserIgnoredPathWithFilters(filters, path),
 		);
 		const next = new Map<string, IgnoredNoteIndexEntry>();
@@ -185,7 +183,10 @@ export class IgnoredNoteIndex {
 				processed % PROGRESS_INTERVAL === 0 ||
 				processed === paths.length
 			)
-				this.log("Scanning Obsidian-excluded files", { processed, total: paths.length });
+				logger.debug("Scanning Obsidian-excluded files", {
+					processed,
+					total: paths.length,
+				});
 			return entry;
 		});
 		for (const entry of scanned) {
@@ -196,7 +197,7 @@ export class IgnoredNoteIndex {
 		this.current.clear();
 		for (const [path, entry] of next) this.current.set(path, entry);
 		this.lastScannedAt = Date.now();
-		this.log("Finished scanning Obsidian-excluded files", { entries: next.size });
+		logger.debug("Finished scanning Obsidian-excluded files", { entries: next.size });
 	}
 
 	private async readEntry(
@@ -225,7 +226,7 @@ export class IgnoredNoteIndex {
 				size: stat.size,
 			};
 		} catch (error) {
-			this.log("Failed to index ignored file", { path, error });
+			logger.debug(`Failed to index ignored file ${path}`, error);
 			// 同期やロックによる一時的なエラーでは、以前の索引の項目を残す。元のファイルが
 			// また読めるようになれば、後の TTL の更新で置き換えられる。
 			return cached;

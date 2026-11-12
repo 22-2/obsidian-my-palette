@@ -33,7 +33,7 @@ import { getVaultRootPath } from "src/features/ignored-notes/ignoredPaths";
 import { openPluginSettings } from "src/features/search/plugin/pluginSettings";
 import "../styles.css";
 import { ICONS } from "src/core/icons";
-import { debugLog, logger, setDebugLogging } from "src/core/logger";
+import { logger, setDebugLogging } from "src/core/logger";
 import { t } from "src/i18n";
 
 export default class MyPalettePlugin extends Plugin {
@@ -42,7 +42,7 @@ export default class MyPalettePlugin extends Plugin {
 		() => this.settings,
 		() => this.saveSettings(),
 	);
-	readonly everythingClient = new EverythingClient(debugLog);
+	readonly everythingClient = new EverythingClient();
 	readonly integrationAvailability = new IntegrationAvailability(
 		() => this.settings,
 		async (settings, signal) => {
@@ -85,18 +85,18 @@ export default class MyPalettePlugin extends Plugin {
 		const loadedSettings = await this.loadSettings();
 		this.initializeLogger();
 		const saveLegacyFallback = () => void this.saveSettings();
-		this.searchHistory = new SearchHistoryService(this.app, debugLog, saveLegacyFallback);
+		this.searchHistory = new SearchHistoryService(this.app, saveLegacyFallback);
 		await this.searchHistory.load(
 			loadedSettings.legacySearchHistoryEntries,
 			this.settings.searchHistory.daysToKeep,
 		);
-		this.recentCommands = new RecentCommandService(this.app, debugLog, saveLegacyFallback);
+		this.recentCommands = new RecentCommandService(this.app, saveLegacyFallback);
 		await this.recentCommands.load(loadedSettings.legacyRecentCommandIds);
 		if (loadedSettings.shouldSave) await this.saveSettings();
-		this.recentTagStore = new RecentTagStore(this.app, debugLog);
+		this.recentTagStore = new RecentTagStore(this.app);
 		// 最近使ったタグは data.json に保存されたことがないので、移行するものはない。
 		await this.recentTagStore.load();
-		this.fileUsageHistory = new FileUsageHistory(this.app, debugLog);
+		this.fileUsageHistory = new FileUsageHistory(this.app);
 		await this.fileUsageHistory.load();
 		registerPluginEvents(this);
 		const providers = createPaletteProviders(this.app, this.everythingClient, {
@@ -110,7 +110,6 @@ export default class MyPalettePlugin extends Plugin {
 			everythingSettings: () => this.settings.everything,
 			settings: () => this.settings,
 			fileUsageHistory: this.fileUsageHistory,
-			log: debugLog,
 		});
 		this.fileProvider = providers.fileProvider;
 		this.commandProvider = providers.commandProvider;

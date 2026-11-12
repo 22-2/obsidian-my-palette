@@ -5,13 +5,8 @@ import { EverythingHttpClient } from "src/features/search/everything/EverythingH
 
 /** 設定の backend に応じて、HTTP サーバーと es.exe のどちらで検索するかを切り替える。 */
 export class EverythingClient {
-	private readonly http: EverythingHttpClient;
-	private readonly es: EverythingEsClient;
-
-	constructor(debug?: (message: string, detail?: unknown) => void) {
-		this.http = new EverythingHttpClient(debug);
-		this.es = new EverythingEsClient(debug);
-	}
+	private readonly http = new EverythingHttpClient();
+	private readonly es = new EverythingEsClient();
 
 	cancel(): void {
 		this.http.cancel();

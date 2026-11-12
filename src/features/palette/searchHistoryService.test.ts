@@ -13,7 +13,7 @@ const options = { now: 2_000, daysToKeep: 0, maxEntries: 256 };
 describe("検索履歴サービス", () => {
 	it("IndexedDB が使用できない場合、履歴を従来のペイロードにミラーリングします。", async () => {
 		const onLegacyChange = vi.fn();
-		const service = new SearchHistoryService(app(), vi.fn(), onLegacyChange);
+		const service = new SearchHistoryService(app(), onLegacyChange);
 		expect(service.getLegacyEntries()).toBeUndefined();
 
 		await service.load(

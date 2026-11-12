@@ -1,8 +1,5 @@
 import type { App } from "obsidian";
-import {
-	RecentCommandStore,
-	type RecentCommandStoreLogger,
-} from "src/features/search/command/recentCommandStore";
+import { RecentCommandStore } from "src/features/search/command/recentCommandStore";
 
 /**
  * IndexedDB に保存する最近のコマンド ID。IndexedDB がデータを受け付けられないときは、ID をメモリに置き、
@@ -14,10 +11,9 @@ export class RecentCommandService {
 
 	constructor(
 		app: App,
-		log: RecentCommandStoreLogger,
 		private readonly onLegacyChange: () => void,
 	) {
-		this.store = new RecentCommandStore(app, log);
+		this.store = new RecentCommandStore(app);
 	}
 
 	async load(legacyIds: readonly string[]): Promise<void> {

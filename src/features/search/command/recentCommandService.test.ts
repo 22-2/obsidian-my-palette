@@ -11,7 +11,7 @@ function app(): App {
 describe("最近のコマンドサービス", () => {
 	it("IndexedDB が使用できない場合は、最近の ID を従来のペイロードにミラーリングします。", async () => {
 		const onLegacyChange = vi.fn();
-		const service = new RecentCommandService(app(), vi.fn(), onLegacyChange);
+		const service = new RecentCommandService(app(), onLegacyChange);
 		expect(service.getLegacyIds()).toBeUndefined();
 
 		await service.load(["a", "b"]);

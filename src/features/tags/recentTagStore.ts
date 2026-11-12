@@ -1,5 +1,5 @@
 import type { App } from "obsidian";
-import { RecentIdStore, type RecentIdStoreLogger } from "src/platform/recentIdStore";
+import { RecentIdStore } from "src/platform/recentIdStore";
 import { tagKey } from "src/core/tagKey";
 import { DATABASE_NAMES } from "src/platform/databaseNames";
 
@@ -10,18 +10,14 @@ export const MAX_RECENT_TAGS = 20;
  * Obsidian では同じタグなので、最近使った枠を 1 つだけ共有する。
  */
 export class RecentTagStore extends RecentIdStore {
-	constructor(app: App, log?: RecentIdStoreLogger) {
-		super(
-			app,
-			{
-				databaseName: DATABASE_NAMES.recentTags,
-				idField: "tag",
-				migrationName: "recent-tags",
-				maxEntries: MAX_RECENT_TAGS,
-				label: "recent tags",
-				dedupeKey: tagKey,
-			},
-			log,
-		);
+	constructor(app: App) {
+		super(app, {
+			databaseName: DATABASE_NAMES.recentTags,
+			idField: "tag",
+			migrationName: "recent-tags",
+			maxEntries: MAX_RECENT_TAGS,
+			label: "recent tags",
+			dedupeKey: tagKey,
+		});
 	}
 }

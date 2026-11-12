@@ -1,6 +1,7 @@
 import { execFile, type ChildProcess } from "child_process";
 import type { MyPaletteSettings } from "src/core/settingsModel";
 import type { EverythingResult } from "src/core/results";
+import { logger } from "src/core/logger";
 import { t } from "src/i18n";
 
 interface EsJsonItem {
@@ -22,8 +23,6 @@ const ES_QUERY_ENV = "MY_PALETTE_ES_QUERY";
 export class EverythingEsClient {
 	private readonly active = new Set<ChildProcess>();
 
-	constructor(private readonly debug?: (message: string, detail?: unknown) => void) {}
-
 	cancel(): void {
 		for (const child of this.active) child.kill();
 		this.active.clear();
@@ -37,7 +36,7 @@ export class EverythingEsClient {
 	): Promise<EverythingResult[]> {
 		if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 		const count = String(Math.min(500, Math.max(1, limit)));
-		this.debug?.("Running es.exe", { esPath: settings.esPath, count, query });
+		logger.debug("Running es.exe", { esPath: settings.esPath, count, query });
 		return parseEsJson(await this.run(settings, count, query, signal));
 	}
 

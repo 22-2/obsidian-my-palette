@@ -51,7 +51,6 @@ interface ProviderFactoryOptions {
 	/** Vault 監査は対象の種類と除外設定を読み、このプラグインの除外フォルダーも使う。 */
 	settings: () => MyPaletteSettings;
 	fileUsageHistory?: FileUsageScoreSource;
-	log: (message: string, detail?: unknown) => void;
 }
 
 /**
@@ -67,7 +66,6 @@ export function createPaletteProviders(
 	const fileProvider = new FileProvider(
 		app,
 		options.vaultExtensions,
-		options.log,
 		options.fileSortPriorities,
 		options.fileUsageHistory,
 		excludedFolders,

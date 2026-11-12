@@ -1,12 +1,7 @@
 import type { App } from "obsidian";
+import { logger } from "src/core/logger";
 
-type IgnoredNoteScanLogger = (message: string, detail?: unknown) => void;
-
-export async function collectVaultPaths(
-	app: App,
-	roots: readonly string[],
-	log: IgnoredNoteScanLogger,
-): Promise<string[]> {
+export async function collectVaultPaths(app: App, roots: readonly string[]): Promise<string[]> {
 	const adapter = app.vault.adapter;
 	const folders = [...new Set(roots)];
 	const visited = new Set<string>();
@@ -20,7 +15,7 @@ export async function collectVaultPaths(
 			// 除外フィルターは、移動や削除されたフォルダーより長く残ることがある。存在しないルートに対して
 			// list() を呼ばない。古い設定がエラーになってしまうため。
 			if (!stat) {
-				log("Skipped missing ignored folder", { folder });
+				logger.debug("Skipped missing ignored folder", { folder });
 				continue;
 			}
 			if (stat.type === "file") {
@@ -32,10 +27,10 @@ export async function collectVaultPaths(
 			folders.push(...listing.folders);
 		} catch (error) {
 			if (isMissingPathError(error)) {
-				log("Skipped missing ignored folder", { folder });
+				logger.debug("Skipped missing ignored folder", { folder });
 				continue;
 			}
-			log("Failed to list ignored folder", { folder, error });
+			logger.debug(`Failed to list ignored folder ${folder}`, error);
 		}
 	}
 	return files;

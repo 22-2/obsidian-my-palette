@@ -12,6 +12,7 @@ import {
 } from "src/features/palette/searchHistory";
 import { getVaultId, getVaultPathKey } from "src/platform/vaultIdentity";
 import { DATABASE_NAMES } from "src/platform/databaseNames";
+import { logger } from "src/core/logger";
 
 const SEARCH_HISTORY_DATABASE_VERSION = 1;
 const SEARCH_HISTORY_MIGRATION_VERSION = 1;
@@ -39,8 +40,6 @@ interface SearchHistoryDatabase extends DBSchema {
 		value: SearchHistoryMigration;
 	};
 }
-
-export type SearchHistoryStoreLogger = (message: string, detail?: unknown) => void;
 
 function migrationKey(vaultId: string): string {
 	return getVaultPathKey(vaultId, `search-history:${SEARCH_HISTORY_MIGRATION_VERSION}`);
@@ -92,10 +91,7 @@ export class SearchHistoryStore {
 	private unavailable = false;
 	private disposed = false;
 
-	constructor(
-		app: App,
-		private readonly log: SearchHistoryStoreLogger = () => undefined,
-	) {
+	constructor(app: App) {
 		this.currentVaultId = getVaultId(app);
 	}
 
@@ -166,7 +162,7 @@ export class SearchHistoryStore {
 		this.current.clear();
 		this.writePromise = this.writePromise
 			.then(() => this.clearDatabase())
-			.catch((error: unknown) => this.log("Failed to clear search history", { error }));
+			.catch((error: unknown) => logger.debug("Failed to clear search history", error));
 	}
 
 	async dispose(): Promise<void> {
@@ -194,7 +190,7 @@ export class SearchHistoryStore {
 		if (changed.length === 0 && removed.length === 0) return;
 		this.writePromise = this.writePromise
 			.then(() => this.persistChanges(changed, removed))
-			.catch((error: unknown) => this.log("Failed to persist search history", { error }));
+			.catch((error: unknown) => logger.debug("Failed to persist search history", error));
 	}
 
 	private getDatabase(): Promise<IDBPDatabase<SearchHistoryDatabase>> {
@@ -286,10 +282,10 @@ export class SearchHistoryStore {
 					SEARCH_HISTORY_MAX_ENTRIES,
 				),
 			);
-			this.log("Search history IndexedDB is unavailable", { error });
+			logger.debug("Search history IndexedDB is unavailable", error);
 		} finally {
 			this.loaded = true;
-			this.log("Loaded search history", { entries: this.current.size });
+			logger.debug("Loaded search history", { entries: this.current.size });
 		}
 	}
 
@@ -308,7 +304,7 @@ export class SearchHistoryStore {
 			await transaction.done;
 		} catch (error) {
 			this.unavailable = true;
-			this.log("Failed to persist search history", { error });
+			logger.debug("Failed to persist search history", error);
 		}
 	}
 
@@ -326,7 +322,7 @@ export class SearchHistoryStore {
 			await transaction.done;
 		} catch (error) {
 			this.unavailable = true;
-			this.log("Failed to clear search history", { error });
+			logger.debug("Failed to clear search history", error);
 		}
 	}
 }

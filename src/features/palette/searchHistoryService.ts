@@ -1,10 +1,7 @@
 import type { SearchHistoryCategory, SearchHistoryEntry } from "src/core/searchHistoryTypes";
 import type { App } from "obsidian";
 import type { RecordSearchHistoryOptions } from "src/features/palette/searchHistory";
-import {
-	SearchHistoryStore,
-	type SearchHistoryStoreLogger,
-} from "src/features/palette/searchHistoryStore";
+import { SearchHistoryStore } from "src/features/palette/searchHistoryStore";
 
 /**
  * IndexedDB に保存する検索履歴。IndexedDB がデータを受け付けられないときは、エントリをメモリに置き、
@@ -16,10 +13,9 @@ export class SearchHistoryService {
 
 	constructor(
 		app: App,
-		log: SearchHistoryStoreLogger,
 		private readonly onLegacyChange: () => void,
 	) {
-		this.store = new SearchHistoryStore(app, log);
+		this.store = new SearchHistoryStore(app);
 	}
 
 	async load(legacyEntries: readonly SearchHistoryEntry[], daysToKeep: number): Promise<void> {

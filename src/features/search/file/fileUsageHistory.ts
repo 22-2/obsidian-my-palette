@@ -2,6 +2,7 @@ import type { App } from "obsidian";
 import { type DBSchema, type IDBPDatabase, openDB } from "idb";
 import { getVaultId, getVaultPathKey } from "src/platform/vaultIdentity";
 import { DATABASE_NAMES } from "src/platform/databaseNames";
+import { logger } from "src/core/logger";
 
 const DATABASE_VERSION = 1;
 const MAX_TRACKED_FILES = 5_000;
@@ -34,8 +35,6 @@ interface FileUsageDatabase extends DBSchema {
 		indexes: { byVault: string };
 	};
 }
-
-export type FileUsageHistoryLogger = (message: string, detail?: unknown) => void;
 
 function finiteTimestamp(value: number): number | undefined {
 	return Number.isFinite(value) && value >= 0 ? value : undefined;
@@ -88,10 +87,7 @@ export class FileUsageHistory implements FileUsageScoreSource {
 	private unavailable = false;
 	private disposed = false;
 
-	constructor(
-		app: App,
-		private readonly log: FileUsageHistoryLogger = () => undefined,
-	) {
+	constructor(app: App) {
 		this.currentVaultId = getVaultId(app);
 	}
 
@@ -126,7 +122,7 @@ export class FileUsageHistory implements FileUsageScoreSource {
 				await this.load();
 				await this.persist(path, removedPaths);
 			})
-			.catch((error: unknown) => this.log("Failed to persist file usage history", { error }));
+			.catch((error: unknown) => logger.debug("Failed to persist file usage history", error));
 	}
 
 	async dispose(): Promise<void> {
@@ -193,10 +189,10 @@ export class FileUsageHistory implements FileUsageScoreSource {
 			}
 		} catch (error) {
 			this.unavailable = true;
-			this.log("File usage history is unavailable", { error });
+			logger.debug("File usage history is unavailable", error);
 		} finally {
 			this.loaded = true;
-			this.log("Loaded file usage history", { entries: this.current.size });
+			logger.debug("Loaded file usage history", { entries: this.current.size });
 		}
 	}
 
@@ -234,7 +230,7 @@ export class FileUsageHistory implements FileUsageScoreSource {
 			await transaction.done;
 		} catch (error) {
 			this.unavailable = true;
-			this.log("Failed to persist file usage history", { path, error });
+			logger.debug(`Failed to persist file usage history for ${path}`, error);
 		}
 	}
 }

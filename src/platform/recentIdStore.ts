@@ -1,6 +1,7 @@
 import type { App } from "obsidian";
 import { type DBSchema, type IDBPDatabase, openDB } from "idb";
 import { getVaultId, getVaultPathKey } from "src/platform/vaultIdentity";
+import { logger } from "src/core/logger";
 
 const RECENT_ID_DATABASE_VERSION = 1;
 const RECENT_ID_MIGRATION_VERSION = 1;
@@ -31,8 +32,6 @@ interface RecentIdDatabase extends DBSchema {
 		value: RecentIdMigration;
 	};
 }
-
-export type RecentIdStoreLogger = (message: string, detail?: unknown) => void;
 
 export interface RecentIdStoreOptions {
 	databaseName: string;
@@ -81,7 +80,6 @@ export class RecentIdStore {
 	constructor(
 		app: App,
 		private readonly options: RecentIdStoreOptions,
-		private readonly log: RecentIdStoreLogger = () => undefined,
 	) {
 		this.currentVaultId = getVaultId(app);
 	}
@@ -114,7 +112,7 @@ export class RecentIdStore {
 		this.writePromise = this.writePromise
 			.then(() => this.clearDatabase())
 			.catch((error: unknown) =>
-				this.log(`Failed to clear ${this.options.label}`, { error }),
+				logger.debug(`Failed to clear ${this.options.label}`, error),
 			);
 	}
 
@@ -174,7 +172,7 @@ export class RecentIdStore {
 		this.writePromise = this.writePromise
 			.then(() => this.persistCurrent())
 			.catch((error: unknown) =>
-				this.log(`Failed to persist ${this.options.label}`, { error }),
+				logger.debug(`Failed to persist ${this.options.label}`, error),
 			);
 	}
 
@@ -242,10 +240,10 @@ export class RecentIdStore {
 		} catch (error) {
 			this.unavailable = true;
 			this.current = this.normalize(legacyIds);
-			this.log(`IndexedDB for ${this.options.label} is unavailable`, { error });
+			logger.debug(`IndexedDB for ${this.options.label} is unavailable`, error);
 		} finally {
 			this.loaded = true;
-			this.log(`Loaded ${this.options.label}`, { entries: this.current.length });
+			logger.debug(`Loaded ${this.options.label}`, { entries: this.current.length });
 		}
 	}
 
@@ -265,7 +263,7 @@ export class RecentIdStore {
 			await transaction.done;
 		} catch (error) {
 			this.unavailable = true;
-			this.log(`Failed to persist ${this.options.label}`, { error });
+			logger.debug(`Failed to persist ${this.options.label}`, error);
 		}
 	}
 
@@ -283,7 +281,7 @@ export class RecentIdStore {
 			await transaction.done;
 		} catch (error) {
 			this.unavailable = true;
-			this.log(`Failed to clear ${this.options.label}`, { error });
+			logger.debug(`Failed to clear ${this.options.label}`, error);
 		}
 	}
 }

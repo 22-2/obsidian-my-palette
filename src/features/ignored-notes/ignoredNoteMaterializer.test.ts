@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("obsidian", () => {
 	class MockTFile {
@@ -40,6 +40,7 @@ vi.mock("obsidian", () => {
 });
 
 import { TFile, type App } from "obsidian";
+import { logger } from "src/core/logger";
 import { materializeIgnoredNote } from "src/features/ignored-notes/ignoredNoteMaterializer";
 
 interface FakeVault {
@@ -118,22 +119,27 @@ function addExistingFile(state: FakeVaultState, path: string, content: string): 
 }
 
 describe("実体化無視注", () => {
-	const log = vi.fn<(message: string, detail?: unknown) => void>();
+	const spyDebug = () => vi.spyOn(logger, "debug").mockImplementation(() => undefined);
+	let debug: ReturnType<typeof spyDebug>;
 
 	beforeEach(() => {
-		log.mockClear();
+		debug = spyDebug();
+	});
+
+	afterEach(() => {
+		debug.mockRestore();
 	});
 
 	it("設定されたフォルダーの直下にインポートされたメモを作成します", async () => {
 		const state = createFakeVault("ignored/note.md", "# Note");
 
-		const imported = await materializeIgnoredNote(state.app, "ignored/note.md", log);
+		const imported = await materializeIgnoredNote(state.app, "ignored/note.md");
 
 		expect(imported.path).toBe("Imported/note.md");
 		expect(state.contents.get(imported.path)).toMatch(
 			/^---\nmy-palette-source: "ignored\/note\.md"\nmy-palette-imported-at: ".+"\n---\n# Note$/,
 		);
-		expect(log).toHaveBeenCalledWith(
+		expect(debug).toHaveBeenCalledWith(
 			"Imported Obsidian-excluded file",
 			expect.objectContaining({
 				sourcePath: "ignored/note.md",
@@ -145,8 +151,8 @@ describe("実体化無視注", () => {
 	it("同じソースの既存のインポートを再利用します", async () => {
 		const state = createFakeVault("ignored/note.md", "# Note");
 
-		const first = await materializeIgnoredNote(state.app, "ignored/note.md", log);
-		const second = await materializeIgnoredNote(state.app, "ignored/note.md", log);
+		const first = await materializeIgnoredNote(state.app, "ignored/note.md");
+		const second = await materializeIgnoredNote(state.app, "ignored/note.md");
 
 		expect(second).toBe(first);
 		expect(state.createCount).toBe(1);
@@ -160,7 +166,7 @@ describe("実体化無視注", () => {
 			'---\nmy-palette-source: "other/note.md"\n---\n# Other',
 		);
 
-		const imported = await materializeIgnoredNote(state.app, ".private/note.md", log);
+		const imported = await materializeIgnoredNote(state.app, ".private/note.md");
 
 		expect(imported.path).toBe("Imported/note (imported 1).md");
 	});

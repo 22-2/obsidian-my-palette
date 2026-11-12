@@ -16,8 +16,6 @@ import { t } from "src/i18n";
 export const IMPORT_SOURCE_PROPERTY = "my-palette-source";
 export const IMPORTED_AT_PROPERTY = "my-palette-imported-at";
 
-export type IgnoredNoteMaterializerLogger = (message: string, detail?: unknown) => void;
-
 function fileName(path: string): string {
 	return path.slice(path.lastIndexOf("/") + 1);
 }
@@ -143,11 +141,7 @@ function addImportFrontmatter(content: string, sourcePath: string, importedAt: s
 }
 
 /** Obsidian の除外ファイルにある Markdown を、設定された新規ノートのフォルダーにコピーする。 */
-export async function materializeIgnoredNote(
-	app: App,
-	sourcePath: string,
-	log: IgnoredNoteMaterializerLogger = () => undefined,
-): Promise<TFile> {
+export async function materializeIgnoredNote(app: App, sourcePath: string): Promise<TFile> {
 	const normalizedSourcePath = normalizePath(sourcePath);
 	if (!isUserIgnoredPath(app, normalizedSourcePath)) throw new Error(t("ignored.onlyExcluded"));
 	if (!normalizedSourcePath.toLocaleLowerCase().endsWith(".md"))
@@ -172,7 +166,7 @@ export async function materializeIgnoredNote(
 		destinationCandidate.path,
 		addImportFrontmatter(sourceContent, normalizedSourcePath, importedAt),
 	);
-	log("Imported Obsidian-excluded file", {
+	logger.debug("Imported Obsidian-excluded file", {
 		sourcePath: normalizedSourcePath,
 		destinationPath: destinationCandidate.path,
 	});

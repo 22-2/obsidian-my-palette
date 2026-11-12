@@ -64,7 +64,6 @@ describe("ファイルプロバイダーのボールトイベント処理", () =
 			undefined,
 			undefined,
 			undefined,
-			undefined,
 			() => openableFilesOnly,
 		);
 	}

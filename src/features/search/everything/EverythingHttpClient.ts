@@ -1,5 +1,6 @@
 import type { MyPaletteSettings } from "src/core/settingsModel";
 import type { EverythingResult } from "src/core/results";
+import { logger } from "src/core/logger";
 import { t } from "src/i18n";
 
 interface EverythingHttpItem {
@@ -27,8 +28,6 @@ declare global {
 export class EverythingHttpClient {
 	private readonly active = new Set<AbortController>();
 
-	constructor(private readonly debug?: (message: string, detail?: unknown) => void) {}
-
 	cancel(): void {
 		for (const controller of this.active) controller.abort();
 		this.active.clear();
@@ -42,7 +41,7 @@ export class EverythingHttpClient {
 	): Promise<EverythingResult[]> {
 		const endpoint = this.buildUrl(query, settings, limit);
 		if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-		this.debug?.("Requesting Everything HTTP Server", endpoint.toString());
+		logger.debug("Requesting Everything HTTP Server", endpoint.toString());
 
 		const controller = new AbortController();
 		this.active.add(controller);

@@ -1,5 +1,6 @@
 import type { App } from "obsidian";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { logger } from "src/core/logger";
 import {
 	collectVaultPaths,
 	mapWithConcurrency,
@@ -23,22 +24,26 @@ function appWith(tree: Record<string, Node>, failOn: Record<string, unknown> = {
 }
 
 describe("VaultPath を収集する", () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
 	it("フォルダーを再帰的に探索し、ファイルのルートを受け入れます", async () => {
 		const { app } = appWith({
 			a: { type: "folder", files: ["a/1.md"], folders: ["a/b"] },
 			"a/b": { type: "folder", files: ["a/b/2.md"], folders: [] },
 			"c.md": { type: "file" },
 		});
-		const files = await collectVaultPaths(app, ["a", "c.md"], vi.fn());
+		const files = await collectVaultPaths(app, ["a", "c.md"]);
 		expect(files.toSorted()).toEqual(["a/1.md", "a/b/2.md", "c.md"]);
 	});
 
 	it("欠落しているルートをリストせずにスキップします", async () => {
 		const { app, adapter } = appWith({});
-		const log = vi.fn();
-		expect(await collectVaultPaths(app, ["gone"], log)).toEqual([]);
+		const debug = vi.spyOn(logger, "debug").mockImplementation(() => undefined);
+		expect(await collectVaultPaths(app, ["gone"])).toEqual([]);
 		expect(adapter.list).not.toHaveBeenCalled();
-		expect(log).toHaveBeenCalledWith("Skipped missing ignored folder", { folder: "gone" });
+		expect(debug).toHaveBeenCalledWith("Skipped missing ignored folder", { folder: "gone" });
 	});
 
 	it("ENOENT を欠落しているものとして扱い、他のルートのスキャンを継続します", async () => {
@@ -46,7 +51,7 @@ describe("VaultPath を収集する", () => {
 			{ ok: { type: "folder", files: ["ok/1.md"], folders: [] } },
 			{ racy: Object.assign(new Error("gone"), { code: "ENOENT" }) },
 		);
-		expect(await collectVaultPaths(app, ["racy", "ok"], vi.fn())).toEqual(["ok/1.md"]);
+		expect(await collectVaultPaths(app, ["racy", "ok"])).toEqual(["ok/1.md"]);
 	});
 
 	it("他のエラーをログに記録して続行します", async () => {
@@ -54,14 +59,14 @@ describe("VaultPath を収集する", () => {
 			{ ok: { type: "folder", files: ["ok/1.md"], folders: [] } },
 			{ bad: new Error("locked") },
 		);
-		const log = vi.fn();
-		expect(await collectVaultPaths(app, ["bad", "ok"], log)).toEqual(["ok/1.md"]);
-		expect(log).toHaveBeenCalledWith("Failed to list ignored folder", expect.anything());
+		const debug = vi.spyOn(logger, "debug").mockImplementation(() => undefined);
+		expect(await collectVaultPaths(app, ["bad", "ok"])).toEqual(["ok/1.md"]);
+		expect(debug).toHaveBeenCalledWith("Failed to list ignored folder bad", expect.any(Error));
 	});
 
 	it("重複したルートに 2 回アクセスしない", async () => {
 		const { app, adapter } = appWith({ a: { type: "folder", files: [], folders: [] } });
-		await collectVaultPaths(app, ["a", "a"], vi.fn());
+		await collectVaultPaths(app, ["a", "a"]);
 		expect(adapter.list).toHaveBeenCalledTimes(1);
 	});
 });

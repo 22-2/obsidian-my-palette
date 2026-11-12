@@ -9,10 +9,7 @@ import {
 	getUserIgnoreFilters,
 	isUserIgnoredPathWithFilters,
 } from "src/features/ignored-notes/ignoredPaths";
-import {
-	IgnoredNoteIndex,
-	type IgnoredNoteIndexLogger,
-} from "src/features/ignored-notes/ignoredNoteIndex";
+import { IgnoredNoteIndex } from "src/features/ignored-notes/ignoredNoteIndex";
 import type { FileResult } from "src/core/results";
 import {
 	DEFAULT_FILE_SORT_PRIORITIES,
@@ -63,7 +60,6 @@ export class FileProvider implements PaletteProvider<FileResult> {
 	constructor(
 		private readonly app: App,
 		private readonly vaultExtensions: () => readonly string[],
-		ignoredLogger?: IgnoredNoteIndexLogger,
 		private readonly fileSortPriorities: () => FileSortPriorities = () => ({
 			blank: [...DEFAULT_FILE_SORT_PRIORITIES],
 			input: [...DEFAULT_FILE_SORT_PRIORITIES],
@@ -76,7 +72,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 	) {
 		this.updateAllowedExtensions();
 		this.rebuild();
-		this.ignoredIndex = new IgnoredNoteIndex(app, ignoredLogger);
+		this.ignoredIndex = new IgnoredNoteIndex(app);
 		this.refs.push(
 			app.vault.on("create", (file) => {
 				if (isTFile(file)) this.update(file);
