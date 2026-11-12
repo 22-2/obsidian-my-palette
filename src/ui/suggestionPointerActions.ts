@@ -156,6 +156,10 @@ export class SuggestionPointerActions<T> {
 				);
 			this.host.setSelectedIndex(index, false);
 		}
+		// Why: どの分岐にも当たらない押下(単一選択のモーダルで、押しても閉じない行など)は、既定の動作で
+		// フォーカスが入力欄から body へ移る。すると入力欄の keydown が矢印キーを受け取れず、
+		// 上下キーが行の選択ではなく、一覧のスクロールになる。既定の動作を止めて、フォーカスを入力欄に残す。
+		if (!event.defaultPrevented) event.preventDefault();
 	}
 
 	private handleDoubleClick(event: MouseEvent): void {

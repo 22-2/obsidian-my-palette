@@ -259,6 +259,21 @@ describe.each(["modal", "view"] as const)("%s suggestion interactions", (surface
 		key(f.input, "Enter");
 		expect(f.choose).toHaveBeenCalledTimes(2);
 	});
+	it.each(["single", "extended"] as const)(
+		"%s 選択で行を押しても、フォーカスが入力欄から離れないように既定の動作を止める",
+		async (selectionMode) => {
+			const f = await fixture(surface, selectionMode);
+			for (const button of [0, 2]) {
+				const event = new MouseEvent("mousedown", {
+					bubbles: true,
+					cancelable: true,
+					button,
+				});
+				f.rows()[1].dispatchEvent(event);
+				expect(event.defaultPrevented).toBe(true);
+			}
+		},
+	);
 	it("プライマリアクティベーションに失敗せずに中クリックを 1 回開きます", async () => {
 		const f = await fixture(surface);
 		mouse(f.rows()[1], "mousedown", { button: 1 });

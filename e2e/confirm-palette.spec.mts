@@ -69,3 +69,18 @@ test("キャンセルの行を選ぶと、何も変えずに閉じる", async ({
 	await expect(confirmPalette(page)).toBeHidden();
 	expect(await obsidian.exists(NOTE)).toBe(true);
 });
+
+test("行をクリックしたあとも、上下キーで行を移動できる", async ({ obsidian }) => {
+	const page = await openDeleteConfirm(obsidian);
+	const rows = confirmPalette(page).locator(".suggestion-item");
+	const activeIndex = () =>
+		rows.evaluateAll((elements) =>
+			elements.findIndex((el) => el.classList.contains("is-active")),
+		);
+
+	// 押しても閉じない行を押すと、フォーカスが入力欄から body へ移り、矢印キーが一覧のスクロールになっていた。
+	await rows.first().click();
+	await expect(confirmPalette(page).locator(".prompt-input")).toBeFocused();
+	await page.keyboard.press("ArrowDown");
+	await expect.poll(activeIndex).toBe(1);
+});
