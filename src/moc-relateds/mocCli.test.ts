@@ -72,6 +72,21 @@ it("確認後に内容が変わると実行しない", async () => {
 	expect(process).not.toHaveBeenCalled();
 });
 
+it("片方向の指定では対象ノートを書き換えない", async () => {
+	const { plugin, contents, process } = fixture();
+	const params = { paths: '["Note.md"]', moc: "MOC.md", "one-way": "true" };
+	const preview = (await mocCliApi.run(plugin, params)) as { plan: string };
+	const result = await mocCliApi.run(plugin, { ...params, apply: "true", plan: preview.plan });
+	expect(result).toMatchObject({
+		files: [
+			{ path: "MOC.md", result: "updated" },
+			{ path: "Note.md", result: "unchanged" },
+		],
+	});
+	expect(process).toHaveBeenCalledTimes(1);
+	expect(contents.get("Note.md")).not.toContain("[[MOC]]");
+});
+
 it("書き込みに失敗したリンクを成功と報告しない", async () => {
 	const { plugin, process } = fixture();
 	const params = { paths: '["Note.md"]', moc: "MOC.md" };
