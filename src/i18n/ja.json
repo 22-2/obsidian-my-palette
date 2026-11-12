@@ -699,6 +699,7 @@
 	"tagDelete.notice.noTargets": "このタグを持つノートはありません。",
 	"tagDelete.notice.done": "{count} 件のノートからタグを削除しました。",
 	"confirm.cancel": "キャンセル",
+	"confirm.notice.pressCtrlEnter": "Ctrl+Enter を押すと、「{action}」を実行します。",
 	"noteDelete.menu.single": "ノートを削除",
 	"noteDelete.menu.multiple": "選択ノートを削除 ({count}件)",
 	"noteDelete.confirm.title.single": "ノートをゴミ箱に移動しますか",

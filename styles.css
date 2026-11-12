@@ -1046,6 +1046,12 @@
 	text-align: right;
 }
 
+/* 確認パレットは、操作の影響の説明を省略せず、折り返して全文を見せる。 */
+.my-palette-confirm .my-palette-suggestion__label {
+	flex: 1 1 auto;
+	white-space: normal;
+}
+
 /* The check icon toggles its row on click, so it should look clickable. */
 .my-palette-multi-select [data-row-toggle] {
 	cursor: pointer;

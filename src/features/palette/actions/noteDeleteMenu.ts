@@ -3,7 +3,7 @@ import { t } from "src/i18n";
 import { collectVaultFiles } from "src/features/palette/actions/resultFile";
 import type { PaletteResult } from "src/core/results";
 import type { PaletteMenu } from "src/ui/paletteMenu";
-import { openConfirmModal } from "src/ui/confirmModal";
+import { openConfirmPalette } from "src/ui/confirmPalette";
 import { ICONS } from "src/core/icons";
 import { trashNotes } from "src/features/trash/trashNotes";
 
@@ -35,7 +35,7 @@ export function addNoteDeleteMenuItem(
 			.setSearchTerms("delete-note trash-note")
 			.setWarning(true)
 			.onClick(() =>
-				openConfirmModal(app, {
+				openConfirmPalette(app, {
 					title:
 						count === 1
 							? t("noteDelete.confirm.title.single")
