@@ -3,7 +3,7 @@ import {
 	mergeFrontmatterTags,
 	removeFrontmatterTags,
 	setOrDeleteFrontmatterList,
-	updateFrontmatter,
+	writeFrontmatter,
 } from "src/shared/frontmatter";
 import { tagKey } from "src/tags/tagChoices";
 import type { MultiSelectChanges } from "src/ui/multiSelectChanges";
@@ -25,6 +25,7 @@ export async function applyTagChangesToFiles(
 	files: readonly TFile[],
 	changes: MultiSelectChanges<string>,
 	expectedContents?: ReadonlyMap<string, string>,
+	expectedTags?: ReadonlyMap<string, readonly string[]>,
 ): Promise<TagWriteResult[]> {
 	const results: TagWriteResult[] = [];
 	for (const file of files) {
@@ -41,7 +42,7 @@ export async function applyTagChangesToFiles(
 				continue;
 			}
 		}
-		const existing = frontmatterTags(app, file);
+		const existing = expectedTags?.get(file.path) ?? frontmatterTags(app, file);
 		const removals = changes.remove.filter((tag) =>
 			existing.some((value) => tagKey(value) === tagKey(tag)),
 		);
@@ -49,13 +50,28 @@ export async function applyTagChangesToFiles(
 			results.push({ path: file.path, result: "unchanged" });
 			continue;
 		}
-		const saved = await updateFrontmatter(app, file, "update tags of", (frontmatter) => {
+		const saved = await writeFrontmatter(app, file, "update tags of", (frontmatter) => {
+			if (expectedContents && !isSafeTagValue(frontmatter.tags))
+				throw new Error(t("cli.tag.invalidValue"));
 			let tags = frontmatter.tags;
 			if (changes.add.length > 0) tags = mergeFrontmatterTags(tags, changes.add);
 			if (removals.length > 0) tags = removeFrontmatterTags(tags, removals);
 			setOrDeleteFrontmatterList(frontmatter, "tags", Array.isArray(tags) ? tags : []);
 		});
-		results.push({ path: file.path, result: saved ? "updated" : "failed" });
+		results.push(
+			saved.ok
+				? { path: file.path, result: "updated" }
+				: { path: file.path, result: "failed", reason: saved.reason },
+		);
 	}
 	return results;
+}
+
+export function isSafeTagValue(value: unknown): boolean {
+	return (
+		value === undefined ||
+		value === null ||
+		typeof value === "string" ||
+		(Array.isArray(value) && value.every((item) => typeof item === "string"))
+	);
 }

@@ -1,6 +1,6 @@
 import type { App, TFile } from "obsidian";
 import { readList } from "src/properties/propertyList";
-import { setOrDeleteFrontmatterList, updateFrontmatter } from "src/shared/frontmatter";
+import { setOrDeleteFrontmatterList, writeFrontmatter } from "src/shared/frontmatter";
 import type { MultiSelectChanges } from "src/ui/multiSelectChanges";
 import { t } from "src/i18n";
 
@@ -17,7 +17,17 @@ export async function writeListChanges(
 	changes: MultiSelectChanges<string>,
 	strict = false,
 ): Promise<boolean> {
-	return updateFrontmatter(app, file, `update the property ${key} of`, (frontmatter) => {
+	return (await writeListChangesDetailed(app, file, key, changes, strict)).ok;
+}
+
+async function writeListChangesDetailed(
+	app: App,
+	file: TFile,
+	key: string,
+	changes: MultiSelectChanges<string>,
+	strict: boolean,
+): Promise<{ ok: true } | { ok: false; reason: string }> {
+	return writeFrontmatter(app, file, `update the property ${key} of`, (frontmatter) => {
 		if (strict && !isSafeListProperty(frontmatter[key]))
 			throw new Error(t("cli.property.invalidValue"));
 		const current = readList(frontmatter[key]);
@@ -59,8 +69,18 @@ export async function writeListChangesToFiles(
 				continue;
 			}
 		}
-		const updated = await writeListChanges(app, file, key, changes, Boolean(expectedContents));
-		results.push({ path: file.path, result: updated ? "updated" : "failed" });
+		const updated = await writeListChangesDetailed(
+			app,
+			file,
+			key,
+			changes,
+			Boolean(expectedContents),
+		);
+		results.push(
+			updated.ok
+				? { path: file.path, result: "updated" }
+				: { path: file.path, result: "failed", reason: updated.reason },
+		);
 	}
 	return results;
 }

@@ -60,6 +60,7 @@
 	"cli.tag.addFlag": "追加するタグ名の JSON 配列",
 	"cli.tag.removeFlag": "削除するタグ名の JSON 配列",
 	"cli.tag.invalid": "add と remove に有効なタグ名の JSON 配列を指定してください。同じタグは両方に指定できません。",
+	"cli.tag.invalidValue": "タグの値は文字列または文字列のリストではありません。",
 	"cli.property.description": "対象ノートのリスト型プロパティをプレビューし、確認した計画を実行する。",
 	"cli.property.keyFlag": "編集するリスト型プロパティのキー（タグは edit-tags を使う）",
 	"cli.property.addFlag": "追加する値の JSON 配列",

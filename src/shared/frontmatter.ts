@@ -8,12 +8,22 @@ export async function updateFrontmatter(
 	operation: string,
 	update: (frontmatter: Record<string, unknown>) => void,
 ): Promise<boolean> {
+	return (await writeFrontmatter(app, file, operation, update)).ok;
+}
+
+/** 書き込みエラーを記録し、呼び出し元が理由も報告できるようにする。 */
+export async function writeFrontmatter(
+	app: App,
+	file: TFile,
+	operation: string,
+	update: (frontmatter: Record<string, unknown>) => void,
+): Promise<{ ok: true } | { ok: false; reason: string }> {
 	try {
 		await app.fileManager.processFrontMatter(file, update);
-		return true;
+		return { ok: true };
 	} catch (error) {
 		logger.error(`Failed to ${operation} ${file.path}`, error);
-		return false;
+		return { ok: false, reason: error instanceof Error ? error.message : String(error) };
 	}
 }
 

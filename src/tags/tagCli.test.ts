@@ -8,6 +8,8 @@ vi.mock("obsidian", () => ({
 		extension = "md";
 		constructor(public path: string) {}
 	},
+	getFrontMatterInfo: (content: string) => ({ exists: true, frontmatter: content }),
+	parseYaml: (value: string) => JSON.parse(value),
 	parseFrontMatterTags: (frontmatter: { tags?: string[] }) => frontmatter?.tags ?? [],
 }));
 
@@ -15,7 +17,7 @@ function fixture() {
 	const File = TFile as unknown as new (path: string) => TFile;
 	const file = new File("note.md");
 	const frontmatter: Record<string, unknown> = { tags: ["old"] };
-	let content = "old content";
+	let content = JSON.stringify(frontmatter);
 	const write = vi.fn(async (_file: TFile, update: (value: Record<string, unknown>) => void) =>
 		update(frontmatter),
 	);
@@ -40,7 +42,8 @@ function fixture() {
 it("確認した計画でフロントマターのタグを追加・削除する", async () => {
 	const { plugin, frontmatter, write } = fixture();
 	const params = { paths: '["note.md"]', add: '["new"]', remove: '["old"]' };
-	const preview = (await tagCliApi.run(plugin, params)) as { plan: string };
+	const preview = (await tagCliApi.run(plugin, params)) as { plan: string; items: unknown[] };
+	expect(preview.items).toMatchObject([{ before: ["old"], after: ["new"] }]);
 	expect(write).not.toHaveBeenCalled();
 	const result = await tagCliApi.run(plugin, { ...params, apply: "true", plan: preview.plan });
 	expect(result).toMatchObject({
@@ -50,11 +53,33 @@ it("確認した計画でフロントマターのタグを追加・削除する"
 	expect(frontmatter.tags).toEqual(["new"]);
 });
 
+it("メタデータが古くてもノートの内容を基に削除する", async () => {
+	const { plugin, frontmatter } = fixture();
+	vi.spyOn(plugin.app.metadataCache, "getFileCache").mockReturnValue({
+		frontmatter: { tags: [] },
+	} as never);
+	const params = { paths: '["note.md"]', remove: '["old"]' };
+	const preview = (await tagCliApi.run(plugin, params)) as { plan: string };
+	const result = await tagCliApi.run(plugin, { ...params, apply: "true", plan: preview.plan });
+	expect(result).toMatchObject({ items: [{ result: "updated" }] });
+	expect(frontmatter.tags).toBeUndefined();
+});
+
+it("文字列以外を含むタグを上書きしない", async () => {
+	const { plugin, frontmatter, write, setContent } = fixture();
+	frontmatter.tags = ["old", 3];
+	setContent(JSON.stringify(frontmatter));
+	await expect(tagCliApi.run(plugin, { paths: '["note.md"]', add: '["new"]' })).rejects.toThrow(
+		"タグの値",
+	);
+	expect(write).not.toHaveBeenCalled();
+});
+
 it("確認後の変更や追加と削除の重複を拒否する", async () => {
 	const { plugin, write, setContent } = fixture();
 	const params = { paths: '["note.md"]', add: '["new"]' };
 	const preview = (await tagCliApi.run(plugin, params)) as { plan: string };
-	setContent("changed");
+	setContent('{"tags":["changed"]}');
 	await expect(
 		tagCliApi.run(plugin, { ...params, apply: "true", plan: preview.plan }),
 	).rejects.toThrow("計画が一致しません");

@@ -28,7 +28,7 @@ it("タグの追加と削除を各ノートに適用し、失敗しても続け�
 	const results = await applyTagChangesToFiles(app, files, { add: ["new"], remove: ["old"] });
 	expect(results).toEqual([
 		{ path: "a.md", result: "updated" },
-		{ path: "b.md", result: "failed" },
+		{ path: "b.md", result: "failed", reason: "locked" },
 		{ path: "c.md", result: "updated" },
 	]);
 	expect(data["a.md"].tags).toEqual(["keep", "new"]);

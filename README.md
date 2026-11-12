@@ -200,6 +200,16 @@ MOC remove selector も、同じ判定でつながっているノートに印（
 
 `obsidian my-palette:merge-notes` は統合元の `paths` と統合先の `target` を指定します。プレビューには統合元・統合先、プロパティの衝突、リンクを付け替えるノートを出します。`plan` と `apply` で実行し、成功すると統合元をゴミ箱へ移動します。`no-aliases` を付けると統合元の名前を aliases に追加しません。
 
+PowerShell では例えば次のように指定します。実行時の `plan` は直前にプレビューで返された値に置き換えてください。
+
+```powershell
+obsidian my-palette:rename 'paths=["Notes/a_old.md","Notes/b_old.md"]' 'rule=old/new'
+obsidian my-palette:rename 'paths=["Notes/a_old.md","Notes/b_old.md"]' 'rule=old/new' apply 'plan=<プレビューの plan>'
+obsidian my-palette:edit-tags 'paths=["Notes/a.md"]' 'add=["draft"]' 'remove=["todo"]'
+```
+
+一括操作はトランザクションではありません。実行結果を確認し、失敗した項目がある場合は、成功済みの項目を除いて再度プレビューしてください。計画の照合と書き込みの間に別の操作が入る可能性もあります。
+
 `obsidian my-palette:audit kind=<kind>` で同じ一覧を JSON で出力します。スクリプトや AI エージェントから使うためのものです。`kind` は `orphaned-files`・`broken-links`・`empty-files`・`empty-folders` のどれかで、`glob=<pattern>` で一致するパス（壊れたリンクでは参照元のノート）だけに絞ります。壊れたリンクの行番号は1から数えます。
 
 `trash` を付けない限り一覧を出すだけです。`trash` には `glob` が必須なので、指定を忘れて保管庫全体を動かすことはありません。そのときは各項目に `trashed`・`skipped`・`failed` の結果が付きます。`obsidian my-palette` で使える CLI コマンドの一覧を出します。

@@ -1,10 +1,25 @@
-import { TFile } from "obsidian";
+import { getFrontMatterInfo, parseYaml, TFile } from "obsidian";
 import type { CliApi } from "src/app/registerCli";
 import { cliPlanHash, cliTargetPaths, requireCliPlan } from "src/app/cliPlans";
 import { t } from "src/i18n";
 import { tagKey } from "src/tags/tagChoices";
 import { normalizeTagName } from "src/tags/tagRename";
-import { applyTagChangesToFiles } from "src/tags/tagOperations";
+import { applyTagChangesToFiles, isSafeTagValue } from "src/tags/tagOperations";
+import {
+	mergeFrontmatterTags,
+	normalizeFrontmatterTags,
+	removeFrontmatterTags,
+} from "src/shared/frontmatter";
+
+function tagsFromContent(content: string): string[] {
+	const info = getFrontMatterInfo(content);
+	const parsed: unknown = info.exists ? parseYaml(info.frontmatter) : {};
+	if (parsed !== null && (typeof parsed !== "object" || Array.isArray(parsed)))
+		throw new Error(t("cli.tag.invalidValue"));
+	const value: unknown = parsed ? (parsed as Record<string, unknown>).tags : undefined;
+	if (!isSafeTagValue(value)) throw new Error(t("cli.tag.invalidValue"));
+	return normalizeFrontmatterTags(value);
+}
 
 function parseTags(value: string | undefined): string[] {
 	if (value === undefined) return [];
@@ -50,14 +65,19 @@ export const tagCliApi: CliApi = {
 				return { file, path, content: await app.vault.read(file) };
 			}),
 		);
-		const items = snapshots.map(({ path, content }) => ({
-			path,
-			contentHash: cliPlanHash(content),
-		}));
+		const items = snapshots.map(({ path, content }) => {
+			const before = tagsFromContent(content);
+			const added = changes.add.length ? mergeFrontmatterTags(before, changes.add) : before;
+			const after = changes.remove.length
+				? removeFrontmatterTags(added, changes.remove)
+				: added;
+			return { path, before, after, contentHash: cliPlanHash(content) };
+		});
 		const plan = cliPlanHash({ changes, items });
 		if (params.apply !== "true") return { action: "preview", plan, changes, items };
 		requireCliPlan(params.plan, plan);
 		const expected = new Map(snapshots.map(({ path, content }) => [path, content]));
+		const expectedTags = new Map(items.map(({ path, before }) => [path, before]));
 		return {
 			action: "edit-tags",
 			plan,
@@ -66,6 +86,7 @@ export const tagCliApi: CliApi = {
 				snapshots.map(({ file }) => file),
 				changes,
 				expected,
+				expectedTags,
 			),
 		};
 	},
