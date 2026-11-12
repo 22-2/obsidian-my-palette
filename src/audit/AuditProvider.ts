@@ -5,8 +5,8 @@ import type { AuditKind, AuditReport } from "src/audit/vaultAudit";
 import type { AuditResult } from "src/palette/results";
 import type { PaletteProvider, PaletteSearchRequest } from "src/search/PaletteProvider";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
-import { formatSize } from "src/shared/fileSize";
-import { countLabel } from "src/shared/countLabel";
+import { formatSize } from "src/core/fileSize";
+import { countLabel } from "src/core/countLabel";
 import type { MyPaletteSettings } from "src/settings/model";
 import { t } from "src/i18n";
 

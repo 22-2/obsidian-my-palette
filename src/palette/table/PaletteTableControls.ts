@@ -11,8 +11,8 @@ import {
 	type PaletteTableState,
 	type PaletteTableColumnId,
 } from "src/palette/table/paletteTableModel";
-import { formatSize } from "src/shared/fileSize";
-import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
+import { formatSize } from "src/core/fileSize";
+import { normalizeFrontmatterPrior } from "src/core/frontmatter";
 import { renderSelectionItem, type SelectionItem } from "src/ui/selectionModal";
 import type { SuggestionPanel, SuggestionPanelResults } from "src/ui/suggestionPanel";
 import { t } from "src/i18n";

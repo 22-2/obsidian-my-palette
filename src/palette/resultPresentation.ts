@@ -1,8 +1,8 @@
 import { TFile, type App } from "obsidian";
 import { emptyFileLabel } from "src/audit/noteEmptiness";
 import { getVaultFullPath, isAbsolutePathUserIgnored } from "src/ignored-notes/ignoredPaths";
-import { isMarkdownPath } from "src/shared/externalFiles";
-import { compactPath } from "src/shared/pathDisplay";
+import { isMarkdownPath } from "src/core/externalFiles";
+import { compactPath } from "src/core/pathDisplay";
 import type { PaletteResult } from "src/palette/results";
 import type { SelectionItem } from "src/ui/selectionModal";
 import type { CopyablePaths } from "src/platform/pathClipboard";

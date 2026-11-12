@@ -7,7 +7,7 @@ import {
 	normalizePath,
 } from "obsidian";
 import { getVaultNewFileFolderPath, isUserIgnoredPath } from "src/ignored-notes/ignoredPaths";
-import { logger } from "src/shared/logger";
+import { logger } from "src/core/logger";
 import { t } from "src/i18n";
 
 export const IMPORT_SOURCE_PROPERTY = "my-palette-source";

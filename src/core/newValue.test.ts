@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { typedNewValue, type NewValueRules } from "src/shared/newValue";
+import { typedNewValue, type NewValueRules } from "src/core/newValue";
 
 const plain: NewValueRules = {
 	normalize: (query) => query.trim(),

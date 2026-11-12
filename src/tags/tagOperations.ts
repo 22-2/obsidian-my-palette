@@ -4,8 +4,8 @@ import {
 	removeFrontmatterTags,
 	setOrDeleteFrontmatterList,
 	writeFrontmatter,
-} from "src/shared/frontmatter";
-import { tagKey } from "src/shared/tagKey";
+} from "src/core/frontmatter";
+import { tagKey } from "src/core/tagKey";
 import type { MultiSelectChanges } from "src/ui/multiSelectChanges";
 import { t } from "src/i18n";
 

@@ -1,6 +1,6 @@
 import { TFile, TFolder, type App, type TAbstractFile } from "obsidian";
 import { noteEmptiness } from "src/audit/noteEmptiness";
-import { logger } from "src/shared/logger";
+import { logger } from "src/core/logger";
 import type { AuditKind } from "src/audit/vaultAudit";
 import { removeLinkFromMocRelateds } from "src/moc-relateds/mocRelatedsCore";
 import { t } from "src/i18n";

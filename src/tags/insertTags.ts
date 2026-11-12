@@ -5,9 +5,9 @@ import {
 	removeFrontmatterTags,
 	setOrDeleteFrontmatterList,
 	updateFrontmatter,
-} from "src/shared/frontmatter";
-import { relationPaths } from "src/shared/noteRelations";
-import { tagKey } from "src/shared/tagKey";
+} from "src/core/frontmatter";
+import { relationPaths } from "src/core/noteRelations";
+import { tagKey } from "src/core/tagKey";
 import { buildTagChoices, type TagChoice } from "src/tags/tagChoices";
 import type { MultiSelectChanges } from "src/ui/multiSelectChanges";
 import { TagSelectionModal } from "src/tags/TagSelectionModal";

@@ -13,7 +13,7 @@ import {
 	FILE_SORT_PRIORITIES,
 	type FileSortPriorities,
 } from "src/settings/model";
-import { normalizeFrontmatterKeywords, normalizeFrontmatterPrior } from "src/shared/frontmatter";
+import { normalizeFrontmatterKeywords, normalizeFrontmatterPrior } from "src/core/frontmatter";
 import {
 	EMPTY_EXCLUDED_FOLDER_SOURCE,
 	isExcludedFolder,

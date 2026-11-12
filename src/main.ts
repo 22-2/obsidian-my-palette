@@ -34,7 +34,7 @@ import { getVaultRootPath } from "src/ignored-notes/ignoredPaths";
 import { openPluginSettings } from "src/search/plugin/pluginSettings";
 import "../styles.css";
 import { ICONS } from "src/ui/icons";
-import { debugLog, logger, setDebugLogging } from "src/shared/logger";
+import { debugLog, logger, setDebugLogging } from "src/core/logger";
 import { t } from "src/i18n";
 
 export default class MyPalettePlugin extends Plugin {

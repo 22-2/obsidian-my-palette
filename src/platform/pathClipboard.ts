@@ -1,7 +1,7 @@
 import { Notice } from "obsidian";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { MENU_ACTIONS, withAction, type MenuAction } from "src/ui/menuActions";
-import { logger } from "src/shared/logger";
+import { logger } from "src/core/logger";
 import { t } from "src/i18n";
 
 export interface CopyablePaths {

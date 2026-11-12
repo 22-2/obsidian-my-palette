@@ -1,6 +1,6 @@
 import { Notice } from "obsidian";
 import { matchesHotkey, type PaletteHotkeys } from "src/ui/hotkeys";
-import { logger } from "src/shared/logger";
+import { logger } from "src/core/logger";
 import { t } from "src/i18n";
 
 export class SuggestionPreview<T> {

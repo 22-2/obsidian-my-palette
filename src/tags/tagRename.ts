@@ -1,4 +1,4 @@
-import { tagKey } from "src/shared/tagKey";
+import { tagKey } from "src/core/tagKey";
 
 // Why: Obsidian がタグとして認める文字。空白と記号は含めず、`/` だけで階層を表す。
 const TAG_NAME = /^[^\s\u2000-\u206F\u2E00-\u2E7F'!"#$%&()*+,.:;<=>?@^`{|}~[\]\\]+$/;

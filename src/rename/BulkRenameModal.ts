@@ -11,7 +11,7 @@ import {
 	type RenameStatus,
 } from "src/rename/renamePlan";
 import { ICONS } from "src/ui/icons";
-import { countLabel } from "src/shared/countLabel";
+import { countLabel } from "src/core/countLabel";
 import { renameFiles } from "src/rename/renameFiles";
 import { t } from "src/i18n";
 

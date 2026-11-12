@@ -2,14 +2,14 @@ import { getFrontMatterInfo, parseYaml, TFile } from "obsidian";
 import type { CliApi } from "src/app/registerCli";
 import { cliPlanHash, cliTargetPaths, requireCliPlan } from "src/app/cliPlans";
 import { t } from "src/i18n";
-import { tagKey } from "src/shared/tagKey";
+import { tagKey } from "src/core/tagKey";
 import { normalizeTagName } from "src/tags/tagRename";
 import { applyTagChangesToFiles, isSafeTagValue } from "src/tags/tagOperations";
 import {
 	mergeFrontmatterTags,
 	normalizeFrontmatterTags,
 	removeFrontmatterTags,
-} from "src/shared/frontmatter";
+} from "src/core/frontmatter";
 
 function tagsFromContent(content: string): string[] {
 	const info = getFrontMatterInfo(content);

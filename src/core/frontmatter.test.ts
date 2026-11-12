@@ -4,7 +4,7 @@ import {
 	normalizeFrontmatterKeywords,
 	normalizeFrontmatterTags,
 	removeFrontmatterTags,
-} from "src/shared/frontmatter";
+} from "src/core/frontmatter";
 
 describe("正規化Frontmatterキーワード", () => {
 	it("文字列配列のみを受け入れ、空または無効な要素をスキップします", () => {

@@ -16,7 +16,7 @@ import {
 } from "src/search/bookmark/bookmarks";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
-import { countLabel } from "src/shared/countLabel";
+import { countLabel } from "src/core/countLabel";
 import { t } from "src/i18n";
 
 interface BookmarkMenuOptions {

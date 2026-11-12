@@ -5,8 +5,8 @@ import {
 	parseYaml,
 } from "obsidian";
 import { normalizeTags } from "src/search/file/fileTags";
-import { normalizeFrontmatterKeywords, normalizeFrontmatterPrior } from "src/shared/frontmatter";
-import { logger } from "src/shared/logger";
+import { normalizeFrontmatterKeywords, normalizeFrontmatterPrior } from "src/core/frontmatter";
+import { logger } from "src/core/logger";
 
 export interface IgnoredNoteIndexEntry {
 	path: string;

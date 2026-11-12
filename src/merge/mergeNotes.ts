@@ -1,5 +1,5 @@
 import type { App, TFile } from "obsidian";
-import { logger } from "src/shared/logger";
+import { logger } from "src/core/logger";
 import { t } from "src/i18n";
 import {
 	buildMergedBody,

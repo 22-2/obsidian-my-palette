@@ -1,6 +1,6 @@
 import type { App } from "obsidian";
 import type { PaletteResult } from "src/palette/results";
-import { normalizeFrontmatterPrior } from "src/shared/frontmatter";
+import { normalizeFrontmatterPrior } from "src/core/frontmatter";
 import { t } from "src/i18n";
 
 export const PALETTE_SORT_KEYS = [

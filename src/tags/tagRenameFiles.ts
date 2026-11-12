@@ -1,6 +1,6 @@
 import { parseFrontMatterAliases, parseFrontMatterTags, type App, type TFile } from "obsidian";
 import { t } from "src/i18n";
-import { logger } from "src/shared/logger";
+import { logger } from "src/core/logger";
 import {
 	deleteAliasTags,
 	deleteFrontmatterTags,

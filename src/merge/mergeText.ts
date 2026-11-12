@@ -1,4 +1,4 @@
-import { mergeFrontmatterTags, normalizeFrontmatterTags } from "src/shared/frontmatter";
+import { mergeFrontmatterTags, normalizeFrontmatterTags } from "src/core/frontmatter";
 
 /**
  * ノートの統合で使う、テキストとプロパティの変換。Obsidian に依存しないので、そのままテストできる。

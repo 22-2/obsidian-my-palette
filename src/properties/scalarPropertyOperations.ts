@@ -1,5 +1,5 @@
 import type { App, TFile } from "obsidian";
-import { writeFrontmatter } from "src/shared/frontmatter";
+import { writeFrontmatter } from "src/core/frontmatter";
 import type { InputPropertyKind } from "src/properties/propertyInput";
 import { t } from "src/i18n";
 

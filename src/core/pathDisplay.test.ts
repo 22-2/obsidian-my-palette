@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compactPath } from "src/shared/pathDisplay";
+import { compactPath } from "src/core/pathDisplay";
 
 describe("コンパクトパス", () => {
 	it("Windows ドライブと最終フォルダーを保持します", () => {

@@ -17,8 +17,8 @@ vi.mock("src/tags/TagRenameModal", () => ({
 		open() {}
 	},
 }));
-vi.mock("src/shared/frontmatter", async (importOriginal) => ({
-	...(await importOriginal<typeof import("src/shared/frontmatter")>()),
+vi.mock("src/core/frontmatter", async (importOriginal) => ({
+	...(await importOriginal<typeof import("src/core/frontmatter")>()),
 	updateFrontmatter: vi.fn(
 		async (_app: unknown, _file: unknown, _operation: string, update: (fm: object) => void) => {
 			const frontmatter: { tags?: unknown } = { tags: ["keep"] };

@@ -1,6 +1,6 @@
 import type { App, TFile } from "obsidian";
-import { logger } from "src/shared/logger";
-import { tagKey } from "src/shared/tagKey";
+import { logger } from "src/core/logger";
+import { tagKey } from "src/core/tagKey";
 
 /** Write a frontmatter change and log any failure, so a "See the console" notice has detail. */
 export async function updateFrontmatter(

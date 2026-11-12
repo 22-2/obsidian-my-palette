@@ -3,7 +3,7 @@ import type MyPalettePlugin from "src/main";
 import type { ActionKind } from "src/palette/resultActions";
 import type { PaletteResult, TagResult } from "src/palette/results";
 import { t } from "src/i18n";
-import { mergeFrontmatterTags, updateFrontmatter } from "src/shared/frontmatter";
+import { mergeFrontmatterTags, updateFrontmatter } from "src/core/frontmatter";
 import { confirmDeleteTags } from "src/tags/tagDelete";
 import { TagRenameModal } from "src/tags/TagRenameModal";
 import { addMenuAction, MENU_ACTIONS } from "src/ui/menuActions";

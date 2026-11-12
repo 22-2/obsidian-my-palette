@@ -3,12 +3,12 @@ import type MyPalettePlugin from "src/main";
 import { searchFuzzyQuery } from "src/search/fuzzyQuery";
 import { readList } from "src/properties/propertyList";
 import type { EditResult } from "src/properties/propertyInputSelector";
-import { typedNewValue, type NewValueRules } from "src/shared/newValue";
+import { typedNewValue, type NewValueRules } from "src/core/newValue";
 import { MultiSelectModal, type MultiSelectCandidate } from "src/ui/MultiSelectModal";
 import { changeCount, type MultiSelectChanges } from "src/ui/multiSelectChanges";
 import { writeListChanges, writeListChangesToFiles } from "src/properties/listPropertyOperations";
 import { getFrontmatterValuesForKey } from "src/platform/obsidianInternals";
-import { countLabel } from "src/shared/countLabel";
+import { countLabel } from "src/core/countLabel";
 import { t } from "src/i18n";
 
 const VALUE_RULES: NewValueRules = {

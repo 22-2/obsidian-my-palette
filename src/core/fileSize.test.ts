@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatSize } from "src/shared/fileSize";
+import { formatSize } from "src/core/fileSize";
 
 describe("フォーマットサイズ", () => {
 	it("1 KB 未満のバイトと 10 単位未満の小数点 1 つを使用します", () => {

@@ -1,6 +1,6 @@
 import { Modal, Notice, Setting, type App, type TFile } from "obsidian";
 import { t } from "src/i18n";
-import { tagKey } from "src/shared/tagKey";
+import { tagKey } from "src/core/tagKey";
 import { normalizeTagName } from "src/tags/tagRename";
 import {
 	applyTagEditToEach,

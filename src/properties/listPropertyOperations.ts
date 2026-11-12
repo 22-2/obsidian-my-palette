@@ -1,6 +1,6 @@
 import type { App, TFile } from "obsidian";
 import { readList } from "src/properties/propertyList";
-import { setOrDeleteFrontmatterList, writeFrontmatter } from "src/shared/frontmatter";
+import { setOrDeleteFrontmatterList, writeFrontmatter } from "src/core/frontmatter";
 import type { MultiSelectChanges } from "src/ui/multiSelectChanges";
 import { t } from "src/i18n";
 

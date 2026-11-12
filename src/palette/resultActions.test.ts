@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isMarkdownPath } from "src/shared/externalFiles";
+import { isMarkdownPath } from "src/core/externalFiles";
 
 describe("Markdownパスの判定", () => {
 	it("大文字と小文字を区別せずに Markdown パスを認識します", () => {

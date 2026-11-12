@@ -34,7 +34,7 @@ import { addTagInsertionMenuItems } from "src/tags/tagInsertionMenu";
 import { populateTagMenu } from "src/tags/tagMenu";
 import { populatePropertyMenu } from "src/properties/propertyMenu";
 import { openPluginSettings } from "src/search/plugin/pluginSettings";
-import { logger } from "src/shared/logger";
+import { logger } from "src/core/logger";
 import { t } from "src/i18n";
 import {
 	addExternalAppMenuItems,

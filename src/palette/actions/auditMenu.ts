@@ -20,7 +20,7 @@ import {
 } from "src/platform/pathClipboard";
 import { ICONS } from "src/ui/icons";
 import type { PaletteMenu } from "src/ui/paletteMenu";
-import { countLabel } from "src/shared/countLabel";
+import { countLabel } from "src/core/countLabel";
 import { t } from "src/i18n";
 
 /** メニューでノートを見つけるのに十分な数。残りは、ノート自体の中で1回の検索で見つかる。 */

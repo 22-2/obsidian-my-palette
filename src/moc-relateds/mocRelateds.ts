@@ -22,12 +22,12 @@ import { ignoredToggleOptions } from "src/palette/ignoredToggle";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
 import { executePaletteResult } from "src/palette/executePaletteResult";
 import { matchedMetadataPresentation } from "src/palette/resultPresentation";
-import { relationPaths } from "src/shared/noteRelations";
+import { relationPaths } from "src/core/noteRelations";
 import { isExcludedFolder } from "src/search/excludedFolders";
 import { openPaletteResultInBackground } from "src/palette/backgroundResultActions";
 import { addOpenMenuItems } from "src/ui/menuActions";
 import { ICONS } from "src/ui/icons";
-import { logger } from "src/shared/logger";
+import { logger } from "src/core/logger";
 import { t } from "src/i18n";
 
 function toRelatedCandidate(

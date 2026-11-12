@@ -1,7 +1,7 @@
 import fuzzysort from "fuzzysort";
-import { tagKey } from "src/shared/tagKey";
+import { tagKey } from "src/core/tagKey";
 import type { TagChoice } from "src/tags/tagChoices";
-import { typedNewValue, type NewValueRules } from "src/shared/newValue";
+import { typedNewValue, type NewValueRules } from "src/core/newValue";
 
 export type TagSuggestion = { type: "tag"; choice: TagChoice } | { type: "new"; tag: string };
 

@@ -3,7 +3,7 @@ import type { SelectorControls } from "src/ui/selectorControls";
 import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
 import { moveFiles, moveSourcePath, type MoveSource } from "src/move/moveFiles";
 import { ICONS } from "src/ui/icons";
-import { countLabel } from "src/shared/countLabel";
+import { countLabel } from "src/core/countLabel";
 import { t } from "src/i18n";
 
 interface FolderItem extends SelectionItem {

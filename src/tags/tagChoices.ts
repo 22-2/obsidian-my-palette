@@ -1,4 +1,4 @@
-import { tagKey } from "src/shared/tagKey";
+import { tagKey } from "src/core/tagKey";
 
 export interface TagChoice {
 	/** Tag name without the leading `#`. */

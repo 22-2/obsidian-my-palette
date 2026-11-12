@@ -3,10 +3,10 @@ import type MyPalettePlugin from "src/main";
 import { propertyTargetPaths, type PropertyResult } from "src/palette/results";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { readList } from "src/properties/propertyList";
-import { updateFrontmatter } from "src/shared/frontmatter";
+import { updateFrontmatter } from "src/core/frontmatter";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 import { ICONS } from "src/ui/icons";
-import { logger } from "src/shared/logger";
+import { logger } from "src/core/logger";
 import { getGlobalSearch } from "src/platform/obsidianInternals";
 import { t } from "src/i18n";
 
