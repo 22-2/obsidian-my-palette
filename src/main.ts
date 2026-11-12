@@ -1,7 +1,7 @@
 import { Plugin, type WorkspaceLeaf } from "obsidian";
-import { DEFAULT_SETTINGS, MyPaletteSettingTab } from "src/settings";
+import { MyPaletteSettingTab } from "src/settings/settingTab";
 import type { LeafOpenAction } from "src/workspace/openLeaf";
-import type { MyPaletteSettings } from "src/settings/model";
+import { DEFAULT_SETTINGS, type MyPaletteSettings } from "src/settings/model";
 import {
 	createPaletteProviders,
 	type PaletteProviderInstances,
