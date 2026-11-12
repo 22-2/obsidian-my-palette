@@ -3,6 +3,34 @@ import globals from "globals";
 import { globalIgnores, defineConfig } from "eslint/config";
 import myPalette from "./eslint-rules/command-naming.mts";
 
+// 層の依存の向きを保つ: core・i18n < platform < ui < settings・features < app。
+// 下の層は上の層を import しない。層の説明は docs/DEVELOPMENT.md にある。
+// テストと、さまざまな層をつなぎ合わせるテスト用の補助(src/ui/testing)は対象外にする。
+const upperLayers = (...layers: string[]) => layers.map((layer) => `src/${layer}/**`);
+const layerBoundaries = [
+	{
+		files: ["src/core/**/*.ts"],
+		layer: "core",
+		forbidden: [...upperLayers("platform", "ui", "settings", "features", "app"), "src/main"],
+	},
+	{
+		files: ["src/platform/**/*.ts"],
+		layer: "platform",
+		forbidden: upperLayers("ui", "settings", "features", "app"),
+	},
+	{
+		files: ["src/ui/**/*.ts"],
+		layer: "ui",
+		forbidden: upperLayers("settings", "features", "app"),
+		ignores: ["src/ui/testing/**"],
+	},
+	{
+		files: ["src/settings/**/*.ts", "src/features/**/*.ts"],
+		layer: "settings・features",
+		forbidden: upperLayers("app"),
+	},
+];
+
 export default defineConfig(
 	globalIgnores([
 		"node_modules",
@@ -69,6 +97,23 @@ export default defineConfig(
 			],
 		},
 	},
+	...layerBoundaries.map(({ files, layer, forbidden, ignores = [] }) => ({
+		files,
+		ignores: ["**/*.test.ts", ...ignores],
+		rules: {
+			"no-restricted-imports": [
+				"error",
+				{
+					patterns: [
+						{
+							group: forbidden,
+							message: `${layer} の層は上の層を import できない。依存の向きは docs/DEVELOPMENT.md を参照。`,
+						},
+					],
+				},
+			],
+		},
+	})),
 	{
 		// Commands are all "Open <thing>" with a matching kebab-case id.
 		files: ["src/app/registerCommands.ts"],
