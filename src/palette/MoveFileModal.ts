@@ -1,24 +1,13 @@
-import { Notice, TFile, TFolder } from "obsidian";
+import { Notice, TFolder } from "obsidian";
 import type { SelectorControls } from "src/ui/selectorControls";
 import { SelectionModal, type SelectionItem } from "src/ui/selectionModal";
-import { materializeIgnoredNote } from "src/ignored-notes/ignoredNoteMaterializer";
+import { moveFiles, moveSourcePath, type MoveSource } from "src/palette/moveFiles";
 import { ICONS } from "src/ui/icons";
 import { countLabel } from "src/shared/countLabel";
 import { t } from "src/i18n";
 
 interface FolderItem extends SelectionItem {
 	path: string;
-}
-
-/** 移動先が選ばれるまで Vault にコピーされない、Obsidian の除外ノート。 */
-export interface ExcludedNoteSource {
-	excludedPath: string;
-}
-
-export type MoveSource = TFile | ExcludedNoteSource;
-
-function sourcePath(source: MoveSource): string {
-	return source instanceof TFile ? source.path : source.excludedPath;
 }
 
 function isSourceList(files: MoveSource | readonly MoveSource[]): files is readonly MoveSource[] {
@@ -43,7 +32,7 @@ export class MoveFileModal extends SelectionModal<FolderItem> {
 				placeholder: t("folder.placeholder"),
 				footerText:
 					targets.length === 1
-						? t("folder.footer.moving", { path: sourcePath(targets[0]) })
+						? t("folder.footer.moving", { path: moveSourcePath(targets[0]) })
 						: t("folder.footer.movingMany", {
 								what: countLabel(targets.length, "ファイル"),
 							}),
@@ -78,26 +67,11 @@ export class MoveFileModal extends SelectionModal<FolderItem> {
 	}
 
 	protected override async onItemActivated(item: FolderItem): Promise<void> {
-		const failures: string[] = [];
-		let moved = 0;
-		// Why: 1つずつ移動して、名前の変更のたびにリンクを更新してから次を始める。
-		// また、1つの名前の衝突が残りを止めないよう、失敗しても続ける。
-		for (const source of this.files) {
-			const name = sourcePath(source).split("/").pop() ?? "";
-			try {
-				// Why: 遅延して取り込むので、セレクターをキャンセルしたときに何もコピーされない。
-				const file =
-					source instanceof TFile
-						? source
-						: await materializeIgnoredNote(this.app, source.excludedPath);
-				const destination = item.path ? `${item.path}/${file.name}` : file.name;
-				if (destination === file.path) continue;
-				await this.app.fileManager.renameFile(file, destination);
-				moved++;
-			} catch (error) {
-				failures.push(`${name}: ${error instanceof Error ? error.message : String(error)}`);
-			}
-		}
+		const results = await moveFiles(this.app, this.files, item.path);
+		const moved = results.filter((result) => result.result === "moved").length;
+		const failures = results
+			.filter((result) => result.result === "failed")
+			.map((result) => `${result.path.split("/").pop() ?? ""}: ${result.reason}`);
 		this.changed ||= moved > 0;
 		const folderName = item.path || t("folder.vaultRoot");
 		if (failures.length === 0) {
