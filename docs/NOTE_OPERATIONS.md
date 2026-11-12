@@ -11,6 +11,7 @@
 | フロントマターのタグ       | [tagOperations.ts](../src/tags/tagOperations.ts)                                                                       | `edit-tags`                                  |
 | 保管庫全体のタグ変更・削除 | [tagRenameFiles.ts](../src/tags/tagRenameFiles.ts)                                                                     | `rename-tag`、`delete-tags`                  |
 | リスト型プロパティ         | [listPropertyOperations.ts](../src/properties/listPropertyOperations.ts)                                               | `edit-list-property`                         |
+| 単一値プロパティ           | [scalarPropertyOperations.ts](../src/properties/scalarPropertyOperations.ts)                                           | `set-property`                               |
 | MOC の Relateds のリンク   | [mocRelatedsCore.ts](../src/moc-relateds/mocRelatedsCore.ts)、[mocOperations.ts](../src/moc-relateds/mocOperations.ts) | `insert-moc-relateds`、`remove-moc-relateds` |
 | Vault 監査                 | [auditActions.ts](../src/audit/auditActions.ts)                                                                        | `audit`                                      |
 
@@ -40,6 +41,7 @@ obsidian my-palette:rename 'paths=["Notes/a_old.md","Notes/b_old.md"]' 'rule=old
 - `merge-notes`: `target` と統合元の `paths` は異なる Markdown ノートにする。プレビューにはプロパティの衝突とリンク付け替え先を含む。統合先のプロパティ・本文、リンク、統合元のゴミ箱移動は別段階なので、失敗時は `failures` を確認する。リンク元の検出には Obsidian のメタデータキャッシュを使う。
 - `edit-tags`: `add` と `remove` はタグ名の JSON 配列。フロントマターの `tags` を対象とし、本文中のインラインタグは変更しない。同じタグを追加と削除の両方に指定できない。プレビューには変更前後を含む。
 - `rename-tag` / `delete-tags`: それぞれ `from`・`to`、または `tags` の JSON 配列でタグ名を指定する。保管庫全体の本文・フロントマター・タグ形式のエイリアスと子タグが対象。対象探索と本文内の位置に Obsidian のメタデータキャッシュを使う。位置が現在の本文と一致しなければ `blocked` になり実行しない。本文とフロントマターは別々に更新するため、失敗した項目には部分変更の可能性を示す `partialPossible` が付く。
-- `edit-list-property`: `key` と `add`・`remove` の文字列配列を指定する。既存の値が文字列のリスト、または存在しない場合だけ扱う。リストが空になるとキーを削除し、プレビューに `deleteKey` を示す。`tags` は `edit-tags` を使う。テキスト・数値・日付などの編集には対応しない。
+- `edit-list-property`: `key` と `add`・`remove` の文字列配列を指定する。既存の値が文字列のリスト、または存在しない場合だけ扱う。リストが空になるとキーを削除し、プレビューに `deleteKey` を示す。`tags` は `edit-tags` を使う。
+- `set-property`: `key`、`kind` と `value` を指定し、テキスト・数値・チェックボックス・日付・日時を設定する。入力は画面と同じ方法で検証する。既存値の保存上の型が異なる場合や複合値は拒否する。`tags`・`aliases`・`cssclasses` は対象外。複数ノートを指定した場合も各ノートの結果を返す。
 - `insert-moc-relateds` / `remove-moc-relateds`: `moc` に MOC、`paths` に対象ノートを指定する。既定は相互リンク、`one-way` では MOC から対象へのリンクだけを操作する。各リンクの方向と状態、各ノートの変更予定を確認できる。いずれかのリンクが操作できない計画は `blocked` になり、実行しない。削除時は子項目のあるリンクを残す。
 - `audit`: `kind` と任意の `glob` で一覧を取得する。`trash` は `glob` が必須。監査結果に対する実行時の再確認と、各項目の処理結果は [auditCli.ts](../src/audit/auditCli.ts) を参照する。

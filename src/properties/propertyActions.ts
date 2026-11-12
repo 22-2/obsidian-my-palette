@@ -5,7 +5,7 @@ import { insertTags } from "src/tags/insertTags";
 import { editListProperty } from "src/properties/propertyValueSelector";
 import { editPropertyValue } from "src/properties/propertyInputSelector";
 import { SelectionModal } from "src/ui/selectionModal";
-import { updateFrontmatter } from "src/shared/frontmatter";
+import { writeScalarProperty } from "src/properties/scalarPropertyOperations";
 import { PROPERTY_KIND_ICONS } from "src/properties/propertyKind";
 import { t } from "src/i18n";
 
@@ -70,15 +70,8 @@ export async function editPropertyResult(
 async function toggleCheckbox(app: App, file: TFile, key: string): Promise<void> {
 	const current: unknown = app.metadataCache.getFileCache(file)?.frontmatter?.[key];
 	const next = current !== true;
-	const updated = await updateFrontmatter(
-		app,
-		file,
-		`update the property ${key} of`,
-		(frontmatter) => {
-			frontmatter[key] = next;
-		},
-	);
-	if (!updated) {
+	const result = await writeScalarProperty(app, file, key, next);
+	if (!result.ok) {
 		new Notice(t("property.error.updateFailed", { name: file.basename }));
 		return;
 	}

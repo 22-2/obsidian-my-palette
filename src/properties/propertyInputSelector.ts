@@ -7,7 +7,7 @@ import {
 } from "src/properties/propertyInput";
 import { vaultValuesOf } from "src/properties/propertyValueSelector";
 import { SelectionModal } from "src/ui/selectionModal";
-import { updateFrontmatter } from "src/shared/frontmatter";
+import { writeScalarProperty } from "src/properties/scalarPropertyOperations";
 import { t } from "src/i18n";
 
 interface PropertyInputOptions {
@@ -92,14 +92,7 @@ async function writeValue(
 	key: string,
 	value: string | number,
 ): Promise<boolean> {
-	const updated = await updateFrontmatter(
-		app,
-		file,
-		`update the property ${key} of`,
-		(frontmatter) => {
-			frontmatter[key] = value;
-		},
-	);
-	if (!updated) new Notice(t("property.error.updateFailed", { name: file.basename }));
-	return updated;
+	const result = await writeScalarProperty(app, file, key, value);
+	if (!result.ok) new Notice(t("property.error.updateFailed", { name: file.basename }));
+	return result.ok;
 }

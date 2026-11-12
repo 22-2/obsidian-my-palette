@@ -5,6 +5,7 @@ import { moveCliApi } from "src/palette/moveCli";
 import { trashCliApi } from "src/palette/trashCli";
 import { tagCliApi } from "src/tags/tagCli";
 import { listPropertyCliApi } from "src/properties/listPropertyCli";
+import { scalarPropertyCliApi } from "src/properties/scalarPropertyCli";
 import { mergeCliApi } from "src/merge/mergeCli";
 import { mocCliApi, mocRemoveCliApi } from "src/moc-relateds/mocCli";
 import { renameTagCliApi, deleteTagsCliApi } from "src/tags/globalTagCli";
@@ -30,6 +31,7 @@ const CLI_APIS: readonly CliApi[] = [
 	trashCliApi,
 	tagCliApi,
 	listPropertyCliApi,
+	scalarPropertyCliApi,
 	mergeCliApi,
 	mocCliApi,
 	mocRemoveCliApi,
