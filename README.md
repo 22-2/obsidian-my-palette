@@ -152,7 +152,7 @@ MOC insert selector も同じ入力／選択モードと操作です。相互に
 
 - **List 型の値**（`aliases`、`cssclasses` を含む）: キーで `Enter` を押すと、全ノートを対象に Property value selector が開きます。全ノートが持つ値はチェック済みで、外すと全ノートから削除します。一部のノートだけが持つ値は `On 2/3 notes` と出て、チェックすると残りのノートに追加します。`Ctrl+Enter` でチェックを反映します。新しい値を入力して `Enter` を押すと、全ノートに追加します。
 - **tags**: `tags` で `Enter` を押すと、`Add tags…` と同じく全ノートを対象に Tag insert selector が開きます。
-- **キーの削除**: キーを右クリックして `Delete property from N notes` を選びます。最初の押下は確認に変わるだけで、2回目の押下でそのキーを持つノートから削除します。元に戻せません。
+- **キーの削除**: キーを右クリックして `Delete property from N notes` を選びます。確認パレットが開くので、`Ctrl+Enter` を押すと、そのキーを持つノートから削除します。元に戻せません。
 - Text・Number・Date・Checkbox の値を複数ノートへ設定することは、まだできません。書き込みに失敗したノート（YAML が壊れている場合など）は数えて通知し、残りのノートは更新します。
 
 ### ファイル名の変更

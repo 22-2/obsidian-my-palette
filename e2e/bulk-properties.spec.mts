@@ -1,5 +1,11 @@
 import { expect, test } from "./fixtures.mts";
-import { MODAL_INPUT, MODAL_ROW, openPaletteWith, pluginVaultOptions } from "./support.mts";
+import {
+	confirmPalette,
+	MODAL_INPUT,
+	MODAL_ROW,
+	openPaletteWith,
+	pluginVaultOptions,
+} from "./support.mts";
 
 test.use({ vaultOptions: pluginVaultOptions() });
 
@@ -66,7 +72,7 @@ test("a value typed in the list selector is added to every selected note", async
 	expect(await obsidian.read("Bulk B.md")).toContain("- y");
 });
 
-test("deleting a key needs a second press and only touches the notes that have it", async ({
+test("deleting a key needs confirmation and only touches the notes that have it", async ({
 	obsidian,
 }) => {
 	const page = await openPropertiesForAll(obsidian);
@@ -78,12 +84,10 @@ test("deleting a key needs a second press and only touches the notes that have i
 		.locator(".menu .menu-item")
 		.filter({ hasText: "3 件のノートからプロパティを削除" });
 	await del.click();
-	await expect(page.locator(".menu .menu-item.mod-cta")).toContainText(
-		"もう一度クリックして 3 件のノートから削除",
-	);
+	await expect(confirmPalette(page)).toBeVisible();
 	expect(await obsidian.read("Bulk A.md")).toContain("topic");
 
-	await page.locator(".menu .menu-item.mod-cta").click();
+	await page.keyboard.press("Control+Enter");
 	for (const note of NOTES.slice(0, 2)) {
 		await expect.poll(() => obsidian.read(note)).not.toContain("topic");
 	}

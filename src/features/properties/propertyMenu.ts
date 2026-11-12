@@ -2,6 +2,7 @@ import { Notice, type App, type TFile } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import { propertyTargetPaths, type PropertyResult } from "src/core/results";
 import type { PaletteMenu } from "src/ui/paletteMenu";
+import { openConfirmPalette } from "src/ui/confirmPalette";
 import { readList } from "src/features/properties/propertyList";
 import { updateFrontmatter } from "src/core/frontmatter";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
@@ -86,20 +87,30 @@ async function copyText(text: string, message: string): Promise<void> {
 	}
 }
 
-/** 複数のノートからキーを削除するのは元に戻せないので、もう一度押す必要がある。 */
+/** 複数のノートからキーを削除するのは元に戻せないので、確認パレットを経る。 */
 function addBulkDeleteItem(
 	menu: PaletteMenu,
 	app: App,
 	result: PropertyResult,
 	targetCount: number,
 ): void {
-	menu.addConfirmedItem({
-		title: t("property.menu.deleteFromMany", { count: targetCount }),
-		confirmTitle: t("property.menu.confirmDeleteMany", { count: targetCount }),
-		id: "delete-property-from-many",
-		icon: ICONS.delete,
-		run: () => void deleteProperties(app, result),
-	});
+	menu.addItem((item) =>
+		item
+			.setTitle(t("property.menu.deleteFromMany", { count: targetCount }))
+			.setIcon(ICONS.delete)
+			.setSearchTerms("delete-property-from-many")
+			.setWarning(true)
+			.onClick(() =>
+				openConfirmPalette(app, {
+					title: t("property.confirmDelete.title", { key: result.key }),
+					paragraphs: [
+						t("property.confirmDelete.body", { key: result.key, count: targetCount }),
+					],
+					action: t("property.confirmDelete.action"),
+					onConfirm: () => void deleteProperties(app, result),
+				}),
+			),
+	);
 }
 
 /** 一覧が対象とするノートのうち、キーを持つすべてのノートからキーを削除する。1つのノートが失敗しても残りは続ける。 */

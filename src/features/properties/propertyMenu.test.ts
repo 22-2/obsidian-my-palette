@@ -3,10 +3,12 @@ import { describe, expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
 import type { PropertyResult } from "src/core/results";
 import { populatePropertyMenu, propertyValueText } from "src/features/properties/propertyMenu";
-import { PaletteMenu } from "src/ui/paletteMenu";
+import type { PaletteMenu } from "src/ui/paletteMenu";
+import { openConfirmPalette } from "src/ui/confirmPalette";
 
 const notices = vi.hoisted(() => [] as string[]);
 
+vi.mock("src/ui/confirmPalette", () => ({ openConfirmPalette: vi.fn() }));
 vi.mock("obsidian", async () => ({
 	...(await import("src/ui/testing/obsidianDom")),
 	Notice: class {
@@ -64,7 +66,6 @@ describe("いくつかのノートのpopulatePropertyMenu", () => {
 			},
 		} as unknown as App;
 		const items: { title: string; click: () => void }[] = [];
-		let selection: (selected: unknown) => void = () => {};
 		const menu = {
 			addItem: (configure: (item: unknown) => void) => {
 				const entry = { title: "", click: () => {} };
@@ -81,9 +82,6 @@ describe("いくつかのノートのpopulatePropertyMenu", () => {
 				configure(item);
 				items.push(entry);
 			},
-			onSelectionChange: (listener: (selected: unknown) => void) => (selection = listener),
-			// Why: the real confirmation builds on the fake addItem and onSelectionChange above.
-			addConfirmedItem: PaletteMenu.prototype.addConfirmedItem,
 		} as unknown as PaletteMenu;
 		const result: PropertyResult = {
 			id: "property:topic",
@@ -100,7 +98,7 @@ describe("いくつかのノートのpopulatePropertyMenu", () => {
 		};
 		populatePropertyMenu(menu, { app } as unknown as MyPalettePlugin, result, vi.fn());
 		const titles = () => items.map(({ title }) => title);
-		return { items, titles, written, selection: (selected: unknown) => selection(selected) };
+		return { items, titles, written };
 	}
 
 	it("値をコピーする代わりに 1 つの確認された削除と単一ノートの削除を提供します", () => {
@@ -113,25 +111,25 @@ describe("いくつかのノートのpopulatePropertyMenu", () => {
 		]);
 	});
 
-	it("2 回押す必要があり、離れると最初のボタンがキャンセルされます", async () => {
+	it("押しただけでは削除せず、確認パレットを開く", () => {
+		vi.mocked(openConfirmPalette).mockClear();
 		const f = fixture();
-		const del = f.items[2];
-		del.click();
-		expect(del.title).toBe("もう一度クリックして 3 件のノートから削除");
-		expect(f.written).toEqual([]);
+		f.items[2].click();
 
-		f.selection(f.items[0]);
-		expect(del.title).toBe("3 件のノートからプロパティを削除");
-		del.click();
+		expect(openConfirmPalette).toHaveBeenCalledOnce();
+		expect(vi.mocked(openConfirmPalette).mock.calls[0][1]).toMatchObject({
+			title: "プロパティ「topic」を削除しますか",
+			action: "削除する",
+		});
 		expect(f.written).toEqual([]);
 	});
 
-	it("キーを含むノートからのみキーを削除します", async () => {
+	it("確認したあと、キーを含むノートからのみキーを削除します", async () => {
 		notices.length = 0;
+		vi.mocked(openConfirmPalette).mockClear();
 		const f = fixture();
-		const del = f.items[2];
-		del.click();
-		del.click();
+		f.items[2].click();
+		vi.mocked(openConfirmPalette).mock.calls[0][1].onConfirm();
 		await vi.waitFor(() =>
 			expect(notices).toEqual(["topic を 2 件のノートから削除しました。"]),
 		);
