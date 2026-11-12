@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 import type { ObsidianAPI } from "obsidian-e2e-toolkit";
 import { expect, test } from "./fixtures.mts";
 import {
+	confirmPalette,
 	MODAL_INPUT,
 	MODAL_ROW,
 	menuItems,
@@ -95,7 +96,8 @@ test("the context menu deletes the tag from every note after confirmation", asyn
 	await page.locator(MODAL_ROW).first().click({ button: "right" });
 	await menuItems(page).filter({ hasText: "タグを全削除" }).click();
 
-	await dialogTitled(page, "全削除しますか").getByRole("button", { name: "全削除する" }).click();
+	await expect(confirmPalette(page)).toBeVisible();
+	await page.keyboard.press("Control+Enter");
 	await expect.poll(() => obsidian.read("Tagged.md")).toBe("Body and #keep\n");
 });
 
@@ -105,8 +107,9 @@ test("cancelling the delete confirmation leaves the note unchanged", async ({ ob
 	await page.locator(MODAL_ROW).first().click({ button: "right" });
 	await menuItems(page).filter({ hasText: "タグを全削除" }).click();
 
-	await dialogTitled(page, "全削除しますか").getByRole("button", { name: "キャンセル" }).click();
-	await expect(dialogTitled(page, "全削除しますか")).toBeHidden();
+	await expect(confirmPalette(page)).toBeVisible();
+	await page.keyboard.press("Escape");
+	await expect(confirmPalette(page)).toBeHidden();
 	expect(await obsidian.read("Tagged.md")).toBe("Body #project\n");
 });
 

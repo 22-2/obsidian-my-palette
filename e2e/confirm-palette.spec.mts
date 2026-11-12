@@ -1,7 +1,14 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures.mts";
 import type { ObsidianAPI } from "./fixtures.mts";
-import { menuItems, MODAL_ROW, openPaletteWith, pluginVaultOptions, t } from "./support.mts";
+import {
+	confirmPalette,
+	menuItems,
+	MODAL_ROW,
+	openPaletteWith,
+	pluginVaultOptions,
+	t,
+} from "./support.mts";
 
 test.use({ vaultOptions: pluginVaultOptions() });
 
@@ -28,10 +35,6 @@ async function openDeleteConfirm(obsidian: ObsidianAPI): Promise<Page> {
 		.click();
 	await expect(confirmPalette(page)).toBeVisible();
 	return page;
-}
-
-function confirmPalette(page: Page) {
-	return page.locator(".my-palette-suggest-modal.my-palette-confirm");
 }
 
 test("ノートの削除は確認パレットで Ctrl+Enter を押したときだけ実行する", async ({ obsidian }) => {

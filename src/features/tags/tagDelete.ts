@@ -6,7 +6,7 @@ import {
 	findTagTargets,
 	formatTagEditSummary,
 } from "src/features/tags/tagRenameFiles";
-import { openConfirmModal } from "src/ui/confirmModal";
+import { openConfirmPalette } from "src/ui/confirmPalette";
 
 /**
  * 選んだタグを、子タグも含めてすべてのノートから消す。確認のあとで1ノートずつ書き換える。
@@ -19,7 +19,7 @@ export function confirmDeleteTags(app: App, names: readonly string[], onDone?: (
 		return;
 	}
 	const tags = names.map((name) => `#${name}`).join(" ");
-	openConfirmModal(app, {
+	openConfirmPalette(app, {
 		title: t("tagDelete.confirm.title"),
 		paragraphs: [t("tagDelete.confirm.body", { count: targets.length, tags })],
 		action: t("tagDelete.confirm.action"),

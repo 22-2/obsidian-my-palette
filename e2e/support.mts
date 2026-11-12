@@ -119,6 +119,11 @@ export function rowLabels(page: Page): Promise<string[]> {
 	return page.locator(`${MODAL_ROW} .my-palette-suggestion__label`).allTextContents();
 }
 
+/** The confirmation palette that destructive operations open. Ctrl+Enter runs it, Esc cancels. */
+export function confirmPalette(page: Page): Locator {
+	return page.locator(".my-palette-suggest-modal.my-palette-confirm");
+}
+
 export function menuItems(page: Page): Locator {
 	return page.locator(".menu .menu-item-title");
 }
