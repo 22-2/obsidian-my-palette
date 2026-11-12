@@ -1,5 +1,5 @@
 import { Platform, type App } from "obsidian";
-import { getVaultFullPath } from "src/ignored-notes/ignoredPaths";
+import { getVaultFullPath } from "src/platform/obsidianInternals";
 import type { PaletteResult } from "src/core/results";
 import { openPathInCode } from "src/platform/vscode";
 
@@ -23,26 +23,25 @@ export function isDesktopApp(): boolean {
 export function getResultAbsolutePath(app: App, result: PaletteResult): string | undefined {
 	switch (result.mode) {
 		case "file":
-			return getVaultFullPath(app, result.vaultPath) ?? undefined;
+			return getVaultFullPath(app, result.vaultPath);
 		case "everything":
 			return result.absolutePath;
 		case "link":
 		case "backlink":
 		case "heading":
 		case "smart":
-			return getVaultFullPath(app, result.file.path) ?? undefined;
+			return getVaultFullPath(app, result.file.path);
 		case "bookmark":
-			return result.file ? (getVaultFullPath(app, result.file.path) ?? undefined) : undefined;
+			return result.file ? getVaultFullPath(app, result.file.path) : undefined;
 		case "tab":
-			return result.file ? (getVaultFullPath(app, result.file.path) ?? undefined) : undefined;
+			return result.file ? getVaultFullPath(app, result.file.path) : undefined;
 		case "plugin":
 		case "snippet":
 			return result.absolutePath;
 		case "audit":
-			if (result.kind === "empty-folders")
-				return getVaultFullPath(app, result.folderPath) ?? undefined;
+			if (result.kind === "empty-folders") return getVaultFullPath(app, result.folderPath);
 			if (result.kind === "broken-links") return undefined;
-			return getVaultFullPath(app, result.file.path) ?? undefined;
+			return getVaultFullPath(app, result.file.path);
 		case "command":
 		case "property":
 		case "tag":
