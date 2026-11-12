@@ -1,6 +1,5 @@
-import type { TFile } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import { resolveVaultFile } from "src/palette/actions/resultFile";
+import { collectVaultFiles } from "src/palette/actions/resultFile";
 import type { PaletteResult } from "src/palette/results";
 import { MergeTargetModal } from "src/merge/MergeTargetModal";
 import type { PaletteMenu } from "src/ui/paletteMenu";
@@ -17,19 +16,17 @@ export function addMergeMenuItem(
 	results: readonly PaletteResult[],
 	onDone?: () => void,
 ): void {
-	const sources = new Map<string, TFile>();
-	for (const result of results) {
-		const file = resolveVaultFile(plugin.app, result);
-		if (file?.extension === "md") sources.set(file.path, file);
-	}
-	if (sources.size === 0) return;
+	const sources = collectVaultFiles(plugin.app, results, {
+		acceptFile: (file) => file.extension === "md",
+	});
+	if (sources.length === 0) return;
 	const action =
 		results.length > 1
-			? { ...MENU_ACTIONS.merge, title: t("menu.mergeSelected", { count: sources.size }) }
+			? { ...MENU_ACTIONS.merge, title: t("menu.mergeSelected", { count: sources.length }) }
 			: MENU_ACTIONS.merge;
 	menu.addItem((item) =>
 		withAction(item, action).onClick(() =>
-			new MergeTargetModal(plugin, [...sources.values()], onDone).open(),
+			new MergeTargetModal(plugin, sources, onDone).open(),
 		),
 	);
 }

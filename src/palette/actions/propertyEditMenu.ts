@@ -1,6 +1,5 @@
-import type { TFile } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import { resolveVaultFile } from "src/palette/actions/resultFile";
+import { collectVaultFiles } from "src/palette/actions/resultFile";
 import type { PaletteResult } from "src/palette/results";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
@@ -17,13 +16,10 @@ export function addPropertyEditMenuItem(
 	results: readonly PaletteResult[],
 	onSelected?: () => void,
 ): void {
-	const notes = new Map<string, TFile>();
-	for (const result of results) {
-		const file = resolveVaultFile(plugin.app, result);
-		if (file?.extension === "md") notes.set(file.path, file);
-	}
-	if (notes.size === 0) return;
-	const files = [...notes.values()];
+	const files = collectVaultFiles(plugin.app, results, {
+		acceptFile: (file) => file.extension === "md",
+	});
+	if (files.length === 0) return;
 	menu.addItem((item) =>
 		withAction(item, MENU_ACTIONS.editProperties).onClick(() => {
 			onSelected?.();

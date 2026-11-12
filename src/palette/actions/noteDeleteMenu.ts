@@ -1,6 +1,6 @@
 import { Notice, TFile, type App } from "obsidian";
 import { t } from "src/i18n";
-import { resolveVaultFile } from "src/palette/actions/resultFile";
+import { collectVaultFiles } from "src/palette/actions/resultFile";
 import type { PaletteResult } from "src/palette/results";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { openConfirmModal } from "src/ui/confirmModal";
@@ -8,13 +8,10 @@ import { ICONS } from "src/ui/icons";
 
 /** Markdown ノートの結果だけを重複なく集める。 */
 function resolveNotes(app: App, results: readonly PaletteResult[]): TFile[] {
-	const notes = new Map<string, TFile>();
-	for (const result of results) {
-		if (result.mode !== "file") continue;
-		const file = resolveVaultFile(app, result);
-		if (file?.extension.toLocaleLowerCase() === "md") notes.set(file.path, file);
-	}
-	return [...notes.values()];
+	return collectVaultFiles(app, results, {
+		acceptResult: (result) => result.mode === "file",
+		acceptFile: (file) => file.extension.toLocaleLowerCase() === "md",
+	});
 }
 
 /** ノートをゴミ箱へ移動する確認付き操作を追加する。 */
