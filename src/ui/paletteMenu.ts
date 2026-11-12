@@ -16,20 +16,6 @@ export interface PaletteMenuShowOptions {
 
 export type PaletteMenuActivation = MouseEvent | KeyboardEvent;
 
-/** 取り消しにくい操作。2回押したときだけ実行する。 */
-export interface ConfirmedMenuItemOptions {
-	title: string;
-	/** 表示名以外に検索できる操作 ID。 */
-	id?: string;
-	/** 1回目の押下のあとに出す。例: 「もう一度クリックして消去」。 */
-	confirmTitle: string;
-	icon: IconName;
-	tooltip?: string;
-	/** 何かを破壊する操作は赤くする。既定は true。 */
-	warning?: boolean;
-	run: () => void;
-}
-
 const GAP = 2;
 
 /** 全角スペース(U+3000)。日本語の入力では半角と同じく、スイッチの切り替えに使えるようにする。 */
@@ -71,7 +57,6 @@ export class PaletteMenu {
 	private openDoc: Document | null = null;
 	private restoreFocusTo: HTMLElement | null = null;
 	private hideCallback: (() => void) | null = null;
-	private selectionListener: ((item: PaletteMenuItem | undefined) => void) | null = null;
 	private filter: MenuFilter | null = null;
 	/**
 	 * 絞り込みの欄があるメニューの、入力モードと選択モード(selection パレットと同じ考え方)。
@@ -100,51 +85,6 @@ export class PaletteMenu {
 		this.group.appendChild(item.dom);
 		build(item);
 		return this;
-	}
-
-	/**
-	 * 1回目の押下で、その項目はメニューを開いたままにする確認に変わり、2回目の押下で実行してメニューを閉じる。
-	 * ほかの項目へ移ると確認は取り消されるので、後の押下は最初からやり直す。メニューには
-	 * そのような項目を最大1つだけ持てる。
-	 */
-	addConfirmedItem({
-		title,
-		confirmTitle,
-		id,
-		icon,
-		tooltip,
-		warning = true,
-		run,
-	}: ConfirmedMenuItemOptions): this {
-		let confirming = false;
-		let confirmedItem: PaletteMenuItem | undefined;
-		const render = (item: PaletteMenuItem) =>
-			item
-				.setTitle(confirming ? confirmTitle : title)
-				.setCta(confirming)
-				.setKeepOpen(confirming);
-		this.addItem((item) => {
-			confirmedItem = item;
-			item.setIcon(icon).setWarning(warning);
-			if (id) item.setSearchTerms(id);
-			if (tooltip) item.setTooltip(tooltip);
-			render(item);
-			item.onClick(() => {
-				if (!confirming) {
-					confirming = true;
-					render(item);
-					return;
-				}
-				// Why: 1回目の押下でメニューを開いたままにしていたので、それを解除しないと今も開いたままになる。
-				item.setKeepOpen(false);
-				run();
-			});
-		});
-		return this.onSelectionChange((selected) => {
-			if (!confirming || !confirmedItem || selected === confirmedItem) return;
-			confirming = false;
-			render(confirmedItem);
-		});
 	}
 
 	/**
@@ -247,12 +187,6 @@ export class PaletteMenu {
 
 	onHide(callback: () => void): void {
 		this.hideCallback = callback;
-	}
-
-	/** 選択が動くたびに、新しく選ばれた項目(または undefined)で呼び戻す。 */
-	onSelectionChange(listener: (item: PaletteMenuItem | undefined) => void): this {
-		this.selectionListener = listener;
-		return this;
 	}
 
 	showAtMouseEvent(event: MouseEvent, options: Omit<PaletteMenuShowOptions, "doc"> = {}): void {
@@ -463,7 +397,6 @@ export class PaletteMenu {
 			item.dom.addClass("selected");
 			item.dom.scrollIntoView({ block: "nearest" });
 		}
-		this.selectionListener?.(item);
 	}
 }
 
@@ -614,13 +547,7 @@ export class PaletteMenuItem {
 		return this;
 	}
 
-	/** 確認の主な操作として項目に印を付ける。setWarning と組み合わせると、赤い目立つ操作になる。 */
-	setCta(cta = true): this {
-		this.dom.toggleClass("mod-cta", cta);
-		return this;
-	}
-
-	/** この項目を有効にした後もメニューを開いたままにする。例: もう一度クリックして確認する操作。 */
+	/** この項目を有効にした後もメニューを開いたままにする。例: スイッチの切り替え。 */
 	setKeepOpen(keepOpen = true): this {
 		this.keepOpen = keepOpen;
 		return this;

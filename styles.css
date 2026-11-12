@@ -1186,12 +1186,6 @@
 	pointer-events: none;
 }
 
-/* A confirmation that is also a warning reads as a destructive call to action, like a red button. */
-.menu-item.is-warning.mod-cta {
-	background-color: var(--text-error);
-	color: var(--text-on-accent);
-}
-
 /* The Shortcuts table is one list, so its own header and rows replace the usual name and description. */
 .setting-item.my-palette-shortcuts {
 	flex-direction: column;

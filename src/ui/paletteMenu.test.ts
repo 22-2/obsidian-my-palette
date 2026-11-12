@@ -1,7 +1,7 @@
 import { Window } from "happy-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { App } from "obsidian";
-import { PaletteMenu, placeMenu, type PaletteMenuItem } from "src/ui/paletteMenu";
+import { PaletteMenu, placeMenu } from "src/ui/paletteMenu";
 import { installObsidianDom } from "src/ui/testing/obsidianDom";
 
 vi.mock("obsidian", () => import("src/ui/testing/obsidianDom"));
@@ -46,10 +46,6 @@ function itemNamed(title: string): HTMLElement {
 	);
 	if (!item) throw new Error(`no menu item: ${title}`);
 	return item;
-}
-
-function titleOfItem(item: PaletteMenuItem): string {
-	return titleOf(item.dom) ?? "";
 }
 
 function selectedTitle(): string | null {
@@ -127,17 +123,6 @@ describe("パレットメニューのマークアップ", () => {
 		expect(itemNamed("Checked").getAttribute("aria-disabled")).toBe("true");
 		expect(document.querySelector(".menu-separator")?.getAttribute("role")).toBe("separator");
 	});
-
-	it("要求されている間のみ項目を行動喚起としてマークします。", () => {
-		const menu = new PaletteMenu();
-		menu.addItem((item) => item.setTitle("Clear").setWarning(true).setCta());
-		menu.showAtPosition({ x: 0, y: 0 });
-		expect(itemNamed("Clear").classList.contains("mod-cta")).toBe(true);
-
-		menu.close();
-		menu.showAtPosition({ x: 0, y: 0 });
-		expect(itemNamed("Clear").classList.contains("mod-cta")).toBe(true);
-	});
 });
 
 describe("パレットメニューのクリック数", () => {
@@ -170,45 +155,6 @@ describe("パレットメニューのクリック数", () => {
 
 		expect(document.querySelector(".menu")).not.toBeNull();
 		expect(titleOf(document.querySelector(".menu"))).toBe("Click again to clear");
-	});
-
-	it("2 回目に押すと確認済みの項目が実行され、メニューが閉じます", () => {
-		const menu = new PaletteMenu();
-		const run = vi.fn();
-		menu.addConfirmedItem({
-			title: "Move to trash",
-			confirmTitle: "Click again to move 2 files to trash",
-			icon: "trash-2",
-			run,
-		});
-		menu.showAtPosition({ x: 0, y: 0 });
-
-		itemNamed("Move to trash").click();
-		expect(run).not.toHaveBeenCalled();
-		expect(document.querySelector(".menu .menu-item.mod-cta.is-warning")).not.toBeNull();
-
-		itemNamed("Click again to move 2 files to trash").click();
-		expect(run).toHaveBeenCalledTimes(1);
-		expect(document.querySelector(".menu")).toBeNull();
-	});
-
-	it("別の項目が選択されると確認をキャンセルします", () => {
-		const menu = new PaletteMenu();
-		const run = vi.fn();
-		menu.addItem((item) => item.setTitle("Open").onClick(vi.fn()));
-		menu.addConfirmedItem({
-			title: "Clear search history",
-			confirmTitle: "Click again to clear",
-			icon: "trash-2",
-			run,
-		});
-		menu.showAtPosition({ x: 0, y: 0 });
-
-		itemNamed("Clear search history").click();
-		press("ArrowDown");
-		expect(document.querySelector(".menu .mod-cta")).toBeNull();
-		itemNamed("Clear search history").click();
-		expect(run).not.toHaveBeenCalled();
 	});
 
 	it("無効なアイテムのクリックを無視します", () => {
@@ -358,20 +304,6 @@ describe("パレットメニューの非表示", () => {
 		expect(onHide).toHaveBeenCalledTimes(1);
 		menu.close();
 		expect(onHide).toHaveBeenCalledTimes(1);
-	});
-});
-
-describe("パレットメニュー選択", () => {
-	it("選択された項目は報告しますが、メニューが閉じたときは何も報告しません", () => {
-		const { menu } = sample();
-		const selected: Array<string | undefined> = [];
-		menu.onSelectionChange((item) => selected.push(item ? titleOfItem(item) : undefined));
-		menu.showAtPosition({ x: 0, y: 0 });
-		press("ArrowDown");
-		press("ArrowDown");
-		menu.close();
-
-		expect(selected).toEqual(["Open", "Help", undefined]);
 	});
 });
 
