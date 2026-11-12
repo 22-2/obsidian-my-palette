@@ -4,7 +4,7 @@ import { PaletteMenu, type PaletteMenuItem } from "src/ui/paletteMenu";
 import { markKeyboardMenuEvent, showMenuAtEvent } from "src/ui/menus";
 import type MyPalettePlugin from "src/main";
 import type { PaletteResult } from "src/core/results";
-import type { PaletteSurface } from "src/settings/model";
+import type { PaletteSurface } from "src/core/settingsModel";
 import { PaletteHelpModal } from "src/ui/paletteHelpModal";
 import { availableModes } from "src/features/palette/modes";
 import { SearchHistorySuggest } from "src/ui/searchHistorySuggest";

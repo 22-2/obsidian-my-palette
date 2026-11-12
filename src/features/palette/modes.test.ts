@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { DEFAULT_SETTINGS } from "src/settings/model";
+import { DEFAULT_SETTINGS } from "src/core/settingsModel";
 import {
 	findPaletteMode,
 	availableModes,

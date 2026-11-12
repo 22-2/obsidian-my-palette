@@ -5,7 +5,7 @@ import {
 	sortFilesWithoutQuery,
 	type SortableFileEntry,
 } from "src/features/search/file/fileSorting";
-import type { FileSortPriority } from "src/settings/model";
+import type { FileSortPriority } from "src/core/settingsModel";
 
 function file(
 	path: string,

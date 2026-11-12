@@ -1,4 +1,8 @@
-import type { MyPaletteSettings, PaletteDisplaySettings, PaletteSurface } from "src/settings/model";
+import type {
+	MyPaletteSettings,
+	PaletteDisplaySettings,
+	PaletteSurface,
+} from "src/core/settingsModel";
 
 type DisplayListener = (settings: PaletteDisplaySettings) => void;
 

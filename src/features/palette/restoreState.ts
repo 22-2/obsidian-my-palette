@@ -1,5 +1,5 @@
 import type { PaletteRoute } from "src/features/palette/PaletteSearchSession";
-import type { ReturnToHomeSeconds } from "src/settings/model";
+import type { ReturnToHomeSeconds } from "src/core/settingsModel";
 
 /** 閉じられたパレットが、次の「ホームを開く」のために残す状態。メモリ上にだけ保持する。 */
 export interface PaletteRestoreState {

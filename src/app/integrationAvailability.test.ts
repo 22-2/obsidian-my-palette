@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { DEFAULT_SETTINGS } from "src/settings/model";
+import { DEFAULT_SETTINGS } from "src/core/settingsModel";
 import { IntegrationAvailability, type ConnectionResult } from "src/app/integrationAvailability";
 
 const success: ConnectionResult = { ok: true, message: "Connected" };

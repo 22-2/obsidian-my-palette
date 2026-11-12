@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { win32 } from "node:path";
 import { EverythingProvider } from "src/features/search/everything/EverythingProvider";
-import { DEFAULT_SETTINGS } from "src/settings/model";
+import { DEFAULT_SETTINGS } from "src/core/settingsModel";
 import type { EverythingResult } from "src/core/results";
 
 vi.mock("obsidian", () => ({

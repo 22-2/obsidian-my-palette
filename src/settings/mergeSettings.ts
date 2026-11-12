@@ -7,7 +7,7 @@ import type {
 	MyPaletteSettings,
 	PaletteSurface,
 	ReturnToHomeSeconds,
-} from "src/settings/model";
+} from "src/core/settingsModel";
 import { normalizeHotkeys } from "src/core/hotkeys";
 import {
 	DEFAULT_BLANK_FILE_SORT_PRIORITIES,
@@ -16,7 +16,7 @@ import {
 	SETTING_LIMITS,
 	SETTINGS_SCHEMA_VERSION,
 	normalizeFileSortPriorities,
-} from "src/settings/model";
+} from "src/core/settingsModel";
 
 const PREVIOUS_DEFAULT_SEARCH_HISTORY_DELAY_MS = 3_000;
 // スキーマ 12 で既定を、入力を遅らせる保存から操作だけの履歴へ変えた。以後のスキーマの変更で、

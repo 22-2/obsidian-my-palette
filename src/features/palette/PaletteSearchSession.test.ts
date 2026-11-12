@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
-import { DEFAULT_SETTINGS } from "src/settings/model";
+import { DEFAULT_SETTINGS } from "src/core/settingsModel";
 import { IntegrationAvailability } from "src/app/integrationAvailability";
 import {
 	PaletteSearchSession,

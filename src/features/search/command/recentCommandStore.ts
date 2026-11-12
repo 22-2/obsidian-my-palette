@@ -1,5 +1,5 @@
 import type { App } from "obsidian";
-import { MAX_RECENT_COMMAND_IDS } from "src/settings/model";
+import { MAX_RECENT_COMMAND_IDS } from "src/core/settingsModel";
 import {
 	normalizeRecentIds,
 	RecentIdStore,

@@ -9,7 +9,11 @@ import {
 	type SettingGroupItem,
 } from "obsidian";
 import type { SettingsHost } from "src/settings/settingsHost";
-import { SETTING_LIMITS, type PaletteSurface, type ReturnToHomeSeconds } from "src/settings/model";
+import {
+	SETTING_LIMITS,
+	type PaletteSurface,
+	type ReturnToHomeSeconds,
+} from "src/core/settingsModel";
 import { t } from "src/i18n";
 
 const RETURN_TO_HOME_LABELS: Record<string, string> = {

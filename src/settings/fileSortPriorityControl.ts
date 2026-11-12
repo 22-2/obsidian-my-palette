@@ -5,7 +5,7 @@ import {
 	type FileSortPriorities,
 	type FileSortPriority,
 	type FileSortState,
-} from "src/settings/model";
+} from "src/core/settingsModel";
 import { moveByInsertionIndex } from "src/settings/fileSortPriorityOrdering";
 import { t } from "src/i18n";
 

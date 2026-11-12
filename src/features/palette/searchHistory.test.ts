@@ -1,6 +1,6 @@
 import type { SearchHistoryCategory, SearchHistoryEntry } from "src/core/searchHistoryTypes";
 import { describe, expect, it } from "vitest";
-import { DEFAULT_SETTINGS } from "src/settings/model";
+import { DEFAULT_SETTINGS } from "src/core/settingsModel";
 import {
 	formatSearchHistoryInput,
 	getSearchHistorySuggestions,

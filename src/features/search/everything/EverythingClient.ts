@@ -1,4 +1,4 @@
-import type { MyPaletteSettings } from "src/settings/model";
+import type { MyPaletteSettings } from "src/core/settingsModel";
 import type { EverythingResult } from "src/core/results";
 import { EverythingEsClient } from "src/features/search/everything/EverythingEsClient";
 import { EverythingHttpClient } from "src/features/search/everything/EverythingHttpClient";

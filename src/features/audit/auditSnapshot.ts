@@ -11,7 +11,7 @@ import {
 import { isMocOnly } from "src/features/moc-relateds/mocRelatedsCore";
 import { getUserIgnoreFilters } from "src/features/ignored-notes/ignoredPaths";
 import { getCorePluginFolder, isExtensionOpenable } from "src/platform/obsidianInternals";
-import type { MyPaletteSettings } from "src/settings/model";
+import type { MyPaletteSettings } from "src/core/settingsModel";
 
 /** 今の Vault に対して1種類の監査を実行する。除外は設定から読む。 */
 export async function auditVault(

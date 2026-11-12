@@ -1,7 +1,7 @@
 import type { SearchHistoryEntry } from "src/core/searchHistoryTypes";
 import type { App } from "obsidian";
 import { IntegrationAvailability } from "src/app/integrationAvailability";
-import { DEFAULT_SETTINGS } from "src/settings/model";
+import { DEFAULT_SETTINGS } from "src/core/settingsModel";
 import { PaletteDisplaySettingsStore } from "src/settings/paletteDisplaySettingsStore";
 import {
 	getSearchHistorySuggestions,

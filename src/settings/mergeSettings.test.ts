@@ -4,7 +4,7 @@ import {
 	SETTING_LIMITS,
 	SETTINGS_SCHEMA_VERSION,
 	UNLIMITED_DAYS,
-} from "src/settings/model";
+} from "src/core/settingsModel";
 import { mergeSettings } from "src/settings/mergeSettings";
 
 describe("マージ設定", () => {

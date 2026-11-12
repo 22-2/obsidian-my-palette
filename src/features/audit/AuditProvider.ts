@@ -7,7 +7,7 @@ import type { PaletteProvider, PaletteSearchRequest } from "src/core/PaletteProv
 import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { formatSize } from "src/core/fileSize";
 import { countLabel } from "src/core/countLabel";
-import type { MyPaletteSettings } from "src/settings/model";
+import type { MyPaletteSettings } from "src/core/settingsModel";
 import { t } from "src/i18n";
 
 /** Vault のどの変化が監査結果を変えうるか。種類ごとの依存は `AUDIT_DEPENDENCIES` で決める。 */

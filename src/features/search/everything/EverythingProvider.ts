@@ -9,7 +9,7 @@ import {
 	isExcludedFolder,
 	type ExcludedFolderSource,
 } from "src/features/search/excludedFolders";
-import type { MyPaletteSettings } from "src/settings/model";
+import type { MyPaletteSettings } from "src/core/settingsModel";
 import type { EverythingResult } from "src/core/results";
 import { EverythingClient } from "src/features/search/everything/EverythingClient";
 import type { PaletteProvider, PaletteSearchRequest } from "src/core/PaletteProvider";

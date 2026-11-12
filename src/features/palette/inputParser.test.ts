@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_SETTINGS } from "src/settings/model";
+import { DEFAULT_SETTINGS } from "src/core/settingsModel";
 import { getSearchHistoryCategory, parseInput } from "src/features/palette/inputParser";
 
 const modes = DEFAULT_SETTINGS.modes;

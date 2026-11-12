@@ -18,7 +18,7 @@ import {
 	DEFAULT_FILE_SORT_PRIORITIES,
 	FILE_SORT_PRIORITIES,
 	type FileSortPriorities,
-} from "src/settings/model";
+} from "src/core/settingsModel";
 import { normalizeFrontmatterKeywords, normalizeFrontmatterPrior } from "src/core/frontmatter";
 import {
 	EMPTY_EXCLUDED_FOLDER_SOURCE,

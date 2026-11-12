@@ -3,7 +3,7 @@ import {
 	FILE_SORT_PRIORITIES,
 	parseFileSortPriority,
 	type FileSortPriority,
-} from "src/settings/model";
+} from "src/core/settingsModel";
 import {
 	extractFileMatchSignals,
 	type FileMatch,

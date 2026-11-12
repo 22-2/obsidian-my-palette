@@ -2,7 +2,7 @@ import type { SearchHistoryCategory, SearchHistoryEntry } from "src/core/searchH
 import { Plugin, type WorkspaceLeaf } from "obsidian";
 import { MyPaletteSettingTab } from "src/settings/settingTab";
 import type { LeafOpenAction } from "src/platform/openLeaf";
-import { DEFAULT_SETTINGS, type MyPaletteSettings } from "src/settings/model";
+import { DEFAULT_SETTINGS, type MyPaletteSettings } from "src/core/settingsModel";
 import {
 	createPaletteProviders,
 	type PaletteProviderInstances,

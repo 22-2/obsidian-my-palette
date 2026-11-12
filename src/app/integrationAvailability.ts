@@ -1,4 +1,4 @@
-import type { IntegrationReadiness, MyPaletteSettings } from "src/settings/model";
+import type { IntegrationReadiness, MyPaletteSettings } from "src/core/settingsModel";
 import { t } from "src/i18n";
 
 export interface ConnectionResult {

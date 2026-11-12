@@ -1,4 +1,4 @@
-import type { MyPaletteSettings } from "src/settings/model";
+import type { MyPaletteSettings } from "src/core/settingsModel";
 import type { EverythingResult } from "src/core/results";
 import { t } from "src/i18n";
 
