@@ -1,7 +1,7 @@
 import type { SearchHistoryCategory } from "src/core/searchHistoryTypes";
 import type { EverythingScope, ParsedInput, PaletteMode } from "src/core/results";
 import type { ModeSettingsMap } from "src/core/settingsModel";
-import { paletteModeAlias } from "src/features/palette/modes";
+import { paletteModeAlias } from "src/core/modes";
 
 /**
  * Home の前のパレットと同じように、接頭辞付きの入力を読む。パレットは今では

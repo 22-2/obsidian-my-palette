@@ -3,7 +3,7 @@ import type { App, WorkspaceLeaf } from "obsidian";
 import type MyPalettePlugin from "src/main";
 import { PaletteModal, type PaletteModalOptions } from "src/features/palette/PaletteModal";
 import { shouldRestore, type PaletteRestoreState } from "src/features/palette/restoreState";
-import { paletteModeAlias } from "src/features/palette/modes";
+import { paletteModeAlias } from "src/core/modes";
 import type { FixedPaletteMode } from "src/features/palette/PaletteSearchSession";
 import { PaletteView } from "src/features/palette/surfaces/PaletteView";
 import {

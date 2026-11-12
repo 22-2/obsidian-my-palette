@@ -43,7 +43,7 @@ import {
 	isPaletteSortableMode,
 	PALETTE_SORT_KEYS,
 	paletteSortPresentation,
-} from "src/features/palette/paletteSorting";
+} from "src/core/paletteSorting";
 import { ignoredToggleOptions, syncIgnoredToggle } from "src/features/palette/ignoredToggle";
 import type { PanelSwitch } from "src/ui/panelSwitch";
 import { createAuditKindChoice, syncAuditKindChoice } from "src/features/palette/auditKindChoice";

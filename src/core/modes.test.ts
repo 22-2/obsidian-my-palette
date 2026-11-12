@@ -8,7 +8,7 @@ import {
 	paletteModeAlias,
 	parseDirectModeEntry,
 	validateModeAlias,
-} from "src/features/palette/modes";
+} from "src/core/modes";
 
 const modes = DEFAULT_SETTINGS.modes;
 const ids = (input: string) => matchPaletteModes(input, modes).map(({ id }) => id);

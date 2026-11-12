@@ -5,7 +5,7 @@ import type {
 	SettingDefinitionPage,
 } from "obsidian";
 import type { SettingsHost } from "src/settings/settingsHost";
-import { PALETTE_MODES } from "src/features/palette/modes";
+import { PALETTE_MODES } from "src/core/modes";
 import { createSettingPages } from "src/settings/settingPages";
 
 vi.mock("obsidian", () => ({

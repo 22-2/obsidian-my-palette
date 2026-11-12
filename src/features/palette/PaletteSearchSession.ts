@@ -20,7 +20,7 @@ import {
 	matchPaletteModes,
 	paletteModeAlias,
 	parseDirectModeEntry,
-} from "src/features/palette/modes";
+} from "src/core/modes";
 import type { ModeEntryResult } from "src/core/results";
 import { t } from "src/i18n";
 import { ICONS } from "src/core/icons";
@@ -29,7 +29,7 @@ import {
 	sortPaletteResults,
 	type PaletteSort,
 	type PaletteSortMode,
-} from "src/features/palette/paletteSorting";
+} from "src/core/paletteSorting";
 
 const HOME_MODE_IDS: readonly PaletteModeId[] = ["notes", "commands", "bookmarks", "tags"];
 

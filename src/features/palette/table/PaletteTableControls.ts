@@ -16,7 +16,7 @@ import { normalizeFrontmatterPrior } from "src/core/frontmatter";
 import { renderSelectionItem, type SelectionItem } from "src/ui/selectionModal";
 import type { SuggestionPanel, SuggestionPanelResults } from "src/ui/suggestionPanel";
 import { t } from "src/i18n";
-import type { PaletteSort } from "src/features/palette/paletteSorting";
+import type { PaletteSort } from "src/core/paletteSorting";
 
 interface PaletteTableControlsOptions {
 	initialState: PaletteTableState;
