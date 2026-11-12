@@ -35,6 +35,7 @@ export type PaletteControlsPlugin = Pick<
 	| "paletteDisplaySettings"
 	| "getSearchHistorySuggestions"
 	| "clearSearchHistoryCategories"
+	| "openConfirm"
 	| "openSettings"
 	| "saveSettings"
 >;
@@ -445,19 +446,27 @@ export class PaletteHistoryControls {
 			).open();
 	}
 
-	/** この画面のカテゴリだけを消去する。2回押しが必要。 */
+	/** この画面のカテゴリだけを消去する。元に戻せないので、確認パレットを経る。 */
 	private addClearHistoryItem(menu: PaletteMenu): void {
 		const { plugin, historyCategories } = this.options;
-		menu.addConfirmedItem({
-			title: t("palette.control.clearHistory"),
-			confirmTitle: t("palette.control.confirmClear"),
-			icon: ICONS.delete,
-			run: () => {
-				plugin.clearSearchHistoryCategories(historyCategories);
-				new Notice(t("palette.notice.historyCleared"));
-				this.update();
-			},
-		});
+		menu.addItem((item) =>
+			item
+				.setTitle(t("palette.control.clearHistory"))
+				.setIcon(ICONS.delete)
+				.setWarning(true)
+				.onClick(() =>
+					plugin.openConfirm({
+						title: t("palette.confirmClear.title"),
+						paragraphs: [t("palette.confirmClear.body")],
+						action: t("palette.confirmClear.action"),
+						onConfirm: () => {
+							plugin.clearSearchHistoryCategories(historyCategories);
+							new Notice(t("palette.notice.historyCleared"));
+							this.update();
+						},
+					}),
+				),
+		);
 	}
 
 	private registerEvents(): void {

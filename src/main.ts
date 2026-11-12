@@ -31,6 +31,7 @@ import { PaletteDisplaySettingsStore } from "src/settings/paletteDisplaySettings
 import { IntegrationAvailability } from "src/app/integrationAvailability";
 import { getVaultRootPath } from "src/features/ignored-notes/ignoredPaths";
 import { openPluginSettings } from "src/features/search/plugin/pluginSettings";
+import { openConfirmPalette, type ConfirmPaletteOptions } from "src/ui/confirmPalette";
 import "../styles.css";
 import { ICONS } from "src/core/icons";
 import { logger, setDebugLogging } from "src/core/logger";
@@ -234,5 +235,14 @@ export default class MyPalettePlugin extends Plugin {
 
 	openSettings(): void {
 		openPluginSettings(this.app, this.manifest.id);
+	}
+
+	/**
+	 * 元に戻せない操作の確認を開く。確認パレットは SelectionModal の上に作られ、SelectionModal は
+	 * 履歴のボタン(PaletteHistoryControls)を持つので、ui の部品が直接 import すると循環する。
+	 * ui の部品は、このプラグイン経由で開く。
+	 */
+	openConfirm(options: ConfirmPaletteOptions): void {
+		openConfirmPalette(this.app, options);
 	}
 }

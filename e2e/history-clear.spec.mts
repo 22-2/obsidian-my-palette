@@ -2,6 +2,7 @@ import { expect, test } from "./fixtures.mts";
 import type { ObsidianAPI } from "./fixtures.mts";
 import {
 	closePalette,
+	confirmPalette,
 	menuItems,
 	MODAL_ROW,
 	openPaletteWith,
@@ -30,7 +31,7 @@ function storedCount(obsidian: ObsidianAPI, category: string): Promise<number> {
 	);
 }
 
-test("Clear search history takes two presses and clears only the palette's own history", async ({
+test("Clear search history asks for confirmation and clears only the palette's own history", async ({
 	obsidian,
 }) => {
 	// A selector's history lives in its own category and must survive the palette's clear.
@@ -58,42 +59,36 @@ test("Clear search history takes two presses and clears only the palette's own h
 		t("palette.control.clearHistory"),
 	]);
 
-	// The first press asks for a second press and keeps the menu open.
+	// The menu item opens the confirmation palette; nothing is cleared yet.
 	await menuItems(page)
 		.filter({ hasText: t("palette.control.clearHistory") })
 		.click();
-	const confirm = page
-		.locator(".menu-item")
-		.filter({ hasText: t("palette.control.confirmClear") });
-	await expect(confirm).toHaveClass(/mod-cta/);
-	await expect(page.locator(".menu")).toHaveCount(1);
+	await expect(confirmPalette(page)).toBeVisible();
 	expect(await storedCount(obsidian, "file")).toBe(1);
 
-	// The second press clears the palette's categories and closes the menu.
-	await confirm.click();
-	await expect(page.locator(".menu")).toHaveCount(0);
+	// Ctrl+Enter clears the palette's categories and closes the confirmation.
+	await page.keyboard.press("Control+Enter");
+	await expect(confirmPalette(page)).toBeHidden();
 	expect(await storedCount(obsidian, "file")).toBe(0);
 	expect(await storedCount(obsidian, "tag-insertion")).toBe(1);
 });
 
-test("moving to another item cancels the confirmation", async ({ obsidian }) => {
+test("cancelling the confirmation keeps the history", async ({ obsidian }) => {
+	const first = await openPaletteWith(obsidian, "alpha");
+	await expect(first.locator(MODAL_ROW).first()).toContainText("Alpha plan");
+	await first.locator(MODAL_ROW).first().click({ button: "right" });
+	await first.keyboard.press("Escape");
+	await closePalette(first);
+	await expect.poll(() => storedCount(obsidian, "file")).toBe(1);
+
 	const page = await openPaletteWith(obsidian, "");
 	await page.locator(".my-palette-suggest-modal .my-palette-options-button").click();
 	await menuItems(page)
 		.filter({ hasText: t("palette.control.clearHistory") })
 		.click();
-	await expect(
-		menuItems(page).filter({ hasText: t("palette.control.confirmClear") }),
-	).toBeVisible();
+	await expect(confirmPalette(page)).toBeVisible();
 
-	await page
-		.locator(".menu-item")
-		.filter({ hasText: t("menu.help") })
-		.hover();
-	await expect(
-		menuItems(page).filter({ hasText: t("palette.control.clearHistory") }),
-	).toBeVisible();
-	await expect(
-		page.locator(".menu-item").filter({ hasText: t("palette.control.clearHistory") }),
-	).not.toHaveClass(/mod-cta/);
+	await page.keyboard.press("Escape");
+	await expect(confirmPalette(page)).toBeHidden();
+	expect(await storedCount(obsidian, "file")).toBe(1);
 });

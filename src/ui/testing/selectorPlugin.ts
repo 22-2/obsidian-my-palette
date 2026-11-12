@@ -28,6 +28,7 @@ export function createSelectorPlugin(app = {} as App): SelectorControls["plugin"
 		),
 		saveSettings: async () => {},
 		openSettings: () => {},
+		openConfirm: () => {},
 		clearSearchHistoryCategories: (categories) => {
 			entries = entries.filter((entry) => !categories.includes(entry.category));
 		},
