@@ -148,6 +148,33 @@ describe("マージ実行", () => {
 		expect(trashed).toEqual([]);
 	});
 
+	it("確認後に統合元へのリンクが増えたら統合先を書き換えない", async () => {
+		const { app, a, b, byPath, trashed } = scenario();
+		const plan = await planMerge(app, [a.file], b.file);
+		byPath.set("new.md", note("new.md", "[[a]]"));
+		app.metadataCache.resolvedLinks["new.md"] = { "a.md": 1 };
+		const result = await executeMerge(app, plan);
+		expect(result.merged).toBe(false);
+		expect(result.failures[0]).toContain("new.md");
+		expect(app.fileManager.processFrontMatter).not.toHaveBeenCalled();
+		expect(trashed).toEqual([]);
+	});
+
+	it("実行途中にリンク数が変わるとそのノートを書き換えず統合元を残す", async () => {
+		const { app, a, b, byPath, trashed } = scenario();
+		const plan = await planMerge(app, [a.file], b.file);
+		const process = vi.mocked(app.vault.process);
+		const original = process.getMockImplementation()!;
+		process.mockImplementation(async (file, fn) => {
+			if (file.path === "c.md") byPath.get("c.md")!.body += " [[a]]";
+			return original(file, fn);
+		});
+		const result = await executeMerge(app, plan);
+		expect(result.failures.join("\n")).toContain("c:");
+		expect(byPath.get("c.md")!.body).toContain("[[a]]");
+		expect(trashed).toEqual([]);
+	});
+
 	it("本文の書き込みに失敗した場合はプロパティ変更済みと報告する", async () => {
 		const { app, a, b, trashed } = scenario();
 		const plan = await planMerge(app, [a.file], b.file);

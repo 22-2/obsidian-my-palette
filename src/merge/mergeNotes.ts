@@ -94,7 +94,7 @@ export async function planMerge(
 		const file = app.vault.getFileByPath(fromPath);
 		if (!file) continue;
 		const result = retargetLinks(
-			await app.vault.cachedRead(file),
+			await app.vault.read(file),
 			fromPath,
 			{ path: target.path, basename: target.basename },
 			moved,
@@ -147,6 +147,12 @@ export async function executeMerge(app: App, plan: MergePlan): Promise<MergeResu
 			return result;
 		}
 	}
+	try {
+		await validateRetargets(app, plan);
+	} catch (error) {
+		failures.push(errorMessage(error));
+		return result;
+	}
 	let propertiesUpdated = false;
 	try {
 		await app.fileManager.processFrontMatter(target, (frontmatter: Record<string, unknown>) => {
@@ -173,17 +179,18 @@ export async function executeMerge(app: App, plan: MergePlan): Promise<MergeResu
 	const resolve = resolverFor(app);
 	for (const { file } of plan.retargets) {
 		try {
-			await app.vault.process(
-				file,
-				(content) =>
-					retargetLinks(
-						content,
-						file.path,
-						{ path: target.path, basename: target.basename },
-						moved,
-						resolve,
-					).content,
-			);
+			await app.vault.process(file, (content) => {
+				const changed = retargetLinks(
+					content,
+					file.path,
+					{ path: target.path, basename: target.basename },
+					moved,
+					resolve,
+				);
+				const expected = plan.retargets.find((entry) => entry.file === file)!;
+				if (changed.count !== expected.count) throw new Error(t("merge.error.changed"));
+				return changed.content;
+			});
 			result.retargeted++;
 		} catch (error) {
 			logger.error(`Failed to retarget links in ${file.path}`, error);
@@ -211,6 +218,32 @@ export async function executeMerge(app: App, plan: MergePlan): Promise<MergeResu
 		}
 	}
 	return result;
+}
+
+/** 確認後にリンク元や付け替えるリンク数が変わった場合は、統合先を書く前に止める。 */
+async function validateRetargets(app: App, plan: MergePlan): Promise<void> {
+	const moved = new Set(plan.sources.map((file) => file.path));
+	const group = new Set([...moved, plan.target.path]);
+	const expected = new Map(plan.retargets.map(({ file, count }) => [file.path, count]));
+	const seen = new Set<string>();
+	const resolve = resolverFor(app);
+	for (const [path, targets] of Object.entries(app.metadataCache.resolvedLinks)) {
+		if (group.has(path) || !Object.keys(targets).some((target) => moved.has(target))) continue;
+		const file = app.vault.getFileByPath(path);
+		if (!file) throw new Error(`${path}: ${t("merge.error.changed")}`);
+		const result = retargetLinks(
+			await app.vault.read(file),
+			path,
+			{ path: plan.target.path, basename: plan.target.basename },
+			moved,
+			resolve,
+		);
+		if (result.count !== (expected.get(path) ?? 0))
+			throw new Error(`${path}: ${t("merge.error.changed")}`);
+		seen.add(path);
+	}
+	for (const path of expected.keys())
+		if (!seen.has(path)) throw new Error(`${path}: ${t("merge.error.changed")}`);
 }
 
 function errorMessage(error: unknown): string {
