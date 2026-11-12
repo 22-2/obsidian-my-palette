@@ -64,7 +64,13 @@ export const listPropertyCliApi: CliApi = {
 				...before.filter((value) => !changes.remove.includes(value)),
 				...changes.add.filter((value) => !before.includes(value)),
 			];
-			return { path, before, after, contentHash: cliPlanHash(content) };
+			return {
+				path,
+				before,
+				after,
+				deleteKey: after.length === 0,
+				contentHash: cliPlanHash(content),
+			};
 		});
 		const plan = cliPlanHash({ key, changes, items });
 		if (params.apply !== "true") return { action: "preview", key, plan, items };

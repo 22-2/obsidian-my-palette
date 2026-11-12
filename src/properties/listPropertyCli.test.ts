@@ -53,3 +53,13 @@ it("文字列以外を含むリストやスカラーの値を上書きしない"
 		expect(write).not.toHaveBeenCalled();
 	}
 });
+
+it("最後の値を削除する計画ではキーの削除を示す", async () => {
+	const { plugin } = fixture(["old"]);
+	const preview = await listPropertyCliApi.run(plugin, {
+		paths: '["note.md"]',
+		key: "topic",
+		remove: '["old"]',
+	});
+	expect(preview).toMatchObject({ items: [{ before: ["old"], after: [], deleteKey: true }] });
+});
