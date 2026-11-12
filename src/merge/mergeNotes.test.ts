@@ -15,6 +15,11 @@ function fakeVault(notes: FakeNote[], links: Record<string, Record<string, numbe
 	const app = {
 		vault: {
 			cachedRead: async (file: TFile) => byPath.get(file.path)?.body ?? "",
+			read: async (file: TFile) => {
+				const note = byPath.get(file.path);
+				if (!note) throw new Error("missing");
+				return note.body;
+			},
 			getFileByPath: (path: string) => byPath.get(path)?.file ?? null,
 			process: vi.fn(async (file: TFile, update: (content: string) => string) => {
 				const note = byPath.get(file.path)!;
@@ -115,5 +120,55 @@ describe("マージ実行", () => {
 		expect(result.trashed).toBe(0);
 		expect(trashed).toEqual([]);
 		expect(vi.mocked(app.vault.process)).not.toHaveBeenCalled();
+	});
+
+	it.each(["a.md", "b.md"])("確認後に %s が変わると書き込まない", async (path) => {
+		const { app, a, b, byPath, trashed } = scenario();
+		const plan = await planMerge(app, [a.file], b.file);
+		byPath.get(path)!.body += "変更";
+		const result = await executeMerge(app, plan);
+		expect(result.merged).toBe(false);
+		expect(result.failures[0]).toContain("確認後にノートが変更");
+		expect(app.fileManager.processFrontMatter).not.toHaveBeenCalled();
+		expect(trashed).toEqual([]);
+	});
+
+	it("リンクの付け替えに失敗したら統合元を残す", async () => {
+		const { app, a, b, trashed } = scenario();
+		const plan = await planMerge(app, [a.file], b.file);
+		const process = vi.mocked(app.vault.process);
+		const original = process.getMockImplementation()!;
+		process.mockImplementation(async (file, fn) => {
+			if (file.path === "c.md") throw new Error("locked");
+			return original(file, fn);
+		});
+		const result = await executeMerge(app, plan);
+		expect(result.merged).toBe(true);
+		expect(result.failures.join("\n")).toContain("統合元はゴミ箱へ移動していません");
+		expect(trashed).toEqual([]);
+	});
+
+	it("本文の書き込みに失敗した場合はプロパティ変更済みと報告する", async () => {
+		const { app, a, b, trashed } = scenario();
+		const plan = await planMerge(app, [a.file], b.file);
+		vi.mocked(app.vault.process).mockRejectedValueOnce(new Error("locked"));
+		const result = await executeMerge(app, plan);
+		expect(result.merged).toBe(false);
+		expect(result.failures.join("\n")).toContain("プロパティは変更済み");
+		expect(trashed).toEqual([]);
+	});
+
+	it("実行中に統合元が変わればゴミ箱へ移動しない", async () => {
+		const { app, a, b, byPath, trashed } = scenario();
+		const plan = await planMerge(app, [a.file], b.file);
+		const process = vi.mocked(app.vault.process);
+		const original = process.getMockImplementation()!;
+		process.mockImplementation(async (file, fn) => {
+			if (file.path === "b.md") byPath.get("a.md")!.body += "新しい内容";
+			return original(file, fn);
+		});
+		const result = await executeMerge(app, plan);
+		expect(result.failures.join("\n")).toContain("確認後にノートが変更");
+		expect(trashed).toEqual([]);
 	});
 });

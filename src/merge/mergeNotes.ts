@@ -1,5 +1,6 @@
 import type { App, TFile } from "obsidian";
 import { logger } from "src/shared/logger";
+import { t } from "src/i18n";
 import {
 	buildMergedBody,
 	mergeFrontmatter,
@@ -29,6 +30,8 @@ export interface MergePlan {
 	retargets: MergeRetarget[];
 	/** 統合元の名前を、マージ先の `aliases` に加える。確認画面で切り替える。 */
 	aliasSourceNames: boolean;
+	/** 計画時に読んだ内容。実行前と削除前の変更検出に使う。 */
+	snapshots: { path: string; file: TFile; content: string }[];
 }
 
 export interface MergeResult {
@@ -66,13 +69,20 @@ export async function planMerge(
 	const group = new Set([...moved, target.path]);
 	const resolve = resolverFor(app);
 
-	const readPart = async (file: TFile): Promise<MergePart> => ({
-		path: file.path,
-		body: splitFrontmatter(await app.vault.cachedRead(file)).body,
+	const snapshots = await Promise.all(
+		[...ordered, target].map(async (file) => ({
+			path: file.path,
+			file,
+			content: await app.vault.read(file),
+		})),
+	);
+	const readPart = ({ path, content }: (typeof snapshots)[number]): MergePart => ({
+		path,
+		body: splitFrontmatter(content).body,
 	});
 	const body = buildMergedBody(
-		await Promise.all(ordered.map(readPart)),
-		await readPart(target),
+		snapshots.slice(0, -1).map(readPart),
+		readPart(snapshots[snapshots.length - 1]),
 		group,
 		resolve,
 	);
@@ -113,6 +123,7 @@ export async function planMerge(
 		conflicts,
 		retargets,
 		aliasSourceNames,
+		snapshots,
 	};
 }
 
@@ -124,19 +135,36 @@ export async function executeMerge(app: App, plan: MergePlan): Promise<MergeResu
 	const failures: string[] = [];
 	const result: MergeResult = { merged: false, trashed: 0, retargeted: 0, failures };
 	const { target } = plan;
+	for (const snapshot of plan.snapshots) {
+		try {
+			if (
+				snapshot.file.path !== snapshot.path ||
+				(await app.vault.read(snapshot.file)) !== snapshot.content
+			)
+				throw new Error(t("merge.error.changed"));
+		} catch (error) {
+			failures.push(`${snapshot.path}: ${errorMessage(error)}`);
+			return result;
+		}
+	}
+	let propertiesUpdated = false;
 	try {
 		await app.fileManager.processFrontMatter(target, (frontmatter: Record<string, unknown>) => {
 			mergeFrontmatter(frontmatter, target.basename, plan.sourceProperties, {
 				aliasSourceNames: plan.aliasSourceNames,
 			});
 		});
-		await app.vault.process(
-			target,
-			(content) => splitFrontmatter(content).frontmatter + plan.body,
-		);
+		propertiesUpdated = true;
+		await app.vault.process(target, (content) => {
+			const current = splitFrontmatter(content);
+			const original = splitFrontmatter(plan.snapshots[plan.snapshots.length - 1].content);
+			if (current.body !== original.body) throw new Error(t("merge.error.changed"));
+			return current.frontmatter + plan.body;
+		});
 	} catch (error) {
 		logger.error(`Failed to merge into ${target.path}`, error);
 		failures.push(`${target.basename}: ${errorMessage(error)}`);
+		if (propertiesUpdated) failures.push(t("merge.error.propertiesUpdated"));
 		return result;
 	}
 	result.merged = true;
@@ -162,9 +190,19 @@ export async function executeMerge(app: App, plan: MergePlan): Promise<MergeResu
 			failures.push(`${file.basename}: ${errorMessage(error)}`);
 		}
 	}
+	if (failures.length > 0) {
+		failures.push(t("merge.error.sourcesKept"));
+		return result;
+	}
 
 	for (const source of plan.sources) {
 		try {
+			const snapshot = plan.snapshots.find((item) => item.file === source)!;
+			if (
+				source.path !== snapshot.path ||
+				(await app.vault.read(source)) !== snapshot.content
+			)
+				throw new Error(t("merge.error.changed"));
 			await app.fileManager.trashFile(source);
 			result.trashed++;
 		} catch (error) {

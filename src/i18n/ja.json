@@ -722,5 +722,8 @@
 	"merge.plan.trash": "ゴミ箱に移動: {name}",
 	"merge.notice.pressCtrlEnterPlan": "Ctrl+Enter を押すと、変更予定どおりにマージします。",
 	"merge.notice.failed": "マージを完了できませんでした:\n{list}",
+	"merge.error.changed": "確認後にノートが変更されました。変更予定を作り直してください。",
+	"merge.error.propertiesUpdated": "マージ先のプロパティは変更済みです。内容を確認してください。",
+	"merge.error.sourcesKept": "リンクの付け替えに失敗したため、統合元はゴミ箱へ移動していません。",
 	"merge.notice.done": "{count} を {target} にマージしました。{links} のリンクを付け替えました。"
 }
