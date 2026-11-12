@@ -17,7 +17,7 @@ import {
 	addCopyPathMenuItems,
 	copyPathListToClipboard,
 	copyPathToClipboard,
-} from "src/platform/pathClipboard";
+} from "src/ui/pathClipboard";
 import { ICONS } from "src/ui/icons";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { countLabel } from "src/core/countLabel";

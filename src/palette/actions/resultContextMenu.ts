@@ -29,7 +29,7 @@ import {
 	addCopyPathMenuItems,
 	copyPathListToClipboard,
 	copyPathToClipboard,
-} from "src/platform/pathClipboard";
+} from "src/ui/pathClipboard";
 import { addTagInsertionMenuItems } from "src/tags/tagInsertionMenu";
 import { populateTagMenu } from "src/tags/tagMenu";
 import { populatePropertyMenu } from "src/properties/propertyMenu";

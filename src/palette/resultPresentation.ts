@@ -5,7 +5,7 @@ import { isMarkdownPath } from "src/core/externalFiles";
 import { compactPath } from "src/core/pathDisplay";
 import type { PaletteResult } from "src/core/results";
 import type { SelectionItem } from "src/ui/selectionModal";
-import type { CopyablePaths } from "src/platform/pathClipboard";
+import type { CopyablePaths } from "src/ui/pathClipboard";
 import { t } from "src/i18n";
 
 export interface PaletteResultPresentationOptions {

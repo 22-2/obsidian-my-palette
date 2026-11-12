@@ -10,7 +10,7 @@ import {
 	addCopyPathMenuItems,
 	copyPathListToClipboard,
 	copyPathToClipboard,
-} from "src/platform/pathClipboard";
+} from "src/ui/pathClipboard";
 import { addTagInsertionMenuItems } from "src/tags/tagInsertionMenu";
 import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 import { ICONS } from "src/ui/icons";

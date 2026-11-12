@@ -17,7 +17,7 @@ import {
 	addCopyPathMenuItems,
 	copyPathListToClipboard,
 	copyPathToClipboard,
-} from "src/platform/pathClipboard";
+} from "src/ui/pathClipboard";
 import { ignoredToggleOptions } from "src/palette/ignoredToggle";
 import { runResultAction, type ActionKind } from "src/palette/resultActions";
 import { executePaletteResult } from "src/palette/executePaletteResult";
