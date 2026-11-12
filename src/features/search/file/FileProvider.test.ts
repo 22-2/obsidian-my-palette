@@ -178,4 +178,53 @@ describe("ファイルプロバイダーのボールトイベント処理", () =
 		).toHaveLength(0);
 		provider.dispose();
 	});
+
+	// Obsidian のメタデータの解析・リンクの解決は非同期なので、削除の後に、削除済みの TFile に対して
+	// `changed` や `resolve` が届くことがある。
+	it.each(["changed", "resolve"])(
+		"削除の後に遅れて届いた metadataCache %s で、削除済みのファイルを復活させません",
+		async (eventName) => {
+			const provider = createProvider();
+			const target = files[0];
+			files = [];
+			vaultHandlers.get("delete")?.(target as never);
+			metadataHandlers.get(eventName)?.(target as never);
+
+			expect(
+				await provider.search({ query: "untitled", includeIgnored: false, mode: "file" }),
+			).toHaveLength(0);
+			provider.dispose();
+		},
+	);
+
+	it("同じパスに作り直されたファイルを、削除済みの古いファイルへの遅れたイベントで上書きしません", async () => {
+		const provider = createProvider();
+		const stale = files[0];
+		const recreated = tfile("untitled.md", 5);
+		files = [];
+		vaultHandlers.get("delete")?.(stale as never);
+		files = [recreated];
+		vaultHandlers.get("create")?.(recreated as never);
+		metadataHandlers.get("changed")?.(stale as never);
+
+		const results = await provider.search({
+			query: "untitled",
+			includeIgnored: false,
+			mode: "file",
+		});
+		expect(results).toHaveLength(1);
+		expect(results[0].file).toBe(recreated);
+		provider.dispose();
+	});
+
+	it("解決の完了イベントで、イベントを取りこぼした削除済みのファイルの項目を捨てます", async () => {
+		const provider = createProvider();
+		files = [];
+		metadataHandlers.get("resolved")?.();
+
+		expect(
+			await provider.search({ query: "untitled", includeIgnored: false, mode: "file" }),
+		).toHaveLength(0);
+		provider.dispose();
+	});
 });

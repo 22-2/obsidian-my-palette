@@ -105,11 +105,7 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		// 別名が空のまま恒久的にキャッシュされてしまうため。
 		// 注: `resolved` は後の変更の後にも発火するので、これは完全な作り直しのままにする。1つの
 		// ファイルのイベントを取りこぼしても、索引が必ず収束するように。
-		this.refs.push(
-			app.metadataCache.on("resolved", () => {
-				this.app.vault.getFiles().forEach((file) => this.update(file));
-			}),
-		);
+		this.refs.push(app.metadataCache.on("resolved", () => this.sync()));
 	}
 
 	dispose(): void {
@@ -137,7 +133,21 @@ export class FileProvider implements PaletteProvider<FileResult> {
 		this.app.vault.getFiles().forEach((file) => this.update(file));
 	}
 
+	/** 保管庫の現状に索引を合わせる。取りこぼしたイベントがあっても、残った項目と足りない項目を直す。 */
+	private sync(): void {
+		const files = this.app.vault.getFiles();
+		const paths = new Set(files.map((file) => file.path));
+		for (const path of [...this.allEntries.keys()]) {
+			if (!paths.has(path)) this.deleteEntry(path);
+		}
+		files.forEach((file) => this.update(file));
+	}
+
 	private update(file: TFile): void {
+		// Why: メタデータの解析やリンクの解決は非同期なので、`changed` や `resolve` は、ファイルが削除された
+		// 後に、削除済みの TFile に対して届くことがある。そのまま項目を作ると、消したノートが検索に残り続ける。
+		// パスではなく参照で比べるのは、同じパスに作り直されたファイルの項目を、古い TFile で上書きしないため。
+		if (this.app.vault.getAbstractFileByPath(file.path) !== file) return;
 		// すべての項目を残すので、拡張子の設定が変わっても、メモリ上のキャッシュを更新するだけで済む。
 		const metadata = this.app.metadataCache.getFileCache(file);
 		const fileAliases = aliases(metadata?.frontmatter?.aliases ?? metadata?.frontmatter?.alias);
