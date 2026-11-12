@@ -34,3 +34,36 @@ test("MOC CLI は相互リンクを確認してから追加する", async ({ obs
 	expect(await obsidian.read("MOC.md")).toContain("[[Note]]");
 	expect(await obsidian.read("Note.md")).toContain("[[MOC]]");
 });
+
+test("MOC CLI は相互リンクを確認してから削除する", async ({ obsidian }) => {
+	await writeRaw(obsidian, "MOC.md", "## MOC\n- Relateds\n    - [[Note]]\n");
+	await writeRaw(obsidian, "Note.md", "## MOC\n- Relateds\n    - [[MOC]]\n");
+	const run = async (params: Record<string, string>) => {
+		const output = await obsidian.evaluateApp(
+			({ command, params }) => {
+				const cli = (
+					app as unknown as {
+						cli: {
+							handlers: Map<string, { handler(params: unknown): Promise<string> }>;
+						};
+					}
+				).cli;
+				return cli.handlers.get(command)!.handler(params);
+			},
+			{ command: `${PLUGIN_ID}:remove-moc-relateds`, params },
+		);
+		return JSON.parse(output) as {
+			plan: string;
+			blocked?: boolean;
+			files: { result?: string }[];
+		};
+	};
+	const params = { paths: '["Note.md"]', moc: "MOC.md" };
+	const preview = await run(params);
+	expect(preview.blocked).toBe(false);
+	expect(await obsidian.read("MOC.md")).toContain("[[Note]]");
+	const result = await run({ ...params, apply: "true", plan: preview.plan });
+	expect(result.files.map((file) => file.result)).toEqual(["updated", "updated"]);
+	expect(await obsidian.read("MOC.md")).not.toContain("[[Note]]");
+	expect(await obsidian.read("Note.md")).not.toContain("[[MOC]]");
+});

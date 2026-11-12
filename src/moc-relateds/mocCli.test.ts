@@ -1,7 +1,7 @@
 import { TFile, type App } from "obsidian";
 import { expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
-import { mocCliApi } from "src/moc-relateds/mocCli";
+import { mocCliApi, mocRemoveCliApi } from "src/moc-relateds/mocCli";
 
 vi.mock("obsidian", () => ({
 	TFile: class {
@@ -98,4 +98,37 @@ it("書き込みに失敗したリンクを成功と報告しない", async () =
 			expect.objectContaining({ from: "MOC.md", result: "failed", reason: "locked" }),
 		]),
 	});
+});
+
+it("相互リンクの削除を確認し、両方向の Relateds から外す", async () => {
+	const { plugin, contents, process } = fixture();
+	contents.set("MOC.md", "## MOC\n- Relateds\n    - [[Note]]\n");
+	contents.set("Note.md", "## MOC\n- Relateds\n    - [[MOC]]\n");
+	const params = { paths: '["Note.md"]', moc: "MOC.md" };
+	const preview = (await mocRemoveCliApi.run(plugin, params)) as {
+		plan: string;
+		links: unknown[];
+	};
+	expect(preview.links).toEqual(
+		expect.arrayContaining([expect.objectContaining({ result: "removed" })]),
+	);
+	expect(process).not.toHaveBeenCalled();
+	await mocRemoveCliApi.run(plugin, { ...params, apply: "true", plan: preview.plan });
+	expect(contents.get("MOC.md")).not.toContain("[[Note]]");
+	expect(contents.get("Note.md")).not.toContain("[[MOC]]");
+});
+
+it("子項目を持つリンクの削除を拒否する", async () => {
+	const { plugin, contents, process } = fixture();
+	contents.set("MOC.md", "## MOC\n- Relateds\n    - [[Note]]\n        - 子項目\n");
+	const params = { paths: '["Note.md"]', moc: "MOC.md", "one-way": "true" };
+	const preview = (await mocRemoveCliApi.run(plugin, params)) as {
+		plan: string;
+		blocked: boolean;
+	};
+	expect(preview.blocked).toBe(true);
+	await expect(
+		mocRemoveCliApi.run(plugin, { ...params, apply: "true", plan: preview.plan }),
+	).rejects.toThrow();
+	expect(process).not.toHaveBeenCalled();
 });

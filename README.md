@@ -204,6 +204,8 @@ MOC remove selector も、同じ判定でつながっているノートに印（
 
 `obsidian my-palette:insert-moc-relateds` は挿入先の `moc` と対象ノートの `paths` を指定し、追加されるリンクの方向と変更されるノートをプレビューします。既定は相互リンクで、`one-way` を付けると MOC からのリンクだけを追加します。`plan` と `apply` で実行します。
 
+`obsidian my-palette:remove-moc-relateds` は同じ対象指定で Relateds のリンクを外します。既定は相互リンクを外し、`one-way` では MOC 側だけを対象にします。子項目を持つリンクは削除せず、計画を実行できない状態で返します。
+
 PowerShell では例えば次のように指定します。実行時の `plan` は直前にプレビューで返された値に置き換えてください。
 
 ```powershell

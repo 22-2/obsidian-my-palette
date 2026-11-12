@@ -1,11 +1,11 @@
 import type { App, TFile } from "obsidian";
-import { addLinkToMocRelateds } from "src/moc-relateds/mocRelatedsCore";
+import { addLinkToMocRelateds, removeLinkFromMocRelateds } from "src/moc-relateds/mocRelatedsCore";
 import { t } from "src/i18n";
 
 export interface MocPlannedLink {
 	from: string;
 	to: string;
-	result: "added" | "already-linked" | "failed";
+	result: "added" | "already-linked" | "removed" | "missing" | "failed";
 	reason?: string;
 }
 
@@ -28,6 +28,26 @@ export async function planMocInsertion(
 	targets: readonly TFile[],
 	mutual: boolean,
 ): Promise<MocInsertionPlan> {
+	return planMocLinks(app, moc, targets, mutual, "insert");
+}
+
+/** MOC と対象ノートの Relateds から外すリンクを計画する。 */
+export async function planMocRemoval(
+	app: App,
+	moc: TFile,
+	targets: readonly TFile[],
+	mutual: boolean,
+): Promise<MocInsertionPlan> {
+	return planMocLinks(app, moc, targets, mutual, "remove");
+}
+
+async function planMocLinks(
+	app: App,
+	moc: TFile,
+	targets: readonly TFile[],
+	mutual: boolean,
+	operation: "insert" | "remove",
+): Promise<MocInsertionPlan> {
 	const files = await Promise.all(
 		[moc, ...targets].map(async (file) => {
 			const before = await app.vault.read(file);
@@ -36,20 +56,29 @@ export async function planMocInsertion(
 	);
 	const links: MocPlannedLink[] = [];
 	const tabSize = Number(app.vault.getConfig("tabSize")) || 4;
-	const add = (from: MocPlannedFile, to: TFile): void => {
-		const change = addLinkToMocRelateds(from.after, to.basename, tabSize);
+	const edit = (from: MocPlannedFile, to: TFile): void => {
+		const change =
+			operation === "insert"
+				? addLinkToMocRelateds(from.after, to.basename, tabSize)
+				: removeLinkFromMocRelateds(from.after, to.basename);
 		if (change.success) {
 			from.after = change.newContent;
-			links.push({ from: from.path, to: to.path, result: "added" });
-		} else if (change.message === t("moc.core.alreadyExists")) {
+			links.push({
+				from: from.path,
+				to: to.path,
+				result: operation === "insert" ? "added" : "removed",
+			});
+		} else if (operation === "insert" && change.message === t("moc.core.alreadyExists")) {
 			links.push({ from: from.path, to: to.path, result: "already-linked" });
+		} else if (operation === "remove" && change.message === t("moc.core.notFound")) {
+			links.push({ from: from.path, to: to.path, result: "missing" });
 		} else {
 			links.push({ from: from.path, to: to.path, result: "failed", reason: change.message });
 		}
 	};
 	for (let index = 0; index < targets.length; index++) {
-		add(files[0], targets[index]);
-		if (mutual) add(files[index + 1], moc);
+		edit(files[0], targets[index]);
+		if (mutual) edit(files[index + 1], moc);
 	}
 	return { files, links };
 }
