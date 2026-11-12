@@ -1,6 +1,10 @@
-import type { IntegrationSettings, ModeSettingsMap, MyPaletteSettings } from "src/settings/model";
+import type {
+	IntegrationSettings,
+	ModeSettingsMap,
+	MyPaletteSettings,
+	IntegrationReadiness,
+} from "src/settings/model";
 import type { PaletteMode, PaletteModeId } from "src/core/results";
-import type { IntegrationReadiness } from "src/app/integrationAvailability";
 import { ICONS } from "src/ui/icons";
 import { t } from "src/i18n";
 

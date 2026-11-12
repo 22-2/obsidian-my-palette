@@ -1,6 +1,6 @@
 import { Notice, type App } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import type { ActionKind } from "src/palette/resultActions";
+import type { LeafOpenAction } from "src/workspace/openLeaf";
 import type { PaletteResult, TagResult } from "src/core/results";
 import { t } from "src/i18n";
 import { mergeFrontmatterTags, updateFrontmatter } from "src/core/frontmatter";
@@ -14,7 +14,7 @@ export interface TagMenuOptions {
 	plugin: MyPalettePlugin;
 	menu: PaletteMenu;
 	tags: readonly TagResult[];
-	activate: (action: ActionKind, result: PaletteResult) => void | Promise<void>;
+	activate: (action: LeafOpenAction, result: PaletteResult) => void | Promise<void>;
 	onNoteActionDone?: () => void;
 }
 

@@ -266,6 +266,8 @@ export interface IntegrationSettings {
 	smartConnections: { enabled: boolean };
 }
 
+export type IntegrationReadiness = Record<keyof IntegrationSettings, boolean>;
+
 export interface MyPaletteSettings {
 	integrations: IntegrationSettings;
 	hotkeys: PaletteHotkeys;

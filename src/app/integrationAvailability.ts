@@ -1,7 +1,6 @@
-import type { IntegrationSettings, MyPaletteSettings } from "src/settings/model";
+import type { IntegrationReadiness, MyPaletteSettings } from "src/settings/model";
 import { t } from "src/i18n";
 
-export type IntegrationReadiness = Record<keyof IntegrationSettings, boolean>;
 export interface ConnectionResult {
 	ok: boolean;
 	message: string;

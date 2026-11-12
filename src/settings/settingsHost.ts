@@ -1,6 +1,5 @@
 import type { App } from "obsidian";
-import type { MyPaletteSettings, PaletteSurface } from "src/settings/model";
-import type { IntegrationReadiness } from "src/app/integrationAvailability";
+import type { MyPaletteSettings, PaletteSurface, IntegrationReadiness } from "src/settings/model";
 
 /** The slice of the plugin that the settings UI reads and acts on. */
 export interface SettingsHost {
