@@ -112,7 +112,7 @@ export class RecentIdStore {
 		this.writePromise = this.writePromise
 			.then(() => this.clearDatabase())
 			.catch((error: unknown) =>
-				logger.debug(`Failed to clear ${this.options.label}`, error),
+				logger.error(`Failed to clear ${this.options.label}`, error),
 			);
 	}
 
@@ -172,7 +172,7 @@ export class RecentIdStore {
 		this.writePromise = this.writePromise
 			.then(() => this.persistCurrent())
 			.catch((error: unknown) =>
-				logger.debug(`Failed to persist ${this.options.label}`, error),
+				logger.error(`Failed to persist ${this.options.label}`, error),
 			);
 	}
 
@@ -240,7 +240,7 @@ export class RecentIdStore {
 		} catch (error) {
 			this.unavailable = true;
 			this.current = this.normalize(legacyIds);
-			logger.debug(`IndexedDB for ${this.options.label} is unavailable`, error);
+			logger.error(`IndexedDB for ${this.options.label} is unavailable`, error);
 		} finally {
 			this.loaded = true;
 			logger.debug(`Loaded ${this.options.label}`, { entries: this.current.length });
@@ -263,7 +263,7 @@ export class RecentIdStore {
 			await transaction.done;
 		} catch (error) {
 			this.unavailable = true;
-			logger.debug(`Failed to persist ${this.options.label}`, error);
+			logger.error(`Failed to persist ${this.options.label}`, error);
 		}
 	}
 
@@ -281,7 +281,7 @@ export class RecentIdStore {
 			await transaction.done;
 		} catch (error) {
 			this.unavailable = true;
-			logger.debug(`Failed to clear ${this.options.label}`, error);
+			logger.error(`Failed to clear ${this.options.label}`, error);
 		}
 	}
 }

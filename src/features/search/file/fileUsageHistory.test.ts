@@ -1,5 +1,6 @@
 import type { App } from "obsidian";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { logger } from "src/core/logger";
 import {
 	calculateFileUsageScore,
 	FILE_USAGE_MAX_FREQUENCY,
@@ -8,6 +9,10 @@ import {
 } from "src/features/search/file/fileUsageHistory";
 
 describe("ファイル使用履歴のスコアリング", () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
 	it("設定された半減期によって最近の使用量を減衰します", () => {
 		const now = FILE_USAGE_RECENCY_HALF_LIFE_MS * 2;
 		const recent = calculateFileUsageScore({ count: 1, lastUsedAt: now }, now);
@@ -50,6 +55,7 @@ describe("ファイル使用履歴のスコアリング", () => {
 	});
 
 	it("IndexedDB が使用できない場合でもメモリ内の信号を維持します", async () => {
+		const error = vi.spyOn(logger, "error").mockImplementation(() => undefined);
 		const app = {
 			vault: { adapter: {}, getName: () => "test-vault" },
 		} as unknown as App;
@@ -59,5 +65,9 @@ describe("ファイル使用履歴のスコアリング", () => {
 
 		expect(history.getScores(1_000_000).get("notes/used.md")).toBeGreaterThan(0);
 		await history.dispose();
+
+		// 使えないと分かった後の書き込みでは、同じエラーを繰り返し出さない。
+		expect(error).toHaveBeenCalledTimes(1);
+		expect(error).toHaveBeenCalledWith("File usage history is unavailable", expect.any(Error));
 	});
 });

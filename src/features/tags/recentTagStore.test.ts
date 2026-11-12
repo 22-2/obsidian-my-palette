@@ -1,5 +1,6 @@
 import type { App } from "obsidian";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { logger } from "src/core/logger";
 import { MAX_RECENT_TAGS, RecentTagStore } from "src/features/tags/recentTagStore";
 
 function app(): App {
@@ -9,6 +10,15 @@ function app(): App {
 }
 
 describe("最近のタグストア", () => {
+	// テストには IndexedDB が無く、読み込みのたびに「使用できない」エラーが出るので黙らせる。
+	beforeEach(() => {
+		vi.spyOn(logger, "error").mockImplementation(() => undefined);
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
 	it("記録されたタグを前面に移動し、大文字と小文字のみの重複をマージします", async () => {
 		const store = new RecentTagStore(app());
 		await store.load();

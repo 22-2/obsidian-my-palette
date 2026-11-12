@@ -162,7 +162,7 @@ export class SearchHistoryStore {
 		this.current.clear();
 		this.writePromise = this.writePromise
 			.then(() => this.clearDatabase())
-			.catch((error: unknown) => logger.debug("Failed to clear search history", error));
+			.catch((error: unknown) => logger.error("Failed to clear search history", error));
 	}
 
 	async dispose(): Promise<void> {
@@ -190,7 +190,7 @@ export class SearchHistoryStore {
 		if (changed.length === 0 && removed.length === 0) return;
 		this.writePromise = this.writePromise
 			.then(() => this.persistChanges(changed, removed))
-			.catch((error: unknown) => logger.debug("Failed to persist search history", error));
+			.catch((error: unknown) => logger.error("Failed to persist search history", error));
 	}
 
 	private getDatabase(): Promise<IDBPDatabase<SearchHistoryDatabase>> {
@@ -282,7 +282,7 @@ export class SearchHistoryStore {
 					SEARCH_HISTORY_MAX_ENTRIES,
 				),
 			);
-			logger.debug("Search history IndexedDB is unavailable", error);
+			logger.error("Search history IndexedDB is unavailable", error);
 		} finally {
 			this.loaded = true;
 			logger.debug("Loaded search history", { entries: this.current.size });
@@ -304,7 +304,7 @@ export class SearchHistoryStore {
 			await transaction.done;
 		} catch (error) {
 			this.unavailable = true;
-			logger.debug("Failed to persist search history", error);
+			logger.error("Failed to persist search history", error);
 		}
 	}
 
@@ -322,7 +322,7 @@ export class SearchHistoryStore {
 			await transaction.done;
 		} catch (error) {
 			this.unavailable = true;
-			logger.debug("Failed to clear search history", error);
+			logger.error("Failed to clear search history", error);
 		}
 	}
 }

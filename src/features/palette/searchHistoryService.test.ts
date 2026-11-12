@@ -1,5 +1,6 @@
 import type { App } from "obsidian";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { logger } from "src/core/logger";
 import { SearchHistoryService } from "src/features/palette/searchHistoryService";
 
 function app(): App {
@@ -11,6 +12,15 @@ function app(): App {
 const options = { now: 2_000, daysToKeep: 0, maxEntries: 256 };
 
 describe("検索履歴サービス", () => {
+	// テストには IndexedDB が無く、読み込みのたびに「使用できない」エラーが出るので黙らせる。
+	beforeEach(() => {
+		vi.spyOn(logger, "error").mockImplementation(() => undefined);
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
 	it("IndexedDB が使用できない場合、履歴を従来のペイロードにミラーリングします。", async () => {
 		const onLegacyChange = vi.fn();
 		const service = new SearchHistoryService(app(), onLegacyChange);

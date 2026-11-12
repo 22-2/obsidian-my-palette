@@ -1,5 +1,6 @@
 import type { App } from "obsidian";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { logger } from "src/core/logger";
 import { SearchHistoryStore } from "src/features/palette/searchHistoryStore";
 
 function app(): App {
@@ -9,7 +10,12 @@ function app(): App {
 }
 
 describe("検索履歴ストア", () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
 	it("IndexedDB が使用できない場合でもレガシー履歴を使用できるようにする", async () => {
+		const error = vi.spyOn(logger, "error").mockImplementation(() => undefined);
 		const store = new SearchHistoryStore(app());
 		const persistent = await store.load([
 			{ input: "old", category: "file", lastSearchedAt: 1_000, count: 2 },
@@ -34,5 +40,12 @@ describe("検索履歴ストア", () => {
 		store.clear();
 		expect(store.getSuggestions("", "file")).toEqual([]);
 		await store.dispose();
+
+		// 使えないと分かった後の書き込みでは、同じエラーを繰り返し出さない。
+		expect(error).toHaveBeenCalledTimes(1);
+		expect(error).toHaveBeenCalledWith(
+			"Search history IndexedDB is unavailable",
+			expect.any(Error),
+		);
 	});
 });

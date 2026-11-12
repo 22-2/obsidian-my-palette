@@ -122,7 +122,7 @@ export class FileUsageHistory implements FileUsageScoreSource {
 				await this.load();
 				await this.persist(path, removedPaths);
 			})
-			.catch((error: unknown) => logger.debug("Failed to persist file usage history", error));
+			.catch((error: unknown) => logger.error("Failed to persist file usage history", error));
 	}
 
 	async dispose(): Promise<void> {
@@ -189,7 +189,7 @@ export class FileUsageHistory implements FileUsageScoreSource {
 			}
 		} catch (error) {
 			this.unavailable = true;
-			logger.debug("File usage history is unavailable", error);
+			logger.error("File usage history is unavailable", error);
 		} finally {
 			this.loaded = true;
 			logger.debug("Loaded file usage history", { entries: this.current.size });
@@ -230,7 +230,7 @@ export class FileUsageHistory implements FileUsageScoreSource {
 			await transaction.done;
 		} catch (error) {
 			this.unavailable = true;
-			logger.debug(`Failed to persist file usage history for ${path}`, error);
+			logger.error(`Failed to persist file usage history for ${path}`, error);
 		}
 	}
 }
