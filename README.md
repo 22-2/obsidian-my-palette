@@ -198,6 +198,8 @@ MOC remove selector も、同じ判定でつながっているノートに印（
 
 `obsidian my-palette:edit-tags` は `paths` のノートのフロントマターのタグを編集します。`add` と `remove` にタグ名の JSON 配列を指定し、プレビューを確認した後、同じ引数に `plan` と `apply` を付けて実行します。本文中のインラインタグは変更しません。
 
+`obsidian my-palette:rename-tag` は `from` と `to`、`obsidian my-palette:delete-tags` は `tags` の JSON 配列で保管庫全体のタグを操作します。本文・フロントマター・タグ形式のエイリアスと子タグが対象です。Obsidian のメタデータキャッシュから対象を探すため、メタデータ更新中は対象や計画が変わる場合があります。
+
 `obsidian my-palette:edit-list-property` は `paths`、プロパティ名の `key`、`add` と `remove` の文字列配列で、リスト型プロパティを編集します。変更前後を確認し、`plan` と `apply` を付けて実行します。文字列リスト以外の値は変更せず、タグには `edit-tags` を使います。
 
 `obsidian my-palette:merge-notes` は統合元の `paths` と統合先の `target` を指定します。プレビューには統合元・統合先、プロパティの衝突、リンクを付け替えるノートを出します。`plan` と `apply` で実行し、成功すると統合元をゴミ箱へ移動します。`no-aliases` を付けると統合元の名前を aliases に追加しません。

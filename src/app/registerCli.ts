@@ -7,6 +7,7 @@ import { tagCliApi } from "src/tags/tagCli";
 import { listPropertyCliApi } from "src/properties/listPropertyCli";
 import { mergeCliApi } from "src/merge/mergeCli";
 import { mocCliApi, mocRemoveCliApi } from "src/moc-relateds/mocCli";
+import { renameTagCliApi, deleteTagsCliApi } from "src/tags/globalTagCli";
 import type MyPalettePlugin from "src/main";
 import { logger } from "src/shared/logger";
 import { t } from "src/i18n";
@@ -32,6 +33,8 @@ const CLI_APIS: readonly CliApi[] = [
 	mergeCliApi,
 	mocCliApi,
 	mocRemoveCliApi,
+	renameTagCliApi,
+	deleteTagsCliApi,
 ];
 
 /** プラグイン ID だけで API の一覧を出せるので、README を見なくても呼び出し先を見つけられる。 */
