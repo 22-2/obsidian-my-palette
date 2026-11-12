@@ -1,8 +1,7 @@
-import { getAllTags, Notice, parseFrontMatterTags, type App, type TFile } from "obsidian";
+import { getAllTags, Notice, type App, type TFile } from "obsidian";
 import { t } from "src/i18n";
 import type MyPalettePlugin from "src/main";
 import {
-	mergeFrontmatterTags,
 	removeFrontmatterTags,
 	setOrDeleteFrontmatterList,
 	updateFrontmatter,
@@ -11,15 +10,12 @@ import { relationPaths } from "src/shared/noteRelations";
 import { buildTagChoices, tagKey, type TagChoice } from "src/tags/tagChoices";
 import type { MultiSelectChanges } from "src/ui/multiSelectChanges";
 import { TagSelectionModal } from "src/tags/TagSelectionModal";
+import { applyTagChangesToFiles, frontmatterTags } from "src/tags/tagOperations";
 
 /** Recent-tag history used to rank candidates and updated after insertion. */
 export interface RecentTagSource {
 	getIds(): readonly string[];
 	record(...tags: string[]): void;
-}
-
-function frontmatterTags(app: App, file: TFile): string[] {
-	return parseFrontMatterTags(app.metadataCache.getFileCache(file)?.frontmatter) ?? [];
 }
 
 /**
@@ -105,24 +101,9 @@ async function applyTagChanges(
 	changes: MultiSelectChanges<string>,
 	recentTags: RecentTagSource,
 ): Promise<void> {
-	let updated = 0;
-	let failed = 0;
-	for (const file of targets) {
-		const existing = frontmatterTags(app, file);
-		const removals = changes.remove.filter((tag) => hasTag(existing, tag));
-		if (changes.add.length === 0 && removals.length === 0) continue;
-		const saved = await updateFrontmatter(app, file, "update tags of", (frontmatter) => {
-			let tags = frontmatter.tags;
-			if (changes.add.length > 0) tags = mergeFrontmatterTags(tags, changes.add);
-			if (removals.length > 0) tags = removeFrontmatterTags(tags, removals);
-			setOrDeleteFrontmatterList(frontmatter, "tags", Array.isArray(tags) ? tags : []);
-		});
-		if (saved) {
-			updated += 1;
-		} else {
-			failed += 1;
-		}
-	}
+	const results = await applyTagChangesToFiles(app, targets, changes);
+	const updated = results.filter((result) => result.result === "updated").length;
+	const failed = results.filter((result) => result.result === "failed").length;
 	if (changes.add.length > 0) recentTags.record(...changes.add);
 
 	if (updated > 0)
@@ -133,10 +114,6 @@ async function applyTagChanges(
 			),
 		);
 	if (failed > 0) new Notice(t("tag.notice.updateFailed", { count: failed }));
-}
-
-function hasTag(tags: readonly string[], tag: string): boolean {
-	return tags.some((existing) => tagKey(existing) === tagKey(tag));
 }
 
 function tagChangeMessage(changes: MultiSelectChanges<string>, where: string): string {

@@ -3,6 +3,7 @@ import { auditCliApi } from "src/audit/auditCli";
 import { renameCliApi } from "src/rename/renameCli";
 import { moveCliApi } from "src/palette/moveCli";
 import { trashCliApi } from "src/palette/trashCli";
+import { tagCliApi } from "src/tags/tagCli";
 import type MyPalettePlugin from "src/main";
 import { logger } from "src/shared/logger";
 import { t } from "src/i18n";
@@ -18,7 +19,7 @@ export interface CliApi {
 	run: (plugin: MyPalettePlugin, params: CliData) => Promise<unknown>;
 }
 
-const CLI_APIS: readonly CliApi[] = [auditCliApi, renameCliApi, moveCliApi, trashCliApi];
+const CLI_APIS: readonly CliApi[] = [auditCliApi, renameCliApi, moveCliApi, trashCliApi, tagCliApi];
 
 /** プラグイン ID だけで API の一覧を出せるので、README を見なくても呼び出し先を見つけられる。 */
 export function registerCli(plugin: MyPalettePlugin): void {
