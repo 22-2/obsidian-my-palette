@@ -1,7 +1,7 @@
 import { TFile, TFolder, type App } from "obsidian";
 import { expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
-import { moveCliApi } from "src/palette/moveCli";
+import { moveCliApi } from "src/move/moveCli";
 
 vi.mock("obsidian", () => ({
 	TFile: class {

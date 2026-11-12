@@ -7,7 +7,8 @@ import {
 	updateFrontmatter,
 } from "src/shared/frontmatter";
 import { relationPaths } from "src/shared/noteRelations";
-import { buildTagChoices, tagKey, type TagChoice } from "src/tags/tagChoices";
+import { tagKey } from "src/shared/tagKey";
+import { buildTagChoices, type TagChoice } from "src/tags/tagChoices";
 import type { MultiSelectChanges } from "src/ui/multiSelectChanges";
 import { TagSelectionModal } from "src/tags/TagSelectionModal";
 import { applyTagChangesToFiles, frontmatterTags } from "src/tags/tagOperations";

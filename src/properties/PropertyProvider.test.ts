@@ -1,6 +1,6 @@
 import type { App, TFile } from "obsidian";
 import { describe, expect, it, vi } from "vitest";
-import { PropertyProvider } from "src/search/property/PropertyProvider";
+import { PropertyProvider } from "src/properties/PropertyProvider";
 
 const note = { path: "note.md", extension: "md" } as unknown as TFile;
 

@@ -1,5 +1,6 @@
 import type { App, TFile } from "obsidian";
 import { logger } from "src/shared/logger";
+import { tagKey } from "src/shared/tagKey";
 
 /** Write a frontmatter change and log any failure, so a "See the console" notice has detail. */
 export async function updateFrontmatter(
@@ -78,7 +79,7 @@ export function normalizeFrontmatterTags(value: unknown): string[] {
 export function mergeFrontmatterTags(existing: unknown, added: readonly string[]): string[] {
 	const merged = new Map<string, string>();
 	for (const tag of [...normalizeFrontmatterTags(existing), ...added]) {
-		const key = tag.replace(/^#/, "").toLowerCase();
+		const key = tagKey(tag);
 		if (!merged.has(key)) merged.set(key, tag);
 	}
 	return [...merged.values()].sort();
@@ -89,8 +90,6 @@ export function mergeFrontmatterTags(existing: unknown, added: readonly string[]
  * タグを削除しても並び順を変える理由はないので、残りの順序は保つ。
  */
 export function removeFrontmatterTags(existing: unknown, removed: readonly string[]): string[] {
-	const removedKeys = new Set(removed.map((tag) => tag.replace(/^#/, "").toLowerCase()));
-	return normalizeFrontmatterTags(existing).filter(
-		(tag) => !removedKeys.has(tag.replace(/^#/, "").toLowerCase()),
-	);
+	const removedKeys = new Set(removed.map(tagKey));
+	return normalizeFrontmatterTags(existing).filter((tag) => !removedKeys.has(tagKey(tag)));
 }

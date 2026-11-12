@@ -1,3 +1,5 @@
+import { tagKey } from "src/shared/tagKey";
+
 export interface TagChoice {
 	/** Tag name without the leading `#`. */
 	tag: string;
@@ -29,11 +31,6 @@ export interface TagChoiceSource {
 // リンクが多いノートは大半のタグを関連ありに見せてしまい、
 // 関連マーカーがヒントとして役に立たなくなる。
 export const MAX_RELATED_TAGS = 10;
-
-/** Tags differ only by case in Obsidian, so comparisons use one key format. */
-export function tagKey(tag: string): string {
-	return tag.replace(/^#/, "").toLowerCase();
-}
 
 /** Counts related notes per tag; repeated tags inside one note count once. */
 export function countTagsInNotes(noteTags: readonly (readonly string[])[]): Map<string, number> {

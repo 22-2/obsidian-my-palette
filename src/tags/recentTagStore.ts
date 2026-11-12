@@ -1,6 +1,6 @@
 import type { App } from "obsidian";
 import { RecentIdStore, type RecentIdStoreLogger } from "src/shared/recentIdStore";
-import { tagKey } from "src/tags/tagChoices";
+import { tagKey } from "src/shared/tagKey";
 import { DATABASE_NAMES } from "src/shared/databaseNames";
 
 export const MAX_RECENT_TAGS = 20;

@@ -1,7 +1,7 @@
 import { TFile, TFolder } from "obsidian";
 import type { CliApi } from "src/app/registerCli";
 import { cliPlanHash, cliTargetPaths, requireCliPlan } from "src/app/cliPlans";
-import { moveFiles } from "src/palette/moveFiles";
+import { moveFiles } from "src/move/moveFiles";
 import { t } from "src/i18n";
 
 export const moveCliApi: CliApi = {

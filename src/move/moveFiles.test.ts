@@ -1,7 +1,7 @@
 import { TFile, type App } from "obsidian";
 import { expect, it, vi } from "vitest";
 import { materializeIgnoredNote } from "src/ignored-notes/ignoredNoteMaterializer";
-import { moveFiles } from "src/palette/moveFiles";
+import { moveFiles } from "src/move/moveFiles";
 
 vi.mock("obsidian", () => ({
 	TFile: class {

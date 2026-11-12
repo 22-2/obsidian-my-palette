@@ -2,7 +2,7 @@ import type { App } from "obsidian";
 import { TFile } from "obsidian";
 import { expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
-import { MoveFileModal } from "src/palette/MoveFileModal";
+import { MoveFileModal } from "src/move/MoveFileModal";
 import { addFileMoveMenuItem } from "src/palette/actions/fileMoveMenu";
 import type { PaletteResult } from "src/palette/results";
 import type { PaletteMenu } from "src/ui/paletteMenu";
@@ -15,7 +15,7 @@ vi.mock("obsidian", () => ({
 vi.mock("src/ignored-notes/ignoredPaths", () => ({
 	isUserIgnoredPath: (_app: unknown, path: string) => path.startsWith("secret/"),
 }));
-vi.mock("src/palette/MoveFileModal", () => ({
+vi.mock("src/move/MoveFileModal", () => ({
 	MoveFileModal: vi.fn(function (this: { open: () => void }) {
 		this.open = vi.fn();
 	}),

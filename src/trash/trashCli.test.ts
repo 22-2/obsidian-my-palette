@@ -1,7 +1,7 @@
 import { TFile, type App } from "obsidian";
 import { expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
-import { trashCliApi } from "src/palette/trashCli";
+import { trashCliApi } from "src/trash/trashCli";
 
 vi.mock("obsidian", () => ({
 	TFile: class {

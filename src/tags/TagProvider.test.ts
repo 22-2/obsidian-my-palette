@@ -1,6 +1,6 @@
 import type { App } from "obsidian";
 import { describe, expect, it } from "vitest";
-import { TagProvider } from "src/search/tag/TagProvider";
+import { TagProvider } from "src/tags/TagProvider";
 
 function providerWith(tags: Record<string, number>) {
 	const app = { metadataCache: { getTags: () => tags } } as unknown as App;

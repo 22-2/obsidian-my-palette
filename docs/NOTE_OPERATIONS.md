@@ -5,8 +5,8 @@
 | 操作                       | 処理の所在                                                                                                             | CLI                                          |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
 | 名前変更                   | [renamePlan.ts](../src/rename/renamePlan.ts)、[renameFiles.ts](../src/rename/renameFiles.ts)                           | `rename`                                     |
-| フォルダーへ移動           | [moveFiles.ts](../src/palette/moveFiles.ts)                                                                            | `move`                                       |
-| ノートをゴミ箱へ移動       | [trashNotes.ts](../src/palette/trashNotes.ts)                                                                          | `trash-notes`                                |
+| フォルダーへ移動           | [moveFiles.ts](../src/move/moveFiles.ts)                                                                               | `move`                                       |
+| ノートをゴミ箱へ移動       | [trashNotes.ts](../src/trash/trashNotes.ts)                                                                            | `trash-notes`                                |
 | 統合                       | [mergeNotes.ts](../src/merge/mergeNotes.ts)、[mergeText.ts](../src/merge/mergeText.ts)                                 | `merge-notes`                                |
 | フロントマターのタグ       | [tagOperations.ts](../src/tags/tagOperations.ts)                                                                       | `edit-tags`                                  |
 | 保管庫全体のタグ変更・削除 | [tagRenameFiles.ts](../src/tags/tagRenameFiles.ts)                                                                     | `rename-tag`、`delete-tags`                  |

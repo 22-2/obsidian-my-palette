@@ -1,7 +1,7 @@
 import { TFile } from "obsidian";
 import type { CliApi } from "src/app/registerCli";
 import { cliPlanHash, cliTargetPaths, requireCliPlan } from "src/app/cliPlans";
-import { trashNotes } from "src/palette/trashNotes";
+import { trashNotes } from "src/trash/trashNotes";
 import { t } from "src/i18n";
 
 export const trashCliApi: CliApi = {

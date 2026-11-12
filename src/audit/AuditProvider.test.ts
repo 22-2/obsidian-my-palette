@@ -1,7 +1,7 @@
 import type { App, TFile } from "obsidian";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { auditVault } from "src/audit/auditSnapshot";
-import { AuditProvider, toAuditResults } from "src/search/audit/AuditProvider";
+import { AuditProvider, toAuditResults } from "src/audit/AuditProvider";
 import { DEFAULT_SETTINGS, type MyPaletteSettings } from "src/settings/model";
 
 vi.mock("obsidian", () => ({ TFile: class {} }));

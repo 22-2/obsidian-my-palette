@@ -1,8 +1,8 @@
 import type { CliData, CliFlags } from "obsidian";
 import { auditCliApi } from "src/audit/auditCli";
 import { renameCliApi } from "src/rename/renameCli";
-import { moveCliApi } from "src/palette/moveCli";
-import { trashCliApi } from "src/palette/trashCli";
+import { moveCliApi } from "src/move/moveCli";
+import { trashCliApi } from "src/trash/trashCli";
 import { tagCliApi } from "src/tags/tagCli";
 import { listPropertyCliApi } from "src/properties/listPropertyCli";
 import { scalarPropertyCliApi } from "src/properties/scalarPropertyCli";

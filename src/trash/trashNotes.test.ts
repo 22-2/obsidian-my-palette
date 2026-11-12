@@ -1,6 +1,6 @@
 import { TFile, type App } from "obsidian";
 import { expect, it, vi } from "vitest";
-import { trashNotes } from "src/palette/trashNotes";
+import { trashNotes } from "src/trash/trashNotes";
 
 vi.mock("obsidian", () => ({
 	TFile: class {

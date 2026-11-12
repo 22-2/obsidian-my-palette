@@ -12,9 +12,9 @@ import { SmartConnectionProvider } from "src/search/smart/SmartConnectionProvide
 import { TabProvider } from "src/search/tab/TabProvider";
 import { PluginProvider } from "src/search/plugin/PluginProvider";
 import { SnippetProvider } from "src/search/snippet/SnippetProvider";
-import { TagProvider } from "src/search/tag/TagProvider";
-import { PropertyProvider } from "src/search/property/PropertyProvider";
-import { AuditProvider } from "src/search/audit/AuditProvider";
+import { TagProvider } from "src/tags/TagProvider";
+import { PropertyProvider } from "src/properties/PropertyProvider";
+import { AuditProvider } from "src/audit/AuditProvider";
 import type { PaletteProvider } from "src/search/PaletteProvider";
 import {
 	EMPTY_EXCLUDED_FOLDER_SOURCE,

@@ -5,7 +5,7 @@ import type { PaletteResult } from "src/palette/results";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 import { openConfirmModal } from "src/ui/confirmModal";
 import { ICONS } from "src/ui/icons";
-import { trashNotes } from "src/palette/trashNotes";
+import { trashNotes } from "src/trash/trashNotes";
 
 /** Markdown ノートの結果だけを重複なく集める。 */
 function resolveNotes(app: App, results: readonly PaletteResult[]): TFile[] {

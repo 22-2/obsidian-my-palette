@@ -1,6 +1,6 @@
 import type MyPalettePlugin from "src/main";
 import { insertLinkToMocRelateds, removeLinkInMocRelateds } from "src/moc-relateds/mocRelateds";
-import { MoveFileModal } from "src/palette/MoveFileModal";
+import { MoveFileModal } from "src/move/MoveFileModal";
 import { BulkRenameModal } from "src/rename/BulkRenameModal";
 import { TagRenameModal } from "src/tags/TagRenameModal";
 import { MergeTargetModal } from "src/merge/MergeTargetModal";
