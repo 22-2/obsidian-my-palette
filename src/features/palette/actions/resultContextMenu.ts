@@ -10,7 +10,7 @@ import {
 import { isAuditResult, populateAuditMenu } from "src/features/palette/actions/auditMenu";
 import { addBookmarkMenuItems } from "src/features/palette/actions/bookmarkMenu";
 import { addBulkRenameMenuItem } from "src/features/palette/actions/bulkRenameMenu";
-import { addNoteDeleteMenuItem } from "src/features/palette/actions/noteDeleteMenu";
+import { addFileDeleteMenuItem } from "src/features/palette/actions/fileDeleteMenu";
 import { addPropertyEditMenuItem } from "src/features/palette/actions/propertyEditMenu";
 import { addSelectionHeader } from "src/features/palette/actions/selectionHeader";
 import { addFileMoveMenuItem } from "src/features/palette/actions/fileMoveMenu";
@@ -154,7 +154,7 @@ export function populatePaletteResultMenu({
 		addPropertyEditMenuItem(menu, plugin, selectedItems, onNoteActionSelected);
 		addMocInsertionMenuItems(menu, plugin, selectedItems, onNoteActionSelected, getMocContext);
 		addTagInsertionMenuItems(menu, plugin, selectedItems, onNoteActionDone);
-		addNoteDeleteMenuItem(app, menu, selectedItems, onResultsChanged);
+		addFileDeleteMenuItem(app, menu, selectedItems, onResultsChanged);
 		// Why: 統合は統合元をゴミ箱に移すので、ほかの書き換えの後ろに置く。
 		addMergeMenuItem(menu, plugin, selectedItems, onNoteActionDone);
 		addBookmarkMenuItems({
@@ -288,7 +288,7 @@ export function populatePaletteResultMenu({
 	// 両方のパレットの外枠で、そうなるようにする。
 	addMocInsertionMenuItem(menu, plugin, result, onNoteActionSelected, getMocContext);
 	addTagInsertionMenuItems(menu, plugin, [result], onNoteActionDone);
-	addNoteDeleteMenuItem(app, menu, [result], onResultsChanged);
+	addFileDeleteMenuItem(app, menu, [result], onResultsChanged);
 	addMergeMenuItem(menu, plugin, [result], onNoteActionDone);
 	// Why: 検索のブックマークの選択にはパスがないので、この1結果のメニューに届く。
 	// ブックマークの操作は、選んだすべてのブックマークに引き続き働く。

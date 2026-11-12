@@ -126,6 +126,8 @@ export const MENU_ACTIONS = {
 		id: "copy-property-name",
 	},
 	deleteProperty: { title: t("menu.deleteProperty"), icon: ICONS.delete, id: "delete-property" },
+	deleteNote: { title: t("noteDelete.menu.single"), icon: ICONS.delete, id: "delete-note" },
+	deleteFile: { title: t("fileDelete.menu.single"), icon: ICONS.delete, id: "delete-file" },
 
 	focusTab: { title: t("menu.focusTab"), icon: ICONS.focusTab, id: "focus-tab" },
 	duplicateTab: { title: t("menu.duplicateTab"), icon: ICONS.duplicateTab, id: "duplicate-tab" },
