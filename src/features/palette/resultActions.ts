@@ -1,5 +1,5 @@
 import { Notice, TFile, type App, type WorkspaceLeaf } from "obsidian";
-import { openFileInLeaf, type LeafOpenAction } from "src/workspace/openLeaf";
+import { openFileInLeaf, type LeafOpenAction } from "src/platform/openLeaf";
 import { getVaultFullPath, isUserIgnoredPath } from "src/features/ignored-notes/ignoredPaths";
 import { getDesktopAdapter } from "src/platform/desktopAdapter";
 import { openWithSystemApplication, showInSystemExplorer } from "src/platform/externalOpen";

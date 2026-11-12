@@ -1,5 +1,5 @@
 import { Notice, TFile } from "obsidian";
-import { openFileInLeaf } from "src/workspace/openLeaf";
+import { openFileInLeaf } from "src/platform/openLeaf";
 import type MyPalettePlugin from "src/main";
 import { getVaultFullPath, isUserIgnoredPath } from "src/features/ignored-notes/ignoredPaths";
 import { getDesktopAdapter } from "src/platform/desktopAdapter";

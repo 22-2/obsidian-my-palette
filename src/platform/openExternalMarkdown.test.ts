@@ -1,7 +1,7 @@
 import type { App, WorkspaceLeaf } from "obsidian";
 import { expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
-import { openExternalMarkdown } from "src/workspace/external-markdown/openExternalMarkdown";
+import { openExternalMarkdown } from "src/platform/openExternalMarkdown";
 
 function fixture(reuse: boolean) {
 	const leaf = {

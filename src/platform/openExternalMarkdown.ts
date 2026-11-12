@@ -1,6 +1,6 @@
 import type { App, WorkspaceLeaf } from "obsidian";
 import { getDesktopAdapter } from "src/platform/desktopAdapter";
-import { getLeafForAction, revealOpenedLeaf, type LeafOpenAction } from "src/workspace/openLeaf";
+import { getLeafForAction, revealOpenedLeaf, type LeafOpenAction } from "src/platform/openLeaf";
 import type MyPalettePlugin from "src/main";
 
 const MARKDOWN_VIEW_TYPE = "markdown";

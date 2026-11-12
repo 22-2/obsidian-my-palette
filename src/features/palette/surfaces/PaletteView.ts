@@ -10,7 +10,7 @@ import {
 	type PaletteModeId,
 } from "src/core/results";
 import { canPreviewResult } from "src/features/palette/resultPreview";
-import { openFileInLeaf, revealOpenedLeaf } from "src/workspace/openLeaf";
+import { openFileInLeaf, revealOpenedLeaf } from "src/platform/openLeaf";
 import {
 	executePaletteResult,
 	type PaletteResultExecutionOptions,
@@ -35,7 +35,7 @@ import { populatePaletteResultMenu } from "src/features/palette/actions/resultCo
 import {
 	getExternalMarkdownLeaves,
 	isExternalMarkdownLeaf,
-} from "src/workspace/external-markdown/openExternalMarkdown";
+} from "src/platform/openExternalMarkdown";
 import { PaletteHistoryControls } from "src/ui/PaletteHistoryControls";
 import { PALETTE_HISTORY_CATEGORIES } from "src/features/palette/searchHistory";
 import {

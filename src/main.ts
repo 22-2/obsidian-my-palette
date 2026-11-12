@@ -1,7 +1,7 @@
 import type { SearchHistoryCategory, SearchHistoryEntry } from "src/core/searchHistoryTypes";
 import { Plugin, type WorkspaceLeaf } from "obsidian";
 import { MyPaletteSettingTab } from "src/settings/settingTab";
-import type { LeafOpenAction } from "src/workspace/openLeaf";
+import type { LeafOpenAction } from "src/platform/openLeaf";
 import { DEFAULT_SETTINGS, type MyPaletteSettings } from "src/settings/model";
 import {
 	createPaletteProviders,
@@ -11,7 +11,7 @@ import { PaletteOpener } from "src/app/paletteOpener";
 import { registerCli } from "src/app/registerCli";
 import { registerPluginCommands } from "src/app/registerCommands";
 import { registerPluginEvents } from "src/app/registerEvents";
-import { openExternalMarkdown } from "src/workspace/external-markdown/openExternalMarkdown";
+import { openExternalMarkdown } from "src/platform/openExternalMarkdown";
 import { EverythingClient } from "src/features/search/everything/EverythingClient";
 import { getResultFilePath, type PaletteResult, type SearchHistoryResult } from "src/core/results";
 import {

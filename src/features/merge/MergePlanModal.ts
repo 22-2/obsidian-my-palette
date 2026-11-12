@@ -5,7 +5,7 @@ import { ICONS } from "src/ui/icons";
 import { countLabel } from "src/core/countLabel";
 import { logger } from "src/core/logger";
 import { executeMerge, type MergePlan } from "src/features/merge/mergeNotes";
-import { openFileInLeaf } from "src/workspace/openLeaf";
+import { openFileInLeaf } from "src/platform/openLeaf";
 import { t } from "src/i18n";
 
 /** 変更予定の1行。ファイルごとに、何が変わるかを縦に並べる。 */

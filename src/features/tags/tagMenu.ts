@@ -1,6 +1,6 @@
 import { Notice, type App } from "obsidian";
 import type MyPalettePlugin from "src/main";
-import type { LeafOpenAction } from "src/workspace/openLeaf";
+import type { LeafOpenAction } from "src/platform/openLeaf";
 import type { PaletteResult, TagResult } from "src/core/results";
 import { t } from "src/i18n";
 import { mergeFrontmatterTags, updateFrontmatter } from "src/core/frontmatter";

@@ -5,7 +5,7 @@ import {
 	getLeafForAction,
 	openFileInLeaf,
 	revealOpenedLeaf,
-} from "src/workspace/openLeaf";
+} from "src/platform/openLeaf";
 
 function fakeLeaf(pinned: boolean): WorkspaceLeaf {
 	return { getViewState: () => ({ pinned }) } as unknown as WorkspaceLeaf;
