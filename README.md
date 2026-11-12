@@ -200,6 +200,8 @@ MOC remove selector も、同じ判定でつながっているノートに印（
 
 `obsidian my-palette:merge-notes` は統合元の `paths` と統合先の `target` を指定します。プレビューには統合元・統合先、プロパティの衝突、リンクを付け替えるノートを出します。`plan` と `apply` で実行し、成功すると統合元をゴミ箱へ移動します。`no-aliases` を付けると統合元の名前を aliases に追加しません。
 
+`obsidian my-palette:insert-moc-relateds` は挿入先の `moc` と対象ノートの `paths` を指定し、追加されるリンクの方向と変更されるノートをプレビューします。既定は相互リンクで、`one-way` を付けると MOC からのリンクだけを追加します。`plan` と `apply` で実行します。
+
 PowerShell では例えば次のように指定します。実行時の `plan` は直前にプレビューで返された値に置き換えてください。
 
 ```powershell
