@@ -4,6 +4,8 @@ import {
 	parseRenameRule,
 	planRename,
 	renamableRows,
+	renameStem,
+	setNameRule,
 	type RenameOptions,
 } from "src/features/rename/renamePlan";
 
@@ -84,5 +86,32 @@ describe("プラン名の変更", () => {
 		expect(isBlocked(plan("a/b", ["a.md", "c.md"]))).toBe(false);
 		expect(isBlocked(plan("a/", ["a.md"]))).toBe(true);
 		expect(renamableRows(plan("a/b", ["a.md", "c.md"]))).toHaveLength(1);
+	});
+});
+
+describe("名前を直接打って変える", () => {
+	const direct = (name: string, paths: string[], existing: string[] = paths) =>
+		planRename(paths, setNameRule(name), new Set(existing.map((path) => path.toLowerCase())));
+
+	it("拡張子を除いた名前を入力そのものにし、フォルダーと拡張子を保つ", () => {
+		const [row] = direct("新しい名前", ["notes/Sample view.base"]);
+		expect(row).toMatchObject({
+			newPath: "notes/新しい名前.base",
+			newName: "新しい名前.base",
+			status: "ready",
+		});
+		expect(renameStem("notes/Sample view.base")).toBe("Sample view");
+		expect(renameStem("a.b.md")).toBe("a.b");
+	});
+
+	it("今の名前のままなら変更なし、空や使えない文字は不正、同名のファイルがあれば衝突", () => {
+		expect(direct("a", ["a.md"])[0].status).toBe("unchanged");
+		expect(direct("", ["a.md"])[0].status).toBe("invalid");
+		expect(direct("x/y", ["a.md"])[0].status).toBe("invalid");
+		expect(direct("b", ["a.md", "b.md"])[0].status).toBe("exists");
+	});
+
+	it("大文字・小文字だけの変更は衝突にしない", () => {
+		expect(direct("A", ["a.md"])[0].status).toBe("ready");
 	});
 });

@@ -1,6 +1,6 @@
 import { Notice, TFile } from "obsidian";
 import type { SelectorControls } from "src/ui/selectorControls";
-import { renderSelectionItem, SelectionModal, type SelectionItem } from "src/ui/selectionModal";
+import { renderSelectionItem, SelectionModal } from "src/ui/selectionModal";
 import {
 	isBlocked,
 	parseRenameRule,
@@ -8,40 +8,12 @@ import {
 	renamableRows,
 	type RenameOptions,
 	type RenamePlanRow,
-	type RenameStatus,
 } from "src/features/rename/renamePlan";
+import { toRenameItem, type RenameItem } from "src/features/rename/renameItems";
 import { ICONS } from "src/core/icons";
 import { countLabel } from "src/core/countLabel";
 import { renameFiles } from "src/features/rename/renameFiles";
 import { t } from "src/i18n";
-
-interface RenameItem extends SelectionItem {
-	row: RenamePlanRow;
-}
-
-const STATUS_BADGE: Record<RenameStatus, string | undefined> = {
-	ready: undefined,
-	unchanged: t("rename.status.unchanged"),
-	invalid: t("rename.status.invalid"),
-	exists: t("rename.status.exists"),
-	duplicate: t("rename.status.duplicate"),
-};
-
-function directoryOf(path: string): string {
-	const slash = path.lastIndexOf("/");
-	return slash < 0 ? "/" : path.slice(0, slash);
-}
-
-function toItem(row: RenamePlanRow): RenameItem {
-	const changed = row.status !== "unchanged";
-	return {
-		label: changed ? `${row.oldName} → ${row.newName}` : row.oldName,
-		description: directoryOf(row.path),
-		icon: row.status === "ready" ? ICONS.ready : changed ? ICONS.warning : ICONS.file,
-		badge: STATUS_BADGE[row.status],
-		row,
-	};
-}
 
 /**
  * 名前変更のセレクター: 入力は `検索/置換` のルールで、一覧は新しい名前をすべてプレビューする。
@@ -137,7 +109,7 @@ export class BulkRenameModal extends SelectionModal<RenameItem> {
 						what: countLabel(this.rows.length, "ファイル"),
 					}),
 		);
-		return this.rows.map(toItem);
+		return this.rows.map(toRenameItem);
 	}
 
 	override renderSuggestion(item: RenameItem, el: HTMLElement): void {

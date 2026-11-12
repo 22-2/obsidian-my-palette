@@ -64,6 +64,19 @@ function isValidStem(stem: string): boolean {
 	return stem !== "" && !ILLEGAL_NAME_CHARACTERS.test(stem) && !/[. ]$/.test(stem);
 }
 
+/** 拡張子を除いたファイル名。 */
+export function renameStem(path: string): string {
+	return splitPath(path).stem;
+}
+
+/**
+ * 拡張子を除いた名前を、入力した名前そのものに置き換える規則。1つのファイルの名前を、
+ * 検索/置換ではなく直接打って変えるときに使う。
+ */
+export function setNameRule(name: string): RenameRule {
+	return { kind: "rule", apply: () => name };
+}
+
 /**
  * 拡張子を除いた各ファイル名にルールを適用し、その後、Obsidian が拒否する名前や、ほかのファイルと
  * 衝突する名前に印を付ける。`existingPaths` は小文字にした Vault のパスをすべて持つ。多くのファイルシステムは

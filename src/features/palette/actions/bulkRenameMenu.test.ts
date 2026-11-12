@@ -4,7 +4,7 @@ import { expect, it, vi } from "vitest";
 import type MyPalettePlugin from "src/main";
 import { addBulkRenameMenuItem } from "src/features/palette/actions/bulkRenameMenu";
 import type { PaletteResult } from "src/core/results";
-import { BulkRenameModal } from "src/features/rename/BulkRenameModal";
+import { openRenameModal } from "src/features/rename/openRename";
 import type { PaletteMenu } from "src/ui/paletteMenu";
 
 vi.mock("obsidian", () => ({
@@ -12,11 +12,7 @@ vi.mock("obsidian", () => ({
 		constructor(public path: string) {}
 	},
 }));
-vi.mock("src/features/rename/BulkRenameModal", () => ({
-	BulkRenameModal: vi.fn(function (this: { open: () => void }) {
-		this.open = vi.fn();
-	}),
-}));
+vi.mock("src/features/rename/openRename", () => ({ openRenameModal: vi.fn() }));
 
 function file(path: string): TFile {
 	const Ctor = TFile as unknown as new (path: string) => TFile;
@@ -64,7 +60,7 @@ it("あらゆるタイプの個別の Vault ファイルの名前を変更し、
 	expect(m.titles).toEqual(["名前を変更…"]);
 
 	m.click();
-	expect(BulkRenameModal).toHaveBeenCalledWith(
+	expect(openRenameModal).toHaveBeenCalledWith(
 		plugin,
 		[files.get("a.md"), files.get("image.png")],
 		onDone,

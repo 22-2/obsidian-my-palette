@@ -653,6 +653,7 @@
 	"rename.status.exists": "既に存在します",
 	"rename.status.duplicate": "新しい名前が重複",
 	"rename.placeholder": "検索/置換。例: _/-",
+	"rename.single.placeholder": "新しい名前(拡張子は変わりません)",
 	"rename.footer.renaming": "名前を変更: {path}",
 	"rename.footer.renamingMany": "名前を変更: {what}",
 	"rename.footer.willRename": "{count} / {total} 件のファイルの名前を変更します",
