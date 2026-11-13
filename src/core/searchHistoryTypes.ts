@@ -27,6 +27,7 @@ export type SearchHistoryCategory =
 	| "tag"
 	| "audit"
 	| "git"
+	| "git-changes"
 	| "everything"
 	| "everything-directory"
 	| "link"

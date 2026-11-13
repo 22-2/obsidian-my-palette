@@ -20,6 +20,7 @@ import {
 	PaletteSearchSession,
 	palettePlaceholder,
 	paletteRouteChrome,
+	palettePageFooter,
 	paletteSectionOf,
 	paletteDigitRows,
 	type FixedPaletteMode,
@@ -346,15 +347,19 @@ export class PaletteView extends ItemView {
 			onContextMenu: (result, event, selectedItems) =>
 				this.showContextMenu(result, event, selectedItems),
 			onEscape: () => {
+				if (this.returnFromPage()) return;
 				if (this.session && this.session.current.route.kind !== "home") this.returnToHome();
 				else this.clearOrFocus();
 			},
 			onEmptyBackspace: () => {
+				if (this.returnFromPage()) return true;
 				if (!this.session || this.session.current.route.kind === "home") return false;
 				this.returnToHome();
 				return true;
 			},
-			onModeChipClick: () => this.returnToHome(),
+			onModeChipClick: () => {
+				if (!this.returnFromPage()) this.returnToHome();
+			},
 			onTab: (result) => {
 				if (result.mode !== "mode-entry") return false;
 				if (!result.unavailable) this.enterMode(result.modeId);
@@ -385,9 +390,12 @@ export class PaletteView extends ItemView {
 					this.contentPreview?.observe(result, cell, query),
 				// Why: Vault 監査は種類ごとに別のものを一覧にし、それぞれ列が異なる。
 				columnSet: () =>
-					this.session?.current.mode === "audit"
-						? this.plugin.settings.audit.kind
-						: "files",
+					this.session?.current.route.kind === "mode" &&
+					this.session.current.route.page?.kind === "git-commit"
+						? "git-files"
+						: this.session?.current.mode === "audit"
+							? this.plugin.settings.audit.kind
+							: "files",
 				onChange: (tableState) => {
 					// 同じクエリでも、別のペインでは並び順の優先度が違うことがある。
 					// 表示の設定はファイルの全体設定ではなく、ペインのレイアウトに保存する。
@@ -444,7 +452,7 @@ export class PaletteView extends ItemView {
 		this.updateSortStatus();
 		syncIgnoredToggle(this.ignoredToggle, state.mode);
 		syncAuditKindChoice(this.auditKindChoice, state.mode, this.plugin.settings.audit.kind);
-		this.renderFooter(state.mode, this.actionMessage);
+		this.renderFooter(state.mode, this.actionMessage ?? palettePageFooter(state.route));
 		const results = {
 			items: state.results,
 			total: state.resultCount,
@@ -671,6 +679,15 @@ export class PaletteView extends ItemView {
 			if (result.mode === "search-history") this.applySearchHistory(result);
 			return;
 		}
+		if (result.mode === "git" && result.kind === "commit" && action === "primary") {
+			this.session.enterPage(
+				{ kind: "git-commit", commit: result },
+				{ ...this.panel.currentView, id: result.id },
+			);
+			this.updateInput("", "end", { syncPanel: true });
+			this.panel.focusSearchInput();
+			return;
+		}
 		// Why: 明示的なメインウィンドウへの移動は、いま有効なポップアウトや、
 		// パレットが持つキャッシュ済みの対象リーフを必ず迂回する。
 		const targetLeaf = targetOverride ?? this.leafTracker.resolveTargetLeaf();
@@ -792,6 +809,17 @@ export class PaletteView extends ItemView {
 	private rememberHomeView(): void {
 		if (!this.panel || this.homeView) return;
 		this.homeView = { ...this.panel.currentView, id: this.panel.getSelectedItem()?.id };
+	}
+
+	private returnFromPage(): boolean {
+		if (!this.session || !this.panel) return false;
+		const previous = this.session.returnFromPage();
+		if (!previous) return false;
+		this.restoringHome = true;
+		this.panel.restoreView(previous.view, (item) => item.id === previous.view.id);
+		this.updateInput(previous.input, "end", { syncPanel: true });
+		this.panel.focusSearchInput();
+		return true;
 	}
 
 	/** 入力を空にして Home に戻り、元の一覧位置を復元する。 */

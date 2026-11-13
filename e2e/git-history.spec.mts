@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { expect, test } from "./fixtures.mts";
-import { menuItems, openHomeWith, pluginVaultOptions, t } from "./support.mts";
+import { menuItems, openHomeWith, pluginVaultOptions, runPaletteCommand, t } from "./support.mts";
 
 test.use({ vaultOptions: pluginVaultOptions() });
 
@@ -21,13 +21,23 @@ test("opens committed content and copies a link to a deleted file", async ({ obs
 	git("commit", "-m", "削除しました");
 	const page = await openHomeWith(obsidian, "git ");
 	const palette = page.locator(".my-palette-suggest-modal").first();
+	await palette.locator(".prompt-input").fill("削除しました");
 	const commit = palette.locator(".suggestion-item").filter({ hasText: "削除しました" });
 	await expect(commit).toBeVisible();
 	await commit.click();
 	await page.keyboard.press("Enter");
+	await expect(page.locator(".my-palette-suggest-modal")).toHaveCount(1);
+	await expect(palette.locator(".my-palette-mode-chip")).toContainText("git ›");
 	const changes = page.locator(".my-palette-suggest-modal").last();
 	const file = changes.locator(".suggestion-item").filter({ hasText: "過去のメモ.md" });
 	await expect(file).toContainText("D");
+	await changes.locator(".prompt-input").fill("メモ");
+	await expect(file).toBeVisible();
+	await page.keyboard.press("Escape");
+	await expect(palette.locator(".prompt-input")).toHaveValue("削除しました");
+	await expect(commit).toHaveClass(/is-active/);
+	await page.keyboard.press("Enter");
+	await expect(file).toBeVisible();
 	await file.click({ button: "right" });
 	await menuItems(page)
 		.filter({ hasText: t("git.copyGithub") })
@@ -97,3 +107,42 @@ test("compares committed versions side by side without editing either", async ({
 	await page.keyboard.insertText("not-editable");
 	await expect(after).not.toContainText("not-editable");
 });
+
+for (const surface of ["sidebar", "table"] as const) {
+	test(`${surface} keeps navigation and returns to the selected commit`, async ({ obsidian }) => {
+		await obsidian.createNote("項目.md", "本文\n");
+		const root = await obsidian.evaluateApp(() =>
+			(app.vault.adapter as unknown as { getBasePath(): string }).getBasePath(),
+		);
+		const git = (...args: string[]) =>
+			execFileSync("git", args, { cwd: root, windowsHide: true });
+		git("init");
+		git("config", "user.name", "Tester");
+		git("config", "user.email", "test@example.com");
+		git("add", "--", "項目.md");
+		git("commit", "-m", "特別なコミット");
+		await runPaletteCommand(
+			obsidian,
+			surface === "sidebar" ? "open-sidebar-palette" : "open-table-palette",
+		);
+		const page = obsidian.page;
+		const palette = page.locator(".my-palette-view").last();
+		const input = palette.locator(".prompt-input");
+		await input.fill("git ");
+		await input.fill("特別");
+		const commit = palette.locator(".suggestion-item").filter({ hasText: "特別なコミット" });
+		await expect(commit).toBeVisible();
+		await commit.dblclick();
+		await expect(page.locator(".my-palette-suggest-modal")).toHaveCount(0);
+		const file = palette.locator(".suggestion-item").filter({ hasText: "項目.md" });
+		await expect(file).toBeVisible();
+		if (surface === "table") {
+			await expect(palette.locator("th[data-column='status']")).toBeVisible();
+			await expect(file.locator("td[data-column='status']")).toHaveText("A");
+		}
+		await input.fill("項目");
+		await page.keyboard.press("Escape");
+		await expect(input).toHaveValue("特別");
+		await expect(commit).toHaveClass(/is-active/);
+	});
+}

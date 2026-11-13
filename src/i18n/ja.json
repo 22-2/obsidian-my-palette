@@ -1,5 +1,6 @@
 {
 	"git.mode.title": "Git履歴",
+	"git.table.status": "変更",
 	"git.version.title": "過去のファイル",
 	"git.version.readOnly": "読み取り専用",
 	"git.copySelection": "コピー",

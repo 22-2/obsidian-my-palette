@@ -48,6 +48,13 @@ export function toPaletteSelectionItem(
 	result: PaletteResult,
 	options: PaletteResultPresentationOptions,
 ): SelectionItem {
+	if (result.mode === "git" && result.kind === "file")
+		return {
+			label: result.primary,
+			description: result.secondary,
+			icon: result.icon,
+			badge: result.change.status,
+		};
 	if (result.mode === "mode-entry") {
 		return {
 			label: result.primary,

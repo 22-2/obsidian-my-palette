@@ -22,6 +22,7 @@ import type { ActionKind } from "src/features/palette/resultActions";
 import {
 	PaletteSearchSession,
 	paletteRouteChrome,
+	palettePageFooter,
 	paletteSectionOf,
 	paletteDigitRows,
 	type FixedPaletteMode,
@@ -115,6 +116,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			initialInput,
 			fixedMode,
 			initialRoute: restore?.route,
+			initialNavigation: restore?.navigation,
 			modeEntries,
 			sourceFile,
 			sourceFiles,
@@ -192,6 +194,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		return {
 			input: this.session.current.input,
 			route: this.session.current.route,
+			navigation: [...this.session.navigationFrames],
 			includeIgnored: this.session.current.ignoredScope,
 			...this.currentResultView(),
 		};
@@ -306,7 +309,8 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		syncIgnoredToggle(this.ignoredToggle, this.mode);
 		syncAuditKindChoice(this.auditKindChoice, this.mode, this.plugin.settings.audit.kind);
 		this.updateFooterText(
-			sourceFooterText(this.app, this.mode, this.sourceFile, this.sourceFiles),
+			palettePageFooter(state.route) ??
+				sourceFooterText(this.app, this.mode, this.sourceFile, this.sourceFiles),
 		);
 		const canSort = state.route.kind !== "other" && isPaletteSortableMode(state.mode);
 		this.updateSortStatus(
@@ -320,11 +324,13 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override onSuggestionEscape(): void {
+		if (this.returnFromPage()) return;
 		if (this.state && this.state.route.kind !== "home") this.returnToHome();
 		else this.close();
 	}
 
 	protected override onEmptyBackspace(): boolean {
+		if (this.returnFromPage()) return true;
 		if (this.state?.route.kind === "home" || !this.state) return false;
 		this.returnToHome();
 		return true;
@@ -337,7 +343,17 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	}
 
 	protected override onModeChipClick(): void {
-		this.returnToHome();
+		if (!this.returnFromPage()) this.returnToHome();
+	}
+
+	private returnFromPage(): boolean {
+		const previous = this.session.returnFromPage();
+		if (!previous) return false;
+		this.restoreResultView(previous.view, (item) => item.id === previous.view.id);
+		this.panelInput(previous.input);
+		this.refreshSuggestions();
+		this.focusSearchInput();
+		return true;
 	}
 
 	private enterMode(result: Extract<PaletteResult, { mode: "mode-entry" }>): void {
@@ -394,6 +410,16 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		}
 		if (result.mode === "mode-entry") {
 			this.enterMode(result);
+			return;
+		}
+		if (result.mode === "git" && result.kind === "commit" && action === "primary") {
+			this.session.enterPage(
+				{ kind: "git-commit", commit: result },
+				{ ...this.currentResultView(), id: result.id },
+			);
+			this.panelInput("");
+			this.refreshSuggestions();
+			this.focusSearchInput();
 			return;
 		}
 		await executePaletteResult(this.plugin, result, action, {

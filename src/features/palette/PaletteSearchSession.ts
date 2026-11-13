@@ -21,7 +21,7 @@ import {
 	paletteModeAlias,
 	parseDirectModeEntry,
 } from "src/core/modes";
-import type { ModeEntryResult } from "src/core/results";
+import type { GitCommitResult, ModeEntryResult } from "src/core/results";
 import { t } from "src/i18n";
 import { ICONS } from "src/core/icons";
 import {
@@ -45,7 +45,15 @@ export type FixedPaletteMode = Extract<
 export type PaletteRoute =
 	| { kind: "home" }
 	| { kind: "other" }
-	| { kind: "mode"; modeId: PaletteModeId };
+	| { kind: "mode"; modeId: PaletteModeId; page?: PalettePage };
+
+export type PalettePage = { kind: "git-commit"; commit: GitCommitResult };
+
+export interface PaletteNavigationFrame {
+	route: PaletteRoute;
+	input: string;
+	view: { activeIndex: number; scrollTop: number; id?: string };
+}
 
 export type RecordableSearch = {
 	query: string;
@@ -76,6 +84,7 @@ export interface PaletteSearchSessionOptions {
 	/** 最初に入るモード。Esc を押すと、そこから Home に戻る。 */
 	fixedMode?: FixedPaletteMode;
 	initialRoute?: PaletteRoute;
+	initialNavigation?: readonly PaletteNavigationFrame[];
 	sourceFile?: TFile;
 	/** 一緒に編集するノート。プロパティのモードだけが読む。 */
 	sourceFiles?: readonly TFile[];
@@ -99,6 +108,7 @@ export class PaletteSearchSession {
 	private disposed = false;
 	private readonly listsModes: boolean;
 	private route: PaletteRoute = { kind: "home" };
+	private readonly navigation: PaletteNavigationFrame[] = [];
 	private sourceFile?: TFile;
 	private readonly sourceFiles?: readonly TFile[];
 	private readonly onStateChange?: (state: PaletteSearchState) => void;
@@ -113,6 +123,7 @@ export class PaletteSearchSession {
 			initialInput = "",
 			fixedMode,
 			initialRoute,
+			initialNavigation,
 			sourceFile,
 			sourceFiles,
 			includeIgnored = false,
@@ -125,6 +136,7 @@ export class PaletteSearchSession {
 		const definition = fixedMode ? findPaletteMode(fixedMode) : undefined;
 		if (initialRoute) this.route = initialRoute;
 		else if (definition) this.route = { kind: "mode", modeId: definition.id };
+		if (initialNavigation) this.navigation.push(...initialNavigation);
 		this.sourceFile = sourceFile;
 		this.sourceFiles = sourceFiles;
 		this.onStateChange = onStateChange;
@@ -154,14 +166,37 @@ export class PaletteSearchSession {
 
 	/** Home からモードに入る。入力にはクエリだけが残る。 */
 	enterMode(modeId: PaletteModeId | "other", query = ""): void {
+		this.navigation.length = 0;
 		this.route = modeId === "other" ? { kind: "other" } : { kind: "mode", modeId };
 		this.state = { ...this.state, input: query, route: this.route };
 	}
 
 	/** モードを抜け、空の Home に戻る。 */
 	returnToHome(): void {
+		this.navigation.length = 0;
 		this.route = { kind: "home" };
 		this.state = { ...this.state, input: "", route: this.route };
+	}
+
+	/** 現在位置を保存し、同じモード内の次の一覧へ進む。 */
+	enterPage(page: PalettePage, view: PaletteNavigationFrame["view"]): void {
+		if (this.route.kind !== "mode") return;
+		this.navigation.push({ route: this.route, input: this.state.input, view });
+		this.route = { ...this.route, page };
+		this.state = { ...this.state, input: "", route: this.route };
+	}
+
+	/** 一段前の入力と行の位置を返す。検索自体はホストが再開する。 */
+	returnFromPage(): PaletteNavigationFrame | undefined {
+		const previous = this.navigation.pop();
+		if (!previous) return undefined;
+		this.route = previous.route;
+		this.state = { ...this.state, input: previous.input, route: this.route };
+		return previous;
+	}
+
+	get navigationFrames(): readonly PaletteNavigationFrame[] {
+		return this.navigation;
 	}
 
 	/**
@@ -278,6 +313,10 @@ export class PaletteSearchSession {
 							includeIgnored,
 							sourceFile: this.sourceFile,
 							sourceFiles: this.sourceFiles,
+							gitCommit:
+								this.route.kind === "mode" && this.route.page?.kind === "git-commit"
+									? this.route.page.commit
+									: undefined,
 						});
 			if (this.disposed || generation !== this.generation) return [];
 			this.unsortedResults = [...this.modeEntries(input), ...providerResults];
@@ -329,12 +368,16 @@ export class PaletteSearchSession {
 		const parsed = this.parse(input);
 		return {
 			query: parsed.query,
-			category: getSearchHistoryCategory(parsed),
+			category:
+				this.route.kind === "mode" && this.route.page
+					? "git-changes"
+					: getSearchHistoryCategory(parsed),
 			includeIgnored: this.includesIgnored(parsed),
 		};
 	}
 
 	getRecordableSearch(input = this.state.input): RecordableSearch | undefined {
+		if (this.route.kind === "mode" && this.route.page) return undefined;
 		const search = this.getSearchHistoryContext(input);
 		return search.query.trim() ? search : undefined;
 	}
@@ -444,6 +487,12 @@ export interface PaletteRouteChrome {
 	chip?: { icon: string; label: string; title: string };
 }
 
+export function palettePageFooter(route: PaletteRoute): string | undefined {
+	if (route.kind !== "mode" || route.page?.kind !== "git-commit") return undefined;
+	const { commit } = route.page;
+	return t("git.files.footer", { hash: commit.hash.slice(0, 8), subject: commit.primary });
+}
+
 /** モーダルと常駐のワークスペースビューが共有する、入力欄の装飾。 */
 export function paletteRouteChrome(
 	state: Pick<PaletteSearchState, "route" | "mode">,
@@ -453,6 +502,17 @@ export function paletteRouteChrome(
 ): PaletteRouteChrome {
 	if (state.route.kind === "mode") {
 		const definition = getPaletteMode(state.route.modeId);
+		if (state.route.page?.kind === "git-commit") {
+			const commit = state.route.page.commit;
+			return {
+				placeholder: t("git.files.placeholder"),
+				chip: {
+					icon: definition.icon,
+					label: `${alias ?? ""} › ${commit.hash.slice(0, 8)}`,
+					title: commit.primary,
+				},
+			};
+		}
 		return {
 			// Why: Vault 監査は、オプションのメニューで種類を切り替えるので、入力欄にその名前を出す。
 			placeholder:

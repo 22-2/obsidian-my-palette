@@ -92,8 +92,17 @@ export interface CommandResult extends BaseResult {
 
 export interface GitCommitResult extends BaseResult {
 	mode: "git";
+	kind: "commit";
 	hash: string;
 	parents: string[];
+}
+
+export interface GitFileResult extends BaseResult {
+	mode: "git";
+	kind: "file";
+	root: string;
+	commit: GitCommitResult;
+	change: { status: string; path: string; oldPath?: string };
 }
 
 export interface EverythingResult extends BaseResult {
@@ -264,6 +273,7 @@ export type AuditResult = AuditFileResult | AuditBrokenLinkResult | AuditFolderR
 export type PaletteResult =
 	| FileResult
 	| GitCommitResult
+	| GitFileResult
 	| CommandResult
 	| EverythingResult
 	| SearchHistoryResult

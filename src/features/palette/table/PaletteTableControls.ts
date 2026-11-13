@@ -166,6 +166,13 @@ export class PaletteTableControls extends Component {
 
 	private toRow(result: PaletteResult): PaletteTableRow {
 		if (result.mode === "audit") return this.toAuditRow(result);
+		if (result.mode === "git" && result.kind === "file")
+			return {
+				result,
+				name: result.primary,
+				path: result.change.path,
+				status: result.change.status,
+			};
 		const candidate =
 			"file" in result
 				? result.file
@@ -307,6 +314,7 @@ export class PaletteTableControls extends Component {
 				return;
 			}
 			case "path":
+			case "status":
 			case "firstSource":
 			case "content": {
 				const text = data?.[column] ?? "—";

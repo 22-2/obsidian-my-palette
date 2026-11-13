@@ -36,6 +36,7 @@ import {
 import { addTagInsertionMenuItems } from "src/features/tags/tagInsertionMenu";
 import { populateTagMenu } from "src/features/tags/tagMenu";
 import { populatePropertyMenu } from "src/features/properties/propertyMenu";
+import { populateGitFileMenu } from "src/features/git/gitUi";
 import { openPluginSettings } from "src/features/search/plugin/pluginSettings";
 import { logger } from "src/core/logger";
 import { t } from "src/i18n";
@@ -210,6 +211,16 @@ export function populatePaletteResultMenu({
 		return;
 	}
 	if (result.mode === "git") {
+		if (result.kind === "file") {
+			populateGitFileMenu(
+				menu,
+				plugin,
+				result,
+				() => void activate("primary", result),
+				onNoteActionDone,
+			);
+			return;
+		}
 		menu.addItem((item) =>
 			item
 				.setTitle(t("git.openChanges"))

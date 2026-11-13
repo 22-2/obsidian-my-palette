@@ -1,4 +1,7 @@
-import type { PaletteRoute } from "src/features/palette/PaletteSearchSession";
+import type {
+	PaletteNavigationFrame,
+	PaletteRoute,
+} from "src/features/palette/PaletteSearchSession";
 import type { ReturnToHomeSeconds } from "src/core/settingsModel";
 
 /** 閉じられたパレットが、次の「ホームを開く」のために残す状態。メモリ上にだけ保持する。 */
@@ -6,6 +9,7 @@ export interface PaletteRestoreState {
 	/** モードの検索語、または Home の入力。 */
 	input: string;
 	route: PaletteRoute;
+	navigation?: readonly PaletteNavigationFrame[];
 	includeIgnored: boolean;
 	activeIndex: number;
 	scrollTop: number;

@@ -9,7 +9,7 @@ import {
 	paletteSectionOf,
 	paletteDigitRows,
 } from "src/features/palette/PaletteSearchSession";
-import type { FileResult } from "src/core/results";
+import type { FileResult, GitCommitResult } from "src/core/results";
 
 async function host() {
 	const settings = structuredClone(DEFAULT_SETTINGS);
@@ -107,6 +107,43 @@ describe("ホームセクション", () => {
 });
 
 describe("PaletteSearchSession 検索ライフサイクル", () => {
+	it("一覧の階層を進み、検索語と選択位置を保って戻る", async () => {
+		const { plugin, recordSearch } = await host();
+		const search = vi.fn().mockResolvedValue([]);
+		plugin.providers.git = { search };
+		const commit: GitCommitResult = {
+			id: "git:abc",
+			mode: "git",
+			kind: "commit",
+			hash: "abc",
+			parents: [],
+			primary: "更新",
+			secondary: "",
+			icon: "git-commit-horizontal",
+		};
+		const session = new PaletteSearchSession(plugin);
+		session.enterMode("git");
+		await session.search("更新");
+		session.enterPage(
+			{ kind: "git-commit", commit },
+			{ activeIndex: 3, scrollTop: 120, id: commit.id },
+		);
+		await session.search("メモ");
+		expect(search).toHaveBeenLastCalledWith(
+			expect.objectContaining({ gitCommit: commit, query: "メモ" }),
+		);
+		session.commitCurrentSearch();
+		expect(recordSearch).not.toHaveBeenCalled();
+		const previous = session.returnFromPage();
+		expect(previous?.view).toEqual({ activeIndex: 3, scrollTop: 120, id: commit.id });
+		expect(session.input).toBe("更新");
+		await session.search();
+		expect(search).toHaveBeenLastCalledWith(
+			expect.objectContaining({ gitCommit: undefined, query: "更新" }),
+		);
+		expect(session.returnFromPage()).toBeUndefined();
+		session.dispose();
+	});
 	it("エイリアスからモードに入り、接頭辞付きの入力を記憶し、履歴を一度コミットします", async () => {
 		const { plugin, recordSearch } = await host();
 		plugin.providers.command = { search: vi.fn().mockResolvedValue([]) };

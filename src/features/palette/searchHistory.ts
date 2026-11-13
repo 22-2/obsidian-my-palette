@@ -309,6 +309,7 @@ function historyCategoryMode(category: SearchHistoryCategory): PaletteModeId | u
 		case "heading":
 			return "headings";
 		case "file":
+		case "git-changes":
 		case "tag-insertion":
 		case "moc-insertion":
 		case "folder-move":

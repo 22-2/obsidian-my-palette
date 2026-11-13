@@ -22,6 +22,7 @@ const COLUMN_DEFINITIONS = {
 	firstSource: { label: t("table.col.firstSource"), width: 38 },
 	foldersInside: { label: t("table.col.foldersInside"), width: 14 },
 	content: { label: t("table.col.content"), width: 12 },
+	status: { label: t("git.table.status"), width: 12 },
 } as const;
 
 export type PaletteTableColumnId = keyof typeof COLUMN_DEFINITIONS;
@@ -36,7 +37,8 @@ export interface PaletteTableColumn {
  * 表が示す列は、何を一覧にしているかで決まる。通常の検索では `files`、Vault 監査の種類ごとに1組ずつ。
  * 組ごとに、列の順序、非表示の列、並べ替えを独立して保つ。
  */
-export type PaletteTableColumnSetId = "files" | AuditKind;
+export type PaletteTableColumnSetId = "files" | "git-files" | AuditKind;
+const EXTRA_COLUMN_SETS = [...AUDIT_KINDS, "git-files"] as const;
 
 function columnsOf(...ids: PaletteTableColumnId[]): PaletteTableColumn[] {
 	return ids.map((id) => ({ id, ...COLUMN_DEFINITIONS[id] }));
@@ -46,6 +48,7 @@ export const PALETTE_TABLE_COLUMN_SETS: Readonly<
 	Record<PaletteTableColumnSetId, readonly PaletteTableColumn[]>
 > = {
 	files: columnsOf("name", "path", "modified", "prior"),
+	"git-files": columnsOf("name", "path", "status"),
 	"orphaned-files": columnsOf("name", "path", "size", "modified"),
 	// Why: 内容の列で、空のノートと MOC だけのノートを区別する。一覧ではどちらも同じ印を付ける。
 	"empty-files": columnsOf("name", "path", "modified", "content"),
@@ -69,7 +72,7 @@ export interface PaletteTableLayout {
  */
 export interface PaletteTableState extends PaletteTableLayout {
 	displayMode: "list" | "table";
-	columnSets?: Partial<Record<AuditKind, PaletteTableLayout>>;
+	columnSets?: Partial<Record<Exclude<PaletteTableColumnSetId, "files">, PaletteTableLayout>>;
 }
 
 export interface PaletteTableRow {
@@ -83,6 +86,7 @@ export interface PaletteTableRow {
 	firstSource?: string;
 	foldersInside?: number;
 	content?: string;
+	status?: string;
 }
 
 interface RawLayout {
@@ -98,8 +102,10 @@ export function normalizePaletteTableState(
 		state.columnSets && typeof state.columnSets === "object"
 			? (state.columnSets as Record<string, unknown>)
 			: {};
-	const columnSets: Partial<Record<AuditKind, PaletteTableLayout>> = {};
-	for (const kind of AUDIT_KINDS) {
+	const columnSets: Partial<
+		Record<Exclude<PaletteTableColumnSetId, "files">, PaletteTableLayout>
+	> = {};
+	for (const kind of EXTRA_COLUMN_SETS) {
 		const raw = rawSets[kind];
 		if (raw && typeof raw === "object") columnSets[kind] = normalizeLayout(raw, kind);
 	}
@@ -152,7 +158,7 @@ const features = tableFeatures({
 });
 const helper = createColumnHelper<typeof features, PaletteTableRow>();
 
-function textColumn(id: "name" | "path" | "firstSource" | "content") {
+function textColumn(id: "name" | "path" | "firstSource" | "content" | "status") {
 	return helper.accessor(id, {
 		sortFn: (a, b) => collator.compare(a.original[id] ?? "", b.original[id] ?? ""),
 		sortDescFirst: false,
@@ -179,6 +185,7 @@ const columns = helper.columns([
 	textColumn("firstSource"),
 	numberColumn("foldersInside"),
 	textColumn("content"),
+	textColumn("status"),
 ]);
 
 /** 並べ替えていない順序では検索の順位を保つ。列の明示的な並べ替えがそれを上書きする。 */
@@ -211,8 +218,10 @@ export class PaletteTableModel {
 
 	/** すべての組のレイアウト。ワークスペースに保存される形。 */
 	get state(): Omit<PaletteTableState, "displayMode"> {
-		const columnSets: Partial<Record<AuditKind, PaletteTableLayout>> = {};
-		for (const kind of AUDIT_KINDS) {
+		const columnSets: Partial<
+			Record<Exclude<PaletteTableColumnSetId, "files">, PaletteTableLayout>
+		> = {};
+		for (const kind of EXTRA_COLUMN_SETS) {
 			if (kind === this.active || this.layouts.has(kind))
 				columnSets[kind] = this.layoutOf(kind);
 		}
@@ -226,7 +235,7 @@ export class PaletteTableModel {
 		const normalized = normalizePaletteTableState(state);
 		this.layouts.clear();
 		this.layouts.set("files", normalizeLayout(normalized, "files"));
-		for (const kind of AUDIT_KINDS) {
+		for (const kind of EXTRA_COLUMN_SETS) {
 			const layout = normalized.columnSets?.[kind];
 			if (layout) this.layouts.set(kind, layout);
 		}

@@ -56,6 +56,7 @@ export async function listCommits(root: string, signal?: AbortSignal): Promise<G
 export async function listChanges(
 	root: string,
 	commit: Pick<GitCommit, "hash" | "parents">,
+	signal?: AbortSignal,
 ): Promise<GitChange[]> {
 	validateHash(commit.hash);
 	const parent = commit.parents[0];
@@ -63,7 +64,7 @@ export async function listChanges(
 	const args = parent
 		? ["diff", "--no-ext-diff", "--name-status", "-z", "-M", parent, commit.hash, "--"]
 		: ["diff-tree", "--root", "--no-commit-id", "-r", "--name-status", "-z", "-M", commit.hash];
-	const fields = (await git(root, args)).toString("utf8").split("\0");
+	const fields = (await git(root, args, signal)).toString("utf8").split("\0");
 	const changes: GitChange[] = [];
 	for (let i = 0; i < fields.length && fields[i];) {
 		const status = fields[i++];
