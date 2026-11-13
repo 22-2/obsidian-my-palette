@@ -30,6 +30,7 @@
 	},
 	"dependencies": {
 		"@22-2/obsidian-magical-editor": "1.0.20",
+		"@codemirror/merge": "6.12.3",
 		"@tanstack/table-core": "^9.3.1",
 		"consola": "^3.4.2",
 		"fuzzysort": "^4.0.2",
@@ -37,6 +38,8 @@
 		"picomatch": "^4.0.7"
 	},
 	"devDependencies": {
+		"@codemirror/state": "6.7.6",
+		"@codemirror/view": "6.43.13",
 		"@eslint/js": "10.0.1",
 		"@obsidian-typings/obsidian-public-latest": "^6.59.0",
 		"@playwright/test": "^1.65.0",

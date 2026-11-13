@@ -1,4 +1,4 @@
-import { Modal, Notice, type App } from "obsidian";
+import { Notice, type App } from "obsidian";
 import { relative, isAbsolute } from "node:path";
 import type MyPalettePlugin from "src/main";
 import type { GitCommitResult } from "src/core/results";
@@ -18,26 +18,14 @@ import {
 } from "src/features/git/gitClient";
 import { repositoryRoot } from "src/features/git/gitRepository";
 import { openGitVersion } from "src/features/git/gitVersionOpening";
+import { openGitDiff } from "src/features/git/gitDiffOpening";
+import { gitDiffState } from "src/features/git/gitDiffState";
 import { t } from "src/i18n";
 
 declare const electron: { shell: { openExternal(url: string): Promise<void> } };
 
 interface ChangeItem extends SelectionItem {
 	change: GitChange;
-}
-
-class GitTextModal extends Modal {
-	constructor(
-		app: App,
-		private readonly title: string,
-		private readonly text: string,
-	) {
-		super(app);
-	}
-	onOpen(): void {
-		this.titleEl.setText(this.title);
-		this.contentEl.createEl("pre", { cls: "my-palette-git-content", text: this.text });
-	}
 }
 
 async function showVersion(app: App, root: string, hash: string, path: string): Promise<void> {
@@ -130,31 +118,10 @@ class GitChangesModal extends SelectionModal<ChangeItem> {
 		);
 		add(t("git.diff"), "git-compare", () =>
 			run(async () => {
-				const parent = this.commit.parents[0];
-				const args = parent
-					? [
-							"diff",
-							"--no-ext-diff",
-							"--no-textconv",
-							"--no-color",
-							parent,
-							this.commit.hash,
-							"--",
-							...(change.oldPath ? [`:(literal)${change.oldPath}`] : []),
-							`:(literal)${change.path}`,
-						]
-					: [
-							"show",
-							"--format=",
-							"--no-ext-diff",
-							"--no-textconv",
-							"--no-color",
-							this.commit.hash,
-							"--",
-							`:(literal)${change.path}`,
-						];
-				const text = (await git(this.root, args)).toString("utf8");
-				new GitTextModal(this.app, t("git.diffTitle", { path: change.path }), text).open();
+				const state = gitDiffState(this.commit.hash, this.commit.parents, change);
+				await openGitDiff(this.app.workspace.getLeaf("tab"), state);
+				this.close();
+				this.closePalette?.();
 			}),
 		);
 		const vault = getVaultRootPath(this.app);

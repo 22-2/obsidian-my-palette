@@ -30,12 +30,6 @@ test("opens committed content and copies a link to a deleted file", async ({ obs
 	await expect(file).toContainText("D");
 	await file.click({ button: "right" });
 	await menuItems(page)
-		.filter({ hasText: t("git.diff") })
-		.click();
-	await expect(page.locator(".my-palette-git-content")).toContainText("昔の本文");
-	await page.keyboard.press("Escape");
-	await file.click({ button: "right" });
-	await menuItems(page)
 		.filter({ hasText: t("git.copyGithub") })
 		.click();
 	await expect
@@ -59,4 +53,47 @@ test("opens committed content and copies a link to a deleted file", async ({ obs
 	await content.click();
 	await page.keyboard.type("変更");
 	await expect(content).not.toContainText("変更");
+});
+
+test("compares committed versions side by side without editing either", async ({ obsidian }) => {
+	await obsidian.createNote("比較.md", "変更前\n");
+	const root = await obsidian.evaluateApp(() =>
+		(app.vault.adapter as unknown as { getBasePath(): string }).getBasePath(),
+	);
+	const git = (...args: string[]) => execFileSync("git", args, { cwd: root, windowsHide: true });
+	git("init");
+	git("config", "user.name", "Tester");
+	git("config", "user.email", "test@example.com");
+	git("add", "--", "比較.md");
+	git("commit", "-m", "最初");
+	await obsidian.createNote("比較.md", "変更後\n");
+	git("add", "--", "比較.md");
+	git("commit", "-m", "更新");
+	const page = await openHomeWith(obsidian, "git ");
+	const commit = page
+		.locator(".my-palette-suggest-modal")
+		.first()
+		.locator(".suggestion-item")
+		.filter({ hasText: "更新" });
+	await expect(commit).toBeVisible();
+	await commit.dblclick();
+	const file = page
+		.locator(".my-palette-suggest-modal")
+		.last()
+		.locator(".suggestion-item")
+		.filter({ hasText: "比較.md" });
+	await file.click({ button: "right" });
+	await menuItems(page)
+		.filter({ hasText: t("git.diff") })
+		.click();
+	const diff = page.locator(".my-palette-git-diff");
+	const before = diff.locator(".cm-merge-a .cm-content");
+	const after = diff.locator(".cm-merge-b .cm-content");
+	await expect(before).toContainText("変更前");
+	await expect(after).toContainText("変更後");
+	await expect(diff.locator(".cm-merge-a .cm-changedLine")).toHaveCount(1);
+	await expect(diff.locator(".cm-merge-b .cm-changedLine")).toHaveCount(1);
+	await after.click();
+	await page.keyboard.insertText("not-editable");
+	await expect(after).not.toContainText("not-editable");
 });
