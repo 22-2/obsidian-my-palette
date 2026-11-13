@@ -17,6 +17,7 @@ import {
 	type GitChange,
 } from "src/features/git/gitClient";
 import { repositoryRoot } from "src/features/git/gitRepository";
+import { openGitVersion } from "src/features/git/gitVersionOpening";
 import { t } from "src/i18n";
 
 declare const electron: { shell: { openExternal(url: string): Promise<void> } };
@@ -40,8 +41,8 @@ class GitTextModal extends Modal {
 }
 
 async function showVersion(app: App, root: string, hash: string, path: string): Promise<void> {
-	const text = await readVersion(root, hash, path);
-	new GitTextModal(app, `${path} · ${hash.slice(0, 8)}`, text).open();
+	await readVersion(root, hash, path);
+	await openGitVersion(app.workspace.getLeaf("tab"), hash, path);
 }
 
 function report(error: unknown): void {
@@ -66,6 +67,7 @@ class GitChangesModal extends SelectionModal<ChangeItem> {
 		private readonly root: string,
 		private readonly commit: GitCommitResult,
 		changes: GitChange[],
+		private readonly closePalette?: () => void,
 	) {
 		super(
 			{
@@ -91,6 +93,8 @@ class GitChangesModal extends SelectionModal<ChangeItem> {
 		try {
 			const ref = contentReference(this.commit, item.change);
 			await showVersion(this.app, this.root, ref.hash, ref.path);
+			this.close();
+			this.closePalette?.();
 		} catch (error) {
 			report(error);
 		}
@@ -117,7 +121,12 @@ class GitChangesModal extends SelectionModal<ChangeItem> {
 		add(
 			change.status.startsWith("D") ? t("git.openDeleted") : t("git.openVersion"),
 			"file-text",
-			() => run(() => showVersion(this.app, this.root, ref.hash, ref.path)),
+			() =>
+				run(async () => {
+					await showVersion(this.app, this.root, ref.hash, ref.path);
+					this.close();
+					this.closePalette?.();
+				}),
 		);
 		add(t("git.diff"), "git-compare", () =>
 			run(async () => {
@@ -202,11 +211,12 @@ class GitChangesModal extends SelectionModal<ChangeItem> {
 export async function openGitChanges(
 	plugin: MyPalettePlugin,
 	commit: GitCommitResult,
+	closePalette?: () => void,
 ): Promise<void> {
 	try {
 		const root = await repositoryRoot(plugin.app);
 		const changes = await listChanges(root, commit);
-		new GitChangesModal(plugin, root, commit, changes).open();
+		new GitChangesModal(plugin, root, commit, changes, closePalette).open();
 	} catch (error) {
 		report(error);
 	}

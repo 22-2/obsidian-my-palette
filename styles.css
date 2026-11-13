@@ -1,3 +1,32 @@
+.my-palette-git-version {
+	display: flex;
+	flex-direction: column;
+	padding: 0;
+}
+
+.my-palette-git-version-title {
+	flex: none;
+	padding: var(--size-4-1) var(--size-4-4);
+	border-bottom: 1px solid var(--background-modifier-border);
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	text-align: center;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.my-palette-git-version-body {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+}
+
+.my-palette-git-message {
+	padding: var(--size-4-4);
+	color: var(--text-muted);
+}
+
 .my-palette-git-content {
 	white-space: pre-wrap;
 	overflow-wrap: anywhere;

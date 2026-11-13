@@ -1,5 +1,8 @@
 {
 	"git.mode.title": "Git履歴",
+	"git.version.title": "過去のファイル",
+	"git.version.readOnly": "読み取り専用",
+	"git.copySelection": "コピー",
 	"git.mode.subtitle": "コミットと変更されたファイル",
 	"git.mode.placeholder": "コミットメッセージ、ハッシュ、作者を検索",
 	"git.files.placeholder": "変更されたファイルを検索",

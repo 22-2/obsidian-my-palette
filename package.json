@@ -29,6 +29,7 @@
 		"prepare": "git config core.hooksPath .githooks"
 	},
 	"dependencies": {
+		"@22-2/obsidian-magical-editor": "1.0.20",
 		"@tanstack/table-core": "^9.3.1",
 		"consola": "^3.4.2",
 		"fuzzysort": "^4.0.2",

@@ -166,6 +166,9 @@ importers:
 
   .:
     dependencies:
+      '@22-2/obsidian-magical-editor':
+        specifier: 1.0.20
+        version: 1.0.20(obsidian@1.14.4(@codemirror/state@6.7.6)(@codemirror/view@6.43.13))
       '@tanstack/table-core':
         specifier: ^9.3.1
         version: 9.3.1
@@ -247,6 +250,11 @@ importers:
         version: 5.1.0(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(happy-dom@21.0.4)(vite@8.3.7(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
 packages:
+
+  '@22-2/obsidian-magical-editor@1.0.20':
+    resolution: {integrity: sha512-0zbJ7bLtuawLI2Xcl5f+J2Nei49vO/Rgm+20JOq1bmbt7kEavNBBgerG3J7IA1Rq05xs8AfV9hQW+L2OJTtSBQ==, tarball: https://npm.pkg.github.com/download/@22-2/obsidian-magical-editor/1.0.20/ad43b57dcbac4a6e1d9d28fecf0d98337ec653bf}
+    peerDependencies:
+      obsidian: '>=1.12.0'
 
   '@babel/helper-string-parser@7.29.13':
     resolution: {integrity: sha512-fWegr+WsEsiMVW4KUNdIIzzMTZSzNiqhy0//6+2MRi2d5NFNsL/AYwBQW8eBnRbTBVRnDVzjaJEUqKaCWjMMdQ==}
@@ -2386,6 +2394,10 @@ packages:
     engines: {node: '>=12.20'}
 
 snapshots:
+
+  '@22-2/obsidian-magical-editor@1.0.20(obsidian@1.14.4(@codemirror/state@6.7.6)(@codemirror/view@6.43.13))':
+    dependencies:
+      obsidian: 1.14.4(@codemirror/state@6.7.6)(@codemirror/view@6.43.13)
 
   '@babel/helper-string-parser@7.29.13': {}
 

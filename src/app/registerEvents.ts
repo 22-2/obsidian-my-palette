@@ -1,6 +1,7 @@
 import type MyPalettePlugin from "src/main";
 import { PaletteView } from "src/features/palette/surfaces/PaletteView";
 import { registerGitProtocol } from "src/features/git/gitUi";
+import { GitVersionView, GIT_VERSION_VIEW } from "src/features/git/GitVersionView";
 import { PaletteTableView } from "src/features/palette/surfaces/PaletteTableView";
 import {
 	PALETTE_VIEW_TYPE,
@@ -15,6 +16,7 @@ import {
  */
 export function registerPluginEvents(plugin: MyPalettePlugin): void {
 	registerGitProtocol(plugin);
+	plugin.registerView(GIT_VERSION_VIEW, (leaf) => new GitVersionView(leaf));
 	plugin.registerView(PALETTE_VIEW_TYPE, (leaf) => new PaletteView(leaf, plugin));
 	// Why: 型を分けると、各コマンドが自分のペインを再利用でき、Obsidian は
 	// 一覧の検索と表の検索を同じワークスペース内で別々に復元できる。

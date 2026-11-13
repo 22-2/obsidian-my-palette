@@ -54,5 +54,9 @@ test("opens committed content and copies a link to a deleted file", async ({ obs
 	expect(uri.searchParams.get("path")).toBe("過去のメモ.md");
 	await file.click();
 	await page.keyboard.press("Enter");
-	await expect(page.locator(".my-palette-git-content")).toHaveText("昔の本文\n");
+	const content = page.locator(".my-palette-git-version .cm-content");
+	await expect(content).toContainText("昔の本文");
+	await content.click();
+	await page.keyboard.type("変更");
+	await expect(content).not.toContainText("変更");
 });

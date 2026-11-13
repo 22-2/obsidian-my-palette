@@ -42,7 +42,8 @@ export async function executePaletteResult(
 	// これらはホストが実行の前に処理する。ワークスペースではなく、パレットを変えるため。
 	if (result.mode === "search-history" || result.mode === "mode-entry") return;
 	if (result.mode === "git") {
-		if (action === "primary") await openGitChanges(plugin, result);
+		if (action === "primary")
+			await openGitChanges(plugin, result, options.closeWhenDone ? options.close : undefined);
 		return;
 	}
 	if (result.mode === "property") {
