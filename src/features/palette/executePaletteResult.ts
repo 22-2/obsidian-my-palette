@@ -10,6 +10,7 @@ import { executeCommandById } from "src/platform/obsidianInternals";
 import { t } from "src/i18n";
 import { contentPreviewTerm } from "src/features/palette/contentPreview";
 import { openTagSearch } from "src/features/tags/tagSearch";
+import { openGitChanges } from "src/features/git/gitUi";
 
 export interface PaletteResultExecutionOptions {
 	/** 成功した操作のあとも、常駐のパネルを残す。 */
@@ -40,6 +41,10 @@ export async function executePaletteResult(
 ): Promise<void> {
 	// これらはホストが実行の前に処理する。ワークスペースではなく、パレットを変えるため。
 	if (result.mode === "search-history" || result.mode === "mode-entry") return;
+	if (result.mode === "git") {
+		if (action === "primary") await openGitChanges(plugin, result);
+		return;
+	}
 	if (result.mode === "property") {
 		if (action !== "primary") return;
 		if ((await editPropertyResult(plugin, result)) === "close") finish(options);

@@ -324,6 +324,7 @@ function normalizeModes(source: Record<string, unknown>): ModeSettingsMap {
 			modes,
 		);
 	}
+	if (!rawModes.git) modes.git.alias = unusedAlias("git", "git", "git", modeIds, modes);
 	return modes;
 }
 

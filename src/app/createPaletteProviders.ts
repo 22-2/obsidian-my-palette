@@ -15,6 +15,7 @@ import { SnippetProvider } from "src/features/search/snippet/SnippetProvider";
 import { TagProvider } from "src/features/tags/TagProvider";
 import { PropertyProvider } from "src/features/properties/PropertyProvider";
 import { AuditProvider } from "src/features/audit/AuditProvider";
+import { GitProvider } from "src/features/git/GitProvider";
 import type { PaletteProvider } from "src/core/PaletteProvider";
 import {
 	EMPTY_EXCLUDED_FOLDER_SOURCE,
@@ -116,6 +117,7 @@ export function createPaletteProviders(
 			property: new PropertyProvider(app),
 			heading: new HeadingProvider(app),
 			audit: auditProvider,
+			git: new GitProvider(app),
 		},
 	};
 }

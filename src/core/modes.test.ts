@@ -72,10 +72,7 @@ describe("パレットモードの一致", () => {
 
 	test("タブの後にプラグインをリストし、エイリアスで入力します", () => {
 		const order = ids("");
-		expect(order.at(-4)).toBe("snippets");
-		expect(order.at(-3)).toBe("properties");
-		expect(order.at(-2)).toBe("audit");
-		expect(order.at(-1)).toBe("tags");
+		expect(order.slice(-5)).toEqual(["snippets", "properties", "audit", "tags", "git"]);
 		expect(order.indexOf("tabs")).toBeLessThan(order.indexOf("plugins"));
 		expect(order.indexOf("plugins")).toBeLessThan(order.indexOf("snippets"));
 		expect(parseDirectModeEntry("pr status", modes)).toEqual({

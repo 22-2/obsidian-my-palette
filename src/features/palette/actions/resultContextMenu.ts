@@ -209,6 +209,21 @@ export function populatePaletteResultMenu({
 		);
 		return;
 	}
+	if (result.mode === "git") {
+		menu.addItem((item) =>
+			item
+				.setTitle(t("git.openChanges"))
+				.setIcon("git-commit-horizontal")
+				.onClick(() => void activate("primary", result)),
+		);
+		menu.addItem((item) =>
+			item
+				.setTitle(t("git.copyHash"))
+				.setIcon("copy")
+				.onClick(() => void copyPathToClipboard(result.hash)),
+		);
+		return;
+	}
 
 	/** ターミナルを開き、失敗を報告する。パレットは閉じない。 */
 	const openTerminal = (absolutePath: string, isFolder: boolean): void => {

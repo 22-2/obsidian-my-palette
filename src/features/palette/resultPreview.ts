@@ -10,6 +10,7 @@ import type { PaletteResult } from "src/core/results";
  */
 const NON_PREVIEWABLE_MODES: ReadonlySet<PaletteResult["mode"]> = new Set<PaletteResult["mode"]>([
 	"command",
+	"git",
 	"mode-entry",
 	"search-history",
 	"property",

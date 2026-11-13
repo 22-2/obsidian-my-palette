@@ -43,6 +43,7 @@ export function getResultAbsolutePath(app: App, result: PaletteResult): string |
 			if (result.kind === "broken-links") return undefined;
 			return getVaultFullPath(app, result.file.path);
 		case "command":
+		case "git":
 		case "property":
 		case "tag":
 		case "search-history":

@@ -346,6 +346,7 @@ export const DEFAULT_SETTINGS: MyPaletteSettings = {
 		properties: { alias: "pr", enabled: true },
 		tags: { alias: "tg", enabled: true },
 		audit: { alias: "a", enabled: true },
+		git: { alias: "git", enabled: true },
 	},
 	file: {
 		// 2つの状態を同じに始め、分けたことで制御は増えるが、新規インストールでユーザーが期待する

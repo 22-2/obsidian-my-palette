@@ -29,6 +29,7 @@ export const PALETTE_HISTORY_CATEGORIES: readonly SearchHistoryCategory[] = [
 	"property",
 	"tag",
 	"audit",
+	"git",
 	"everything",
 	"everything-directory",
 	"link",
@@ -61,6 +62,7 @@ function isSearchHistoryCategory(value: unknown): value is SearchHistoryCategory
 		value === "property" ||
 		value === "tag" ||
 		value === "audit" ||
+		value === "git" ||
 		value === "everything" ||
 		value === "everything-directory" ||
 		value === "link" ||
@@ -295,6 +297,8 @@ function historyCategoryMode(category: SearchHistoryCategory): PaletteModeId | u
 			return "tags";
 		case "audit":
 			return "audit";
+		case "git":
+			return "git";
 		case "everything":
 		case "everything-directory":
 			return "everything";

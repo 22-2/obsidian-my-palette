@@ -39,6 +39,7 @@ async function resolveMocTarget(
 	}
 	if (
 		result.mode === "command" ||
+		result.mode === "git" ||
 		result.mode === "plugin" ||
 		result.mode === "snippet" ||
 		result.mode === "property" ||
@@ -75,6 +76,7 @@ export function addMocInsertionMenuItems(
 	const insertableResults = results.filter((result) => {
 		if (
 			result.mode === "command" ||
+			result.mode === "git" ||
 			result.mode === "plugin" ||
 			result.mode === "snippet" ||
 			result.mode === "property" ||

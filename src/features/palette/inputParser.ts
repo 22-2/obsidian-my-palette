@@ -33,6 +33,7 @@ export function parseInput(raw: string, modes: ModeSettingsMap): ParsedInput {
 		{ prefix: `${paletteModeAlias("bookmarks", modes)} `, mode: "bookmark" },
 		{ prefix: `${paletteModeAlias("smart", modes)} `, mode: "smart" },
 		{ prefix: `${paletteModeAlias("tabs", modes)} `, mode: "tab" },
+		{ prefix: `${paletteModeAlias("git", modes)} `, mode: "git" },
 		{
 			prefix: `${directoryAlias} `,
 			mode: "everything",

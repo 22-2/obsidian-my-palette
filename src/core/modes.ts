@@ -148,6 +148,15 @@ export const PALETTE_MODES: readonly PaletteModeDefinition[] = [
 		icon: ICONS.tagMode,
 		placeholder: t("mode.tags.placeholder"),
 	},
+	{
+		id: "git",
+		mode: "git",
+		englishName: "Git history",
+		title: t("git.mode.title"),
+		subtitle: t("git.mode.subtitle"),
+		icon: "git-commit-horizontal",
+		placeholder: t("git.mode.placeholder"),
+	},
 ];
 
 export function getPaletteMode(id: PaletteModeId): PaletteModeDefinition {

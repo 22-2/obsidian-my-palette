@@ -16,7 +16,8 @@ export type PaletteMode =
 	| "snippet"
 	| "property"
 	| "tag"
-	| "audit";
+	| "audit"
+	| "git";
 
 /** Home に並ぶモードの識別子。設定の保存形式にも使うので、定義は `modes.ts` ではなくここに置く。 */
 export type PaletteModeId =
@@ -33,7 +34,8 @@ export type PaletteModeId =
 	| "snippets"
 	| "properties"
 	| "tags"
-	| "audit";
+	| "audit"
+	| "git";
 
 export type EverythingScope = "vault" | "directory";
 
@@ -86,6 +88,12 @@ export interface FileResult extends BaseResult {
 export interface CommandResult extends BaseResult {
 	mode: "command";
 	commandId: string;
+}
+
+export interface GitCommitResult extends BaseResult {
+	mode: "git";
+	hash: string;
+	parents: string[];
 }
 
 export interface EverythingResult extends BaseResult {
@@ -255,6 +263,7 @@ export type AuditResult = AuditFileResult | AuditBrokenLinkResult | AuditFolderR
 
 export type PaletteResult =
 	| FileResult
+	| GitCommitResult
 	| CommandResult
 	| EverythingResult
 	| SearchHistoryResult
@@ -295,6 +304,7 @@ export function getResultFilePath(result: PaletteResult): string | undefined {
 		case "smart":
 			return result.file.path;
 		case "command":
+		case "git":
 		case "plugin":
 		case "snippet":
 		case "property":

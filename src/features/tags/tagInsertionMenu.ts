@@ -13,6 +13,7 @@ import { MENU_ACTIONS, withAction } from "src/ui/menuActions";
 function resolveTagTarget(app: App, result: PaletteResult): TFile | undefined {
 	if (
 		result.mode === "command" ||
+		result.mode === "git" ||
 		result.mode === "plugin" ||
 		result.mode === "snippet" ||
 		result.mode === "property" ||
