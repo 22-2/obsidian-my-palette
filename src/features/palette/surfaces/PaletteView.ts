@@ -25,7 +25,10 @@ import {
 	paletteDigitRows,
 	type FixedPaletteMode,
 	type PaletteSearchState,
+	type PaletteRoute,
+	type PaletteNavigationFrame,
 } from "src/features/palette/PaletteSearchSession";
+import { normalizeSavedNavigation } from "src/features/palette/paletteNavigationState";
 import { openPaletteResultInBackground } from "src/features/palette/backgroundResultActions";
 import { ContentPreview } from "src/features/palette/contentPreview";
 import { toPaletteSelectionItem } from "src/features/palette/resultPresentation";
@@ -81,6 +84,8 @@ interface PaletteViewState extends Record<string, unknown> {
 	sorting?: unknown;
 	columnOrder?: unknown;
 	hiddenColumns?: unknown;
+	route?: unknown;
+	navigation?: unknown;
 }
 
 interface NormalizedPaletteViewState extends PaletteTableState {
@@ -89,6 +94,8 @@ interface NormalizedPaletteViewState extends PaletteTableState {
 	sourcePath?: string;
 	sourcePinned: boolean;
 	includeIgnored: boolean;
+	route?: PaletteRoute;
+	navigation?: readonly PaletteNavigationFrame[];
 }
 
 /** メモを表示したままでも検索できる、常駐の ItemView の外枠。 */
@@ -170,6 +177,8 @@ export class PaletteView extends ItemView {
 						sourcePath: state.sourcePath,
 						sourcePinned: state.sourcePinned,
 						includeIgnored: state.includeIgnored,
+						route: state.route,
+						navigation: state.navigation,
 						tableState: state,
 						viewType: this.getViewType(),
 					});
@@ -182,12 +191,21 @@ export class PaletteView extends ItemView {
 	}
 
 	private snapshotState(): NormalizedPaletteViewState {
+		const navigation = this.session?.navigationFrames ?? this.pendingState.navigation;
+		const route = navigation?.length
+			? (this.session?.current.route ?? this.pendingState.route)
+			: undefined;
 		return {
-			input: this.session?.prefixedInput ?? this.pendingState.input,
+			input: this.session
+				? route
+					? this.session.input
+					: this.session.prefixedInput
+				: this.pendingState.input,
 			fixedMode: this.pendingState.fixedMode,
 			sourcePath: this.sourcePinned ? this.sourcePath : undefined,
 			sourcePinned: this.sourcePinned,
 			includeIgnored: this.ignoredScope,
+			...(route ? { route, navigation } : {}),
 			...normalizePaletteTableState(this.tableControls?.getState() ?? this.pendingState),
 		};
 	}
@@ -199,11 +217,15 @@ export class PaletteView extends ItemView {
 		const fixedModeChanged = next.fixedMode !== this.pendingState.fixedMode;
 		const sourceChanged = next.sourcePath !== this.pendingState.sourcePath;
 		const sourcePinChanged = next.sourcePinned !== this.pendingState.sourcePinned;
+		const navigationChanged =
+			Boolean(next.route) ||
+			(this.session?.current.route.kind === "mode" &&
+				Boolean(this.session.current.route.page));
 		this.pendingState = next;
 		this.sourcePinned = this.pendingState.sourcePinned;
 		this.sourcePath = this.sourcePinned ? this.pendingState.sourcePath : undefined;
 		if (!this.panel || !this.session) return;
-		if (fixedModeChanged || sourceChanged || sourcePinChanged) {
+		if (fixedModeChanged || sourceChanged || sourcePinChanged || navigationChanged) {
 			this.createSurface(this.pendingState);
 			return;
 		}
@@ -244,11 +266,7 @@ export class PaletteView extends ItemView {
 		if (this.session) {
 			// Why: onClose でセッションを破棄したあとに、Obsidian がワークスペースの状態を
 			// 集めることがあるため、最後の入力を予備の状態にも残しておく。
-			this.pendingState = {
-				...this.pendingState,
-				input: this.session.prefixedInput,
-				includeIgnored: this.session.current.ignoredScope,
-			};
+			this.pendingState = this.snapshotState();
 		}
 		this.contentPreview?.dispose();
 		this.contentPreview = undefined;
@@ -299,6 +317,8 @@ export class PaletteView extends ItemView {
 		const initialInput = state.input;
 		this.session = new PaletteSearchSession(this.plugin, {
 			initialInput,
+			initialRoute: state.route,
+			initialNavigation: state.navigation,
 			fixedMode: state.fixedMode,
 			// Why: ピン留めされていない表示は、元のノートを現在の中央のノートから決める。
 			// ここで保存された状態を渡すと、最初の検索が古くなってしまうため。
@@ -312,7 +332,7 @@ export class PaletteView extends ItemView {
 		this.pendingState = {
 			...this.pendingState,
 			fixedMode: undefined,
-			input: this.session.prefixedInput,
+			input: state.route ? this.session.input : this.session.prefixedInput,
 		};
 		this.panel = new SuggestionPanel<PaletteResult>(this.contentEl, {
 			getHotkeys: () => this.plugin.settings.hotkeys,
@@ -877,6 +897,7 @@ export class PaletteView extends ItemView {
 }
 
 function normalizeState(state: PaletteViewState): NormalizedPaletteViewState {
+	const navigation = normalizeSavedNavigation(state.route, state.navigation);
 	const fixedMode =
 		state.fixedMode === "link" ||
 		state.fixedMode === "backlink" ||
@@ -891,6 +912,7 @@ function normalizeState(state: PaletteViewState): NormalizedPaletteViewState {
 		sourcePath: typeof state.sourcePath === "string" ? state.sourcePath : undefined,
 		sourcePinned: state.sourcePinned === true,
 		includeIgnored: state.includeIgnored === true,
+		...(navigation ?? {}),
 		...normalizePaletteTableState(state),
 	};
 }

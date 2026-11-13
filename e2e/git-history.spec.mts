@@ -1,6 +1,13 @@
 import { execFileSync } from "node:child_process";
 import { expect, test } from "./fixtures.mts";
-import { menuItems, openHomeWith, pluginVaultOptions, runPaletteCommand, t } from "./support.mts";
+import {
+	closePalette,
+	menuItems,
+	openHomeWith,
+	pluginVaultOptions,
+	runPaletteCommand,
+	t,
+} from "./support.mts";
 
 test.use({ vaultOptions: pluginVaultOptions() });
 
@@ -32,6 +39,10 @@ test("opens committed content and copies a link to a deleted file", async ({ obs
 	const file = changes.locator(".suggestion-item").filter({ hasText: "過去のメモ.md" });
 	await expect(file).toContainText("D");
 	await changes.locator(".prompt-input").fill("メモ");
+	await expect(file).toBeVisible();
+	await closePalette(page);
+	await runPaletteCommand(obsidian, "open-home");
+	await expect(palette.locator(".prompt-input")).toHaveValue("メモ");
 	await expect(file).toBeVisible();
 	await page.keyboard.press("Escape");
 	await expect(palette.locator(".prompt-input")).toHaveValue("削除しました");
@@ -141,8 +152,55 @@ for (const surface of ["sidebar", "table"] as const) {
 			await expect(file.locator("td[data-column='status']")).toHaveText("A");
 		}
 		await input.fill("項目");
-		await page.keyboard.press("Escape");
+		await obsidian.evaluateApp(
+			async (type) => {
+				const view = app.workspace.getLeavesOfType(type)[0].view;
+				await view.setState(view.getState(), { history: false });
+			},
+			surface === "sidebar" ? "my-palette-search" : "my-palette-table",
+		);
+		await expect(input).toHaveValue("項目");
+		await expect(file).toBeVisible();
+		await input.focus();
+		if (surface === "table") {
+			await input.fill("");
+			await page.keyboard.press("Backspace");
+		} else await page.keyboard.press("Escape");
 		await expect(input).toHaveValue("特別");
 		await expect(commit).toHaveClass(/is-active/);
+		await page.keyboard.press("Escape");
+		await expect(palette.locator(".my-palette-mode-chip")).toBeHidden();
 	});
 }
+
+test("moves the current commit and its back navigation into the sidebar", async ({ obsidian }) => {
+	await obsidian.createNote("移動.md", "本文\n");
+	const root = await obsidian.evaluateApp(() =>
+		(app.vault.adapter as unknown as { getBasePath(): string }).getBasePath(),
+	);
+	const git = (...args: string[]) => execFileSync("git", args, { cwd: root, windowsHide: true });
+	git("init");
+	git("config", "user.name", "Tester");
+	git("config", "user.email", "test@example.com");
+	git("add", "--", "移動.md");
+	git("commit", "-m", "移動テスト");
+	const page = await openHomeWith(obsidian, "git ");
+	const modal = page.locator(".my-palette-suggest-modal");
+	await modal.locator(".prompt-input").fill("移動テスト");
+	await modal.locator(".suggestion-item").filter({ hasText: "移動テスト" }).dblclick();
+	await modal.locator(".prompt-input").fill("移動");
+	await expect(modal.locator(".suggestion-item").filter({ hasText: "移動.md" })).toBeVisible();
+	await modal.locator(".my-palette-options-button").click();
+	await menuItems(page)
+		.filter({ hasText: t("menu.moveToRightSidebar") })
+		.click();
+	const sidebar = page.locator(".my-palette-view").last();
+	const input = sidebar.locator(".prompt-input");
+	await expect(input).toHaveValue("移動");
+	await expect(sidebar.locator(".suggestion-item").filter({ hasText: "移動.md" })).toBeVisible();
+	await page.keyboard.press("Escape");
+	await expect(input).toHaveValue("移動テスト");
+	await expect(sidebar.locator(".suggestion-item").filter({ hasText: "移動テスト" })).toHaveClass(
+		/is-active/,
+	);
+});

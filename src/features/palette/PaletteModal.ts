@@ -392,10 +392,16 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 		// 入力にはモードが含まれるので、新しいペインは同じモードに入り直す。
 		// 新しいペインは、ほかのサイドバーのパレットを置き換えずに、この検索を残す。
 		// 閉じてから開くので、新しい入力がフォーカスを保てる。
-		const input = this.session.prefixedInput;
+		const navigation = [...this.session.navigationFrames];
+		const route = navigation.length ? this.session.current.route : undefined;
+		const input = route ? this.session.input : this.session.prefixedInput;
 		const includeIgnored = this.session.current.ignoredScope;
 		this.close();
-		void this.plugin.paletteOpener.openNewPaletteView({ input, includeIgnored });
+		void this.plugin.paletteOpener.openNewPaletteView({
+			input,
+			includeIgnored,
+			...(route ? { route, navigation } : {}),
+		});
 	}
 
 	private async activatePaletteResult(

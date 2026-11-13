@@ -4,7 +4,11 @@ import type MyPalettePlugin from "src/main";
 import { PaletteModal, type PaletteModalOptions } from "src/features/palette/PaletteModal";
 import { shouldRestore, type PaletteRestoreState } from "src/features/palette/restoreState";
 import { paletteModeAlias } from "src/core/modes";
-import type { FixedPaletteMode } from "src/features/palette/PaletteSearchSession";
+import type {
+	FixedPaletteMode,
+	PaletteNavigationFrame,
+	PaletteRoute,
+} from "src/features/palette/PaletteSearchSession";
 import { PaletteView } from "src/features/palette/surfaces/PaletteView";
 import {
 	PALETTE_TABLE_VIEW_TYPE,
@@ -21,6 +25,8 @@ export interface NewPaletteViewOptions {
 	includeIgnored?: boolean;
 	tableState?: PaletteTableState;
 	viewType?: PaletteViewType;
+	route?: PaletteRoute;
+	navigation?: readonly PaletteNavigationFrame[];
 }
 
 /**
@@ -90,6 +96,8 @@ export class PaletteOpener {
 			includeIgnored = false,
 			tableState,
 			viewType = PALETTE_VIEW_TYPE,
+			route,
+			navigation,
 		} = options;
 		// Why: 表の複製には新しい中央のタブが要る。一覧のパレットは、同時に検索できるよう
 		// 右サイドバーのペインをそれぞれ独立に持つ。
@@ -106,6 +114,8 @@ export class PaletteOpener {
 			state: {
 				...this.viewState(input, fixedMode, sourcePath, sourcePinned),
 				includeIgnored,
+				route,
+				navigation,
 				...tableState,
 			},
 		});
