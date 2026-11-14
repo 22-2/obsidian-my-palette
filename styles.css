@@ -1270,6 +1270,11 @@
 	display: none;
 }
 
+/* While filtering, the submenu items are listed in the parent's list; this wrapper must not add a box of its own. */
+.my-palette-menu-flat {
+	display: contents;
+}
+
 .my-palette-menu-empty {
 	display: none;
 	padding: var(--size-4-2) var(--size-4-3);
