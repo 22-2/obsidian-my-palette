@@ -87,11 +87,17 @@ for (const { mode, input, row } of [
 		const page = await openHomeWith(obsidian, input);
 		await expect(page.locator(MODAL_ROW).first()).toContainText(row, { ignoreCase: true });
 		await page.locator(MODAL_INPUT).press("Enter");
-		await expect(
-			page.locator(".menu .menu-item").filter({ hasText: t("menu.openInExternalEditor") }),
-		).toBeVisible();
+		// 外部アプリの操作はサブメニューに畳まれているので、開くまで見えない。
+		const menuItem = (title: string) =>
+			page.locator(".menu .menu-item").filter({ hasText: title });
+		await expect(menuItem(t("menu.openInExternalEditor"))).toHaveCount(0);
+		await menuItem(t("menu.externalApps")).click();
+		await expect(menuItem(t("menu.openInExternalEditor"))).toBeVisible();
 		// The palette stays open behind the menu, so Esc returns to the list.
+		// 1回目の Esc はサブメニューだけを閉じ、2回目でメニュー全体を閉じる。
 		await expect(page.locator(MODAL_INPUT)).toBeAttached();
+		await page.keyboard.press("Escape");
+		await expect(page.locator(".menu")).toHaveCount(1);
 		await page.keyboard.press("Escape");
 		await expect(page.locator(".menu")).toHaveCount(0);
 		await closePalette(page);

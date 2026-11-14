@@ -53,7 +53,9 @@ export const MENU_ACTIONS = {
 		icon: ICONS.openSettings,
 		id: "open-plugin-settings",
 	},
+	externalApps: { title: t("menu.externalApps"), icon: ICONS.externalApps, id: "external-apps" },
 
+	copyPath: { title: t("menu.copyPath"), icon: ICONS.copyPath, id: "copy-path" },
 	copyFileName: { title: t("menu.copyFileName"), icon: ICONS.copy, id: "copy-file-name" },
 	copyRelativePath: {
 		title: t("menu.copyRelativePath"),
@@ -181,11 +183,15 @@ interface MenuItemLike<T> {
  * ノート・ファイルの削除は、キーを押しても確認パレットが開くだけで、実行には Ctrl+Enter が要るので付ける。
  * 操作の id ごとに1つ決め、どのメニューでも同じ操作は同じキーにする。
  * 同じメニューで同じキーの項目が並ぶときは、押すたびに順番にカーソルが移る。
+ * サブメニューを開く項目(外部アプリ、パスをコピー)にも付ける。開くだけで実行はしないので、誤操作の心配がない。
+ * サブメニューの中の項目は、サブメニューが開いている間だけ、そのキーで実行できる。
  */
 export const ACCESS_KEYS: Readonly<Record<string, string>> = {
 	open: "O",
 	"open-in-background": "B",
 	"open-side-by-side": "S",
+	"external-apps": "E",
+	"copy-path": "C",
 	"copy-file-name": "N",
 	"copy-file-names": "N",
 	"copy-relative-path": "P",
@@ -225,6 +231,16 @@ export function addMenuAction(menu: PaletteMenu, action: MenuAction, onClick: ()
 	menu.addItem((item) => withAction(item, action).onClick(onClick));
 }
 
+/** サブメニューを開く項目を1つ加え、そのサブメニューを返す。操作は返されたサブメニューへ加える。 */
+export function addSubmenuAction(menu: PaletteMenu, action: MenuAction): PaletteMenu {
+	let submenu: PaletteMenu | undefined;
+	menu.addItem((item) => {
+		submenu = withAction(item, action).setSubmenu();
+	});
+	// addItem はその場で build を呼ぶので、ここで必ず入っている。
+	return submenu as PaletteMenu;
+}
+
 export interface OpenMenuHandlers {
 	open: () => void;
 	/** ポップアウトのホストだけが出す。ほかでは省く。 */
@@ -251,14 +267,19 @@ export interface ExternalAppMenuHandlers {
 	openInTerminal?: () => void;
 }
 
-/** ファイルやフォルダーを別のアプリに渡す操作。どこでも同じ順序にする。 */
+/**
+ * ファイルやフォルダーを別のアプリに渡す操作。どこでも同じ順序にする。
+ * 2つ以上あれば「外部アプリ」のサブメニューに畳み、外部エディターだけなら畳まずにそのまま出す。
+ */
 export function addExternalAppMenuItems(
 	menu: PaletteMenu,
 	handlers: ExternalAppMenuHandlers,
 ): void {
-	addMenuAction(menu, MENU_ACTIONS.openInExternalEditor, handlers.openInExternalEditor);
+	const folds = Boolean(handlers.showInSystemExplorer || handlers.openInTerminal);
+	const target = folds ? addSubmenuAction(menu, MENU_ACTIONS.externalApps) : menu;
+	addMenuAction(target, MENU_ACTIONS.openInExternalEditor, handlers.openInExternalEditor);
 	if (handlers.showInSystemExplorer)
-		addMenuAction(menu, MENU_ACTIONS.showInSystemExplorer, handlers.showInSystemExplorer);
+		addMenuAction(target, MENU_ACTIONS.showInSystemExplorer, handlers.showInSystemExplorer);
 	if (handlers.openInTerminal)
-		addMenuAction(menu, MENU_ACTIONS.openInTerminal, handlers.openInTerminal);
+		addMenuAction(target, MENU_ACTIONS.openInTerminal, handlers.openInTerminal);
 }

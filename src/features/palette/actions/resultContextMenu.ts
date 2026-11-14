@@ -28,8 +28,8 @@ import {
 } from "src/platform/externalOpen";
 import { getTerminalDirectory, openDirectoryInTerminal } from "src/platform/terminal";
 import {
-	addCopyPathListMenuItems,
-	addCopyPathMenuItems,
+	addCopyPathListSubmenu,
+	addCopyPathSubmenu,
 	copyPathListToClipboard,
 	copyPathToClipboard,
 } from "src/ui/pathClipboard";
@@ -144,20 +144,19 @@ export function populatePaletteResultMenu({
 	if (selectedPaths.length > 1) {
 		// Why: 複数選択には移動の操作に使える結果が1つもないので、
 		// 選んだすべてのパスやノートに働く操作を出す。
+		// グループは、単一の結果のメニューと同じ並び(コピー、編集、危険な操作)にする。
 		addSelectionHeader(menu, selectedItems.length);
-		addCopyPathListMenuItems(
+		addCopyPathListSubmenu(
 			menu,
 			selectedPaths,
 			(values) => void copyPathListToClipboard(values),
 		);
+		menu.addSeparator();
 		addFileMoveMenuItem(menu, plugin, selectedItems, onNoteActionDone);
 		addBulkRenameMenuItem(menu, plugin, selectedItems, onNoteActionDone);
 		addPropertyEditMenuItem(menu, plugin, selectedItems, onNoteActionSelected);
-		addMocInsertionMenuItems(menu, plugin, selectedItems, onNoteActionSelected, getMocContext);
 		addTagInsertionMenuItems(menu, plugin, selectedItems, onNoteActionDone);
-		addFileDeleteMenuItem(app, menu, selectedItems, onResultsChanged);
-		// Why: 統合は統合元をゴミ箱に移すので、ほかの書き換えの後ろに置く。
-		addMergeMenuItem(menu, plugin, selectedItems, onNoteActionDone);
+		addMocInsertionMenuItems(menu, plugin, selectedItems, onNoteActionSelected, getMocContext);
 		addBookmarkMenuItems({
 			menu,
 			plugin,
@@ -165,6 +164,10 @@ export function populatePaletteResultMenu({
 			onBookmarksChanged: onResultsChanged,
 			onNoteActionDone,
 		});
+		menu.addSeparator();
+		// Why: 統合は統合元をゴミ箱に移すので、削除と同じ危険な操作のグループに置く。削除は最後。
+		addMergeMenuItem(menu, plugin, selectedItems, onNoteActionDone);
+		addFileDeleteMenuItem(app, menu, selectedItems, onResultsChanged);
 		return;
 	}
 
@@ -269,7 +272,8 @@ export function populatePaletteResultMenu({
 				openPluginSettings(app, pluginId);
 			});
 		}
-		addCopyPathMenuItems(
+		menu.addSeparator();
+		addCopyPathSubmenu(
 			menu,
 			getCopyablePaths(app, result),
 			(path) => void copyPathToClipboard(path),
@@ -287,13 +291,17 @@ export function populatePaletteResultMenu({
 		openSideBySide: () => void activate("vertical", result),
 		openBelow: () => void activate("horizontal", result),
 	});
+	// Why: グループは、上ほど安全で、下ほど取り消しにくい並びにする。
+	// 開く / 外へ渡す(外部アプリ、パスのコピー) / ノートの編集 / 危険な操作(統合、削除)。
+	// 区切り線を各ヘルパーに任せず、ここで引く。そうしないと、項目を動かすたびにヘルパーの中を触ることになる。
+	// 区切り線は、前に項目がないと引かれないので、空になったグループがあっても余らない。
+	menu.addSeparator();
 	const absolutePath = isDesktopApp() ? getResultAbsolutePath(app, result) : undefined;
 	if (absolutePath) {
 		// Why: 外部アプリの操作は、Everything だけでなくすべてのファイルの結果に働く。
 		// 「システムのエクスプローラーで表示」は、以前の Everything だけの「ファイルエクスプローラーで表示」を統一したもの。
 		// これは Obsidian のファイルエクスプローラーと混同されていた。
 		const isFolder = isFolderResult(result);
-		menu.addSeparator();
 		addExternalAppMenuItems(menu, {
 			openInExternalEditor: () => {
 				onNoteActionSelected?.();
@@ -306,16 +314,15 @@ export function populatePaletteResultMenu({
 			openInTerminal: () => openTerminal(absolutePath, isFolder),
 		});
 	}
-	addCopyPathMenuItems(menu, paths, (path) => void copyPathToClipboard(path));
+	addCopyPathSubmenu(menu, paths, (path) => void copyPathToClipboard(path));
+	menu.addSeparator();
 	addFileMoveMenuItem(menu, plugin, [result], onNoteActionDone);
 	addBulkRenameMenuItem(menu, plugin, [result], onNoteActionDone);
 	addPropertyEditMenuItem(menu, plugin, [result], onNoteActionSelected);
+	addTagInsertionMenuItems(menu, plugin, [result], onNoteActionDone);
 	// Why: MOC への挿入は複数のノートを書き換えるので、移動やコピーなど書き換えない操作の後に置く。
 	// 両方のパレットの外枠で、そうなるようにする。
 	addMocInsertionMenuItem(menu, plugin, result, onNoteActionSelected, getMocContext);
-	addTagInsertionMenuItems(menu, plugin, [result], onNoteActionDone);
-	addFileDeleteMenuItem(app, menu, [result], onResultsChanged);
-	addMergeMenuItem(menu, plugin, [result], onNoteActionDone);
 	// Why: 検索のブックマークの選択にはパスがないので、この1結果のメニューに届く。
 	// ブックマークの操作は、選んだすべてのブックマークに引き続き働く。
 	addBookmarkMenuItems({
@@ -325,4 +332,8 @@ export function populatePaletteResultMenu({
 		onBookmarksChanged: onResultsChanged,
 		onNoteActionDone,
 	});
+	menu.addSeparator();
+	// Why: 統合は統合元をゴミ箱に移すので、削除と同じ危険な操作のグループに置く。削除は最後。
+	addMergeMenuItem(menu, plugin, [result], onNoteActionDone);
+	addFileDeleteMenuItem(app, menu, [result], onResultsChanged);
 }

@@ -90,7 +90,6 @@ export function addMocInsertionMenuItems(
 		return !(result.mode === "bookmark" && result.kind === "search");
 	});
 	if (!insertableResults.length) return;
-	menu.addSeparator();
 	menu.addItem((item) =>
 		withAction(item, MENU_ACTIONS.insertIntoMoc).onClick(() => {
 			onSelected?.();
