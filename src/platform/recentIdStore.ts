@@ -106,6 +106,13 @@ export class RecentIdStore {
 		this.queuePersist();
 	}
 
+	/** Replaces the ordered list while keeping the same persistence guarantees as record. */
+	setIds(ids: readonly string[]): void {
+		if (this.disposed) return;
+		this.current = this.normalize(ids);
+		this.queuePersist();
+	}
+
 	clear(): void {
 		if (this.disposed) return;
 		this.current = [];

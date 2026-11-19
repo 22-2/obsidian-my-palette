@@ -7,5 +7,7 @@ export const DATABASE_NAMES = {
 	fileUsage: "my-palette-file-usage",
 	recentCommands: "my-palette-recent-commands",
 	recentTags: "my-palette-recent-tags",
+	homeRecent: "my-palette-home-recent",
+	homePins: "my-palette-home-pins",
 	ignoredNotes: "my-palette-ignored-notes",
 } as const;
