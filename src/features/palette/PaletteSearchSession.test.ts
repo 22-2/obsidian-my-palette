@@ -38,24 +38,38 @@ async function host() {
 }
 
 describe("ホームセクション", () => {
-	it("主要なモードとその他を表示し、残りを絞り込んで選べる", async () => {
+	it("ピンと最近開いたモード・ファイルを同じ一覧に並べる", async () => {
+		const { plugin } = await host();
+		const record = vi.fn();
+		plugin.homeItems = {
+			pinned: ["mode:tags"],
+			recents: ["file:Example.md", "mode:plugins"],
+			record,
+		} as unknown as MyPalettePlugin["homeItems"];
+		const session = new PaletteSearchSession(plugin, { modeEntries: true });
+		expect((await session.search()).slice(0, 3).map((result) => result.id)).toEqual([
+			"mode:tags",
+			"file:Example.md",
+			"mode:plugins",
+		]);
+		session.enterMode("plugins");
+		expect(record).toHaveBeenCalledWith("mode:plugins");
+		session.returnToHome();
+		await session.search("t ");
+		expect(record).toHaveBeenCalledWith("mode:tabs");
+		session.dispose();
+	});
+	it("すべてのモードとファイルを表示し、モードを絞り込める", async () => {
 		const { plugin, file } = await host();
 		const session = new PaletteSearchSession(plugin, { modeEntries: true });
 		const ids = (results: Awaited<ReturnType<typeof session.search>>) =>
 			results.filter((result) => result.mode === "mode-entry").map((result) => result.modeId);
-		expect(ids(await session.search())).toEqual([
-			"notes",
-			"commands",
-			"bookmarks",
-			"tags",
-			"other",
-		]);
+		const results = await session.search();
+		expect(ids(results)).toContain("notes");
+		expect(ids(results)).toContain("plugins");
+		expect(ids(results)).not.toContain("other");
+		expect(results).toContain(file);
 		expect(session.current.hasModeEntries).toBe(true);
-		session.enterMode("other");
-		const other = await session.search();
-		expect(ids(other)).toContain("plugins");
-		expect(ids(other)).not.toContain("notes");
-		expect(other).not.toContain(file);
 		expect(ids(await session.search("plugins"))).toEqual(["plugins"]);
 		session.returnToHome();
 		expect(session.input).toBe("");
@@ -300,7 +314,7 @@ describe("パレットルートのプレゼンテーション", () => {
 		expect(palettePlaceholder("file")).toBe("ファイルを検索");
 	});
 
-	it("混合ホームリストのみセクション見出しを表示します", () => {
+	it("混合ホームリストにはセクション見出しを表示しない", () => {
 		const file: FileResult = {
 			id: "file:x",
 			mode: "file",
@@ -319,8 +333,8 @@ describe("パレットルートのプレゼンテーション", () => {
 			icon: "files",
 		} as const;
 		const state = { route: { kind: "home" as const }, hasModeEntries: true };
-		expect(paletteSectionOf(state, mode)).toBe("モード");
-		expect(paletteSectionOf(state, file)).toBe("ファイル");
+		expect(paletteSectionOf(state, mode)).toBeUndefined();
+		expect(paletteSectionOf(state, file)).toBeUndefined();
 		expect(paletteSectionOf({ ...state, hasModeEntries: false }, file)).toBeUndefined();
 		expect(paletteSectionOf(undefined, file)).toBeUndefined();
 		expect(
@@ -354,9 +368,9 @@ describe("paletteDigitRows", () => {
 		icon: "files",
 	} as const;
 
-	it("Home では、モードの行を数えずにファイルの行番号を返す", () => {
+	it("Home では、モードを含む表示順に行番号を返す", () => {
 		const items = [modeEntry, note("a"), note("b")];
-		expect(paletteDigitRows({ kind: "home" }, items)).toEqual([1, 2]);
+		expect(paletteDigitRows({ kind: "home" }, items)).toEqual([0, 1, 2]);
 	});
 
 	it("モードの中では、先頭から順に行番号を返す", () => {

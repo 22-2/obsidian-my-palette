@@ -151,16 +151,13 @@ describe("パレットモーダル", () => {
 		expect(f.modal.modalEl.getAttribute("data-route")).toBe("home");
 	});
 
-	it("その他からモードを選び、Escape で Home に戻る", async () => {
-		const f = await open();
-		expect(f.labels()).toContain("その他");
-		expect(f.labels()).not.toContain("プラグイン");
-		for (let i = 0; i < 4; i++) key(f.modal.inputEl, "ArrowDown");
+	it("Home からモードを選び、Escape で戻る", async () => {
+		const f = await open("plugins");
+		expect(f.labels()).not.toContain("その他");
+		expect(f.labels()).toContain("プラグイン");
 		key(f.modal.inputEl, "Enter");
 		await settle();
-		expect(f.modal.modalEl.getAttribute("data-route")).toBe("other");
-		expect(f.labels()).toContain("プラグイン");
-		expect(f.labels()).not.toContain("ノート");
+		expect(f.modal.modalEl.getAttribute("data-route")).toBe("mode");
 		key(f.modal.inputEl, "Escape");
 		await settle();
 		expect(f.modal.modalEl.getAttribute("data-route")).toBe("home");

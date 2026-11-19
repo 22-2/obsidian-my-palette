@@ -3,6 +3,8 @@ import { searchFuzzyQuery } from "src/core/fuzzyQuery";
 import { BaseSuggestModal, type SuggestModalProps } from "src/ui/baseSuggestModal";
 import { matchedQueryIndexes } from "src/ui/queryHighlight";
 import { matchPreparer } from "src/core/kana";
+import { t } from "src/i18n";
+import { ICONS } from "src/core/icons";
 
 export interface SelectionItem {
 	label: string;
@@ -11,6 +13,7 @@ export interface SelectionItem {
 	descriptionTitle?: string;
 	icon?: string;
 	badge?: string;
+	pinned?: boolean;
 	tags?: string[];
 	tagsTitle?: string;
 	value?: unknown;
@@ -47,6 +50,12 @@ export function renderSelectionItem(
 		if (result.descriptionTitle) setTooltip(description, result.descriptionTitle);
 	}
 	if (result.badge) main.createSpan({ cls: "my-palette-suggestion__badge", text: result.badge });
+	if (result.pinned) {
+		const pin = main.createSpan("my-palette-suggestion__icon");
+		setIcon(pin, ICONS.pin);
+		setTooltip(pin, t("home.pinned"));
+		pin.setAttribute("aria-label", t("home.pinned"));
+	}
 	if (result.tags?.length) {
 		// 一致したタグとキーワードは、コンパクトなファイル名・パスの行の下に、一致の理由を説明する。
 		const tags = body.createDiv("my-palette-suggestion__tags");

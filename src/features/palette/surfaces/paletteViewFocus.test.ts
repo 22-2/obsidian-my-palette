@@ -73,7 +73,7 @@ function fixture() {
 			selected: PaletteResult[],
 		) => void;
 	};
-	view.session = {};
+	view.session = { current: { route: { kind: "home" } } };
 	view.panel = panel;
 	view.contentEl = { ownerDocument: rootSplit.doc };
 	const result: PaletteResult = {

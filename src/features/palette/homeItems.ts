@@ -64,7 +64,12 @@ export class HomeItems {
 		const oldId = `file:${oldPath}`;
 		const newId = `file:${newPath}`;
 		for (const store of [this.recent, this.pins])
-			store.setIds(store.getIds().map((id) => (id === oldId ? newId : id)));
+			store.setIds(
+				store.getIds().map((id) => {
+					if (id === oldId) return newId;
+					return id.startsWith(`${oldId}/`) ? `${newId}${id.slice(oldId.length)}` : id;
+				}),
+			);
 	}
 
 	async dispose(): Promise<void> {

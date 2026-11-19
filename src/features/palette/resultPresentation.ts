@@ -13,6 +13,7 @@ import { t } from "src/i18n";
 
 export interface PaletteResultPresentationOptions {
 	openExternalMarkdownInObsidian: boolean;
+	pinned?: boolean;
 }
 
 const MAX_VISIBLE_MATCHED_METADATA = 3;
@@ -60,6 +61,7 @@ export function toPaletteSelectionItem(
 			label: result.primary,
 			description: result.unavailable ? t("mode.unavailable") : result.secondary,
 			icon: result.icon,
+			pinned: options.pinned,
 			badge: result.alias,
 			disabled: result.unavailable,
 		};
@@ -95,6 +97,7 @@ export function toPaletteSelectionItem(
 			: {};
 	return {
 		label: result.primary,
+		pinned: options.pinned,
 		description: usesPath ? compactPath(result.secondary) : result.secondary,
 		descriptionTitle: usesPath ? result.secondary : undefined,
 		icon: result.icon,

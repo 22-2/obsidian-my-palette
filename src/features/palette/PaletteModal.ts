@@ -1,6 +1,7 @@
 import type { App, TFile } from "obsidian";
 import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
+import { homeItemId } from "src/features/palette/homeItems";
 import type MyPalettePlugin from "src/main";
 import {
 	choosingOpensMenu,
@@ -155,7 +156,9 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			getContext: (input) => this.session.getSearchHistoryContext(input),
 			getSortOptions: () => {
 				const state = this.session.current;
-				return state.route.kind !== "other" && isPaletteSortableMode(state.mode)
+				return state.route.kind !== "other" &&
+					!(this.modeEntries && state.route.kind === "home") &&
+					isPaletteSortableMode(state.mode)
 					? PALETTE_SORT_KEYS
 					: [];
 			},
@@ -227,6 +230,10 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 	protected override toSelectionItem(result: PaletteResult): SelectionItem {
 		return toPaletteSelectionItem(this.app, result, {
 			openExternalMarkdownInObsidian: this.plugin.settings.openExternalMarkdownInObsidian,
+			pinned:
+				this.modeEntries &&
+				this.session.current.route.kind === "home" &&
+				this.plugin.homeItems?.pinned.includes(homeItemId(result) ?? ""),
 		});
 	}
 
@@ -276,6 +283,7 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			plugin: this.plugin,
 			menu,
 			result,
+			isHome: this.modeEntries && this.session.current.route.kind === "home",
 			selectedItems: this.getSelectedItems(),
 			activate: (action, selected) => this.activatePaletteResult(action, selected),
 			openInBackground: (selected) => this.openResultInBackground(selected),
@@ -312,7 +320,10 @@ export class PaletteModal extends SelectionModal<PaletteResult> {
 			palettePageFooter(state.route) ??
 				sourceFooterText(this.app, this.mode, this.sourceFile, this.sourceFiles),
 		);
-		const canSort = state.route.kind !== "other" && isPaletteSortableMode(state.mode);
+		const canSort =
+			state.route.kind !== "other" &&
+			!(this.modeEntries && state.route.kind === "home") &&
+			isPaletteSortableMode(state.mode);
 		this.updateSortStatus(
 			canSort ? paletteSortPresentation(this.session.getSorting()) : undefined,
 			(event, button) => this.historyControls?.openSortMenu(event, button),

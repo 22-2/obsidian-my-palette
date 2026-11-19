@@ -36,6 +36,7 @@ import "../styles.css";
 import { ICONS } from "src/core/icons";
 import { logger, setDebugLogging } from "src/core/logger";
 import { t } from "src/i18n";
+import { HomeItems } from "src/features/palette/homeItems";
 
 export default class MyPalettePlugin extends Plugin {
 	settings: MyPaletteSettings = DEFAULT_SETTINGS;
@@ -80,6 +81,7 @@ export default class MyPalettePlugin extends Plugin {
 	private searchHistory?: SearchHistoryService;
 	private recentCommands?: RecentCommandService;
 	recentTagStore!: RecentTagStore;
+	homeItems!: HomeItems;
 	readonly paletteOpener = new PaletteOpener(this.app, this);
 
 	async onload(): Promise<void> {
@@ -99,6 +101,8 @@ export default class MyPalettePlugin extends Plugin {
 		await this.recentTagStore.load();
 		this.fileUsageHistory = new FileUsageHistory(this.app);
 		await this.fileUsageHistory.load();
+		this.homeItems = new HomeItems(this.app);
+		await this.homeItems.load(this.app.workspace.getLastOpenFiles?.() ?? []);
 		registerPluginEvents(this);
 		const providers = createPaletteProviders(this.app, this.everythingClient, {
 			vaultExtensions: () => this.settings.everything.vaultExtensions,
@@ -160,6 +164,7 @@ export default class MyPalettePlugin extends Plugin {
 		void this.recentCommands?.dispose();
 		void this.recentTagStore?.dispose();
 		void this.fileUsageHistory?.dispose();
+		void this.homeItems?.dispose();
 		logger.debug("Plugin unloaded");
 	}
 

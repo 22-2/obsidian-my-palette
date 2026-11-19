@@ -40,6 +40,8 @@ import { populateGitFileMenu } from "src/features/git/gitUi";
 import { openPluginSettings } from "src/features/search/plugin/pluginSettings";
 import { logger } from "src/core/logger";
 import { t } from "src/i18n";
+import { ICONS } from "src/core/icons";
+import { homeItemId } from "src/features/palette/homeItems";
 import {
 	addExternalAppMenuItems,
 	addMenuAction,
@@ -68,6 +70,7 @@ interface PaletteResultMenuOptions {
 	getMocContext?: () => MocInsertionContext;
 	/** タブまたはブックマークの操作で一覧の結果が変わったあと、検索をやり直す。 */
 	onResultsChanged?: () => void;
+	isHome?: boolean;
 }
 
 async function copyCommandId(commandId: string): Promise<void> {
@@ -94,9 +97,47 @@ export function populatePaletteResultMenu({
 	onNoteActionDone,
 	getMocContext,
 	onResultsChanged,
+	isHome,
 }: PaletteResultMenuOptions): void {
 	// Why: 開いているメニューで入力すると、そうしないとパレットの検索欄に入ってしまうため。
 	menu.enableFilter(app);
+	const homeId = isHome && selectedItems.length <= 1 ? homeItemId(result) : undefined;
+	if (homeId && plugin.homeItems) {
+		const pins = plugin.homeItems.pinned;
+		const index = pins.indexOf(homeId);
+		menu.addItem((item) =>
+			item
+				.setTitle(t(index < 0 ? "home.pin" : "home.unpin"))
+				.setIcon(index < 0 ? ICONS.pin : ICONS.unpin)
+				.onClick(() => {
+					plugin.homeItems.togglePin(homeId);
+					onResultsChanged?.();
+				}),
+		);
+		if (index >= 0) {
+			if (index > 0)
+				menu.addItem((item) =>
+					item
+						.setTitle(t("home.moveUp"))
+						.setIcon(ICONS.moveUp)
+						.onClick(() => {
+							plugin.homeItems.movePin(homeId, -1);
+							onResultsChanged?.();
+						}),
+				);
+			if (index < pins.length - 1)
+				menu.addItem((item) =>
+					item
+						.setTitle(t("home.moveDown"))
+						.setIcon(ICONS.moveDown)
+						.onClick(() => {
+							plugin.homeItems.movePin(homeId, 1);
+							onResultsChanged?.();
+						}),
+				);
+		}
+		menu.addSeparator();
+	}
 	// タブの結果は独自のメニューを持つ。1回の検索は1つのモードの結果しか作らないので、
 	// 種類の混ざった選択は起こらない。
 	const targets = selectedItems.length > 1 ? selectedItems : [result];

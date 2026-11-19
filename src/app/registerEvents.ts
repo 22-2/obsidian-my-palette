@@ -17,6 +17,16 @@ import {
  * 追加しない。
  */
 export function registerPluginEvents(plugin: MyPalettePlugin): void {
+	plugin.registerEvent(
+		plugin.app.workspace.on("file-open", (file) => {
+			if (file) plugin.homeItems.record(`file:${file.path}`);
+		}),
+	);
+	plugin.registerEvent(
+		plugin.app.vault.on("rename", (file, oldPath) => {
+			plugin.homeItems.renameFile(oldPath, file.path);
+		}),
+	);
 	registerGitProtocol(plugin);
 	plugin.registerView(GIT_VERSION_VIEW, (leaf) => new GitVersionView(leaf));
 	plugin.registerView(GIT_DIFF_VIEW, (leaf) => new GitDiffView(leaf));

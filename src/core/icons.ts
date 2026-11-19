@@ -54,6 +54,8 @@ export const ICONS = {
 	duplicateTab: "copy-plus",
 	pin: "pin",
 	unpin: "pin-off",
+	moveUp: "arrow-up",
+	moveDown: "arrow-down",
 	close: "x",
 
 	// Selection

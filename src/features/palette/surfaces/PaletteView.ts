@@ -1,6 +1,7 @@
 import { ItemView, Menu, Scope, TFile, type WorkspaceLeaf } from "obsidian";
 import { PaletteMenu } from "src/ui/paletteMenu";
 import { showMenuAtEvent } from "src/ui/menus";
+import { homeItemId } from "src/features/palette/homeItems";
 import type MyPalettePlugin from "src/main";
 import {
 	choosingOpensMenu,
@@ -352,6 +353,10 @@ export class PaletteView extends ItemView {
 					toPaletteSelectionItem(this.app, result, {
 						openExternalMarkdownInObsidian:
 							this.plugin.settings.openExternalMarkdownInObsidian,
+						pinned:
+							!this.tableView &&
+							this.session?.current.route.kind === "home" &&
+							this.plugin.homeItems?.pinned.includes(homeItemId(result) ?? ""),
 					}),
 					el,
 					query,
@@ -488,7 +493,10 @@ export class PaletteView extends ItemView {
 	private updateSortStatus(): void {
 		if (!this.panel || !this.session) return;
 		const state = this.session.current;
-		const canSort = state.route.kind !== "other" && isPaletteSortableMode(state.mode);
+		const canSort =
+			state.route.kind !== "other" &&
+			(this.tableView || state.route.kind !== "home") &&
+			isPaletteSortableMode(state.mode);
 		const sorting = this.tableControls
 			? this.tableControls.getSort()
 			: this.session.getSorting();
@@ -633,7 +641,12 @@ export class PaletteView extends ItemView {
 				},
 			getSortOptions: () => {
 				const state = this.session?.current;
-				if (!state || state.route.kind === "other" || !isPaletteSortableMode(state.mode))
+				if (
+					!state ||
+					state.route.kind === "other" ||
+					(!this.tableView && state.route.kind === "home") ||
+					!isPaletteSortableMode(state.mode)
+				)
 					return [];
 				return this.tableControls
 					? ["name", "path", "modified", "prior"]
@@ -780,6 +793,7 @@ export class PaletteView extends ItemView {
 			menu,
 			result,
 			selectedItems,
+			isHome: this.session?.current.route.kind === "home" && !this.tableView,
 			activate: (action, selected) => this.execute(selected, action),
 			openInBackground: (selected) => this.openInBackground(selected),
 			// Why: メニューを開いた時点で所有するドキュメントを比べる。同じビューをウィンドウ間で移すと、

@@ -1,4 +1,9 @@
 {
+	"home.pin": "Home にピン留め",
+	"home.pinned": "Home にピン留め済み",
+	"home.unpin": "Home のピン留めを解除",
+	"home.moveUp": "ピン留めを上に移動",
+	"home.moveDown": "ピン留めを下に移動",
 	"git.mode.title": "Git履歴",
 	"git.table.status": "変更",
 	"git.version.title": "過去のファイル",

@@ -24,6 +24,7 @@ import {
 import type { GitCommitResult, ModeEntryResult } from "src/core/results";
 import { t } from "src/i18n";
 import { ICONS } from "src/core/icons";
+import { sortHomeItems } from "src/features/palette/homeItems";
 import {
 	isPaletteSortableMode,
 	sortPaletteResults,
@@ -136,6 +137,7 @@ export class PaletteSearchSession {
 		const definition = fixedMode ? findPaletteMode(fixedMode) : undefined;
 		if (initialRoute) this.route = initialRoute;
 		else if (definition) this.route = { kind: "mode", modeId: definition.id };
+		if (definition && !initialRoute) this.plugin.homeItems?.record(`mode:${definition.id}`);
 		if (initialNavigation) this.navigation.push(...initialNavigation);
 		this.sourceFile = sourceFile;
 		this.sourceFiles = sourceFiles;
@@ -168,6 +170,7 @@ export class PaletteSearchSession {
 	enterMode(modeId: PaletteModeId | "other", query = ""): void {
 		this.navigation.length = 0;
 		this.route = modeId === "other" ? { kind: "other" } : { kind: "mode", modeId };
+		if (modeId !== "other") this.plugin.homeItems?.record(`mode:${modeId}`);
 		this.state = { ...this.state, input: query, route: this.route };
 	}
 
@@ -320,13 +323,19 @@ export class PaletteSearchSession {
 						});
 			if (this.disposed || generation !== this.generation) return [];
 			this.unsortedResults = [...this.modeEntries(input), ...providerResults];
-			const results = sortPaletteResults(
+			let results = sortPaletteResults(
 				this.plugin.app,
 				this.unsortedResults,
 				isPaletteSortableMode(parsed.mode)
 					? this.sortingByMode.get(parsed.mode)
 					: undefined,
 			);
+			if (this.listsModes && this.route.kind === "home" && this.plugin.homeItems)
+				results = sortHomeItems(
+					results,
+					this.plugin.homeItems.pinned,
+					this.plugin.homeItems.recents,
+				);
 			if (this.disposed || generation !== this.generation) return [];
 			this.state = {
 				...this.state,
@@ -414,6 +423,7 @@ export class PaletteSearchSession {
 		);
 		if (!entry) return input;
 		this.route = { kind: "mode", modeId: entry.modeId };
+		this.plugin.homeItems?.record(`mode:${entry.modeId}`);
 		return entry.query;
 	}
 
@@ -439,9 +449,7 @@ export class PaletteSearchSession {
 		const definitions =
 			this.route.kind === "other"
 				? matched.filter(({ id }) => !HOME_MODE_IDS.includes(id))
-				: input.trim()
-					? matched
-					: HOME_MODE_IDS.flatMap((id) => matched.filter((mode) => mode.id === id));
+				: matched;
 		const entries: ModeEntryResult[] = definitions.map((definition) => ({
 			id: `mode:${definition.id}`,
 			mode: "mode-entry",
@@ -452,20 +460,6 @@ export class PaletteSearchSession {
 			secondary: definition.subtitle,
 			icon: definition.icon,
 		}));
-		if (
-			this.route.kind === "home" &&
-			!input.trim() &&
-			matched.some(({ id }) => !HOME_MODE_IDS.includes(id))
-		)
-			entries.push({
-				id: "mode:other",
-				mode: "mode-entry",
-				modeId: "other",
-				alias: "",
-				primary: t("mode.other.title"),
-				secondary: "",
-				icon: ICONS.expand,
-			});
 		return entries;
 	}
 
@@ -538,25 +532,21 @@ export function paletteRouteChrome(
 	};
 }
 
-/** Home の見出し。モードの項目とファイルが同じ一覧にあるときだけ表示する。 */
+/** プロパティの種類だけを見出しとして表示する。 */
 export function paletteSectionOf(
-	state: Pick<PaletteSearchState, "route" | "hasModeEntries"> | undefined,
+	_state: Pick<PaletteSearchState, "route" | "hasModeEntries"> | undefined,
 	result: PaletteResult,
 ): string | undefined {
 	if (result.mode === "property") return result.section;
-	if (state?.route.kind !== "home") return undefined;
-	if (!state.hasModeEntries) return undefined;
-	return result.mode === "mode-entry" ? t("palette.section.modes") : t("palette.section.files");
+	return undefined;
 }
 
-/** 数字キーの 1〜9 が指す行の番号。Home では、モードの行を数えず、ファイルを先頭から数える。 */
+/** 数字キーの 1〜9 が指す、表示順の行番号。 */
 export function paletteDigitRows(
-	route: PaletteRoute | undefined,
+	_route: PaletteRoute | undefined,
 	items: readonly PaletteResult[],
 ): number[] {
-	return items.flatMap((item, index) =>
-		route?.kind === "home" && item.mode === "mode-entry" ? [] : [index],
-	);
+	return items.map((_, index) => index);
 }
 
 export function palettePlaceholder(mode: PaletteMode): string {
