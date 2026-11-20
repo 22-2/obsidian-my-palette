@@ -34,7 +34,16 @@ export async function git(cwd: string, args: string[], signal?: AbortSignal): Pr
 export async function listCommits(root: string, signal?: AbortSignal): Promise<GitCommit[]> {
 	const output = await git(
 		root,
-		["log", "--all", "HEAD", "--date-order", "-z", "--format=%H%x00%P%x00%aI%x00%an%x00%s"],
+		[
+			"log",
+			"--branches",
+			"--remotes",
+			"--tags",
+			"HEAD",
+			"--date-order",
+			"-z",
+			"--format=%H%x00%P%x00%aI%x00%an%x00%s",
+		],
 		signal,
 	);
 	const fields = output.toString("utf8").split("\0");

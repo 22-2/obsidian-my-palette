@@ -19,6 +19,37 @@ afterEach(async () => {
 });
 
 describe("Git history", () => {
+	it("includes branches and tags but ignores agent-only references", async () => {
+		root = await mkdtemp(join(tmpdir(), "palette-git-"));
+		await git(root, ["init"]);
+		await git(root, ["config", "user.name", "Tester"]);
+		await git(root, ["config", "user.email", "test@example.com"]);
+		await git(root, ["commit", "--allow-empty", "-m", "Agent host session is a normal commit"]);
+		const head = (await git(root, ["rev-parse", "HEAD"])).toString().trim();
+		const tree = (await git(root, ["rev-parse", "HEAD^{tree}"])).toString().trim();
+		const branchCommit = (
+			await git(root, ["commit-tree", tree, "-p", head, "-m", "branch commit"])
+		)
+			.toString()
+			.trim();
+		const tagCommit = (await git(root, ["commit-tree", tree, "-p", head, "-m", "tag commit"]))
+			.toString()
+			.trim();
+		const agentCommit = (
+			await git(root, ["commit-tree", tree, "-p", head, "-m", "agent checkpoint"])
+		)
+			.toString()
+			.trim();
+		await git(root, ["update-ref", "refs/heads/other", branchCommit]);
+		await git(root, ["update-ref", "refs/tags/saved", tagCommit]);
+		await git(root, ["update-ref", "refs/agents/session/checkpoint", agentCommit]);
+		const subjects = (await listCommits(root)).map((commit) => commit.subject);
+		expect(subjects).toContain("Agent host session is a normal commit");
+		expect(subjects).toContain("branch commit");
+		expect(subjects).toContain("tag commit");
+		expect(subjects).not.toContain("agent checkpoint");
+	}, 20_000);
+
 	it("reads root, renamed and deleted files with their exact historical contents", async () => {
 		root = await mkdtemp(join(tmpdir(), "palette-git-"));
 		await git(root, ["init"]);

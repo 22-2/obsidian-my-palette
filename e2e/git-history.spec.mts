@@ -26,8 +26,19 @@ test("opens committed content and copies a link to a deleted file", async ({ obs
 	const parent = git("rev-parse", "HEAD").toString().trim();
 	git("rm", "--", "過去のメモ.md");
 	git("commit", "-m", "削除しました");
+	const tree = git("rev-parse", "HEAD^{tree}").toString().trim();
+	const checkpoint = git("commit-tree", tree, "-p", parent, "-m", "Agent host session checkpoint")
+		.toString()
+		.trim();
+	git("update-ref", "refs/agents/session/checkpoint", checkpoint);
 	const page = await openHomeWith(obsidian, "git ");
 	const palette = page.locator(".my-palette-suggest-modal").first();
+	await expect(
+		palette.locator(".suggestion-item").filter({ hasText: "削除しました" }),
+	).toBeVisible();
+	await expect(
+		palette.locator(".suggestion-item").filter({ hasText: "Agent host session" }),
+	).toHaveCount(0);
 	await palette.locator(".prompt-input").fill("削除しました");
 	const commit = palette.locator(".suggestion-item").filter({ hasText: "削除しました" });
 	await expect(commit).toBeVisible();

@@ -2,10 +2,12 @@ import type { App } from "obsidian";
 import type { PaletteProvider, PaletteSearchRequest } from "src/core/PaletteProvider";
 import type { GitCommitResult, GitFileResult } from "src/core/results";
 import { searchFuzzyQuery } from "src/core/fuzzyQuery";
-import { listChanges, listCommits } from "src/features/git/gitClient";
+import { listChanges, listCommits, type GitCommit } from "src/features/git/gitClient";
 import { repositoryRoot } from "src/features/git/gitRepository";
 
 export class GitProvider implements PaletteProvider<GitCommitResult | GitFileResult> {
+	private cachedCommits?: { root: string; commits: GitCommit[]; expiresAt: number };
+
 	constructor(private readonly app: App) {}
 
 	async search({
@@ -31,7 +33,15 @@ export class GitProvider implements PaletteProvider<GitCommitResult | GitFileRes
 				change,
 			}));
 		}
-		const commits = await listCommits(root, signal);
+		let commits =
+			this.cachedCommits?.root === root && Date.now() < this.cachedCommits.expiresAt
+				? this.cachedCommits.commits
+				: undefined;
+		if (!commits) {
+			commits = await listCommits(root, signal);
+			if (!signal?.aborted)
+				this.cachedCommits = { root, commits, expiresAt: Date.now() + 2_000 };
+		}
 		const matched = new Set(
 			searchFuzzyQuery(query, commits, [
 				(commit) => commit.hash,
