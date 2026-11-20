@@ -53,14 +53,15 @@ export function populateGitFileMenu(
 	const { app } = plugin;
 	const { change, commit, root } = result;
 	const ref = contentReference(commit, change);
-	const add = (title: string, icon: string, action: () => void) =>
-		menu.addItem((entry) => entry.setTitle(title).setIcon(icon).onClick(action));
+	const add = (target: PaletteMenu, title: string, icon: string, action: () => void) =>
+		target.addItem((entry) => entry.setTitle(title).setIcon(icon).onClick(action));
 	add(
+		menu,
 		change.status.startsWith("D") ? t("git.openDeleted") : t("git.openVersion"),
 		"file-text",
 		activate,
 	);
-	add(t("git.diff"), "git-compare", () =>
+	add(menu, t("git.diff"), "git-compare", () =>
 		run(async () => {
 			await openGitDiff(
 				app.workspace.getLeaf("tab"),
@@ -75,7 +76,7 @@ export function populateGitFileMenu(
 		if (local !== ".." && !local.startsWith(`..${sep}`) && !isAbsolute(local)) {
 			const current = app.vault.getFileByPath(local.replaceAll("\\", "/"));
 			if (current)
-				add(t("git.openCurrent"), "file", () =>
+				add(menu, t("git.openCurrent"), "file", () =>
 					run(async () => {
 						await app.workspace.getLeaf(false).openFile(current);
 						onDone?.();
@@ -83,29 +84,34 @@ export function populateGitFileMenu(
 				);
 		}
 	}
-	menu.addSeparator();
-	add(
-		t("git.copyObsidian"),
-		"link",
-		() => void copyPathToClipboard(obsidianGitUri(app.vault.getName(), ref.hash, ref.path)),
-	);
-	add(t("git.copyContent"), "copy", () =>
-		run(async () => {
-			await copyPathToClipboard(await readVersion(root, ref.hash, ref.path));
-		}),
-	);
-	add(t("git.copyGithub"), "github", () =>
-		run(async () => {
-			await copyPathToClipboard(await githubUrl(root, ref.hash, ref.path));
-		}),
-	);
-	add(t("git.openGithub"), "github", () =>
+	add(menu, t("git.openGithub"), "github", () =>
 		run(async () => {
 			await electron.shell.openExternal(await githubUrl(root, ref.hash, ref.path));
 		}),
 	);
-	add(t("git.copyPath"), "copy", () => void copyPathToClipboard(change.path));
-	add(t("git.copyHash"), "copy", () => void copyPathToClipboard(commit.hash));
+	menu.addSeparator();
+	let copyMenu!: PaletteMenu;
+	menu.addItem((item) => {
+		copyMenu = item.setTitle(t("git.copy")).setIcon("copy").setAccessKey("C").setSubmenu();
+	});
+	add(
+		copyMenu,
+		t("git.copyObsidian"),
+		"link",
+		() => void copyPathToClipboard(obsidianGitUri(app.vault.getName(), ref.hash, ref.path)),
+	);
+	add(copyMenu, t("git.copyContent"), "copy", () =>
+		run(async () => {
+			await copyPathToClipboard(await readVersion(root, ref.hash, ref.path));
+		}),
+	);
+	add(copyMenu, t("git.copyGithub"), "github", () =>
+		run(async () => {
+			await copyPathToClipboard(await githubUrl(root, ref.hash, ref.path));
+		}),
+	);
+	add(copyMenu, t("git.copyPath"), "copy", () => void copyPathToClipboard(change.path));
+	add(copyMenu, t("git.copyHash"), "copy", () => void copyPathToClipboard(commit.hash));
 }
 
 export function registerGitProtocol(plugin: MyPalettePlugin): void {

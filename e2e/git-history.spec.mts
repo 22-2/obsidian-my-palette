@@ -61,6 +61,22 @@ test("opens committed content and copies a link to a deleted file", async ({ obs
 	await page.keyboard.press("Enter");
 	await expect(file).toBeVisible();
 	await file.click({ button: "right" });
+	await expect(menuItems(page)).toHaveText([
+		t("git.openDeleted"),
+		t("git.diff"),
+		t("git.openGithub"),
+		t("git.copy"),
+	]);
+	await menuItems(page)
+		.filter({ hasText: t("git.copy") })
+		.click();
+	await expect(menuItems(page)).toContainText([
+		t("git.copyObsidian"),
+		t("git.copyContent"),
+		t("git.copyGithub"),
+		t("git.copyPath"),
+		t("git.copyHash"),
+	]);
 	await menuItems(page)
 		.filter({ hasText: t("git.copyGithub") })
 		.click();
@@ -68,6 +84,9 @@ test("opens committed content and copies a link to a deleted file", async ({ obs
 		.poll(() => obsidian.evaluateApp(() => navigator.clipboard.readText()))
 		.toContain(`https://github.com/example/repo/blob/${parent}/`);
 	await file.click({ button: "right" });
+	await menuItems(page)
+		.filter({ hasText: t("git.copy") })
+		.click();
 	await menuItems(page)
 		.filter({ hasText: t("git.copyObsidian") })
 		.click();

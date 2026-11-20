@@ -24,6 +24,7 @@
 	"git.diff.previous": "前の変更へ",
 	"git.diff.next": "次の変更へ",
 	"git.openCurrent": "現在のファイルを開く",
+	"git.copy": "コピー",
 	"git.copyObsidian": "Obsidianリンクをコピー",
 	"git.copyContent": "この時点の内容をコピー",
 	"git.copyGithub": "GitHubリンクをコピー",
