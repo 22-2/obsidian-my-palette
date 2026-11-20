@@ -10,6 +10,7 @@ import {
 	listCommits,
 	obsidianGitUri,
 	readVersion,
+	readVersionBytes,
 } from "src/features/git/gitClient";
 
 let root = "";
@@ -19,6 +20,19 @@ afterEach(async () => {
 });
 
 describe("Git history", () => {
+	it("reads binary history without changing its bytes", async () => {
+		root = await mkdtemp(join(tmpdir(), "palette-git-"));
+		await git(root, ["init"]);
+		await git(root, ["config", "user.name", "Tester"]);
+		await git(root, ["config", "user.email", "test@example.com"]);
+		const bytes = Buffer.from([0, 255, 13, 10, 128]);
+		await writeFile(join(root, "image.bin"), bytes);
+		await git(root, ["add", "image.bin"]);
+		await git(root, ["commit", "-m", "binary"]);
+		const hash = (await git(root, ["rev-parse", "HEAD"])).toString().trim();
+		expect(await readVersionBytes(root, hash, "image.bin")).toEqual(bytes);
+		await expect(readVersion(root, hash, "image.bin")).rejects.toThrow();
+	}, 20_000);
 	it("includes branches and tags but ignores agent-only references", async () => {
 		root = await mkdtemp(join(tmpdir(), "palette-git-"));
 		await git(root, ["init"]);

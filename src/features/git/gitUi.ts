@@ -16,6 +16,7 @@ import { repositoryRoot } from "src/features/git/gitRepository";
 import { openGitVersion } from "src/features/git/gitVersionOpening";
 import { openGitDiff } from "src/features/git/gitDiffOpening";
 import { gitDiffState } from "src/features/git/gitDiffState";
+import { restoreGitFile } from "src/features/git/restoreGitFile";
 import { t } from "src/i18n";
 
 declare const electron: { shell: { openExternal(url: string): Promise<void> } };
@@ -67,6 +68,13 @@ export function populateGitFileMenu(
 				app.workspace.getLeaf("tab"),
 				gitDiffState(commit.hash, commit.parents, change),
 			);
+			onDone?.();
+		}),
+	);
+	add(menu, t("git.restoreCopy"), "file-plus", () =>
+		run(async () => {
+			const file = await restoreGitFile(app, result);
+			await app.workspace.getLeaf("tab").openFile(file);
 			onDone?.();
 		}),
 	);

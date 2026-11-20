@@ -64,6 +64,7 @@ test("opens committed content and copies a link to a deleted file", async ({ obs
 	await expect(menuItems(page)).toHaveText([
 		t("git.openDeleted"),
 		t("git.diff"),
+		t("git.restoreCopy"),
 		t("git.openGithub"),
 		t("git.copy"),
 	]);
@@ -104,6 +105,60 @@ test("opens committed content and copies a link to a deleted file", async ({ obs
 	await content.click();
 	await page.keyboard.type("変更");
 	await expect(content).not.toContainText("変更");
+});
+
+test("restores an editable copy without overwriting the current file", async ({ obsidian }) => {
+	await obsidian.createNote("folder/復元.md", "以前の本文\n");
+	const root = await obsidian.evaluateApp(() =>
+		(app.vault.adapter as unknown as { getBasePath(): string }).getBasePath(),
+	);
+	const git = (...args: string[]) => execFileSync("git", args, { cwd: root, windowsHide: true });
+	git("init");
+	git("config", "user.name", "Tester");
+	git("config", "user.email", "test@example.com");
+	git("add", "--", "folder/復元.md");
+	git("commit", "-m", "保存した内容");
+	const hash = git("rev-parse", "--short=8", "HEAD").toString().trim();
+	await obsidian.createNote("folder/復元.md", "現在の本文\n");
+	const page = await openHomeWith(obsidian, "git ");
+	const palette = page.locator(".my-palette-suggest-modal").first();
+	await palette.locator(".suggestion-item").filter({ hasText: "保存した内容" }).dblclick();
+	const file = palette.locator(".suggestion-item").filter({ hasText: "復元.md" });
+	await file.click({ button: "right" });
+	await menuItems(page)
+		.filter({ hasText: t("git.restoreCopy") })
+		.click();
+	const restoredPath = `folder/復元 (復元 ${hash}).md`;
+	await expect
+		.poll(() => obsidian.evaluateApp((path) => app.vault.adapter.exists(path), restoredPath))
+		.toBe(true);
+	await expect
+		.poll(() => obsidian.evaluateApp((path) => app.vault.adapter.read(path), restoredPath))
+		.toBe("以前の本文\n");
+	expect(await obsidian.evaluateApp(() => app.vault.adapter.read("folder/復元.md"))).toBe(
+		"現在の本文\n",
+	);
+	const editor = page.locator(".workspace-leaf.mod-active .cm-content");
+	await expect(editor).toContainText("以前の本文");
+	await editor.click();
+	await page.keyboard.insertText("追記");
+	await expect(editor).toContainText("追記");
+	await runPaletteCommand(obsidian, "open-home");
+	const reopened = page.locator(".my-palette-suggest-modal").first();
+	const restoredFile = reopened.locator(".suggestion-item").filter({ hasText: "復元.md" });
+	await expect(restoredFile).toBeVisible();
+	await restoredFile.click({ button: "right" });
+	await menuItems(page)
+		.filter({ hasText: t("git.restoreCopy") })
+		.click();
+	await expect
+		.poll(() =>
+			obsidian.evaluateApp(
+				(path) => app.vault.adapter.exists(path),
+				`folder/復元 (復元 ${hash}) 2.md`,
+			),
+		)
+		.toBe(true);
 });
 
 test("compares committed versions side by side without editing either", async ({ obsidian }) => {

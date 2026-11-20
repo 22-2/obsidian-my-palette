@@ -102,10 +102,14 @@ export function validateHash(hash: string): void {
 	if (!HASH.test(hash)) throw new Error("コミットハッシュが正しくありません。");
 }
 
-export async function readVersion(root: string, hash: string, path: string): Promise<string> {
+export async function readVersionBytes(root: string, hash: string, path: string): Promise<Buffer> {
 	validateHash(hash);
 	if (!path || path.includes("\0")) throw new Error("ファイルパスが正しくありません。");
-	const data = await git(root, ["show", "--no-textconv", `${hash}:${path}`]);
+	return git(root, ["show", "--no-textconv", `${hash}:${path}`]);
+}
+
+export async function readVersion(root: string, hash: string, path: string): Promise<string> {
+	const data = await readVersionBytes(root, hash, path);
 	if (data.includes(0)) throw new Error("バイナリーファイルはテキストとして表示できません。");
 	return new TextDecoder("utf-8", { fatal: true }).decode(data);
 }
